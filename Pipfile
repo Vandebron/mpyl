@@ -14,5 +14,5 @@ toml = "==0.10.2"
 python_version = "3.9"
 
 [scripts]
-build = "python -m pympl"
+build = "python setup.py sdist bdist_wheel"
 test = "python -m unittest"
