@@ -22,7 +22,7 @@ def get_install_requirements():
 
 setup(
     name="pympl",
-    version="0.0.1",
+    version="0.0.2",
     description="A python rewrite of mpl-modules",
     long_description=readme,
     long_description_content_type="text/markdown",

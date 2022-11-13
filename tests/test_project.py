@@ -8,10 +8,10 @@ from pympl.target import Target
 
 class TestMplSchema(unittest.TestCase):
     current_path = Path(path.dirname(path.realpath(__file__)))
-    project_path = current_path / "test_resources" / "test_project.yml"
+    resource_path = current_path / "test_resources"
 
     def test_schema_load(self):
-        project = load_project(str(self.project_path))
+        project = load_project(str(self.resource_path / "test_project.yml"))
         self.assertEqual(project.name, 'nginx')
         self.assertEqual(project.maintainer, ['Marketplace', 'EV Home'])
         envs = project.deployment.properties.env
@@ -40,7 +40,12 @@ class TestMplSchema(unittest.TestCase):
                          'HostRegexp(`{subdomain:(bewindvoering|ev|mijn|nom|vrienden|werkenbij|www|blog){1}}'
                          '.test.vdbinfra.nl`, `test.vdbinfra.nl`)')
         self.assertEqual(host.tls.get_value(Target.PULL_REQUEST_BASE), 'le-production-frontend-wildcard-cert')
-        self.assertEqual(host.whitelists.get_value(Target.ACCEPTANCE), ['NAT-Gateway-Service', 'Salesforce', 'K8s-Acceptance'])
+        self.assertEqual(host.whitelists.get_value(Target.ACCEPTANCE),
+                         ['NAT-Gateway-Service', 'Salesforce', 'K8s-Acceptance'])
+
+    def test_schema_load_validation(self):
+        project = load_project(str(self.resource_path / "test_project_invalid.yml"))
+        self.assertEqual(project, None)
 
 
 if __name__ == '__main__':

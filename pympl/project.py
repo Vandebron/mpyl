@@ -1,5 +1,9 @@
+import json
+import pkgutil
 from dataclasses import dataclass
 from typing import Optional, TypeVar, Dict, Any
+
+import jsonschema
 import yaml
 from mypy.checker import Generic
 
@@ -133,8 +137,9 @@ class Host:
         host = values.get('host')
         tls = values.get('tls')
         whitelists = values.get('whitelists')
-        return Host(host=TargetSpecificProperty.from_yaml(host), tls=TargetSpecificProperty.from_yaml(tls),
-                    whitelists=TargetSpecificProperty.from_yaml(whitelists))
+        return Host(host=TargetSpecificProperty.from_yaml(host) if host else None,
+                    tls=TargetSpecificProperty.from_yaml(tls) if tls else None,
+                    whitelists=TargetSpecificProperty.from_yaml(whitelists) if whitelists else None)
 
 
 @dataclass(frozen=True)
@@ -184,11 +189,23 @@ class Project:
                        dependencies=Dependencies.from_yaml(dependencies) if dependencies else None)
 
 
-def load_project(project_path: str) -> Optional[Project]:
+def load_project(project_path: str, strict: bool = True) -> Optional[Project]:
     with open(project_path) as f:
         try:
-            values = yaml.load(f, Loader=yaml.FullLoader)
+            yaml_values = yaml.load(f, Loader=yaml.FullLoader)
+            template = pkgutil.get_data(__name__, "schema/project.schema.json")
+            if strict and template:
+                schema = json.loads(template.decode('utf-8'))
+                jsonschema.validate(yaml_values, schema)
+
+            return Project.from_yaml(yaml_values, project_path)
+        except jsonschema.exceptions.ValidationError as e:
+            print(f'{project_path} does not comply with schema: ', e.message)
+        except TypeError as e:
+            import traceback
+            traceback.print_exc()
+            print(f'Type error', e, )
         except Exception as e:
             print(f'Failed to load {project_path}', e)
 
-        return Project.from_yaml(values, project_path)
+        return None

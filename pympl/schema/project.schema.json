@@ -1,0 +1,1369 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://vandebron.nl/project.schema.json",
+  "description": "A unit in CI/CD",
+  "required": [
+    "name",
+    "stages"
+  ],
+  "additionalProperties": false,
+  "dependencies": {
+    "deployment": ["maintainer"]
+  },
+  "properties": {
+    "name": {
+      "description": "Uniquely identifies this project",
+      "type": "string",
+      "examples": [
+        "invoices",
+        "keycloak"
+      ]
+    },
+    "description": {
+      "description": "A one-liner to describe this projetc's role",
+      "type": "string",
+      "examples": [
+        "Acts as a gateway and facade to the outside world"
+      ]
+    },
+    "maintainer": {
+      "description": "Describes which team or guild is ultimately responsible for the life cycle of this particular project",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "Energy Trading",
+          "Big Data",
+          "Flex IoT",
+          "Marketplace",
+          "EV Home",
+          "Data Analytics",
+          "Salesforce",
+          "Commercial Analytics",
+          "Energy Services And Flex Analytics",
+          "Finance",
+          "Portfolio Management"
+        ]
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    },
+    "stages": {
+      "$id": "#/properties/stages",
+      "description": "Defines which steps should be executed at each stage",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "build": {
+          "description": "Output needs to be a docker image",
+          "examples": [
+            "Sbt Build",
+            "Docker Build"
+          ],
+          "type": "string",
+          "enum": [
+            "Sbt Build",
+            "Docker Build",
+            "Skip Build"
+          ]
+        },
+        "test": {
+          "description": "Output needs to be a junit test result file (https://svn.jenkins-ci.org/trunk/hudson/dtkit/dtkit-format/dtkit-junit-model/src/main/resources/com/thalesgroup/dtkit/junit/model/xsd/junit-4.xsd)",
+          "examples": [
+            "Sbt Test",
+            "Docker Test"
+          ],
+          "type": "string",
+          "enum": [
+            "Docker Test",
+            "Sbt Test",
+            "Skip Test"
+          ]
+        },
+        "deploy": {
+          "$id": "#/properties/stages/deploy",
+          "description": "Deploys the artifacts created in the build stage",
+          "examples": [
+            "Kubernetes Deploy"
+          ],
+          "type": "string",
+          "enum": [
+            "Docker Deploy",
+            "Ephemeral Docker Deploy",
+            "Echo Deploy",
+            "NUC Deploy",
+            "Kubernetes Deploy",
+            "Echo Kubernetes Deploy",
+            "Kubernetes Job Deploy",
+            "Kubernetes Job Template Deploy",
+            "CloudFront Kubernetes Deploy",
+            "Renew Lets Encrypt Deploy",
+            "Helm Deploy",
+            "Dagster Deploy"
+          ]
+        },
+        "postdeploy": {
+          "description": "Additional steps that can be done after the project has been deployed.",
+          "examples": [
+            "TriggerJenkinsJob PostDeploy"
+          ],
+          "type": "string",
+          "enum": [
+            "TriggerJenkinsJob PostDeploy"
+          ]
+        }
+      },
+      "minProperties": 1
+    },
+    "docker": {
+      "description": "Defines docker repository and it's credentials",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "credentialsId": {
+          "description": "credentialsId for the docker repository",
+          "examples": [
+            "exampleRegistry"
+          ],
+          "type": "string"
+        },
+        "registryUrl": {
+          "description": "docker registry url use for the project",
+          "examples": [
+            "example.azurecr.io"
+          ],
+          "type": "string"
+        }
+      }
+    },
+    "build": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "args": {
+          "type": "object",
+          "description": "Defines arguments that are passed in the `Build` stage (e.g. Docker build arguments)",
+          "additionalProperties": false,
+          "properties": {
+            "plain": {
+              "type": "array",
+              "description": "Plain text values that are passed through as-is.",
+              "items": {
+                "$ref": "#/definitions/env"
+              },
+              "uniqueItems": true
+            },
+            "credentials": {
+              "type": "array",
+              "description": "Values that are resolved based on their Jenkins credential `id`.",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["key", "id"],
+                "properties": {
+                  "key": { "type": "string" },
+                  "id": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "minProperties": 1
+    },
+    "deployment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "properties": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "env": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/env"
+              },
+              "uniqueItems": true
+            },
+            "jenkins": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/env"
+              },
+              "uniqueItems": true
+            },
+            "vault": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/vault"
+              },
+              "uniqueItems": true
+            },
+            "sealedSecret": {
+              "description": "Bitnami sealed secrets. Will be decrypted in the cluster at deploy time.",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/env"
+              },
+              "uniqueItems": true
+            },
+            "kubernetes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "key",
+                  "valueFrom"
+                ],
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "valueFrom": {
+                    "oneOf": [
+                      { "$ref": "#/definitions/fieldRef"},
+                      { "$ref": "#/definitions/secretKeyRef"},
+                      { "$ref": "#/definitions/resourceFieldRef"}
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "namespace": {
+          "description": "Corresponds to the namespace in Kubernetes to which the artifact will be deployed",
+          "type": "string"
+        },
+        "s3": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "bucket"
+          ],
+          "properties": {
+            "bucket": {
+              "type": "object",
+              "additionalProperties": false,
+              "oneOf": [
+                {
+                  "required": [
+                    "pr",
+                    "test",
+                    "acceptance",
+                    "production"
+                  ]
+                },
+                {
+                  "required": [
+                    "all"
+                  ]
+                }
+              ],
+              "properties": {
+                "pr": {
+                  "type": "string"
+                },
+                "test": {
+                  "type": "string"
+                },
+                "acceptance": {
+                  "type": "string"
+                },
+                "production": {
+                  "type": "string"
+                },
+                "all": {
+                  "type": "string"
+                }
+              }
+            },
+            "path": {
+              "type": "object",
+              "additionalProperties": false,
+              "oneOf": [
+                {
+                  "required": [
+                    "pr",
+                    "test",
+                    "acceptance",
+                    "production"
+                  ]
+                },
+                {
+                  "required": [
+                    "all"
+                  ]
+                }
+              ],
+              "properties": {
+                "pr": {
+                  "type": "string"
+                },
+                "test": {
+                  "type": "string"
+                },
+                "acceptance": {
+                  "type": "string"
+                },
+                "production": {
+                  "type": "string"
+                },
+                "all": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "kubernetes": {
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {
+            "secrets": {
+              "type": "object",
+              "additionalItems": false,
+              "required": [
+                "name"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              }
+            },
+            "cron": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "schedule"
+              ],
+              "properties" : {
+                "schedule": {
+                  "type": "string"
+                },
+                "successfulJobHistory": {
+                  "type": "integer",
+                  "description": "number of jobs to keep in history that succeeded"
+                },
+                "failedJobHistory": {
+                  "type": "integer",
+                  "description": "number of jobs to keep in history that failed"
+                }
+              }
+            },
+            "policies": {
+              "type": "array",
+              "minItems": 1
+            },
+            "labels": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/label"
+              }
+            },
+            "startupProbe": {
+              "description": "Delay for startup probe (Container ready to accept traffic)",
+              "$ref": "#/definitions/startupProbe"
+            },
+            "livenessProbe": {
+              "description": "Delay for liveness probe (Container need to be restarted)",
+              "$ref": "#/definitions/livenessProbe"
+            },
+            "cmd": {
+              "type": "object",
+              "additionalProperties": false,
+              "oneOf": [
+                {
+                  "required": [
+                    "pr",
+                    "test",
+                    "acceptance",
+                    "production"
+                  ]
+                },
+                {
+                  "required": [
+                    "all"
+                  ]
+                }
+              ],
+              "properties": {
+                "pr": {
+                  "type": "string"
+                },
+                "test": {
+                  "type": "string"
+                },
+                "acceptance": {
+                  "type": "string"
+                },
+                "production": {
+                  "type": "string"
+                },
+                "all": {
+                  "type": "string"
+                }
+              }
+            },
+            "args": {
+              "type": "object",
+              "additionalProperties": false,
+              "oneOf": [
+                {
+                  "required": [
+                    "pr",
+                    "test",
+                    "acceptance",
+                    "production"
+                  ]
+                },
+                {
+                  "required": [
+                    "all"
+                  ]
+                }
+              ],
+              "properties": {
+                "pr": {
+                  "type": "string"
+                },
+                "test": {
+                  "type": "string"
+                },
+                "acceptance": {
+                  "type": "string"
+                },
+                "production": {
+                  "type": "string"
+                },
+                "all": {
+                  "type": "string"
+                }
+              }
+            },
+            "resources": {
+              "type": "object",
+              "properties": {
+                "instances": {
+                  "description": "Sets the number of replicas to be started",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "oneOf": [
+                    {
+                      "required": [
+                        "pr",
+                        "test",
+                        "acceptance",
+                        "production"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "all"
+                      ]
+                    }
+                  ],
+                  "properties": {
+                    "pr": {
+                      "default": "1",
+                      "type": "integer"
+                    },
+                    "test": {
+                      "default": "1",
+                      "type": "integer"
+                    },
+                    "acceptance": {
+                      "default": "1",
+                      "type": "integer"
+                    },
+                    "production": {
+                      "default": "1",
+                      "type": "integer"
+                    },
+                    "all": {
+                      "default": "1",
+                      "type": "integer"
+                    }
+                  }
+                },
+                "limit": { "$ref": "#/definitions/limitResources" },
+                "request": { "$ref": "#/definitions/requestResources" }
+              },
+              "additionalProperties": false
+            },
+            "portMappings": {
+              "type": "object"
+            },
+            "ttlSecondsAfterFinished": {
+              "type": "object",
+              "additionalProperties": false,
+              "oneOf": [
+                {
+                  "required": [
+                    "pr",
+                    "test",
+                    "acceptance",
+                    "production"
+                  ]
+                },
+                {
+                  "required": [
+                    "all"
+                  ]
+                }
+              ],
+              "properties": {
+                "pr": {
+                  "type": "number"
+                },
+                "test": {
+                  "type": "number"
+                },
+                "acceptance": {
+                  "type": "number"
+                },
+                "production": {
+                  "type": "number"
+                },
+                "all": {
+                  "type": "number"
+                }
+              }
+            },
+            "activeDeadlineSeconds": {
+              "type": "object",
+              "additionalProperties": false,
+              "oneOf": [
+                {
+                  "required": [
+                    "pr",
+                    "test",
+                    "acceptance",
+                    "production"
+                  ]
+                },
+                {
+                  "required": [
+                    "all"
+                  ]
+                }
+              ],
+              "properties": {
+                "pr": {
+                  "type": "number"
+                },
+                "test": {
+                  "type": "number"
+                },
+                "acceptance": {
+                  "type": "number"
+                },
+                "production": {
+                  "type": "number"
+                },
+                "all": {
+                  "type": "number"
+                }
+              }
+            },
+            "role": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "resources",
+                "verbs"
+              ],
+              "properties": {
+                "resources": {
+                  "description": "A list of Kubernetes resources that the verbs will be applied on. See https://kubernetes.io/docs/reference/kubectl/overview/#resource-types",
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "verbs": {
+                  "description": "A list of Kubernetes Request Verbs that will be granted to a Role that will be bound to the ServiceAccount of this service. See https://kubernetes.io/docs/reference/access-authn-authz/authorization/#determine-the-request-verb",
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "metrics": {
+              "required": ["enabled"],
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                }       ,
+                "port": {
+                  "type": "integer"
+                }       ,
+                "path": {
+                  "type": "string"
+                },
+                "alerts": {
+                  "type": "array",
+                  "items" : {
+                    "$ref": "#/definitions/alert"
+                  }
+                }
+              }
+            }
+          },
+          "dependencies": {
+            "portMappings": [ "metrics" ],
+            "livenessProbe": [ "metrics" ]
+          }
+        },
+        "traefik": {
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "hosts": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/traefikHost" }
+            }
+          }
+        },
+        "nuc": {
+          "type": "object",
+          "required": [
+            "path"
+          ],
+          "properties": {
+            "config": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            }
+          }
+        },
+        "helm": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "name",
+            "version",
+            "repoName",
+            "repoUrl"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            },
+            "repoName": {
+              "type": "string"
+            },
+            "repoUrl": {
+              "type": "string"
+            }
+          }
+        },
+        "dagster": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "repo"
+          ],
+          "properties": {
+            "repo": {
+              "description": "Absolute path to Dagster repository py-file",
+              "type": "string",
+              "examples": [
+                "/python/my_project/dagster/repo.py"
+              ]
+            }
+          }
+        }
+      },
+      "minProperties": 1
+    },
+    "postdeployment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "triggerjob": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "jobs"
+          ],
+          "properties": {
+            "jobs": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "pr": {
+                  "type": "array"
+                },
+                "test": {
+                  "type": "array"
+                },
+                "acceptance": {
+                  "type": "array"
+                },
+                "production": {
+                  "type": "array"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "properties": {
+        "build": {
+          "type": "array",
+          "minItems": 1
+        },
+        "test": {
+          "type": "array",
+          "minItems": 1
+        },
+        "deploy": {
+          "type": "array",
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "definitions": {
+    "dtapValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": [
+            "pr",
+            "test",
+            "acceptance",
+            "production"
+          ]
+        },
+        {
+          "required": [
+            "all"
+          ]
+        }
+      ],
+      "properties": {
+        "pr": {
+          "type": "string"
+        },
+        "test": {
+          "type": "string"
+        },
+        "acceptance": {
+          "type": "string"
+        },
+        "production": {
+          "type": "string"
+        },
+        "all": {
+          "type": "string"
+        }
+      }
+    },
+    "traefikHost": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["host"],
+      "properties": {
+        "host": {
+          "type": "object",
+          "additionalProperties": false,
+          "oneOf": [
+            {
+              "required": [
+                "pr",
+                "test",
+                "acceptance",
+                "production"
+              ]
+            },
+            {
+              "required": [
+                "all"
+              ]
+            }
+          ],
+          "properties": {
+            "pr": {
+              "type": "string"
+            },
+            "test": {
+              "type": "string"
+            },
+            "acceptance": {
+              "type": "string"
+            },
+            "production": {
+              "type": "string"
+            },
+            "all": {
+              "type": "string"
+            }
+          }
+        },
+        "servicePort": { "type": "number" },
+        "whitelists": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "all": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "pr": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "test": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "acceptance": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "production": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "tls": {
+          "description": "",
+          "$ref": "#/definitions/dtapValue" },
+        "priority": {
+          "type": "number"
+        }
+      }
+    },
+    "livenessProbe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path"],
+      "properties": {
+        "path": {
+          "description": "URL to be used called for liveness probes",
+          "$ref": "#/definitions/dtapValue"
+        },
+        "periodSeconds": {
+          "description": "How often to perform the probe. Period needs to be > than timeout, or requests will overlap",
+          "type": "integer"
+        },
+        "timeoutSeconds": {
+          "description": "Number of seconds after which the probe times out.",
+          "type": "integer"
+        },
+        "successThreshold": {
+          "description": "Minimum consecutive successes for the probe to be considered successful after having failed.",
+          "type": "integer"
+        },
+        "failureThreshold": {
+          "description": "When a probe fails, Kubernetes will try failureThreshold times before restarting the container.",
+          "type": "integer"
+        }
+      }
+    },
+    "startupProbe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path"],
+      "properties": {
+        "path": {
+          "description": "URL to be used called for startup probes",
+          "$ref": "#/definitions/dtapValue"
+        },
+        "initialDelaySeconds": {
+          "description": "Number of seconds after the container has started before probe is started.",
+          "type": "integer"
+        },
+        "periodSeconds": {
+          "description": "How often to perform the probe. The first request will happen after initialDelaySeconds +  periodSeconds.  Period needs to be > than timeout, or requests will overlap",
+          "type": "integer"
+        },
+        "timeoutSeconds": {
+          "description": "Number of seconds after which the probe times out.",
+          "type": "integer"
+        },
+        "successThreshold": {
+          "description": "Minimum consecutive successes for the probe to be considered successful after having failed.",
+          "type": "integer"
+        },
+        "failureThreshold": {
+          "description": "When a probe fails, Kubernetes will try failureThreshold times before restarting the container.",
+          "type": "integer"
+        }
+      }
+    },
+    "env": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "pr": {
+          "type": "string"
+        },
+        "test": {
+          "type": "string"
+        },
+        "acceptance": {
+          "type": "string"
+        },
+        "production": {
+          "type": "string"
+        },
+        "all": {
+          "type": "string"
+        }
+      }
+    },
+    "label": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 2,
+      "required": [
+        "key"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "pr": {
+          "type": "string"
+        },
+        "test": {
+          "type": "string"
+        },
+        "acceptance": {
+          "type": "string"
+        },
+        "production": {
+          "type": "string"
+        },
+        "all": {
+          "type": "string"
+        }
+      }
+    },
+    "vault": {
+      "type": "object",
+      "additionalItems": false,
+      "required": [
+        "key",
+        "path"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        }
+      }
+    },
+    "fieldRef": {
+      "type": "object",
+      "additionalItems": false,
+      "required": ["fieldRef"],
+      "properties": {
+        "fieldRef": {
+          "type": "object",
+          "additionalItems": false,
+          "required": [
+            "fieldPath"
+          ],
+          "properties": {
+            "fieldPath": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "secretKeyRef": {
+      "type": "object",
+      "additionalItems": false,
+      "required": ["secretKeyRef"],
+      "properties": {
+        "secretKeyRef": {
+          "type": "object",
+          "additionalItems": false,
+          "required": ["name", "key", "optional"],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "key": {
+              "type": "string"
+            },
+            "optional": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        }
+      }
+    },
+    "resourceFieldRef": {
+      "type": "object",
+      "additionalItems": false,
+      "required": ["resourceFieldRef"],
+      "properties": {
+        "resourceFieldRef": {
+          "type": "object",
+          "additionalItems": false,
+          "required": [
+            "containerName",
+            "resource"
+          ],
+          "properties": {
+            "containerName": {
+              "type": "string"
+            },
+            "resource": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "secret": {
+      "type": "object",
+      "additionalItems": false,
+      "required": [
+        "secretType",
+        "name",
+        "key",
+        "value"
+      ],
+      "properties": {
+        "secretType": {
+          "type": "string",
+          "enum": [
+            "Generic",
+            "DockerSecret"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "requestResources": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Sets the minimum amount of resources the application needs to run. Higher resource consumption is allowed, but no more than as set by limit. https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits",
+      "properties": {
+        "cpus": {
+          "type": "object",
+          "description": "The amount of CPUs the service will request initially. Kubernetes will try to create the pod on a node with CPU available.",
+          "additionalProperties": false,
+          "oneOf": [
+            {
+              "required": [
+                "pr",
+                "test",
+                "acceptance",
+                "production"
+              ]
+            },
+            {
+              "required": [
+                "all"
+              ]
+            }
+          ],
+          "properties": {
+            "pr": {
+              "description": "0.1",
+              "type": "number"
+            },
+            "test": {
+              "description": "0.1",
+              "type": "number"
+            },
+            "acceptance": {
+              "description": "0.1",
+              "type": "number"
+            },
+            "production": {
+              "description": "0.2",
+              "type": "number"
+            },
+            "all": {
+              "type": "number"
+            }
+          }
+        },
+        "mem": {
+          "type": "object",
+          "description": "The amount of memory in KB that will be requested initially",
+          "additionalProperties": false,
+          "oneOf": [
+            {
+              "required": [
+                "pr",
+                "test",
+                "acceptance",
+                "production"
+              ]
+            },
+            {
+              "required": [
+                "all"
+              ]
+            }
+          ],
+          "properties": {
+            "pr": {
+              "default": "512",
+              "type": "integer"
+            },
+            "test": {
+              "default": "512",
+              "type": "integer"
+            },
+            "acceptance": {
+              "default": "512",
+              "type": "integer"
+            },
+            "production": {
+              "default": "512",
+              "type": "integer"
+            },
+            "all": {
+              "default": "512",
+              "type": "integer"
+            }
+          }
+        },
+        "disk": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Sets the amount of swap space a pod can use. Note: this is not persistent storage. https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/",
+          "oneOf": [
+            {
+              "required": [
+                "pr",
+                "test",
+                "acceptance",
+                "production"
+              ]
+            },
+            {
+              "required": [
+                "all"
+              ]
+            }
+          ],
+          "properties": {
+            "pr": {
+              "type": "number"
+            },
+            "test": {
+              "type": "number"
+            },
+            "acceptance": {
+              "type": "number"
+            },
+            "production": {
+              "type": "number"
+            },
+            "all": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "limitResources": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Sets the upper limit for resource consumption. Any consumption more than this will be curtailed. https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits",
+      "properties": {
+        "cpus": {
+          "type": "object",
+          "description": "Any CPU usage more than this amount will be throttled.",
+          "additionalProperties": false,
+          "oneOf": [
+            {
+              "required": [
+                "pr",
+                "test",
+                "acceptance",
+                "production"
+              ]
+            },
+            {
+              "required": [
+                "all"
+              ]
+            }
+          ],
+          "properties": {
+            "pr": {
+              "default": "0.5",
+              "type": "number"
+            },
+            "test": {
+              "default": "0.5",
+              "type": "number"
+            },
+            "acceptance": {
+              "default": "0.5",
+              "type": "number"
+            },
+            "production": {
+              "default": "1.0",
+              "type": "number"
+            },
+            "all": {
+              "type": "number"
+            }
+          }
+        },
+        "mem": {
+          "type": "object",
+          "description": "The maximum amount of memory (in KB) the pod is allowed to use. Pods that use any more will be killed.",
+          "additionalProperties": false,
+          "oneOf": [
+            {
+              "required": [
+                "pr",
+                "test",
+                "acceptance",
+                "production"
+              ]
+            },
+            {
+              "required": [
+                "all"
+              ]
+            }
+          ],
+          "properties": {
+            "pr": {
+              "default": "1024",
+              "type": "integer"
+            },
+            "test": {
+              "default": "1024",
+              "type": "integer"
+            },
+            "acceptance": {
+              "default": "1024",
+              "type": "integer"
+            },
+            "production": {
+              "default": "2048",
+              "type": "integer"
+            },
+            "all": {
+              "type": "integer"
+            }
+          }
+        },
+        "disk": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Sets the amount of swap space a pod can use. Note: this is not persistent storage. https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/",
+          "oneOf": [
+            {
+              "required": [
+                "pr",
+                "test",
+                "acceptance",
+                "production"
+              ]
+            },
+            {
+              "required": [
+                "all"
+              ]
+            }
+          ],
+          "properties": {
+            "pr": {
+              "type": "number"
+            },
+            "test": {
+              "type": "number"
+            },
+            "acceptance": {
+              "type": "number"
+            },
+            "production": {
+              "type": "number"
+            },
+            "all": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "alert": {
+      "type": "object",
+      "required": ["name", "expr", "forDuration", "severity", "description"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "expr": {
+          "type": "string"
+        },
+        "forDuration": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
