@@ -20,7 +20,19 @@ jobs:
         with:
           command: install -d
 
+      - name: Install Types
+        uses: VaultVulp/action-pipenv@v2.0.1
+        with:
+          command: run install-types
+
+      - name: Validate Types
+        uses: VaultVulp/action-pipenv@v2.0.1
+        with:
+          command: run check-types
+
       - name: Test
         uses: VaultVulp/action-pipenv@v2.0.1
         with:
           command: run test
+
+
