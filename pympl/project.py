@@ -123,17 +123,45 @@ class Kubernetes:
 
 
 @dataclass(frozen=True)
+class Host:
+    host: TargetSpecificProperty[str]
+    tls: TargetSpecificProperty[str]
+    whitelists: TargetSpecificProperty[list[str]]
+
+    @staticmethod
+    def from_yaml(values: dict):
+        host = values.get('host')
+        tls = values.get('tls')
+        whitelists = values.get('whitelists')
+        return Host(host=TargetSpecificProperty.from_yaml(host), tls=TargetSpecificProperty.from_yaml(tls),
+                    whitelists=TargetSpecificProperty.from_yaml(whitelists))
+
+
+@dataclass(frozen=True)
+class Traefik:
+    hosts: list[Host]
+
+    @staticmethod
+    def from_yaml(values: dict):
+        hosts = values.get('hosts')
+        return Traefik(hosts=(list(map(lambda h: Host.from_yaml(h), hosts) if hosts else [])))
+
+
+@dataclass(frozen=True)
 class Deployment:
     namespace: str
     properties: Properties
     kubernetes: Optional[Kubernetes]
+    traefik: Optional[Traefik]
 
     @staticmethod
     def from_yaml(values: dict):
         props = values.get('properties')
         kubernetes = values.get('kubernetes')
+        traefik = values.get('traefik')
         return Deployment(namespace=values['namespace'], properties=Properties.from_yaml(props) if props else None,
-                          kubernetes=Kubernetes.from_yaml(kubernetes) if kubernetes else None)
+                          kubernetes=Kubernetes.from_yaml(kubernetes) if kubernetes else None,
+                          traefik=Traefik.from_yaml(traefik) if traefik else None)
 
 
 @dataclass(frozen=True)
