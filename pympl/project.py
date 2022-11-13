@@ -16,11 +16,6 @@ class TargetSpecificProperty(Generic[T]):
     production: Optional[T]
     all: Optional[T]
 
-
-@dataclass(frozen=True)
-class KeyValueProperty(TargetSpecificProperty[str]):
-    key: str
-
     def get_value(self, target: Target):
         if self.all:
             return self.all
@@ -32,6 +27,16 @@ class KeyValueProperty(TargetSpecificProperty[str]):
             return self.acceptance
         if target is Target.PRODUCTION:
             return self.production
+
+    @staticmethod
+    def from_yaml(values: dict):
+        return TargetSpecificProperty(pr=values.get('pr'), test=values.get('test'), acceptance=values.get('acceptance'),
+                                      production=values.get('production'), all=values.get('all'))
+
+
+@dataclass(frozen=True)
+class KeyValueProperty(TargetSpecificProperty[str]):
+    key: str
 
     @staticmethod
     def from_yaml(values: dict):
@@ -82,14 +87,53 @@ class Properties:
 
 
 @dataclass(frozen=True)
+class Probe:
+    path: TargetSpecificProperty[str]
+
+    @staticmethod
+    def from_yaml(values: dict):
+        path = values['path']
+        return Probe(path=TargetSpecificProperty.from_yaml(path))
+
+
+@dataclass(frozen=True)
+class Metrics:
+    path: str
+    enabled: bool
+
+    @staticmethod
+    def from_yaml(values: dict):
+        return Metrics(path=values.get('path', '/metrics'), enabled=values.get('enabled', False))
+
+
+@dataclass(frozen=True)
+class Kubernetes:
+    portMappings: dict[int, int]
+    livenessProbe: Optional[Probe]
+    metrics: Optional[Metrics]
+
+    @staticmethod
+    def from_yaml(values: dict):
+        mappings = values.get('portMappings')
+        liveness_probe = values.get('livenessProbe')
+        metrics = values.get('metrics')
+        return Kubernetes(portMappings=mappings if mappings else {},
+                          livenessProbe=Probe.from_yaml(liveness_probe) if liveness_probe else None,
+                          metrics=Metrics.from_yaml(metrics) if metrics else None)
+
+
+@dataclass(frozen=True)
 class Deployment:
     namespace: str
     properties: Properties
+    kubernetes: Optional[Kubernetes]
 
     @staticmethod
     def from_yaml(values: dict):
         props = values.get('properties')
-        return Deployment(namespace=values['namespace'], properties=Properties.from_yaml(props) if props else None)
+        kubernetes = values.get('kubernetes')
+        return Deployment(namespace=values['namespace'], properties=Properties.from_yaml(props) if props else None,
+                          kubernetes=Kubernetes.from_yaml(kubernetes) if kubernetes else None)
 
 
 @dataclass(frozen=True)
