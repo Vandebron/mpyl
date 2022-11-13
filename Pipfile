@@ -6,10 +6,10 @@ name = "pypi"
 [packages]
 PyYAML = "==5.4.1"
 jsonschema = "==4.17.0"
+mypy = "*"
 
 [dev-packages]
 toml = "==0.10.2"
-mypy = "*"
 types-jsonschema = "==4.17.0.1"
 types-pyyaml = "==6.0.12.2"
 
