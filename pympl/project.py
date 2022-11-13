@@ -8,7 +8,7 @@ from pympl.target import Target
 T = TypeVar('T')
 
 
-@dataclass
+@dataclass(frozen=True)
 class TargetSpecificProperty(Generic[T]):
     pr: Optional[T]
     test: Optional[T]
@@ -17,7 +17,7 @@ class TargetSpecificProperty(Generic[T]):
     all: Optional[T]
 
 
-@dataclass
+@dataclass(frozen=True)
 class KeyValueProperty(TargetSpecificProperty[str]):
     key: str
 
@@ -40,7 +40,7 @@ class KeyValueProperty(TargetSpecificProperty[str]):
                                 all=values.get('all'))
 
 
-@dataclass()
+@dataclass(frozen=True)
 class StageSpecificProperty(Generic[T]):
     build: Optional[T]
     test: Optional[T]
@@ -48,7 +48,7 @@ class StageSpecificProperty(Generic[T]):
     postdeploy: Optional[T]
 
 
-@dataclass
+@dataclass(frozen=True)
 class Stages(StageSpecificProperty[str]):
 
     @staticmethod
@@ -57,22 +57,22 @@ class Stages(StageSpecificProperty[str]):
                       postdeploy=values.get('postdeploy'))
 
 
-@dataclass
+@dataclass(frozen=True)
 class Dependencies(StageSpecificProperty[list[str]]):
     @staticmethod
     def from_yaml(values: dict):
         return Dependencies(build=values.get('build'), test=values.get('test'), deploy=values.get('deploy'),
-                      postdeploy=values.get('postdeploy'))
+                            postdeploy=values.get('postdeploy'))
 
 
-@dataclass
+@dataclass(frozen=True)
 class Env:
     @staticmethod
     def from_yaml(values: list[dict]):
         return list(map(lambda v: KeyValueProperty.from_yaml(v), values))
 
 
-@dataclass
+@dataclass(frozen=True)
 class Properties:
     env: list[KeyValueProperty]
 
@@ -81,7 +81,7 @@ class Properties:
         return Properties(env=list(map(lambda v: KeyValueProperty.from_yaml(v), values.get('env', []))))
 
 
-@dataclass
+@dataclass(frozen=True)
 class Deployment:
     namespace: str
     properties: Properties
@@ -92,7 +92,7 @@ class Deployment:
         return Deployment(namespace=values['namespace'], properties=Properties.from_yaml(props) if props else None)
 
 
-@dataclass
+@dataclass(frozen=True)
 class Project:
     name: str
     description: str
