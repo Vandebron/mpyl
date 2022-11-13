@@ -35,6 +35,13 @@ class TestMplSchema(unittest.TestCase):
         self.assertEqual(project.deployment.kubernetes.livenessProbe.path.get_value(Target.ACCEPTANCE), '/health')
         self.assertEqual(project.deployment.kubernetes.metrics.enabled, False)
 
+        host = project.deployment.traefik.hosts[0]
+        self.assertEqual(host.host.get_value(Target.PULL_REQUEST_BASE),
+                         'HostRegexp(`{subdomain:(bewindvoering|ev|mijn|nom|vrienden|werkenbij|www|blog){1}}'
+                         '.test.vdbinfra.nl`, `test.vdbinfra.nl`)')
+        self.assertEqual(host.tls.get_value(Target.PULL_REQUEST_BASE), 'le-production-frontend-wildcard-cert')
+        self.assertEqual(host.whitelists.get_value(Target.ACCEPTANCE), ['NAT-Gateway-Service', 'Salesforce', 'K8s-Acceptance'])
+
 
 if __name__ == '__main__':
     unittest.main()
