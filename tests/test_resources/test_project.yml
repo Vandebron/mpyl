@@ -107,6 +107,7 @@ deployment:
         all: "https"
     portMappings:
       9090: 80
+      9091: 84
     livenessProbe:
       path:
         all: /health

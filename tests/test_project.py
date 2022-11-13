@@ -31,6 +31,10 @@ class TestMplSchema(unittest.TestCase):
         self.assertEqual(project.dependencies.build, ['apps/', 'server/', 'nginx-gateway/', 'client'])
         self.assertEqual(project.dependencies.test, None)
 
+        self.assertEqual(project.deployment.kubernetes.portMappings, {9090: 80, 9091: 84})
+        self.assertEqual(project.deployment.kubernetes.livenessProbe.path.get_value(Target.ACCEPTANCE), '/health')
+        self.assertEqual(project.deployment.kubernetes.metrics.enabled, False)
+
 
 if __name__ == '__main__':
     unittest.main()
