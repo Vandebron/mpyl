@@ -2,9 +2,8 @@ import unittest
 from pathlib import Path
 from os import path
 
-
-from mpl.project import load_project
-from mpl.target import Target
+from pympl.project import load_project
+from pympl.target import Target
 
 
 class TestMplSchema(unittest.TestCase):
@@ -17,9 +16,17 @@ class TestMplSchema(unittest.TestCase):
         self.assertEqual(project.maintainer, ['Marketplace', 'EV Home'])
         envs = project.deployment.properties.env
 
-        first_env = [x for x in envs if x.key == 'ENV_NGINX_CONF_FOLDER'].pop()
-        self.assertEqual(first_env.key, 'ENV_NGINX_CONF_FOLDER')
-        self.assertEqual(first_env.get_value(Target.ACCEPTANCE), '/etc/nginx')
+        simple_env = [x for x in envs if x.key == 'ENV_NGINX_CONF_FOLDER'].pop()
+        self.assertEqual(simple_env.key, 'ENV_NGINX_CONF_FOLDER')
+        self.assertEqual(simple_env.get_value(Target.ACCEPTANCE), '/etc/nginx')
+        self.assertEqual(simple_env.get_value(Target.PRODUCTION), '/etc/nginx')
+
+        multi_env = [x for x in envs if x.key == 'ENV_SERVER_NAME'].pop()
+        self.assertEqual(multi_env.key, 'ENV_SERVER_NAME')
+        self.assertEqual(multi_env.get_value(Target.PULL_REQUEST), 'test-{PR-NUMBER}.test.vdbinfra.nl')
+        self.assertEqual(multi_env.get_value(Target.PULL_REQUEST_BASE), 'test.vdbinfra.nl')
+        self.assertEqual(multi_env.get_value(Target.ACCEPTANCE), 'acceptance.vdbinfra.nl')
+        self.assertEqual(multi_env.get_value(Target.PRODUCTION), 'vandebron.nl')
 
 
 if __name__ == '__main__':
