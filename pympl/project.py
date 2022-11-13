@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Optional, TypeVar
 import yaml
 
-from mpl.target import Target
+from pympl.target import Target
 
 T = TypeVar('T')
 

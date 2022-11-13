@@ -27,5 +27,5 @@ setup(
     long_description=readme,
     long_description_content_type="text/markdown",
     install_requires=get_install_requirements(),
-    packages=['mpl']
+    packages=['pympl']
 )
