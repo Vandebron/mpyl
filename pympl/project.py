@@ -39,16 +39,28 @@ class KeyValueProperty(TargetSpecificProperty):
                                 all=values.get('all'))
 
 
+@dataclass()
+class StageSpecificProperty:
+    build: Optional[T]
+    test: Optional[T]
+    deploy: Optional[T]
+    postdeploy: Optional[T]
+
+
 @dataclass
-class Stages:
-    build: Optional[str]
-    test: Optional[str]
-    deploy: Optional[str]
-    postdeploy: Optional[str]
+class Stages(StageSpecificProperty):
 
     @staticmethod
     def from_yaml(values: dict):
         return Stages(build=values.get('build'), test=values.get('test'), deploy=values.get('deploy'),
+                      postdeploy=values.get('postdeploy'))
+
+
+@dataclass
+class Dependencies(StageSpecificProperty):
+    @staticmethod
+    def from_yaml(values: dict):
+        return Dependencies(build=values.get('build'), test=values.get('test'), deploy=values.get('deploy'),
                       postdeploy=values.get('postdeploy'))
 
 
@@ -70,11 +82,12 @@ class Properties:
 
 @dataclass
 class Deployment:
+    namespace: str
     properties: Properties
 
     @staticmethod
     def from_yaml(values: dict):
-        return Deployment(properties=Properties.from_yaml(values.get('properties')))
+        return Deployment(namespace=values.get('namespace'), properties=Properties.from_yaml(values.get('properties')))
 
 
 @dataclass
@@ -85,12 +98,14 @@ class Project:
     stages: Stages
     maintainer: list[str]
     deployment: Optional[Deployment]
+    dependencies: Optional[Dependencies]
 
     @staticmethod
     def from_yaml(values: dict, project_path: str):
         return Project(name=values['name'], description=values['description'], path=project_path,
                        stages=Stages.from_yaml(values.get('stages', {})), maintainer=values.get('maintainer'),
-                       deployment=Deployment.from_yaml(values.get('deployment')))
+                       deployment=Deployment.from_yaml(values.get('deployment')),
+                       dependencies=Dependencies.from_yaml(values.get('dependencies')))
 
 
 def load_project(project_path: str) -> Project:
