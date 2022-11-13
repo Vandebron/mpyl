@@ -8,7 +8,7 @@ PyYAML = "==5.4.1"
 
 [dev-packages]
 toml = "==0.10.2"
-
+mypy = "*"
 
 [requires]
 python_version = "3.9"
@@ -16,3 +16,5 @@ python_version = "3.9"
 [scripts]
 build = "python setup.py sdist bdist_wheel"
 test = "python -m unittest"
+check-types ="mypy pympl/"
+install-types ="mypy --install-types --non-interactive pympl/"
