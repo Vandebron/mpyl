@@ -28,6 +28,9 @@ class TestMplSchema(unittest.TestCase):
         self.assertEqual(multi_env.get_value(Target.ACCEPTANCE), 'acceptance.vdbinfra.nl')
         self.assertEqual(multi_env.get_value(Target.PRODUCTION), 'vandebron.nl')
 
+        self.assertEqual(project.dependencies.build, ['apps/', 'server/', 'nginx-gateway/', 'client'])
+        self.assertEqual(project.dependencies.test, None)
+
 
 if __name__ == '__main__':
     unittest.main()
