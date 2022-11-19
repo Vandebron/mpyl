@@ -2,6 +2,8 @@ import unittest
 from pathlib import Path
 from os import path
 
+from jsonschema import ValidationError
+
 from pympl.project import load_project
 from pympl.target import Target
 
@@ -44,8 +46,8 @@ class TestMplSchema(unittest.TestCase):
                          ['NAT-Gateway-Service', 'Salesforce', 'K8s-Acceptance'])
 
     def test_schema_load_validation(self):
-        project = load_project(str(self.resource_path / "test_project_invalid.yml"))
-        self.assertEqual(project, None)
+        with self.assertRaises(ValidationError):
+            load_project(str(self.resource_path / "test_project_invalid.yml"))
 
 
 if __name__ == '__main__':
