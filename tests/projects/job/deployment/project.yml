@@ -1,0 +1,6 @@
+name: job
+description: "A job"
+maintainer: ["Marketplace"]
+stages:
+  build: "Docker Build"
+  deploy: "Kubernetes Job Deploy"

@@ -1,4 +1,5 @@
 import json
+import logging
 import pkgutil
 from dataclasses import dataclass
 from typing import Optional, TypeVar, Dict, Any
@@ -189,7 +190,7 @@ class Project:
                        dependencies=Dependencies.from_yaml(dependencies) if dependencies else None)
 
 
-def load_project(project_path: str, strict: bool = True) -> Optional[Project]:
+def load_project(project_path: str, strict: bool = True) -> Project:
     with open(project_path) as f:
         try:
             yaml_values = yaml.load(f, Loader=yaml.FullLoader)
@@ -200,12 +201,13 @@ def load_project(project_path: str, strict: bool = True) -> Optional[Project]:
 
             return Project.from_yaml(yaml_values, project_path)
         except jsonschema.exceptions.ValidationError as e:
-            print(f'{project_path} does not comply with schema: ', e.message)
+            logging.warning(f'{project_path} does not comply with schema: {e.message}')
+            raise
         except TypeError as e:
             import traceback
             traceback.print_exc()
-            print(f'Type error', e, )
+            logging.warning(f'Type error', e)
+            raise
         except Exception as e:
-            print(f'Failed to load {project_path}', e)
-
-        return None
+            logging.warning(f'Failed to load {project_path}', e)
+            raise
