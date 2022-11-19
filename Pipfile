@@ -17,7 +17,7 @@ types-pyyaml = "==6.0.12.2"
 python_version = "3.9"
 
 [scripts]
-build = "python setup.py sdist bdist_wheel"
+build = "python setup.py install sdist bdist_wheel"
 test = "python -m unittest"
 check-types ="mypy pympl/"
 install-types ="mypy --install-types --non-interactive pympl/"
