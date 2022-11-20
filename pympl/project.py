@@ -8,6 +8,7 @@ import jsonschema
 import yaml
 from mypy.checker import Generic
 
+from pympl.stage import Stage
 from pympl.target import Target
 
 T = TypeVar('T')
@@ -57,6 +58,15 @@ class StageSpecificProperty(Generic[T]):
     deploy: Optional[T]
     postdeploy: Optional[T]
 
+    def for_stage(self, stage: Stage) -> Optional[T]:
+        if stage is Stage.BUILD:
+            return self.build
+        if stage is Stage.TEST:
+            return self.test
+        if stage is Stage.DEPLOY:
+            return self.deploy
+        return self.postdeploy
+
 
 @dataclass(frozen=True)
 class Stages(StageSpecificProperty[str]):
@@ -68,11 +78,16 @@ class Stages(StageSpecificProperty[str]):
 
 
 @dataclass(frozen=True)
-class Dependencies(StageSpecificProperty[list[str]]):
+class Dependencies(StageSpecificProperty[set[str]]):
+
+    def set_for_stage(self, stage: Stage) -> set[str]:
+        deps_for_stage = self.for_stage(stage)
+        return deps_for_stage if deps_for_stage else set()
+
     @staticmethod
     def from_yaml(values: dict):
-        return Dependencies(build=values.get('build'), test=values.get('test'), deploy=values.get('deploy'),
-                            postdeploy=values.get('postdeploy'))
+        return Dependencies(build=set(values.get('build', [])), test=set(values.get('test', [])),
+                            deploy=set(values.get('deploy', [])), postdeploy=set(values.get('postdeploy', [])))
 
 
 @dataclass(frozen=True)
@@ -207,8 +222,8 @@ class Project:
                        dependencies=Dependencies.from_yaml(dependencies) if dependencies else None)
 
 
-def load_project(project_path: str, strict: bool = True) -> Project:
-    with open(project_path) as f:
+def load_project(root_dir, project_path: str, strict: bool = True) -> Project:
+    with open(f'{root_dir}/{project_path}') as f:
         try:
             yaml_values = yaml.load(f, Loader=yaml.FullLoader)
             template = pkgutil.get_data(__name__, "schema/project.schema.json")

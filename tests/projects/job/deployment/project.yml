@@ -4,3 +4,6 @@ maintainer: ["Marketplace"]
 stages:
   build: "Docker Build"
   deploy: "Kubernetes Job Deploy"
+dependencies:
+  test:
+    - tests/projects/service/file.py
