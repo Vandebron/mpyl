@@ -3,7 +3,7 @@ from enum import Enum
 
 
 @dataclass(frozen=True)
-class Target(Enum):
+class Stage(Enum):
     def __eq__(self, other):
         return self.value == other.value
 
