@@ -181,6 +181,14 @@ class Project:
     dependencies: Optional[Dependencies]
 
     @staticmethod
+    def project_yaml_path() -> str:
+        return 'deployment/project.yml'
+
+    @staticmethod
+    def to_project_root_path(path: str) -> str:
+        return path.replace(Project.project_yaml_path(), '')
+
+    @staticmethod
     def from_yaml(values: dict, project_path: str):
         deployment = values.get('deployment')
         dependencies = values.get('dependencies')
