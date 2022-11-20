@@ -8,8 +8,6 @@ class MyTestCase(unittest.TestCase):
         projects = find_projects()
 
         self.assertEqual(len(projects), 2)
-        self.assertEqual(projects[0].name, 'job')
-        self.assertEqual(projects[1].name, 'service')
 
 
 if __name__ == '__main__':
