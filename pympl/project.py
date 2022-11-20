@@ -180,6 +180,15 @@ class Project:
     deployment: Optional[Deployment]
     dependencies: Optional[Dependencies]
 
+    def __lt__(self, other):
+        return self.path < other.path
+
+    def __eq__(self, other):
+        return self.path == other.path
+
+    def __hash__(self):
+        return hash(self.path)
+
     @staticmethod
     def project_yaml_path() -> str:
         return 'deployment/project.yml'
