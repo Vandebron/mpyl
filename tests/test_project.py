@@ -13,7 +13,7 @@ class TestMplSchema(unittest.TestCase):
     resource_path = current_path / "test_resources"
 
     def test_schema_load(self):
-        project = load_project(str(self.resource_path / "test_project.yml"))
+        project = load_project("", str(self.resource_path / "test_project.yml"))
         self.assertEqual(project.name, 'nginx')
         self.assertEqual(project.maintainer, ['Marketplace', 'EV Home'])
         envs = project.deployment.properties.env
@@ -30,8 +30,8 @@ class TestMplSchema(unittest.TestCase):
         self.assertEqual(multi_env.get_value(Target.ACCEPTANCE), 'acceptance.vdbinfra.nl')
         self.assertEqual(multi_env.get_value(Target.PRODUCTION), 'vandebron.nl')
 
-        self.assertEqual(project.dependencies.build, ['apps/', 'server/', 'nginx-gateway/', 'client'])
-        self.assertEqual(project.dependencies.test, None)
+        self.assertEqual(project.dependencies.build, {'apps/', 'server/', 'nginx-gateway/', 'client'})
+        self.assertEqual(project.dependencies.test, set())
 
         self.assertEqual(project.deployment.kubernetes.portMappings, {9090: 80, 9091: 84})
         self.assertEqual(project.deployment.kubernetes.livenessProbe.path.get_value(Target.ACCEPTANCE), '/health')
@@ -47,7 +47,7 @@ class TestMplSchema(unittest.TestCase):
 
     def test_schema_load_validation(self):
         with self.assertRaises(ValidationError):
-            load_project(str(self.resource_path / "test_project_invalid.yml"))
+            load_project("", str(self.resource_path / "test_project_invalid.yml"))
 
 
 if __name__ == '__main__':
