@@ -25,13 +25,13 @@ class TargetSpecificProperty(Generic[T]):
     def get_value(self, target: Target):
         if self.all:
             return self.all
-        if target is Target.PULL_REQUEST:
+        if target == Target.PULL_REQUEST:
             return self.pr
-        if target is Target.PULL_REQUEST_BASE:
+        if target == Target.PULL_REQUEST_BASE:
             return self.test
-        if target is Target.ACCEPTANCE:
+        if target == Target.ACCEPTANCE:
             return self.acceptance
-        if target is Target.PRODUCTION:
+        if target == Target.PRODUCTION:
             return self.production
 
     @staticmethod
@@ -59,11 +59,11 @@ class StageSpecificProperty(Generic[T]):
     postdeploy: Optional[T]
 
     def for_stage(self, stage: Stage) -> Optional[T]:
-        if stage is Stage.BUILD:
+        if stage == Stage.BUILD:
             return self.build
-        if stage is Stage.TEST:
+        if stage == Stage.TEST:
             return self.test
-        if stage is Stage.DEPLOY:
+        if stage == Stage.DEPLOY:
             return self.deploy
         return self.postdeploy
 
@@ -170,7 +170,7 @@ class Traefik:
 
 @dataclass(frozen=True)
 class Deployment:
-    namespace: str
+    namespace: Optional[str]
     properties: Properties
     kubernetes: Optional[Kubernetes]
     traefik: Optional[Traefik]
@@ -180,7 +180,7 @@ class Deployment:
         props = values.get('properties')
         kubernetes = values.get('kubernetes')
         traefik = values.get('traefik')
-        return Deployment(namespace=values['namespace'], properties=Properties.from_yaml(props) if props else None,
+        return Deployment(namespace=values.get('namespace'), properties=Properties.from_yaml(props) if props else None,
                           kubernetes=Kubernetes.from_yaml(kubernetes) if kubernetes else None,
                           traefik=Traefik.from_yaml(traefik) if traefik else None)
 
@@ -217,7 +217,7 @@ class Project:
         deployment = values.get('deployment')
         dependencies = values.get('dependencies')
         return Project(name=values['name'], description=values['description'], path=project_path,
-                       stages=Stages.from_yaml(values.get('stages', {})), maintainer=values['maintainer'],
+                       stages=Stages.from_yaml(values.get('stages', {})), maintainer=values.get('maintainer', []),
                        deployment=Deployment.from_yaml(deployment) if deployment else None,
                        dependencies=Dependencies.from_yaml(dependencies) if dependencies else None)
 
