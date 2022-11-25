@@ -9,9 +9,9 @@ class TestDiscovery(unittest.TestCase):
 
     def test_should_find_invalidated_test_dependencies(self):
         repo = Repository('main')
-        invalidated = find_invalidated_projects_for_stage(repo, Stage.TEST,
-                                                          {'tests/projects/service/file.py', 'tests/some_file.txt'})
-        self.assertEqual(len(invalidated), 2)
+        touched_files = {'tests/projects/service/file.py', 'tests/some_file.txt'}
+        self.assertEqual(len(find_invalidated_projects_for_stage(repo, Stage.BUILD, touched_files)), 1)
+        self.assertEqual(len(find_invalidated_projects_for_stage(repo, Stage.TEST, touched_files)), 2)
 
     def test_should_find_invalidated_dependencies(self):
         repo = Repository('main')
