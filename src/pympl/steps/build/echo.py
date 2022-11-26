@@ -16,6 +16,6 @@ class BuildEcho(Step):
             stage=Stage.BUILD
         ))
 
-    def execute(self, input: Input) -> Output:
-        self._logger.info(f"Building project {input.project.name}")
-        return Output(success=True, message=f"Built {input.project.name}")
+    def execute(self, ipt: Input) -> Output:
+        self._logger.info(f"Building project {ipt.project.name}")
+        return Output(success=True, message=f"Built {ipt.project.name}")
