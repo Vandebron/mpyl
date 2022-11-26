@@ -4,7 +4,7 @@ from typing import Optional
 from .build.echo import BuildEcho
 from .build.dockerbuild import BuildDocker
 from .deploy.echo import DeployEcho
-from .models import Output, Input
+from .models import Output, Input, BuildProperties
 from .step import Step
 from ..project import Project
 from ..stage import Stage
@@ -24,14 +24,14 @@ class Steps:
         executors = filter(lambda e: e.meta.stage == stage and step_name == e.meta.name, self._step_executors)
         return next(executors, None)
 
-    def execute(self, stage: Stage, project: Project) -> Output:
+    def execute(self, stage: Stage, project: Project, properties: BuildProperties) -> Output:
         stage_name = project.stages.for_stage(stage)
         if stage_name is None:
             return Output(success=False, message=f"Stage ${stage.value} not defined on project ${project.name}")
 
         executor = self._find_executor(stage, stage_name)
         if executor:
-            result = executor.execute(Input(project))
+            result = executor.execute(Input(project, properties))
             if result.success:
                 self._logger.info(
                     f"Execution of {executor.meta.name} succeeded for {project.name} with outcome {result.message}")

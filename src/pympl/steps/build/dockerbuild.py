@@ -1,11 +1,11 @@
 from logging import Logger
-from pathlib import Path
 
-from ..step import Step
+from docker import APIClient  # type: ignore
+
 from ..models import Meta, Input, Output
+from ..step import Step
 from ...project import Project
 from ...stage import Stage
-from docker import APIClient
 
 
 class BuildDocker(Step):
@@ -36,9 +36,8 @@ class BuildDocker(Step):
         self._logger.debug(low_level_client.version())
 
         path = Project.to_deployment_path(project.path)
-        docker_path = str(Path(path, 'Dockerfile-mpl'))
-        self._logger.info(f"path: {docker_path}")
-        logs = low_level_client.build(path=path, dockerfile='Dockerfile-mpl', tag='app:123', rm=True, target="installer", decode=True)
+        logs = low_level_client.build(path=path, dockerfile='Dockerfile-mpl', tag=build_input.docker_image_tag(),
+                                      rm=True, target="installer", decode=True)
         self.__log_docker_output(logs)
 
         return Output(success=True, message=f"Built {build_input.project.name}")
