@@ -39,6 +39,14 @@ The aim of this tool is to be a better version of https://github.com/Vandebron/m
 - hard to grasp for new developers
 
 ## The ugly
+
+- awkward Jenkins module project structure
+- very obscure error messages and exceptions
+- deploy steps cannot be executed or simulated locally
+- logic needs to be written in groovy
+- code that depends on IO is virtually untestable
+
+# Proposed implementation
  - Replaceablity
    - Independent from Jenkins (or any other build executor) 
    - Runs locally, with no OS dependencies in as far as possible.
