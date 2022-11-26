@@ -1,0 +1,11 @@
+FROM node:12.18.2 AS installer
+COPY . .
+WORKDIR /test/docker
+RUN yarn install
+
+FROM installer as builder
+ENTRYPOINT [ "yarn", "start" ]
+
+FROM installer as tester
+RUN mkdir -p /test/docker/target/test-reports/
+RUN yarn test-ci

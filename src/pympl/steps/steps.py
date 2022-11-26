@@ -2,6 +2,7 @@ from logging import Logger
 from typing import Optional
 
 from .build.echo import BuildEcho
+from .build.dockerbuild import BuildDocker
 from .deploy.echo import DeployEcho
 from .models import Output, Input
 from .step import Step
@@ -15,7 +16,7 @@ class Steps:
 
     def __init__(self, logger: Logger) -> None:
         self._logger = logger
-        self._step_executors = {BuildEcho(logger), DeployEcho(logger)}
+        self._step_executors = {BuildEcho(logger), DeployEcho(logger), BuildDocker(logger)}
         for step in self._step_executors:
             self._logger.debug(f"Registered executor ${step.meta.name}")
 
