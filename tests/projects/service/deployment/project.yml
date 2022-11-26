@@ -2,5 +2,5 @@ name: service
 description: "A service"
 maintainer: ["Marketplace", "EV Home"]
 stages:
-  build: "Echo Build"
+  build: "Docker Build"
   deploy: "Echo Deploy"
