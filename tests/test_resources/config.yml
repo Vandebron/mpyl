@@ -1,0 +1,7 @@
+cvs:
+  git:
+    main_branch: 'main'
+  github:
+    repository: 'Vandebron/pympl'
+
+
