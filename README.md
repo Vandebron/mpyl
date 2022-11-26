@@ -39,8 +39,19 @@ The aim of this tool is to be a better version of https://github.com/Vandebron/m
 - hard to grasp for new developers
 
 ## The ugly
-
-- awkard jenkins module project structure
-- deploy steps cannot be executed or simulated locally
-- logic needs to be written in groovy
-- code that depends on IO is virtually untestable
+ - Replaceablity
+   - Independent from Jenkins (or any other build executor) 
+   - Runs locally, with no OS dependencies in as far as possible.
+   - Where OS dependencies e.g. kubectl, helm are unavoidable, they are included in a docker image that can be used inside the executor
+ - Usability
+   - Self documented where possible: `project.yml` schema, CLI --help for each argument, concise and guiding logging
+   - Built for us and by us. This should not be a one-person project.
+   - Clearly defined data model and interfaces for:
+     - project metadata (name, env vars, dependencies)
+     - run specific information (initiator, branch/tag, build target)
+     - input and output types of individual steps
+ - Standards
+   - awkard jenkins module project structure
+   - deploy steps cannot be executed or simulated locally
+   - logic needs to be written in groovy
+   - code that depends on IO is virtually untestable
