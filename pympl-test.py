@@ -6,11 +6,14 @@ from src.pympl.project import load_project
 from src.pympl.repo import Repository, RepoConfig
 from src.pympl.stage import Stage
 from src.pympl.stages.discovery import find_invalidated_projects_for_stage
+from src.pympl.steps.models import BuildProperties, VersioningProperties
 from src.pympl.steps.steps import Steps
 
 import logging
 from rich.logging import RichHandler
 from rich.console import Console
+
+from src.pympl.target import Target
 
 
 def main(repo: Repository, log: Logger):
@@ -29,10 +32,11 @@ def main(repo: Repository, log: Logger):
     all_projects = list(map(lambda p: load_project(".", p, False), project_paths))
     executor = Steps(logger=log)
     log.info(" Building projects")
+    build_props = BuildProperties("1", Target.PULL_REQUEST, VersioningProperties("1234", None))
     for proj in all_projects:
-        executor.execute(Stage.BUILD, proj)
+        executor.execute(Stage.BUILD, proj, build_props)
     for proj in all_projects:
-        executor.execute(Stage.DEPLOY, proj)
+        executor.execute(Stage.DEPLOY, proj, build_props)
 
 
 if __name__ == "__main__":
