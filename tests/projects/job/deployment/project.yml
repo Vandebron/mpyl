@@ -2,8 +2,8 @@ name: job
 description: "A job"
 maintainer: ["Marketplace"]
 stages:
-  build: "Docker Build"
-  deploy: "Kubernetes Job Deploy"
+  build: "Echo Build"
+  deploy: "Echo Deploy"
 dependencies:
   test:
     - tests/projects/service/file.py
