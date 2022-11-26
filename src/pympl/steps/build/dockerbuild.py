@@ -29,15 +29,15 @@ class BuildDocker(Step):
                 self._logger.info(f'{task_name} complete.')
                 break
 
-    def execute(self, build_input: Input) -> Output:
-        project = build_input.project
+    def execute(self, ipt: Input) -> Output:
+        project = ipt.project
         self._logger.info(f"Building project {project.name}")
         low_level_client = APIClient()
         self._logger.debug(low_level_client.version())
 
         path = Project.to_deployment_path(project.path)
-        logs = low_level_client.build(path=path, dockerfile='Dockerfile-mpl', tag=build_input.docker_image_tag(),
+        logs = low_level_client.build(path=path, dockerfile='Dockerfile-mpl', tag=ipt.docker_image_tag(),
                                       rm=True, target="installer", decode=True)
         self.__log_docker_output(logs)
 
-        return Output(success=True, message=f"Built {build_input.project.name}")
+        return Output(success=True, message=f"Built {ipt.project.name}")
