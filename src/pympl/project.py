@@ -8,6 +8,7 @@ import jsonschema
 import yaml
 from mypy.checker import Generic
 
+from pympl.stage import Stage
 from pympl.target import Target
 
 T = TypeVar('T')
@@ -24,13 +25,13 @@ class TargetSpecificProperty(Generic[T]):
     def get_value(self, target: Target):
         if self.all:
             return self.all
-        if target is Target.PULL_REQUEST:
+        if target == Target.PULL_REQUEST:
             return self.pr
-        if target is Target.PULL_REQUEST_BASE:
+        if target == Target.PULL_REQUEST_BASE:
             return self.test
-        if target is Target.ACCEPTANCE:
+        if target == Target.ACCEPTANCE:
             return self.acceptance
-        if target is Target.PRODUCTION:
+        if target == Target.PRODUCTION:
             return self.production
 
     @staticmethod
@@ -57,6 +58,15 @@ class StageSpecificProperty(Generic[T]):
     deploy: Optional[T]
     postdeploy: Optional[T]
 
+    def for_stage(self, stage: Stage) -> Optional[T]:
+        if stage == Stage.BUILD:
+            return self.build
+        if stage == Stage.TEST:
+            return self.test
+        if stage == Stage.DEPLOY:
+            return self.deploy
+        return self.postdeploy
+
 
 @dataclass(frozen=True)
 class Stages(StageSpecificProperty[str]):
@@ -68,11 +78,16 @@ class Stages(StageSpecificProperty[str]):
 
 
 @dataclass(frozen=True)
-class Dependencies(StageSpecificProperty[list[str]]):
+class Dependencies(StageSpecificProperty[set[str]]):
+
+    def set_for_stage(self, stage: Stage) -> set[str]:
+        deps_for_stage = self.for_stage(stage)
+        return deps_for_stage if deps_for_stage else set()
+
     @staticmethod
     def from_yaml(values: dict):
-        return Dependencies(build=values.get('build'), test=values.get('test'), deploy=values.get('deploy'),
-                            postdeploy=values.get('postdeploy'))
+        return Dependencies(build=set(values.get('build', [])), test=set(values.get('test', [])),
+                            deploy=set(values.get('deploy', [])), postdeploy=set(values.get('postdeploy', [])))
 
 
 @dataclass(frozen=True)
@@ -155,7 +170,7 @@ class Traefik:
 
 @dataclass(frozen=True)
 class Deployment:
-    namespace: str
+    namespace: Optional[str]
     properties: Properties
     kubernetes: Optional[Kubernetes]
     traefik: Optional[Traefik]
@@ -165,7 +180,7 @@ class Deployment:
         props = values.get('properties')
         kubernetes = values.get('kubernetes')
         traefik = values.get('traefik')
-        return Deployment(namespace=values['namespace'], properties=Properties.from_yaml(props) if props else None,
+        return Deployment(namespace=values.get('namespace'), properties=Properties.from_yaml(props) if props else None,
                           kubernetes=Kubernetes.from_yaml(kubernetes) if kubernetes else None,
                           traefik=Traefik.from_yaml(traefik) if traefik else None)
 
@@ -180,18 +195,35 @@ class Project:
     deployment: Optional[Deployment]
     dependencies: Optional[Dependencies]
 
+    def __lt__(self, other):
+        return self.path < other.path
+
+    def __eq__(self, other):
+        return self.path == other.path
+
+    def __hash__(self):
+        return hash(self.path)
+
+    @staticmethod
+    def project_yaml_path() -> str:
+        return 'deployment/project.yml'
+
+    @staticmethod
+    def to_project_root_path(path: str) -> str:
+        return path.replace(Project.project_yaml_path(), '')
+
     @staticmethod
     def from_yaml(values: dict, project_path: str):
         deployment = values.get('deployment')
         dependencies = values.get('dependencies')
         return Project(name=values['name'], description=values['description'], path=project_path,
-                       stages=Stages.from_yaml(values.get('stages', {})), maintainer=values['maintainer'],
+                       stages=Stages.from_yaml(values.get('stages', {})), maintainer=values.get('maintainer', []),
                        deployment=Deployment.from_yaml(deployment) if deployment else None,
                        dependencies=Dependencies.from_yaml(dependencies) if dependencies else None)
 
 
-def load_project(project_path: str, strict: bool = True) -> Project:
-    with open(project_path) as f:
+def load_project(root_dir, project_path: str, strict: bool = True) -> Project:
+    with open(f'{root_dir}/{project_path}') as f:
         try:
             yaml_values = yaml.load(f, Loader=yaml.FullLoader)
             template = pkgutil.get_data(__name__, "schema/project.schema.json")
