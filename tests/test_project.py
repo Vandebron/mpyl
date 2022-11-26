@@ -1,16 +1,14 @@
 import unittest
-from pathlib import Path
-from os import path
 
 from jsonschema import ValidationError
-
 from pympl.project import load_project
 from pympl.target import Target
 
+from tests import root_test_path
+
 
 class TestMplSchema(unittest.TestCase):
-    current_path = Path(path.dirname(path.realpath(__file__)))
-    resource_path = current_path / "test_resources"
+    resource_path = root_test_path / "test_resources"
 
     def test_schema_load(self):
         project = load_project("", str(self.resource_path / "test_project.yml"))
