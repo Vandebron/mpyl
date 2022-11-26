@@ -30,6 +30,11 @@ jobs:
         with:
           command: run check-types
 
+      - name: Build
+        uses: VaultVulp/action-pipenv@v2.0.1
+        with:
+          command: run build
+
       - name: Test
         uses: VaultVulp/action-pipenv@v2.0.1
         with:

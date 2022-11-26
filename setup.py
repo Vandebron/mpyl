@@ -1,4 +1,5 @@
-from setuptools import setup, find_packages
+import setuptools
+from setuptools import setup
 import toml
 
 with open("README.md", "r") as readme_file:
@@ -22,10 +23,12 @@ def get_install_requirements():
 
 setup(
     name="pympl",
-    version="0.0.3",
+    version="0.0.8",
     description="A python rewrite of mpl-modules",
     long_description=readme,
     long_description_content_type="text/markdown",
     install_requires=get_install_requirements(),
-    packages=['pympl']
+    package_dir={'': 'src'},
+    include_package_data=True,
+    packages=setuptools.find_packages(where="./src")
 )
