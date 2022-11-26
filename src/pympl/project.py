@@ -2,6 +2,7 @@ import json
 import logging
 import pkgutil
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Optional, TypeVar, Dict, Any
 
 import jsonschema
@@ -211,6 +212,10 @@ class Project:
     @staticmethod
     def to_project_root_path(path: str) -> str:
         return path.replace(Project.project_yaml_path(), '')
+
+    @staticmethod
+    def to_deployment_path(path: str) -> str:
+        return str(Path(Project.to_project_root_path(path), 'deployment'))
 
     @staticmethod
     def from_yaml(values: dict, project_path: str):
