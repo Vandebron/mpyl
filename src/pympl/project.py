@@ -9,8 +9,8 @@ import jsonschema
 import yaml
 from mypy.checker import Generic
 
-from pympl.stage import Stage
-from pympl.target import Target
+from .stage import Stage
+from .target import Target
 
 T = TypeVar('T')
 

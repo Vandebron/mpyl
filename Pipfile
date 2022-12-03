@@ -11,6 +11,7 @@ gitpython = "==3.1.29"
 docker = "==6.0.1"
 
 [dev-packages]
+pulumi-command = "*"
 toml = "==0.10.2"
 types-jsonschema = "==4.17.0.1"
 types-pyyaml = "==6.0.12.2"
@@ -22,6 +23,7 @@ python_version = "3.9"
 
 [scripts]
 build = "python setup.py install sdist bdist bdist_wheel"
+dryrun = "python pympl-test.py"
 test = "python -m unittest"
 check-types ="mypy src/pympl/"
 validate = "bash -c 'mypy src/pympl/ && python -m unittest'"
