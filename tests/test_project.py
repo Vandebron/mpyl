@@ -1,9 +1,9 @@
 import unittest
 
 from jsonschema import ValidationError
-from pympl.project import load_project
-from pympl.target import Target
 
+from src.pympl.project import load_project
+from src.pympl.target import Target
 from tests import root_test_path
 
 

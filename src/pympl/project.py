@@ -9,8 +9,8 @@ import jsonschema
 import yaml
 from mypy.checker import Generic
 
-from pympl.stage import Stage
-from pympl.target import Target
+from .stage import Stage
+from .target import Target
 
 T = TypeVar('T')
 
@@ -204,6 +204,12 @@ class Project:
 
     def __hash__(self):
         return hash(self.path)
+
+    @property
+    def kubernetes(self) -> Kubernetes:
+        if self.deployment is None or self.deployment.kubernetes is None:
+            raise AttributeError(f"Project {self.name} does not have kubernetes configuration")
+        return self.deployment.kubernetes
 
     @staticmethod
     def project_yaml_path() -> str:
