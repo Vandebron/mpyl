@@ -1,7 +1,7 @@
-from pympl.project import Project
-from pympl.projects.find import load_projects
-from pympl.repo import Repository
-from pympl.stage import Stage
+from ..project import Project
+from ..projects.find import load_projects
+from ..repo import Repository
+from ..stage import Stage
 
 
 def is_invalidated(project: Project, stage: Stage, path: str) -> bool:
