@@ -4,7 +4,6 @@ from typing import Optional
 from .build.echo import BuildEcho
 from .build.dockerbuild import BuildDocker
 from .deploy.echo import DeployEcho
-from .deploy.kubernetes import DeployKubernetes
 from .models import Output, Input, BuildProperties
 from .step import Step
 from ..project import Project
@@ -17,7 +16,7 @@ class Steps:
 
     def __init__(self, logger: Logger) -> None:
         self._logger = logger
-        self._step_executors = {BuildEcho(logger), DeployEcho(logger), BuildDocker(logger), DeployKubernetes(logger)}
+        self._step_executors = {BuildEcho(logger), DeployEcho(logger), BuildDocker(logger)}
         for step in self._step_executors:
             self._logger.debug(f"Registered executor ${step.meta.name}")
 
