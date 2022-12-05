@@ -1,4 +1,4 @@
-from pympl.project import Project, load_project
+from ..project import Project, load_project
 
 
 def load_projects(root_dir: str, paths: set[str]) -> set[Project]:

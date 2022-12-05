@@ -20,5 +20,5 @@ class Step(object, metaclass=IPluginRegistry):
         self._logger = logger.getChild(meta.name.replace(' ', ''))
         self.meta = meta
 
-    def execute(self, input: Input) -> Output:
+    def execute(self, step_input: Input) -> Output:
         return Output(success=False, message="Not implemented")
