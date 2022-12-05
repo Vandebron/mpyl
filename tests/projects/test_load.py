@@ -1,7 +1,7 @@
 import unittest
 
-from pympl.projects.find import load_projects
-from pympl.repo import Repository
+from src.pympl.projects.find import load_projects
+from src.pympl.repo import Repository
 
 
 class ProjectLoadTestCase(unittest.TestCase):

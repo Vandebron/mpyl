@@ -1,8 +1,8 @@
 import unittest
 
 import yaml
-from pympl.repo import RepoConfig
-from pympl.repo import Repository
+from src.pympl.repo import RepoConfig
+from src.pympl.repo import Repository
 
 from tests import root_test_path
 
