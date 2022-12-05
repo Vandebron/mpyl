@@ -1,7 +1,7 @@
 from typing import Dict
 
 from git import Git, Repo
-from pympl.project import Project
+from ..project import Project
 
 
 class RepoConfig:

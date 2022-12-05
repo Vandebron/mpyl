@@ -16,6 +16,6 @@ class DeployEcho(Step):
             stage=Stage.DEPLOY
         ))
 
-    def execute(self, input: Input) -> Output:
-        self._logger.info(f"Deploying project {input.project.name}")
-        return Output(success=True, message=f"Deployed project {input.project.name}")
+    def execute(self, ipt: Input) -> Output:
+        self._logger.info(f"Deploying project {ipt.project.name}")
+        return Output(success=True, message=f"Deployed project {ipt.project.name}")
