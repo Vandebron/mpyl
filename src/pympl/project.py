@@ -215,13 +215,17 @@ class Project:
     def project_yaml_path() -> str:
         return 'deployment/project.yml'
 
-    @staticmethod
-    def to_project_root_path(path: str) -> str:
-        return path.replace(Project.project_yaml_path(), '')
+    @property
+    def root_path(self) -> str:
+        return self.path.replace(Project.project_yaml_path(), '')
 
-    @staticmethod
-    def to_deployment_path(path: str) -> str:
-        return str(Path(Project.to_project_root_path(path), 'deployment'))
+    @property
+    def deployment_path(self) -> str:
+        return str(Path(self.root_path, 'deployment'))
+
+    @property
+    def target_path(self) -> str:
+        return str(Path(self.deployment_path, 'mpl'))
 
     @staticmethod
     def from_yaml(values: dict, project_path: str):
