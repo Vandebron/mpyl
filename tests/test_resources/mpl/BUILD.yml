@@ -1,0 +1,10 @@
+!!python/object:pympl.steps.models.Output
+message: Built service
+produced_artifact: !!python/object:pympl.steps.models.Artifact
+  artifact_type: !!python/object/apply:pympl.steps.models.ArtifactType
+  - 1
+  producing_step: Docker Build
+  revision: tag
+  spec:
+    image: service:pr-1234
+success: true

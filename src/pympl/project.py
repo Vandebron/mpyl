@@ -225,7 +225,7 @@ class Project:
 
     @property
     def target_path(self) -> str:
-        return str(Path(self.deployment_path, 'mpl'))
+        return str(Path(self.deployment_path, '.mpl'))
 
     @staticmethod
     def from_yaml(values: dict, project_path: str):
