@@ -1,11 +1,10 @@
 from logging import Logger
-from pathlib import Path
 from typing import Optional
 
 from ruamel.yaml import YAML
 
-from .build.echo import BuildEcho
 from .build.dockerbuild import BuildDocker
+from .build.echo import BuildEcho
 from .deploy.echo import DeployEcho
 from .models import Output, Input, BuildProperties, ArtifactType, Artifact
 from .step import Step
@@ -45,16 +44,15 @@ class Steps:
         if step.required_artifact is None:
             return None
 
-        path = Path(f'{project.target_path}/BUILD.yml')
         required_artifact = step.required_artifact
-        if step.required_artifact and required_artifact != ArtifactType.NONE and path.exists():
-            with open(path) as f:
-                output: Output = yaml.load(f)
-                artifact = output.produced_artifact
-                if artifact is None or artifact.artifact_type != required_artifact:
-                    raise ValueError(
-                        f"Artifact {required_artifact} required for {project.name}, found: {artifact}")
-                return artifact
+        if step.required_artifact and required_artifact != ArtifactType.NONE:
+            output: Optional[Output] = Output.try_read(project.target_path, Stage.BUILD)
+            if output is None or output.produced_artifact \
+                    and output.produced_artifact.artifact_type != required_artifact:
+                raise ValueError(
+                    f"Artifact {required_artifact} required for {project.name}, found: {output}")
+
+            return output.produced_artifact
         return None
 
     def execute(self, stage: Stage, project: Project, properties: BuildProperties) -> Output:
@@ -67,12 +65,9 @@ class Steps:
             try:
                 artifact: Optional[Artifact] = self._find_required_artifact(project, executor)
 
-                path = Path(project.target_path)
-                path.mkdir(parents=True, exist_ok=True)
-                with Path(path, f"{stage.name}.yml").open(mode='w+') as file:
-                    result: Output = self._execute(executor, project, properties, artifact)
-                    yaml.dump(result, file)
-                    return result
+                result = self._execute(executor, project, properties, artifact)
+                result.write(project.target_path, stage)
+                return result
             except Exception as e:
                 self._logger.warning(
                     f"Execution of '{executor.meta.name}' for project '{project.name}' in stage {stage} "
