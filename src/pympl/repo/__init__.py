@@ -18,6 +18,10 @@ class Repository:
         self._root_dir = Git().rev_parse('--show-toplevel')
         self._repo = Repo(self._root_dir)
 
+    @property
+    def get_sha(self):
+        return self._repo.head.commit.hexsha
+
     def root_dir(self) -> str:
         return self._root_dir
 
