@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import Optional, TypeVar, Dict, Any
 
 import jsonschema
-import yaml
 from mypy.checker import Generic
+from ruamel.yaml import YAML
 
 from .stage import Stage
 from .target import Target
@@ -215,13 +215,17 @@ class Project:
     def project_yaml_path() -> str:
         return 'deployment/project.yml'
 
-    @staticmethod
-    def to_project_root_path(path: str) -> str:
-        return path.replace(Project.project_yaml_path(), '')
+    @property
+    def root_path(self) -> str:
+        return self.path.replace(Project.project_yaml_path(), '')
 
-    @staticmethod
-    def to_deployment_path(path: str) -> str:
-        return str(Path(Project.to_project_root_path(path), 'deployment'))
+    @property
+    def deployment_path(self) -> str:
+        return str(Path(self.root_path, 'deployment'))
+
+    @property
+    def target_path(self) -> str:
+        return str(Path(self.deployment_path, '.mpl'))
 
     @staticmethod
     def from_yaml(values: dict, project_path: str):
@@ -236,7 +240,8 @@ class Project:
 def load_project(root_dir, project_path: str, strict: bool = True) -> Project:
     with open(f'{root_dir}/{project_path}') as f:
         try:
-            yaml_values = yaml.load(f, Loader=yaml.FullLoader)
+            yaml = YAML()
+            yaml_values = yaml.load(f)
             template = pkgutil.get_data(__name__, "schema/project.schema.json")
             if strict and template:
                 schema = json.loads(template.decode('utf-8'))

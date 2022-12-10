@@ -1,6 +1,7 @@
 import unittest
 
-import yaml
+from ruamel.yaml import YAML
+
 from src.pympl.repo import RepoConfig
 from src.pympl.repo import Repository
 
@@ -21,7 +22,8 @@ class RepoTestCase(unittest.TestCase):
     def test_load_config(self):
         yaml_path = self.resource_path / "config.yml"
         with open(yaml_path) as f:
-            yaml_values = yaml.load(f, Loader=yaml.FullLoader)
+            yaml = YAML()
+            yaml_values = yaml.load(f)
             config = RepoConfig(yaml_values)
 
 
