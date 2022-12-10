@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 from typing import Optional
 
 from ..project import Project
@@ -74,6 +75,24 @@ class Output:
     success: bool
     message: str
     produced_artifact: Optional[Artifact] = None
+
+    @staticmethod
+    def path(target_path: str, stage: Stage):
+        return Path(target_path, f"{stage.name}.yml")
+
+    def write(self, target_path: str, stage: Stage):
+        Path(target_path).mkdir(parents=True, exist_ok=True)
+        with Output.path(target_path, stage).open(mode='w+') as file:
+            yaml.dump(self, file)
+
+    @staticmethod
+    def try_read(target_path: str, stage: Stage):
+        path = Output.path(target_path, stage)
+        if path.exists():
+            with open(path) as f:
+                load: Output = yaml.load(f)
+                return load
+        return None
 
 
 @dataclass(frozen=True)
