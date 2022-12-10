@@ -6,7 +6,7 @@ from typing import Optional
 from ..project import Project
 from ..stage import Stage
 from ..target import Target
-from ruamel.yaml import YAML, yaml_object
+from ruamel.yaml import YAML, yaml_object  # type: ignore
 
 yaml = YAML()
 
@@ -90,8 +90,7 @@ class Output:
         path = Output.path(target_path, stage)
         if path.exists():
             with open(path) as f:
-                load: Output = yaml.load(f)
-                return load
+                return yaml.load(f)
         return None
 
 

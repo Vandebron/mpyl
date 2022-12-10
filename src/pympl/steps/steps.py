@@ -1,7 +1,7 @@
 from logging import Logger
 from typing import Optional
 
-from ruamel.yaml import YAML
+from ruamel.yaml import YAML  # type: ignore
 
 from .build.dockerbuild import BuildDocker
 from .build.echo import BuildEcho
