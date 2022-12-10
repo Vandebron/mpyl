@@ -1,7 +1,7 @@
 import unittest
 from io import StringIO
 
-from ruamel.yaml import YAML
+from ruamel.yaml import YAML  # type: ignore
 
 from src.pympl.steps.models import Output, Artifact, ArtifactType
 from tests import root_test_path
