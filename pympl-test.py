@@ -32,7 +32,7 @@ def main(repo: Repository, log: Logger):
     all_projects = list(map(lambda p: load_project(".", p, False), project_paths))
     executor = Steps(logger=log)
     log.info(" Building projects")
-    build_props = BuildProperties("1", Target.PULL_REQUEST, VersioningProperties("1234", None))
+    build_props = BuildProperties("1", Target.PULL_REQUEST, VersioningProperties("tag", "1234", None))
     for proj in all_projects:
         executor.execute(Stage.BUILD, proj, build_props)
     for proj in all_projects:
