@@ -12,12 +12,16 @@ from ....project import Project
 yaml = YAML()
 
 
+def camel_case(text):
+    return ''.join(word.title() if i else word for i, word in enumerate(text.split('_')))
+
+
 def to_yaml(resource: object) -> str:
     def remove_none(obj):
         if isinstance(obj, (list, tuple, set)):
             return type(obj)(remove_none(x) for x in obj if x is not None)
         elif isinstance(obj, dict):
-            return type(obj)((remove_none(k), remove_none(v))
+            return type(obj)((remove_none(camel_case(k)), remove_none(v))
                              for k, v in obj.items() if k is not None and v is not None)
         else:
             return obj
@@ -38,7 +42,7 @@ class ServiceDeployment:
         self.project = self.step_input.project
         self.mappings = self.project.kubernetes.portMappings
 
-    def __to_labels(self) -> Dict:
+    def _get_labels(self) -> Dict:
         build_properties = self.step_input.build_properties
         app_labels = {"name": self.project.name}
 
@@ -56,8 +60,11 @@ class ServiceDeployment:
 
         return app_labels
 
+    def _get_annotations(self) -> Dict:
+        return {'description': self.project.description}
+
     def _to_object_meta(self):
-        return V1ObjectMeta(name=self.project.name, labels=self.__to_labels())
+        return V1ObjectMeta(name=self.project.name, labels=self._get_labels())
 
     def to_service(self) -> V1Service:
         service_ports = list(map(lambda key: V1ServicePort(port=key, target_port=self.mappings[key], protocol="TCP",
@@ -90,7 +97,8 @@ class ServiceDeployment:
         return V1Deployment(
             api_version="apps/v1",
             kind="Deployment",
-            metadata=self._to_object_meta(),
+            metadata=V1ObjectMeta(annotations=self._get_annotations(), name=self.project.name,
+                                  labels=self._get_labels()),
             spec=V1DeploymentSpec(
                 template=V1PodTemplateSpec(
                     metadata=self._to_object_meta(),
