@@ -11,18 +11,17 @@ class K8sTestCase(unittest.TestCase):
     resource_path = root_test_path / "test_resources"
 
     def roundtrip(self, bla: str, resource: object, overwrite: bool = False):
-        blergh = to_yaml(resource)
+        as_yaml = to_yaml(resource)
         if overwrite:
             with(open(bla, 'w+')) as f:
-                f.write(blergh)
+                f.write(as_yaml)
                 self.assertEqual(overwrite, False)
 
         with open(bla) as f:
-            hoi = f.read()
-            self.assertEqual(hoi, blergh, "Should not commit with overwrite")
+            self.assertEqual(f.read(), as_yaml, "Should not commit with overwrite")
 
     def test_deployment(self):
-        project = load_project("", str(self.resource_path / "test_project.yml"))
+        project = load_project("", str(self.resource_path / "test_project.yml"), False)
 
         properties = BuildProperties("id", Target.PULL_REQUEST,
                                      VersioningProperties("2ad3293a7675d08bc037ef0846ef55897f38ec8f", "1234", None))
