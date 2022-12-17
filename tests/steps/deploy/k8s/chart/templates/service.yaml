@@ -1,6 +1,9 @@
-api_version: apps/v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    description: This is a test container. For testing the MPL pipelines, not to be
+      deployed anywhere.
   labels:
     name: dockertest
     maintainers: Marketplace.Energy_Trading
@@ -10,13 +13,13 @@ metadata:
   name: dockertest
 spec:
   selector:
-    match_labels:
+    matchLabels:
       app.kubernetes.io/instance: dockertest
       app.kubernetes.io/name: dockertest
   strategy:
-    rolling_update:
-      max_surge: 25%
-      max_unavailable: 25%
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
     type: RollingUpdate
   template:
     metadata:
@@ -32,11 +35,11 @@ spec:
       - env:
         - name: SOME_ENV
         image: dockertest:pr-1234
-        image_pull_policy: Always
+        imagePullPolicy: Always
         name: dockertest
         ports:
-        - container_port: 8080
-          host_port: 8080
+        - containerPort: 8080
+          hostPort: 8080
           protocol: TCP
-      service_account: dockertest
-      service_account_name: dockertest
+      serviceAccount: dockertest
+      serviceAccountName: dockertest
