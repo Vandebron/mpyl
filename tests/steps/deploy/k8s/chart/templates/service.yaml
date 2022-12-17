@@ -1,0 +1,98 @@
+api_version: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    name: nginx
+    maintainers: Marketplace.EV_Home
+    maintainer: Marketplace
+    version: '1234'
+    revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
+  name: nginx
+spec:
+  selector:
+    match_labels:
+      app.kubernetes.io/instance: nginx
+      app.kubernetes.io/name: nginx
+  strategy:
+    rolling_update:
+      max_surge: 25%
+      max_unavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: nginx
+        maintainers: Marketplace.EV_Home
+        maintainer: Marketplace
+        version: '1234'
+        revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
+      name: nginx
+    spec:
+      containers:
+      - env:
+        - name: ENV_MAIN_WEBSITE_LOCATION
+          value: http://main-website.{namespace}.svc.cluster.local:4050
+        - name: ENV_ANGULAR_LOCATION
+          value: http://angular.{namespace}.svc.cluster.local:9091
+        - name: ENV_ENERGY_DASHBOARD_LOCATION
+          value: http://energy-dashboard.{namespace}.svc.cluster.local:4082
+        - name: ENV_ADMIN_DASHBOARD_LOCATION
+          value: http://admin-dashboard.{namespace}.svc.cluster.local:4085
+        - name: ENV_CUSTOMER_DASHBOARD_LOCATION
+          value: http://customer-dashboard.{namespace}.svc.cluster.local:4086
+        - name: ENV_EV_DASHBOARD_LOCATION
+          value: http://ev-dashboard.{namespace}.svc.cluster.local:4083
+        - name: ENV_PRODUCER_DASHBOARD_LOCATION
+          value: http://producer-dashboard.{namespace}.svc.cluster.local:4081
+        - name: ENV_SALES_DASHBOARD_LOCATION
+          value: http://sales-dashboard.{namespace}.svc.cluster.local:4084
+        - name: ENV_SERVER_NAME
+          value: test-{PR-NUMBER}.test.vdbinfra.nl
+        - name: ENV_API_LOCATION
+          value: http://api.{namespace}.svc.cluster.local:8080
+        - name: ENV_API_OUTAGE_LOCATION
+          value: http://producers.{namespace}.svc.cluster.local:8094
+        - name: ENV_API_PRICING_LOCATION
+          value: http://pricing.{namespace}.svc.cluster.local:8093
+        - name: ENV_API_CHARGE_POINT_LOCATION
+          value: http://batterypackcharge-point-api.marathon.l4lb.thisdcos.directory:8092
+        - name: ENV_API_VALIDATION_LOCATION
+          value: http://validation.{namespace}.svc.cluster.local:8082
+        - name: ENV_API_HTMLTOPDF_FACADE_LOCATION
+          value: http://htmlToPdfFacade.{namespace}.svc.cluster.local:8081
+        - name: ENV_API_DISCOUNTS_LOCATION
+          value: http://discounts.{namespace}.svc.cluster.local:8095
+        - name: ENV_API_INVOICES_LOCATION
+          value: http://invoices.{namespace}.svc.cluster.local:8087
+        - name: ENV_KEYCLOAK_FACADE_LOCATION
+          value: http://keyCloakFacade.{namespace}.svc.cluster.local:8091
+        - name: ENV_API_EV_LOCATION
+          value: http://ev.{namespace}.svc.cluster.local:8090
+        - name: ENV_API_CUSTOMERS_LOCATION
+          value: http://customers.{namespace}.svc.cluster.local:8096
+        - name: ENV_API_ENERGY_CONSUMERS_LOCATION
+          value: http://energyConsumers.{namespace}.svc.cluster.local:8098
+        - name: ENV_API_SALESFORCE_PRICEBOOK_LOCATION
+          value: http://salesforce-pricebook.{namespace}.svc.cluster.local:8100
+        - name: ENV_API_OFFERINGS_LOCATION
+          value: http://offerings.{namespace}.svc.cluster.local:8101
+        - name: ENV_API_CONTENT_LOCATION
+          value: http://content.{namespace}.svc.cluster.local:8015
+        - name: ENV_API_UPVOTY_AUTH_LOCATION
+          value: http://upvotyAuth.{namespace}.svc.cluster.local:8103
+        - name: ENV_IS_LOCAL
+          value: 'false'
+        - name: ENV_NGINX_CONF_FOLDER
+          value: /etc/nginx
+        image: nginx:pr-1234
+        image_pull_policy: Always
+        name: nginx
+        ports:
+        - container_port: 9090
+          host_port: 80
+          protocol: TCP
+        - container_port: 9091
+          host_port: 84
+          protocol: TCP
+      service_account: nginx
+      service_account_name: nginx
