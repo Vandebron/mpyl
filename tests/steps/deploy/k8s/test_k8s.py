@@ -9,6 +9,7 @@ from tests import root_test_path
 
 class K8sTestCase(unittest.TestCase):
     resource_path = root_test_path / "test_resources"
+    template_path = root_test_path / "steps" / "deploy" / "k8s" / "chart" / "templates"
 
     def roundtrip(self, bla: str, resource: object, overwrite: bool = False):
         as_yaml = to_yaml(resource)
@@ -28,7 +29,7 @@ class K8sTestCase(unittest.TestCase):
         sd = ServiceDeployment(step_input=Input(project, properties, None))
         deployment = sd.to_deployment()
 
-        self.roundtrip(root_test_path / "steps" / "deploy" / "k8s" / "chart" / "templates" / 'service.yaml', deployment)
+        self.roundtrip(self.template_path / 'service.yaml', deployment)
 
 
 if __name__ == '__main__':
