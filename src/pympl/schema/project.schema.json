@@ -4,7 +4,8 @@
   "description": "A unit in CI/CD",
   "required": [
     "name",
-    "stages"
+    "stages",
+    "description"
   ],
   "additionalProperties": false,
   "dependencies": {
@@ -351,6 +352,15 @@
                 "failedJobHistory": {
                   "type": "integer",
                   "description": "number of jobs to keep in history that failed"
+                },
+                "concurrencyPolicy": {
+                  "type": "string",
+                  "enum": [
+                    "Allow",
+                    "Forbid",
+                    "Replace"
+                  ],
+                  "description": "treatment of concurrent job executions. See https://kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/#concurrency-policy"
                 }
               }
             },
@@ -863,6 +873,10 @@
         "tls": {
           "description": "",
           "$ref": "#/definitions/dtapValue" },
+        "insecure": {
+          "description": "Set to true to allow HTTPS connections with less secure ciphers to your ingress for old clients",
+          "type": "boolean"
+        },
         "priority": {
           "type": "number"
         }
