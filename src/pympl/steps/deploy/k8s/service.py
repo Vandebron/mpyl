@@ -3,11 +3,12 @@ from typing import Dict
 
 from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1PodTemplateSpec, V1ObjectMeta, V1PodSpec, \
     V1DeploymentStrategy, V1RollingUpdateDeployment, V1LabelSelector, V1ContainerPort, V1EnvVar, V1Ingress, \
-    V1IngressSpec, V1IngressRule, V1Service, V1ServiceSpec, V1ServicePort
+    V1IngressSpec, V1IngressRule, V1Service, V1ServiceSpec, V1ServicePort, V1Probe
 from ruamel.yaml import YAML
 
 from ...models import Input
 from ....project import Project
+from ....target import Target
 
 yaml = YAML()
 
@@ -36,11 +37,13 @@ class ServiceDeployment:
     step_input: Input
     project: Project
     mappings: dict[int, int]
+    target: Target
 
     def __init__(self, step_input: Input):
         self.step_input = step_input
         self.project = self.step_input.project
         self.mappings = self.project.kubernetes.portMappings
+        self.target = step_input.build_properties.target
 
     def _get_labels(self) -> Dict:
         build_properties = self.step_input.build_properties
@@ -80,18 +83,40 @@ class ServiceDeployment:
         if deployment is None:
             raise AttributeError("deployment field should be set")
 
+        kubernetes = deployment.kubernetes
+        if kubernetes is None:
+            raise AttributeError("deployment.kubernetes field should be set")
+
         ports = list(map(lambda key: V1ContainerPort(container_port=key, host_port=self.mappings[key], protocol="TCP"),
                          self.mappings.keys()))
 
-        env_vars = list(map(lambda e: V1EnvVar(e.key, e.get_value(self.step_input.build_properties.target)),
-                            deployment.properties.env))
+        env_vars = list(map(lambda e: V1EnvVar(e.key, e.get_value(self.target)), deployment.properties.env))
+
+        startup_probe_defaults = {
+            'initialDelaySeconds': 4,  # 0 - We expect service to rarely be up within 4 secs.
+            'periodSeconds': 2,  # 10 - We want the service to become available as soon as possible
+            'timeoutSeconds': 3,  # 1 - If the app is very busy during the startup stage, 1 second might be too fast
+            'successThreshold': 1,  # 1 - We want the service to become available as soon as possible
+            'failureThreshold': 60  # 3 - 4 + 60 * 2 = more than 2 minutes
+        }
+
+        liveness_probe_defaults = {
+            'periodSeconds': 30,  # 10
+            'timeoutSeconds': 20,  # 1 - Busy apps may momentarily have long timeouts
+            'successThreshold': 1,  # 1
+            'failureThreshold': 3  # 3
+        }
 
         container = V1Container(
             name=self.project.name,
             image=self.step_input.docker_image_tag(),
             env=env_vars,
             ports=ports,
-            image_pull_policy="Always"
+            image_pull_policy="Always",
+            liveness_probe=kubernetes.livenessProbe.to_probe(liveness_probe_defaults,
+                                                             self.target) if kubernetes.livenessProbe else None,
+            startup_probe=kubernetes.startupProbe.to_probe(startup_probe_defaults,
+                                                           self.target) if kubernetes.startupProbe else None
         )
 
         return V1Deployment(

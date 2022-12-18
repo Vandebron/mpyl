@@ -36,6 +36,12 @@ spec:
         - name: SOME_ENV
         image: dockertest:pr-1234
         imagePullPolicy: Always
+        livenessProbe:
+          failureThreshold: 99
+          httpGet: /health
+          periodSeconds: 30
+          successThreshold: 0
+          timeoutSeconds: 20
         name: dockertest
         ports:
         - containerPort: 8080

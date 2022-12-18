@@ -11,14 +11,14 @@ class K8sTestCase(unittest.TestCase):
     resource_path = root_test_path / "test_resources"
     template_path = root_test_path / "steps" / "deploy" / "k8s" / "chart" / "templates"
 
-    def roundtrip(self, bla: str, resource: object, overwrite: bool = False):
+    def roundtrip(self, file_name: str, resource: object, overwrite: bool = False):
         as_yaml = to_yaml(resource)
         if overwrite:
-            with(open(bla, 'w+')) as f:
+            with(open(file_name, 'w+')) as f:
                 f.write(as_yaml)
                 self.assertEqual(overwrite, False)
 
-        with open(bla) as f:
+        with open(file_name) as f:
             self.assertEqual(f.read(), as_yaml, "Should not commit with overwrite")
 
     def test_deployment(self):

@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Optional, TypeVar, Dict, Any
 
 import jsonschema
+from kubernetes.client import V1Probe, ApiClient
 from mypy.checker import Generic
 from ruamel.yaml import YAML
 
@@ -110,11 +111,19 @@ class Properties:
 @dataclass(frozen=True)
 class Probe:
     path: TargetSpecificProperty[str]
+    values: dict
+
+    def to_probe(self, defaults: dict, target: Target) -> V1Probe:
+        defaults.update(self.values)
+        probe: V1Probe = ApiClient()._ApiClient__deserialize(defaults, V1Probe)
+        path = self.path.get_value(target)
+        probe.http_get = '/health' if path is None else path
+        return probe
 
     @staticmethod
     def from_yaml(values: dict):
         path = values['path']
-        return Probe(path=TargetSpecificProperty.from_yaml(path))
+        return Probe(path=TargetSpecificProperty.from_yaml(path), values=values)
 
 
 @dataclass(frozen=True)
@@ -130,15 +139,18 @@ class Metrics:
 @dataclass(frozen=True)
 class Kubernetes:
     portMappings: dict[int, int]
+    startupProbe: Optional[Probe]
     livenessProbe: Optional[Probe]
     metrics: Optional[Metrics]
 
     @staticmethod
     def from_yaml(values: dict):
         mappings = values.get('portMappings')
+        startup_probe = values.get('startupProbe')
         liveness_probe = values.get('livenessProbe')
         metrics = values.get('metrics')
         return Kubernetes(portMappings=mappings if mappings else {},
+                          startupProbe=Probe.from_yaml(startup_probe) if startup_probe else None,
                           livenessProbe=Probe.from_yaml(liveness_probe) if liveness_probe else None,
                           metrics=Metrics.from_yaml(metrics) if metrics else None)
 
