@@ -78,6 +78,10 @@ class ServiceDeployment:
     def to_ingress(self) -> V1Ingress:
         return V1Ingress(metadata=self._to_object_meta(), spec=V1IngressSpec(rules=[V1IngressRule()]))
 
+    def to_chart(self) -> dict[str, str]:
+        return {'deployment': to_yaml(self.to_deployment()), 'service': to_yaml(self.to_service()),
+                'ingress': to_yaml(self.to_ingress())}
+
     def to_deployment(self) -> V1Deployment:
         deployment = self.project.deployment
         if deployment is None:

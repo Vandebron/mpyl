@@ -10,6 +10,7 @@ gitpython = "==3.1.29"
 docker = "==6.0.1"
 "ruamel.yaml" = "==0.17.21"
 kubernetes = "==25.3.0"
+pyhelm = "==2.14.5"
 
 [dev-packages]
 toml = "==0.10.2"
