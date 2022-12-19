@@ -1,11 +1,13 @@
+import shutil
 import subprocess
 from logging import Logger
 from pathlib import Path
 
 from ....project import Project
 
+# TODO: interpolate version info
 chart = """
-apiVersion: v2
+apiVersion: v3
 name: service
 description: A helm chart used by the MPL pipeline
 type: application
@@ -23,15 +25,17 @@ def custom_check_output(command: str):
 
 
 def install(logger: Logger, project: Project, name_space: str, chart_path: Path, templates: dict[str, str]) -> str:
-    Path(chart_path).mkdir(parents=True, exist_ok=True)
+    shutil.rmtree(chart_path)
+    template_path = chart_path / "templates"
+    Path(template_path).mkdir(parents=True, exist_ok=True)
 
     with open(chart_path / "Chart.yaml", mode='w+') as file:
         file.write(chart)
     with open(chart_path / "values.yaml", mode='w+') as file:
-        file.write("")
+        file.write("# This file is intentionally left empty. All values in /templates have been pre-interpolated")
 
     for k, v in templates.items():
-        with open(chart_path / "templates" / str(k), mode='w+') as file:
+        with open(template_path / str(k), mode='w+') as file:
             file.write(v)
     command = f"helm upgrade -i {project.name.lower()} -n {name_space} {chart_path}"
     logger.info(command)
