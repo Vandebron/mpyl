@@ -1,6 +1,55 @@
-name: service
-description: "A service"
-maintainer: ["Marketplace", "EV Home"]
+name: 'service'
+description: 'This is a test container. For testing the MPL pipelines, not to be deployed anywhere.'
 stages:
-  build: "Docker Build"
-  deploy: "Kubernetes Deploy"
+  build: Docker Build
+  deploy: Kubernetes Deploy
+maintainer: [ 'Marketplace', 'Energy Trading' ]
+build:
+  args:
+    plain:
+      - key: SOME_ENV
+        test: "Test"
+        acceptance: "Acceptance"
+        production: "Production"
+dependencies:
+  build:
+    - 'test/docker/'
+deployment:
+  properties:
+    env:
+      - key: SOME_ENV
+        test: "Test"
+        acceptance: "Acceptance"
+        production: "Production"
+  kubernetes:
+    livenessProbe:
+      path:
+        all: /health
+      successThreshold: 0
+      failureThreshold: 99
+    portMappings:
+      8080: 8080
+    metrics:
+      enabled: false
+    resources:
+      instances:
+        all: 1
+      limit:
+        cpus:
+          all: 0.5
+        mem:
+          all: 1024
+  traefik:
+    hosts:
+      - host:
+          pr: "Host(`payments-{PR-NUMBER}.test.vdbinfra.nl`)"
+          test: "Host(`payments.test.vdbinfra.nl`)"
+          acceptance: "Host(`payments.acceptance1.vdbinfra.nl`)"
+          production: "Host(`payments.vandebron.nl`)"
+        tls:
+          all: "le-custom-prod-wildcard-cert"
+        insecure: true
+      - host:
+          all: "Host(`some.other.host.com`)"
+        servicePort: 4091
+        priority: 1000

@@ -19,8 +19,11 @@ deployment:
   properties:
     env:
       - key: SOME_ENV
+        pr: "PullRequest"
         test: "Test"
         acceptance: "Acceptance"
+        production: "Production"
+      - key: PROD_ONLY_ENV
         production: "Production"
     sealedSecret:
       - key: SOME_SECRET_ENV
