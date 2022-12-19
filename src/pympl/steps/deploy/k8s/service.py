@@ -3,7 +3,7 @@ from typing import Dict
 
 from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1PodTemplateSpec, V1ObjectMeta, V1PodSpec, \
     V1DeploymentStrategy, V1RollingUpdateDeployment, V1LabelSelector, V1ContainerPort, V1EnvVar, V1Ingress, \
-    V1IngressSpec, V1IngressRule, V1Service, V1ServiceSpec, V1ServicePort, V1Probe
+    V1IngressSpec, V1IngressRule, V1Service, V1ServiceSpec, V1ServicePort, V1ServiceAccount, V1LocalObjectReference
 from ruamel.yaml import YAML
 
 from ...models import Input
@@ -38,28 +38,32 @@ class ServiceDeployment:
     project: Project
     mappings: dict[int, int]
     target: Target
+    release_name: str
 
     def __init__(self, step_input: Input):
         self.step_input = step_input
         self.project = self.step_input.project
         self.mappings = self.project.kubernetes.portMappings
         self.target = step_input.build_properties.target
+        self.release_name = self.project.name.lower()
 
     def _get_labels(self) -> Dict:
         build_properties = self.step_input.build_properties
-        app_labels = {"name": self.project.name}
+        app_labels = {'name': self.project.name, 'app.kubernetes.io/version': 'pr-1234',
+                      'app.kubernetes.io/managed-by': 'Helm', 'app.kubernetes.io/name': self.release_name,
+                      'app.kubernetes.io/instance': self.release_name}
 
         if len(self.project.maintainer) > 0:
-            app_labels["maintainers"] = ".".join(self.project.maintainer).replace(' ', '_')
+            app_labels['maintainers'] = ".".join(self.project.maintainer).replace(' ', '_')
             app_labels["maintainer"] = self.project.maintainer[0].replace(' ', '_')
 
         if build_properties.git.tag:
-            app_labels["version"] = build_properties.git.tag
+            app_labels['version'] = build_properties.git.tag
         elif build_properties.git.pr_number:
-            app_labels["version"] = build_properties.git.pr_number
+            app_labels['version'] = build_properties.git.pr_number
 
         if build_properties.git.revision:
-            app_labels["revision"] = build_properties.git.revision
+            app_labels['revision'] = build_properties.git.revision
 
         return app_labels
 
@@ -78,9 +82,13 @@ class ServiceDeployment:
     def to_ingress(self) -> V1Ingress:
         return V1Ingress(metadata=self._to_object_meta(), spec=V1IngressSpec(rules=[V1IngressRule()]))
 
+    def to_service_account(self) -> V1ServiceAccount:
+        return V1ServiceAccount(api_version="v1", kind="ServiceAccount", metadata=self._to_object_meta(),
+                                image_pull_secrets=[V1LocalObjectReference("bigdataregistry")])
+
     def to_chart(self) -> dict[str, str]:
-        return {'deployment': to_yaml(self.to_deployment()), 'service': to_yaml(self.to_service()),
-                'ingress': to_yaml(self.to_ingress())}
+        return {'deployment': to_yaml(self.to_deployment()), 'serviceaccount': to_yaml(self.to_service_account()),
+                'service': to_yaml(self.to_service()), 'ingress': to_yaml(self.to_ingress())}
 
     def to_deployment(self) -> V1Deployment:
         deployment = self.project.deployment
@@ -94,7 +102,8 @@ class ServiceDeployment:
         ports = list(map(lambda key: V1ContainerPort(container_port=key, host_port=self.mappings[key], protocol="TCP"),
                          self.mappings.keys()))
 
-        env_vars = list(map(lambda e: V1EnvVar(e.key, e.get_value(self.target)), deployment.properties.env))
+        env_vars = list(filter(lambda v: v.value, map(lambda e: V1EnvVar(name=e.key, value=e.get_value(self.target)),
+                                                      deployment.properties.env))) if deployment.properties else []
 
         startup_probe_defaults = {
             'initialDelaySeconds': 4,  # 0 - We expect service to rarely be up within 4 secs.
@@ -126,18 +135,18 @@ class ServiceDeployment:
         return V1Deployment(
             api_version="apps/v1",
             kind="Deployment",
-            metadata=V1ObjectMeta(annotations=self._get_annotations(), name=self.project.name,
+            metadata=V1ObjectMeta(annotations=self._get_annotations(), name=self.release_name,
                                   labels=self._get_labels()),
             spec=V1DeploymentSpec(
                 template=V1PodTemplateSpec(
                     metadata=self._to_object_meta(),
-                    spec=V1PodSpec(containers=[container], service_account=self.project.name,
-                                   service_account_name=self.project.name),
+                    spec=V1PodSpec(containers=[container], service_account=self.release_name,
+                                   service_account_name=self.release_name),
                 ),
                 strategy=V1DeploymentStrategy(
                     rolling_update=V1RollingUpdateDeployment(max_surge="25%", max_unavailable="25%"),
                     type="RollingUpdate"),
-                selector=V1LabelSelector(match_labels={"app.kubernetes.io/instance": self.project.name,
-                                                       "app.kubernetes.io/name": self.project.name}),
+                selector=V1LabelSelector(match_labels={"app.kubernetes.io/instance": self.release_name,
+                                                       "app.kubernetes.io/name": self.release_name}),
             ),
         )
