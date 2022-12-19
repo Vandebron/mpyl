@@ -115,6 +115,7 @@ class Probe:
 
     def to_probe(self, defaults: dict, target: Target) -> V1Probe:
         defaults.update(self.values)
+        #TODO: centralize deserialization logic
         probe: V1Probe = ApiClient()._ApiClient__deserialize(defaults, V1Probe)
         path = self.path.get_value(target)
         probe.http_get = V1HTTPGetAction(path='/health' if path is None else path, port='port-0')
