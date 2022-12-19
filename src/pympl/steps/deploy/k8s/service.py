@@ -47,8 +47,9 @@ class ServiceDeployment:
         self.target = step_input.build_properties.target
         self.release_name = self.project.name.lower()
 
-    def _get_labels(self) -> Dict:
+    def _to_labels(self) -> Dict:
         build_properties = self.step_input.build_properties
+        #TODO: extract version from build properties
         app_labels = {'name': self.project.name, 'app.kubernetes.io/version': 'pr-1234',
                       'app.kubernetes.io/managed-by': 'Helm', 'app.kubernetes.io/name': self.release_name,
                       'app.kubernetes.io/instance': self.release_name}
@@ -67,17 +68,23 @@ class ServiceDeployment:
 
         return app_labels
 
-    def _get_annotations(self) -> Dict:
+    def _to_annotations(self) -> Dict:
         return {'description': self.project.description}
 
     def _to_object_meta(self):
-        return V1ObjectMeta(name=self.project.name, labels=self._get_labels())
+        return V1ObjectMeta(name=self.project.name, labels=self._to_labels())
+
+    def _to_selector(self):
+        return V1LabelSelector(match_labels={"app.kubernetes.io/instance": self.release_name,
+                                             "app.kubernetes.io/name": self.release_name})
 
     def to_service(self) -> V1Service:
         service_ports = list(map(lambda key: V1ServicePort(port=key, target_port=self.mappings[key], protocol="TCP",
                                                            name=f"{key}-webservice-port"), self.mappings.keys()))
 
-        return V1Service(metadata=self._to_object_meta(), spec=V1ServiceSpec(type="ClusterIP", ports=service_ports))
+        return V1Service(api_version='v1', kind='Service', metadata=self._to_object_meta(),
+                         spec=V1ServiceSpec(type="ClusterIP", ports=service_ports,
+                                            selector=self._to_selector().match_labels))
 
     def to_ingress(self) -> V1Ingress:
         return V1Ingress(metadata=self._to_object_meta(), spec=V1IngressSpec(rules=[V1IngressRule()]))
@@ -88,7 +95,7 @@ class ServiceDeployment:
 
     def to_chart(self) -> dict[str, str]:
         return {'deployment': to_yaml(self.to_deployment()), 'serviceaccount': to_yaml(self.to_service_account()),
-                'service': to_yaml(self.to_service()), 'ingress': to_yaml(self.to_ingress())}
+                'service': to_yaml(self.to_service())}
 
     def to_deployment(self) -> V1Deployment:
         deployment = self.project.deployment
@@ -135,8 +142,8 @@ class ServiceDeployment:
         return V1Deployment(
             api_version="apps/v1",
             kind="Deployment",
-            metadata=V1ObjectMeta(annotations=self._get_annotations(), name=self.release_name,
-                                  labels=self._get_labels()),
+            metadata=V1ObjectMeta(annotations=self._to_annotations(), name=self.release_name,
+                                  labels=self._to_labels()),
             spec=V1DeploymentSpec(
                 template=V1PodTemplateSpec(
                     metadata=self._to_object_meta(),
@@ -146,7 +153,6 @@ class ServiceDeployment:
                 strategy=V1DeploymentStrategy(
                     rolling_update=V1RollingUpdateDeployment(max_surge="25%", max_unavailable="25%"),
                     type="RollingUpdate"),
-                selector=V1LabelSelector(match_labels={"app.kubernetes.io/instance": self.release_name,
-                                                       "app.kubernetes.io/name": self.release_name}),
+                selector=self._to_selector(),
             ),
         )
