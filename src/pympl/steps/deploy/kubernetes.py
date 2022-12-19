@@ -1,12 +1,14 @@
 from logging import Logger
 from pathlib import Path
 
-from .k8s.service import ServiceDeployment, to_yaml
+from kubernetes import config, client
+
+from .k8s import helm
+from .k8s.rancher import rancher_namespace_metadata
+from .k8s.service import ServiceDeployment
 from ..models import Meta, Input, Output, ArtifactType
 from ..step import Step
 from ...stage import Stage
-from pyhelm.chartbuilder import ChartBuilder
-from pyhelm.tiller import Tiller
 
 
 class DeployKubernetes(Step):
@@ -26,15 +28,22 @@ class DeployKubernetes(Step):
 
         templates = dep.to_chart()
 
-        chart_path = Path(step_input.project.target_path) / "chart" / "templates"
-        Path(chart_path).mkdir(parents=True, exist_ok=True)
+        chart_path = Path(step_input.project.target_path) / "chart"
 
-        for k, v in templates.items():
-            with open(chart_path / str(k), mode='w+') as file:
-                file.write(v)
+        config.load_kube_config()
+        v1 = client.CoreV1Api()
 
-        chart = ChartBuilder({"name": step_input.project.name, "source": {"type": "directory", "location": chart_path}})
+        namespace = f'pr-{step_input.build_properties.git.pr_number}'
+        meta_data = rancher_namespace_metadata(namespace, step_input.build_properties.target)
 
-        self._logger.info(chart.dump())
+        namespaces = v1.list_namespace(field_selector=f'metadata.name={namespace}')
+        if len(namespaces.items) == 0:
+            v1.create_namespace(
+                client.V1Namespace(api_version='v1', kind='Namespace', metadata=meta_data))
+        else:
+            self._logger.info(f"Found namespace {namespace}")
+
+        helm_logs = helm.install(self._logger, step_input.project, namespace, chart_path, templates)
+        self._logger.info(helm_logs)
 
         return Output(success=True, message=f"Deployed project {step_input.project.name}")
