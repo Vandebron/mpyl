@@ -64,7 +64,8 @@
           "enum": [
             "Sbt Build",
             "Docker Build",
-            "Skip Build"
+            "Skip Build",
+            "Echo Build"
           ]
         },
         "test": {

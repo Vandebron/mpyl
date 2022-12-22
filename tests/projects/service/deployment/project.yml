@@ -3,4 +3,5 @@ description: "A service"
 maintainer: ["Marketplace", "EV Home"]
 stages:
   build: "Docker Build"
+  test: "Sbt Test"
   deploy: "Echo Deploy"

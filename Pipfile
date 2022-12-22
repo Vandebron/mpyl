@@ -9,6 +9,7 @@ mypy = "==0.991"
 gitpython = "==3.1.29"
 docker = "==6.0.1"
 "ruamel.yaml" = "==0.17.21"
+prefect = "==2.7.3"
 
 [dev-packages]
 toml = "==0.10.2"

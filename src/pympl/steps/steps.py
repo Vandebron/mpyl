@@ -8,6 +8,7 @@ from .build.echo import BuildEcho
 from .deploy.echo import DeployEcho
 from .models import Output, Input, BuildProperties, ArtifactType, Artifact
 from .step import Step
+from .test.sbt import SbtTest
 from ..project import Project
 from ..stage import Stage
 
@@ -20,7 +21,7 @@ class Steps:
 
     def __init__(self, logger: Logger) -> None:
         self._logger = logger
-        self._step_executors = {BuildEcho(logger), DeployEcho(logger), BuildDocker(logger)}
+        self._step_executors = {BuildEcho(logger), DeployEcho(logger), BuildDocker(logger), SbtTest(logger)}
         for step in self._step_executors:
             self._logger.debug(f"Registered executor ${step.meta.name}")
 
