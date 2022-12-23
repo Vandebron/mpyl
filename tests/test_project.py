@@ -21,6 +21,9 @@ class TestMplSchema(unittest.TestCase):
         self.assertEqual(simple_env.get_value(Target.ACCEPTANCE), 'Acceptance')
         self.assertEqual(simple_env.get_value(Target.PRODUCTION), 'Production')
 
+        secret_env = [x for x in project.deployment.properties.sealedSecret if x.key == 'SOME_SECRET_ENV'].pop()
+        self.assertTrue(secret_env.get_value(Target.PULL_REQUEST).startswith('AgCA5/qvMMp'))
+
         self.assertEqual(project.dependencies.build, {'test/docker/'})
         self.assertEqual(project.dependencies.test, set())
 
