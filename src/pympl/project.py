@@ -102,10 +102,13 @@ class Env:
 @dataclass(frozen=True)
 class Properties:
     env: list[KeyValueProperty]
+    sealedSecret: list[KeyValueProperty]
 
     @staticmethod
     def from_yaml(values: Dict[Any, Any]):
-        return Properties(env=list(map(lambda v: KeyValueProperty.from_yaml(v), values.get('env', []))))
+        return Properties(env=list(map(lambda v: KeyValueProperty.from_yaml(v), values.get('env', []))),
+                          sealedSecret=list(
+                              map(lambda v: KeyValueProperty.from_yaml(v), values.get('sealedSecret', []))))
 
 
 @dataclass(frozen=True)
@@ -115,7 +118,7 @@ class Probe:
 
     def to_probe(self, defaults: dict, target: Target) -> V1Probe:
         defaults.update(self.values)
-        #TODO: centralize deserialization logic
+        # TODO: centralize deserialization logic
         probe: V1Probe = ApiClient()._ApiClient__deserialize(defaults, V1Probe)
         path = self.path.get_value(target)
         probe.http_get = V1HTTPGetAction(path='/health' if path is None else path, port='port-0')
@@ -140,19 +143,19 @@ class Metrics:
 @dataclass(frozen=True)
 class Kubernetes:
     portMappings: dict[int, int]
-    startupProbe: Optional[Probe]
     livenessProbe: Optional[Probe]
+    startupProbe: Optional[Probe]
     metrics: Optional[Metrics]
 
     @staticmethod
     def from_yaml(values: dict):
         mappings = values.get('portMappings')
-        startup_probe = values.get('startupProbe')
         liveness_probe = values.get('livenessProbe')
+        startup_probe = values.get('startupProbe')
         metrics = values.get('metrics')
         return Kubernetes(portMappings=mappings if mappings else {},
-                          startupProbe=Probe.from_yaml(startup_probe) if startup_probe else None,
                           livenessProbe=Probe.from_yaml(liveness_probe) if liveness_probe else None,
+                          startupProbe=Probe.from_yaml(startup_probe) if startup_probe else None,
                           metrics=Metrics.from_yaml(metrics) if metrics else None)
 
 
