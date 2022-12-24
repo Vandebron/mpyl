@@ -43,6 +43,12 @@ spec:
       - env:
         - name: SOME_ENV
           value: PullRequest
+        - name: SOME_SECRET_ENV
+          valueFrom:
+            secretKeyRef:
+              key: SOME_SECRET_ENV
+              name: dockertest
+              optional: false
         image: dockertest:pr-1234
         imagePullPolicy: Always
         livenessProbe:

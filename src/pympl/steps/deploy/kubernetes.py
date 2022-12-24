@@ -5,7 +5,7 @@ from kubernetes import config, client
 
 from .k8s import helm
 from .k8s.rancher import rancher_namespace_metadata
-from .k8s.service import ServiceDeployment
+from .k8s.service import ServiceChart
 from ..models import Meta, Input, Output, ArtifactType
 from ..step import Step
 from ...stage import Stage
@@ -24,7 +24,7 @@ class DeployKubernetes(Step):
     def execute(self, step_input: Input) -> Output:
         self._logger.info(f"Deploying project {step_input.project.name}")
 
-        dep = ServiceDeployment(step_input)
+        dep = ServiceChart(step_input)
 
         templates = dep.to_chart()
 

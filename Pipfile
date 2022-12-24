@@ -18,6 +18,7 @@ types-jsonschema = "==4.17.0.1"
 types-pyyaml = "==6.0.12.2"
 twine = "==4.0.1"
 rich = "==12.5.1"
+types-six = "==1.16.21.4"
 
 [requires]
 python_version = "3.9"
