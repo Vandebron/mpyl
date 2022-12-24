@@ -9,6 +9,8 @@ mypy = "==0.991"
 gitpython = "==3.1.29"
 docker = "==6.0.1"
 "ruamel.yaml" = "==0.17.21"
+kubernetes = "==25.3.0"
+pyhelm = "==2.14.5"
 
 [dev-packages]
 toml = "==0.10.2"
@@ -16,6 +18,7 @@ types-jsonschema = "==4.17.0.1"
 types-pyyaml = "==6.0.12.2"
 twine = "==4.0.1"
 rich = "==12.5.1"
+types-six = "==1.16.21.4"
 
 [requires]
 python_version = "3.9"

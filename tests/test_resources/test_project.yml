@@ -1,170 +1,65 @@
-name: nginx
-description: "A proxy server that handles requests to Vandebron website ((main.)vandebron.nl) and forwards them to respective front-end and back-end services"
-maintainer: ["Marketplace", "EV Home"]
+name: 'dockertest'
+description: 'This is a test container. For testing the MPL pipelines, not to be deployed anywhere.'
 stages:
-  build: "Docker Build"
+  build: Docker Build
+  test: Docker Test
   deploy: Kubernetes Deploy
+maintainer: [ 'Marketplace', 'Energy Trading' ]
+build:
+  args:
+    plain:
+      - key: SOME_ENV
+        test: "Test"
+        acceptance: "Acceptance"
+        production: "Production"
+dependencies:
+  build:
+    - 'test/docker/'
 deployment:
-  namespace: "webapps"
   properties:
     env:
-      - key: ENV_MAIN_WEBSITE_LOCATION
-        all: "http://main-website.{namespace}.svc.cluster.local:4050"
-      - key: ENV_ANGULAR_LOCATION
-        all: "http://angular.{namespace}.svc.cluster.local:9091"
-      - key: ENV_ENERGY_DASHBOARD_LOCATION
-        all: "http://energy-dashboard.{namespace}.svc.cluster.local:4082"
-      - key: ENV_ADMIN_DASHBOARD_LOCATION
-        all: "http://admin-dashboard.{namespace}.svc.cluster.local:4085"
-      - key: ENV_CUSTOMER_DASHBOARD_LOCATION
-        all: "http://customer-dashboard.{namespace}.svc.cluster.local:4086"
-      - key: ENV_EV_DASHBOARD_LOCATION
-        all: "http://ev-dashboard.{namespace}.svc.cluster.local:4083"
-      - key: ENV_PRODUCER_DASHBOARD_LOCATION
-        all: "http://producer-dashboard.{namespace}.svc.cluster.local:4081"
-      - key: ENV_SALES_DASHBOARD_LOCATION
-        all: "http://sales-dashboard.{namespace}.svc.cluster.local:4084"
-      - key: ENV_SERVER_NAME
-        pr: "test-{PR-NUMBER}.test.vdbinfra.nl"
-        test: "test.vdbinfra.nl"
-        acceptance: "acceptance.vdbinfra.nl"
-        production: "vandebron.nl"
-      - key: ENV_API_LOCATION
-        all: "http://api.{namespace}.svc.cluster.local:8080"
-      - key: ENV_API_OUTAGE_LOCATION
-        all: "http://producers.{namespace}.svc.cluster.local:8094"
-      - key: ENV_API_PRICING_LOCATION
-        all: "http://pricing.{namespace}.svc.cluster.local:8093"
-      - key: ENV_API_CHARGE_POINT_LOCATION
-        all: "http://batterypackcharge-point-api.marathon.l4lb.thisdcos.directory:8092"
-      - key: ENV_API_VALIDATION_LOCATION
-        all: "http://validation.{namespace}.svc.cluster.local:8082"
-      - key: ENV_API_HTMLTOPDF_FACADE_LOCATION
-        all: "http://htmlToPdfFacade.{namespace}.svc.cluster.local:8081"
-      - key: ENV_API_DISCOUNTS_LOCATION
-        all: "http://discounts.{namespace}.svc.cluster.local:8095"
-      - key: ENV_API_INVOICES_LOCATION
-        all: "http://invoices.{namespace}.svc.cluster.local:8087"
-      - key: ENV_KEYCLOAK_FACADE_LOCATION
-        all: "http://keyCloakFacade.{namespace}.svc.cluster.local:8091"
-      - key: ENV_API_EV_LOCATION
-        all: "http://ev.{namespace}.svc.cluster.local:8090"
-      - key: ENV_API_CUSTOMERS_LOCATION
-        all: "http://customers.{namespace}.svc.cluster.local:8096"
-      - key: ENV_API_ENERGY_CONSUMERS_LOCATION
-        all: "http://energyConsumers.{namespace}.svc.cluster.local:8098"
-      - key: ENV_API_SALESFORCE_PRICEBOOK_LOCATION
-        all: "http://salesforce-pricebook.{namespace}.svc.cluster.local:8100"
-      - key: ENV_API_OFFERINGS_LOCATION
-        all: "http://offerings.{namespace}.svc.cluster.local:8101"
-      - key: ENV_API_CONTENT_LOCATION
-        all: "http://content.{namespace}.svc.cluster.local:8015"
-      - key: ENV_API_UPVOTY_AUTH_LOCATION
-        all: "http://upvotyAuth.{namespace}.svc.cluster.local:8103"
-      - key: ENV_IS_LOCAL
-        all: "false"
-      - key: ENV_NGINX_CONF_FOLDER
-        all: "/etc/nginx"
-    vault:
-      - key: ENV_CONTENTFUL_BEARER_TOKEN
-        path: "website/contentful/bearer_token"
-      - key: ENV_CONTENTFUL_PREVIEW_BEARER_TOKEN
-        path: "website/contentful/preview_bearer_token"
-      - key: ENV_KLANTENVERTELLEN_AUTH_TOKEN
-        path: "website/klantenvertellen/auth_token"
-      - key: ENV_ESSENT_SOLAR_ADVICE_AUTH_TOKEN
-        path: "essent/solar-advice/auth_token"
+      - key: SOME_ENV
+        pr: "PullRequest"
+        test: "Test"
+        acceptance: "Acceptance"
+        production: "Production"
+      - key: PROD_ONLY_ENV
+        production: "Production"
+    sealedSecret:
+      - key: SOME_SECRET_ENV
+        pr: "AgCA5/qvMMp/qOyXA62f/4k89gB9vk/G9pwLzMwUH9ytqP97ml9V7+shq01Khkgz638uJz8UTff92cU2iq3yLAiElAEdQb0lwBCvG7qMXSeTkmCpZVJc8+oLbAC2m6IX3qXYFiOzwCrvrFiyPf1vxZGMcedJf0+13938yFyrPnnCH+DZGLReFWtJfp5POcvktaz9tv4kAz4LCvvwvFgPVeO3fxM2PDnegvbX7K2ojwftaFoyu0rOBylQaUsMGZd9KcFxuPnY6RXSrGh5lbyFHRZRy3RtrsWGy7Vh/vwMRjeHM3ORN4WeLQXpCRpvegD7bngXmR9yFuuD9FLDw/Wapllhv1sRX4uP2C9Fghdp005g/8iQ8IUHbC/7Rp967xs9YU6UO3kIURCQabvXpmDQ7kNbAcnDjilBY4WR8Wcsu3KJRA6dcpiZhhuQ7JbKNtySGhnRtzDuamuFUXTx8qkiegB0I8Db7Fd9K2I4bOuqhHoEgp9miQEWkd60rO5vcOqeuGzZE12ZN8XB8Iq4/QRWWafl8pjKrDf+r9ASFHUt2eAnvzK6GkGrZzZ2NRCew2csPU5V0iodkHZL+OpKQQ181J7YuJ4spziyOkzIBRRGwkrxfLmVAt5r6B5gcSsU30iOkHmbSgE37uDJAiSJmsnkzrkWARTKzEYGgvJcxKxI0ftsx5SggHCItSdnKlNBQ23bSTTdCKM1kJe0eHWHKg=="
+        test: "AgCA5/qvMMp/qOyXA62f/4k89gB9vk/G9pwLzMwUH9ytqP97ml9V7+shq01Khkgz638uJz8UTff92cU2iq3yLAiElAEdQb0lwBCvG7qMXSeTkmCpZVJc8+oLbAC2m6IX3qXYFiOzwCrvrFiyPf1vxZGMcedJf0+13938yFyrPnnCH+DZGLReFWtJfp5POcvktaz9tv4kAz4LCvvwvFgPVeO3fxM2PDnegvbX7K2ojwftaFoyu0rOBylQaUsMGZd9KcFxuPnY6RXSrGh5lbyFHRZRy3RtrsWGy7Vh/vwMRjeHM3ORN4WeLQXpCRpvegD7bngXmR9yFuuD9FLDw/Wapllhv1sRX4uP2C9Fghdp005g/8iQ8IUHbC/7Rp967xs9YU6UO3kIURCQabvXpmDQ7kNbAcnDjilBY4WR8Wcsu3KJRA6dcpiZhhuQ7JbKNtySGhnRtzDuamuFUXTx8qkiegB0I8Db7Fd9K2I4bOuqhHoEgp9miQEWkd60rO5vcOqeuGzZE12ZN8XB8Iq4/QRWWafl8pjKrDf+r9ASFHUt2eAnvzK6GkGrZzZ2NRCew2csPU5V0iodkHZL+OpKQQ181J7YuJ4spziyOkzIBRRGwkrxfLmVAt5r6B5gcSsU30iOkHmbSgE37uDJAiSJmsnkzrkWARTKzEYGgvJcxKxI0ftsx5SggHCItSdnKlNBQ23bSTTdCKM1kJe0eHWHKg=="
+        acceptance: "Acceptance"
+        production: "Production"
   kubernetes:
-    resources:
-      instances:
-        pr: 1
-        test: 1
-        acceptance: 4
-        production: 4
-      request:
-        mem:
-          pr: 32
-          test: 32
-          acceptance: 32
-          production: 64
-        cpus:
-          pr: 0.05
-          test: 0.05
-          acceptance: 0.05
-          production: 0.1
-      limit:
-        mem:
-          all: 256
-        cpus:
-          all: 0.5
-    labels:
-      - key: traefik.frontend.rule
-        pr: "HostRegexp: {subdomain:(sales|bewindvoering|ev|mijn|nom|vrienden|werkenbij|www|blog){1}}.webapps-nginx-gateway.test-backend.vdbinfra.nl, webapps-nginx-gateway.test-backend.vdbinfra.nl"
-        test: "HostRegexp: {subdomain:(sales|bewindvoering|ev|mijn|nom|vrienden|werkenbij|www|blog){1}}.test.vdbinfra.nl, test.vdbinfra.nl"
-        acceptance: "HostRegexp: {subdomain:(sales|bewindvoering|ev|mijn|nom|vrienden|werkenbij|www|blog){1}}.acceptance.vdbinfra.nl, acceptance.vdbinfra.nl"
-        production: "HostRegexp: {subdomain:(sales|bewindvoering|ev|mijn|nom|vrienden|werkenbij|www|blog){1}}.vandebron.nl, vandebron.nl"
-      - key: traefik.frontend.entryPoints
-        all: "https"
-    portMappings:
-      9090: 80
-      9091: 84
     livenessProbe:
       path:
         all: /health
+      successThreshold: 0
+      failureThreshold: 99
+    portMappings:
+      8080: 8080
     metrics:
       enabled: false
+    resources:
+      instances:
+        all: 1
+      limit:
+        cpus:
+          all: 0.5
+        mem:
+          all: 1024
   traefik:
     hosts:
       - host:
-          pr: "HostRegexp(`{subdomain:(bewindvoering|ev|mijn|nom|vrienden|werkenbij|www|blog){1}}.test-{PR-NUMBER}.test.vdbinfra.nl`, `test-{PR-NUMBER}.test.vdbinfra.nl`)"
-          test: "HostRegexp(`{subdomain:(bewindvoering|ev|mijn|nom|vrienden|werkenbij|www|blog){1}}.test.vdbinfra.nl`, `test.vdbinfra.nl`)"
-          acceptance: "HostRegexp(`{subdomain:(bewindvoering|ev|mijn|nom|vrienden|werkenbij|www|blog){1}}.acceptance.vdbinfra.nl`, `acceptance.vdbinfra.nl`)"
-          production: "HostRegexp(`{subdomain:(bewindvoering|ev|mijn|nom|vrienden|werkenbij|www|blog){1}}.vandebron.nl`, `vandebron.nl`)"
+          pr: "Host(`payments-{PR-NUMBER}.test.vdbinfra.nl`)"
+          test: "Host(`payments.test.vdbinfra.nl`)"
+          acceptance: "Host(`payments.acceptance1.vdbinfra.nl`)"
+          production: "Host(`payments.vandebron.nl`)"
         tls:
-          pr: "le-production-frontend-wildcard-cert"
-          test: "le-production-frontend-wildcard-cert"
-          acceptance: "le-production-frontend-wildcard-cert"
-          production: "globalsign-vandebron-cert"
-        whitelists:
-          pr:
-            - "NAT-Gateway-Service"
-            - "Salesforce"
-            - "K8s-Test"
-          test:
-            - "NAT-Gateway-Service"
-            - "Salesforce"
-            - "K8s-Test"
-          acceptance:
-            - "NAT-Gateway-Service"
-            - "Salesforce"
-            - "K8s-Acceptance"
-          production:
-            - "Outside-World"
+          all: "le-custom-prod-wildcard-cert"
+        insecure: true
       - host:
-          pr: "Host(`sales.test-{PR-NUMBER}.test.vdbinfra.nl`)"
-          test: "Host(`sales.test.vdbinfra.nl`)"
-          acceptance: "Host(`sales.acceptance.vdbinfra.nl`)"
-          production: "Host(`sales.vdbinfra.nl`)"
-        tls:
-          pr: "le-production-frontend-wildcard-cert"
-          test: "le-production-frontend-wildcard-cert"
-          acceptance: "le-production-frontend-wildcard-cert"
-          production: "globalsign-vdbinfra-wildcard-cert"
-        whitelists:
-          pr:
-            - "NAT-Gateway-Service"
-          test:
-            - "NAT-Gateway-Service"
-          acceptance:
-            - "NAT-Gateway-Service"
-          production:
-            - "Outside-World"
-dependencies:
-  build:
-    - apps/
-    - server/
-    - nginx-gateway/
-    - client
-  deploy:
-    - apps/
-    - server/
+          all: "Host(`some.other.host.com`)"
+        servicePort: 4091
+        priority: 1000

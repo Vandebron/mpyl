@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: dockertest
+    app.kubernetes.io/version: pr-1234
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: dockertest
+    app.kubernetes.io/instance: dockertest
+    maintainers: Marketplace.Energy_Trading
+    maintainer: Marketplace
+    version: '1234'
+    revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
+  name: dockertest
+spec:
+  ports:
+  - name: 8080-webservice-port
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app.kubernetes.io/instance: dockertest
+    app.kubernetes.io/name: dockertest
+  type: ClusterIP
