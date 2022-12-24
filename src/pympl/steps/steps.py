@@ -6,6 +6,7 @@ from ruamel.yaml import YAML  # type: ignore
 from .build.dockerbuild import BuildDocker
 from .build.echo import BuildEcho
 from .deploy.echo import DeployEcho
+from .deploy.kubernetes import DeployKubernetes
 from .models import Output, Input, BuildProperties, ArtifactType, Artifact
 from .step import Step
 from ..project import Project
@@ -20,7 +21,7 @@ class Steps:
 
     def __init__(self, logger: Logger) -> None:
         self._logger = logger
-        self._step_executors = {BuildEcho(logger), DeployEcho(logger), BuildDocker(logger)}
+        self._step_executors = {BuildEcho(logger), DeployEcho(logger), BuildDocker(logger), DeployKubernetes(logger)}
         for step in self._step_executors:
             self._logger.debug(f"Registered executor ${step.meta.name}")
 
@@ -72,5 +73,7 @@ class Steps:
                 self._logger.warning(
                     f"Execution of '{executor.meta.name}' for project '{project.name}' in stage {stage} "
                     f"failed with  exception: '{e}' ")
+        else:
+            self._logger.warning(f"No executor found for {stage_name} in stage {stage}")
 
         return Output(success=False, message=f"Executor {stage.value} not defined on project {project.name}")
