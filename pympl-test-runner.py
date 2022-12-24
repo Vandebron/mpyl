@@ -39,9 +39,11 @@ def deploy_project(project: Project):
     return execute_step(project, Stage.DEPLOY)
 
 
-@op
-def deploy_projects(outputs: list[Output]):
-    print(f"Deploying {outputs}")
+@op(out=DynamicOut())
+def deploy_projects(projects: list[Project], outputs: list[Output]):
+    for proj in projects:
+        result = execute_step(proj, Stage.DEPLOY)
+        yield DynamicOutput(result, mapping_key=f"deployed_{proj.name}")
 
 
 @op(out=DynamicOut())
@@ -59,4 +61,7 @@ def run_build():
     projects = find_projects()
     build_results = projects.map(build_project)
     projects.map(test_project)
-    deploy_projects(build_results.collect())
+    deploy_projects(
+        projects=projects.collect(),
+        outputs=build_results.collect()
+    )
