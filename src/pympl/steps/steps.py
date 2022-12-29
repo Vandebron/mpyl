@@ -23,7 +23,7 @@ class Steps:
         self._logger = logger
         self._step_executors = {BuildEcho(logger), DeployEcho(logger), BuildDocker(logger), DeployKubernetes(logger)}
         for step in self._step_executors:
-            self._logger.debug(f"Registered executor ${step.meta.name}")
+            self._logger.debug(f"Registered executor '{step.meta.name}'")
 
     def _find_executor(self, stage: Stage, step_name: str) -> Optional[Step]:
         executors = filter(lambda e: e.meta.stage == stage and step_name == e.meta.name, self._step_executors)
