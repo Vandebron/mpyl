@@ -25,7 +25,7 @@ def custom_check_output(command: str):
 
 
 def install(logger: Logger, project: Project, name_space: str, chart_path: Path, templates: dict[str, str]) -> str:
-    shutil.rmtree(chart_path)
+    shutil.rmtree(chart_path, ignore_errors=True)
     template_path = chart_path / "templates"
     Path(template_path).mkdir(parents=True, exist_ok=True)
 
