@@ -33,7 +33,8 @@ class AfterBuildDocker(Step):
         docker_config = DockerConfig(step_input.build_properties.config)
 
         self._logger.info(f"Logging in with user '{docker_config.user_name}'")
-        client.login(username=docker_config.user_name)
+        client.login(username=docker_config.user_name, password=docker_config.password,
+                     registry=f'https://{docker_config.host_name}')
         full_image_path = Path(docker_config.host_name, image_name)
         client.images.get(image_name).tag(full_image_path)
         client.images.push(full_image_path)
