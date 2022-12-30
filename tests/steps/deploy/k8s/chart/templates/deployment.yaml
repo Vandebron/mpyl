@@ -49,7 +49,7 @@ spec:
               key: SOME_SECRET_ENV
               name: dockertest
               optional: false
-        image: dockertest:pr-1234
+        image: registry/image:123
         imagePullPolicy: Always
         livenessProbe:
           failureThreshold: 99

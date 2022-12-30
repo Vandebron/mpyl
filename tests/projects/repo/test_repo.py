@@ -1,6 +1,6 @@
 import unittest
 
-from ruamel.yaml import YAML
+from pyaml_env import parse_config
 
 from src.pympl.repo import RepoConfig
 from src.pympl.repo import Repository
@@ -20,11 +20,9 @@ class RepoTestCase(unittest.TestCase):
         self.assertTrue(changes_in_commit.issubset(changes_in_branch))
 
     def test_load_config(self):
-        yaml_path = self.resource_path / "config.yml"
-        with open(yaml_path) as f:
-            yaml = YAML()
-            yaml_values = yaml.load(f)
-            config = RepoConfig(yaml_values)
+        yaml_values = parse_config(self.resource_path / "config.yml")
+        config = RepoConfig(yaml_values)
+        self.assertEqual(config.main_branch, 'main')
 
 
 if __name__ == '__main__':

@@ -3,5 +3,8 @@ cvs:
     main_branch: 'main'
   github:
     repository: 'Vandebron/pympl'
-
-
+docker:
+  registry:
+    host_name: 'bigdataregistry.azurecr.io'
+    user_name: !ENV ${DOCKER_REGISTRY_USERNAME:user}
+    password: !ENV ${DOCKER_REGISTRY_PASSWORD:password}
