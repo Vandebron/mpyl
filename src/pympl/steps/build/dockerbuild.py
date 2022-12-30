@@ -1,37 +1,23 @@
 from logging import Logger
-from typing import Dict
 
 from docker import APIClient  # type: ignore
 
+from .docker_after_build import AfterBuildDocker
 from ..models import Meta, Input, Output, Artifact, ArtifactType
 from ..step import Step
 from ...stage import Stage
 
 
-class DockerConfig:
-    host_name: str
-    user_name: str
-    password: str
-
-    def __init__(self, config: Dict):
-        try:
-            registry: dict = config['docker']['registry']
-            self.host_name = registry['host_name']
-            self.user_name = registry['user_name']
-            self.password = registry['password']
-        except KeyError:
-            raise KeyError(f'Docker config could not be loaded from {config}')
-
-
 class BuildDocker(Step):
 
     def __init__(self, logger: Logger) -> None:
-        super().__init__(logger, Meta(
+        super().__init__(logger=logger, meta=Meta(
             name='Docker Build',
-            description='Build docker image and push to registry',
+            description='Build docker image',
             version='0.0.1',
             stage=Stage.BUILD
-        ), ArtifactType.DOCKER_IMAGE, ArtifactType.NONE)
+        ), produced_artifact=ArtifactType.DOCKER_IMAGE, required_artifact=ArtifactType.NONE,
+                         after=AfterBuildDocker(logger=logger))
 
     def __log_docker_output(self, generator, task_name: str = 'docker command execution') -> None:
         while True:

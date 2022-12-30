@@ -69,6 +69,8 @@ class Steps:
                 artifact: Optional[Artifact] = self._find_required_artifact(project, executor)
 
                 result = self._execute(executor, project, self._properties, artifact)
+                if executor.after:
+                    result = self._execute(executor.after, project, self._properties, result.produced_artifact)
                 result.write(project.target_path, stage)
                 return result
             except Exception as e:
