@@ -36,10 +36,10 @@ class Steps:
         result = executor.execute(Input(project, properties, required_artifact=artifact))
         if result.success:
             self._logger.info(
-                f"Execution of {executor.meta.name} succeeded for '{project.name}' with outcome {result.message}")
+                f"Execution of {executor.meta.name} succeeded for '{project.name}' with outcome '{result.message}'")
         else:
             self._logger.warning(
-                f"Execution of {executor.meta.name} failed for '{project.name}' with outcome {result.message}")
+                f"Execution of {executor.meta.name} failed for '{project.name}' with outcome '{result.message}'")
         return result
 
     @staticmethod
@@ -70,7 +70,8 @@ class Steps:
 
                 result = self._execute(executor, project, self._properties, artifact)
                 if executor.after:
-                    result = self._execute(executor.after, project, self._properties, result.produced_artifact)
+                    executor = executor.after
+                    result = self._execute(executor, project, self._properties, result.produced_artifact)
                 result.write(project.target_path, stage)
                 return result
             except Exception as e:
