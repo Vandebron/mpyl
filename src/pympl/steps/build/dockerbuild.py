@@ -2,6 +2,7 @@ from logging import Logger
 
 from docker import APIClient  # type: ignore
 
+from .docker_after_build import AfterBuildDocker
 from ..models import Meta, Input, Output, Artifact, ArtifactType
 from ..step import Step
 from ...stage import Stage
@@ -10,12 +11,13 @@ from ...stage import Stage
 class BuildDocker(Step):
 
     def __init__(self, logger: Logger) -> None:
-        super().__init__(logger, Meta(
+        super().__init__(logger=logger, meta=Meta(
             name='Docker Build',
-            description='Build docker image and push to registry',
+            description='Build docker image',
             version='0.0.1',
             stage=Stage.BUILD
-        ), ArtifactType.DOCKER_IMAGE, ArtifactType.NONE)
+        ), produced_artifact=ArtifactType.DOCKER_IMAGE, required_artifact=ArtifactType.NONE,
+                         after=AfterBuildDocker(logger=logger))
 
     def __log_docker_output(self, generator, task_name: str = 'docker command execution') -> None:
         while True:
@@ -39,6 +41,6 @@ class BuildDocker(Step):
                                       rm=True, target="installer", decode=True)
         self.__log_docker_output(logs)
 
-        artifact = Artifact(ArtifactType.DOCKER_IMAGE, step_input.build_properties.git.revision, self.meta.name,
+        artifact = Artifact(ArtifactType.DOCKER_IMAGE, step_input.build_properties.versioning.revision, self.meta.name,
                             {'image': step_input.docker_image_tag()})
         return Output(success=True, message=f"Built {step_input.project.name}", produced_artifact=artifact)

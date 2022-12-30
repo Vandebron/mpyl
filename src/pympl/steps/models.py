@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict
 
 from ..project import Project
 from ..stage import Stage
@@ -17,13 +17,26 @@ class VersioningProperties:
     pr_number: Optional[str]
     tag: Optional[str]
 
+    @property
+    def identifier(self):
+        return f'pr-{self.pr_number}' if self.pr_number else self.tag
+
 
 @yaml_object(yaml)
 @dataclass(frozen=True)
 class BuildProperties:
     build_id: str
     target: Target
-    git: VersioningProperties
+    versioning: VersioningProperties
+    config: dict
+
+    @staticmethod
+    def from_configuration(build_properties: Dict, config: Dict):
+        build = build_properties['build']
+        versioning = build['versioning']
+        return BuildProperties(build_id=build['run']['id'], target=Target(build['parameters']['deploy_target']),
+                               versioning=VersioningProperties(versioning['revision'], versioning.get('pr_number'),
+                                                               versioning.get('tag')), config=config)
 
 
 @yaml_object(yaml)
@@ -64,9 +77,9 @@ class Input:
     required_artifact: Optional[Artifact] = None
 
     def docker_image_tag(self):
-        git = self.build_properties.git
+        git = self.build_properties.versioning
         tag = f"pr-{git.pr_number}" if git.pr_number else git.tag
-        return f"{self.project.name.lower()}:{tag}"
+        return f"{self.project.name.lower()}:{tag}".replace('/', '_')
 
 
 @yaml_object(yaml)

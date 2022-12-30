@@ -1,7 +1,10 @@
 import unittest
 from pathlib import Path
 
+from pyaml_env import parse_config
+
 from src.pympl.project import load_project
+from src.pympl.steps.build import DockerConfig
 from src.pympl.steps.deploy.k8s.service import ServiceChart
 from src.pympl.steps.models import Input, BuildProperties, VersioningProperties
 from src.pympl.target import Target
@@ -26,8 +29,13 @@ class K8sTestCase(unittest.TestCase):
     def _build_chart(self):
         project = load_project("", str(self.resource_path / "test_project.yml"), False)
         properties = BuildProperties("id", Target.PULL_REQUEST,
-                                     VersioningProperties("2ad3293a7675d08bc037ef0846ef55897f38ec8f", "1234", None))
-        return ServiceChart(step_input=Input(project, properties, None)).to_chart()
+                                     VersioningProperties("2ad3293a7675d08bc037ef0846ef55897f38ec8f", "1234", None), {})
+        return ServiceChart(step_input=Input(project, properties, None), image_name='registry/image:123').to_chart()
+
+    def test_load_config(self):
+        yaml_values = parse_config(self.resource_path / "config.yml")
+        config = DockerConfig(yaml_values)
+        self.assertEqual(config.host_name, 'bigdataregistry.azurecr.io')
 
     def test_deployment(self):
         sd = self._build_chart()

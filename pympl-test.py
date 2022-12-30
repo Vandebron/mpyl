@@ -1,6 +1,6 @@
 from logging import Logger
 
-import yaml
+from pyaml_env import parse_config
 
 from src.pympl.project import load_project
 from src.pympl.repo import Repository, RepoConfig, History
@@ -27,13 +27,13 @@ def main(repo: Repository, log: Logger):
     log.info(
         f" Post deploy stage: {len(find_invalidated_projects_for_stage(repo, Stage.POST_DEPLOY, changes_in_branch))}")
     all_projects = list(map(lambda p: load_project(".", p, False), project_paths))
-    executor = Steps(logger=log)
+    build_props = BuildProperties("1", Target.PULL_REQUEST, VersioningProperties(repo.get_sha, "1234", None), {})
+    executor = Steps(logger=log, properties=build_props)
     log.info(" Building projects")
-    build_props = BuildProperties("1", Target.PULL_REQUEST, VersioningProperties(repo.get_sha, "1234", None))
     for proj in find_invalidated_projects_for_stage(repo, Stage.BUILD, changes_in_branch):
-        executor.execute(Stage.BUILD, proj, build_props)
+        executor.execute(Stage.BUILD, proj)
     for proj in find_invalidated_projects_for_stage(repo, Stage.DEPLOY, changes_in_branch):
-        executor.execute(Stage.DEPLOY, proj, build_props)
+        executor.execute(Stage.DEPLOY, proj)
 
 
 if __name__ == "__main__":
@@ -43,6 +43,5 @@ if __name__ == "__main__":
         handlers=[RichHandler(markup=True, console=Console(width=255), show_path=True)]
     )
 
-    with open("config.yml") as f:
-        yaml_values = yaml.load(f, Loader=yaml.FullLoader)
-        main(Repository(RepoConfig(yaml_values)), logging.getLogger("mpl"))
+    yaml_values = parse_config("config.yml")
+    main(Repository(RepoConfig(yaml_values)), logging.getLogger("mpl"))
