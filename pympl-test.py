@@ -45,3 +45,4 @@ if __name__ == "__main__":
 
     yaml_values = parse_config("config.yml")
     main(Repository(RepoConfig(yaml_values)), logging.getLogger("mpl"))
+
