@@ -4,6 +4,12 @@
 
 The aim of this tool is to be a better version of https://github.com/Vandebron/mpl-modules
 
+## Run instructions
+
+```shell
+dagit --workspace ./workspace.yml 
+```
+
 ## Proposed implementation
 
 - Usability
