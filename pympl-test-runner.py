@@ -6,9 +6,8 @@ from pyaml_env import parse_config
 from src.pympl.project import load_project, Project
 from src.pympl.repo import Repository, RepoConfig
 from src.pympl.stage import Stage
-from src.pympl.steps.models import BuildProperties, VersioningProperties, Output as MplOutput
+from src.pympl.steps.models import BuildProperties, Output as MplOutput
 from src.pympl.steps.steps import Steps
-from src.pympl.target import Target
 
 
 @dataclass

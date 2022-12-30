@@ -77,7 +77,7 @@ class Steps:
             except Exception as e:
                 self._logger.warning(
                     f"Execution of '{executor.meta.name}' for project '{project.name}' in stage {stage} "
-                    f"failed with  exception: '{e}' ")
+                    f"failed with exception: '{e}' ")
         else:
             self._logger.warning(f"No executor found for {stage_name} in stage {stage}")
 
