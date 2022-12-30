@@ -1,7 +1,7 @@
 from logging import Logger
 from pathlib import Path
 
-import docker
+from docker import DockerClient
 
 from . import DockerConfig
 from ..models import Meta, Input, Output, Artifact, ArtifactType
@@ -25,21 +25,19 @@ class AfterBuildDocker(Step):
             self._logger.warn("After docker has image required artifact")
             return Output(success=False, message=f"After docker has image required artifact {step_input.project.name}")
 
-        client = docker.from_env()
+        client = DockerClient.from_env()
 
         image_name = built_image.spec['image']
         self._logger.debug(f'Image to publish: {image_name}')
 
         docker_config = DockerConfig(step_input.build_properties.config)
 
-        client.login(
-            username=docker_config.user_name,
-            password=docker_config.password,
-            registry=docker_config.host_name
-        )
+        self._logger.info(f"Logging in with user '{docker_config.user_name}'")
+        client.login(username=docker_config.user_name)
         full_image_path = Path(docker_config.host_name, image_name)
+        client.images.get(image_name).tag(full_image_path)
         client.images.push(full_image_path)
 
-        artifact = Artifact(ArtifactType.DOCKER_IMAGE, step_input.build_properties.git.revision, self.meta.name,
+        artifact = Artifact(ArtifactType.DOCKER_IMAGE, step_input.build_properties.versioning.revision, self.meta.name,
                             {'image': full_image_path})
         return Output(success=True, message=f"Pushed {full_image_path}", produced_artifact=artifact)

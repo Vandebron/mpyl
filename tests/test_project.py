@@ -39,6 +39,10 @@ class TestMplSchema(unittest.TestCase):
         with self.assertRaises(ValidationError):
             load_project("", str(self.resource_path / "test_project_invalid.yml"))
 
+    def test_target_by_value(self):
+        target = Target('PullRequest')
+        self.assertEqual(target, Target.PULL_REQUEST)
+
 
 if __name__ == '__main__':
     unittest.main()
