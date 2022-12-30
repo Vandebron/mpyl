@@ -1,4 +1,6 @@
 # Modular Pipelines in Python
+![build-and-test-module](https://github.com/Vandebron/pympl/actions/workflows/build-package.yml/badge.svg?branch=main)
+![version](https://img.shields.io/github/v/tag/Vandebron/pympl.svg?color=blue&include_prereleases=&sort=semver)
 
 The aim of this tool is to be a better version of https://github.com/Vandebron/mpl-modules
 
