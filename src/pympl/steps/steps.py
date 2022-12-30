@@ -1,5 +1,5 @@
 from logging import Logger
-from typing import Optional
+from typing import Optional, Dict
 
 from ruamel.yaml import YAML  # type: ignore
 
@@ -18,10 +18,12 @@ yaml = YAML()
 class Steps:
     _step_executors: set[Step]
     _logger: Logger
+    _properties: BuildProperties
 
-    def __init__(self, logger: Logger) -> None:
+    def __init__(self, logger: Logger, properties: BuildProperties) -> None:
         self._logger = logger
         self._step_executors = {BuildEcho(logger), DeployEcho(logger), BuildDocker(logger), DeployKubernetes(logger)}
+        self._properties = properties
         for step in self._step_executors:
             self._logger.debug(f"Registered executor '{step.meta.name}'")
 
@@ -34,10 +36,10 @@ class Steps:
         result = executor.execute(Input(project, properties, required_artifact=artifact))
         if result.success:
             self._logger.info(
-                f"Execution of {executor.meta.name} succeeded for '{project.name}' with outcome {result.message}")
+                f"Execution of {executor.meta.name} succeeded for '{project.name}' with outcome '{result.message}'")
         else:
             self._logger.warning(
-                f"Execution of {executor.meta.name} failed for '{project.name}' with outcome {result.message}")
+                f"Execution of {executor.meta.name} failed for '{project.name}' with outcome '{result.message}'")
         return result
 
     @staticmethod
@@ -56,7 +58,7 @@ class Steps:
             return output.produced_artifact
         return None
 
-    def execute(self, stage: Stage, project: Project, properties: BuildProperties) -> Output:
+    def execute(self, stage: Stage, project: Project) -> Output:
         stage_name = project.stages.for_stage(stage)
         if stage_name is None:
             return Output(success=False, message=f"Stage ${stage.value} not defined on project ${project.name}")
@@ -66,7 +68,10 @@ class Steps:
             try:
                 artifact: Optional[Artifact] = self._find_required_artifact(project, executor)
 
-                result = self._execute(executor, project, properties, artifact)
+                result = self._execute(executor, project, self._properties, artifact)
+                if executor.after:
+                    executor = executor.after
+                    result = self._execute(executor, project, self._properties, result.produced_artifact)
                 result.write(project.target_path, stage)
                 return result
             except Exception as e:
