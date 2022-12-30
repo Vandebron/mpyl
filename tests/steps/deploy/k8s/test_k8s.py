@@ -1,7 +1,7 @@
 import unittest
 from pathlib import Path
 
-from ruamel.yaml import YAML
+from pyaml_env import parse_config
 
 from src.pympl.project import load_project
 from src.pympl.steps.build import DockerConfig
@@ -33,12 +33,10 @@ class K8sTestCase(unittest.TestCase):
         return ServiceChart(step_input=Input(project, properties, None)).to_chart()
 
     def test_load_config(self):
-        yaml_path = self.resource_path / "config.yml"
-        with open(yaml_path) as f:
-            yaml = YAML()
-            yaml_values = yaml.load(f)
-            config = DockerConfig(yaml_values)
-            self.assertEqual(config.host_name, 'bigdataregistry.azurecr.io')
+        yaml_values = parse_config(self.resource_path / "config.yml")
+        config = DockerConfig(yaml_values)
+        self.assertEqual(config.host_name, 'bigdataregistry.azurecr.io')
+        self.assertEqual(config.user_name, 'user')
 
     def test_deployment(self):
         sd = self._build_chart()

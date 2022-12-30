@@ -1,6 +1,6 @@
 from logging import Logger
 
-import yaml
+from pyaml_env import parse_config
 
 from src.pympl.project import load_project
 from src.pympl.repo import Repository, RepoConfig, History
@@ -43,6 +43,5 @@ if __name__ == "__main__":
         handlers=[RichHandler(markup=True, console=Console(width=255), show_path=True)]
     )
 
-    with open("config.yml") as f:
-        yaml_values = yaml.load(f, Loader=yaml.FullLoader)
-        main(Repository(RepoConfig(yaml_values)), logging.getLogger("mpl"))
+    yaml_values = parse_config("config.yml")
+    main(Repository(RepoConfig(yaml_values)), logging.getLogger("mpl"))
