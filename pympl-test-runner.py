@@ -17,11 +17,10 @@ class StepParam:
     project: Project
 
 
-def execute_step(param: Project, stage: Stage) -> MplOutput:
-    proj = param
-    yaml_values = parse_config("config.yml")
-
-    build_props = BuildProperties("1", Target.PULL_REQUEST, VersioningProperties("sha", "1234", None), yaml_values)
+def execute_step(proj: Project, stage: Stage) -> MplOutput:
+    config = parse_config("config.yml")
+    properties = parse_config("build_properties.yml")
+    build_props = BuildProperties.from_configuration(build_properties=properties, config=config)
     executor = Steps(get_dagster_logger(), build_props)
     step_output = executor.execute(stage, proj)
     if not step_output.success:

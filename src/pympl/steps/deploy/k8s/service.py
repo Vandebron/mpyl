@@ -22,8 +22,9 @@ class ServiceChart:
     sealed_secrets: list[KeyValueProperty]
     target: Target
     release_name: str
+    image_name: str
 
-    def __init__(self, step_input: Input):
+    def __init__(self, step_input: Input, image_name: str):
         self.step_input = step_input
         project = self.step_input.project
         self.project = project
@@ -33,11 +34,11 @@ class ServiceChart:
         self.mappings = self.project.kubernetes.portMappings
         self.target = step_input.build_properties.target
         self.release_name = self.project.name.lower()
+        self.image_name = image_name
 
     def _to_labels(self) -> Dict:
         build_properties = self.step_input.build_properties
-        # TODO: extract version from build properties
-        app_labels = {'name': self.project.name, 'app.kubernetes.io/version': 'pr-1234',
+        app_labels = {'name': self.project.name, 'app.kubernetes.io/version': build_properties.versioning.identifier,
                       'app.kubernetes.io/managed-by': 'Helm', 'app.kubernetes.io/name': self.release_name,
                       'app.kubernetes.io/instance': self.release_name}
 
@@ -45,13 +46,13 @@ class ServiceChart:
             app_labels['maintainers'] = ".".join(self.project.maintainer).replace(' ', '_')
             app_labels["maintainer"] = self.project.maintainer[0].replace(' ', '_')
 
-        if build_properties.git.tag:
-            app_labels['version'] = build_properties.git.tag
-        elif build_properties.git.pr_number:
-            app_labels['version'] = build_properties.git.pr_number
+        if build_properties.versioning.tag:
+            app_labels['version'] = build_properties.versioning.tag
+        elif build_properties.versioning.pr_number:
+            app_labels['version'] = build_properties.versioning.pr_number
 
-        if build_properties.git.revision:
-            app_labels['revision'] = build_properties.git.revision
+        if build_properties.versioning.revision:
+            app_labels['revision'] = build_properties.versioning.revision
 
         return app_labels
 
@@ -134,7 +135,7 @@ class ServiceChart:
 
         container = V1Container(
             name=self.project.name,
-            image=self.step_input.docker_image_tag(),
+            image=self.image_name,
             env=env_vars + sealed_secrets,
             ports=ports,
             image_pull_policy="Always",

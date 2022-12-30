@@ -23,8 +23,12 @@ class DeployKubernetes(Step):
 
     def execute(self, step_input: Input) -> Output:
         self._logger.info(f"Deploying project {step_input.project.name}")
+        if not step_input.required_artifact:
+            return Output(success=False, message=f"Step requires artifact of type {self.required_artifact}")
 
-        dep = ServiceChart(step_input)
+        image_name = step_input.required_artifact.spec['image']
+
+        dep = ServiceChart(step_input, image_name)
 
         templates = dep.to_chart()
 
@@ -33,7 +37,7 @@ class DeployKubernetes(Step):
         config.load_kube_config()
         v1 = client.CoreV1Api()
 
-        namespace = f'pr-{step_input.build_properties.git.pr_number}'
+        namespace = f'pr-{step_input.build_properties.versioning.pr_number}'
         meta_data = rancher_namespace_metadata(namespace, step_input.build_properties.target)
 
         namespaces = v1.list_namespace(field_selector=f'metadata.name={namespace}')
