@@ -1,5 +1,5 @@
+import os
 from logging import Logger
-from pathlib import Path
 
 from docker import DockerClient
 
@@ -32,12 +32,20 @@ class AfterBuildDocker(Step):
 
         docker_config = DockerConfig(step_input.build_properties.config)
 
-        self._logger.info(f"Logging in with user '{docker_config.user_name}'")
-        client.login(username=docker_config.user_name, password=docker_config.password,
-                     registry=f'https://{docker_config.host_name}')
-        full_image_path = Path(docker_config.host_name, image_name)
-        client.images.get(image_name).tag(full_image_path)
-        client.images.push(full_image_path)
+        self._logger.info(f"Logging in with user '{docker_config.user_name}', {docker_config.password}")
+        login_result = client.login(username=docker_config.user_name, password=docker_config.password,
+                                    registry=f'https://{docker_config.host_name}')
+        self._logger.debug(f"Docker login result: {login_result}")
+        full_image_path = os.path.join(docker_config.host_name, image_name)
+        tagged = client.images.get(image_name).tag(full_image_path)
+        if tagged:
+            stream = client.images.push(full_image_path, stream=True, decode=True)
+            for line in stream:
+                status = line.get('status')
+                if status:
+                    self._logger.info(status)
+        else:
+            return Output(success=False, message=f"Could not tag {full_image_path}")
 
         artifact = Artifact(ArtifactType.DOCKER_IMAGE, step_input.build_properties.versioning.revision, self.meta.name,
                             {'image': full_image_path})
