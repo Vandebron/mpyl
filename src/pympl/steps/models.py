@@ -17,6 +17,10 @@ class VersioningProperties:
     pr_number: Optional[str]
     tag: Optional[str]
 
+    @property
+    def identifier(self):
+        return f'pr-{self.pr_number}' if self.pr_number else self.tag
+
 
 @yaml_object(yaml)
 @dataclass(frozen=True)

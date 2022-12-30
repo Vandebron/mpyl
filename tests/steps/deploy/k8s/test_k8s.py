@@ -4,7 +4,7 @@ from pathlib import Path
 from ruamel.yaml import YAML
 
 from src.pympl.project import load_project
-from src.pympl.steps.build.dockerbuild import DockerConfig
+from src.pympl.steps.build import DockerConfig
 from src.pympl.steps.deploy.k8s.service import ServiceChart
 from src.pympl.steps.models import Input, BuildProperties, VersioningProperties
 from src.pympl.target import Target
