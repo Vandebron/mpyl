@@ -18,7 +18,8 @@ class Step(object, metaclass=IPluginRegistry):
     produced_artifact: ArtifactType
     required_artifact: ArtifactType
 
-    def __init__(self, logger: Logger, meta: Meta, produced_artifact: ArtifactType, required_artifact: ArtifactType) -> None:
+    def __init__(self, logger: Logger, meta: Meta, produced_artifact: ArtifactType,
+                 required_artifact: ArtifactType) -> None:
         self._logger = logger.getChild(meta.name.replace(' ', ''))
         self.meta = meta
         self.produced_artifact = produced_artifact
