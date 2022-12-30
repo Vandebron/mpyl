@@ -6,5 +6,5 @@ cvs:
 docker:
   registry:
     host_name: 'bigdataregistry.azurecr.io'
-    user_name: '${DOCKER_REGISTRY_USERNAME:-user}'
-    password: '${DOCKER_REGISTRY_PASSWORD:-password}'
+    user_name: !ENV ${DOCKER_REGISTRY_USERNAME:user}
+    password: !ENV ${DOCKER_REGISTRY_PASSWORD:password}
