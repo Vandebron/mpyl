@@ -25,6 +25,7 @@ class RepoTestCase(unittest.TestCase):
             yaml = YAML()
             yaml_values = yaml.load(f)
             config = RepoConfig(yaml_values)
+            self.assertEqual(config.main_branch, 'main')
 
 
 if __name__ == '__main__':

@@ -24,6 +24,7 @@ class BuildProperties:
     build_id: str
     target: Target
     git: VersioningProperties
+    config: dict
 
 
 @yaml_object(yaml)
@@ -66,7 +67,7 @@ class Input:
     def docker_image_tag(self):
         git = self.build_properties.git
         tag = f"pr-{git.pr_number}" if git.pr_number else git.tag
-        return f"{self.project.name.lower()}:{tag}"
+        return f"{self.project.name.lower()}:{tag}".replace('/', '_')
 
 
 @yaml_object(yaml)
