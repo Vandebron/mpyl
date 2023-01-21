@@ -35,14 +35,14 @@ class DeployKubernetes(Step):
         chart_path = Path(step_input.project.target_path) / "chart"
 
         config.load_kube_config()
-        v1 = client.CoreV1Api()
+        api = client.CoreV1Api()
 
         namespace = f'pr-{step_input.build_properties.versioning.pr_number}'
         meta_data = rancher_namespace_metadata(namespace, step_input.build_properties.target)
 
-        namespaces = v1.list_namespace(field_selector=f'metadata.name={namespace}')
+        namespaces = api.list_namespace(field_selector=f'metadata.name={namespace}')
         if len(namespaces.items) == 0:
-            v1.create_namespace(
+            api.create_namespace(
                 client.V1Namespace(api_version='v1', kind='Namespace', metadata=meta_data))
         else:
             self._logger.info(f"Found namespace {namespace}")

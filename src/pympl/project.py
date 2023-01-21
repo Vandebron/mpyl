@@ -1,13 +1,14 @@
 import json
 import logging
 import pkgutil
+import traceback
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, TypeVar, Dict, Any
 
 import jsonschema
 from kubernetes.client import V1Probe, ApiClient, V1HTTPGetAction
-from mypy.checker import Generic
+from mypy.checker import Generic  # pylint: disable = no-name-in-module
 from ruamel.yaml import YAML
 
 from .stage import Stage
@@ -33,8 +34,7 @@ class TargetSpecificProperty(Generic[T]):
             return self.test
         if target == Target.ACCEPTANCE:
             return self.acceptance
-        if target == Target.PRODUCTION:
-            return self.production
+        return self.production
 
     @staticmethod
     def from_yaml(values: dict):
@@ -89,14 +89,14 @@ class Dependencies(StageSpecificProperty[set[str]]):
     @staticmethod
     def from_yaml(values: dict):
         return Dependencies(build=set(values.get('build', [])), test=set(values.get('test', [])),
-                            deploy=set(values.get('deploy', [])), postdeploy=set(values.get('postdeploy', [])))
+                                     deploy=set(values.get('deploy', [])), postdeploy=set(values.get('postdeploy', [])))
 
 
 @dataclass(frozen=True)
 class Env:
     @staticmethod
     def from_yaml(values: list[dict]):
-        return list(map(lambda v: KeyValueProperty.from_yaml(v), values))
+        return list(map(KeyValueProperty.from_yaml, values))
 
 
 @dataclass(frozen=True)
@@ -106,9 +106,9 @@ class Properties:
 
     @staticmethod
     def from_yaml(values: Dict[Any, Any]):
-        return Properties(env=list(map(lambda v: KeyValueProperty.from_yaml(v), values.get('env', []))),
+        return Properties(env=list(map(KeyValueProperty.from_yaml, values.get('env', []))),
                           sealedSecret=list(
-                              map(lambda v: KeyValueProperty.from_yaml(v), values.get('sealedSecret', []))))
+                              map(KeyValueProperty.from_yaml, values.get('sealedSecret', []))))
 
 
 @dataclass(frozen=True)
@@ -182,7 +182,7 @@ class Traefik:
     @staticmethod
     def from_yaml(values: dict):
         hosts = values.get('hosts')
-        return Traefik(hosts=(list(map(lambda h: Host.from_yaml(h), hosts) if hosts else [])))
+        return Traefik(hosts=(list(map(Host.from_yaml, hosts) if hosts else [])))
 
 
 @dataclass(frozen=True)
@@ -254,24 +254,23 @@ class Project:
 
 
 def load_project(root_dir, project_path: str, strict: bool = True) -> Project:
-    with open(f'{root_dir}/{project_path}') as f:
+    with open(f'{root_dir}/{project_path}', encoding='utf-8') as file:
         try:
             yaml = YAML()
-            yaml_values = yaml.load(f)
+            yaml_values = yaml.load(file)
             template = pkgutil.get_data(__name__, "schema/project.schema.json")
             if strict and template:
                 schema = json.loads(template.decode('utf-8'))
                 jsonschema.validate(yaml_values, schema)
 
             return Project.from_yaml(yaml_values, project_path)
-        except jsonschema.exceptions.ValidationError as e:
-            logging.warning(f'{project_path} does not comply with schema: {e.message}')
+        except jsonschema.exceptions.ValidationError as exc:
+            logging.warning(f'{project_path} does not comply with schema: {exc.message}')
             raise
-        except TypeError as e:
-            import traceback
+        except TypeError as exc:
             traceback.print_exc()
-            logging.warning(f'Type error', e)
+            logging.warning('Type error %s', exc)
             raise
-        except Exception as e:
-            logging.warning(f'Failed to load {project_path}', e)
+        except Exception as exc:
+            logging.warning(f'Failed to load {project_path}', exc)
             raise

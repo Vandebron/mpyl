@@ -6,7 +6,7 @@ from pathlib import Path
 from ....project import Project
 
 # TODO: interpolate version info
-chart = """
+CHART = """
 apiVersion: v3
 name: service
 description: A helm chart used by the MPL pipeline
@@ -17,7 +17,7 @@ appVersion: "PR-123"
 
 
 def custom_check_output(command: str):
-    output = subprocess.run(command.split(" "), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output = subprocess.run(command.split(" "), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
     if output.returncode == 0:
         return output.stdout.decode()
 
@@ -29,14 +29,14 @@ def install(logger: Logger, project: Project, name_space: str, chart_path: Path,
     template_path = chart_path / "templates"
     Path(template_path).mkdir(parents=True, exist_ok=True)
 
-    with open(chart_path / "Chart.yaml", mode='w+') as file:
-        file.write(chart)
-    with open(chart_path / "values.yaml", mode='w+') as file:
+    with open(chart_path / "Chart.yaml", mode='w+', encoding='utf8') as file:
+        file.write(CHART)
+    with open(chart_path / "values.yaml", mode='w+', encoding='utf8') as file:
         file.write("# This file is intentionally left empty. All values in /templates have been pre-interpolated")
 
-    for k, v in templates.items():
-        with open(template_path / str(k), mode='w+') as file:
-            file.write(v)
+    for name, template in templates.items():
+        with open(template_path / str(name), mode='w+', encoding='utf8') as file:
+            file.write(template)
     command = f"helm upgrade -i {project.name.lower()} -n {name_space} {chart_path}"
     logger.info(command)
     return custom_check_output(command)

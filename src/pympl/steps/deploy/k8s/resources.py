@@ -1,13 +1,13 @@
 from io import StringIO
 
 import six
-from kubernetes.client import Configuration, V1ObjectMeta, V1EnvVar
+from kubernetes.client import Configuration, V1ObjectMeta
 from ruamel.yaml import YAML
 
 yaml = YAML()
 
 
-class KubernetesResource(object):
+class KubernetesResource:
     openapi_types = {
         'api_version': 'str',
         'kind': 'str',
@@ -121,11 +121,10 @@ def to_yaml(resource: object) -> str:
     def remove_none(obj):
         if isinstance(obj, (list, tuple, set)):
             return type(obj)(remove_none(x) for x in obj if x is not None)
-        elif isinstance(obj, dict):
+        if isinstance(obj, dict):
             return type(obj)((remove_none(k), remove_none(v))
                              for k, v in obj.items() if k is not None and v is not None)
-        else:
-            return obj
+        return obj
 
     resource_dict = to_dict(resource) if (
                 hasattr(resource, "openapi_types") and hasattr(resource, "attribute_map")) else {}

@@ -22,5 +22,5 @@ class DeployEcho(Step):
         if artifact:
             self._logger.info(f"Deploying {artifact.artifact_type} {artifact.spec['image']}")
         else:
-            return Output(success=False, message=f"Required artifact not found", produced_artifact=None)
+            return Output(success=False, message="Required artifact not found", produced_artifact=None)
         return Output(success=True, message=f"Deployed project {step_input.project.name}", produced_artifact=None)
