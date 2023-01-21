@@ -1,5 +1,6 @@
 import unittest
 
+import pytest
 from jsonschema import ValidationError
 
 from src.pympl.project import load_project
@@ -12,36 +13,36 @@ class TestMplSchema(unittest.TestCase):
 
     def test_schema_load(self):
         project = load_project("", str(self.resource_path / "test_project.yml"))
-        self.assertEqual(project.name, 'dockertest')
-        self.assertEqual(project.maintainer, ['Marketplace', 'Energy Trading'])
+        assert project.name == 'dockertest'
+        assert project.maintainer, ['Marketplace' == 'Energy Trading']
         envs = project.deployment.properties.env
 
         simple_env = [x for x in envs if x.key == 'SOME_ENV'].pop()
-        self.assertEqual(simple_env.key, 'SOME_ENV')
-        self.assertEqual(simple_env.get_value(Target.ACCEPTANCE), 'Acceptance')
-        self.assertEqual(simple_env.get_value(Target.PRODUCTION), 'Production')
+        assert simple_env.key == 'SOME_ENV'
+        assert simple_env.get_value(Target.ACCEPTANCE) == 'Acceptance'
+        assert simple_env.get_value(Target.PRODUCTION) == 'Production'
 
         secret_env = [x for x in project.deployment.properties.sealedSecret if x.key == 'SOME_SECRET_ENV'].pop()
-        self.assertTrue(secret_env.get_value(Target.PULL_REQUEST).startswith('AgCA5/qvMMp'))
+        assert secret_env.get_value(Target.PULL_REQUEST).startswith('AgCA5/qvMMp'), "should start with"
 
-        self.assertEqual(project.dependencies.build, {'test/docker/'})
-        self.assertEqual(project.dependencies.test, set())
+        assert project.dependencies.build == {'test/docker/'}
+        assert project.dependencies.test == set()
 
-        self.assertEqual(project.deployment.kubernetes.portMappings, {8080: 8080})
-        self.assertEqual(project.deployment.kubernetes.livenessProbe.path.get_value(Target.ACCEPTANCE), '/health')
-        self.assertEqual(project.deployment.kubernetes.metrics.enabled, False)
+        assert project.deployment.kubernetes.portMappings == {8080: 8080}
+        assert project.deployment.kubernetes.livenessProbe.path.get_value(Target.ACCEPTANCE) == '/health'
+        assert project.deployment.kubernetes.metrics.enabled == False
 
         host = project.deployment.traefik.hosts[0]
-        self.assertEqual(host.host.get_value(Target.PULL_REQUEST_BASE), 'Host(`payments.test.vdbinfra.nl`)')
-        self.assertEqual(host.tls.get_value(Target.PULL_REQUEST_BASE), 'le-custom-prod-wildcard-cert')
+        assert host.host.get_value(Target.PULL_REQUEST_BASE) == 'Host(`payments.test.vdbinfra.nl`)'
+        assert host.tls.get_value(Target.PULL_REQUEST_BASE) == 'le-custom-prod-wildcard-cert'
 
     def test_schema_load_validation(self):
-        with self.assertRaises(ValidationError):
+        with pytest.raises(ValidationError):
             load_project("", str(self.resource_path / "test_project_invalid.yml"))
 
     def test_target_by_value(self):
         target = Target('PullRequest')
-        self.assertEqual(target, Target.PULL_REQUEST)
+        assert target == Target.PULL_REQUEST
 
 
 if __name__ == '__main__':

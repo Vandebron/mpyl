@@ -9,7 +9,7 @@ class ProjectLoadTestCase(unittest.TestCase):
         repo = Repository(RepoConfig({'cvs': {'git': {'main_branch': 'main'}}}))
         projects = load_projects(repo.root_dir(), repo.find_projects())
 
-        self.assertEqual(len(projects), 2)
+        assert len(projects) == 2
 
 
 if __name__ == '__main__':
