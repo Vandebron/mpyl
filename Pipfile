@@ -21,7 +21,7 @@ types-six = "==1.16.21.4"
 dagit = "==1.1.7"
 dagster = "==1.1.7"
 pyaml-env = "==1.2.1"
-pytest = "*"
+pytest = "==7.2.1"
 
 [requires]
 python_version = "3.9"

@@ -23,8 +23,8 @@ class TestDiscovery(unittest.TestCase):
     def test_output_no_artifact_roundtrip(self):
         output: Output = self._roundtrip(Output(success=True, message="build success"))
 
-        self.assertEqual(output.produced_artifact, None)
-        self.assertEqual(output.message, "build success")
+        assert output.produced_artifact is None
+        assert output.message == "build success"
 
     def test_output_roundtrip(self):
         meta_data = {'a': 'b'}
@@ -33,8 +33,8 @@ class TestDiscovery(unittest.TestCase):
                                                                            revision="123",
                                                                            producing_step="Producing Step",
                                                                            spec=meta_data)))
-        self.assertEqual(output.produced_artifact.artifact_type.name, "DOCKER_IMAGE")
-        self.assertEqual(output.produced_artifact.spec, meta_data)
+        assert output.produced_artifact.artifact_type.name == "DOCKER_IMAGE"
+        assert output.produced_artifact.spec == meta_data
 
 
 if __name__ == '__main__':
