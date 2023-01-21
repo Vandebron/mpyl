@@ -17,12 +17,12 @@ class RepoTestCase(unittest.TestCase):
         changes_in_branch = repo.changes_in_branch()
         changes_in_commit = repo.changes_in_commit()
 
-        self.assertTrue(changes_in_commit.issubset(changes_in_branch))
+        assert changes_in_commit.issubset(changes_in_branch), "should be subset"
 
     def test_load_config(self):
         yaml_values = parse_config(self.resource_path / "config.yml")
         config = RepoConfig(yaml_values)
-        self.assertEqual(config.main_branch, 'main')
+        assert config.main_branch == 'main'
 
 
 if __name__ == '__main__':
