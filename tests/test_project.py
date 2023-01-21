@@ -30,7 +30,7 @@ class TestMplSchema(unittest.TestCase):
 
         assert project.deployment.kubernetes.portMappings == {8080: 8080}
         assert project.deployment.kubernetes.livenessProbe.path.get_value(Target.ACCEPTANCE) == '/health'
-        assert project.deployment.kubernetes.metrics.enabled == False
+        assert not project.deployment.kubernetes.metrics.enabled, "metrics should be disabled"
 
         host = project.deployment.traefik.hosts[0]
         assert host.host.get_value(Target.PULL_REQUEST_BASE) == 'Host(`payments.test.vdbinfra.nl`)'
