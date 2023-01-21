@@ -1,6 +1,7 @@
 import unittest
 from pathlib import Path
 
+import pytest
 from pyaml_env import parse_config
 
 from src.pympl.project import load_project
@@ -21,10 +22,10 @@ class K8sTestCase(unittest.TestCase):
         if overwrite:
             with(open(name_chart, 'w+')) as f:
                 f.write(chart_yaml)
-                self.assertEqual(overwrite, False, "Should not commit with overwrite")
+                assert not overwrite, "Should not commit with overwrite"
 
         with open(name_chart) as f:
-            self.assertEqual(f.read(), chart_yaml)
+            assert f.read() == chart_yaml
 
     def _build_chart(self):
         project = load_project("", str(self.resource_path / "test_project.yml"), False)
@@ -35,9 +36,9 @@ class K8sTestCase(unittest.TestCase):
     def test_load_config(self):
         yaml_values = parse_config(self.resource_path / "config.yml")
         config = DockerConfig(yaml_values)
-        self.assertEqual(config.host_name, 'bigdataregistry.azurecr.io')
+        assert config.host_name == 'bigdataregistry.azurecr.io'
 
-    def test_deployment(self):
+    def test_deployments(self):
         sd = self._build_chart()
         self._roundtrip(self.template_path, 'deployment', sd)
 
