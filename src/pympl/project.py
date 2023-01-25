@@ -142,9 +142,9 @@ class Metrics:
 
 @dataclass(frozen=True)
 class Kubernetes:
-    portMappings: dict[int, int]
-    livenessProbe: Optional[Probe]
-    startupProbe: Optional[Probe]
+    port_mappings: dict[int, int]
+    liveness_probe: Optional[Probe]
+    startup_probe: Optional[Probe]
     metrics: Optional[Metrics]
 
     @staticmethod
@@ -153,9 +153,9 @@ class Kubernetes:
         liveness_probe = values.get('livenessProbe')
         startup_probe = values.get('startupProbe')
         metrics = values.get('metrics')
-        return Kubernetes(portMappings=mappings if mappings else {},
-                          livenessProbe=Probe.from_yaml(liveness_probe) if liveness_probe else None,
-                          startupProbe=Probe.from_yaml(startup_probe) if startup_probe else None,
+        return Kubernetes(port_mappings=mappings if mappings else {},
+                          liveness_probe=Probe.from_yaml(liveness_probe) if liveness_probe else None,
+                          startup_probe=Probe.from_yaml(startup_probe) if startup_probe else None,
                           metrics=Metrics.from_yaml(metrics) if metrics else None)
 
 
