@@ -20,6 +20,11 @@ jobs:
         with:
           command: install -d
 
+      - name: Run lint
+        uses: VaultVulp/action-pipenv@v2.0.1
+        with:
+          command: run lint
+
       - name: Install Types
         uses: VaultVulp/action-pipenv@v2.0.1
         with:
