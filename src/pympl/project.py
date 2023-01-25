@@ -270,7 +270,7 @@ def load_project(root_dir, project_path: str, strict: bool = True) -> Project:
         except TypeError as exc:
             import traceback
             traceback.print_exc()
-            logging.warning(f'Type error', exc)
+            logging.warning('Type error', exc)
             raise
         except Exception as exc:
             logging.warning(f'Failed to load {project_path}', exc)
