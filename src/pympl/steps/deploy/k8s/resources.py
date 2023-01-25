@@ -121,11 +121,10 @@ def to_yaml(resource: object) -> str:
     def remove_none(obj):
         if isinstance(obj, (list, tuple, set)):
             return type(obj)(remove_none(x) for x in obj if x is not None)
-        elif isinstance(obj, dict):
+        if isinstance(obj, dict):
             return type(obj)((remove_none(k), remove_none(v))
                              for k, v in obj.items() if k is not None and v is not None)
-        else:
-            return obj
+        return obj
 
     resource_dict = to_dict(resource) if (
                 hasattr(resource, "openapi_types") and hasattr(resource, "attribute_map")) else {}
