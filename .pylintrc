@@ -417,7 +417,12 @@ disable=raw-checker-failed,
         deprecated-pragma,
         use-symbolic-message-instead,
         too-few-public-methods,
-        logging-fstring-interpolation
+        logging-fstring-interpolation,
+        missing-module-docstring,
+        missing-class-docstring,
+        missing-function-docstring
+# TODO: re-enable documentation related lint checks
+
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
