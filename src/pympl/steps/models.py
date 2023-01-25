@@ -3,10 +3,11 @@ from enum import Enum
 from pathlib import Path
 from typing import Optional, Dict
 
+from ruamel.yaml import YAML, yaml_object  # type: ignore
+
 from ..project import Project
 from ..stage import Stage
 from ..target import Target
-from ruamel.yaml import YAML, yaml_object  # type: ignore
 
 yaml = YAML()
 
