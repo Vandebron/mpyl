@@ -29,13 +29,13 @@ def install(logger: Logger, project: Project, name_space: str, chart_path: Path,
     template_path = chart_path / "templates"
     Path(template_path).mkdir(parents=True, exist_ok=True)
 
-    with open(chart_path / "Chart.yaml", mode='w+') as file:
+    with open(chart_path / "Chart.yaml", mode='w+', encoding='utf-8') as file:
         file.write(chart)
-    with open(chart_path / "values.yaml", mode='w+') as file:
+    with open(chart_path / "values.yaml", mode='w+', encoding='utf-8') as file:
         file.write("# This file is intentionally left empty. All values in /templates have been pre-interpolated")
 
     for k, v in templates.items():
-        with open(template_path / str(k), mode='w+') as file:
+        with open(template_path / str(k), mode='w+', encoding='utf-8') as file:
             file.write(v)
     command = f"helm upgrade -i {project.name.lower()} -n {name_space} {chart_path}"
     logger.info(command)
