@@ -264,14 +264,14 @@ def load_project(root_dir, project_path: str, strict: bool = True) -> Project:
                 jsonschema.validate(yaml_values, schema)
 
             return Project.from_yaml(yaml_values, project_path)
-        except jsonschema.exceptions.ValidationError as e:
-            logging.warning(f'{project_path} does not comply with schema: {e.message}')
+        except jsonschema.exceptions.ValidationError as exc:
+            logging.warning(f'{project_path} does not comply with schema: {exc.message}')
             raise
-        except TypeError as e:
+        except TypeError as exc:
             import traceback
             traceback.print_exc()
-            logging.warning(f'Type error', e)
+            logging.warning(f'Type error', exc)
             raise
-        except Exception as e:
-            logging.warning(f'Failed to load {project_path}', e)
+        except Exception as exc:
+            logging.warning(f'Failed to load {project_path}', exc)
             raise
