@@ -6,7 +6,7 @@ from pathlib import Path
 from ....project import Project
 
 # TODO: interpolate version info
-chart = """
+CHART = """
 apiVersion: v3
 name: service
 description: A helm chart used by the MPL pipeline
@@ -30,7 +30,7 @@ def install(logger: Logger, project: Project, name_space: str, chart_path: Path,
     Path(template_path).mkdir(parents=True, exist_ok=True)
 
     with open(chart_path / "Chart.yaml", mode='w+', encoding='utf-8') as file:
-        file.write(chart)
+        file.write(CHART)
     with open(chart_path / "values.yaml", mode='w+', encoding='utf-8') as file:
         file.write("# This file is intentionally left empty. All values in /templates have been pre-interpolated")
 
