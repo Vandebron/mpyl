@@ -28,8 +28,8 @@ class TestMplSchema(unittest.TestCase):
         assert project.dependencies.build == {'test/docker/'}
         assert project.dependencies.test == set()
 
-        assert project.deployment.kubernetes.portMappings == {8080: 8080}
-        assert project.deployment.kubernetes.livenessProbe.path.get_value(Target.ACCEPTANCE) == '/health'
+        assert project.deployment.kubernetes.port_mappings == {8080: 8080}
+        assert project.deployment.kubernetes.liveness_probe.path.get_value(Target.ACCEPTANCE) == '/health'
         assert not project.deployment.kubernetes.metrics.enabled, "metrics should be disabled"
 
         host = project.deployment.traefik.hosts[0]
