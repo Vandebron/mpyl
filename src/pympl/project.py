@@ -96,7 +96,7 @@ class Dependencies(StageSpecificProperty[set[str]]):
 class Env:
     @staticmethod
     def from_yaml(values: list[dict]):
-        return list(map(lambda v: KeyValueProperty.from_yaml(v), values))
+        return list(map(KeyValueProperty.from_yaml, values))
 
 
 @dataclass(frozen=True)
@@ -106,9 +106,9 @@ class Properties:
 
     @staticmethod
     def from_yaml(values: Dict[Any, Any]):
-        return Properties(env=list(map(lambda v: KeyValueProperty.from_yaml(v), values.get('env', []))),
+        return Properties(env=list(map(KeyValueProperty.from_yaml, values.get('env', []))),
                           sealedSecret=list(
-                              map(lambda v: KeyValueProperty.from_yaml(v), values.get('sealedSecret', []))))
+                              map(KeyValueProperty.from_yaml, values.get('sealedSecret', []))))
 
 
 @dataclass(frozen=True)
@@ -182,7 +182,7 @@ class Traefik:
     @staticmethod
     def from_yaml(values: dict):
         hosts = values.get('hosts')
-        return Traefik(hosts=(list(map(lambda h: Host.from_yaml(h), hosts) if hosts else [])))
+        return Traefik(hosts=(list(map(Host.from_yaml, hosts) if hosts else [])))
 
 
 @dataclass(frozen=True)
