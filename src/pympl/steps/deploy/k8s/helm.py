@@ -17,7 +17,7 @@ appVersion: "PR-123"
 
 
 def custom_check_output(command: str):
-    output = subprocess.run(command.split(" "), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output = subprocess.run(command.split(" "), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
     if output.returncode == 0:
         return output.stdout.decode()
 
@@ -34,9 +34,9 @@ def install(logger: Logger, project: Project, name_space: str, chart_path: Path,
     with open(chart_path / "values.yaml", mode='w+', encoding='utf-8') as file:
         file.write("# This file is intentionally left empty. All values in /templates have been pre-interpolated")
 
-    for k, v in templates.items():
-        with open(template_path / str(k), mode='w+', encoding='utf-8') as file:
-            file.write(v)
+    for name, template in templates.items():
+        with open(template_path / str(name), mode='w+', encoding='utf-8') as file:
+            file.write(template)
     command = f"helm upgrade -i {project.name.lower()} -n {name_space} {chart_path}"
     logger.info(command)
     return custom_check_output(command)
