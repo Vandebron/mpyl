@@ -18,12 +18,12 @@ def _roundtrip(file_name: Path, chart: str, as_yaml: dict[str, str], overwrite: 
     name_chart = file_name / f"{chart}.yaml"
     chart_yaml = as_yaml[chart]
     if overwrite:
-        with(open(name_chart, 'w+')) as f:
-            f.write(chart_yaml)
+        with open(name_chart, 'w+', encoding='utf-8') as file:
+            file.write(chart_yaml)
             assert not overwrite, "Should not commit with overwrite"
 
-    with open(name_chart) as f:
-        assert f.read() == chart_yaml
+    with open(name_chart, encoding='utf-8') as file:
+        assert file.read() == chart_yaml
 
 
 def _build_chart():

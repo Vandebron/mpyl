@@ -95,15 +95,15 @@ class Output:
 
     def write(self, target_path: str, stage: Stage):
         Path(target_path).mkdir(parents=True, exist_ok=True)
-        with Output.path(target_path, stage).open(mode='w+') as file:
+        with Output.path(target_path, stage).open(mode='w+', encoding='utf-8') as file:
             yaml.dump(self, file)
 
     @staticmethod
     def try_read(target_path: str, stage: Stage):
         path = Output.path(target_path, stage)
         if path.exists():
-            with open(path) as f:
-                return yaml.load(f)
+            with open(path, encoding='utf-8') as file:
+                return yaml.load(file)
         return None
 
 
