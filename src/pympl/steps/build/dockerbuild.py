@@ -22,7 +22,7 @@ class BuildDocker(Step):
     def __log_docker_output(self, generator, task_name: str = 'docker command execution') -> None:
         while True:
             try:
-                output = generator.__next__()
+                output = next(generator)
                 if 'stream' in output:
                     output_str = output['stream'].strip('\n')
                     self._logger.info(output_str)
