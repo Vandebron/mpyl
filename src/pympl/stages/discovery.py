@@ -9,7 +9,7 @@ def is_invalidated(project: Project, stage: Stage, path: str) -> bool:
     deps = project.dependencies
     deps_for_stage = deps.set_for_stage(stage) if deps else {}
 
-    touched_dependency = next(filter(lambda d: path.startswith(d), deps_for_stage), None) if deps else None
+    touched_dependency = next(filter(path.startswith, deps_for_stage), None) if deps else None
     startswith: bool = path.startswith(project.root_path)
     return startswith or touched_dependency is not None
 
