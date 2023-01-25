@@ -254,10 +254,10 @@ class Project:
 
 
 def load_project(root_dir, project_path: str, strict: bool = True) -> Project:
-    with open(f'{root_dir}/{project_path}') as f:
+    with open(f'{root_dir}/{project_path}', encoding='utf-8') as file:
         try:
             yaml = YAML()
-            yaml_values = yaml.load(f)
+            yaml_values = yaml.load(file)
             template = pkgutil.get_data(__name__, "schema/project.schema.json")
             if strict and template:
                 schema = json.loads(template.decode('utf-8'))
