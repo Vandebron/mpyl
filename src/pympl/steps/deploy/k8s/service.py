@@ -31,7 +31,7 @@ class ServiceChart:
         deployment = project.deployment
         self.env = deployment.properties.env if deployment and deployment.properties.env else []
         self.sealed_secrets = deployment.properties.sealedSecret if deployment and deployment.properties.sealedSecret else []
-        self.mappings = self.project.kubernetes.portMappings
+        self.mappings = self.project.kubernetes.port_mappings
         self.target = step_input.build_properties.target
         self.release_name = self.project.name.lower()
         self.image_name = image_name
@@ -139,10 +139,10 @@ class ServiceChart:
             env=env_vars + sealed_secrets,
             ports=ports,
             image_pull_policy="Always",
-            liveness_probe=kubernetes.livenessProbe.to_probe(liveness_probe_defaults,
-                                                             self.target) if kubernetes.livenessProbe else None,
-            startup_probe=kubernetes.startupProbe.to_probe(startup_probe_defaults,
-                                                           self.target) if kubernetes.startupProbe else None
+            liveness_probe=kubernetes.liveness_probe.to_probe(liveness_probe_defaults,
+                                                              self.target) if kubernetes.liveness_probe else None,
+            startup_probe=kubernetes.startup_probe.to_probe(startup_probe_defaults,
+                                                            self.target) if kubernetes.startup_probe else None
         )
 
         return V1Deployment(
