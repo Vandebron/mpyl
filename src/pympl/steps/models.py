@@ -47,7 +47,7 @@ class ArtifactType(Enum):
         return self.value == other.value
 
     @classmethod
-    def from_yaml(cls, constructor, node):
+    def from_yaml(cls, node):
         return ArtifactType(int(node.value.split('-')[1]))
 
     @classmethod

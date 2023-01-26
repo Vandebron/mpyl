@@ -1,5 +1,5 @@
 from logging import Logger
-from typing import Optional, Dict
+from typing import Optional
 
 from ruamel.yaml import YAML  # type: ignore
 
