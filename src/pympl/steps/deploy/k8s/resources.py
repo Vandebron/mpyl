@@ -1,7 +1,7 @@
 from io import StringIO
 
 import six
-from kubernetes.client import Configuration, V1ObjectMeta, V1EnvVar
+from kubernetes.client import Configuration, V1ObjectMeta
 from ruamel.yaml import YAML
 
 yaml = YAML()
