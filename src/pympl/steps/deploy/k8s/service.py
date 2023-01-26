@@ -30,7 +30,8 @@ class ServiceChart:
         self.project = project
         deployment = project.deployment
         self.env = deployment.properties.env if deployment and deployment.properties.env else []
-        self.sealed_secrets = deployment.properties.sealedSecret if deployment and deployment.properties.sealedSecret else []
+        self.sealed_secrets = deployment.properties.sealedSecret if deployment and deployment.properties.sealedSecret \
+            else []
         self.mappings = self.project.kubernetes.port_mappings
         self.target = step_input.build_properties.target
         self.release_name = self.project.name.lower()

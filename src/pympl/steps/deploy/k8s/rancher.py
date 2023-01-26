@@ -17,6 +17,7 @@ def cluster_config(target: Target):
         return ClusterConfig(cluster_id='c-6mkzg', project_id='p-ckqxz', cluster_env="acce")
     if target == Target.PRODUCTION:
         return ClusterConfig(cluster_id='c-r8bj6', project_id='p-lb52t', cluster_env="prd")
+    return None
 
 
 def rancher_namespace_metadata(namespace: str, target: Target):
