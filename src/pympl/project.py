@@ -1,6 +1,7 @@
 import json
 import logging
 import pkgutil
+import traceback
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, TypeVar, Dict, Any
@@ -35,6 +36,7 @@ class TargetSpecificProperty(Generic[T]):
             return self.acceptance
         if target == Target.PRODUCTION:
             return self.production
+        return None
 
     @staticmethod
     def from_yaml(values: dict):
@@ -268,7 +270,6 @@ def load_project(root_dir, project_path: str, strict: bool = True) -> Project:
             logging.warning(f'{project_path} does not comply with schema: {exc.message}')
             raise
         except TypeError as exc:
-            import traceback
             traceback.print_exc()
             logging.warning('Type error', exc)
             raise
