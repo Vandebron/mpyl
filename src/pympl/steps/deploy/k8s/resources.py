@@ -7,7 +7,7 @@ from ruamel.yaml import YAML
 yaml = YAML()
 
 
-class KubernetesResource(object):
+class KubernetesResource:
     openapi_types = {
         'api_version': 'str',
         'kind': 'str',
