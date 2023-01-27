@@ -74,6 +74,7 @@ class ServiceChart:
 
     @staticmethod
     def _to_probe(probe: Probe, defaults: dict, target: Target) -> V1Probe:
+        defaults.update(probe.values)
         v1_probe: V1Probe = ServiceChart._to_k8s_model(defaults, V1Probe)
         path = probe.path.get_value(target)
         v1_probe.http_get = V1HTTPGetAction(path='/health' if path is None else path, port='port-0')
@@ -131,30 +132,15 @@ class ServiceChart:
             secret_key_ref=V1SecretKeySelector(key=e.key, name=self.release_name, optional=False))),
                                   sealed_for_target))
 
-        startup_probe_defaults = {
-            'initialDelaySeconds': 4,  # 0 - We expect service to rarely be up within 4 secs.
-            'periodSeconds': 2,  # 10 - We want the service to become available as soon as possible
-            'timeoutSeconds': 3,  # 1 - If the app is very busy during the startup stage, 1 second might be too fast
-            'successThreshold': 1,  # 1 - We want the service to become available as soon as possible
-            'failureThreshold': 60  # 3 - 4 + 60 * 2 = more than 2 minutes
-        }
-
-        liveness_probe_defaults = {
-            'periodSeconds': 30,  # 10
-            'timeoutSeconds': 20,  # 1 - Busy apps may momentarily have long timeouts
-            'successThreshold': 1,  # 1
-            'failureThreshold': 3  # 3
-        }
-
         container = V1Container(
             name=self.project.name,
             image=self.image_name,
             env=env_vars + sealed_secrets,
             ports=ports,
             image_pull_policy="Always",
-            liveness_probe=ServiceChart._to_probe(kubernetes.liveness_probe, liveness_probe_defaults,
+            liveness_probe=ServiceChart._to_probe(kubernetes.liveness_probe, Probe.LIVENESS_PROBE_DEFAULTS,
                                                   self.target) if kubernetes.liveness_probe else None,
-            startup_probe=ServiceChart._to_probe(kubernetes.startup_probe, startup_probe_defaults,
+            startup_probe=ServiceChart._to_probe(kubernetes.startup_probe, Probe.STARTUP_PROBE_DEFAULTS,
                                                  self.target) if kubernetes.startup_probe else None
         )
 
