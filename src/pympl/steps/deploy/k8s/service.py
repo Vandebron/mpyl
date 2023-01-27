@@ -3,12 +3,13 @@ from typing import Dict, Optional
 from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1PodTemplateSpec, V1ObjectMeta, V1PodSpec, \
     V1DeploymentStrategy, V1RollingUpdateDeployment, V1LabelSelector, V1ContainerPort, V1EnvVar, V1Ingress, \
     V1IngressSpec, V1IngressRule, V1Service, V1ServiceSpec, V1ServicePort, V1ServiceAccount, V1LocalObjectReference, \
-    V1EnvVarSource, V1SecretKeySelector
+    V1EnvVarSource, V1SecretKeySelector, V1Probe, ApiClient, V1HTTPGetAction
+
 from ruamel.yaml import YAML
 
 from .resources import to_yaml, V1SealedSecret
 from ...models import Input
-from ....project import Project, KeyValueProperty
+from ....project import Project, KeyValueProperty, Probe
 from ....target import Target
 
 yaml = YAML()
@@ -30,8 +31,9 @@ class ServiceChart:
         self.project = project
         deployment = project.deployment
         self.env = deployment.properties.env if deployment and deployment.properties.env else []
-        self.sealed_secrets = deployment.properties.sealedSecret if deployment and deployment.properties.sealedSecret else []
-        self.mappings = self.project.kubernetes.portMappings
+        self.sealed_secrets = deployment.properties.sealed_secret if deployment \
+                                                                     and deployment.properties.sealed_secret else []
+        self.mappings = self.project.kubernetes.port_mappings
         self.target = step_input.build_properties.target
         self.release_name = self.project.name.lower()
         self.image_name = image_name
@@ -65,6 +67,19 @@ class ServiceChart:
     def _to_selector(self):
         return V1LabelSelector(match_labels={"app.kubernetes.io/instance": self.release_name,
                                              "app.kubernetes.io/name": self.release_name})
+
+    @staticmethod
+    def _to_k8s_model(values: dict, model_type):
+        return ApiClient()._ApiClient__deserialize(values, model_type)  # pylint: disable=protected-access
+
+    @staticmethod
+    def _to_probe(probe: Probe, defaults: dict, target: Target) -> V1Probe:
+        values = defaults.copy()
+        values.update(probe.values)
+        v1_probe: V1Probe = ServiceChart._to_k8s_model(values, V1Probe)
+        path = probe.path.get_value(target)
+        v1_probe.http_get = V1HTTPGetAction(path='/health' if path is None else path, port='port-0')
+        return v1_probe
 
     def to_service(self) -> V1Service:
         service_ports = list(map(lambda key: V1ServicePort(port=key, target_port=self.mappings[key], protocol="TCP",
@@ -113,25 +128,10 @@ class ServiceChart:
             filter(lambda v: v.value, map(lambda e: V1EnvVar(name=e.key, value=e.get_value(self.target)), self.env)))
 
         sealed_for_target = list(
-            filter(lambda v: v.get_value(self.target) is not None, deployment.properties.sealedSecret))
+            filter(lambda v: v.get_value(self.target) is not None, deployment.properties.sealed_secret))
         sealed_secrets = list(map(lambda e: V1EnvVar(name=e.key, value_from=V1EnvVarSource(
             secret_key_ref=V1SecretKeySelector(key=e.key, name=self.release_name, optional=False))),
                                   sealed_for_target))
-
-        startup_probe_defaults = {
-            'initialDelaySeconds': 4,  # 0 - We expect service to rarely be up within 4 secs.
-            'periodSeconds': 2,  # 10 - We want the service to become available as soon as possible
-            'timeoutSeconds': 3,  # 1 - If the app is very busy during the startup stage, 1 second might be too fast
-            'successThreshold': 1,  # 1 - We want the service to become available as soon as possible
-            'failureThreshold': 60  # 3 - 4 + 60 * 2 = more than 2 minutes
-        }
-
-        liveness_probe_defaults = {
-            'periodSeconds': 30,  # 10
-            'timeoutSeconds': 20,  # 1 - Busy apps may momentarily have long timeouts
-            'successThreshold': 1,  # 1
-            'failureThreshold': 3  # 3
-        }
 
         container = V1Container(
             name=self.project.name,
@@ -139,10 +139,10 @@ class ServiceChart:
             env=env_vars + sealed_secrets,
             ports=ports,
             image_pull_policy="Always",
-            liveness_probe=kubernetes.livenessProbe.to_probe(liveness_probe_defaults,
-                                                             self.target) if kubernetes.livenessProbe else None,
-            startup_probe=kubernetes.startupProbe.to_probe(startup_probe_defaults,
-                                                           self.target) if kubernetes.startupProbe else None
+            liveness_probe=ServiceChart._to_probe(kubernetes.liveness_probe, Probe.LIVENESS_PROBE_DEFAULTS,
+                                                  self.target) if kubernetes.liveness_probe else None,
+            startup_probe=ServiceChart._to_probe(kubernetes.startup_probe, Probe.STARTUP_PROBE_DEFAULTS,
+                                                 self.target) if kubernetes.startup_probe else None
         )
 
         return V1Deployment(

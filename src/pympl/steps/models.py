@@ -3,10 +3,11 @@ from enum import Enum
 from pathlib import Path
 from typing import Optional, Dict
 
+from ruamel.yaml import YAML, yaml_object  # type: ignore
+
 from ..project import Project
 from ..stage import Stage
 from ..target import Target
-from ruamel.yaml import YAML, yaml_object  # type: ignore
 
 yaml = YAML()
 
@@ -46,14 +47,13 @@ class ArtifactType(Enum):
         return self.value == other.value
 
     @classmethod
-    def from_yaml(cls, constructor, node):
+    def from_yaml(cls, _, node):
         return ArtifactType(int(node.value.split('-')[1]))
 
     @classmethod
     def to_yaml(cls, representer, node):
-        return representer.represent_scalar(u'!ArtifactType',
-                                            '{}-{}'.format(node._name_, node._value_)
-                                            )
+        return representer.represent_scalar('!ArtifactType',
+                                            f'{node._name_}-{node._value_}')  #pylint: disable=protected-access
 
     DOCKER_IMAGE = 1
     JUNIT_TESTS = 2
@@ -95,15 +95,15 @@ class Output:
 
     def write(self, target_path: str, stage: Stage):
         Path(target_path).mkdir(parents=True, exist_ok=True)
-        with Output.path(target_path, stage).open(mode='w+') as file:
+        with Output.path(target_path, stage).open(mode='w+', encoding='utf-8') as file:
             yaml.dump(self, file)
 
     @staticmethod
     def try_read(target_path: str, stage: Stage):
         path = Output.path(target_path, stage)
         if path.exists():
-            with open(path) as f:
-                return yaml.load(f)
+            with open(path, encoding='utf-8') as file:
+                return yaml.load(file)
         return None
 
 

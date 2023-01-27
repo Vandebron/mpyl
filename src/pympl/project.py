@@ -1,12 +1,12 @@
 import json
 import logging
 import pkgutil
+import traceback
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, TypeVar, Dict, Any
 
 import jsonschema
-from kubernetes.client import V1Probe, ApiClient, V1HTTPGetAction
 from mypy.checker import Generic
 from ruamel.yaml import YAML
 
@@ -18,7 +18,7 @@ T = TypeVar('T')
 
 @dataclass(frozen=True)
 class TargetSpecificProperty(Generic[T]):
-    pr: Optional[T]
+    pr: Optional[T]  # pylint: disable=invalid-name
     test: Optional[T]
     acceptance: Optional[T]
     production: Optional[T]
@@ -35,6 +35,7 @@ class TargetSpecificProperty(Generic[T]):
             return self.acceptance
         if target == Target.PRODUCTION:
             return self.production
+        return None
 
     @staticmethod
     def from_yaml(values: dict):
@@ -96,19 +97,19 @@ class Dependencies(StageSpecificProperty[set[str]]):
 class Env:
     @staticmethod
     def from_yaml(values: list[dict]):
-        return list(map(lambda v: KeyValueProperty.from_yaml(v), values))
+        return list(map(KeyValueProperty.from_yaml, values))
 
 
 @dataclass(frozen=True)
 class Properties:
     env: list[KeyValueProperty]
-    sealedSecret: list[KeyValueProperty]
+    sealed_secret: list[KeyValueProperty]
 
     @staticmethod
     def from_yaml(values: Dict[Any, Any]):
-        return Properties(env=list(map(lambda v: KeyValueProperty.from_yaml(v), values.get('env', []))),
-                          sealedSecret=list(
-                              map(lambda v: KeyValueProperty.from_yaml(v), values.get('sealedSecret', []))))
+        return Properties(env=list(map(KeyValueProperty.from_yaml, values.get('env', []))),
+                          sealed_secret=list(
+                              map(KeyValueProperty.from_yaml, values.get('sealedSecret', []))))
 
 
 @dataclass(frozen=True)
@@ -116,13 +117,20 @@ class Probe:
     path: TargetSpecificProperty[str]
     values: dict
 
-    def to_probe(self, defaults: dict, target: Target) -> V1Probe:
-        defaults.update(self.values)
-        # TODO: centralize deserialization logic
-        probe: V1Probe = ApiClient()._ApiClient__deserialize(defaults, V1Probe)
-        path = self.path.get_value(target)
-        probe.http_get = V1HTTPGetAction(path='/health' if path is None else path, port='port-0')
-        return probe
+    STARTUP_PROBE_DEFAULTS = {
+        'initialDelaySeconds': 4,  # 0 - We expect service to rarely be up within 4 secs.
+        'periodSeconds': 2,  # 10 - We want the service to become available as soon as possible
+        'timeoutSeconds': 3,  # 1 - If the app is very busy during the startup stage, 1 second might be too fast
+        'successThreshold': 1,  # 1 - We want the service to become available as soon as possible
+        'failureThreshold': 60  # 3 - 4 + 60 * 2 = more than 2 minutes
+    }
+
+    LIVENESS_PROBE_DEFAULTS = {
+        'periodSeconds': 30,  # 10
+        'timeoutSeconds': 20,  # 1 - Busy apps may momentarily have long timeouts
+        'successThreshold': 1,  # 1
+        'failureThreshold': 3  # 3
+    }
 
     @staticmethod
     def from_yaml(values: dict):
@@ -142,9 +150,9 @@ class Metrics:
 
 @dataclass(frozen=True)
 class Kubernetes:
-    portMappings: dict[int, int]
-    livenessProbe: Optional[Probe]
-    startupProbe: Optional[Probe]
+    port_mappings: dict[int, int]
+    liveness_probe: Optional[Probe]
+    startup_probe: Optional[Probe]
     metrics: Optional[Metrics]
 
     @staticmethod
@@ -153,9 +161,9 @@ class Kubernetes:
         liveness_probe = values.get('livenessProbe')
         startup_probe = values.get('startupProbe')
         metrics = values.get('metrics')
-        return Kubernetes(portMappings=mappings if mappings else {},
-                          livenessProbe=Probe.from_yaml(liveness_probe) if liveness_probe else None,
-                          startupProbe=Probe.from_yaml(startup_probe) if startup_probe else None,
+        return Kubernetes(port_mappings=mappings if mappings else {},
+                          liveness_probe=Probe.from_yaml(liveness_probe) if liveness_probe else None,
+                          startup_probe=Probe.from_yaml(startup_probe) if startup_probe else None,
                           metrics=Metrics.from_yaml(metrics) if metrics else None)
 
 
@@ -182,7 +190,7 @@ class Traefik:
     @staticmethod
     def from_yaml(values: dict):
         hosts = values.get('hosts')
-        return Traefik(hosts=(list(map(lambda h: Host.from_yaml(h), hosts) if hosts else [])))
+        return Traefik(hosts=(list(map(Host.from_yaml, hosts) if hosts else [])))
 
 
 @dataclass(frozen=True)
@@ -254,24 +262,23 @@ class Project:
 
 
 def load_project(root_dir, project_path: str, strict: bool = True) -> Project:
-    with open(f'{root_dir}/{project_path}') as f:
+    with open(f'{root_dir}/{project_path}', encoding='utf-8') as file:
         try:
             yaml = YAML()
-            yaml_values = yaml.load(f)
+            yaml_values = yaml.load(file)
             template = pkgutil.get_data(__name__, "schema/project.schema.json")
             if strict and template:
                 schema = json.loads(template.decode('utf-8'))
                 jsonschema.validate(yaml_values, schema)
 
             return Project.from_yaml(yaml_values, project_path)
-        except jsonschema.exceptions.ValidationError as e:
-            logging.warning(f'{project_path} does not comply with schema: {e.message}')
+        except jsonschema.exceptions.ValidationError as exc:
+            logging.warning(f'{project_path} does not comply with schema: {exc.message}')
             raise
-        except TypeError as e:
-            import traceback
+        except TypeError:
             traceback.print_exc()
-            logging.warning(f'Type error', e)
+            logging.warning('Type error', exc_info=True)
             raise
-        except Exception as e:
-            logging.warning(f'Failed to load {project_path}', e)
+        except Exception:
+            logging.warning(f'Failed to load {project_path}', exc_info=True)
             raise

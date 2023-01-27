@@ -21,6 +21,7 @@ types-six = "==1.16.21.4"
 dagit = "==1.1.7"
 dagster = "==1.1.7"
 pyaml-env = "==1.2.1"
+pylint = "==2.15.10"
 pytest = "==7.2.1"
 
 [requires]
@@ -28,7 +29,8 @@ python_version = "3.9"
 
 [scripts]
 build = "python setup.py install sdist bdist bdist_wheel"
+lint = "pylint --rcfile .pylintrc src/"
 test = "pytest"
 check-types ="mypy src/pympl/"
-validate = "bash -c 'mypy src/pympl/ && python -m unittest'"
-install-types ="mypy --install-types --non-interactive src/pympl/"
+validate = "bash -c 'mypy src/pympl/ && python -m unittest && pylint src/'"
+install-types ="mypy --install-types --non-interactive src/pympl/  "

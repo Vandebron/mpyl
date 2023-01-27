@@ -1,5 +1,5 @@
 from logging import Logger
-from typing import Optional, Dict
+from typing import Optional
 
 from ruamel.yaml import YAML  # type: ignore
 
@@ -74,10 +74,11 @@ class Steps:
                     result = self._execute(executor, project, self._properties, result.produced_artifact)
                 result.write(project.target_path, stage)
                 return result
-            except Exception as e:
+            except Exception as exc:
                 self._logger.warning(
                     f"Execution of '{executor.meta.name}' for project '{project.name}' in stage {stage} "
-                    f"failed with exception: '{e}' ")
+                    f"failed with exception: ", exc_info=True)
+                raise Exception from exc
         else:
             self._logger.warning(f"No executor found for {stage_name} in stage {stage}")
 

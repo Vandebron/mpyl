@@ -16,6 +16,6 @@ class BuildEcho(Step):
             stage=Stage.BUILD
         ), ArtifactType.NONE, ArtifactType.NONE)
 
-    def execute(self, ipt: Input) -> Output:
-        self._logger.info(f"Building project {ipt.project.name}")
-        return Output(success=True, message=f"Built {ipt.project.name}", produced_artifact=None)
+    def execute(self, step_input: Input) -> Output:
+        self._logger.info(f"Building project {step_input.project.name}")
+        return Output(success=True, message=f"Built {step_input.project.name}", produced_artifact=None)

@@ -12,5 +12,5 @@ class DockerConfig:
             self.host_name = registry['host_name']
             self.user_name = registry['user_name']
             self.password = registry['password']
-        except KeyError:
-            raise KeyError(f'Docker config could not be loaded from {config}')
+        except KeyError as exc:
+            raise KeyError(f'Docker config could not be loaded from {config}') from exc

@@ -7,15 +7,15 @@ from .models import Meta, Input, Output, ArtifactType
 
 
 class IPluginRegistry(type):
-    plugin_registries: List[type] = list()
+    plugin_registries: List[type] = []
 
-    def __init__(cls, name, bases, attrs):
+    def __init__(cls, name):
         super().__init__(cls)
         if name != 'Step':
             IPluginRegistry.plugin_registries.append(cls)
 
 
-class Step(object, metaclass=IPluginRegistry):
+class Step(metaclass=IPluginRegistry):
     meta: Meta
     produced_artifact: ArtifactType
     required_artifact: ArtifactType
@@ -32,4 +32,4 @@ class Step(object, metaclass=IPluginRegistry):
         self.after = after
 
     def execute(self, step_input: Input) -> Output:
-        return Output(success=False, message="Not implemented", produced_artifact=None)
+        return Output(success=False, message=f"Not implemented for {step_input.project.name}", produced_artifact=None)
