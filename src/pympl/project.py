@@ -18,7 +18,7 @@ T = TypeVar('T')
 
 @dataclass(frozen=True)
 class TargetSpecificProperty(Generic[T]):
-    pr: Optional[T]
+    pr: Optional[T]  # pylint: disable=invalid-name
     test: Optional[T]
     acceptance: Optional[T]
     production: Optional[T]
