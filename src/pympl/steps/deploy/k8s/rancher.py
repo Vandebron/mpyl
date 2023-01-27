@@ -11,12 +11,13 @@ class ClusterConfig:
 
 
 def cluster_config(target: Target):
-    if target == Target.PULL_REQUEST or target == Target.PULL_REQUEST_BASE:
+    if target in {Target.PULL_REQUEST, Target.PULL_REQUEST_BASE}:
         return ClusterConfig(cluster_id='c-z8wzm', project_id='p-k9l47', cluster_env="test")
     if target == Target.ACCEPTANCE:
         return ClusterConfig(cluster_id='c-6mkzg', project_id='p-ckqxz', cluster_env="acce")
     if target == Target.PRODUCTION:
         return ClusterConfig(cluster_id='c-r8bj6', project_id='p-lb52t', cluster_env="prd")
+    return None
 
 
 def rancher_namespace_metadata(namespace: str, target: Target):

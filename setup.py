@@ -2,13 +2,13 @@ import setuptools
 from setuptools import setup
 import toml
 
-with open("README.md", "r") as readme_file:
+with open("README.md", "r", encoding='utf-8') as readme_file:
     readme = readme_file.read()
 
 
 def get_install_requirements():
     try:
-        with open('Pipfile', 'r') as fh:
+        with open('Pipfile', 'r', encoding='utf-8') as fh:
             pipfile = fh.read()
         pipfile_toml = toml.loads(pipfile)
     except FileNotFoundError:
