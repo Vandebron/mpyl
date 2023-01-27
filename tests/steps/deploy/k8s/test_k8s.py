@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+from kubernetes.client import V1Probe
 from pyaml_env import parse_config
 
 from src.pympl.project import load_project, Probe
@@ -43,12 +44,23 @@ def test_probe_values_should_be_customizable():
     assert probe.values['successThreshold'] == custom_success_threshold
     assert probe.values['failureThreshold'] == custom_failure_threshold
 
-    v1_probe = ServiceChart._to_probe(probe, Probe.LIVENESS_PROBE_DEFAULTS, target=Target.PULL_REQUEST)
+    v1_probe: V1Probe = ServiceChart._to_probe(probe, Probe.LIVENESS_PROBE_DEFAULTS, target=Target.PULL_REQUEST)
     assert v1_probe.success_threshold == custom_success_threshold
     assert v1_probe.failure_threshold == custom_failure_threshold
 
     assert v1_probe.period_seconds == Probe.LIVENESS_PROBE_DEFAULTS['periodSeconds']
     assert v1_probe.grpc.port == 123
+
+
+def test_probe_deserialization_failure_should_throw():
+    project = load_project("", str(resource_path / "test_project.yml"), False)
+    probe = project.kubernetes.liveness_probe
+
+    probe.values['httpGet'] = 'incorrect'
+
+    with pytest.raises(ValueError) as excinfo:
+        ServiceChart._to_probe(probe, Probe.LIVENESS_PROBE_DEFAULTS, target=Target.PULL_REQUEST)
+    assert 'Invalid value for `port`, must not be `None`' in str(excinfo.value)
 
 
 def test_load_config():
