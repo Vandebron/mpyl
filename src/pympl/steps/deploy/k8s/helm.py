@@ -26,7 +26,10 @@ appVersion: "{build_properties.versioning.identifier}"
 
 
 def install(logger: Logger, step_input: Input, name_space: str) -> str:
-    image_name = step_input.required_artifact.spec['image']
+    if step_input.required_artifact:
+        image_name = step_input.required_artifact.spec['image']
+    else:
+        raise ValueError('Required artifact must be defined')
     service_chart = ServiceChart(step_input, image_name)
 
     templates = service_chart.to_chart()
