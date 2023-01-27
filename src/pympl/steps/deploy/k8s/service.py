@@ -3,12 +3,13 @@ from typing import Dict, Optional
 from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1PodTemplateSpec, V1ObjectMeta, V1PodSpec, \
     V1DeploymentStrategy, V1RollingUpdateDeployment, V1LabelSelector, V1ContainerPort, V1EnvVar, V1Ingress, \
     V1IngressSpec, V1IngressRule, V1Service, V1ServiceSpec, V1ServicePort, V1ServiceAccount, V1LocalObjectReference, \
-    V1EnvVarSource, V1SecretKeySelector
+    V1EnvVarSource, V1SecretKeySelector, V1Probe, ApiClient, V1HTTPGetAction
+
 from ruamel.yaml import YAML
 
 from .resources import to_yaml, V1SealedSecret
 from ...models import Input
-from ....project import Project, KeyValueProperty
+from ....project import Project, KeyValueProperty, Probe
 from ....target import Target
 
 yaml = YAML()
@@ -66,6 +67,17 @@ class ServiceChart:
     def _to_selector(self):
         return V1LabelSelector(match_labels={"app.kubernetes.io/instance": self.release_name,
                                              "app.kubernetes.io/name": self.release_name})
+
+    @staticmethod
+    def _to_k8s_model(values: dict, model_type):
+        return ApiClient()._ApiClient__deserialize(values, model_type)  # pylint: disable=protected-access
+
+    @staticmethod
+    def _to_probe(probe: Probe, defaults: dict, target: Target) -> V1Probe:
+        v1_probe: V1Probe = ServiceChart._to_k8s_model(defaults, V1Probe)
+        path = probe.path.get_value(target)
+        v1_probe.http_get = V1HTTPGetAction(path='/health' if path is None else path, port='port-0')
+        return v1_probe
 
     def to_service(self) -> V1Service:
         service_ports = list(map(lambda key: V1ServicePort(port=key, target_port=self.mappings[key], protocol="TCP",
@@ -140,10 +152,10 @@ class ServiceChart:
             env=env_vars + sealed_secrets,
             ports=ports,
             image_pull_policy="Always",
-            liveness_probe=kubernetes.liveness_probe.to_probe(liveness_probe_defaults,
-                                                              self.target) if kubernetes.liveness_probe else None,
-            startup_probe=kubernetes.startup_probe.to_probe(startup_probe_defaults,
-                                                            self.target) if kubernetes.startup_probe else None
+            liveness_probe=ServiceChart._to_probe(kubernetes.liveness_probe, liveness_probe_defaults,
+                                                  self.target) if kubernetes.liveness_probe else None,
+            startup_probe=ServiceChart._to_probe(kubernetes.startup_probe, startup_probe_defaults,
+                                                 self.target) if kubernetes.startup_probe else None
         )
 
         return V1Deployment(
