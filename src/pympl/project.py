@@ -117,6 +117,21 @@ class Probe:
     path: TargetSpecificProperty[str]
     values: dict
 
+    STARTUP_PROBE_DEFAULTS = {
+        'initialDelaySeconds': 4,  # 0 - We expect service to rarely be up within 4 secs.
+        'periodSeconds': 2,  # 10 - We want the service to become available as soon as possible
+        'timeoutSeconds': 3,  # 1 - If the app is very busy during the startup stage, 1 second might be too fast
+        'successThreshold': 1,  # 1 - We want the service to become available as soon as possible
+        'failureThreshold': 60  # 3 - 4 + 60 * 2 = more than 2 minutes
+    }
+
+    LIVENESS_PROBE_DEFAULTS = {
+        'periodSeconds': 30,  # 10
+        'timeoutSeconds': 20,  # 1 - Busy apps may momentarily have long timeouts
+        'successThreshold': 1,  # 1
+        'failureThreshold': 3  # 3
+    }
+
     @staticmethod
     def from_yaml(values: dict):
         path = values['path']

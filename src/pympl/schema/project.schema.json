@@ -375,11 +375,11 @@
               }
             },
             "startupProbe": {
-              "description": "Delay for startup probe (Container ready to accept traffic)",
+              "description": "Defers the execution of liveness and readiness probes until a container indicates it’s able to handle them. Kubernetes won’t direct the other probe types to a container if it has a startup probe that hasn’t yet succeeded.",
               "$ref": "#/definitions/startupProbe"
             },
             "livenessProbe": {
-              "description": "Delay for liveness probe (Container need to be restarted)",
+              "description": "Detects whether a pod is healthy by running a command or making a network request inside the container. Containers that fail the check are restarted.",
               "$ref": "#/definitions/livenessProbe"
             },
             "cmd": {
@@ -884,7 +884,7 @@
     },
     "livenessProbe": {
       "type": "object",
-      "additionalProperties": false,
+      "additionalProperties": true,
       "required": ["path"],
       "properties": {
         "path": {
@@ -911,7 +911,7 @@
     },
     "startupProbe": {
       "type": "object",
-      "additionalProperties": false,
+      "additionalProperties": true,
       "required": ["path"],
       "properties": {
         "path": {

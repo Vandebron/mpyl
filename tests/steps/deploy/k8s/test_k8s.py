@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from pyaml_env import parse_config
 
-from src.pympl.project import load_project
+from src.pympl.project import load_project, Probe
 from src.pympl.steps.build import DockerConfig
 from src.pympl.steps.deploy.k8s.service import ServiceChart
 from src.pympl.steps.models import Input, BuildProperties, VersioningProperties
@@ -31,6 +31,24 @@ def _build_chart():
     properties = BuildProperties("id", Target.PULL_REQUEST,
                                  VersioningProperties("2ad3293a7675d08bc037ef0846ef55897f38ec8f", "1234", None), {})
     return ServiceChart(step_input=Input(project, properties, None), image_name='registry/image:123').to_chart()
+
+
+def test_probe_values_should_be_customizable():
+    project = load_project("", str(resource_path / "test_project.yml"), False)
+    probe = project.kubernetes.liveness_probe
+
+    custom_success_threshold = 0
+    custom_failure_threshold = 99
+
+    assert probe.values['successThreshold'] == custom_success_threshold
+    assert probe.values['failureThreshold'] == custom_failure_threshold
+
+    v1_probe = ServiceChart._to_probe(probe, Probe.LIVENESS_PROBE_DEFAULTS, target=Target.PULL_REQUEST)
+    assert v1_probe.success_threshold == custom_success_threshold
+    assert v1_probe.failure_threshold == custom_failure_threshold
+
+    assert v1_probe.period_seconds == Probe.LIVENESS_PROBE_DEFAULTS['periodSeconds']
+    assert v1_probe.grpc.port == 123
 
 
 def test_load_config():
