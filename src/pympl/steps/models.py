@@ -53,7 +53,7 @@ class ArtifactType(Enum):
     @classmethod
     def to_yaml(cls, representer, node):
         return representer.represent_scalar('!ArtifactType',
-                                            f'{node._name_}-{node._value_}')
+                                            f'{node._name_}-{node._value_}')  #pylint: disable=protected-access
 
     DOCKER_IMAGE = 1
     JUNIT_TESTS = 2
