@@ -23,7 +23,7 @@ jobs:
       - name: Run lint
         uses: VaultVulp/action-pipenv@v2.0.1
         with:
-          command: run lint --fail-under 8.5
+          command: run lint
 
       - name: Install Types
         uses: VaultVulp/action-pipenv@v2.0.1
