@@ -74,8 +74,9 @@ class ServiceChart:
 
     @staticmethod
     def _to_probe(probe: Probe, defaults: dict, target: Target) -> V1Probe:
-        defaults.update(probe.values)
-        v1_probe: V1Probe = ServiceChart._to_k8s_model(defaults, V1Probe)
+        values = defaults.copy()
+        values.update(probe.values)
+        v1_probe: V1Probe = ServiceChart._to_k8s_model(values, V1Probe)
         path = probe.path.get_value(target)
         v1_probe.http_get = V1HTTPGetAction(path='/health' if path is None else path, port='port-0')
         return v1_probe
