@@ -22,7 +22,7 @@ class TestMplSchema(unittest.TestCase):
         assert simple_env.get_value(Target.ACCEPTANCE) == 'Acceptance'
         assert simple_env.get_value(Target.PRODUCTION) == 'Production'
 
-        secret_env = [x for x in project.deployment.properties.sealedSecret if x.key == 'SOME_SECRET_ENV'].pop()
+        secret_env = [x for x in project.deployment.properties.sealed_secret if x.key == 'SOME_SECRET_ENV'].pop()
         assert secret_env.get_value(Target.PULL_REQUEST).startswith('AgCA5/qvMMp'), "should start with"
 
         assert project.dependencies.build == {'test/docker/'}

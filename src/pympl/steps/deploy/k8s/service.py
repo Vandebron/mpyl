@@ -31,7 +31,7 @@ class ServiceChart:
         self.project = project
         deployment = project.deployment
         self.env = deployment.properties.env if deployment and deployment.properties.env else []
-        self.sealed_secrets = deployment.properties.sealedSecret if deployment and deployment.properties.sealedSecret \
+        self.sealed_secrets = deployment.properties.sealed_secret if deployment and deployment.properties.sealed_secret \
             else []
         self.mappings = self.project.kubernetes.port_mappings
         self.target = step_input.build_properties.target
@@ -126,7 +126,7 @@ class ServiceChart:
             filter(lambda v: v.value, map(lambda e: V1EnvVar(name=e.key, value=e.get_value(self.target)), self.env)))
 
         sealed_for_target = list(
-            filter(lambda v: v.get_value(self.target) is not None, deployment.properties.sealedSecret))
+            filter(lambda v: v.get_value(self.target) is not None, deployment.properties.sealed_secret))
         sealed_secrets = list(map(lambda e: V1EnvVar(name=e.key, value_from=V1EnvVarSource(
             secret_key_ref=V1SecretKeySelector(key=e.key, name=self.release_name, optional=False))),
                                   sealed_for_target))

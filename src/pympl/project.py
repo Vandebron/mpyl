@@ -103,12 +103,12 @@ class Env:
 @dataclass(frozen=True)
 class Properties:
     env: list[KeyValueProperty]
-    sealedSecret: list[KeyValueProperty]
+    sealed_secret: list[KeyValueProperty]
 
     @staticmethod
     def from_yaml(values: Dict[Any, Any]):
         return Properties(env=list(map(KeyValueProperty.from_yaml, values.get('env', []))),
-                          sealedSecret=list(
+                          sealed_secret=list(
                               map(KeyValueProperty.from_yaml, values.get('sealedSecret', []))))
 
 
