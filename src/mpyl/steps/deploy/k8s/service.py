@@ -7,7 +7,8 @@ from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1Pod
 
 from ruamel.yaml import YAML
 
-from .resources import to_yaml, V1SealedSecret
+from .resources.crd import to_yaml
+from .resources.customresources import V1SealedSecret
 from ...models import Input
 from ....project import Project, KeyValueProperty, Probe
 from ....target import Target
