@@ -260,10 +260,10 @@ def load_project(root_dir, project_path: str, strict: bool = True) -> Project:
         except jsonschema.exceptions.ValidationError as exc:
             logging.warning(f'{project_path} does not comply with schema: {exc.message}')
             raise
-        except TypeError as exc:
+        except TypeError:
             traceback.print_exc()
-            logging.warning('Type error', exc)
+            logging.warning('Type error', exc_info=True)
             raise
-        except Exception as exc:
-            logging.warning(f'Failed to load {project_path}', exc)
+        except Exception:
+            logging.warning(f'Failed to load {project_path}', exc_info=True)
             raise
