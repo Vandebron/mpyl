@@ -10,7 +10,7 @@ from ruamel.yaml import YAML
 from .resources.crd import to_yaml
 from .resources.customresources import V1SealedSecret
 from ...models import Input
-from ....project import Project, KeyValueProperty, Probe
+from ....project import Project, KeyValueProperty, Probe, Deployment
 from ....target import Target
 
 yaml = YAML()
@@ -22,6 +22,7 @@ class ServiceChart:
     mappings: dict[int, int]
     env: list[KeyValueProperty]
     sealed_secrets: list[KeyValueProperty]
+    deployment: Deployment
     target: Target
     release_name: str
     image_name: str
@@ -30,10 +31,12 @@ class ServiceChart:
         self.step_input = step_input
         project = self.step_input.project
         self.project = project
-        deployment = project.deployment
-        self.env = deployment.properties.env if deployment and deployment.properties.env else []
-        self.sealed_secrets = deployment.properties.sealed_secret if deployment \
-                                                                     and deployment.properties.sealed_secret else []
+        if project.deployment is None:
+            raise AttributeError("deployment field should be set")
+        self.deployment = project.deployment
+        properties = self.deployment.properties
+        self.env = properties.env if properties.env else []
+        self.sealed_secrets = properties.sealed_secret if properties.sealed_secret else []
         self.mappings = self.project.kubernetes.port_mappings
         self.target = step_input.build_properties.target
         self.release_name = self.project.name.lower()
@@ -115,11 +118,7 @@ class ServiceChart:
         return V1SealedSecret(name=self.release_name, secrets=secrets)
 
     def to_deployment(self) -> V1Deployment:
-        deployment = self.project.deployment
-        if deployment is None:
-            raise AttributeError("deployment field should be set")
-
-        kubernetes = deployment.kubernetes
+        kubernetes = self.deployment.kubernetes
         if kubernetes is None:
             raise AttributeError("deployment.kubernetes field should be set")
 
@@ -129,7 +128,7 @@ class ServiceChart:
             filter(lambda v: v.value, map(lambda e: V1EnvVar(name=e.key, value=e.get_value(self.target)), self.env)))
 
         sealed_for_target = list(
-            filter(lambda v: v.get_value(self.target) is not None, deployment.properties.sealed_secret))
+            filter(lambda v: v.get_value(self.target) is not None, self.deployment.properties.sealed_secret))
         sealed_secrets = list(map(lambda e: V1EnvVar(name=e.key, value_from=V1EnvVarSource(
             secret_key_ref=V1SecretKeySelector(key=e.key, name=self.release_name, optional=False))),
                                   sealed_for_target))
