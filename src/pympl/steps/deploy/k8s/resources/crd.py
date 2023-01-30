@@ -76,9 +76,6 @@ class CustomResourceDefinition:
             raise ValueError("Invalid value for `spec`, must not be `None`")  # noqa: E501
         self._spec = spec
 
-    def to_dict(self):
-        pass
-
 
 def to_dict(obj):
     result = {}
