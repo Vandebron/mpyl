@@ -1,5 +1,7 @@
 from kubernetes.client import V1ObjectMeta
 
+from src.mpyl.project import Host
+from src.mpyl.target import Target
 from .crd import CustomResourceDefinition
 
 
@@ -9,3 +11,16 @@ class V1SealedSecret(CustomResourceDefinition):
                          metadata=V1ObjectMeta(name=name, labels={'chart': 'service-0.1.0'},
                                                annotations={'sealedsecrets.bitnami.com/cluster-wide': 'true'}),
                          spec={'encryptedData': secrets})
+
+
+class V1AlphaIngressRoute(CustomResourceDefinition):
+
+    def __init__(self, metadata: V1ObjectMeta, hosts: list[Host], service_port: int, name: str, target: Target):
+        hosties = []
+        for host in hosts:
+            hosties.append({'kind': 'Rule', 'match': host.host.get_value(target),
+                            'services': [{'name': name, 'kind': 'Service', 'port': service_port}],
+                            'middlewares': [{'name': f'{name}-ingress-0-whitelist'}]})
+
+        super().__init__(api_version='traefik.containo.us/v1alpha1', kind="IngressRoute", metadata=metadata,
+                         spec={'routes': hosties}, schema='traeffik.schema.yml')
