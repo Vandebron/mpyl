@@ -1,14 +1,13 @@
 from typing import Dict, Optional
-
-from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1PodTemplateSpec, V1ObjectMeta, V1PodSpec, \
-    V1DeploymentStrategy, V1RollingUpdateDeployment, V1LabelSelector, V1ContainerPort, V1EnvVar, V1Ingress, \
-    V1IngressSpec, V1IngressRule, V1Service, V1ServiceSpec, V1ServicePort, V1ServiceAccount, V1LocalObjectReference, \
-    V1EnvVarSource, V1SecretKeySelector, V1Probe, ApiClient, V1HTTPGetAction
-
 from ruamel.yaml import YAML
 
-from .resources.crd import to_yaml
-from .resources.customresources import V1SealedSecret
+from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1PodTemplateSpec, V1ObjectMeta, V1PodSpec, \
+    V1DeploymentStrategy, V1RollingUpdateDeployment, V1LabelSelector, V1ContainerPort, V1EnvVar, V1Service, \
+    V1ServiceSpec, V1ServicePort, V1ServiceAccount, V1LocalObjectReference, \
+    V1EnvVarSource, V1SecretKeySelector, V1Probe, ApiClient, V1HTTPGetAction
+from pympl.steps.deploy.k8s.resources import V1SealedSecret, to_yaml
+
+from src.pympl.steps.deploy.k8s.resources.customresources import V1AlphaIngressRoute
 from ...models import Input
 from ....project import Project, KeyValueProperty, Probe, Deployment
 from ....target import Target
@@ -93,8 +92,11 @@ class ServiceChart:
                          spec=V1ServiceSpec(type="ClusterIP", ports=service_ports,
                                             selector=self._to_selector().match_labels))
 
-    def to_ingress(self) -> V1Ingress:
-        return V1Ingress(metadata=self._to_object_meta(), spec=V1IngressSpec(rules=[V1IngressRule()]))
+    def to_ingress_routes(self) -> Optional[V1AlphaIngressRoute]:
+        if not self.deployment.traefik:
+            return None
+        return V1AlphaIngressRoute(metadata=self._to_object_meta(), hosts=self.deployment.traefik.hosts,
+                                   service_port=123, name=self.release_name, target=self.target)
 
     def to_service_account(self) -> V1ServiceAccount:
         return V1ServiceAccount(api_version="v1", kind="ServiceAccount", metadata=self._to_object_meta(),
@@ -105,6 +107,10 @@ class ServiceChart:
                  'service': to_yaml(self.to_service())}
         if self.sealed_secrets:
             chart['sealedsecrets'] = to_yaml(self.to_sealed_secrets())
+
+        if self.deployment.traefik:
+            chart['ingress-https-route'] = to_yaml(self.to_ingress_routes())
+
         return chart
 
     def to_sealed_secrets(self) -> Optional[V1SealedSecret]:
