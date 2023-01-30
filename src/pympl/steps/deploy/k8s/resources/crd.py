@@ -1,6 +1,10 @@
+import pkgutil
 from io import StringIO
+from typing import Optional
 
+import jsonschema
 import six
+from jsonschema import ValidationError
 from kubernetes.client import Configuration, V1ObjectMeta
 from ruamel.yaml import YAML
 
@@ -23,7 +27,7 @@ class CustomResourceDefinition:
     }
 
     def __init__(self, api_version: str, kind: str, metadata: V1ObjectMeta, spec: dict,
-                 local_vars_configuration=None):  # noqa: E501
+                 local_vars_configuration=None, schema: Optional[str] = None):  # noqa: E501
         """V1CSIDriver - a model defined in OpenAPI"""  # noqa: E501
         if local_vars_configuration is None:
             local_vars_configuration = Configuration()
@@ -33,6 +37,7 @@ class CustomResourceDefinition:
         self._kind = kind
         self._metadata = metadata
         self._spec = spec
+        self._schema = schema
         self.discriminator = None
 
         if api_version is not None:
@@ -43,7 +48,11 @@ class CustomResourceDefinition:
             self.metadata = metadata
 
     @property
-    def api_version(self):
+    def schema(self) -> Optional[str]:
+        return self._schema
+
+    @property
+    def api_version(self) -> str:
         return self._api_version
 
     @api_version.setter
@@ -51,7 +60,7 @@ class CustomResourceDefinition:
         self._api_version = api_version
 
     @property
-    def kind(self):
+    def kind(self) -> str:
         return self._kind
 
     @kind.setter
@@ -59,7 +68,7 @@ class CustomResourceDefinition:
         self._kind = kind
 
     @property
-    def metadata(self):
+    def metadata(self) -> V1ObjectMeta:
         return self._metadata
 
     @metadata.setter
@@ -67,7 +76,7 @@ class CustomResourceDefinition:
         self._metadata = metadata
 
     @property
-    def spec(self):
+    def spec(self) -> dict:
         return self._spec
 
     @spec.setter
@@ -113,6 +122,21 @@ def to_yaml(resource: object) -> str:
 
     resource_dict = to_dict(resource) if (
             hasattr(resource, "openapi_types") and hasattr(resource, "attribute_map")) else {}
+    yaml_values = remove_none(resource_dict)
+
+    if hasattr(resource, 'schema') and resource.schema:
+        template = pkgutil.get_data(__name__, f'schema/{resource.schema}')
+        if template:
+            schema = yaml.load(template.decode('utf-8'))
+            try:
+                jsonschema.validate(yaml_values, schema)
+            except ValidationError as err:
+                raise ValueError(
+                    f'Schema validation failed with {err.message} at {".".join(map(str, err.schema_path))}') from err
+        else:
+            raise ValueError(f'Schema {resource.schema} defined but not found in package')
+
     stream = StringIO()
-    yaml.dump(remove_none(resource_dict), stream)
+    yaml.dump(yaml_values, stream)
+
     return stream.getvalue()
