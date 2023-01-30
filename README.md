@@ -9,9 +9,16 @@ The aim of this tool is to be a better version of https://github.com/Vandebron/m
 
 ## Run instructions
 
-```shell
-dagit --workspace ./workspace.yml 
-```
+1. Install dependencies
+    ```shell
+    pipenv install
+    ```
+2. Run the Dagit UI
+    ```shell
+    dagit --workspace ./workspace.yml 
+    ```
+
+If you encounter problems consult the [developer readme](https://github.com/Vandebron/pympl/README-dev.md)
 
 ## Proposed implementation
 
