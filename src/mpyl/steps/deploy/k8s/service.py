@@ -7,7 +7,7 @@ from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1Pod
     V1EnvVarSource, V1SecretKeySelector, V1Probe, ApiClient, V1HTTPGetAction
 from pympl.steps.deploy.k8s.resources import V1SealedSecret, to_yaml
 
-from src.pympl.steps.deploy.k8s.resources.customresources import V1AlphaIngressRoute
+from .resources.customresources import V1AlphaIngressRoute # pylint: disable = no-name-in-module
 from ...models import Input
 from ....project import Project, KeyValueProperty, Probe, Deployment
 from ....target import Target
