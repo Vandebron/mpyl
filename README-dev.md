@@ -1,3 +1,9 @@
+## Run tests and checks
+To run linting (`pylint`), type checking (`mypy`) and testing (`pytest`) in one go, run: 
+```shell
+pipenv run validate
+```
+
 ## Troubleshooting Python setup
 
 1. Check if you're in the correct `venv`
