@@ -1,7 +1,7 @@
 import unittest
 
-from src.pympl.projects.find import load_projects
-from src.pympl.repo import Repository, RepoConfig
+from src.mpyl.projects.find import load_projects
+from src.mpyl.repo import Repository, RepoConfig
 
 
 class ProjectLoadTestCase(unittest.TestCase):

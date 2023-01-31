@@ -2,8 +2,8 @@ import unittest
 
 from pyaml_env import parse_config
 
-from src.pympl.repo import RepoConfig
-from src.pympl.repo import Repository
+from src.mpyl.repo import RepoConfig
+from src.mpyl.repo import Repository
 
 from tests import root_test_path
 

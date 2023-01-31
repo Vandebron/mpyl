@@ -3,11 +3,11 @@ from dataclasses import dataclass
 from dagster import job, op, DynamicOut, DynamicOutput, get_dagster_logger, Output, Failure
 from pyaml_env import parse_config
 
-from src.pympl.project import load_project, Project
-from src.pympl.repo import Repository, RepoConfig
-from src.pympl.stage import Stage
-from src.pympl.steps.models import BuildProperties, Output as MplOutput
-from src.pympl.steps.steps import Steps
+from src.mpyl.project import load_project, Project
+from src.mpyl.repo import Repository, RepoConfig
+from src.mpyl.stage import Stage
+from src.mpyl.steps.models import BuildProperties, Output as MplOutput
+from src.mpyl.steps.steps import Steps
 
 
 @dataclass
