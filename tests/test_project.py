@@ -3,8 +3,8 @@ import unittest
 import pytest
 from jsonschema import ValidationError
 
-from src.pympl.project import load_project
-from src.pympl.target import Target
+from src.mpyl.project import load_project
+from src.mpyl.target import Target
 from tests import root_test_path
 
 
