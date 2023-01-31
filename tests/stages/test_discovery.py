@@ -1,8 +1,8 @@
 import unittest
 
-from src.pympl.repo import Repository, RepoConfig, History
-from src.pympl.stage import Stage
-from src.pympl.stages.discovery import find_invalidated_projects_for_stage
+from src.mpyl.repo import Repository, RepoConfig, History
+from src.mpyl.stage import Stage
+from src.mpyl.stages.discovery import find_invalidated_projects_for_stage
 
 
 class TestDiscovery(unittest.TestCase):
