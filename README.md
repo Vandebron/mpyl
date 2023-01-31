@@ -10,9 +10,16 @@ but completely independent from Jenkins
 
 ## Run instructions
 
-```shell
-dagit --workspace ./workspace.yml 
-```
+1. Install dependencies
+    ```shell
+    pipenv install
+    ```
+2. Run the Dagit UI
+    ```shell
+    dagit --workspace ./workspace.yml 
+    ```
+
+For developer instructions and troubleshooting, see [developer readme](./README-dev.md)
 
 ## Proposed implementation
 
