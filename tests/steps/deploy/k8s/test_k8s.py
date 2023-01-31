@@ -4,11 +4,11 @@ import pytest
 from kubernetes.client import V1Probe
 from pyaml_env import parse_config
 
-from src.pympl.project import load_project, Probe
-from src.pympl.steps.build import DockerConfig
-from src.pympl.steps.deploy.k8s.service import ServiceChart
-from src.pympl.steps.models import Input, BuildProperties, VersioningProperties
-from src.pympl.target import Target
+from src.mpyl.project import load_project, Probe
+from src.mpyl.steps.build import DockerConfig
+from src.mpyl.steps.deploy.k8s.service import ServiceChart
+from src.mpyl.steps.models import Input, BuildProperties, VersioningProperties
+from src.mpyl.target import Target
 from tests import root_test_path
 
 resource_path = root_test_path / "test_resources"
