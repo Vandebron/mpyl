@@ -16,11 +16,9 @@ class V1SealedSecret(CustomResourceDefinition):
 class V1AlphaIngressRoute(CustomResourceDefinition):
 
     def __init__(self, metadata: V1ObjectMeta, hosts: list[Host], service_port: int, name: str, target: Target):
-        hosties = []
-        for host in hosts:
-            hosties.append({'kind': 'Rule', 'match': host.host.get_value(target),
-                            'services': [{'name': name, 'kind': 'Service', 'port': service_port}],
-                            'middlewares': [{'name': f'{name}-ingress-0-whitelist'}]})
+        routes = [{'kind': 'Rule', 'match': host.host.get_value(target),
+                   'services': [{'name': name, 'kind': 'Service', 'port': service_port}],
+                   'middlewares': [{'name': f'{name}-ingress-0-whitelist'}]} for host in hosts]
 
         super().__init__(api_version='traefik.containo.us/v1alpha1', kind="IngressRoute", metadata=metadata,
-                         spec={'routes': hosties}, schema='traeffik.schema.yml')
+                         spec={'routes': routes}, schema='traeffik.schema.yml')
