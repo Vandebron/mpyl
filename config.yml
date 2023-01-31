@@ -2,7 +2,7 @@ cvs:
   git:
     main_branch: 'main'
   github:
-    repository: 'Vandebron/pympl'
+    repository: 'Vandebron/mpyl'
 docker:
   registry:
     host_name: 'bigdataregistry.azurecr.io'
