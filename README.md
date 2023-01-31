@@ -18,7 +18,7 @@ The aim of this tool is to be a better version of https://github.com/Vandebron/m
     dagit --workspace ./workspace.yml 
     ```
 
-If you encounter problems consult the [developer readme](https://github.com/Vandebron/pympl/README-dev.md)
+For developer instructions and troubleshooting, see [developer readme](./README-dev.md)
 
 ## Proposed implementation
 
