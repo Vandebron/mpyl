@@ -4,18 +4,18 @@ from logging import Logger
 
 from pyaml_env import parse_config
 
-from src.pympl.project import load_project
-from src.pympl.repo import Repository, RepoConfig, History
-from src.pympl.stage import Stage
-from src.pympl.stages.discovery import find_invalidated_projects_for_stage
-from src.pympl.steps.models import BuildProperties, VersioningProperties
-from src.pympl.steps.steps import Steps
+from src.mpyl.project import load_project
+from src.mpyl.repo import Repository, RepoConfig, History
+from src.mpyl.stage import Stage
+from src.mpyl.stages.discovery import find_invalidated_projects_for_stage
+from src.mpyl.steps.models import BuildProperties, VersioningProperties
+from src.mpyl.steps.steps import Steps
 
 import logging
 from rich.logging import RichHandler
 from rich.console import Console
 
-from src.pympl.target import Target
+from src.mpyl.target import Target
 
 
 def main(repo: Repository, log: Logger):

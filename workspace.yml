@@ -1,2 +1,2 @@
 load_from:
-  - python_file: pympl-test-runner.py
+  - python_file: mpyl-test-runner.py

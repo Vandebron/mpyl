@@ -1,15 +1,25 @@
-# Modular Pipelines in Python
+# Modular Pypeline Library
+[![python](https://img.shields.io/badge/Python-3.9-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
 ![build-and-test-module](https://github.com/Vandebron/pympl/actions/workflows/build-package.yml/badge.svg?branch=main)
 ![version](https://img.shields.io/github/v/tag/Vandebron/pympl.svg?color=blue&include_prereleases=&sort=semver)
+[![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
 [![linting: pylint](https://img.shields.io/badge/linting-pylint-yellowgreen)](https://github.com/PyCQA/pylint)
 
-The aim of this tool is to be a better version of https://github.com/Vandebron/mpl-modules
+This tool is loosely based on the principles described in https://www.jenkins.io/blog/2019/01/08/mpl-modular-pipeline-library/
+but completely independent from Jenkins
 
 ## Run instructions
 
-```shell
-dagit --workspace ./workspace.yml 
-```
+1. Install dependencies
+    ```shell
+    pipenv install
+    ```
+2. Run the Dagit UI
+    ```shell
+    dagit --workspace ./workspace.yml 
+    ```
+
+For developer instructions and troubleshooting, see [developer readme](./README-dev.md)
 
 ## Proposed implementation
 
