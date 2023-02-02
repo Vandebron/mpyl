@@ -1,9 +1,5 @@
 pipeline {
-    agent {
-      docker {
-        image 'python:3'
-      }
-    }
+    agent { docker { image 'python:3.9.16-slim-buster' } }
 
 //     environment {
 // //         PYENV_ROOT="$HOME/.pyenv"
