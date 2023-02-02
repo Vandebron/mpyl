@@ -8,3 +8,24 @@ docker:
     host_name: 'bigdataregistry.azurecr.io'
     user_name: !ENV ${DOCKER_REGISTRY_USERNAME:user}
     password: !ENV ${DOCKER_REGISTRY_PASSWORD:password}
+project:
+  deployment:
+    kubernetes:
+      startupProbe:
+        path:
+          all: '/health'
+        initialDelaySeconds: 4  # 0 - We expect service to rarely be up within 4 secs.
+        periodSeconds: 2  # 10 - We want the service to become available as soon as possible
+        timeoutSeconds: 3  # 1 - If the app is very busy during the startup stage, 1 second might be too fast
+        successThreshold: 1  # 1 - We want the service to become available as soon as possible
+        failureThreshold: 60  # 3 - 4 + 60 * 2 = more than 2 minutes
+      livenessProbe:
+        path:
+          all: '/health'
+        periodSeconds: 30  # 10
+        timeoutSeconds: 20  # 1 - Busy apps may momentarily have long timeouts
+        successThreshold: 1  # 1
+        failureThreshold: 3  # 3
+      metrics:
+        path: '/metrics'
+        enabled: true

@@ -26,6 +26,7 @@ from ruamel.yaml import YAML
 
 from .stage import Stage
 from .target import Target
+from .validation import validate
 
 T = TypeVar('T')
 
@@ -290,7 +291,7 @@ def load_project(root_dir, project_path: str, strict: bool = True) -> Project:
             template = pkgutil.get_data(__name__, "schema/project.schema.yml")
             if strict and template:
                 schema = yaml.load(template.decode('utf-8'))
-                jsonschema.validate(yaml_values, schema)
+                validate(yaml_values, schema)
 
             return Project.from_yaml(yaml_values, project_path)
         except jsonschema.exceptions.ValidationError as exc:
