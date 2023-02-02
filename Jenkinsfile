@@ -1,4 +1,6 @@
 pipeline {
+    agent any
+
     environment {
         PYENV_ROOT="$HOME/.pyenv"
         PYENV_SHELL="bash"
