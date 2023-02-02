@@ -1,3 +1,5 @@
+""" Defines the stages of the pipeline. Stages are: Build, Test, Deploy and Postdeploy"""
+
 from dataclasses import dataclass
 from enum import Enum
 

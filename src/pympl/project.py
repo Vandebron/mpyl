@@ -18,6 +18,7 @@ T = TypeVar('T')
 
 @dataclass(frozen=True)
 class TargetSpecificProperty(Generic[T]):
+    """ Get the target value: pr, test, acceptance, production, all"""
     pr: Optional[T]  # pylint: disable=invalid-name
     test: Optional[T]
     acceptance: Optional[T]

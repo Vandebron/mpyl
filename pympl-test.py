@@ -1,3 +1,5 @@
+""" Test if you've setup your pipenv"""
+
 from logging import Logger
 
 from pyaml_env import parse_config
