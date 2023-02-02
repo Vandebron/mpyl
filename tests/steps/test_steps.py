@@ -1,16 +1,21 @@
-import unittest
 from io import StringIO
 
+from pyaml_env import parse_config
 from ruamel.yaml import YAML  # type: ignore
 
-from src.mpyl.steps.models import Output, Artifact, ArtifactType
+from src.mpyl.project import Project, Stages
+from src.mpyl.stage import Stage
+from src.mpyl.steps.models import Output, Artifact, ArtifactType, BuildProperties, VersioningProperties
+from src.mpyl.steps.steps import Steps
+from src.mpyl.target import Target
 from tests import root_test_path
+from logging import Logger
 
 yaml = YAML()
 yaml.preserve_quotes = True
 
 
-class TestDiscovery(unittest.TestCase):
+class TestSteps:
     resource_path = root_test_path / "test_resources"
 
     @staticmethod
@@ -36,6 +41,14 @@ class TestDiscovery(unittest.TestCase):
         assert output.produced_artifact.artifact_type.name == "DOCKER_IMAGE"
         assert output.produced_artifact.spec == meta_data
 
+    def test_should_return_error_if_stage_not_defined(self):
+        yaml_values = parse_config(self.resource_path / "config.yml")
+        properties = BuildProperties("id", Target.PULL_REQUEST,
+                                     VersioningProperties("2ad3293a7675d08bc037ef0846ef55897f38ec8f", "1234", None), yaml_values)
 
-if __name__ == '__main__':
-    unittest.main()
+        steps = Steps(logger=Logger.manager.getLogger('logger'), properties=properties)
+        stages = Stages(build=None, test=None, deploy=None, postdeploy=None)
+        project = Project('test', 'Test project', '', stages, [], None, None)
+        output = steps.execute(stage=Stage.BUILD, project=project)
+        assert not output.success
+        assert output.message == "Stage 'build' not defined on project 'test'"
