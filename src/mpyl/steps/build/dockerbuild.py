@@ -1,3 +1,11 @@
+"""This file defines a class BuildDocker which is a subclass of the Step class. This class implements a step for
+building a Docker image for a project. The execute method uses the Docker APIClient to build the image and log the
+build output. The BuildDocker class is defined as a build stage step with a name "Docker Build", a description "Build
+docker image", and a version "0.0.1". The class specifies that the output artifact produced is a Docker image,
+and that no input artifact is required. The class also has "after" step, which calls an instance of the
+AfterBuildDocker class, that pushes the image to the docker registry.
+"""
+
 from logging import Logger
 
 from docker import APIClient  # type: ignore

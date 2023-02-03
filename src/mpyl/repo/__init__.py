@@ -1,3 +1,13 @@
+"""This module has a class called Repository for working with Github. The class has several methods:
+- get_sha: returns the SHA of the repository
+- root_dir: returns the root directory of the repository
+- changes_in_branch: returns a list of history objects, each of which represents a change in the repository
+- changes_in_commit: returns a set of filenames that were changed in the current commit
+- find_projects: returns a set of paths to project yaml
+files in the repository The Repository class takes a RepoConfig object on initialization, which contains
+configuration information for the repository.
+"""
+
 from dataclasses import dataclass
 from typing import Dict
 

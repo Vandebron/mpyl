@@ -1,3 +1,10 @@
+""" This module defines a class named DockerConfig.
+The class has three variables: host_name, user_name, and password, each of type str.
+
+The __init__ method takes as input a dictionary config and sets the values of host_name, user_name,
+and password based on the values stored in the dictionary.
+"""
+
 from typing import Dict
 
 

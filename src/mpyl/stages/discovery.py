@@ -1,3 +1,8 @@
+"""This module contains functions for determining whether a project has been invalidated,
+given a stage and a history of changes. This module also provides a function to find all projects that are relevant for
+a given stage. The functions are implemented using classes and methods from the project, projects.find, repo,
+stage, and steps.models modules."""
+
 from ..project import Project
 from ..projects.find import load_projects
 from ..repo import History, Repository

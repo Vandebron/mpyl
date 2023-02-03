@@ -1,3 +1,14 @@
+"""This module defines a class named AfterBuildDocker, which is a subclass of the Step class.
+
+The class has a constructor method that takes in a Logger object and sets its meta data, artifact types and
+initializes the Step class with that information.
+
+The execute method retrieves the required artifact from the input object. If one is present, a Docker client is
+created using the environment variables. It retrieves the Docker configuration from the input object and logs in to the
+Docker registry. It tags the built Docker image with the full image path and pushes it to the Docker registry.
+The method returns an output object indicating success and including the produced artifact.
+"""
+
 import os
 from logging import Logger
 

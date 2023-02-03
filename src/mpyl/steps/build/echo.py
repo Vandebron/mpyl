@@ -1,3 +1,8 @@
+"""This module defines a class named BuildEcho, which is a subclass of the Step class. It's used to perform a
+dummy build step for testing purposes. The execute method logs a message indicating that
+the project is being built and returns an Output object indicating the success of the build and a message. No actual
+building is done in this class, as it is just meant to serve as a dummy build step."""
+
 from logging import Logger
 
 from ..step import Step

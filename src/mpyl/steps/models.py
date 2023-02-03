@@ -1,3 +1,17 @@
+"""This module defines several classes:
+- VersioningProperties: Gives information about the project, such as the revision, pull request
+number, and tag.
+- BuildProperties: Gives information about a build of the project, such as the build ID, target,
+versioning information, and build configuration.
+- ArtifactType: An enumeration of different types of artifacts that
+can be produced: Docker Image, JUnit Tests, None
+- Artifact: Gives information about the artifact.
+- Input: Represents the input of the project along with its build properties and required artifact.
+- Output: Represents the output of the project with information about the build process,
+including success or failure of the stage and the produced artifact.
+- Meta: Gives metadata about a project including the name, description, version, and stage.
+"""
+
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
