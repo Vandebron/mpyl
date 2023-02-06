@@ -22,6 +22,9 @@ jobs:
 
       - name: Build
         uses: VaultVulp/action-pipenv@v2.0.1
+        env:
+          PIPENV_DONT_LOAD_ENV: true
+          MPYL_VERSION: "${{ github.ref }}"
         with:
           command: run build
 
