@@ -261,6 +261,14 @@ class Project:
 
 
 def load_project(root_dir, project_path: str, strict: bool = True) -> Project:
+    """
+    Load a `project.yml` to `Project` data class
+
+    :param root_dir: root source directory
+    :param project_path: relative path from :param:`root_dir` to the `project.yml`
+    :param strict: indicates whether the schema should be validated
+    :return: `Project` data class
+    """
     with open(f'{root_dir}/{project_path}', encoding='utf-8') as file:
         try:
             yaml = YAML()
