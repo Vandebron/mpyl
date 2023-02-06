@@ -1,3 +1,7 @@
+"""
+This package models the `project.yml` MPyL project definition as a dataclass for use in code.
+"""
+
 import logging
 import pkgutil
 import traceback
