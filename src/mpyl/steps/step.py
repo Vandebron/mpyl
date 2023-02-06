@@ -9,7 +9,7 @@ from .models import Meta, Input, Output, ArtifactType
 class IPluginRegistry(type):
     plugin_registries: List[type] = []
 
-    def __init__(cls, name):
+    def __init__(cls, name, _bases, _attrs):
         super().__init__(cls)
         if name != 'Step':
             IPluginRegistry.plugin_registries.append(cls)
