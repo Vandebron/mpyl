@@ -269,7 +269,7 @@ def load_project(root_dir, project_path: str, strict: bool = True) -> Project:
     Load a `project.yml` to `Project` data class
 
     :param root_dir: root source directory
-    :param project_path: relative path from :param:`root_dir` to the `project.yml`
+    :param project_path: relative path from `root_dir` to the `project.yml`
     :param strict: indicates whether the schema should be validated
     :return: `Project` data class
     """
