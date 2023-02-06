@@ -1,3 +1,3 @@
 """
-The MPyL module
+.. include:: ../../README.md
 """
