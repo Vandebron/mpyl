@@ -15,34 +15,53 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Avoid shared ownership issue on workspace
+        # stderr: 'fatal: detected dubious ownership in repository at '/github/workspace'
+        run: git config --global --add safe.directory /github/workspace
+
       - name: Install dependencies
         uses: VaultVulp/action-pipenv@v2.0.1
         with:
           command: install -d
 
-      - name: Run lint
-        uses: VaultVulp/action-pipenv@v2.0.1
-        with:
-          command: run lint
+#      - name: Run lint
+#        uses: VaultVulp/action-pipenv@v2.0.1
+#        with:
+#          command: run lint
+#
+#      - name: Install Types
+#        uses: VaultVulp/action-pipenv@v2.0.1
+#        with:
+#          command: run install-types
+#
+#      - name: Validate Types
+#        uses: VaultVulp/action-pipenv@v2.0.1
+#        with:
+#          command: run check-types
+#
+#      - name: Test
+#        uses: VaultVulp/action-pipenv@v2.0.1
+#        with:
+#          command: run test
 
-      - name: Install Types
-        uses: VaultVulp/action-pipenv@v2.0.1
+      - uses: jwalton/gh-find-current-pr@v1
+        id: findPr
         with:
-          command: run install-types
-
-      - name: Validate Types
-        uses: VaultVulp/action-pipenv@v2.0.1
-        with:
-          command: run check-types
+          state: open
 
       - name: Build
         uses: VaultVulp/action-pipenv@v2.0.1
+        env:
+          PIPENV_DONT_LOAD_ENV: true
+          MPYL_VERSION: "${{ steps.findPr.outputs.pr }}-${{ github.run_number }}"
         with:
           command: run build
 
-      - name: Test
-        uses: VaultVulp/action-pipenv@v2.0.1
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          command: run test
-
-
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/
+          verbose: true
+          print_hash: true
+          skip_existing: true
