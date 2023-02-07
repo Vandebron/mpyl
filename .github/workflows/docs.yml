@@ -32,6 +32,11 @@ jobs:
         with:
           command: run doc
 
+      - name: Copy schemas
+        run: |
+          chmod -R 0755 docs/schema
+          cp src/mpyl/schema/* docs/schema
+
       - uses: actions/upload-pages-artifact@v1
         with:
           path: docs/
