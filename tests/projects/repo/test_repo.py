@@ -1,3 +1,5 @@
+""" TESTING SPHINX """
+
 import unittest
 
 from pyaml_env import parse_config
@@ -9,6 +11,7 @@ from tests import root_test_path
 
 
 class RepoTestCase(unittest.TestCase):
+    """ TESTING SPHINX """
     resource_path = root_test_path / "test_resources"
 
     @unittest.skip("FIXME: main is not available in github action")
