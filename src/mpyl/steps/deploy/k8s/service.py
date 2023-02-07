@@ -67,10 +67,7 @@ class ServiceChart:
             app_labels['maintainers'] = ".".join(self.project.maintainer).replace(' ', '_')
             app_labels["maintainer"] = self.project.maintainer[0].replace(' ', '_')
 
-        if build_properties.versioning.tag:
-            app_labels['version'] = build_properties.versioning.tag
-        elif build_properties.versioning.pr_number:
-            app_labels['version'] = build_properties.versioning.pr_number
+        app_labels['version'] = build_properties.versioning.identifier
 
         if build_properties.versioning.revision:
             app_labels['revision'] = build_properties.versioning.revision

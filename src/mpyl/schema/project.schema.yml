@@ -58,6 +58,7 @@ properties:
           - Sbt Build
           - Docker Build
           - Skip Build
+          - Echo Build
       test:
         description: >-
           Output needs to be a junit test result file
