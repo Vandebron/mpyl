@@ -9,12 +9,47 @@ definitions:
         "$ref": "#/definitions/CVS"
       docker:
         "$ref": "#/definitions/Docker"
+      kubernetes:
+        "$ref": "#/definitions/Kubernetes"
       project:
         "$ref": "#/definitions/Project"
     required:
       - cvs
       - docker
-    title: Welcome5
+    title: MPyL global configuration
+  Kubernetes:
+    type: object
+    additionalProperties: false
+    properties:
+      rancher:
+        type: object
+        additionalProperties: false
+        properties:
+          cluster:
+            "$ref": "#/definitions/RancherClusters"
+  RancherClusters:
+    type: object
+    additionalProperties: false
+    properties:
+      test:
+        "$ref": "#/definitions/RancherCluster"
+      acceptance:
+        "$ref": "#/definitions/RancherCluster"
+      production:
+        "$ref": "#/definitions/RancherCluster"
+  RancherCluster:
+    type: object
+    additionalProperties: false
+    properties:
+      clusterId:
+        type: string
+      projectId:
+        type: string
+      clusterEnv:
+        type: string
+      context:
+        type: string
+    required: [ clusterId, projectId, clusterEnv, context ]
   CVS:
     type: object
     additionalProperties: false

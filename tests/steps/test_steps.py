@@ -1,5 +1,7 @@
 from io import StringIO
 
+import pytest
+from jsonschema import ValidationError
 from pyaml_env import parse_config
 from ruamel.yaml import YAML  # type: ignore
 
@@ -42,10 +44,10 @@ class TestSteps:
         assert output.produced_artifact.spec == meta_data
 
     def test_should_return_error_if_stage_not_defined(self):
-        yaml_values = parse_config(self.resource_path / "config.yml")
+        config_values = parse_config(self.resource_path / "config.yml")
         properties = BuildProperties("id", Target.PULL_REQUEST,
                                      VersioningProperties("2ad3293a7675d08bc037ef0846ef55897f38ec8f", "1234", None),
-                                     yaml_values)
+                                     config_values)
 
         steps = Steps(logger=Logger.manager.getLogger('logger'), properties=properties)
         stages = Stages(build=None, test=None, deploy=None, postdeploy=None)
@@ -53,3 +55,14 @@ class TestSteps:
         output = steps.execute(stage=Stage.BUILD, project=project)
         assert not output.success
         assert output.message == "Stage 'build' not defined on project 'test'"
+
+    def test_should_return_error_if_stage_not_defined(self):
+        config_values = parse_config(self.resource_path / "config.yml")
+        config_values['kubernetes']['rancher']['cluster']['test']['invalid'] = 'somevalue'
+        properties = BuildProperties("id", Target.PULL_REQUEST, VersioningProperties("", "", None), config_values)
+        with pytest.raises(ValidationError) as excinfo:
+            Steps(logger=Logger.manager.getLogger('logger'), properties=properties)
+        assert "('invalid' was unexpected)" in excinfo.value.message
+
+
+
