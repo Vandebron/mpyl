@@ -26,10 +26,17 @@ class VersioningProperties:
 @yaml_object(yaml)
 @dataclass(frozen=True)
 class BuildProperties:
+    """ Contains information that is specific to a particular run of the pipeline
+    """
     build_id: str
+    """Uniquely identifies the run. Typically a monotonically increasing number"""
     target: Target
+    """The deploy target"""
     versioning: VersioningProperties
     config: dict
+    """Globally specified configuration, to be used by specific steps. Complies with the schema as
+    specified in `mpyl_config.schema.yml`
+     """
 
     @staticmethod
     def from_configuration(build_properties: Dict, config: Dict):
