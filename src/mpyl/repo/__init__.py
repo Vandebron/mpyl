@@ -43,4 +43,5 @@ class Repository:
         return set(self._repo.git.diff(None, name_only=True).splitlines())
 
     def find_projects(self) -> set[str]:
+        """ returns a set of all project.yml files """
         return set(self._repo.git.ls_files(f'**/{Project.project_yaml_path()}').splitlines())
