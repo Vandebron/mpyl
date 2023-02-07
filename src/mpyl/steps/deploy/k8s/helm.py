@@ -4,15 +4,23 @@ from logging import Logger
 from pathlib import Path
 
 from .service import ServiceChart
-from ...models import BuildProperties, Input
+from ...models import BuildProperties, Input, Output
 
 
-def custom_check_output(command: str):
-    output = subprocess.run(command.split(" "), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-    if output.returncode == 0:
-        return output.stdout.decode()
+def custom_check_output(logger: Logger, command: str) -> Output:
+    message = ''
+    try:
+        output = subprocess.run(command.split(" "), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        if output.returncode == 0:
+            message = output.stdout.decode()
+            logger.info(message)
+            return Output(success=True, message='Helm deploy successful')
 
-    return output.stderr.decode()
+    except subprocess.CalledProcessError as exc:
+        message = f"'{command}': return code: {exc.returncode}"
+        logger.warning(exc.stderr.decode(), exc_info=True)
+
+    return Output(success=False, message=f'Helm deploy failed for {message}')
 
 
 def to_chart(chart_name: str, build_properties: BuildProperties):
@@ -25,7 +33,7 @@ appVersion: "{build_properties.versioning.identifier}"
 """
 
 
-def install(logger: Logger, step_input: Input, name_space: str) -> str:
+def install(logger: Logger, step_input: Input, name_space: str, kube_context: str) -> Output:
     if step_input.required_artifact:
         image_name = step_input.required_artifact.spec['image']
     else:
@@ -52,6 +60,6 @@ def install(logger: Logger, step_input: Input, name_space: str) -> str:
     for name, template in templates.items():
         with open(template_path / str(name), mode='w+', encoding='utf-8') as file:
             file.write(template)
-    command = f"helm upgrade -i {chart_name} -n {name_space} {chart_path}"
+    command = f"helm upgrade -i {chart_name} -n {name_space} --kube-context {kube_context} {chart_path}"
     logger.info(command)
-    return custom_check_output(command)
+    return custom_check_output(logger, command)
