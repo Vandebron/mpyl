@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Dict, Optional
 from ruamel.yaml import YAML
 
@@ -6,13 +7,19 @@ from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1Pod
     V1ServiceSpec, V1ServicePort, V1ServiceAccount, V1LocalObjectReference, \
     V1EnvVarSource, V1SecretKeySelector, V1Probe, ApiClient, V1HTTPGetAction
 
-from .resources.crd import to_yaml # pylint: disable = no-name-in-module
+from .resources.crd import to_yaml  # pylint: disable = no-name-in-module
 from .resources.customresources import V1AlphaIngressRoute, V1SealedSecret  # pylint: disable = no-name-in-module
 from ...models import Input
 from ....project import Project, KeyValueProperty, Probe, Deployment
 from ....target import Target
 
 yaml = YAML()
+
+
+@dataclass(frozen=True)
+class KubernetesConfig:
+    liveness_probe_defaults: dict
+    startup_probe_defaults: dict
 
 
 class ServiceChart:
@@ -25,6 +32,7 @@ class ServiceChart:
     target: Target
     release_name: str
     image_name: str
+    kubernetes_config: KubernetesConfig
 
     def __init__(self, step_input: Input, image_name: str):
         self.step_input = step_input
@@ -32,6 +40,14 @@ class ServiceChart:
         self.project = project
         if project.deployment is None:
             raise AttributeError("deployment field should be set")
+        kubernetes_config_dict = step_input.build_properties.config.get('project', {}).get('deployment', {}).get(
+            'kubernetes', {})
+        if kubernetes_config_dict is None:
+            raise KeyError("Configuration should have project.deployment.kubernetes section")
+
+        self.kubernetes_config = KubernetesConfig(liveness_probe_defaults=kubernetes_config_dict['livenessProbe'],
+                                                  startup_probe_defaults=kubernetes_config_dict['startupProbe'])
+
         self.deployment = project.deployment
         properties = self.deployment.properties
         self.env = properties.env if properties.env else []
@@ -145,9 +161,11 @@ class ServiceChart:
             env=env_vars + sealed_secrets,
             ports=ports,
             image_pull_policy="Always",
-            liveness_probe=ServiceChart._to_probe(kubernetes.liveness_probe, Probe.LIVENESS_PROBE_DEFAULTS,
+            liveness_probe=ServiceChart._to_probe(kubernetes.liveness_probe,
+                                                  self.kubernetes_config.liveness_probe_defaults,
                                                   self.target) if kubernetes.liveness_probe else None,
-            startup_probe=ServiceChart._to_probe(kubernetes.startup_probe, Probe.STARTUP_PROBE_DEFAULTS,
+            startup_probe=ServiceChart._to_probe(kubernetes.startup_probe,
+                                                 self.kubernetes_config.startup_probe_defaults,
                                                  self.target) if kubernetes.startup_probe else None
         )
 
