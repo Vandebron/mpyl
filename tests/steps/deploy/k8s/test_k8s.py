@@ -34,7 +34,6 @@ def _roundtrip(file_name: Path, chart: str, as_yaml: dict[str, str], overwrite: 
 
 def _build_chart():
     project = load_project("", str(resource_path / "test_project.yml"), False)
-    config = parse_config(resource_path / "config.yml")
     properties = BuildProperties("id", Target.PULL_REQUEST,
                                  VersioningProperties("2ad3293a7675d08bc037ef0846ef55897f38ec8f", "1234", None),
                                  config)
