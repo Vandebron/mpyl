@@ -11,6 +11,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Avoid shared ownership issue on workspace
+        # stderr: 'fatal: detected dubious ownership in repository at '/github/workspace'
+        run: git config --global --add safe.directory '*'
+
       - name: Install dependencies
         uses: VaultVulp/action-pipenv@v2.0.1
         with:
@@ -18,10 +22,14 @@ jobs:
 
       - name: Build
         uses: VaultVulp/action-pipenv@v2.0.1
+        env:
+          PIPENV_DONT_LOAD_ENV: true
+          MPYL_VERSION: "${{ github.ref }}"
         with:
           command: run build
 
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          password: ${{ secrets.PYPI_RELEASE_API_TOKEN }}
+          verbose: true

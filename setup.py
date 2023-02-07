@@ -1,6 +1,17 @@
+import sys
+
 import setuptools
 from setuptools import setup
 import toml
+
+import os
+
+version_name = 'MPYL_VERSION'
+version = os.environ.get(version_name, None)
+
+if not version:
+    print(f'Version needs to be specified via {version_name} environment variable')
+    sys.exit(1)
 
 with open("README.md", "r", encoding='utf-8') as readme_file:
     readme = readme_file.read()
@@ -23,7 +34,7 @@ def get_install_requirements():
 
 setup(
     name="mpyl",
-    version="0.0.1",
+    version=version,
     description="Modular Pipeline Library",
     long_description=readme,
     long_description_content_type="text/markdown",

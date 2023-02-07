@@ -28,7 +28,7 @@ pytest = "==7.2.1"
 python_version = "3.9"
 
 [scripts]
-build = "python setup.py install sdist bdist bdist_wheel"
+build = "python setup.py install bdist bdist_wheel"
 lint = "pylint --rcfile .pylintrc src/"
 test = "pytest"
 check-types ="mypy src/mpyl/"
