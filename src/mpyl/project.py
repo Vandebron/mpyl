@@ -1,3 +1,18 @@
+"""
+Datamodel representation of project specific configuration as specified
+in the `deployment/project.yml`. It defines how the source code to which it relates
+"wants" to be built / tested / deployed.
+
+<details>
+  <summary>Schema definition</summary>
+```yaml
+.. include:: ./schema/project.schema.yml
+```
+</details>
+
+.. include:: ../../README-dev.md
+"""
+
 import logging
 import pkgutil
 import traceback
@@ -261,6 +276,13 @@ class Project:
 
 
 def load_project(root_dir, project_path: str, strict: bool = True) -> Project:
+    """
+    Load a `project.yml` to `Project` data class
+    :param root_dir: root source directory
+    :param project_path: relative path from `root_dir` to the `project.yml`
+    :param strict: indicates whether the schema should be validated
+    :return: `Project` data class
+    """
     with open(f'{root_dir}/{project_path}', encoding='utf-8') as file:
         try:
             yaml = YAML()

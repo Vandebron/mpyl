@@ -17,7 +17,7 @@ properties:
       - invoices
       - keycloak
   description:
-    description: A one-liner to describe this projetc's role
+    description: A one-liner to describe this project's role
     type: string
     examples:
       - Acts as a gateway and facade to the outside world
