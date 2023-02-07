@@ -9,6 +9,8 @@ in the `deployment/project.yml`. It defines how the source code to which it rela
 .. include:: ./schema/project.schema.yml
 ```
 </details>
+
+.. include:: ../../README-dev.md
 """
 
 import logging
