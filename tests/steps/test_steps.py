@@ -44,7 +44,8 @@ class TestSteps:
     def test_should_return_error_if_stage_not_defined(self):
         yaml_values = parse_config(self.resource_path / "config.yml")
         properties = BuildProperties("id", Target.PULL_REQUEST,
-                                     VersioningProperties("2ad3293a7675d08bc037ef0846ef55897f38ec8f", "1234", None), yaml_values)
+                                     VersioningProperties("2ad3293a7675d08bc037ef0846ef55897f38ec8f", "1234", None),
+                                     yaml_values)
 
         steps = Steps(logger=Logger.manager.getLogger('logger'), properties=properties)
         stages = Stages(build=None, test=None, deploy=None, postdeploy=None)
