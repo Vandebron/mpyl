@@ -16,8 +16,11 @@ class IPluginRegistry(type):
 
 
 class Step(metaclass=IPluginRegistry):
+    """ Information and execution of a single building step inside the pipeline. """
     meta: Meta
+    """ Identifies the name, description, version and stage """
     produced_artifact: ArtifactType
+    """ Returns a enum value describing the produced archifact"""
     required_artifact: ArtifactType
     before: Optional[Step]
     after: Optional[Step]
@@ -32,4 +35,8 @@ class Step(metaclass=IPluginRegistry):
         self.after = after
 
     def execute(self, step_input: Input) -> Output:
+        """ Execute a building step of the project
+        :param step_input: The input of the project along with its build properties and required artifact.
+        :return Output: The output of the project with information about the build process.
+        """
         return Output(success=False, message=f"Not implemented for {step_input.project.name}", produced_artifact=None)
