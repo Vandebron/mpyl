@@ -18,7 +18,6 @@ yaml = YAML()
 class Steps:
     """ Executes the pipeline with its build properties """
     _step_executors: set[Step]
-    """ A set of all the steps inside the pipeline """
     _logger: Logger
     _properties: BuildProperties
 
