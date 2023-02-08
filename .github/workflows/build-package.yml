@@ -2,7 +2,6 @@ name: build
 
 on:
   push:
-    branches-ignore: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
@@ -48,11 +47,13 @@ jobs:
           command: run test
 
       - uses: jwalton/gh-find-current-pr@v1
+        if: github.ref_name != 'main'
         id: findPr
         with:
           state: open
 
       - name: Build
+        if: github.ref_name != 'main'
         uses: VaultVulp/action-pipenv@v2.0.1
         env:
           PIPENV_DONT_LOAD_ENV: true
@@ -61,6 +62,7 @@ jobs:
           command: run build
 
       - name: Publish package
+        if: github.ref_name != 'main'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
