@@ -5,10 +5,6 @@ on:
   push:
     branches:
       - main
-      - feature/ARC-555-inline-documentation-example
-    # Alternative: only build for tags.
-    # tags:
-    #   - '*'
 
 # security: restrict permissions for CI jobs.
 permissions:
