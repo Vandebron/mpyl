@@ -2,7 +2,7 @@ name: build
 
 on:
   push:
-    branches: [ "main" ]
+    branches-ignore: [ "master" ]
   pull_request:
     branches: [ "main" ]
 
