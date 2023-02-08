@@ -1,18 +1,25 @@
+from dataclasses import dataclass
 from typing import Dict, Optional
-
-from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1PodTemplateSpec, V1ObjectMeta, V1PodSpec, \
-    V1DeploymentStrategy, V1RollingUpdateDeployment, V1LabelSelector, V1ContainerPort, V1EnvVar, V1Ingress, \
-    V1IngressSpec, V1IngressRule, V1Service, V1ServiceSpec, V1ServicePort, V1ServiceAccount, V1LocalObjectReference, \
-    V1EnvVarSource, V1SecretKeySelector, V1Probe, ApiClient, V1HTTPGetAction
-
 from ruamel.yaml import YAML
 
-from .resources import to_yaml, V1SealedSecret
+from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1PodTemplateSpec, V1ObjectMeta, V1PodSpec, \
+    V1DeploymentStrategy, V1RollingUpdateDeployment, V1LabelSelector, V1ContainerPort, V1EnvVar, V1Service, \
+    V1ServiceSpec, V1ServicePort, V1ServiceAccount, V1LocalObjectReference, \
+    V1EnvVarSource, V1SecretKeySelector, V1Probe, ApiClient, V1HTTPGetAction
+
+from .resources.crd import to_yaml  # pylint: disable = no-name-in-module
+from .resources.customresources import V1AlphaIngressRoute, V1SealedSecret  # pylint: disable = no-name-in-module
 from ...models import Input
-from ....project import Project, KeyValueProperty, Probe
+from ....project import Project, KeyValueProperty, Probe, Deployment
 from ....target import Target
 
 yaml = YAML()
+
+
+@dataclass(frozen=True)
+class KubernetesConfig:
+    liveness_probe_defaults: dict
+    startup_probe_defaults: dict
 
 
 class ServiceChart:
@@ -21,18 +28,30 @@ class ServiceChart:
     mappings: dict[int, int]
     env: list[KeyValueProperty]
     sealed_secrets: list[KeyValueProperty]
+    deployment: Deployment
     target: Target
     release_name: str
     image_name: str
+    kubernetes_config: KubernetesConfig
 
     def __init__(self, step_input: Input, image_name: str):
         self.step_input = step_input
         project = self.step_input.project
         self.project = project
-        deployment = project.deployment
-        self.env = deployment.properties.env if deployment and deployment.properties.env else []
-        self.sealed_secrets = deployment.properties.sealed_secret if deployment \
-                                                                     and deployment.properties.sealed_secret else []
+        if project.deployment is None:
+            raise AttributeError("deployment field should be set")
+        kubernetes_config_dict = step_input.build_properties.config.get('project', {}).get('deployment', {}).get(
+            'kubernetes', {})
+        if kubernetes_config_dict is None:
+            raise KeyError("Configuration should have project.deployment.kubernetes section")
+
+        self.kubernetes_config = KubernetesConfig(liveness_probe_defaults=kubernetes_config_dict['livenessProbe'],
+                                                  startup_probe_defaults=kubernetes_config_dict['startupProbe'])
+
+        self.deployment = project.deployment
+        properties = self.deployment.properties
+        self.env = properties.env if properties.env else []
+        self.sealed_secrets = properties.sealed_secret if properties.sealed_secret else []
         self.mappings = self.project.kubernetes.port_mappings
         self.target = step_input.build_properties.target
         self.release_name = self.project.name.lower()
@@ -48,10 +67,7 @@ class ServiceChart:
             app_labels['maintainers'] = ".".join(self.project.maintainer).replace(' ', '_')
             app_labels["maintainer"] = self.project.maintainer[0].replace(' ', '_')
 
-        if build_properties.versioning.tag:
-            app_labels['version'] = build_properties.versioning.tag
-        elif build_properties.versioning.pr_number:
-            app_labels['version'] = build_properties.versioning.pr_number
+        app_labels['version'] = build_properties.versioning.identifier
 
         if build_properties.versioning.revision:
             app_labels['revision'] = build_properties.versioning.revision
@@ -89,8 +105,11 @@ class ServiceChart:
                          spec=V1ServiceSpec(type="ClusterIP", ports=service_ports,
                                             selector=self._to_selector().match_labels))
 
-    def to_ingress(self) -> V1Ingress:
-        return V1Ingress(metadata=self._to_object_meta(), spec=V1IngressSpec(rules=[V1IngressRule()]))
+    def to_ingress_routes(self) -> Optional[V1AlphaIngressRoute]:
+        if not self.deployment.traefik:
+            return None
+        return V1AlphaIngressRoute(metadata=self._to_object_meta(), hosts=self.deployment.traefik.hosts,
+                                   service_port=123, name=self.release_name, target=self.target)
 
     def to_service_account(self) -> V1ServiceAccount:
         return V1ServiceAccount(api_version="v1", kind="ServiceAccount", metadata=self._to_object_meta(),
@@ -101,6 +120,10 @@ class ServiceChart:
                  'service': to_yaml(self.to_service())}
         if self.sealed_secrets:
             chart['sealedsecrets'] = to_yaml(self.to_sealed_secrets())
+
+        if self.deployment.traefik:
+            chart['ingress-https-route'] = to_yaml(self.to_ingress_routes())
+
         return chart
 
     def to_sealed_secrets(self) -> Optional[V1SealedSecret]:
@@ -114,11 +137,7 @@ class ServiceChart:
         return V1SealedSecret(name=self.release_name, secrets=secrets)
 
     def to_deployment(self) -> V1Deployment:
-        deployment = self.project.deployment
-        if deployment is None:
-            raise AttributeError("deployment field should be set")
-
-        kubernetes = deployment.kubernetes
+        kubernetes = self.deployment.kubernetes
         if kubernetes is None:
             raise AttributeError("deployment.kubernetes field should be set")
 
@@ -128,7 +147,7 @@ class ServiceChart:
             filter(lambda v: v.value, map(lambda e: V1EnvVar(name=e.key, value=e.get_value(self.target)), self.env)))
 
         sealed_for_target = list(
-            filter(lambda v: v.get_value(self.target) is not None, deployment.properties.sealed_secret))
+            filter(lambda v: v.get_value(self.target) is not None, self.deployment.properties.sealed_secret))
         sealed_secrets = list(map(lambda e: V1EnvVar(name=e.key, value_from=V1EnvVarSource(
             secret_key_ref=V1SecretKeySelector(key=e.key, name=self.release_name, optional=False))),
                                   sealed_for_target))
@@ -139,9 +158,11 @@ class ServiceChart:
             env=env_vars + sealed_secrets,
             ports=ports,
             image_pull_policy="Always",
-            liveness_probe=ServiceChart._to_probe(kubernetes.liveness_probe, Probe.LIVENESS_PROBE_DEFAULTS,
+            liveness_probe=ServiceChart._to_probe(kubernetes.liveness_probe,
+                                                  self.kubernetes_config.liveness_probe_defaults,
                                                   self.target) if kubernetes.liveness_probe else None,
-            startup_probe=ServiceChart._to_probe(kubernetes.startup_probe, Probe.STARTUP_PROBE_DEFAULTS,
+            startup_probe=ServiceChart._to_probe(kubernetes.startup_probe,
+                                                 self.kubernetes_config.startup_probe_defaults,
                                                  self.target) if kubernetes.startup_probe else None
         )
 

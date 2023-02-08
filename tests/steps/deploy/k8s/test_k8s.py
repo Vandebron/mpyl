@@ -1,18 +1,23 @@
 from pathlib import Path
 
 import pytest
-from kubernetes.client import V1Probe
+from kubernetes.client import V1Probe, V1ObjectMeta
 from pyaml_env import parse_config
 
 from src.mpyl.project import load_project, Probe
 from src.mpyl.steps.build import DockerConfig
+from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml
 from src.mpyl.steps.deploy.k8s.service import ServiceChart
-from src.mpyl.steps.models import Input, BuildProperties, VersioningProperties
+from src.mpyl.steps.models import BuildProperties, VersioningProperties, Input
 from src.mpyl.target import Target
+from src.mpyl.steps.deploy.k8s.resources.customresources import V1AlphaIngressRoute
 from tests import root_test_path
 
 resource_path = root_test_path / "test_resources"
 template_path = root_test_path / "steps" / "deploy" / "k8s" / "chart" / "templates"
+
+config = parse_config(resource_path / "config.yml")
+liveness_probe_defaults = config['project']['deployment']['kubernetes']['livenessProbe']
 
 
 def _roundtrip(file_name: Path, chart: str, as_yaml: dict[str, str], overwrite: bool = False):
@@ -30,7 +35,8 @@ def _roundtrip(file_name: Path, chart: str, as_yaml: dict[str, str], overwrite: 
 def _build_chart():
     project = load_project("", str(resource_path / "test_project.yml"), False)
     properties = BuildProperties("id", Target.PULL_REQUEST,
-                                 VersioningProperties("2ad3293a7675d08bc037ef0846ef55897f38ec8f", "1234", None), {})
+                                 VersioningProperties("2ad3293a7675d08bc037ef0846ef55897f38ec8f", "1234", None),
+                                 config)
     return ServiceChart(step_input=Input(project, properties, None), image_name='registry/image:123').to_chart()
 
 
@@ -44,11 +50,11 @@ def test_probe_values_should_be_customizable():
     assert probe.values['successThreshold'] == custom_success_threshold
     assert probe.values['failureThreshold'] == custom_failure_threshold
 
-    v1_probe: V1Probe = ServiceChart._to_probe(probe, Probe.LIVENESS_PROBE_DEFAULTS, target=Target.PULL_REQUEST)
+    v1_probe: V1Probe = ServiceChart._to_probe(probe, liveness_probe_defaults, target=Target.PULL_REQUEST)
     assert v1_probe.success_threshold == custom_success_threshold
     assert v1_probe.failure_threshold == custom_failure_threshold
 
-    assert v1_probe.period_seconds == Probe.LIVENESS_PROBE_DEFAULTS['periodSeconds']
+    assert v1_probe.period_seconds == liveness_probe_defaults['periodSeconds']
     assert v1_probe.grpc.port == 123
 
 
@@ -58,9 +64,9 @@ def test_probe_deserialization_failure_should_throw():
 
     probe.values['httpGet'] = 'incorrect'
 
-    with pytest.raises(ValueError) as excinfo:
-        ServiceChart._to_probe(probe, Probe.LIVENESS_PROBE_DEFAULTS, target=Target.PULL_REQUEST)
-    assert 'Invalid value for `port`, must not be `None`' in str(excinfo.value)
+    with pytest.raises(ValueError) as exc_info:
+        ServiceChart._to_probe(probe, liveness_probe_defaults, target=Target.PULL_REQUEST)
+    assert 'Invalid value for `port`, must not be `None`' in str(exc_info.value)
 
 
 def test_load_config():
@@ -69,7 +75,20 @@ def test_load_config():
     assert config.host_name == 'bigdataregistry.azurecr.io'
 
 
-@pytest.mark.parametrize('template', ['deployment', 'service', 'serviceaccount', 'sealedsecrets'])
+def test_should_validate_against_crd_schema():
+    project = load_project("", str(resource_path / "test_project.yml"), False)
+
+    route = V1AlphaIngressRoute(metadata=V1ObjectMeta(), hosts=project.deployment.traefik.hosts, service_port=1234,
+                                name='serviceName', target=Target.PRODUCTION)
+    route.spec['tls'] = {'secretName': 1234}
+
+    with pytest.raises(ValueError) as exc_info:
+        to_yaml(route)
+    assert "Schema validation failed with 1234 is not of type 'string'" in str(exc_info.value)
+
+
+@pytest.mark.parametrize('template',
+                         ['deployment', 'service', 'serviceaccount', 'sealedsecrets', 'ingress-https-route'])
 def test_chart_roundtrip(template):
     charts = _build_chart()
     _roundtrip(template_path, template, charts)

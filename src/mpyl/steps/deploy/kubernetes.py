@@ -3,7 +3,7 @@ from logging import Logger
 from kubernetes import config, client
 
 from .k8s import helm
-from .k8s.rancher import rancher_namespace_metadata
+from .k8s.rancher import rancher_namespace_metadata, cluster_config
 from ..models import Meta, Input, Output, ArtifactType
 from ..step import Step
 from ...stage import Stage
@@ -24,11 +24,14 @@ class DeployKubernetes(Step):
         if not step_input.required_artifact:
             return Output(success=False, message=f"Step requires artifact of type {self.required_artifact}")
 
-        config.load_kube_config()
+        properties = step_input.build_properties
+        context = cluster_config(properties.target).context
+        config.load_kube_config(context=context)
+        self._logger.info(f"Deploying target {properties.target} and k8s context {context}")
         api = client.CoreV1Api()
 
-        namespace = f'pr-{step_input.build_properties.versioning.pr_number}'
-        meta_data = rancher_namespace_metadata(namespace, step_input.build_properties.target)
+        namespace = f'pr-{properties.versioning.pr_number}'
+        meta_data = rancher_namespace_metadata(namespace, properties.target)
 
         namespaces = api.list_namespace(field_selector=f'metadata.name={namespace}')
         if len(namespaces.items) == 0:
@@ -37,7 +40,6 @@ class DeployKubernetes(Step):
         else:
             self._logger.info(f"Found namespace {namespace}")
 
-        helm_logs = helm.install(self._logger, step_input, namespace)
-        self._logger.info(helm_logs)
-
-        return Output(success=True, message=f"Deployed project {step_input.project.name}")
+        helm_result = helm.install(self._logger, step_input, namespace, context)
+        self._logger.info(helm_result.message)
+        return helm_result
