@@ -1,3 +1,5 @@
+""" Module """
+
 from ..project import Project
 from ..projects.find import load_projects
 from ..repo import History, Repository

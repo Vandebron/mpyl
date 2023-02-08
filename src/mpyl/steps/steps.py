@@ -1,3 +1,5 @@
+""" Module used to define and execute the steps inside the pipeline. """
+
 from logging import Logger
 from typing import Optional
 

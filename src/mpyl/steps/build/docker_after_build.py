@@ -1,3 +1,5 @@
+""" A build step to push a docker image to the container registry. """
+
 import os
 from logging import Logger
 
