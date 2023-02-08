@@ -26,6 +26,7 @@ from ruamel.yaml import YAML
 
 from .stage import Stage
 from .target import Target
+from .validation import validate
 
 T = TypeVar('T')
 
@@ -130,21 +131,6 @@ class Properties:
 class Probe:
     path: TargetSpecificProperty[str]
     values: dict
-
-    STARTUP_PROBE_DEFAULTS = {
-        'initialDelaySeconds': 4,  # 0 - We expect service to rarely be up within 4 secs.
-        'periodSeconds': 2,  # 10 - We want the service to become available as soon as possible
-        'timeoutSeconds': 3,  # 1 - If the app is very busy during the startup stage, 1 second might be too fast
-        'successThreshold': 1,  # 1 - We want the service to become available as soon as possible
-        'failureThreshold': 60  # 3 - 4 + 60 * 2 = more than 2 minutes
-    }
-
-    LIVENESS_PROBE_DEFAULTS = {
-        'periodSeconds': 30,  # 10
-        'timeoutSeconds': 20,  # 1 - Busy apps may momentarily have long timeouts
-        'successThreshold': 1,  # 1
-        'failureThreshold': 3  # 3
-    }
 
     @staticmethod
     def from_yaml(values: dict):
@@ -290,7 +276,7 @@ def load_project(root_dir, project_path: str, strict: bool = True) -> Project:
             template = pkgutil.get_data(__name__, "schema/project.schema.yml")
             if strict and template:
                 schema = yaml.load(template.decode('utf-8'))
-                jsonschema.validate(yaml_values, schema)
+                validate(yaml_values, schema)
 
             return Project.from_yaml(yaml_values, project_path)
         except jsonschema.exceptions.ValidationError as exc:

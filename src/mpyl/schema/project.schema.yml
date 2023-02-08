@@ -1,6 +1,6 @@
 $schema: http://json-schema.org/draft-07/schema#
-$id: http://vandebron.nl/project.schema.yml
-description: A unit in CI/CD
+$id: schema/project.schema.yml
+description: Description of a buildable artifact
 required:
   - name
   - stages
@@ -58,6 +58,7 @@ properties:
           - Sbt Build
           - Docker Build
           - Skip Build
+          - Echo Build
       test:
         description: >-
           Output needs to be a junit test result file
@@ -247,233 +248,7 @@ properties:
               all:
                 type: string
       kubernetes:
-        additionalProperties: false
-        type: object
-        properties:
-          secrets:
-            type: object
-            additionalItems: false
-            required:
-              - name
-            properties:
-              name:
-                type: string
-          cron:
-            additionalProperties: false
-            type: object
-            required:
-              - schedule
-            properties:
-              schedule:
-                type: string
-              successfulJobHistory:
-                type: integer
-                description: number of jobs to keep in history that succeeded
-              failedJobHistory:
-                type: integer
-                description: number of jobs to keep in history that failed
-              concurrencyPolicy:
-                type: string
-                enum:
-                  - Allow
-                  - Forbid
-                  - Replace
-                description: >-
-                  treatment of concurrent job executions. See
-                  https://kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/#concurrency-policy
-          policies:
-            type: array
-            minItems: 1
-          labels:
-            type: array
-            items:
-              $ref: '#/definitions/label'
-          startupProbe:
-            description: >-
-              Defers the execution of liveness and readiness probes until a
-              container indicates it’s able to handle them. Kubernetes won’t
-              direct the other probe types to a container if it has a startup
-              probe that hasn’t yet succeeded.
-            $ref: '#/definitions/startupProbe'
-          livenessProbe:
-            description: >-
-              Detects whether a pod is healthy by running a command or making a
-              network request inside the container. Containers that fail the
-              check are restarted.
-            $ref: '#/definitions/livenessProbe'
-          cmd:
-            type: object
-            additionalProperties: false
-            oneOf:
-              - required:
-                  - pr
-                  - test
-                  - acceptance
-                  - production
-              - required:
-                  - all
-            properties:
-              pr:
-                type: string
-              test:
-                type: string
-              acceptance:
-                type: string
-              production:
-                type: string
-              all:
-                type: string
-          args:
-            type: object
-            additionalProperties: false
-            oneOf:
-              - required:
-                  - pr
-                  - test
-                  - acceptance
-                  - production
-              - required:
-                  - all
-            properties:
-              pr:
-                type: string
-              test:
-                type: string
-              acceptance:
-                type: string
-              production:
-                type: string
-              all:
-                type: string
-          resources:
-            type: object
-            properties:
-              instances:
-                description: Sets the number of replicas to be started
-                type: object
-                additionalProperties: false
-                oneOf:
-                  - required:
-                      - pr
-                      - test
-                      - acceptance
-                      - production
-                  - required:
-                      - all
-                properties:
-                  pr:
-                    default: '1'
-                    type: integer
-                  test:
-                    default: '1'
-                    type: integer
-                  acceptance:
-                    default: '1'
-                    type: integer
-                  production:
-                    default: '1'
-                    type: integer
-                  all:
-                    default: '1'
-                    type: integer
-              limit:
-                $ref: '#/definitions/limitResources'
-              request:
-                $ref: '#/definitions/requestResources'
-            additionalProperties: false
-          portMappings:
-            type: object
-          ttlSecondsAfterFinished:
-            type: object
-            additionalProperties: false
-            oneOf:
-              - required:
-                  - pr
-                  - test
-                  - acceptance
-                  - production
-              - required:
-                  - all
-            properties:
-              pr:
-                type: number
-              test:
-                type: number
-              acceptance:
-                type: number
-              production:
-                type: number
-              all:
-                type: number
-          activeDeadlineSeconds:
-            type: object
-            additionalProperties: false
-            oneOf:
-              - required:
-                  - pr
-                  - test
-                  - acceptance
-                  - production
-              - required:
-                  - all
-            properties:
-              pr:
-                type: number
-              test:
-                type: number
-              acceptance:
-                type: number
-              production:
-                type: number
-              all:
-                type: number
-          role:
-            type: object
-            additionalProperties: false
-            required:
-              - resources
-              - verbs
-            properties:
-              resources:
-                description: >-
-                  A list of Kubernetes resources that the verbs will be applied
-                  on. See
-                  https://kubernetes.io/docs/reference/kubectl/overview/#resource-types
-                type: array
-                minItems: 1
-                items:
-                  type: string
-              verbs:
-                description: >-
-                  A list of Kubernetes Request Verbs that will be granted to a
-                  Role that will be bound to the ServiceAccount of this service.
-                  See
-                  https://kubernetes.io/docs/reference/access-authn-authz/authorization/#determine-the-request-verb
-                type: array
-                minItems: 1
-                items:
-                  type: string
-          metrics:
-            required:
-              - enabled
-            additionalProperties: false
-            type: object
-            properties:
-              enabled:
-                type: boolean
-              port:
-                type: integer
-              path:
-                type: string
-              alerts:
-                type: array
-                items:
-                  $ref: '#/definitions/alert'
-        dependencies:
-          portMappings:
-            - metrics
-          livenessProbe:
-            - metrics
+        $ref: '#/definitions/kubernetes'
       traefik:
         additionalProperties: false
         type: object
@@ -1024,3 +799,231 @@ definitions:
         type: string
       description:
         type: string
+  kubernetes:
+    type: object
+    additionalProperties: false
+    properties:
+      secrets:
+        type: object
+        additionalItems: false
+        required:
+          - name
+        properties:
+          name:
+            type: string
+      cron:
+        additionalProperties: false
+        type: object
+        required:
+          - schedule
+        properties:
+          schedule:
+            type: string
+          successfulJobHistory:
+            type: integer
+            description: number of jobs to keep in history that succeeded
+          failedJobHistory:
+            type: integer
+            description: number of jobs to keep in history that failed
+          concurrencyPolicy:
+            type: string
+            enum:
+              - Allow
+              - Forbid
+              - Replace
+            description: >-
+              treatment of concurrent job executions. See
+              https://kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/#concurrency-policy
+      policies:
+        type: array
+        minItems: 1
+      labels:
+        type: array
+        items:
+          $ref: '#/definitions/label'
+      startupProbe:
+        description: >-
+          Defers the execution of liveness and readiness probes until a
+          container indicates it’s able to handle them. Kubernetes won’t
+          direct the other probe types to a container if it has a startup
+          probe that hasn’t yet succeeded.
+        $ref: '#/definitions/startupProbe'
+      livenessProbe:
+        description: >-
+          Detects whether a pod is healthy by running a command or making a
+          network request inside the container. Containers that fail the
+          check are restarted.
+        $ref: '#/definitions/livenessProbe'
+      cmd:
+        type: object
+        additionalProperties: false
+        oneOf:
+          - required:
+              - pr
+              - test
+              - acceptance
+              - production
+          - required:
+              - all
+        properties:
+          pr:
+            type: string
+          test:
+            type: string
+          acceptance:
+            type: string
+          production:
+            type: string
+          all:
+            type: string
+      args:
+        type: object
+        additionalProperties: false
+        oneOf:
+          - required:
+              - pr
+              - test
+              - acceptance
+              - production
+          - required:
+              - all
+        properties:
+          pr:
+            type: string
+          test:
+            type: string
+          acceptance:
+            type: string
+          production:
+            type: string
+          all:
+            type: string
+      resources:
+        type: object
+        properties:
+          instances:
+            description: Sets the number of replicas to be started
+            type: object
+            additionalProperties: false
+            oneOf:
+              - required:
+                  - pr
+                  - test
+                  - acceptance
+                  - production
+              - required:
+                  - all
+            properties:
+              pr:
+                default: '1'
+                type: integer
+              test:
+                default: '1'
+                type: integer
+              acceptance:
+                default: '1'
+                type: integer
+              production:
+                default: '1'
+                type: integer
+              all:
+                default: '1'
+                type: integer
+          limit:
+            $ref: '#/definitions/limitResources'
+          request:
+            $ref: '#/definitions/requestResources'
+        additionalProperties: false
+      portMappings:
+        type: object
+      ttlSecondsAfterFinished:
+        type: object
+        additionalProperties: false
+        oneOf:
+          - required:
+              - pr
+              - test
+              - acceptance
+              - production
+          - required:
+              - all
+        properties:
+          pr:
+            type: number
+          test:
+            type: number
+          acceptance:
+            type: number
+          production:
+            type: number
+          all:
+            type: number
+      activeDeadlineSeconds:
+        type: object
+        additionalProperties: false
+        oneOf:
+          - required:
+              - pr
+              - test
+              - acceptance
+              - production
+          - required:
+              - all
+        properties:
+          pr:
+            type: number
+          test:
+            type: number
+          acceptance:
+            type: number
+          production:
+            type: number
+          all:
+            type: number
+      role:
+        type: object
+        additionalProperties: false
+        required:
+          - resources
+          - verbs
+        properties:
+          resources:
+            description: >-
+              A list of Kubernetes resources that the verbs will be applied
+              on. See
+              https://kubernetes.io/docs/reference/kubectl/overview/#resource-types
+            type: array
+            minItems: 1
+            items:
+              type: string
+          verbs:
+            description: >-
+              A list of Kubernetes Request Verbs that will be granted to a
+              Role that will be bound to the ServiceAccount of this service.
+              See
+              https://kubernetes.io/docs/reference/access-authn-authz/authorization/#determine-the-request-verb
+            type: array
+            minItems: 1
+            items:
+              type: string
+      metrics:
+        required:
+          - enabled
+        additionalProperties: false
+        type: object
+        properties:
+          enabled:
+            type: boolean
+          port:
+            type: integer
+          path:
+            type: string
+          alerts:
+            type: array
+            items:
+              $ref: '#/definitions/alert'
+    dependencies:
+      portMappings:
+        - metrics
+      livenessProbe:
+        - metrics
