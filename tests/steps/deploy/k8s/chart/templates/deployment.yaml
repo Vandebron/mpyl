@@ -12,7 +12,7 @@ metadata:
     app.kubernetes.io/instance: dockertest
     maintainers: Marketplace.Energy_Trading
     maintainer: Marketplace
-    version: '1234'
+    version: pr-1234
     revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
   name: dockertest
 spec:
@@ -35,7 +35,7 @@ spec:
         app.kubernetes.io/instance: dockertest
         maintainers: Marketplace.Energy_Trading
         maintainer: Marketplace
-        version: '1234'
+        version: pr-1234
         revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
       name: dockertest
     spec:

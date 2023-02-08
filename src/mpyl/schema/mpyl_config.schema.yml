@@ -1,0 +1,116 @@
+"$schema": http://json-schema.org/draft-07/schema#
+"$ref": "#/definitions/Config"
+definitions:
+  Config:
+    type: object
+    additionalProperties: false
+    properties:
+      cvs:
+        "$ref": "#/definitions/CVS"
+      docker:
+        "$ref": "#/definitions/Docker"
+      kubernetes:
+        "$ref": "#/definitions/Kubernetes"
+      project:
+        "$ref": "#/definitions/Project"
+    required:
+      - cvs
+      - docker
+    title: MPyL global configuration
+  Kubernetes:
+    type: object
+    additionalProperties: false
+    properties:
+      rancher:
+        type: object
+        additionalProperties: false
+        properties:
+          cluster:
+            "$ref": "#/definitions/RancherClusters"
+  RancherClusters:
+    type: object
+    additionalProperties: false
+    properties:
+      test:
+        "$ref": "#/definitions/RancherCluster"
+      acceptance:
+        "$ref": "#/definitions/RancherCluster"
+      production:
+        "$ref": "#/definitions/RancherCluster"
+  RancherCluster:
+    type: object
+    additionalProperties: false
+    properties:
+      clusterId:
+        type: string
+      projectId:
+        type: string
+      clusterEnv:
+        type: string
+      context:
+        type: string
+    required: [ clusterId, projectId, clusterEnv, context ]
+  CVS:
+    type: object
+    additionalProperties: false
+    properties:
+      git:
+        "$ref": "#/definitions/Git"
+      github:
+        "$ref": "#/definitions/Github"
+    required:
+      - git
+      - github
+    title: CVS
+  Git:
+    type: object
+    additionalProperties: false
+    properties:
+      main_branch:
+        type: string
+    required:
+      - main_branch
+    title: Git
+  Github:
+    type: object
+    additionalProperties: false
+    properties:
+      repository:
+        type: string
+    required:
+      - repository
+    title: Github
+  Docker:
+    type: object
+    additionalProperties: false
+    properties:
+      registry:
+        "$ref": "#/definitions/Registry"
+    required:
+      - registry
+    title: Docker
+  Registry:
+    type: object
+    additionalProperties: false
+    properties:
+      host_name:
+        type: string
+      user_name:
+        type: string
+      password:
+        type: string
+    required:
+      - host_name
+      - password
+      - user_name
+    title: Registry
+  Project:
+    type: object
+    additionalProperties: false
+    properties:
+      deployment:
+        type: object
+        additionalProperties: false
+        properties:
+          kubernetes:
+             "$ref": "project.schema.yml#/definitions/kubernetes"

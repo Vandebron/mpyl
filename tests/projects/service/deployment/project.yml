@@ -28,7 +28,7 @@ deployment:
       successThreshold: 0
       failureThreshold: 99
     portMappings:
-      8080: 8080
+      8081: 8081
     metrics:
       enabled: false
     resources:
