@@ -9,8 +9,8 @@ jobs:
   Build_Package:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
       - name: Checkout Source
+        uses: actions/checkout@v3
 
       - name: Cache Dependencies
         uses: actions/cache@v2
@@ -46,15 +46,16 @@ jobs:
         with:
           command: run test
 
-      - uses: jwalton/gh-find-current-pr@v1
-        if: github.ref_name != 'main'
+      - name: Find PR number
+        uses: jwalton/gh-find-current-pr@v1
         id: findPr
+        if: github.ref_name != 'main'
         with:
           state: open
 
       - name: Build
-        if: github.ref_name != 'main'
         uses: VaultVulp/action-pipenv@v2.0.1
+        if: github.ref_name != 'main'
         env:
           PIPENV_DONT_LOAD_ENV: true
           MPYL_VERSION: "${{ steps.findPr.outputs.pr }}-${{ github.run_number }}"
@@ -62,8 +63,8 @@ jobs:
           command: run build
 
       - name: Publish package
-        if: github.ref_name != 'main'
         uses: pypa/gh-action-pypi-publish@release/v1
+        if: github.ref_name != 'main'
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
           repository_url: https://test.pypi.org/legacy/
