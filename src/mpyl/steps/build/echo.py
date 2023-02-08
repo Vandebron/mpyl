@@ -1,3 +1,5 @@
+""" Dummy build step to test the framework. """
+
 from logging import Logger
 
 from ..step import Step

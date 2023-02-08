@@ -1,3 +1,7 @@
+""" Model representation of the project containing the build configuration.
+TODO: More info
+"""
+
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
