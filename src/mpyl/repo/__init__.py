@@ -1,3 +1,5 @@
+""" Module defining information about the repository, any changes made to it and the containing projects. """
+
 from dataclasses import dataclass
 from typing import Dict
 

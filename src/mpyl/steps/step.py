@@ -1,3 +1,5 @@
+""" Module to call a single (custom) building step. """
+
 from __future__ import annotations
 
 from logging import Logger

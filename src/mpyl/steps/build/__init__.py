@@ -1,3 +1,5 @@
+""" Module defining the docker configuration. """
+
 from typing import Dict
 
 

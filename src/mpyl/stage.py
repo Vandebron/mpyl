@@ -1,3 +1,5 @@
+""" Module to define the pipeline stage. [Build, Test, Deploy, Post Deploy] """
+
 from dataclasses import dataclass
 from enum import Enum
 

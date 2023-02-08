@@ -1,3 +1,5 @@
+""" Module which builds the docker image. """
+
 from logging import Logger
 
 from docker import APIClient  # type: ignore

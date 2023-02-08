@@ -1,3 +1,7 @@
+""" This module can be used as a dummy deploy step to test the framework.
+    :return NoneType: Empty artifact
+"""
+
 from logging import Logger
 
 from ..step import Step
