@@ -10,7 +10,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo "Running dagster..."
-                sh "dagster job execute -f mpyl-test-runner.py"
+                sh "pipenv run run"
             }
         }
     }
