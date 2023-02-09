@@ -1,4 +1,6 @@
-""" Module """
+""" This module iterates through projects and checks if changes have been made to it, therefore it's needed to
+rebuild them.
+"""
 
 from ..project import Project
 from ..projects.find import load_projects
