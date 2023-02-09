@@ -1,3 +1,5 @@
+""" A subclass of Step used to deploy to Kubernetes """
+
 from logging import Logger
 
 from kubernetes import config, client

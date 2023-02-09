@@ -1,3 +1,5 @@
+""" Module to be used when a service needs to be deployed (for example, Postgres). """
+
 from typing import Dict, Optional
 
 from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1PodTemplateSpec, V1ObjectMeta, V1PodSpec, \

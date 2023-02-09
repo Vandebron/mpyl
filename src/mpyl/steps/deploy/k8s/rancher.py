@@ -1,3 +1,5 @@
+""" Provide Rancher with the Kubernetes cluster configuration. """
+
 from dataclasses import dataclass
 
 from ....target import Target
