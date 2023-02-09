@@ -9,8 +9,8 @@ pipeline {
         }
         stage('Build') {
             steps {
-                echo "Running dagit..."
-                sh "dagit --workspace ./workspace.yml"
+                echo "Running dagster..."
+                sh "dagster job execute -f mpyl-test-runner.py"
             }
         }
     }
