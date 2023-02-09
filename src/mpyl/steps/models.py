@@ -1,6 +1,4 @@
-""" Model representation of the project containing the build configuration.
-TODO: More info
-"""
+""" Model representation of the project containing the build configuration."""
 
 from dataclasses import dataclass
 from enum import Enum
