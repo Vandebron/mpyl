@@ -1,4 +1,4 @@
-""" """
+""" This module is called on to create a helm chart for your project and install it during the deploy step. """
 
 import shutil
 import subprocess

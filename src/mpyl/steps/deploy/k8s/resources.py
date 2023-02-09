@@ -1,4 +1,6 @@
-"""  """
+""" Configuration of the Kubernetes API server, which lets end users, different parts of your cluster, and external
+components communicate with one another.
+"""
 
 from io import StringIO
 
