@@ -5,7 +5,7 @@ from ruamel.yaml import YAML
 from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1PodTemplateSpec, V1ObjectMeta, V1PodSpec, \
     V1DeploymentStrategy, V1RollingUpdateDeployment, V1LabelSelector, V1ContainerPort, V1EnvVar, V1Service, \
     V1ServiceSpec, V1ServicePort, V1ServiceAccount, V1LocalObjectReference, \
-    V1EnvVarSource, V1SecretKeySelector, V1Probe, ApiClient, V1HTTPGetAction
+    V1EnvVarSource, V1SecretKeySelector, V1Probe, ApiClient, V1HTTPGetAction, V1ResourceRequirements
 
 from .resources.crd import to_yaml  # pylint: disable = no-name-in-module
 from .resources.customresources import V1AlphaIngressRoute, V1SealedSecret  # pylint: disable = no-name-in-module
@@ -141,8 +141,10 @@ class ServiceChart:
         if kubernetes is None:
             raise AttributeError("deployment.kubernetes field should be set")
 
-        ports = list(map(lambda key: V1ContainerPort(container_port=key, host_port=self.mappings[key], protocol="TCP"),
-                         self.mappings.keys()))
+        ports = [
+            V1ContainerPort(container_port=key, host_port=self.mappings[key], protocol="TCP", name=f'port-{idx}')
+            for idx, key in enumerate(self.mappings.keys())
+        ]
         env_vars = list(
             filter(lambda v: v.value, map(lambda e: V1EnvVar(name=e.key, value=e.get_value(self.target)), self.env)))
 
@@ -158,6 +160,8 @@ class ServiceChart:
             env=env_vars + sealed_secrets,
             ports=ports,
             image_pull_policy="Always",
+            resources=V1ResourceRequirements(limits={'cpu': '500m', 'memory': '1Gi'},
+                                             requests={'cpu': '100m', 'memory': '512Mi'}),
             liveness_probe=ServiceChart._to_probe(kubernetes.liveness_probe,
                                                   self.kubernetes_config.liveness_probe_defaults,
                                                   self.target) if kubernetes.liveness_probe else None,
