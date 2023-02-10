@@ -40,10 +40,12 @@ class AfterBuildDocker(Step):
         tagged = client.images.get(image_name).tag(full_image_path)
         if tagged:
             stream = client.images.push(full_image_path, stream=True, decode=True)
+            previous_status = ""
             for line in stream:
                 status = line.get('status')
-                if status:
+                if status and status != previous_status:
                     self._logger.info(status)
+                    previous_status = status
         else:
             return Output(success=False, message=f"Could not tag {full_image_path}")
 
