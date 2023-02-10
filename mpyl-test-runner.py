@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import time
 
 from dagster import job, op, DynamicOut, DynamicOutput, get_dagster_logger, Output, Failure
 from pyaml_env import parse_config
@@ -22,6 +23,7 @@ def execute_step(proj: Project, stage: Stage) -> MplOutput:
     build_props = BuildProperties.from_configuration(build_properties=properties, config=config)
     executor = Steps(get_dagster_logger(), build_props)
     step_output = executor.execute(stage, proj)
+    time.sleep(2)
     if not step_output.success:
         raise Failure(description=step_output.message)
     return step_output
