@@ -1,17 +1,17 @@
 cvs:
   git:
-    main_branch: 'main'
+    mainBranch: 'main'
   github:
     repository: 'Vandebron/mpyl'
 docker:
   registry:
-    host_name: 'bigdataregistry.azurecr.io'
-    user_name: !ENV ${DOCKER_REGISTRY_USR:user}
+    hostName: 'bigdataregistry.azurecr.io'
+    userName: !ENV ${DOCKER_REGISTRY_USR:user}
     password: !ENV ${DOCKER_REGISTRY_PSW:password}
   build:
-    root_folder: '.'
-    build_target: 'builder'
-    docker_file_name: 'Dockerfile-mpl'
+    rootFolder: '.'
+    buildTarget: 'builder'
+    dockerFileName: 'Dockerfile-mpl'
 kubernetes:
   rancher:
     cluster:
