@@ -66,6 +66,14 @@ spec:
         ports:
         - containerPort: 8080
           hostPort: 8080
+          name: port-0
           protocol: TCP
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1Gi
+          requests:
+            cpu: 100m
+            memory: 512Mi
       serviceAccount: dockertest
       serviceAccountName: dockertest
