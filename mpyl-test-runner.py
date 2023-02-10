@@ -69,3 +69,8 @@ def run_build():
         projects=projects.collect(),
         outputs=build_results.collect()
     )
+
+
+if __name__ == "__main__":
+    result = run_build.execute_in_process()
+    print(f"Result: {result.success}")
