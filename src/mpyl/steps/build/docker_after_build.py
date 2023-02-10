@@ -32,7 +32,7 @@ class AfterBuildDocker(Step):
 
         docker_config = DockerConfig(step_input.build_properties.config)
 
-        self._logger.info(f"Logging in with user '{docker_config.user_name}', {docker_config.password}")
+        self._logger.info(f"Logging in with user '{docker_config.user_name}'")
         login_result = client.login(username=docker_config.user_name, password=docker_config.password,
                                     registry=f'https://{docker_config.host_name}')
         self._logger.debug(f"Docker login result: {login_result}")
