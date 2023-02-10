@@ -36,7 +36,7 @@ class BuildDocker(Step):
         low_level_client = APIClient()
         self._logger.debug(low_level_client.version())
 
-        logs = low_level_client.build(path=project.deployment_path, dockerfile='Dockerfile-mpl',
+        logs = low_level_client.build(path=".", dockerfile=f'{project.deployment_path}/Dockerfile-mpl',
                                       tag=step_input.docker_image_tag(),
                                       rm=True, target="installer", decode=True)
         self.__log_docker_output(logs)
