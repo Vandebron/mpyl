@@ -38,7 +38,7 @@ class BuildDocker(Step):
 
         logs = low_level_client.build(path=".", dockerfile=f'{project.deployment_path}/Dockerfile-mpl',
                                       tag=step_input.docker_image_tag(),
-                                      rm=True, target="installer", decode=True)
+                                      rm=True, target="builder", decode=True)
         self.__log_docker_output(logs)
 
         artifact = Artifact(ArtifactType.DOCKER_IMAGE, step_input.build_properties.versioning.revision, self.meta.name,
