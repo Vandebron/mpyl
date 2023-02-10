@@ -71,6 +71,7 @@ properties:
           - Docker Test
           - Sbt Test
           - Skip Test
+          - Echo Test
       deploy:
         $id: '#/properties/stages/deploy'
         description: Deploys the artifacts created in the build stage

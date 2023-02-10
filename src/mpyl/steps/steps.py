@@ -4,6 +4,7 @@ from typing import Optional
 
 from ruamel.yaml import YAML  # type: ignore
 
+from .test.echo import TestEcho
 from .build.dockerbuild import BuildDocker
 from .build.echo import BuildEcho
 from .deploy.echo import DeployEcho
@@ -30,7 +31,7 @@ class Steps:
             validate(properties.config, schema)
 
         self._logger = logger
-        self._step_executors = {BuildEcho(logger), DeployEcho(logger), BuildDocker(logger), DeployKubernetes(logger)}
+        self._step_executors = {TestEcho(logger), BuildEcho(logger), DeployEcho(logger), BuildDocker(logger), DeployKubernetes(logger)}
         self._properties = properties
         for step in self._step_executors:
             self._logger.debug(f"Registered executor '{step.meta.name}'")
