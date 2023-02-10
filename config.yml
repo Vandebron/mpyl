@@ -6,8 +6,8 @@ cvs:
 docker:
   registry:
     host_name: 'bigdataregistry.azurecr.io'
-    user_name: !ENV ${DOCKER_REGISTRY_USERNAME:user}
-    password: !ENV ${DOCKER_REGISTRY_PASSWORD:password}
+    user_name: !ENV ${DOCKER_REGISTRY_USR:user}
+    password: !ENV ${DOCKER_REGISTRY_PSW:password}
 kubernetes:
   rancher:
     cluster:
