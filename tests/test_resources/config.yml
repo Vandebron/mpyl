@@ -8,6 +8,10 @@ docker:
     host_name: 'bigdataregistry.azurecr.io'
     user_name: !ENV ${DOCKER_REGISTRY_USERNAME:user}
     password: !ENV ${DOCKER_REGISTRY_PASSWORD:password}
+  build:
+    root_folder: '.'
+    build_target: 'builder'
+    docker_file_name: 'Dockerfile-mpl'
 kubernetes:
   rancher:
     cluster:

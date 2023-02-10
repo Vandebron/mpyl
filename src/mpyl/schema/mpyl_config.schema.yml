@@ -86,9 +86,22 @@ definitions:
     properties:
       registry:
         "$ref": "#/definitions/Registry"
+      build:
+        "$ref" : "#/definitions/Build"
     required:
       - registry
     title: Docker
+  Build:
+    type: object
+    additionalProperties: false
+    properties:
+      root_folder:
+        type: string
+      build_target:
+        type: string
+      docker_file_name:
+        type: string
+    required: [ root_folder, build_target, docker_file_name ]
   Registry:
     type: object
     additionalProperties: false

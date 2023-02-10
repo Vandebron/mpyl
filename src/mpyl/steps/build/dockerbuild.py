@@ -2,6 +2,7 @@ from logging import Logger
 
 from docker import APIClient  # type: ignore
 
+from . import DockerConfig
 from .docker_after_build import AfterBuildDocker
 from ..models import Meta, Input, Output, Artifact, ArtifactType
 from ..step import Step
@@ -36,9 +37,12 @@ class BuildDocker(Step):
         low_level_client = APIClient()
         self._logger.debug(low_level_client.version())
 
-        logs = low_level_client.build(path=".", dockerfile=f'{project.deployment_path}/Dockerfile-mpl',
+        docker_config = DockerConfig(step_input.build_properties.config)
+
+        logs = low_level_client.build(path=docker_config.root_folder,
+                                      dockerfile=f'{project.deployment_path}/{docker_config.docker_file_name}',
                                       tag=step_input.docker_image_tag(),
-                                      rm=True, target="builder", decode=True)
+                                      rm=True, target=docker_config.build_target, decode=True)
         self.__log_docker_output(logs)
 
         artifact = Artifact(ArtifactType.DOCKER_IMAGE, step_input.build_properties.versioning.revision, self.meta.name,
