@@ -16,7 +16,7 @@ class RepoConfig:
     main_branch: str
 
     def __init__(self, config: Dict):
-        self.main_branch = config['cvs']['git']['main_branch']
+        self.main_branch = config['cvs']['git']['mainBranch']
 
 
 class Repository:
