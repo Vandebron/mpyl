@@ -1,6 +1,8 @@
 pipeline {
     agent { node { label 'jenkins-test-dind-agent' } }
-
+    options {
+        ansiColor('xterm')
+    }
     stages {
         stage('Initialise') {
             steps {
