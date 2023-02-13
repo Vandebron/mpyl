@@ -7,7 +7,7 @@ from pyaml_env import parse_config
 from src.mpyl.project import load_project, Project
 from src.mpyl.repo import Repository, RepoConfig
 from src.mpyl.stage import Stage
-from src.mpyl.steps.models import BuildProperties, Output as MplOutput
+from src.mpyl.steps.models import RunProperties, Output as MplOutput
 from src.mpyl.steps.steps import Steps
 
 
@@ -19,9 +19,9 @@ class StepParam:
 
 def execute_step(proj: Project, stage: Stage) -> MplOutput:
     config = parse_config("config.yml")
-    properties = parse_config("build_properties.yml")
-    build_props = BuildProperties.from_configuration(build_properties=properties, config=config)
-    executor = Steps(get_dagster_logger(), build_props)
+    properties = parse_config("run_properties.yml")
+    run_properties = RunProperties.from_configuration(run_properties=properties, config=config)
+    executor = Steps(get_dagster_logger(), run_properties)
     step_output = executor.execute(stage, proj)
     time.sleep(2)
     if not step_output.success:

@@ -27,7 +27,7 @@ class VersioningProperties:
 
 @yaml_object(yaml)
 @dataclass(frozen=True)
-class BuildProperties:
+class RunProperties:
     """ Contains information that is specific to a particular run of the pipeline
     """
     build_id: str
@@ -41,11 +41,11 @@ class BuildProperties:
      """
 
     @staticmethod
-    def from_configuration(build_properties: Dict, config: Dict):
-        build = build_properties['build']
+    def from_configuration(run_properties: Dict, config: Dict):
+        build = run_properties['build']
         versioning = build['versioning']
-        return BuildProperties(build_id=build['run']['id'], target=Target(build['parameters']['deploy_target']),
-                               versioning=VersioningProperties(versioning['revision'], versioning.get('pr_number'),
+        return RunProperties(build_id=build['run']['id'], target=Target(build['parameters']['deploy_target']),
+                             versioning=VersioningProperties(versioning['revision'], versioning.get('pr_number'),
                                                                versioning.get('tag')), config=config)
 
 
@@ -82,11 +82,11 @@ class Artifact:
 @dataclass(frozen=True)
 class Input:
     project: Project
-    build_properties: BuildProperties
+    run_properties: RunProperties
     required_artifact: Optional[Artifact] = None
 
     def docker_image_tag(self):
-        git = self.build_properties.versioning
+        git = self.run_properties.versioning
         tag = f"pr-{git.pr_number}" if git.pr_number else git.tag
         return f"{self.project.name.lower()}:{tag}".replace('/', '_')
 

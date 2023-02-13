@@ -8,7 +8,7 @@ from logging import Logger
 from pathlib import Path
 
 from .service import ServiceChart
-from ...models import BuildProperties, Input, Output
+from ...models import RunProperties, Input, Output
 
 
 def custom_check_output(logger: Logger, command: str) -> Output:
@@ -27,13 +27,13 @@ def custom_check_output(logger: Logger, command: str) -> Output:
     return Output(success=False, message=f'Helm deploy failed for {message}')
 
 
-def to_chart(chart_name: str, build_properties: BuildProperties):
+def to_chart(chart_name: str, run_properties: RunProperties):
     return f"""apiVersion: v3
 name: {chart_name}
 description: A helm chart used by the MPL pipeline
 type: application
 version: 0.1.0
-appVersion: "{build_properties.versioning.identifier}"
+appVersion: "{run_properties.versioning.identifier}"
 """
 
 
@@ -54,7 +54,7 @@ def install(logger: Logger, step_input: Input, name_space: str, kube_context: st
 
     chart_name = step_input.project.name.lower()
 
-    chart = to_chart(chart_name, step_input.build_properties)
+    chart = to_chart(chart_name, step_input.run_properties)
 
     with open(chart_path / "Chart.yaml", mode='w+', encoding='utf-8') as file:
         file.write(chart)

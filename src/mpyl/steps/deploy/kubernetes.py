@@ -26,7 +26,7 @@ class DeployKubernetes(Step):
         if not step_input.required_artifact:
             return Output(success=False, message=f"Step requires artifact of type {self.required_artifact}")
 
-        properties = step_input.build_properties
+        properties = step_input.run_properties
         context = cluster_config(properties.target).context
         config.load_kube_config(context=context)
         self._logger.info(f"Deploying target {properties.target} and k8s context {context}")
