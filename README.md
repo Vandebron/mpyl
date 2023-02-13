@@ -7,7 +7,7 @@
 [![linting: pylint](https://img.shields.io/badge/linting-pylint-yellowgreen)](https://github.com/PyCQA/pylint)
 
 This tool is loosely based on the principles described in https://www.jenkins.io/blog/2019/01/08/mpl-modular-pipeline-library/
-but completely independent from Jenkins
+but completely independent of Jenkins
 
 ## Usage
 ### Run instructions
