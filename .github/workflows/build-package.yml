@@ -51,6 +51,8 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v1
         if: always() # always run even if the previous step fails
         with:
+          job_summary: true
+          report_individual_runs: true
           files: 'build/test-result/*.xml'
 
       - name: Find PR number
