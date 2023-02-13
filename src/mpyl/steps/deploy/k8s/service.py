@@ -73,7 +73,7 @@ class ServiceChart:
         self.project = project
         if project.deployment is None:
             raise AttributeError("deployment field should be set")
-        kubernetes_config_dict = step_input.build_properties.config.get('project', {}).get('deployment', {}).get(
+        kubernetes_config_dict = step_input.run_properties.config.get('project', {}).get('deployment', {}).get(
             'kubernetes', {})
         if kubernetes_config_dict is None:
             raise KeyError("Configuration should have project.deployment.kubernetes section")
@@ -85,13 +85,13 @@ class ServiceChart:
         self.env = properties.env if properties.env else []
         self.sealed_secrets = properties.sealed_secret if properties.sealed_secret else []
         self.mappings = self.project.kubernetes.port_mappings
-        self.target = step_input.build_properties.target
+        self.target = step_input.run_properties.target
         self.release_name = self.project.name.lower()
         self.image_name = image_name
 
     def _to_labels(self) -> Dict:
-        build_properties = self.step_input.build_properties
-        app_labels = {'name': self.project.name, 'app.kubernetes.io/version': build_properties.versioning.identifier,
+        run_properties = self.step_input.run_properties
+        app_labels = {'name': self.project.name, 'app.kubernetes.io/version': run_properties.versioning.identifier,
                       'app.kubernetes.io/managed-by': 'Helm', 'app.kubernetes.io/name': self.release_name,
                       'app.kubernetes.io/instance': self.release_name}
 
@@ -99,10 +99,10 @@ class ServiceChart:
             app_labels['maintainers'] = ".".join(self.project.maintainer).replace(' ', '_')
             app_labels["maintainer"] = self.project.maintainer[0].replace(' ', '_')
 
-        app_labels['version'] = build_properties.versioning.identifier
+        app_labels['version'] = run_properties.versioning.identifier
 
-        if build_properties.versioning.revision:
-            app_labels['revision'] = build_properties.versioning.revision
+        if run_properties.versioning.revision:
+            app_labels['revision'] = run_properties.versioning.revision
 
         return app_labels
 

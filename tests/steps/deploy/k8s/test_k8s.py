@@ -8,7 +8,7 @@ from src.mpyl.project import load_project, Probe
 from src.mpyl.steps.build import DockerConfig
 from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml
 from src.mpyl.steps.deploy.k8s.service import ServiceChart
-from src.mpyl.steps.models import BuildProperties, VersioningProperties, Input
+from src.mpyl.steps.models import RunProperties, VersioningProperties, Input
 from src.mpyl.target import Target
 from src.mpyl.steps.deploy.k8s.resources.customresources import V1AlphaIngressRoute
 from tests import root_test_path
@@ -34,9 +34,9 @@ def _roundtrip(file_name: Path, chart: str, as_yaml: dict[str, str], overwrite: 
 
 def _build_chart():
     project = load_project("", str(resource_path / "test_project.yml"), False)
-    properties = BuildProperties("id", Target.PULL_REQUEST,
-                                 VersioningProperties("2ad3293a7675d08bc037ef0846ef55897f38ec8f", "1234", None),
-                                 config)
+    properties = RunProperties("id", Target.PULL_REQUEST,
+                               VersioningProperties("2ad3293a7675d08bc037ef0846ef55897f38ec8f", "1234", None),
+                               config)
     return ServiceChart(step_input=Input(project, properties, None), image_name='registry/image:123').to_chart()
 
 
