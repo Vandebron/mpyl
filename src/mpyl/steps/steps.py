@@ -3,6 +3,7 @@ Project and Stage.
 """
 
 import pkgutil
+from dataclasses import dataclass
 from logging import Logger
 from typing import Optional
 
@@ -19,6 +20,11 @@ from ..stage import Stage
 from ..validation import validate
 
 yaml = YAML()
+
+
+@dataclass(frozen=True)
+class StepResult:
+    output: Output
 
 
 class Steps:
@@ -71,7 +77,7 @@ class Steps:
             return output.produced_artifact
         return None
 
-    def execute(self, stage: Stage, project: Project) -> Output:
+    def _execute_step(self, stage: Stage, project: Project) -> Output:
         stage_name = project.stages.for_stage(stage)
         if stage_name is None:
             return Output(success=False, message=f"Stage '{stage.value}' not defined on project '{project.name}'")
@@ -96,3 +102,7 @@ class Steps:
             self._logger.warning(f"No executor found for {stage_name} in stage {stage}")
 
         return Output(success=False, message=f"Executor {stage.value} not defined on project {project.name}")
+
+    def execute(self, stage: Stage, project: Project) -> StepResult:
+        step_output = self._execute_step(stage, project)
+        return StepResult(output=step_output)

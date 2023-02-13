@@ -27,7 +27,10 @@ def main(repo: Repository, log: Logger):
     log.info(
         f" Post deploy stage: {len(find_invalidated_projects_for_stage(repo, Stage.POST_DEPLOY, changes_in_branch))}")
     all_projects = list(map(lambda p: load_project(".", p, False), project_paths))
-    build_props = BuildProperties("1", Target.PULL_REQUEST, VersioningProperties(repo.get_sha, "1234", None), {})
+
+    config = parse_config("config.yml")
+    properties = parse_config("build_properties.yml")
+    build_props = BuildProperties.from_configuration(build_properties=properties, config=config)
     executor = Steps(logger=log, properties=build_props)
     log.info(" Building projects")
     for proj in find_invalidated_projects_for_stage(repo, Stage.BUILD, changes_in_branch):

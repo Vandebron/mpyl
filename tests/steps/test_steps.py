@@ -52,11 +52,11 @@ class TestSteps:
         steps = Steps(logger=Logger.manager.getLogger('logger'), properties=properties)
         stages = Stages(build=None, test=None, deploy=None, postdeploy=None)
         project = Project('test', 'Test project', '', stages, [], None, None)
-        output = steps.execute(stage=Stage.BUILD, project=project)
-        assert not output.success
-        assert output.message == "Stage 'build' not defined on project 'test'"
+        step_result = steps.execute(stage=Stage.BUILD, project=project)
+        assert not step_result.output.success
+        assert step_result.output.message == "Stage 'build' not defined on project 'test'"
 
-    def test_should_return_error_if_stage_not_defined(self):
+    def test_should_validate_configuration_on_load(self):
         config_values = parse_config(self.resource_path / "config.yml")
         config_values['kubernetes']['rancher']['cluster']['test']['invalid'] = 'somevalue'
         properties = BuildProperties("id", Target.PULL_REQUEST, VersioningProperties("", "", None), config_values)
