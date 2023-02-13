@@ -47,6 +47,12 @@ jobs:
         with:
           command: run test
 
+      - name: Publish Test Report
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always() # always run even if the previous step fails
+        with:
+          files: 'build/test-result/*.xml'
+
       - name: Find PR number
         uses: jwalton/gh-find-current-pr@v1
         id: findPr
