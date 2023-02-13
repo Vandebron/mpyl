@@ -1,19 +1,16 @@
+import logging
 from logging import Logger
 
 from pyaml_env import parse_config
+from rich.console import Console
+from rich.logging import RichHandler
 
 from src.mpyl.project import load_project
 from src.mpyl.repo import Repository, RepoConfig, History
 from src.mpyl.stage import Stage
 from src.mpyl.stages.discovery import find_invalidated_projects_for_stage
-from src.mpyl.steps.models import BuildProperties, VersioningProperties
+from src.mpyl.steps.models import RunProperties
 from src.mpyl.steps.steps import Steps
-
-import logging
-from rich.logging import RichHandler
-from rich.console import Console
-
-from src.mpyl.target import Target
 
 
 def main(repo: Repository, log: Logger):
@@ -29,9 +26,9 @@ def main(repo: Repository, log: Logger):
     all_projects = list(map(lambda p: load_project(".", p, False), project_paths))
 
     config = parse_config("config.yml")
-    properties = parse_config("build_properties.yml")
-    build_props = BuildProperties.from_configuration(build_properties=properties, config=config)
-    executor = Steps(logger=log, properties=build_props)
+    properties = parse_config("run_properties.yml")
+    run_properties = RunProperties.from_configuration(run_properties=properties, config=config)
+    executor = Steps(logger=log, properties=run_properties)
     log.info(" Building projects")
     for proj in find_invalidated_projects_for_stage(repo, Stage.BUILD, changes_in_branch):
         executor.execute(Stage.BUILD, proj)

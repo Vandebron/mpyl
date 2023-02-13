@@ -13,7 +13,7 @@ from .build.dockerbuild import BuildDocker
 from .build.echo import BuildEcho
 from .deploy.echo import DeployEcho
 from .deploy.kubernetes import DeployKubernetes
-from .models import Output, Input, BuildProperties, ArtifactType, Artifact
+from .models import Output, Input, RunProperties, ArtifactType, Artifact
 from .step import Step
 from ..project import Project
 from ..stage import Stage
@@ -31,9 +31,9 @@ class Steps:
     """ Executor of individual steps within a pipeline. """
     _step_executors: set[Step]
     _logger: Logger
-    _properties: BuildProperties
+    _properties: RunProperties
 
-    def __init__(self, logger: Logger, properties: BuildProperties) -> None:
+    def __init__(self, logger: Logger, properties: RunProperties) -> None:
         schema_dict = pkgutil.get_data(__name__, "../schema/mpyl_config.schema.yml")
 
         if schema_dict:
@@ -50,7 +50,7 @@ class Steps:
         executors = filter(lambda e: e.meta.stage == stage and step_name == e.meta.name, self._step_executors)
         return next(executors, None)
 
-    def _execute(self, executor: Step, project: Project, properties: BuildProperties,
+    def _execute(self, executor: Step, project: Project, properties: RunProperties,
                  artifact: Optional[Artifact]) -> Output:
         result = executor.execute(Input(project, properties, required_artifact=artifact))
         if result.success:
