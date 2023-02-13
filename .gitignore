@@ -132,6 +132,9 @@ dmypy.json
 .idea/
 .mpl/
 
+#documentation
+docs/
+
 #dagster
 tmp*/
 
