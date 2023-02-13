@@ -1,1 +1,2 @@
-include src/pympl/schema/project.schema.json
+include src/mpyl/schema/mpyl_config.schema.yml
+include src/mpyl/schema/project.schema.yml
