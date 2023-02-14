@@ -13,6 +13,7 @@ from src.mpyl import Target
 from src.mpyl.steps.deploy.k8s.resources.customresources import V1AlphaIngressRoute
 from tests import root_test_path
 from tests.test_resources import test_data
+from tests.test_resources.test_data import assert_roundtrip
 
 resource_path = root_test_path / "test_resources"
 template_path = root_test_path / "steps" / "deploy" / "k8s" / "chart" / "templates"
@@ -24,13 +25,7 @@ liveness_probe_defaults = config['project']['deployment']['kubernetes']['livenes
 def _roundtrip(file_name: Path, chart: str, as_yaml: dict[str, str], overwrite: bool = False):
     name_chart = file_name / f"{chart}.yaml"
     chart_yaml = as_yaml[chart]
-    if overwrite:
-        with open(name_chart, 'w+', encoding='utf-8') as file:
-            file.write(chart_yaml)
-            assert not overwrite, "Should not commit with overwrite"
-
-    with open(name_chart, encoding='utf-8') as file:
-        assert file.read() == chart_yaml
+    assert_roundtrip(name_chart, chart_yaml, overwrite)
 
 
 def _build_chart():

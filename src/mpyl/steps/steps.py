@@ -4,6 +4,7 @@ Project and Stage.
 
 import pkgutil
 from dataclasses import dataclass
+from datetime import datetime
 from logging import Logger
 from typing import Optional
 
@@ -24,7 +25,10 @@ yaml = YAML()
 
 @dataclass(frozen=True)
 class StepResult:
+    stage: Stage
+    project: Project
     output: Output
+    timestamp: datetime = datetime.now()
 
 
 class Steps:
@@ -105,4 +109,4 @@ class Steps:
 
     def execute(self, stage: Stage, project: Project) -> StepResult:
         step_output = self._execute_stage(stage, project)
-        return StepResult(output=step_output)
+        return StepResult(stage=stage, project=project, output=step_output)
