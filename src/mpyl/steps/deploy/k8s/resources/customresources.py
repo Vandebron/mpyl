@@ -3,7 +3,7 @@
 from kubernetes.client import V1ObjectMeta
 
 from src.mpyl.project import Host
-from src.mpyl.target import Target
+from src.mpyl import Target
 from .crd import CustomResourceDefinition
 
 

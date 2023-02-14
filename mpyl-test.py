@@ -7,7 +7,7 @@ from rich.logging import RichHandler
 
 from src.mpyl.project import load_project
 from src.mpyl.repo import Repository, RepoConfig, History
-from src.mpyl.stage import Stage
+from src.mpyl import Stage
 from src.mpyl.stages.discovery import find_invalidated_projects_for_stage
 from src.mpyl.steps.models import RunProperties
 from src.mpyl.steps.steps import Steps

@@ -9,7 +9,7 @@ from docker import DockerClient
 from . import DockerConfig
 from ..models import Meta, Input, Output, Artifact, ArtifactType
 from ..step import Step
-from ...stage import Stage
+from ... import Stage
 
 
 class AfterBuildDocker(Step):
