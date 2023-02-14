@@ -35,12 +35,12 @@ def _roundtrip(file_name: Path, chart: str, as_yaml: dict[str, str], overwrite: 
 
 def _build_chart():
     project = load_project("", str(resource_path / "test_project.yml"), False)
-    properties = test_data.RUN_PROPERTIES
-    return ServiceChart(step_input=Input(project, properties, None), image_name='registry/image:123').to_chart()
+    return ServiceChart(step_input=Input(project, test_data.RUN_PROPERTIES, None),
+                        image_name='registry/image:123').to_chart()
 
 
 def test_probe_values_should_be_customizable():
-    project = load_project("", str(resource_path / "test_project.yml"), False)
+    project = test_data.TEST_PROJECT
     probe = project.kubernetes.liveness_probe
 
     custom_success_threshold = 0
@@ -58,7 +58,7 @@ def test_probe_values_should_be_customizable():
 
 
 def test_probe_deserialization_failure_should_throw():
-    project = load_project("", str(resource_path / "test_project.yml"), False)
+    project = test_data.TEST_PROJECT
     probe = project.kubernetes.liveness_probe
 
     probe.values['httpGet'] = 'incorrect'
@@ -75,8 +75,7 @@ def test_load_config():
 
 
 def test_should_validate_against_crd_schema():
-    project = load_project("", str(resource_path / "test_project.yml"), False)
-
+    project = test_data.TEST_PROJECT
     route = V1AlphaIngressRoute(metadata=V1ObjectMeta(), hosts=project.deployment.traefik.hosts, service_port=1234,
                                 name='serviceName', target=Target.PRODUCTION)
     route.spec['tls'] = {'secretName': 1234}
