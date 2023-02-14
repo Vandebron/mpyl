@@ -1,3 +1,5 @@
+TestRunSummary(tests=51, failures=1, errors=1, skipped=0) 
+
 Suite nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs
 Case Invoice orchestrator should Return the stream of incoming data when downloading a PDF file 
 Case Invoice orchestrator should Filter invoices by type 
