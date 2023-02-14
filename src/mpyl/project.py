@@ -24,8 +24,8 @@ import jsonschema
 from mypy.checker import Generic
 from ruamel.yaml import YAML
 
-from .stage import Stage
-from .target import Target
+from . import Stage
+from . import Target
 from .validation import validate
 
 T = TypeVar('T')

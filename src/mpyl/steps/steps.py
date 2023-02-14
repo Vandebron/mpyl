@@ -16,7 +16,7 @@ from .deploy.kubernetes import DeployKubernetes
 from .models import Output, Input, RunProperties, ArtifactType, Artifact
 from .step import Step
 from ..project import Project
-from ..stage import Stage
+from .. import Stage
 from ..validation import validate
 
 yaml = YAML()

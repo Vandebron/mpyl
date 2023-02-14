@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from ....target import Target
+from .... import Target
 
 
 @dataclass(frozen=True)

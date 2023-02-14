@@ -1,17 +1,16 @@
 from io import StringIO
+from logging import Logger
 
 import pytest
 from jsonschema import ValidationError
 from pyaml_env import parse_config
 from ruamel.yaml import YAML  # type: ignore
 
+from src.mpyl import Stage, Target
 from src.mpyl.project import Project, Stages
-from src.mpyl.stage import Stage
 from src.mpyl.steps.models import Output, Artifact, ArtifactType, RunProperties, VersioningProperties
 from src.mpyl.steps.steps import Steps
-from src.mpyl.target import Target
 from tests import root_test_path
-from logging import Logger
 
 yaml = YAML()
 yaml.preserve_quotes = True

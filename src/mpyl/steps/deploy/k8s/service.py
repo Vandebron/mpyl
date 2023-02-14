@@ -16,7 +16,7 @@ from .resources.crd import to_yaml  # pylint: disable = no-name-in-module
 from .resources.customresources import V1AlphaIngressRoute, V1SealedSecret  # pylint: disable = no-name-in-module
 from ...models import Input
 from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources
-from ....target import Target
+from .... import Target
 
 yaml = YAML()
 
