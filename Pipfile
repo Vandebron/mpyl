@@ -39,4 +39,4 @@ check-types ="mypy src/mpyl/"
 validate = "bash -c 'mypy src/mpyl/ && pytest && pylint src/'"
 install-types ="mypy --install-types --non-interactive src/mpyl/  "
 run = "python mpyl-test-runner.py"
-run-hello = "python say-hello.py"
+
