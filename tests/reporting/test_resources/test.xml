@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+    <testsuite name="pytest" errors="0" failures="0" skipped="0" tests="18" time="1.525"
+               timestamp="2023-02-14T12:39:50.245591" hostname="MBP-samtheisens.local">
+        <testcase classname="tests.test_project.TestMplSchema" name="test_schema_load" time="0.233"/>
+        <testcase classname="tests.test_project.TestMplSchema" name="test_schema_load_validation" time="0.214"/>
+        <testcase classname="tests.test_project.TestMplSchema" name="test_target_by_value" time="0.000"/>
+        <testcase classname="tests.reporting.test_reporting.TestReporting" name="test_should_print_results_as_string"
+                  time="0.001"/>
+        <testcase classname="tests.stages.test_discovery.TestDiscovery"
+                  name="test_should_find_invalidated_test_dependencies" time="0.090"/>
+        <testcase classname="tests.stages.test_discovery.TestDiscovery" name="test_should_find_invalidated_dependencies"
+                  time="0.038"/>
+        <testcase classname="tests.steps.test_steps.TestSteps" name="test_output_no_artifact_roundtrip" time="0.001"/>
+        <testcase classname="tests.steps.test_steps.TestSteps" name="test_output_roundtrip" time="0.002"/>
+        <testcase classname="tests.steps.test_steps.TestSteps" name="test_should_return_error_if_stage_not_defined"
+                  time="0.125"/>
+        <testcase classname="tests.steps.deploy.k8s.test_k8s" name="test_probe_values_should_be_customizable"
+                  time="0.001"/>
+        <testcase classname="tests.steps.deploy.k8s.test_k8s" name="test_probe_deserialization_failure_should_throw"
+                  time="0.000"/>
+        <testcase classname="tests.steps.deploy.k8s.test_k8s" name="test_load_config" time="0.003"/>
+        <testcase classname="tests.steps.deploy.k8s.test_k8s" name="test_should_validate_against_crd_schema"
+                  time="0.033"/>
+        <testcase classname="tests.steps.deploy.k8s.test_k8s" name="test_chart_roundtrip[deployment]" time="0.054"/>
+        <testcase classname="tests.steps.deploy.k8s.test_k8s" name="test_chart_roundtrip[service]" time="0.050"/>
+        <testcase classname="tests.steps.deploy.k8s.test_k8s" name="test_chart_roundtrip[serviceaccount]" time="0.050"/>
+        <testcase classname="tests.steps.deploy.k8s.test_k8s" name="test_chart_roundtrip[sealedsecrets]" time="0.050"/>
+        <testcase classname="tests.steps.deploy.k8s.test_k8s" name="test_chart_roundtrip[ingress-https-route]"
+                  time="0.050"/>
+    </testsuite>
+</testsuites>
