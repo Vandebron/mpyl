@@ -1,0 +1,54 @@
+Suite nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs
+Case Invoice orchestrator should Return the stream of incoming data when downloading a PDF file 
+Case Invoice orchestrator should Filter invoices by type 
+Case Invoice orchestrator should Enrich ecedo producer invoices with BusinessCentral vendor invoices 
+Case Invoice orchestrator should Enrich ecedo invoice with BusinessCentral data for roles EV and CONSUMER 
+Case Invoice orchestrator should getInvoicesSummary should Generate invoices summary from ecedo data with multiple rows 
+Case Invoice orchestrator should getInvoicesSummary should Generate invoices summary from ecedo data with a single row 
+Case Invoice orchestrator should getInvoicesSummary should Return a 404 error if ecedo returns an empty list for InvoiceRowsTotals 
+Case Invoice orchestrator should getInvoicesSummary should Return a 404 error if total usage is zero 
+Case Invoice orchestrator should toMWH should convert KWh to MWh 
+Case Invoice orchestrator should toMWH should convert Wh to MWh 
+Case Invoice orchestrator should toMWH should do not change value for MWh 
+Case Invoice orchestrator should toMWH should return a left for unknown unit 
+Case Invoice orchestrator should toInvoiceDto should set paymentProcessing as true when both maybeOpen and PPEntryPresent are true 
+Case Invoice orchestrator should zipMaps should merge two maps 
+Case Invoice orchestrator should embedSubInvoicesInParent should return None for empty arrays 
+Case Invoice orchestrator should embedSubInvoicesInParent should return only parent for one invoice 
+Case Invoice orchestrator should embedSubInvoicesInParent should separate parent and sort children 
+Case Invoice orchestrator should createPaymentPlan should accept requests with valid payload 
+Case Invoice orchestrator should createPaymentPlan should reject requests with invalid numberOfMonths 
+Case Invoice orchestrator should getPaymentPlanStartDate should set start date as 18th of the coming month 
+Case Invoice orchestrator should getInvoiceDataSet should return a result when it exists in Ecedo 
+Case Invoice orchestrator should getInvoiceDataSet should return a 404 when invoice has different company label id Ecedo 
+Case Invoice orchestrator should getInvoiceDataSet should return a 404 when invoice doesn't exist in Ecedo 
+Case Invoice orchestrator should getInvoiceDataSet should return a 404 when organization doesn't exist in Ecedo 
+Suite pytest
+Case test_schema_load 
+Case test_schema_load_validation 
+Case test_target_by_value 
+Case test_should_print_results_as_string 
+Case test_should_find_invalidated_test_dependencies 
+Case test_should_find_invalidated_dependencies 
+Case test_output_no_artifact_roundtrip 
+Case test_output_roundtrip 
+Case test_should_return_error_if_stage_not_defined 
+Case test_probe_values_should_be_customizable 
+Case test_probe_deserialization_failure_should_throw 
+Case test_load_config 
+Case test_should_validate_against_crd_schema 
+Case test_chart_roundtrip[deployment] 
+Case test_chart_roundtrip[service] 
+Case test_chart_roundtrip[serviceaccount] 
+Case test_chart_roundtrip[sealedsecrets] 
+Case test_chart_roundtrip[ingress-https-route] 
+Suite nl.vandebron.api.invoices.routes.InvoiceRouteSpecs
+Case Invoice routes should serve all invoices if user user owns organization 
+Case Invoice routes should create payment plan 
+Case Invoice routes should serve invoices summary 
+Case Invoice routes should filter on queried type and honour contract 
+Case Invoice routes should serve invoices for specified invoice types 
+Case Invoice routes should refuse to serve invoices if user reference in path does not match token 
+Case Invoice routes should refuse request without filter 
+Case Invoice routes should use proper headers when returning a PDF invoice 
+Case Invoice routes should GET '/api/v1/organizations/{customerReference}/invoices/{invoiceId}' should return a 200 with invoice details 
