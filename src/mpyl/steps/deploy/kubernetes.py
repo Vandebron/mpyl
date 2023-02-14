@@ -8,7 +8,7 @@ from .k8s import helm
 from .k8s.rancher import rancher_namespace_metadata, cluster_config
 from ..models import Meta, Input, Output, ArtifactType
 from ..step import Step
-from ...stage import Stage
+from ... import Stage
 
 
 class DeployKubernetes(Step):

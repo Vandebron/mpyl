@@ -6,7 +6,7 @@ from pyaml_env import parse_config
 
 from src.mpyl.project import load_project, Project
 from src.mpyl.repo import Repository, RepoConfig
-from src.mpyl.stage import Stage
+from src.mpyl import Stage
 from src.mpyl.steps.models import RunProperties, Output as MplOutput
 from src.mpyl.steps.steps import Steps
 

@@ -4,7 +4,7 @@ import unittest
 import pytest
 
 from src.mpyl.repo import Repository, RepoConfig, History
-from src.mpyl.stage import Stage
+from src.mpyl import Stage
 from src.mpyl.stages.discovery import find_invalidated_projects_for_stage
 
 
