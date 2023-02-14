@@ -1,11 +1,11 @@
 import os
 from dataclasses import dataclass
-from functools import reduce
+
+from junitparser import JUnitXml, TestSuite
 
 from ..steps.models import Artifact, ArtifactType
 from ...mpyl import Stage
 from ...mpyl.steps.run import RunResult
-from junitparser import JUnitXml, TestSuite, TestCase
 
 
 def to_string(run_result: RunResult) -> str:
