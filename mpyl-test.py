@@ -5,11 +5,13 @@ from pyaml_env import parse_config
 from rich.console import Console
 from rich.logging import RichHandler
 
+from src.mpyl import Stage
 from src.mpyl.project import load_project
 from src.mpyl.repo import Repository, RepoConfig, History
-from src.mpyl import Stage
+from src.mpyl.reporting.simple import to_string
 from src.mpyl.stages.discovery import find_invalidated_projects_for_stage
 from src.mpyl.steps.models import RunProperties
+from src.mpyl.steps.run import RunResult
 from src.mpyl.steps.steps import Steps
 
 
@@ -30,10 +32,15 @@ def main(repo: Repository, log: Logger):
     run_properties = RunProperties.from_configuration(run_properties=properties, config=config)
     executor = Steps(logger=log, properties=run_properties)
     log.info(" Building projects")
+
+    run_result = RunResult(run_properties)
+
     for proj in find_invalidated_projects_for_stage(repo, Stage.BUILD, changes_in_branch):
-        executor.execute(Stage.BUILD, proj)
+        run_result.append(executor.execute(Stage.BUILD, proj))
     for proj in find_invalidated_projects_for_stage(repo, Stage.DEPLOY, changes_in_branch):
-        executor.execute(Stage.DEPLOY, proj)
+        run_result.append(executor.execute(Stage.DEPLOY, proj))
+
+    print(to_string(run_result))
 
 
 if __name__ == "__main__":

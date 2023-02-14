@@ -1,10 +1,9 @@
 import os
-import unittest
 
 import pytest
 
-from src.mpyl.repo import Repository, RepoConfig, History
 from src.mpyl import Stage
+from src.mpyl.repo import Repository, RepoConfig, History
 from src.mpyl.stages.discovery import find_invalidated_projects_for_stage
 
 
@@ -28,7 +27,3 @@ class TestDiscovery:
                                                           [History(0, "revision", {'tests/projects/job/file.py',
                                                                                    'tests/some_file.txt'})])
         assert 1 == len(invalidated)
-
-
-if __name__ == '__main__':
-    unittest.main()
