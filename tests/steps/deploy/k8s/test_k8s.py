@@ -12,6 +12,7 @@ from src.mpyl.steps.models import RunProperties, VersioningProperties, Input
 from src.mpyl import Target
 from src.mpyl.steps.deploy.k8s.resources.customresources import V1AlphaIngressRoute
 from tests import root_test_path
+from tests.test_resources import test_data
 
 resource_path = root_test_path / "test_resources"
 template_path = root_test_path / "steps" / "deploy" / "k8s" / "chart" / "templates"
@@ -34,9 +35,7 @@ def _roundtrip(file_name: Path, chart: str, as_yaml: dict[str, str], overwrite: 
 
 def _build_chart():
     project = load_project("", str(resource_path / "test_project.yml"), False)
-    properties = RunProperties("id", Target.PULL_REQUEST,
-                               VersioningProperties("2ad3293a7675d08bc037ef0846ef55897f38ec8f", "1234", None),
-                               config)
+    properties = test_data.RUN_PROPERTIES
     return ServiceChart(step_input=Input(project, properties, None), image_name='registry/image:123').to_chart()
 
 
