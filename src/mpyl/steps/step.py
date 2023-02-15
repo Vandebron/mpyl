@@ -37,8 +37,8 @@ class Step(metaclass=IPluginRegistry):
         self.after = after
 
     def execute(self, step_input: Input) -> Output:
-        """ Execute a building step of the project
-        :param step_input: The input of the project along with its build properties and required artifact.
-        :return Output: The output of the project with information about the build process.
+        """ Execute an individual step for a specific `project` at a specific `stage` of the pipeline.
+        :param step_input: The input of the project along with its build properties and required artifact (if any).
+        :return Output: The result of the execution. `success` will be `False` if any exception was thrown during execution.
         """
         return Output(success=False, message=f"Not implemented for {step_input.project.name}", produced_artifact=None)
