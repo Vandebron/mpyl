@@ -1,4 +1,4 @@
-""" A subclass of Step used to deploy to Kubernetes """
+""" Step that deploys the docker image produced in the build stage to Kubernetes, using HELM. """
 
 from logging import Logger
 

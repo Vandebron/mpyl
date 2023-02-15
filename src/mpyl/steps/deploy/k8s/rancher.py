@@ -1,4 +1,4 @@
-""" Provide Rancher with the Kubernetes cluster configuration. """
+""" Utilities for creating rancher compatible helm charts. """
 
 from dataclasses import dataclass
 
