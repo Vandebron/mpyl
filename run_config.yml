@@ -1,0 +1,15 @@
+loggers:
+  console:
+    config:
+      log_level: INFO
+
+execution:
+  config:
+    multiprocess:
+      # Note that max_concurrent: 0 is equivalent to multiprocessing.cpu_count() - see:
+      # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.cpu_count
+      max_concurrent: 0
+
+compute_logs:
+  module: dagster.core.storage.noop_compute_log_manager
+  class: "NoOpComputeLogManager"
