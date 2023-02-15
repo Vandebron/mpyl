@@ -39,7 +39,7 @@ class BuildDocker(Step):
         low_level_client = APIClient()
         self._logger.debug(low_level_client.version())
 
-        docker_config = DockerConfig(step_input.build_properties.config)
+        docker_config = DockerConfig(step_input.run_properties.config)
 
         logs = low_level_client.build(path=docker_config.root_folder,
                                       dockerfile=f'{project.deployment_path}/{docker_config.docker_file_name}',
