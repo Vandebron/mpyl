@@ -1,4 +1,6 @@
-""" Module used to define and execute the steps inside the pipeline. """
+""" Entry point of MPyL. Loads all available Step implementations and triggers their execution based on the specified
+Project and Stage.
+"""
 
 from logging import Logger
 from typing import Optional
@@ -18,7 +20,7 @@ yaml = YAML()
 
 
 class Steps:
-    """ Executes the pipeline with its build properties """
+    """ Executor of individual steps within a pipeline. """
     _step_executors: set[Step]
     _logger: Logger
     _properties: BuildProperties

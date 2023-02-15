@@ -1,4 +1,6 @@
-""" A build step to push a docker image to the container registry. """
+""" Pushes the artifact created in the build stage to the docker registry for any build step that has
+ArtifactType.DOCKER_IMAGE as `produced_artifact`.
+"""
 
 import os
 from logging import Logger

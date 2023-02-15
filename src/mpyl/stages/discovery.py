@@ -1,6 +1,5 @@
-""" This module iterates through projects and checks if changes have been made to it, therefore it's needed to
-rebuild them.
-"""
+""" Discovery of projects that are relevant to a specific Stage. Determine which of the discovered projects have been
+invalidated due to changes in the source code since the last build of the project's output artifact."""
 
 from ..project import Project
 from ..projects.find import load_projects
