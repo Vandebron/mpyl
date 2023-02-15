@@ -22,7 +22,7 @@ class Step(metaclass=IPluginRegistry):
     meta: Meta
     """ Information _about_ the specific instance of `Step`. For example its name, description, version or the stage to which it applies """
     produced_artifact: ArtifactType
-    """ Returns a enum value describing the produced archifact"""
+    """ The type of the artifact produced by this step"""
     required_artifact: ArtifactType
     before: Optional[Step]
     after: Optional[Step]
