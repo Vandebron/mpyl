@@ -1,4 +1,6 @@
-""" Module defining information about the repository, any changes made to it and the containing projects. """
+""" Defines information about the repository, any changes made to it and the containing projects. The repository
+class is a facade for the Version Control System. At this moment Git is the only supported VCS.
+"""
 
 from dataclasses import dataclass
 from typing import Dict

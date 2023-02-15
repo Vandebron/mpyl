@@ -1,6 +1,4 @@
-""" This module can be used as a dummy deploy step to test the framework.
-    :return NoneType: Empty artifact
-"""
+""" A dummy deploy step, which produces ArtifactType.NONE."""
 
 from logging import Logger
 

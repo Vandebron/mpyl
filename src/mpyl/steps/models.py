@@ -1,4 +1,4 @@
-""" Model representation of the project containing the build configuration."""
+""" Model representation of run-specific configuration. """
 
 from dataclasses import dataclass
 from enum import Enum

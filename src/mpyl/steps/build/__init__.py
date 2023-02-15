@@ -1,4 +1,4 @@
-""" Module defining the docker configuration. """
+""" Defines the docker registry configuration. """
 
 from typing import Dict
 

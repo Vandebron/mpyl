@@ -1,4 +1,6 @@
-""" Module to call a single (custom) building step. """
+""" Abstract base class for execution steps. Any execution step (e.g. build, test, deploy) will need to implement
+this class.
+"""
 
 from __future__ import annotations
 
