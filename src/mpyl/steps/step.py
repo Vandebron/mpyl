@@ -20,7 +20,7 @@ class IPluginRegistry(type):
 class Step(metaclass=IPluginRegistry):
     """ Information and execution of a single building step inside the pipeline. """
     meta: Meta
-    """ Identifies the name, description, version and stage """
+    """ Information _about_ the specific instance of `Step`. For example its name, description, version or the stage to which it applies """
     produced_artifact: ArtifactType
     """ Returns a enum value describing the produced archifact"""
     required_artifact: ArtifactType
