@@ -1,14 +1,12 @@
-import unittest
-
 import pytest
 from jsonschema import ValidationError
 
-from src.mpyl.project import load_project
 from src.mpyl import Target
+from src.mpyl.project import load_project
 from tests import root_test_path
 
 
-class TestMplSchema(unittest.TestCase):
+class TestMplSchema:
     resource_path = root_test_path / "test_resources"
 
     def test_schema_load(self):
@@ -37,13 +35,10 @@ class TestMplSchema(unittest.TestCase):
         assert host.tls.get_value(Target.PULL_REQUEST_BASE) == 'le-custom-prod-wildcard-cert'
 
     def test_schema_load_validation(self):
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError) as exc:
             load_project("", str(self.resource_path / "test_project_invalid.yml"))
+        assert exc.value.message == "'maintainer' is a dependency of 'deployment'"
 
     def test_target_by_value(self):
         target = Target('PullRequest')
         assert target == Target.PULL_REQUEST
-
-
-if __name__ == '__main__':
-    unittest.main()
