@@ -34,7 +34,7 @@ def sum_suites(suites: list[TestSuite]) -> TestRunSummary:
 
 def to_test_suites(artifact: Artifact):
     if artifact.artifact_type != ArtifactType.JUNIT_TESTS:
-        raise ValueError(f'Artifact {artifact} should be of type {ArtifactType.JUNIT_TESTS.name}')
+        raise ValueError(f'Artifact {artifact} should be of type {ArtifactType.JUNIT_TESTS}')
     junit_result_path = artifact.spec['test_output_path']
 
     xml = JUnitXml()
