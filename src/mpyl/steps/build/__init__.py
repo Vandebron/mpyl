@@ -1,3 +1,5 @@
+""" Defines the docker registry configuration. """
+
 from typing import Dict
 
 

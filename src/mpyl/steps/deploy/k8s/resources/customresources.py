@@ -1,3 +1,5 @@
+""" Fetches the secrets and ingress routes needed for the Deploy step. """
+
 from kubernetes.client import V1ObjectMeta
 
 from src.mpyl.project import Host

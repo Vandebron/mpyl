@@ -1,3 +1,7 @@
+""" Entry point of MPyL. Loads all available Step implementations and triggers their execution based on the specified
+Project and Stage.
+"""
+
 import pkgutil
 from logging import Logger
 from typing import Optional
@@ -18,6 +22,7 @@ yaml = YAML()
 
 
 class Steps:
+    """ Executor of individual steps within a pipeline. """
     _step_executors: set[Step]
     _logger: Logger
     _properties: BuildProperties

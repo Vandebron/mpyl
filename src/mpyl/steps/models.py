@@ -1,3 +1,5 @@
+""" Model representation of run-specific configuration. """
+
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path

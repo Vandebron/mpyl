@@ -1,3 +1,6 @@
+""" Pushes the artifact created in the build stage to the docker registry for any build step that has
+ArtifactType.DOCKER_IMAGE as `mpyl.steps.models.ArtifactType`."""
+
 import os
 from logging import Logger
 
