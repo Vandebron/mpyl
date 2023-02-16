@@ -45,7 +45,7 @@ class RunProperties:
         build = run_properties['build']
         versioning = build['versioning']
         return RunProperties(build_id=build['run']['id'], target=Target(build['parameters']['deploy_target']),
-                             versioning=VersioningProperties(versioning['revision'], versioning.get('pr_number'),
+                             versioning=VersioningProperties(versioning['revision'], int(versioning.get('pr_number')),
                                                                versioning.get('tag')), config=config)
 
 
