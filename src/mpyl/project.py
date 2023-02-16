@@ -32,7 +32,7 @@ T = TypeVar('T')
 
 
 @dataclass(frozen=True)
-class TargetSpecificProperty(Generic[T]):
+class TargetProperty(Generic[T]):
     pr: Optional[T]  # pylint: disable=invalid-name
     test: Optional[T]
     acceptance: Optional[T]
@@ -54,12 +54,12 @@ class TargetSpecificProperty(Generic[T]):
 
     @staticmethod
     def from_yaml(values: dict):
-        return TargetSpecificProperty(pr=values.get('pr'), test=values.get('test'), acceptance=values.get('acceptance'),
-                                      production=values.get('production'), all=values.get('all'))
+        return TargetProperty(pr=values.get('pr'), test=values.get('test'), acceptance=values.get('acceptance'),
+                              production=values.get('production'), all=values.get('all'))
 
 
 @dataclass(frozen=True)
-class KeyValueProperty(TargetSpecificProperty[str]):
+class KeyValueProperty(TargetProperty[str]):
     key: str
 
     @staticmethod
@@ -129,13 +129,13 @@ class Properties:
 
 @dataclass(frozen=True)
 class Probe:
-    path: TargetSpecificProperty[str]
+    path: TargetProperty[str]
     values: dict
 
     @staticmethod
     def from_yaml(values: dict):
         path = values['path']
-        return Probe(path=TargetSpecificProperty.from_yaml(path), values=values)
+        return Probe(path=TargetProperty.from_yaml(path), values=values)
 
 
 @dataclass(frozen=True)
@@ -149,11 +149,32 @@ class Metrics:
 
 
 @dataclass(frozen=True)
+class Resources:
+    instances: Optional[TargetProperty[int]]
+    cpus: Optional[TargetProperty[float]]
+    mem: Optional[TargetProperty[int]]
+    disk: Optional[TargetProperty[int]]
+
+    @staticmethod
+    def from_yaml(values: dict):
+        instances = values.get('instances')
+        limits = values.get('limit', {})
+        cpus = limits.get('cpus')
+        mem = limits.get('mem')
+        disk = limits.get('disk')
+        return Resources(instances=TargetProperty.from_yaml(instances) if instances else None,
+                         cpus=TargetProperty.from_yaml(cpus) if cpus else None,
+                         mem=TargetProperty.from_yaml(mem) if mem else None,
+                         disk=TargetProperty.from_yaml(disk) if disk else None)
+
+
+@dataclass(frozen=True)
 class Kubernetes:
     port_mappings: dict[int, int]
     liveness_probe: Optional[Probe]
     startup_probe: Optional[Probe]
     metrics: Optional[Metrics]
+    resources: Resources
 
     @staticmethod
     def from_yaml(values: dict):
@@ -161,26 +182,28 @@ class Kubernetes:
         liveness_probe = values.get('livenessProbe')
         startup_probe = values.get('startupProbe')
         metrics = values.get('metrics')
+        resources = values.get('resources')
         return Kubernetes(port_mappings=mappings if mappings else {},
                           liveness_probe=Probe.from_yaml(liveness_probe) if liveness_probe else None,
                           startup_probe=Probe.from_yaml(startup_probe) if startup_probe else None,
-                          metrics=Metrics.from_yaml(metrics) if metrics else None)
+                          metrics=Metrics.from_yaml(metrics) if metrics else None,
+                          resources=Resources.from_yaml(resources) if resources else None)
 
 
 @dataclass(frozen=True)
 class Host:
-    host: TargetSpecificProperty[str]
-    tls: TargetSpecificProperty[str]
-    whitelists: TargetSpecificProperty[list[str]]
+    host: TargetProperty[str]
+    tls: TargetProperty[str]
+    whitelists: TargetProperty[list[str]]
 
     @staticmethod
     def from_yaml(values: dict):
         host = values.get('host')
         tls = values.get('tls')
         whitelists = values.get('whitelists')
-        return Host(host=TargetSpecificProperty.from_yaml(host) if host else None,
-                    tls=TargetSpecificProperty.from_yaml(tls) if tls else None,
-                    whitelists=TargetSpecificProperty.from_yaml(whitelists) if whitelists else None)
+        return Host(host=TargetProperty.from_yaml(host) if host else None,
+                    tls=TargetProperty.from_yaml(tls) if tls else None,
+                    whitelists=TargetProperty.from_yaml(whitelists) if whitelists else None)
 
 
 @dataclass(frozen=True)

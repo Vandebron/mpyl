@@ -66,10 +66,10 @@ definitions:
     type: object
     additionalProperties: false
     properties:
-      main_branch:
+      mainBranch:
         type: string
     required:
-      - main_branch
+      - mainBranch
     title: Git
   Github:
     type: object
@@ -86,23 +86,36 @@ definitions:
     properties:
       registry:
         "$ref": "#/definitions/Registry"
+      build:
+        "$ref" : "#/definitions/Build"
     required:
       - registry
     title: Docker
+  Build:
+    type: object
+    additionalProperties: false
+    properties:
+      rootFolder:
+        type: string
+      buildTarget:
+        type: string
+      dockerFileName:
+        type: string
+    required: [ rootFolder, buildTarget, dockerFileName ]
   Registry:
     type: object
     additionalProperties: false
     properties:
-      host_name:
+      hostName:
         type: string
-      user_name:
+      userName:
         type: string
       password:
         type: string
     required:
-      - host_name
+      - hostName
       - password
-      - user_name
+      - userName
     title: Registry
   Project:
     type: object
