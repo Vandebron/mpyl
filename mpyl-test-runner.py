@@ -26,10 +26,6 @@ def execute_step(proj: Project, stage: Stage) -> StepResult:
     dagster_logger = get_dagster_logger()
     executor = Steps(dagster_logger, run_properties)
     step_result = executor.execute(stage, proj)
-    # message = f'Executed {stage.name} for {proj.name}'
-    # dagster_logger.info(message)
-    # output = MplOutput(success=True, message=message)
-    # step_result = StepResult(stage=stage, project=proj, output=output)
     if not step_result.output.success:
         raise Failure(description=step_result.output.message)
     return step_result
