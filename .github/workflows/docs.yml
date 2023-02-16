@@ -28,7 +28,6 @@ jobs:
 
       - name: Copy schemas
         run: |
-          mkdir -p docs/schema
           chmod -R 0755 docs/schema
           cp src/mpyl/schema/* docs/schema
 
