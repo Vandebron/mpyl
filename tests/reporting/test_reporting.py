@@ -20,7 +20,7 @@ class TestReporting:
         stages = Stages(build=None, test=None, deploy=None, postdeploy=None)
         other_project = Project('test', 'Test project', '', stages, [], None, None)
 
-        result.append(StepResult(stage=Stage.BUILD, project=test_data.TEST_PROJECT,
+        result.append(StepResult(stage=Stage.BUILD, project=test_data.get_project(),
                                  output=Output(success=True, message='Build sucessful'),
                                  timestamp=datetime.fromisoformat('2019-01-04T16:41:24+02:00')))
         result.append(StepResult(stage=Stage.BUILD, project=other_project,

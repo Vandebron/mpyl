@@ -35,7 +35,7 @@ def _build_chart():
 
 
 def test_probe_values_should_be_customizable():
-    project = test_data.TEST_PROJECT
+    project = test_data.get_project()
     probe = project.kubernetes.liveness_probe
 
     custom_success_threshold = 0
@@ -53,7 +53,7 @@ def test_probe_values_should_be_customizable():
 
 
 def test_probe_deserialization_failure_should_throw():
-    project = test_data.TEST_PROJECT
+    project = test_data.get_project()
     probe = project.kubernetes.liveness_probe
 
     probe.values['httpGet'] = 'incorrect'
@@ -70,7 +70,7 @@ def test_load_config():
 
 
 def test_should_validate_against_crd_schema():
-    project = test_data.TEST_PROJECT
+    project = test_data.get_project()
     route = V1AlphaIngressRoute(metadata=V1ObjectMeta(), hosts=project.deployment.traefik.hosts, service_port=1234,
                                 name='serviceName', target=Target.PRODUCTION)
     route.spec['tls'] = {'secretName': 1234}
