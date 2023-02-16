@@ -17,6 +17,9 @@ class RunResult:
     def append(self, result: StepResult):
         self._results.append(result)
 
+    def extend(self, results: list[StepResult]):
+        self._results.extend(results)
+
     @staticmethod
     def sort_chronologically(results: list[StepResult]) -> list[StepResult]:
         return sorted(results, key=operator.attrgetter('timestamp'))
