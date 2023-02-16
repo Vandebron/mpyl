@@ -1,3 +1,7 @@
+""" Data classes for the composition of Custom Resource Definitions.
+More info: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/
+"""
+
 from dataclasses import dataclass
 from typing import Dict, Optional
 
