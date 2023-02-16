@@ -8,6 +8,7 @@ from github.PullRequest import PullRequest
 from .. import Reporter
 from ..simple import to_string
 from ...repo import Repository, RepoConfig
+from ...steps.models import RunProperties
 from ...steps.run import RunResult
 
 
@@ -29,16 +30,23 @@ class GithubReport(Reporter):
         self._config = GithubConfig(config)
         self.git_repository = Repository(RepoConfig(config))
 
-    def send_report(self, results: RunResult) -> None:
-        github = Github(self._config.token)
+    def _get_pull_request(self, github: Github, run_properties: RunProperties):
         repo = github.get_repo(self._config.repository)
+        if run_properties.versioning.pr_number:
+            return repo.get_pull(run_properties.versioning.pr_number)
+
         current_branch = self.git_repository.get_branch
         pulls: list[PullRequest] = repo.get_pulls(head=f'{repo.full_name}:{current_branch}').get_page(0)
 
         if len(pulls) == 0:
             raise ValueError(f'No PR related to {current_branch} were found')
 
-        pull_request: PullRequest = pulls.pop()
+        return pulls.pop()
+
+    def send_report(self, results: RunResult) -> None:
+        github = Github(self._config.token)
+
+        pull_request = self._get_pull_request(github, results.run_properties)
 
         comments = pull_request.get_issue_comments()
         authenticated_user = github.get_user()
