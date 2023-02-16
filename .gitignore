@@ -132,7 +132,12 @@ dmypy.json
 .idea/
 .mpl/
 
+#documentation
+docs/
+
 #dagster
 tmp*/
 
 .DS_Store
+
+node_modules/

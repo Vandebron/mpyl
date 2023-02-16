@@ -1,13 +1,17 @@
 cvs:
   git:
-    main_branch: 'main'
+    mainBranch: 'main'
   github:
     repository: 'Vandebron/mpyl'
 docker:
   registry:
-    host_name: 'bigdataregistry.azurecr.io'
-    user_name: !ENV ${DOCKER_REGISTRY_USERNAME:user}
-    password: !ENV ${DOCKER_REGISTRY_PASSWORD:password}
+    hostName: 'bigdataregistry.azurecr.io'
+    userName: !ENV ${DOCKER_REGISTRY_USR:user}
+    password: !ENV ${DOCKER_REGISTRY_PSW:password}
+  build:
+    rootFolder: '.'
+    buildTarget: 'builder'
+    dockerFileName: 'Dockerfile-mpl'
 kubernetes:
   rancher:
     cluster:
@@ -26,9 +30,26 @@ kubernetes:
         projectId: p-lb52t
         clusterEnv: prd
         context: vdb-core-digital-k8s-prod
-project:
+project: # default values
   deployment:
     kubernetes:
+      resources:
+        instances:
+          pr: 1
+          test: 1
+          acceptance: 1
+          production: 3
+        limit:
+          cpus:
+            pr: 0.5
+            test: 0.5
+            acceptance: 0.5
+            production: 1.0
+          mem:
+            pr: 1024
+            test: 1024
+            acceptance: 1024
+            production: 2048
       startupProbe:
         path:
           all: '/health'

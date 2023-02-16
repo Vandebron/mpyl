@@ -1,3 +1,7 @@
+""" Defines information about the repository, any changes made to it and the containing projects.
+`mpyl.repo.Repository` is a facade for the Version Control System. At this moment Git is the only supported VCS.
+"""
+
 from dataclasses import dataclass
 from typing import Dict
 
@@ -16,7 +20,7 @@ class RepoConfig:
     main_branch: str
 
     def __init__(self, config: Dict):
-        self.main_branch = config['cvs']['git']['main_branch']
+        self.main_branch = config['cvs']['git']['mainBranch']
 
 
 class Repository:
@@ -44,4 +48,5 @@ class Repository:
         return set(self._repo.git.diff(None, name_only=True).splitlines())
 
     def find_projects(self) -> set[str]:
+        """ returns a set of all project.yml files """
         return set(self._repo.git.ls_files(f'**/{Project.project_yaml_path()}').splitlines())
