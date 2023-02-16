@@ -1,4 +1,4 @@
-""" A dummy deploy step, which produces ArtifactType.NONE."""
+""" A dummy deploy step, which produces `mpyl.steps.models.ArtifactType.NONE`."""
 
 from logging import Logger
 

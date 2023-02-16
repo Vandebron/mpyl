@@ -1,4 +1,4 @@
-""" Step that builds a docker image from its specification in Dockerfile-mpl """
+""" Step that builds a docker image from its specification in Dockerfile-mpl. """
 
 from logging import Logger
 
