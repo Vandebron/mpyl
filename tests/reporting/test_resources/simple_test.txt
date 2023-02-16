@@ -1,5 +1,24 @@
 TestRunSummary(tests=51, failures=1, errors=1, skipped=0) 
 
+Suite pytest
+Case test_schema_load 
+Case test_schema_load_validation 
+Case test_target_by_value 
+Case test_should_print_results_as_string 
+Case test_should_find_invalidated_test_dependencies 
+Case test_should_find_invalidated_dependencies 
+Case test_output_no_artifact_roundtrip 
+Case test_output_roundtrip 
+Case test_should_return_error_if_stage_not_defined 
+Case test_probe_values_should_be_customizable 
+Case test_probe_deserialization_failure_should_throw 
+Case test_load_config 
+Case test_should_validate_against_crd_schema 
+Case test_chart_roundtrip[deployment] 
+Case test_chart_roundtrip[service] 
+Case test_chart_roundtrip[serviceaccount] 
+Case test_chart_roundtrip[sealedsecrets] 
+Case test_chart_roundtrip[ingress-https-route] 
 Suite nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs
 Case Invoice orchestrator should Return the stream of incoming data when downloading a PDF file 
 Case Invoice orchestrator should Filter invoices by type 
@@ -25,25 +44,6 @@ Case Invoice orchestrator should getInvoiceDataSet should return a result when i
 Case Invoice orchestrator should getInvoiceDataSet should return a 404 when invoice has different company label id Ecedo 
 Case Invoice orchestrator should getInvoiceDataSet should return a 404 when invoice doesn't exist in Ecedo 
 Case Invoice orchestrator should getInvoiceDataSet should return a 404 when organization doesn't exist in Ecedo 
-Suite pytest
-Case test_schema_load 
-Case test_schema_load_validation 
-Case test_target_by_value 
-Case test_should_print_results_as_string 
-Case test_should_find_invalidated_test_dependencies 
-Case test_should_find_invalidated_dependencies 
-Case test_output_no_artifact_roundtrip 
-Case test_output_roundtrip 
-Case test_should_return_error_if_stage_not_defined 
-Case test_probe_values_should_be_customizable 
-Case test_probe_deserialization_failure_should_throw 
-Case test_load_config 
-Case test_should_validate_against_crd_schema 
-Case test_chart_roundtrip[deployment] 
-Case test_chart_roundtrip[service] 
-Case test_chart_roundtrip[serviceaccount] 
-Case test_chart_roundtrip[sealedsecrets] 
-Case test_chart_roundtrip[ingress-https-route] 
 Suite nl.vandebron.api.invoices.routes.InvoiceRouteSpecs
 Case Invoice routes should serve all invoices if user user owns organization 
 Case Invoice routes should create payment plan 
