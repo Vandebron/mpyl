@@ -41,7 +41,8 @@ def to_test_suites(artifact: Artifact):
     for file_name in [fn for fn in os.listdir(junit_result_path) if fn.endswith('.xml')]:
         xml += JUnitXml.fromfile(junit_result_path / file_name)
 
-    return [TestSuite.fromelem(s) for s in xml]
+    suites = [TestSuite.fromelem(s) for s in xml]
+    return sorted(suites, key=lambda s: s.time)
 
 
 def to_test_report(artifact: Artifact):
