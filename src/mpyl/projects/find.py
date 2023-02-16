@@ -1,4 +1,4 @@
-""" Module to load all projects inside a repository. """
+""" Loads all projects inside a repository. """
 
 from ..project import Project, load_project
 
