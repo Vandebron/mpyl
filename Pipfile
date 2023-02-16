@@ -10,8 +10,8 @@ gitpython = "==3.1.30"
 docker = "==6.0.1"
 "ruamel.yaml" = "==0.17.21"
 kubernetes = "==25.3.0"
-junitparser = "*"
-junitxml = "*"
+junitparser = "==2.8.0"
+pygithub = "==1.57"
 
 [dev-packages]
 toml = "==0.10.2"
