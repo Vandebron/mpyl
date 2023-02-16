@@ -2,8 +2,8 @@
 
 from kubernetes.client import V1ObjectMeta
 
-from src.mpyl.project import Host
-from src.mpyl import Target
+from ..... import Target
+from .....project import Host
 from .crd import CustomResourceDefinition
 
 
