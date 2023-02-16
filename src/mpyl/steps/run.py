@@ -14,6 +14,10 @@ class RunResult:
     def __init__(self, run_properties: RunProperties):
         self._run_properties = run_properties
 
+    @property
+    def run_properties(self) -> RunProperties:
+        return self._run_properties
+
     def append(self, result: StepResult):
         self._results.append(result)
 

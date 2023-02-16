@@ -17,7 +17,7 @@ yaml = YAML()
 @dataclass(frozen=True)
 class VersioningProperties:
     revision: str
-    pr_number: Optional[str]
+    pr_number: Optional[int]
     tag: Optional[str]
 
     @property
