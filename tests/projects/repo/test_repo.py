@@ -1,5 +1,4 @@
 import os
-import unittest
 
 import pytest
 from pyaml_env import parse_config
@@ -25,6 +24,3 @@ class RepoTestCase:
         config = RepoConfig(yaml_values)
         assert config.main_branch == 'main'
 
-
-if __name__ == '__main__':
-    unittest.main()
