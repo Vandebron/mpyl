@@ -134,7 +134,7 @@ dmypy.json
 
 #documentation
 docs/*
-!docs/schema
+!docs/schema/
 
 #dagster
 tmp*/
