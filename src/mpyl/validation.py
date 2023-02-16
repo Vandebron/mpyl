@@ -1,3 +1,5 @@
+""" Function used to validate the project.schema.yml against the local schema."""
+
 import pkgutil
 
 import jsonschema

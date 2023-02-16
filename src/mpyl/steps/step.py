@@ -22,9 +22,11 @@ class IPluginRegistry(type):
 class Step(metaclass=IPluginRegistry):
     """ Information and execution of a single building step inside the pipeline. """
     meta: Meta
-    """ Information _about_ the specific instance of `Step`. For example its name, description, version or the stage to which it applies """
+    """Information _about_ the specific instance of `Step`. For example its name, description, version or the stage
+    to which it applies.
+    """
     produced_artifact: ArtifactType
-    """ The type of the artifact produced by this step"""
+    """ The type of the artifact produced by this step """
     required_artifact: ArtifactType
     before: Optional[Step]
     after: Optional[Step]
@@ -41,6 +43,7 @@ class Step(metaclass=IPluginRegistry):
     def execute(self, step_input: Input) -> Output:
         """ Execute an individual step for a specific `project` at a specific `stage` of the pipeline.
         :param step_input: The input of the project along with its build properties and required artifact (if any).
-        :return Output: The result of the execution. `success` will be `False` if any exception was thrown during execution.
+        :return Output: The result of the execution. `success` will be `False` if any exception was thrown during
+        execution.
         """
         return Output(success=False, message=f"Not implemented for {step_input.project.name}", produced_artifact=None)
