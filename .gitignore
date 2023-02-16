@@ -133,7 +133,7 @@ dmypy.json
 .mpl/
 
 #documentation
-!docs/schema/
+
 
 #dagster
 tmp*/
