@@ -1,3 +1,6 @@
+""" Pushes the artifact created in the build stage to the docker registry for any build step that has
+ArtifactType.DOCKER_IMAGE as `mpyl.steps.models.ArtifactType`."""
+
 import os
 from logging import Logger
 
@@ -40,10 +43,12 @@ class AfterBuildDocker(Step):
         tagged = client.images.get(image_name).tag(full_image_path)
         if tagged:
             stream = client.images.push(full_image_path, stream=True, decode=True)
+            previous_status = ""
             for line in stream:
                 status = line.get('status')
-                if status:
+                if status and status != previous_status:
                     self._logger.info(status)
+                    previous_status = status
         else:
             return Output(success=False, message=f"Could not tag {full_image_path}")
 

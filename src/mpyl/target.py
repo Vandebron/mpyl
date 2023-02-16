@@ -1,3 +1,5 @@
+""" Module to define the target. [Pull Request, Pull Request Base, Acceptance, Production] """
+
 from dataclasses import dataclass
 from enum import Enum
 
