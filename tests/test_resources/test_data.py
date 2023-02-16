@@ -14,9 +14,14 @@ config_values = parse_config(resource_path / "config.yml")
 RUN_PROPERTIES = RunProperties("id", Target.PULL_REQUEST,
                                VersioningProperties("2ad3293a7675d08bc037ef0846ef55897f38ec8f", "1234", None),
                                config_values)
-TEST_PROJECT = load_project(resource_path, "test_project.yml", False)
 
-TEST_REPO = Repository(RepoConfig({'cvs': {'git': {'mainBranch': 'main'}}}))
+
+def get_project():
+    return load_project(resource_path, "test_project.yml", False)
+
+
+def get_repo() -> Repository:
+    return Repository(RepoConfig({'cvs': {'git': {'mainBranch': 'main'}}}))
 
 
 def assert_roundtrip(file_path: Path, expected_contents: str, overwrite: bool = False):

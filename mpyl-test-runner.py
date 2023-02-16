@@ -22,8 +22,7 @@ def execute_step(proj: Project, stage: Stage) -> MplOutput:
     properties = parse_config("run_properties.yml")
     run_properties = RunProperties.from_configuration(run_properties=properties, config=config)
     executor = Steps(get_dagster_logger(), run_properties)
-    step_output = executor.execute(stage, proj)
-    time.sleep(2)
+    step_output = executor.execute(stage, proj).output
     if not step_output.success:
         raise Failure(description=step_output.message)
     return step_output
