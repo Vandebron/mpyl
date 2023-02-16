@@ -1,3 +1,5 @@
+""" Step that builds a docker image from its specification in Dockerfile-mpl. """
+
 from logging import Logger
 
 from docker import APIClient  # type: ignore
