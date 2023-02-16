@@ -3,9 +3,9 @@ from dataclasses import dataclass
 
 from junitparser import JUnitXml, TestSuite
 
+from .. import Stage
 from ..steps.models import Artifact, ArtifactType
-from ...mpyl import Stage
-from ...mpyl.steps.run import RunResult
+from ..steps.run import RunResult
 
 
 def to_string(run_result: RunResult) -> str:
