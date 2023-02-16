@@ -925,7 +925,7 @@ definitions:
                 default: '1'
                 type: integer
               production:
-                default: '1'
+                default: '2'
                 type: integer
               all:
                 default: '1'

@@ -2,6 +2,7 @@ name: build
 
 on:
   push:
+    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
@@ -44,7 +45,15 @@ jobs:
       - name: Test
         uses: VaultVulp/action-pipenv@v2.0.1
         with:
-          command: run test
+          command: run test-ci
+
+      - name: Publish Test Report
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always() # always run even if the previous step fails
+        with:
+          job_summary: true
+          report_individual_runs: true
+          files: 'build/test-result/*.xml'
 
       - name: Find PR number
         uses: jwalton/gh-find-current-pr@v1

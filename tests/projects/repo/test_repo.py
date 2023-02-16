@@ -15,7 +15,7 @@ class RepoTestCase:
 
     @pytest.mark.skipif(condition="GITHUB_JOB" in os.environ, reason="main is not available in github action")
     def test_changes_in_commit_should_be_in_branch(self):
-        repo = Repository(RepoConfig({'cvs': {'git': 'main_branch'}}))
+        repo = Repository(RepoConfig({'cvs': {'git': 'mainBranch'}}))
         changes_in_branch = repo.changes_in_branch()
         changes_in_commit = repo.changes_in_commit()
 

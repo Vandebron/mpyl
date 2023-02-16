@@ -1,25 +1,58 @@
+""" Data classes for the composition of Custom Resource Definitions.
+More info: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/
+"""
+
 from dataclasses import dataclass
 from typing import Dict, Optional
-from ruamel.yaml import YAML
 
-from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1PodTemplateSpec, V1ObjectMeta, V1PodSpec, \
-    V1DeploymentStrategy, V1RollingUpdateDeployment, V1LabelSelector, V1ContainerPort, V1EnvVar, V1Service, \
+from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1ObjectMeta, V1PodSpec, \
+    V1RollingUpdateDeployment, V1LabelSelector, V1ContainerPort, V1EnvVar, V1Service, \
     V1ServiceSpec, V1ServicePort, V1ServiceAccount, V1LocalObjectReference, \
-    V1EnvVarSource, V1SecretKeySelector, V1Probe, ApiClient, V1HTTPGetAction
+    V1EnvVarSource, V1SecretKeySelector, V1Probe, ApiClient, V1HTTPGetAction, V1ResourceRequirements, \
+    V1PodTemplateSpec, V1DeploymentStrategy
+from ruamel.yaml import YAML
 
 from .resources.crd import to_yaml  # pylint: disable = no-name-in-module
 from .resources.customresources import V1AlphaIngressRoute, V1SealedSecret  # pylint: disable = no-name-in-module
 from ...models import Input
-from ....project import Project, KeyValueProperty, Probe, Deployment
+from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources
 from ....target import Target
 
 yaml = YAML()
 
+# Determined (unscientifically) to be sensible factors.
+# Based on actual CPU usage, pods rarely use more than 10% of the allocated CPU. 60% usage is healthy, so we
+# scale down to 20% in order to keep some slack.
+# Memory is cheaper, but poses a harder limit (OOM when exceeding limit), so we are more generous than with CPU.
+CPU_REQUEST_SCALE_FACTOR = 0.2
+MEM_REQUEST_SCALE_FACTOR = 0.5
+
+
+@dataclass(frozen=True)
+class ResourceDefaults:
+    instances: TargetProperty[int]
+    cpus: TargetProperty[float]
+    mem: TargetProperty[int]
+
+    @staticmethod
+    def from_yaml(resources: dict):
+        limit = resources['limit']
+        return ResourceDefaults(instances=TargetProperty.from_yaml(resources['instances']),
+                                cpus=TargetProperty.from_yaml(limit['cpus']),
+                                mem=TargetProperty.from_yaml(limit['mem']))
+
 
 @dataclass(frozen=True)
 class KubernetesConfig:
+    resources_defaults: ResourceDefaults
     liveness_probe_defaults: dict
     startup_probe_defaults: dict
+
+    @staticmethod
+    def from_yaml(values: dict):
+        return KubernetesConfig(resources_defaults=ResourceDefaults.from_yaml(values['resources']),
+                                liveness_probe_defaults=values['livenessProbe'],
+                                startup_probe_defaults=values['startupProbe'])
 
 
 class ServiceChart:
@@ -45,8 +78,7 @@ class ServiceChart:
         if kubernetes_config_dict is None:
             raise KeyError("Configuration should have project.deployment.kubernetes section")
 
-        self.kubernetes_config = KubernetesConfig(liveness_probe_defaults=kubernetes_config_dict['livenessProbe'],
-                                                  startup_probe_defaults=kubernetes_config_dict['startupProbe'])
+        self.kubernetes_config = KubernetesConfig.from_yaml(kubernetes_config_dict)
 
         self.deployment = project.deployment
         properties = self.deployment.properties
@@ -136,13 +168,27 @@ class ServiceChart:
 
         return V1SealedSecret(name=self.release_name, secrets=secrets)
 
+    @staticmethod
+    def _to_resources(resources: Resources, defaults: ResourceDefaults, target: Target):
+        cpus = resources.cpus if resources.cpus else defaults.cpus
+        cpus_limit = cpus.get_value(target=target) * 1000.0
+        cpus_request = cpus_limit * CPU_REQUEST_SCALE_FACTOR
+
+        mem = resources.mem if resources.mem else defaults.mem
+        mem_limit = mem.get_value(target=target)
+        mem_request = mem_limit * MEM_REQUEST_SCALE_FACTOR
+        return V1ResourceRequirements(limits={'cpu': f'{int(cpus_limit)}m', 'memory': f'{int(mem_limit)}Mi'},
+                                      requests={'cpu': f'{int(cpus_request)}m', 'memory': f'{int(mem_request)}Mi'})
+
     def to_deployment(self) -> V1Deployment:
         kubernetes = self.deployment.kubernetes
         if kubernetes is None:
             raise AttributeError("deployment.kubernetes field should be set")
 
-        ports = list(map(lambda key: V1ContainerPort(container_port=key, host_port=self.mappings[key], protocol="TCP"),
-                         self.mappings.keys()))
+        ports = [
+            V1ContainerPort(container_port=key, host_port=self.mappings[key], protocol="TCP", name=f'port-{idx}')
+            for idx, key in enumerate(self.mappings.keys())
+        ]
         env_vars = list(
             filter(lambda v: v.value, map(lambda e: V1EnvVar(name=e.key, value=e.get_value(self.target)), self.env)))
 
@@ -152,12 +198,17 @@ class ServiceChart:
             secret_key_ref=V1SecretKeySelector(key=e.key, name=self.release_name, optional=False))),
                                   sealed_for_target))
 
+        resources = kubernetes.resources
+        defaults = self.kubernetes_config.resources_defaults
+        instances = resources.instances if resources.instances else defaults.instances
+
         container = V1Container(
             name=self.project.name,
             image=self.image_name,
             env=env_vars + sealed_secrets,
             ports=ports,
             image_pull_policy="Always",
+            resources=ServiceChart._to_resources(resources, defaults, self.target),
             liveness_probe=ServiceChart._to_probe(kubernetes.liveness_probe,
                                                   self.kubernetes_config.liveness_probe_defaults,
                                                   self.target) if kubernetes.liveness_probe else None,
@@ -172,6 +223,7 @@ class ServiceChart:
             metadata=V1ObjectMeta(annotations=self._to_annotations(), name=self.release_name,
                                   labels=self._to_labels()),
             spec=V1DeploymentSpec(
+                replicas=instances.get_value(target=self.target),
                 template=V1PodTemplateSpec(
                     metadata=self._to_object_meta(),
                     spec=V1PodSpec(containers=[container], service_account=self.release_name,

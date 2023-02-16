@@ -1,3 +1,5 @@
+""" Step that deploys the docker image produced in the build stage to Kubernetes, using HELM. """
+
 from logging import Logger
 
 from kubernetes import config, client
