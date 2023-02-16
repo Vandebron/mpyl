@@ -35,7 +35,7 @@ class AfterBuildDocker(Step):
 
         docker_config = DockerConfig(step_input.build_properties.config)
 
-        self._logger.info(f"Logging in with user '{docker_config.user_name}', {docker_config.password}")
+        self._logger.info(f"Logging in with user '{docker_config.user_name}'")
         login_result = client.login(username=docker_config.user_name, password=docker_config.password,
                                     registry=f'https://{docker_config.host_name}')
         self._logger.debug(f"Docker login result: {login_result}")
@@ -43,10 +43,12 @@ class AfterBuildDocker(Step):
         tagged = client.images.get(image_name).tag(full_image_path)
         if tagged:
             stream = client.images.push(full_image_path, stream=True, decode=True)
+            previous_status = ""
             for line in stream:
                 status = line.get('status')
-                if status:
+                if status and status != previous_status:
                     self._logger.info(status)
+                    previous_status = status
         else:
             return Output(success=False, message=f"Could not tag {full_image_path}")
 

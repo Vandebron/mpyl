@@ -1,3 +1,4 @@
+import os
 import unittest
 
 import pytest
@@ -7,19 +8,22 @@ from src.mpyl.stage import Stage
 from src.mpyl.stages.discovery import find_invalidated_projects_for_stage
 
 
-class TestDiscovery(unittest.TestCase):
+class TestDiscovery:
 
-    @pytest.skip(reason='Does not work in github action due to repo ownership issue', allow_module_level=True)
+    @pytest.mark.skipif(condition="GITHUB_JOB" in os.environ,
+                        reason="fatal: detected dubious ownership in repository at '/github/workspace'")
     def test_should_find_invalidated_test_dependencies(self):
-        repo = Repository(RepoConfig({'cvs': {'git': {'main_branch': 'main'}}}))
+        repo = Repository(RepoConfig({'cvs': {'git': {'mainBranch': 'main'}}}))
         touched_files = {'tests/projects/service/file.py', 'tests/some_file.txt'}
         assert len(find_invalidated_projects_for_stage(repo, Stage.BUILD, [History(0, "revision", touched_files)])) == 1
         assert len(find_invalidated_projects_for_stage(repo, Stage.TEST, [History(0, "revision", touched_files)])) == 0
         assert len(
             find_invalidated_projects_for_stage(repo, Stage.DEPLOY, [History(0, "revision", touched_files)])) == 1
 
+    @pytest.mark.skipif(condition="GITHUB_JOB" in os.environ,
+                        reason="fatal: detected dubious ownership in repository at '/github/workspace'")
     def test_should_find_invalidated_dependencies(self):
-        repo = Repository(RepoConfig({'cvs': {'git': {'main_branch': 'main'}}}))
+        repo = Repository(RepoConfig({'cvs': {'git': {'mainBranch': 'main'}}}))
         invalidated = find_invalidated_projects_for_stage(repo, Stage.BUILD,
                                                           [History(0, "revision", {'tests/projects/job/file.py',
                                                                                    'tests/some_file.txt'})])

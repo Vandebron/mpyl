@@ -12,10 +12,11 @@ metadata:
     app.kubernetes.io/instance: dockertest
     maintainers: Marketplace.Energy_Trading
     maintainer: Marketplace
-    version: '1234'
+    version: pr-1234
     revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
   name: dockertest
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/instance: dockertest
@@ -35,7 +36,7 @@ spec:
         app.kubernetes.io/instance: dockertest
         maintainers: Marketplace.Energy_Trading
         maintainer: Marketplace
-        version: '1234'
+        version: pr-1234
         revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
       name: dockertest
     spec:
@@ -66,6 +67,14 @@ spec:
         ports:
         - containerPort: 8080
           hostPort: 8080
+          name: port-0
           protocol: TCP
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1024Mi
+          requests:
+            cpu: 100m
+            memory: 512Mi
       serviceAccount: dockertest
       serviceAccountName: dockertest

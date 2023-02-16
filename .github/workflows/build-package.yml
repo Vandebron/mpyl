@@ -1,4 +1,4 @@
-name: Build package
+name: build
 
 on:
   push:
@@ -12,13 +12,15 @@ jobs:
     steps:
       - name: Checkout Source
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-        run: git config --system --add safe.directory *
 
-      - name: Avoid shared ownership issue on workspace
-        # stderr: 'fatal: detected dubious ownership in repository at '/github/workspace'
-        run: git config --global --add safe.directory /github/workspace
+      - name: Cache Dependencies
+        uses: actions/cache@v2
+        id: cache-dependencies
+        with:
+          path: /github/home/.local/share/virtualenvs/*
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/Pipfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pipenv
 
       - name: Install dependencies
         uses: VaultVulp/action-pipenv@v2.0.1
@@ -43,15 +45,26 @@ jobs:
       - name: Test
         uses: VaultVulp/action-pipenv@v2.0.1
         with:
-          command: run test
+          command: run test-ci
 
-      - uses: jwalton/gh-find-current-pr@v1
+      - name: Publish Test Report
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always() # always run even if the previous step fails
+        with:
+          job_summary: true
+          report_individual_runs: true
+          files: 'build/test-result/*.xml'
+
+      - name: Find PR number
+        uses: jwalton/gh-find-current-pr@v1
         id: findPr
+        if: github.ref_name != 'main'
         with:
           state: open
 
       - name: Build
         uses: VaultVulp/action-pipenv@v2.0.1
+        if: github.ref_name != 'main'
         env:
           PIPENV_DONT_LOAD_ENV: true
           MPYL_VERSION: "${{ steps.findPr.outputs.pr }}-${{ github.run_number }}"
@@ -60,6 +73,7 @@ jobs:
 
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@release/v1
+        if: github.ref_name != 'main'
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
           repository_url: https://test.pypi.org/legacy/

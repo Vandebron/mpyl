@@ -19,7 +19,7 @@ class RepoConfig:
     main_branch: str
 
     def __init__(self, config: Dict):
-        self.main_branch = config['cvs']['git']['main_branch']
+        self.main_branch = config['cvs']['git']['mainBranch']
 
 
 class Repository:
@@ -28,6 +28,7 @@ class Repository:
         self._config = config
         self._root_dir = Git().rev_parse('--show-toplevel')
         self._repo = Repo(self._root_dir)
+
 
     @property
     def get_sha(self):
