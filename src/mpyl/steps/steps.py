@@ -2,6 +2,7 @@
 Project and Stage.
 """
 
+import pkgutil
 from logging import Logger
 from typing import Optional
 
@@ -15,6 +16,7 @@ from .models import Output, Input, BuildProperties, ArtifactType, Artifact
 from .step import Step
 from ..project import Project
 from ..stage import Stage
+from ..validation import validate
 
 yaml = YAML()
 
@@ -26,6 +28,12 @@ class Steps:
     _properties: BuildProperties
 
     def __init__(self, logger: Logger, properties: BuildProperties) -> None:
+        schema_dict = pkgutil.get_data(__name__, "../schema/mpyl_config.schema.yml")
+
+        if schema_dict:
+            schema = yaml.load(schema_dict.decode('utf-8'))
+            validate(properties.config, schema)
+
         self._logger = logger
         self._step_executors = {BuildEcho(logger), DeployEcho(logger), BuildDocker(logger), DeployKubernetes(logger)}
         self._properties = properties
@@ -66,7 +74,7 @@ class Steps:
     def execute(self, stage: Stage, project: Project) -> Output:
         stage_name = project.stages.for_stage(stage)
         if stage_name is None:
-            return Output(success=False, message=f"Stage ${stage.value} not defined on project ${project.name}")
+            return Output(success=False, message=f"Stage '{stage.value}' not defined on project '{project.name}'")
 
         executor = self._find_executor(stage, stage_name)
         if executor:

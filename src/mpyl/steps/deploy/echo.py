@@ -16,13 +16,8 @@ class DeployEcho(Step):
             description='Dummy deploy step to test the framework',
             version='0.0.1',
             stage=Stage.DEPLOY
-        ), ArtifactType.NONE, ArtifactType.DOCKER_IMAGE)
+        ), ArtifactType.NONE, ArtifactType.NONE)
 
     def execute(self, step_input: Input) -> Output:
         self._logger.info(f"Deploying project {step_input.project.name}")
-        artifact = step_input.required_artifact
-        if artifact:
-            self._logger.info(f"Deploying {artifact.artifact_type} {artifact.spec['image']}")
-        else:
-            return Output(success=False, message="Required artifact not found", produced_artifact=None)
         return Output(success=True, message=f"Deployed project {step_input.project.name}", produced_artifact=None)

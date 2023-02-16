@@ -2,16 +2,20 @@
 components communicate with one another.
 """
 
+import pkgutil
 from io import StringIO
+from typing import Optional
 
+import jsonschema
 import six
+from jsonschema import ValidationError
 from kubernetes.client import Configuration, V1ObjectMeta
 from ruamel.yaml import YAML
 
 yaml = YAML()
 
 
-class KubernetesResource:
+class CustomResourceDefinition:
     openapi_types = {
         'api_version': 'str',
         'kind': 'str',
@@ -27,7 +31,7 @@ class KubernetesResource:
     }
 
     def __init__(self, api_version: str, kind: str, metadata: V1ObjectMeta, spec: dict,
-                 local_vars_configuration=None):  # noqa: E501
+                 local_vars_configuration=None, schema: Optional[str] = None):  # noqa: E501
         """V1CSIDriver - a model defined in OpenAPI"""  # noqa: E501
         if local_vars_configuration is None:
             local_vars_configuration = Configuration()
@@ -37,6 +41,7 @@ class KubernetesResource:
         self._kind = kind
         self._metadata = metadata
         self._spec = spec
+        self._schema = schema
         self.discriminator = None
 
         if api_version is not None:
@@ -47,7 +52,11 @@ class KubernetesResource:
             self.metadata = metadata
 
     @property
-    def api_version(self):
+    def schema(self) -> Optional[str]:
+        return self._schema
+
+    @property
+    def api_version(self) -> str:
         return self._api_version
 
     @api_version.setter
@@ -55,7 +64,7 @@ class KubernetesResource:
         self._api_version = api_version
 
     @property
-    def kind(self):
+    def kind(self) -> str:
         return self._kind
 
     @kind.setter
@@ -63,7 +72,7 @@ class KubernetesResource:
         self._kind = kind
 
     @property
-    def metadata(self):
+    def metadata(self) -> V1ObjectMeta:
         return self._metadata
 
     @metadata.setter
@@ -71,7 +80,7 @@ class KubernetesResource:
         self._metadata = metadata
 
     @property
-    def spec(self):
+    def spec(self) -> dict:
         return self._spec
 
     @spec.setter
@@ -79,21 +88,6 @@ class KubernetesResource:
         if self.local_vars_configuration.client_side_validation and spec is None:  # noqa: E501
             raise ValueError("Invalid value for `spec`, must not be `None`")  # noqa: E501
         self._spec = spec
-
-    def to_dict(self):
-        pass
-
-
-class V1SealedSecret(KubernetesResource):
-    def __init__(self, name: str, secrets: dict[str, str]):
-        super().__init__(api_version="bitnami.com/v1alpha1", kind="SealedSecret",
-                         metadata=V1ObjectMeta(name=name, labels={'chart': 'service-0.1.0'},
-                                               annotations={'sealedsecrets.bitnami.com/cluster-wide': 'true'}),
-                         spec={'encryptedData': secrets})
-
-
-def camel_case(text):
-    return ''.join(word.title() if i else word for i, word in enumerate(text.split('_')))
 
 
 def to_dict(obj):
@@ -131,7 +125,22 @@ def to_yaml(resource: object) -> str:
         return obj
 
     resource_dict = to_dict(resource) if (
-                hasattr(resource, "openapi_types") and hasattr(resource, "attribute_map")) else {}
+            hasattr(resource, "openapi_types") and hasattr(resource, "attribute_map")) else {}
+    yaml_values = remove_none(resource_dict)
+
+    if hasattr(resource, 'schema') and resource.schema:
+        template = pkgutil.get_data(__name__, f'schema/{resource.schema}')
+        if template:
+            schema = yaml.load(template.decode('utf-8'))
+            try:
+                jsonschema.validate(yaml_values, schema)
+            except ValidationError as err:
+                raise ValueError(
+                    f'Schema validation failed with {err.message} at {".".join(map(str, err.schema_path))}') from err
+        else:
+            raise ValueError(f'Schema {resource.schema} defined but not found in package')
+
     stream = StringIO()
-    yaml.dump(remove_none(resource_dict), stream)
+    yaml.dump(yaml_values, stream)
+
     return stream.getvalue()
