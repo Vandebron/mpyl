@@ -2,7 +2,7 @@
 ArtifactType.DOCKER_IMAGE as `mpyl.steps.models.ArtifactType`."""
 
 import os
-from logging import Logger
+from dagster import colored_console_logger
 
 from docker import DockerClient
 
@@ -14,7 +14,7 @@ from ...stage import Stage
 
 class AfterBuildDocker(Step):
 
-    def __init__(self, logger: Logger) -> None:
+    def __init__(self, logger: colored_console_logger) -> None:
         super().__init__(logger, Meta(
             name='After Docker Build',
             description='Push docker image to registry',

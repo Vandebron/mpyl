@@ -1,6 +1,6 @@
 """ Dummy build step to test the framework. """
 
-from logging import Logger
+from dagster import colored_console_logger
 
 from ..step import Step
 
@@ -10,7 +10,7 @@ from ...stage import Stage
 
 class BuildEcho(Step):
 
-    def __init__(self, logger: Logger) -> None:
+    def __init__(self, logger: colored_console_logger) -> None:
         super().__init__(logger, Meta(
             name='Echo Build',
             description='Dummy build step to test the framework',

@@ -4,14 +4,14 @@ step.
 
 import shutil
 import subprocess
-from logging import Logger
+from dagster import colored_console_logger
 from pathlib import Path
 
 from .service import ServiceChart
 from ...models import BuildProperties, Input, Output
 
 
-def custom_check_output(logger: Logger, command: str) -> Output:
+def custom_check_output(logger: colored_console_logger, command: str) -> Output:
     message = ''
     try:
         output = subprocess.run(command.split(" "), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)

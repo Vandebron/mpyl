@@ -1,6 +1,6 @@
 """ Step that builds a docker image from its specification in Dockerfile-mpl. """
 
-from logging import Logger
+from dagster import colored_console_logger
 
 from docker import APIClient  # type: ignore
 
@@ -13,7 +13,7 @@ from ...stage import Stage
 
 class BuildDocker(Step):
 
-    def __init__(self, logger: Logger) -> None:
+    def __init__(self, logger: colored_console_logger) -> None:
         super().__init__(logger=logger, meta=Meta(
             name='Docker Build',
             description='Build docker image',
