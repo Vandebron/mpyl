@@ -1,9 +1,12 @@
+"""
+Simple run result formatters
+"""
 import os
 from dataclasses import dataclass
 
 from junitparser import JUnitXml, TestSuite
 
-from .. import Stage
+from ..project import Stage
 from ..steps.models import Artifact, ArtifactType
 from ..steps.run import RunResult
 

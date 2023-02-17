@@ -1,3 +1,7 @@
+"""
+Report `mpyl.steps.run.RunResult` to Github
+"""
+
 from dataclasses import dataclass
 from typing import Dict
 

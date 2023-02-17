@@ -17,6 +17,7 @@ import logging
 import pkgutil
 import traceback
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 from typing import Optional, TypeVar, Dict, Any
 
@@ -24,11 +25,21 @@ import jsonschema
 from mypy.checker import Generic
 from ruamel.yaml import YAML
 
-from . import Stage
-from . import Target
+from .steps import Target
 from .validation import validate
 
 T = TypeVar('T')
+
+
+@dataclass(frozen=True)
+class Stage(Enum):
+    def __eq__(self, other):
+        return self.value == other.value
+
+    BUILD = 'build'
+    TEST = 'test'
+    DEPLOY = 'deploy'
+    POST_DEPLOY = 'postdeploy'
 
 
 @dataclass(frozen=True)

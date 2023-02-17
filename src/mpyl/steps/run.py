@@ -1,8 +1,12 @@
+"""
+Accumulate `mpyl.steps.run.RunResult` from executed `mpyl.steps.step.Step`
+"""
+
 import operator
 from typing import Optional
 
 from .models import RunProperties
-from .. import Stage
+from ..project import Stage
 from .steps import StepResult
 
 
