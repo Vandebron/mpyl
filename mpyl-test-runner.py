@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from dagster import job, op, DynamicOut, DynamicOutput, get_dagster_logger, Output, Failure
 from pyaml_env import parse_config
 
-from src.mpyl import Stage
-from src.mpyl.project import load_project, Project
+from src.mpyl.project import load_project, Project, Stage
+from src.mpyl.steps.models import Output as MplOutput
 from src.mpyl.repo import Repository, RepoConfig
 from src.mpyl.reporting.simple import to_string
 from src.mpyl.reporting.targets.github import GithubReport
