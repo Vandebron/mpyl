@@ -7,9 +7,8 @@ from typing import Optional, Dict
 
 from ruamel.yaml import YAML, yaml_object  # type: ignore
 
-from ..project import Project
-from .. import Stage
-from .. import Target
+from ..project import Project, Stage
+from ..steps import Target
 
 yaml = YAML()
 
@@ -46,7 +45,7 @@ class RunProperties:
         versioning = build['versioning']
         return RunProperties(build_id=build['run']['id'], target=Target(build['parameters']['deploy_target']),
                              versioning=VersioningProperties(versioning['revision'], int(versioning.get('pr_number')),
-                                                               versioning.get('tag')), config=config)
+                                                             versioning.get('tag')), config=config)
 
 
 @yaml_object(yaml)
@@ -62,7 +61,7 @@ class ArtifactType(Enum):
     @classmethod
     def to_yaml(cls, representer, node):
         return representer.represent_scalar('!ArtifactType',
-                                            f'{node._name_}-{node._value_}')  #pylint: disable=protected-access
+                                            f'{node._name_}-{node._value_}')  # pylint: disable=protected-access
 
     DOCKER_IMAGE = 1
     JUNIT_TESTS = 2

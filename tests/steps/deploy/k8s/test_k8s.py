@@ -9,7 +9,7 @@ from src.mpyl.steps.build import DockerConfig
 from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml
 from src.mpyl.steps.deploy.k8s.service import ServiceChart
 from src.mpyl.steps.models import RunProperties, VersioningProperties, Input
-from src.mpyl import Target
+from src.mpyl.steps import Target
 from src.mpyl.steps.deploy.k8s.resources.customresources import V1AlphaIngressRoute
 from tests import root_test_path
 from tests.test_resources import test_data

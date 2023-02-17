@@ -1,4 +1,5 @@
-""" Data classes for the composition of Custom Resource Definitions.
+"""
+Data classes for the composition of Custom Resource Definitions.
 More info: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/
 """
 
@@ -15,8 +16,7 @@ from ruamel.yaml import YAML
 from .resources.crd import to_yaml  # pylint: disable = no-name-in-module
 from .resources.customresources import V1AlphaIngressRoute, V1SealedSecret  # pylint: disable = no-name-in-module
 from ...models import Input
-from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources
-from .... import Target
+from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target
 
 yaml = YAML()
 

@@ -1,4 +1,6 @@
-""" Defines the docker registry configuration. """
+"""
+Step implementations relating to the `Build` Stage. These steps produce Docker images by default
+"""
 
 from typing import Dict
 

@@ -1,3 +1,7 @@
+"""
+Interface for custom reporters. Take `mpyl.steps.run.RunResult` and send it
+to the report sink of your choice.
+"""
 from abc import abstractmethod
 
 from ..steps.run import RunResult

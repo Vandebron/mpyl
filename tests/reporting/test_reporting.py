@@ -1,7 +1,6 @@
 from datetime import datetime
 
-from src.mpyl import Stage
-from src.mpyl.project import Project, Stages
+from src.mpyl.project import Project, Stages, Stage
 from src.mpyl.reporting.simple import to_string, to_test_report
 from src.mpyl.steps.models import Output, Artifact, ArtifactType
 from src.mpyl.steps.run import RunResult

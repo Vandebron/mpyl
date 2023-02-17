@@ -2,9 +2,9 @@ from pathlib import Path
 
 from pyaml_env import parse_config
 
-from src.mpyl import Target
 from src.mpyl.project import load_project
 from src.mpyl.repo import Repository, RepoConfig
+from src.mpyl.steps import Target
 from src.mpyl.steps.models import RunProperties, VersioningProperties
 from tests import root_test_path
 
