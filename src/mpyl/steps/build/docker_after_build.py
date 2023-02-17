@@ -9,7 +9,7 @@ from docker import DockerClient
 from . import DockerConfig
 from ..models import Meta, Input, Output, Artifact, ArtifactType
 from ..step import Step
-from ...stage import Stage
+from ...project import Stage
 
 
 class AfterBuildDocker(Step):
@@ -33,7 +33,7 @@ class AfterBuildDocker(Step):
         image_name = built_image.spec['image']
         self._logger.debug(f'Image to publish: {image_name}')
 
-        docker_config = DockerConfig(step_input.build_properties.config)
+        docker_config = DockerConfig(step_input.run_properties.config)
 
         self._logger.info(f"Logging in with user '{docker_config.user_name}'")
         login_result = client.login(username=docker_config.user_name, password=docker_config.password,
@@ -52,6 +52,6 @@ class AfterBuildDocker(Step):
         else:
             return Output(success=False, message=f"Could not tag {full_image_path}")
 
-        artifact = Artifact(ArtifactType.DOCKER_IMAGE, step_input.build_properties.versioning.revision, self.meta.name,
+        artifact = Artifact(ArtifactType.DOCKER_IMAGE, step_input.run_properties.versioning.revision, self.meta.name,
                             {'image': full_image_path})
         return Output(success=True, message=f"Pushed {full_image_path}", produced_artifact=artifact)

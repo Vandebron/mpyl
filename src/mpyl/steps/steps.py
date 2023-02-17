@@ -3,6 +3,8 @@ Project and Stage.
 """
 
 import pkgutil
+from dataclasses import dataclass
+from datetime import datetime
 from logging import Logger
 from typing import Optional
 
@@ -12,22 +14,30 @@ from .build.dockerbuild import BuildDocker
 from .build.echo import BuildEcho
 from .deploy.echo import DeployEcho
 from .deploy.kubernetes import DeployKubernetes
-from .models import Output, Input, BuildProperties, ArtifactType, Artifact
+from .models import Output, Input, RunProperties, ArtifactType, Artifact
 from .step import Step
 from ..project import Project
-from ..stage import Stage
+from ..project import Stage
 from ..validation import validate
 
 yaml = YAML()
+
+
+@dataclass(frozen=True)
+class StepResult:
+    stage: Stage
+    project: Project
+    output: Output
+    timestamp: datetime = datetime.now()
 
 
 class Steps:
     """ Executor of individual steps within a pipeline. """
     _step_executors: set[Step]
     _logger: Logger
-    _properties: BuildProperties
+    _properties: RunProperties
 
-    def __init__(self, logger: Logger, properties: BuildProperties) -> None:
+    def __init__(self, logger: Logger, properties: RunProperties) -> None:
         schema_dict = pkgutil.get_data(__name__, "../schema/mpyl_config.schema.yml")
 
         if schema_dict:
@@ -44,7 +54,7 @@ class Steps:
         executors = filter(lambda e: e.meta.stage == stage and step_name == e.meta.name, self._step_executors)
         return next(executors, None)
 
-    def _execute(self, executor: Step, project: Project, properties: BuildProperties,
+    def _execute(self, executor: Step, project: Project, properties: RunProperties,
                  artifact: Optional[Artifact]) -> Output:
         result = executor.execute(Input(project, properties, required_artifact=artifact))
         if result.success:
@@ -71,7 +81,7 @@ class Steps:
             return output.produced_artifact
         return None
 
-    def execute(self, stage: Stage, project: Project) -> Output:
+    def _execute_stage(self, stage: Stage, project: Project) -> Output:
         stage_name = project.stages.for_stage(stage)
         if stage_name is None:
             return Output(success=False, message=f"Stage '{stage.value}' not defined on project '{project.name}'")
@@ -96,3 +106,7 @@ class Steps:
             self._logger.warning(f"No executor found for {stage_name} in stage {stage}")
 
         return Output(success=False, message=f"Executor {stage.value} not defined on project {project.name}")
+
+    def execute(self, stage: Stage, project: Project) -> StepResult:
+        step_output = self._execute_stage(stage, project)
+        return StepResult(stage=stage, project=project, output=step_output)

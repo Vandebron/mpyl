@@ -7,9 +7,8 @@ from typing import Optional, Dict
 
 from ruamel.yaml import YAML, yaml_object  # type: ignore
 
-from ..project import Project
-from ..stage import Stage
-from ..target import Target
+from ..project import Project, Stage
+from ..steps import Target
 
 yaml = YAML()
 
@@ -17,7 +16,7 @@ yaml = YAML()
 @dataclass(frozen=True)
 class VersioningProperties:
     revision: str
-    pr_number: Optional[str]
+    pr_number: Optional[int]
     tag: Optional[str]
 
     @property
@@ -27,7 +26,7 @@ class VersioningProperties:
 
 @yaml_object(yaml)
 @dataclass(frozen=True)
-class BuildProperties:
+class RunProperties:
     """ Contains information that is specific to a particular run of the pipeline
     """
     build_id: str
@@ -41,12 +40,12 @@ class BuildProperties:
      """
 
     @staticmethod
-    def from_configuration(build_properties: Dict, config: Dict):
-        build = build_properties['build']
+    def from_configuration(run_properties: Dict, config: Dict):
+        build = run_properties['build']
         versioning = build['versioning']
-        return BuildProperties(build_id=build['run']['id'], target=Target(build['parameters']['deploy_target']),
-                               versioning=VersioningProperties(versioning['revision'], versioning.get('pr_number'),
-                                                               versioning.get('tag')), config=config)
+        return RunProperties(build_id=build['run']['id'], target=Target(build['parameters']['deploy_target']),
+                             versioning=VersioningProperties(versioning['revision'], int(versioning.get('pr_number')),
+                                                             versioning.get('tag')), config=config)
 
 
 @yaml_object(yaml)
@@ -62,7 +61,7 @@ class ArtifactType(Enum):
     @classmethod
     def to_yaml(cls, representer, node):
         return representer.represent_scalar('!ArtifactType',
-                                            f'{node._name_}-{node._value_}')  #pylint: disable=protected-access
+                                            f'{node._name_}-{node._value_}')  # pylint: disable=protected-access
 
     DOCKER_IMAGE = 1
     JUNIT_TESTS = 2
@@ -82,11 +81,11 @@ class Artifact:
 @dataclass(frozen=True)
 class Input:
     project: Project
-    build_properties: BuildProperties
+    run_properties: RunProperties
     required_artifact: Optional[Artifact] = None
 
     def docker_image_tag(self):
-        git = self.build_properties.versioning
+        git = self.run_properties.versioning
         tag = f"pr-{git.pr_number}" if git.pr_number else git.tag
         return f"{self.project.name.lower()}:{tag}".replace('/', '_')
 

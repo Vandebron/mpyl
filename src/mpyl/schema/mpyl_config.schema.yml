@@ -77,8 +77,11 @@ definitions:
     properties:
       repository:
         type: string
+      token:
+        type: string
     required:
       - repository
+      - token
     title: Github
   Docker:
     type: object

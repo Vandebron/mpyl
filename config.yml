@@ -3,6 +3,7 @@ cvs:
     mainBranch: 'main'
   github:
     repository: 'Vandebron/mpyl'
+    token: !ENV ${GITHUB_TOKEN}
 docker:
   registry:
     hostName: 'bigdataregistry.azurecr.io'

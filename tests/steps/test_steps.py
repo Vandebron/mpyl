@@ -1,17 +1,17 @@
 from io import StringIO
+from logging import Logger
 
 import pytest
 from jsonschema import ValidationError
 from pyaml_env import parse_config
 from ruamel.yaml import YAML  # type: ignore
 
-from src.mpyl.project import Project, Stages
-from src.mpyl.stage import Stage
-from src.mpyl.steps.models import Output, Artifact, ArtifactType, BuildProperties, VersioningProperties
+from src.mpyl.project import Project, Stages, Stage
+from src.mpyl.steps import Target
+from src.mpyl.steps.models import Output, Artifact, ArtifactType, RunProperties, VersioningProperties
 from src.mpyl.steps.steps import Steps
-from src.mpyl.target import Target
 from tests import root_test_path
-from logging import Logger
+from tests.test_resources import test_data
 
 yaml = YAML()
 yaml.preserve_quotes = True
@@ -44,12 +44,7 @@ class TestSteps:
         assert output.produced_artifact.spec == meta_data
 
     def test_should_return_error_if_stage_not_defined(self):
-        config_values = parse_config(self.resource_path / "config.yml")
-        properties = BuildProperties("id", Target.PULL_REQUEST,
-                                     VersioningProperties("2ad3293a7675d08bc037ef0846ef55897f38ec8f", "1234", None),
-                                     config_values)
-
-        steps = Steps(logger=Logger.manager.getLogger('logger'), properties=properties)
+        steps = Steps(logger=Logger.manager.getLogger('logger'), properties=test_data.RUN_PROPERTIES)
         stages = Stages(build=None, test=None, deploy=None, postdeploy=None)
         project = Project('test', 'Test project', '', stages, [], None, None)
         output = steps.execute(stage=Stage.BUILD, project=project)
@@ -59,10 +54,7 @@ class TestSteps:
     def test_should_return_error_if_stage_not_defined(self):
         config_values = parse_config(self.resource_path / "config.yml")
         config_values['kubernetes']['rancher']['cluster']['test']['invalid'] = 'somevalue'
-        properties = BuildProperties("id", Target.PULL_REQUEST, VersioningProperties("", "", None), config_values)
+        properties = RunProperties("id", Target.PULL_REQUEST, VersioningProperties("", "", None), config_values)
         with pytest.raises(ValidationError) as excinfo:
             Steps(logger=Logger.manager.getLogger('logger'), properties=properties)
         assert "('invalid' was unexpected)" in excinfo.value.message
-
-
-
