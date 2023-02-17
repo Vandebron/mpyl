@@ -66,6 +66,7 @@ properties:
         examples:
           - Sbt Test
           - Docker Test
+          - Echo Test
         type: string
         enum:
           - Docker Test

@@ -24,6 +24,7 @@ pyaml-env = "==1.2.1"
 pylint = "==2.15.10"
 pytest = "==7.2.1"
 pdoc = "==12.3.1"
+sqlalchemy = "<2.0.0" # forced downgrade https://github.com/dagster-io/dagster/discussions/11881
 
 [requires]
 python_version = "3.9"

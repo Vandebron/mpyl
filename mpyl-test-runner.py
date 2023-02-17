@@ -64,6 +64,7 @@ def find_projects() -> list[DynamicOutput[Project]]:
 def run_build():
     projects = find_projects()
     build_results = projects.map(build_project)
+    projects.map(test_project)
     deploy_projects(
         projects=projects.collect(),
         outputs=build_results.collect()
