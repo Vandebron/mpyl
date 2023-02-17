@@ -1,13 +1,11 @@
 import os
-import unittest
 
 import pytest
 from pyaml_env import parse_config
 
 from src.mpyl.repo import RepoConfig
-from src.mpyl.repo import Repository
-
 from tests import root_test_path
+from tests.test_resources import test_data
 
 
 class RepoTestCase:
@@ -15,7 +13,7 @@ class RepoTestCase:
 
     @pytest.mark.skipif(condition="GITHUB_JOB" in os.environ, reason="main is not available in github action")
     def test_changes_in_commit_should_be_in_branch(self):
-        repo = Repository(RepoConfig({'cvs': {'git': 'mainBranch'}}))
+        repo = test_data.TEST_REPO
         changes_in_branch = repo.changes_in_branch()
         changes_in_commit = repo.changes_in_commit()
 
@@ -26,6 +24,3 @@ class RepoTestCase:
         config = RepoConfig(yaml_values)
         assert config.main_branch == 'main'
 
-
-if __name__ == '__main__':
-    unittest.main()

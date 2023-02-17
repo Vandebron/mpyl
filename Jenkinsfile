@@ -12,6 +12,7 @@ pipeline {
         stage('Build') {
            environment {
                 DOCKER_REGISTRY = credentials('91751de6-20aa-4b12-8459-6e16094a233a')
+                GITHUB_TOKEN = credentials('github-pat-mpyl-vandebronjenkins')
             }
             steps {
                 script {

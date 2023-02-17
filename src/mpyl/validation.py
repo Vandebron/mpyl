@@ -23,4 +23,4 @@ def validate(values: dict, schema: dict):
 
     resolver = RefResolver(referrer=schema, base_uri="", handlers={"": load_schema_from_local})
 
-    jsonschema.validate(values, schema, resolver=resolver)
+    jsonschema.validators.Draft7Validator(schema=schema, resolver=resolver).validate(values)
