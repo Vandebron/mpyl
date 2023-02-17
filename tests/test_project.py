@@ -1,8 +1,8 @@
 import pytest
 from jsonschema import ValidationError
 
-from src.mpyl import Target
 from src.mpyl.project import load_project
+from src.mpyl.steps import Target
 from tests import root_test_path
 
 

@@ -8,7 +8,7 @@ from . import DockerConfig
 from .docker_after_build import AfterBuildDocker
 from ..models import Meta, Input, Output, Artifact, ArtifactType
 from ..step import Step
-from ... import Stage
+from ...project import Stage
 
 
 class BuildDocker(Step):
