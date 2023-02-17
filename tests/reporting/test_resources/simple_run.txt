@@ -1,0 +1,5 @@
+Stage BUILD
+2019-01-04 16:41:24+02:00 - dockertest - Stage.BUILD - success: True 
+2019-01-04 16:41:26+02:00 - test - Stage.BUILD - success: True 
+Stage TEST
+2019-01-04 16:41:45+02:00 - test - Stage.TEST - success: True 

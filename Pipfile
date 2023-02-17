@@ -10,6 +10,8 @@ gitpython = "==3.1.30"
 docker = "==6.0.1"
 "ruamel.yaml" = "==0.17.21"
 kubernetes = "==25.3.0"
+junitparser = "==2.8.0"
+pygithub = "==1.57"
 
 [dev-packages]
 toml = "==0.10.2"
@@ -24,6 +26,7 @@ pyaml-env = "==1.2.1"
 pylint = "==2.15.10"
 pytest = "==7.2.1"
 pdoc = "==12.3.1"
+sqlalchemy = "<2.0.0" # forced downgrade https://github.com/dagster-io/dagster/discussions/11881
 
 [requires]
 python_version = "3.9"
@@ -39,4 +42,3 @@ check-types ="mypy src/mpyl/"
 validate = "bash -c 'mypy src/mpyl/ && pytest && pylint src/'"
 install-types ="mypy --install-types --non-interactive src/mpyl/  "
 run = "python mpyl-test-runner.py"
-

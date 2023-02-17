@@ -1,9 +1,10 @@
-""" Fetches the secrets and ingress routes needed for the Deploy step. """
-
+"""
+Custom Resource Definitions, implementing `mpyl.steps.deploy.k8s.resources.crd.CustomResourceDefinition`
+"""
 from kubernetes.client import V1ObjectMeta
 
-from src.mpyl.project import Host
-from src.mpyl.target import Target
+from .....steps import Target
+from .....project import Host
 from .crd import CustomResourceDefinition
 
 

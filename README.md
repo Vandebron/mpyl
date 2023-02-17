@@ -14,7 +14,7 @@ but completely independent of Jenkins
 
 1. Install dependencies
     ```shell
-    pipenv install
+    pipenv install -d
     ```
 2. Run the Dagit UI
     ```shell

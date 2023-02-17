@@ -8,10 +8,12 @@ from src.mpyl.project import load_project, Probe
 from src.mpyl.steps.build import DockerConfig
 from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml
 from src.mpyl.steps.deploy.k8s.service import ServiceChart
-from src.mpyl.steps.models import BuildProperties, VersioningProperties, Input
-from src.mpyl.target import Target
+from src.mpyl.steps.models import RunProperties, VersioningProperties, Input
+from src.mpyl.steps import Target
 from src.mpyl.steps.deploy.k8s.resources.customresources import V1AlphaIngressRoute
 from tests import root_test_path
+from tests.test_resources import test_data
+from tests.test_resources.test_data import assert_roundtrip
 
 resource_path = root_test_path / "test_resources"
 template_path = root_test_path / "steps" / "deploy" / "k8s" / "chart" / "templates"
@@ -23,25 +25,17 @@ liveness_probe_defaults = config['project']['deployment']['kubernetes']['livenes
 def _roundtrip(file_name: Path, chart: str, as_yaml: dict[str, str], overwrite: bool = False):
     name_chart = file_name / f"{chart}.yaml"
     chart_yaml = as_yaml[chart]
-    if overwrite:
-        with open(name_chart, 'w+', encoding='utf-8') as file:
-            file.write(chart_yaml)
-            assert not overwrite, "Should not commit with overwrite"
-
-    with open(name_chart, encoding='utf-8') as file:
-        assert file.read() == chart_yaml
+    assert_roundtrip(name_chart, chart_yaml, overwrite)
 
 
 def _build_chart():
     project = load_project("", str(resource_path / "test_project.yml"), False)
-    properties = BuildProperties("id", Target.PULL_REQUEST,
-                                 VersioningProperties("2ad3293a7675d08bc037ef0846ef55897f38ec8f", "1234", None),
-                                 config)
-    return ServiceChart(step_input=Input(project, properties, None), image_name='registry/image:123').to_chart()
+    return ServiceChart(step_input=Input(project, test_data.RUN_PROPERTIES, None),
+                        image_name='registry/image:123').to_chart()
 
 
 def test_probe_values_should_be_customizable():
-    project = load_project("", str(resource_path / "test_project.yml"), False)
+    project = test_data.get_project()
     probe = project.kubernetes.liveness_probe
 
     custom_success_threshold = 0
@@ -59,7 +53,7 @@ def test_probe_values_should_be_customizable():
 
 
 def test_probe_deserialization_failure_should_throw():
-    project = load_project("", str(resource_path / "test_project.yml"), False)
+    project = test_data.get_project()
     probe = project.kubernetes.liveness_probe
 
     probe.values['httpGet'] = 'incorrect'
@@ -76,8 +70,7 @@ def test_load_config():
 
 
 def test_should_validate_against_crd_schema():
-    project = load_project("", str(resource_path / "test_project.yml"), False)
-
+    project = test_data.get_project()
     route = V1AlphaIngressRoute(metadata=V1ObjectMeta(), hosts=project.deployment.traefik.hosts, service_port=1234,
                                 name='serviceName', target=Target.PRODUCTION)
     route.spec['tls'] = {'secretName': 1234}
