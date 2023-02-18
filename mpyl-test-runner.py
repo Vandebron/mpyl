@@ -4,6 +4,7 @@ from typing import Union
 
 from dagster import job, op, DynamicOut, DynamicOutput, get_dagster_logger, Output, Failure, logger, Field
 from pyaml_env import parse_config
+from rich.ansi import AnsiDecoder
 from rich.logging import RichHandler, Console
 from rich.text import Text
 
@@ -89,7 +90,7 @@ class CustomRichHandler(RichHandler):
             level: Union[int, str] = logging.NOTSET
 
     ) -> None:
-        super().__init__(level=level, show_path=True, console=Console(width=160, no_color=False, color_system='256'))
+        super().__init__(level=level, show_path=True, console=Console(width=140, no_color=False, color_system='256'))
 
     def emit(self, record: logging.LogRecord) -> None:
         meta = getattr(record, 'dagster_meta', None)
@@ -97,6 +98,22 @@ class CustomRichHandler(RichHandler):
             record.pathname = meta['step_key']
             record.lineno = None
         super().emit(record)
+
+    def render_message(self, record: logging.LogRecord, message: str) -> "ConsoleRenderable":
+        use_markup = getattr(record, "markup", self.markup)
+        message_text = Text.from_markup(message) if use_markup else Text.from_ansi(message)
+
+        highlighter = getattr(record, "highlighter", self.highlighter)
+        if highlighter:
+            message_text = highlighter(message_text)
+
+        if self.keywords is None:
+            self.keywords = self.KEYWORDS
+
+        if self.keywords:
+            message_text.highlight_words(self.keywords, "logging.keyword")
+
+        return message_text
 
 
 @logger(
@@ -119,7 +136,7 @@ def mpyl_logger(init_context):
         def format(self, record: logging.LogRecord):
             meta = getattr(record, 'dagster_meta', None)
             if meta:
-                return Text.from_ansi(meta['orig_message'])
+                return meta['orig_message']
 
             return record.msg
 
