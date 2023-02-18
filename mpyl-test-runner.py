@@ -1,10 +1,13 @@
+import logging
 from dataclasses import dataclass
+from typing import Union
 
-from dagster import job, op, DynamicOut, DynamicOutput, get_dagster_logger, Output, Failure
+from dagster import job, op, DynamicOut, DynamicOutput, get_dagster_logger, Output, Failure, logger, Field
 from pyaml_env import parse_config
+from rich.logging import RichHandler, Console
+from rich.text import Text
 
 from src.mpyl.project import load_project, Project, Stage
-from src.mpyl.steps.models import Output as MplOutput
 from src.mpyl.repo import Repository, RepoConfig
 from src.mpyl.reporting.simple import to_string
 from src.mpyl.reporting.targets.github import GithubReport
@@ -64,8 +67,7 @@ def report_results(build_results: list[StepResult], deploy_results: list[StepRes
     run_result.extend(build_results)
     run_result.extend(deploy_results)
 
-    logger = get_dagster_logger()
-    logger.info(to_string(run_result))
+    get_dagster_logger().info(to_string(run_result))
 
     report = GithubReport(config)
     report.send_report(run_result)
@@ -81,7 +83,53 @@ def find_projects() -> list[DynamicOutput[Project]]:
     return list(map(lambda project: DynamicOutput(project, mapping_key=project.name), projects))
 
 
-@job
+class CustomRichHandler(RichHandler):
+    def __init__(
+            self,
+            level: Union[int, str] = logging.NOTSET
+
+    ) -> None:
+        super().__init__(level=level, show_path=True, console=Console(width=160, no_color=False, color_system='256'))
+
+    def emit(self, record: logging.LogRecord) -> None:
+        meta = getattr(record, 'dagster_meta', None)
+        if meta:
+            record.pathname = meta['step_key']
+            record.lineno = None
+        super().emit(record)
+
+
+@logger(
+    {
+        "log_level": Field(str, is_required=False, default_value="INFO"),
+        "name": Field(str, is_required=False, default_value="dagster"),
+    },
+    description="A Rich logger that includes the step context",
+)
+def mpyl_logger(init_context):
+    level = init_context.logger_config["log_level"]
+    name = init_context.logger_config["name"]
+
+    klass = logging.getLoggerClass()
+    logger_ = klass(name, level=level)
+
+    rich_handler = CustomRichHandler()
+
+    class DagsterFormatter(logging.Formatter):
+        def format(self, record: logging.LogRecord):
+            meta = getattr(record, 'dagster_meta', None)
+            if meta:
+                return Text.from_ansi(meta['orig_message'])
+
+            return record.msg
+
+    rich_handler.setFormatter(DagsterFormatter())
+    logger_.addHandler(rich_handler)
+
+    return logger_
+
+
+@job(logger_defs={"mpyl_logger": mpyl_logger})
 def run_build():
     projects = find_projects()
     build_results = projects.map(build_project)
@@ -93,6 +141,5 @@ def run_build():
 
 
 if __name__ == "__main__":
-
-    result = run_build.execute_in_process()
+    result = run_build.execute_in_process(run_config={'loggers': {'mpyl_logger': {'config': {'log_level': 'INFO'}}}})
     print(f"Result: {result.success}")
