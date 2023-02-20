@@ -35,7 +35,7 @@ def execute_step(proj: Project, stage: Stage) -> StepResult:
     return step_result
 
 
-@op
+@op(description="Build stage. Build steps produce a docker image")
 def build_project(project: Project) -> Output:
     return Output(execute_step(project, Stage.BUILD))
 
@@ -50,7 +50,7 @@ def deploy_project(project: Project) -> Output:
     return Output(execute_step(project, Stage.DEPLOY))
 
 
-@op
+@op(description="Deploy all artifacts produced over all runs of the pipeline")
 def deploy_projects(projects: list[Project], outputs: list[StepResult]) -> Output[list[StepResult]]:
     res = []
     for proj in projects:
@@ -58,7 +58,7 @@ def deploy_projects(projects: list[Project], outputs: list[StepResult]) -> Outpu
     return Output(res)
 
 
-@op
+@op(description="Log run results and send to Github")
 def report_results(build_results: list[StepResult], deploy_results: list[StepResult]) -> bool:
     config = parse_config("config.yml")
 
@@ -75,7 +75,7 @@ def report_results(build_results: list[StepResult], deploy_results: list[StepRes
     return True
 
 
-@op(out=DynamicOut())
+@op(out=DynamicOut(), description="Find artifacts that need to be built")
 def find_projects() -> list[DynamicOutput[Project]]:
     yaml_values = parse_config("config.yml")
     repo = Repository(RepoConfig(yaml_values))
