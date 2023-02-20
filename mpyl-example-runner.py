@@ -1,10 +1,10 @@
 import logging
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Union
 
 from dagster import job, op, DynamicOut, DynamicOutput, get_dagster_logger, Output, Failure, logger, Field
 from pyaml_env import parse_config
-from rich.ansi import AnsiDecoder
 from rich.logging import RichHandler, Console
 from rich.text import Text
 
@@ -85,12 +85,19 @@ def find_projects() -> list[DynamicOutput[Project]]:
 
 
 class CustomRichHandler(RichHandler):
+
+    @staticmethod
+    def format_datetime(timestamp: datetime) -> Text:
+        return Text.from_markup(timestamp.strftime("%y-%m-%d %H:%M:%S"))
+
     def __init__(
             self,
             level: Union[int, str] = logging.NOTSET
 
     ) -> None:
-        super().__init__(level=level, show_path=True, console=Console(width=140, no_color=False, color_system='256'))
+        super().__init__(level=level, show_path=True, console=Console(width=135, no_color=False, color_system='256'),
+                         log_time_format=CustomRichHandler.format_datetime)
+        self._log_render.level_width = 4
 
     def emit(self, record: logging.LogRecord) -> None:
         meta = getattr(record, 'dagster_meta', None)
