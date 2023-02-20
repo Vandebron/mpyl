@@ -35,11 +35,19 @@ class AfterBuildDocker(Step):
 
         docker_config = DockerConfig(step_input.run_properties.config)
 
+        full_image_path = os.path.join(docker_config.host_name, image_name)
+        artifact = Artifact(ArtifactType.DOCKER_IMAGE, step_input.run_properties.versioning.revision, self.meta.name,
+                            {'image': full_image_path})
+
+        if step_input.dry_run:
+            return Output(success=True, message=f"Dry run. Not pushing {image_name} to {docker_config.host_name}",
+                          produced_artifact=artifact)
+
         self._logger.info(f"Logging in with user '{docker_config.user_name}'")
         login_result = client.login(username=docker_config.user_name, password=docker_config.password,
                                     registry=f'https://{docker_config.host_name}')
         self._logger.debug(f"Docker login result: {login_result}")
-        full_image_path = os.path.join(docker_config.host_name, image_name)
+
         tagged = client.images.get(image_name).tag(full_image_path)
         if tagged:
             stream = client.images.push(full_image_path, stream=True, decode=True)
@@ -52,6 +60,4 @@ class AfterBuildDocker(Step):
         else:
             return Output(success=False, message=f"Could not tag {full_image_path}")
 
-        artifact = Artifact(ArtifactType.DOCKER_IMAGE, step_input.run_properties.versioning.revision, self.meta.name,
-                            {'image': full_image_path})
         return Output(success=True, message=f"Pushed {full_image_path}", produced_artifact=artifact)

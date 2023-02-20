@@ -91,10 +91,10 @@ class Steps:
             try:
                 artifact: Optional[Artifact] = self._find_required_artifact(project, executor)
 
-                result = self._execute(executor, project, self._properties, artifact)
+                result = self._execute(executor, project, self._properties, artifact, dry_run)
                 if executor.after:
                     executor = executor.after
-                    result = self._execute(executor, project, self._properties, result.produced_artifact)
+                    result = self._execute(executor, project, self._properties, result.produced_artifact, dry_run)
                 result.write(project.target_path, stage)
                 return result
             except Exception as exc:
