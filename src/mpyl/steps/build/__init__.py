@@ -20,7 +20,6 @@ class DockerConfig:
             build: dict = config['docker']['build']
             self.root_folder = build['rootFolder']
             self.build_target = build['buildTarget']
-            
             self.docker_file_name = build['dockerFileName']
 
         except KeyError as exc:
