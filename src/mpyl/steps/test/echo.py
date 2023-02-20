@@ -18,4 +18,4 @@ class TestEcho(Step):
 
     def execute(self, step_input: Input) -> Output:
         self._logger.info(f"Testing project {step_input.project.name}")
-        return Output(success=True, message=f"Built {step_input.project.name}", produced_artifact=None)
+        return Output(success=True, message=f"Tested {step_input.project.name}", produced_artifact=None)

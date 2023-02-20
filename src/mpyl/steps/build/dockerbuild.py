@@ -49,4 +49,4 @@ class BuildDocker(Step):
 
         artifact = Artifact(ArtifactType.DOCKER_IMAGE, step_input.build_properties.versioning.revision, self.meta.name,
                             {'image': step_input.docker_image_tag()})
-        return Output(success=True, message=f"Built {step_input.project.name}", produced_artifact=artifact)
+        return Output(success=True, message=f"Tested {step_input.project.name}", produced_artifact=artifact)

@@ -57,13 +57,15 @@ def find_projects() -> list[DynamicOutput[Project]]:
     repo = Repository(RepoConfig(yaml_values))
     project_paths = repo.find_projects()
     projects = map(lambda p: load_project(".", p), project_paths)
+    
     return list(map(lambda project: DynamicOutput(project, mapping_key=project.name), projects))
 
 
 @job
 def run_build():
     projects = find_projects()
-    build_results = projects.map(build_project).map(test_project)
+    build_results = projects.map(build_project)
+    projects.map(test_project)
     deploy_projects(
         projects=projects.collect(),
         outputs=build_results.collect()

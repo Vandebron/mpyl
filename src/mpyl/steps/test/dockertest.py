@@ -1,49 +1,49 @@
 import os
 
-from docker import DockerClient
+from docker import APIClient  # type: ignore
 from logging import Logger
 
 from ..step import Step
 from ..build import DockerConfig
-from ..models import Meta, Input, Output, ArtifactType
+from ..models import Meta, Input, Output, ArtifactType, Artifact
 from ...stage import Stage
 
 
 class TestDocker(Step):
     def __init__(self, logger: Logger) -> None:
-        super().__init__(logger, Meta(
+        super().__init__(logger=logger, meta=Meta(
             name='Docker Test',
-            description='Docker test step',
+            description='Test docker image',
             version='0.0.1',
             stage=Stage.TEST
-        ), ArtifactType.DOCKER_IMAGE, ArtifactType.DOCKER_IMAGE)
+        ), produced_artifact=ArtifactType.DOCKER_IMAGE, required_artifact=ArtifactType.NONE)
+
+    def __log_docker_output(self, generator, task_name: str = 'docker command execution') -> None:
+        while True:
+            try:
+                output = next(generator)
+                if 'stream' in output:
+                    output_str = output['stream'].strip('\n')
+                    self._logger.info(output_str)
+            except StopIteration:
+                self._logger.info(f'{task_name} complete.')
+                break
 
     def execute(self, step_input: Input) -> Output:
-        self._logger.info(f"Testing project {step_input.project.name}")
-        
-        built_image = step_input.required_artifact
-        if not built_image:
-            self._logger.warn("After docker has image required artifact")
-            return Output(success=False, message=f"After docker has image required artifact {step_input.project.name}")
-
-        client = DockerClient.from_env()
+        project = step_input.project
+        self._logger.info(f"Testing project {project.name}")
+        low_level_client = APIClient()
+        self._logger.debug(low_level_client.version())
 
         docker_config = DockerConfig(step_input.build_properties.config)
-        image_name = built_image.spec['image']
+        image_name = f"{docker_config.docker_file_name}-test"
 
-        self._logger.info(f"Logging in with user '{docker_config.user_name}'")
-        login_result = client.login(username=docker_config.user_name, password=docker_config.password,
-                                    registry=f'https://{docker_config.host_name}')
-        self._logger.debug(f"Docker login result: {login_result}")
-        full_image_path = os.path.join(docker_config.host_name, image_name)
+        logs = low_level_client.build(path=docker_config.root_folder,
+                                      dockerfile=f'{project.deployment_path}/{docker_config.docker_file_name}',
+                                      tag=image_name,
+                                      rm=True, target="tester", decode=True)
+        self.__log_docker_output(logs)
 
-        #Run docker command --target test
-        f"docker build -t {image_name} -f tests/projects/service/deployment/Dockerfile-mpl --build-arg " \
-        f"'PROJECT_PATH=tests/projects/service' --build-arg 'TAG_NAME={docker_config.build_target}' --build-arg 'DOCKER_IMAGE={image_name}' --build-arg " \
-        f"'MAINTAINER={maintainer}' '--target=tester' ."
-
-
-        #Send output to test-reports 
-        
-        
-        return Output(success=True, message=f"Built {step_input.project.name}", produced_artifact=None)
+        artifact = Artifact(ArtifactType.DOCKER_IMAGE, step_input.build_properties.versioning.revision, self.meta.name,
+                            {'image': image_name})
+        return Output(success=True, message=f"Built {image_name}", produced_artifact=artifact)

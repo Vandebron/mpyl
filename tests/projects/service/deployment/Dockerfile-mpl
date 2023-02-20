@@ -7,5 +7,6 @@ FROM installer as builder
 ENTRYPOINT [ "yarn", "start" ]
 
 FROM installer as tester
+RUN echo "Hello, this is docker tester"
 RUN mkdir -p /tests/projects/service/target/test-reports/
 RUN yarn test-ci

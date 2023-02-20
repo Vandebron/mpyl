@@ -2,8 +2,8 @@ name: job
 description: "A job"
 maintainer: ["Marketplace"]
 stages:
-  test: "Docker Test"
   build: "Echo Build"
+  test: "Echo Test"
   deploy: "Echo Deploy"
 dependencies:
   test:
