@@ -23,38 +23,41 @@ class StepParam:
     project: Project
 
 
-def execute_step(proj: Project, stage: Stage) -> StepResult:
+def execute_step(proj: Project, stage: Stage, dry_run: bool = False) -> StepResult:
     config = parse_config("config.yml")
     properties = parse_config("run_properties.yml")
     run_properties = RunProperties.from_configuration(run_properties=properties, config=config)
     dagster_logger = get_dagster_logger()
     executor = Steps(dagster_logger, run_properties)
-    step_result = executor.execute(stage, proj)
+    step_result = executor.execute(stage, proj, dry_run)
     if not step_result.output.success:
         raise Failure(description=step_result.output.message)
     return step_result
 
 
-@op(description="Build stage. Build steps produce a docker image")
-def build_project(project: Project) -> Output:
-    return Output(execute_step(project, Stage.BUILD))
+@op(description="Build stage. Build steps produce a docker image", config_schema={"dry_run": bool})
+def build_project(context, project: Project) -> Output:
+    dry_run: bool = context.op_config["dry_run"]
+    return Output(execute_step(project, Stage.BUILD, dry_run))
 
 
 @op
-def test_project(project: Project) -> Output:
+def test_project(context, project: Project) -> Output:
     return Output(execute_step(project, Stage.TEST))
 
 
-@op
-def deploy_project(project: Project) -> Output:
-    return Output(execute_step(project, Stage.DEPLOY))
+@op(description="Deploy a project to the target specified in the step", config_schema={"dry_run": bool})
+def deploy_project(context, project: Project) -> Output:
+    dry_run: bool = context.op_config["dry_run"]
+    return Output(execute_step(project, Stage.DEPLOY, dry_run))
 
 
 @op(description="Deploy all artifacts produced over all runs of the pipeline")
-def deploy_projects(projects: list[Project], outputs: list[StepResult]) -> Output[list[StepResult]]:
+def deploy_projects(context, projects: list[Project], outputs: list[StepResult]) -> Output[list[StepResult]]:
+    dry_run: bool = context.op_config["dry_run"]
     res = []
     for proj in projects:
-        res.append(execute_step(proj, Stage.DEPLOY))
+        res.append(execute_step(proj, Stage.DEPLOY, dry_run))
     return Output(res)
 
 
@@ -165,5 +168,11 @@ def run_build():
 
 
 if __name__ == "__main__":
-    result = run_build.execute_in_process(run_config={'loggers': {'mpyl_logger': {'config': {'log_level': 'INFO'}}}})
+    result = run_build.execute_in_process(run_config={
+        'loggers': {'mpyl_logger': {'config': {'log_level': 'INFO'}}},
+        'ops': {
+            'build_project': {'config': {'dry_run': True}},
+            'deploy_projects': {'config': {'dry_run': True}}
+        }
+    })
     print(f"Result: {result.success}")
