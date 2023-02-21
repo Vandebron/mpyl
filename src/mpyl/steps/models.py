@@ -83,7 +83,7 @@ class Input:
     project: Project
     run_properties: RunProperties
     required_artifact: Optional[Artifact] = None
-    dry_run: bool = True
+    dry_run: bool = False
 
     def docker_image_tag(self):
         git = self.run_properties.versioning
