@@ -3,11 +3,14 @@ Report `mpyl.steps.run.RunResult` to Github
 """
 
 from dataclasses import dataclass
-from typing import Dict
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, Optional
 
-from github import Github
+from github import Github, GithubIntegration
 from github.IssueComment import IssueComment
 from github.PullRequest import PullRequest
+from github.Repository import Repository as GithubRepository
 
 from .. import Reporter
 from ..simple import to_string
@@ -17,14 +20,34 @@ from ...steps.run import RunResult
 
 
 @dataclass
+class GithubAppConfig:
+    private_app_key_path: str
+    app_key: str
+
+    def __init__(self, config: Dict):
+        self.private_app_key_path = config['privateKeyPath']
+        self.app_key = config['appId']
+
+
+@dataclass
 class GithubConfig:
     repository: str
+    owner: str
+    repo_name: str
     token: str
+    app_config: Optional[GithubAppConfig] = None
 
     def __init__(self, config: Dict):
         github = config['cvs']['github']
         self.repository = github['repository']
+        parts = self.repository.split('/')
+        self.owner = parts[0]
+        self.repo_name = parts[1]
         self.token = github['token']
+
+        app_config = github.get('app', {})
+        if app_config:
+            self.app_config = GithubAppConfig(app_config)
 
 
 class GithubReport(Reporter):
@@ -34,8 +57,7 @@ class GithubReport(Reporter):
         self._config = GithubConfig(config)
         self.git_repository = Repository(RepoConfig(config))
 
-    def _get_pull_request(self, github: Github, run_properties: RunProperties):
-        repo = github.get_repo(self._config.repository)
+    def _get_pull_request(self, repo: GithubRepository, run_properties: RunProperties):
         if run_properties.versioning.pr_number:
             return repo.get_pull(run_properties.versioning.pr_number)
 
@@ -49,8 +71,9 @@ class GithubReport(Reporter):
 
     def send_report(self, results: RunResult) -> None:
         github = Github(self._config.token)
+        repo = github.get_repo(self._config.repository)
 
-        pull_request = self._get_pull_request(github, results.run_properties)
+        pull_request = self._get_pull_request(repo, results.run_properties)
 
         comments = pull_request.get_issue_comments()
         authenticated_user = github.get_user()
@@ -60,3 +83,31 @@ class GithubReport(Reporter):
             comment_to_update.edit(to_string(results))
         else:
             pull_request.create_issue_comment(to_string(results))
+
+
+class GithubCheck(Reporter):
+    _config: GithubConfig
+    _check_run_id: Optional[int]
+
+    def __init__(self, config: Dict):
+        self._config = GithubConfig(config)
+        self.git_repository = Repository(RepoConfig(config))
+        self._check_run_id = None
+
+    def send_report(self, results: RunResult) -> None:
+        config = self._config.app_config
+        if not config:
+            raise ValueError("github.app config needs to be defined")
+
+        private_key = Path(config.private_app_key_path).read_text(encoding='utf-8')
+        integration = GithubIntegration(integration_id=config.app_key, private_key=private_key)
+
+        install = integration.get_installation(self._config.owner, self._config.repo_name)
+        access_token = integration.get_access_token(install.id)
+        github = Github(login_or_token=access_token.token)
+        repo = github.get_repo(self._config.repository)
+        if self._check_run_id:
+            run = repo.get_check_run(self._check_run_id)
+            run.edit(completed_at=datetime.now(), conclusion='success')
+        else:
+            self._check_run_id = repo.create_check_run(name='MPyL run', head_sha=self.git_repository.get_sha).id
