@@ -3,7 +3,7 @@ from logging import Logger
 from ..step import Step
 
 from ..models import Meta, Input, Output, ArtifactType
-from ...stage import Stage
+from ...project import Stage
 
 
 class TestEcho(Step):

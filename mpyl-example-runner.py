@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Union
 
-from dagster import job, op, DynamicOut, DynamicOutput, get_dagster_logger, Output, Failure, logger, Field
+from dagster import job, op, In, Nothing, DynamicOut, DynamicOutput, get_dagster_logger, Output, Failure, logger, Field
 from pyaml_env import parse_config
 from rich.logging import RichHandler, Console
 from rich.text import Text
@@ -42,8 +42,9 @@ def build_project(context, project: Project) -> Output:
 
 
 @op
-def test_project(context, project: Project) -> Output:
-    return Output(execute_step(project, Stage.TEST))
+def test_project(context, projects: list[Project], _ignored: Output) -> Output:
+    for project in projects:
+        return Output(execute_step(project, Stage.TEST))
 
 
 @op(description="Deploy a project to the target specified in the step", config_schema={"dry_run": bool})
@@ -160,6 +161,10 @@ def mpyl_logger(init_context):
 def run_build():
     projects = find_projects()
     build_results = projects.map(build_project)
+    test_project(
+        projects.collect(),
+        build_results.collect()
+    )
     deploy_results = deploy_projects(
         projects=projects.collect(),
         outputs=build_results.collect()
