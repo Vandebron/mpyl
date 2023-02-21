@@ -12,6 +12,7 @@ from ...models import RunProperties, Input, Output
 
 
 def custom_check_output(logger: Logger, command: str) -> Output:
+    logger.info(f"Executing: `{command}`")
     message = ''
     try:
         output = subprocess.run(command.split(" "), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
@@ -64,6 +65,10 @@ def install(logger: Logger, step_input: Input, name_space: str, kube_context: st
     for name, template in templates.items():
         with open(template_path / str(name), mode='w+', encoding='utf-8') as file:
             file.write(template)
-    command = f"helm upgrade -i {chart_name} -n {name_space} --kube-context {kube_context} {chart_path}"
-    logger.info(command)
-    return custom_check_output(logger, command)
+
+    if step_input.dry_run:
+        cmd = f"helm upgrade -i {chart_name} -n namespace --kube-context {kube_context} {chart_path} --debug --dry-run"
+        return custom_check_output(logger, cmd)
+
+    cmd = f"helm upgrade -i {chart_name} -n {name_space} --kube-context {kube_context} {chart_path}"
+    return custom_check_output(logger, cmd)

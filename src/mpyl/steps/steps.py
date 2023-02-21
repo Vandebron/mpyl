@@ -55,8 +55,8 @@ class Steps:
         return next(executors, None)
 
     def _execute(self, executor: Step, project: Project, properties: RunProperties,
-                 artifact: Optional[Artifact]) -> Output:
-        result = executor.execute(Input(project, properties, required_artifact=artifact))
+                 artifact: Optional[Artifact], dry_run: bool = False) -> Output:
+        result = executor.execute(Input(project, properties, required_artifact=artifact, dry_run=dry_run))
         if result.success:
             self._logger.info(
                 f"Execution of {executor.meta.name} succeeded for '{project.name}' with outcome '{result.message}'")
@@ -81,7 +81,7 @@ class Steps:
             return output.produced_artifact
         return None
 
-    def _execute_stage(self, stage: Stage, project: Project) -> Output:
+    def _execute_stage(self, stage: Stage, project: Project, dry_run: bool = False) -> Output:
         stage_name = project.stages.for_stage(stage)
         if stage_name is None:
             return Output(success=False, message=f"Stage '{stage.value}' not defined on project '{project.name}'")
@@ -91,10 +91,10 @@ class Steps:
             try:
                 artifact: Optional[Artifact] = self._find_required_artifact(project, executor)
 
-                result = self._execute(executor, project, self._properties, artifact)
+                result = self._execute(executor, project, self._properties, artifact, dry_run)
                 if executor.after:
                     executor = executor.after
-                    result = self._execute(executor, project, self._properties, result.produced_artifact)
+                    result = self._execute(executor, project, self._properties, result.produced_artifact, dry_run)
                 result.write(project.target_path, stage)
                 return result
             except Exception as exc:
@@ -107,6 +107,6 @@ class Steps:
 
         return Output(success=False, message=f"Executor {stage.value} not defined on project {project.name}")
 
-    def execute(self, stage: Stage, project: Project) -> StepResult:
-        step_output = self._execute_stage(stage, project)
+    def execute(self, stage: Stage, project: Project, dry_run: bool = False) -> StepResult:
+        step_output = self._execute_stage(stage, project, dry_run)
         return StepResult(stage=stage, project=project, output=step_output)
