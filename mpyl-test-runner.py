@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import time
 
-from dagster import job, op, DynamicOut, DynamicOutput, get_dagster_logger, Output, Failure
+from dagster import job, op, In, DynamicOut, DynamicOutput, get_dagster_logger, Output, Failure
 from pyaml_env import parse_config
 
 from src.mpyl.project import load_project, Project
@@ -57,7 +57,7 @@ def find_projects() -> list[DynamicOutput[Project]]:
     repo = Repository(RepoConfig(yaml_values))
     project_paths = repo.find_projects()
     projects = map(lambda p: load_project(".", p), project_paths)
-    
+
     return list(map(lambda project: DynamicOutput(project, mapping_key=project.name), projects))
 
 
@@ -65,7 +65,7 @@ def find_projects() -> list[DynamicOutput[Project]]:
 def run_build():
     projects = find_projects()
     build_results = projects.map(build_project)
-    projects.map(test_project)
+    build_results.map(test_project)
     deploy_projects(
         projects=projects.collect(),
         outputs=build_results.collect()
