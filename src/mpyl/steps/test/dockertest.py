@@ -1,5 +1,7 @@
-from docker import APIClient  # type: ignore
+""" Step that tests the docker image from the target `tester` in Dockerfile-mpl. """
+
 from logging import Logger
+from docker import APIClient  # type: ignore
 
 from ..step import Step
 from ..build import DockerConfig
