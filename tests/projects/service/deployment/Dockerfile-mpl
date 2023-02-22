@@ -1,6 +1,6 @@
 FROM node:12.18.2 AS installer
 COPY . .
-COPY --link tests/projects/service /tests/projects/service
+COPY tests/projects/service /tests/projects/service
 WORKDIR /tests/projects/service
 RUN yarn install
 
