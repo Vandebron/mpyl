@@ -17,11 +17,15 @@ pipeline {
             steps {
                 script {
                     withKubeConfig([credentialsId: 'jenkins-rancher-service-account-kubeconfig-test']) {
+                    withCredentials([file(credentialsId: '4bee8d6f-6180-4b28-89e3-8cbfc2b9e8b8', variable: 'PIPELINEKEY')]) {
+                        def privateKey = sh(script: "cat $PIPELINEKEY", returnStdout: true)
+                        writeFile(file: 'mpyl-pipeline.2023-02-20.private-key.pem', text: privateKey)
+
                         echo "Running dagster..."
                         sh "pipenv install -d --skip-lock"
                         sh "pipenv run run"
                     }
-                }
+                }}
             }
         }
     }
