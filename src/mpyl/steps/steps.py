@@ -47,7 +47,14 @@ class Steps:
             validate(properties.config, schema)
 
         self._logger = logger
-        self._step_executors = {BuildEcho(logger), TestEcho(logger), DeployEcho(logger), BuildDocker(logger), TestDocker(logger), DeployKubernetes(logger)}
+        self._step_executors = {
+            BuildEcho(logger),
+            TestEcho(logger),
+            DeployEcho(logger),
+            BuildDocker(logger),
+            TestDocker(logger),
+            DeployKubernetes(logger)
+        }
         self._properties = properties
         for step in self._step_executors:
             self._logger.debug(f"Registered executor '{step.meta.name}'")
@@ -103,7 +110,7 @@ class Steps:
                 self._logger.warning(
                     f"Execution of '{executor.meta.name}' for project '{project.name}' in stage {stage} "
                     f"failed with exception: ", exc_info=True)
-                raise Exception from exc
+                raise ValueError from exc
         else:
             self._logger.warning(f"No executor found for {stage_name} in stage {stage}")
 
