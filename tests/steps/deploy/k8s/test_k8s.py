@@ -1,17 +1,16 @@
-from logging import Logger
 from pathlib import Path
 
 import pytest
 from kubernetes.client import V1Probe, V1ObjectMeta
 from pyaml_env import parse_config
 
-from src.mpyl.project import load_project, Probe
-from src.mpyl.steps.build import DockerConfig
-from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml
-from src.mpyl.steps.deploy.k8s.service import ServiceChart
-from src.mpyl.steps.models import RunProperties, VersioningProperties, Input
+from src.mpyl.docker import DockerConfig
+from src.mpyl.project import load_project
 from src.mpyl.steps import Target
+from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml
 from src.mpyl.steps.deploy.k8s.resources.customresources import V1AlphaIngressRoute
+from src.mpyl.steps.deploy.k8s.service import ServiceChart
+from src.mpyl.steps.models import Input
 from tests import root_test_path
 from tests.test_resources import test_data
 from tests.test_resources.test_data import assert_roundtrip

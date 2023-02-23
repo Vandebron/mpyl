@@ -85,11 +85,6 @@ class Input:
     required_artifact: Optional[Artifact] = None
     dry_run: bool = False
 
-    def docker_image_tag(self):
-        git = self.run_properties.versioning
-        tag = f"pr-{git.pr_number}" if git.pr_number else git.tag
-        return f"{self.project.name.lower()}:{tag}".replace('/', '_')
-
 
 @yaml_object(yaml)
 @dataclass()
