@@ -8,5 +8,5 @@ build:
     deploy_target: !ENV ${deployTarget:PullRequest}
   versioning:
     revision: !ENV ${GIT_COMMIT:hash}
-    pr_number: 0 #!ENV ${CHANGE_ID}
+    pr_number: !ENV ${CHANGE_ID}
     tag: !ENV ${TAG_NAME}

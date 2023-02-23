@@ -57,23 +57,24 @@ def docker_file_path(project: Project, docker_config: DockerConfig):
     return f'{project.deployment_path}/{docker_config.docker_file_name}'
 
 
-def build(logger: Logger, root_path: str, file_path: str, image_tag: str, target: str) -> bool:
+def build(logger: Logger, docker_client: APIClient, root_path: str, file_path: str, image_tag: str,
+          target: str) -> bool:
     """
     :param logger: the logger
+    :param docker_client: the docker API client
     :param root_path: the root path to which `docker_file_path` is relative
     :param file_path: path to the docker file to be built
     :param image_tag: the tag of the image
     :param target: the 'target' within the multi-stage docker image
     :return: True if success, False if failure
     """
-    low_level_client = APIClient()
-    logger.debug(low_level_client.version())
+    logger.debug(docker_client.version())
     summary = f"target '{target}' for {docker_file_path}"
-    logger.info(f"Building docker image with {summary}")
+    logger.info(f"Building docker image with {file_path}")
 
     try:
-        logs = low_level_client.build(path=root_path, dockerfile=file_path, tag=image_tag, rm=True, target=target,
-                                      decode=True)
+        logs = docker_client.build(path=root_path, dockerfile=file_path, tag=image_tag, rm=True, target=target,
+                                   decode=True)
         __stream_docker_logging(logger, logs)
         logger.debug(logs)
     except APIError:
