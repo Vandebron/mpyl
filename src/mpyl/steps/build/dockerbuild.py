@@ -4,7 +4,7 @@ from logging import Logger
 
 from . import DockerConfig, build
 from .docker_after_build import AfterBuildDocker
-from ..models import Meta, Input, Output, ArtifactType
+from ..models import Meta, Input, Output, ArtifactType, input_to_artifact
 from ..step import Step
 from ...project import Stage
 
@@ -26,6 +26,11 @@ class BuildDocker(Step):
         if not build_target:
             raise ValueError('docker.testTarget must be specified')
 
-        artifact = build(logger=self._logger, step_input=step_input, target=build_target,
-                         artifact_type=self.produced_artifact, config=docker_config)
-        return Output(success=True, message=f"Built {step_input.project.name}", produced_artifact=artifact)
+        success = build(logger=self._logger, step_input=step_input, target=build_target, config=docker_config)
+        artifact = input_to_artifact(ArtifactType.DOCKER_IMAGE, step_input, {'image': step_input.docker_image_tag()})
+
+        if success:
+            return Output(success=True, message=f"Built {step_input.project.name}", produced_artifact=artifact)
+
+        return Output(success=False, message=f"Failed to build docker image for {step_input.project.name}",
+                      produced_artifact=None)

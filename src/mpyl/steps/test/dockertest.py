@@ -3,7 +3,7 @@
 from logging import Logger
 
 from ..build import DockerConfig, build
-from ..models import Meta, Input, Output, ArtifactType
+from ..models import Meta, Input, Output, ArtifactType, input_to_artifact
 from ..step import Step
 from ...project import Stage
 
@@ -23,6 +23,11 @@ class TestDocker(Step):
         if not test_target:
             raise ValueError('docker.testTarget must be specified')
 
-        artifact = build(logger=self._logger, step_input=step_input, target=test_target,
-                         artifact_type=self.produced_artifact, config=docker_config)
-        return Output(success=True, message=f"Tested {step_input.project.name}", produced_artifact=artifact)
+        success = build(logger=self._logger, step_input=step_input, target=test_target, config=docker_config)
+
+        artifact = input_to_artifact(ArtifactType.JUNIT_TESTS, step_input, {'test_path': step_input.docker_image_tag()})
+        if success:
+            return Output(success=True, message=f"Tests succeeded for {step_input.project.name}",
+                          produced_artifact=artifact)
+
+        return Output(success=False, message=f"Test failure in {step_input.project.name}", produced_artifact=artifact)
