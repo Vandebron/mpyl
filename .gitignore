@@ -144,3 +144,6 @@ tmp*/
 node_modules/
 *.pem
 .dockerignore
+#Scala
+.jvmopts
+build.properties

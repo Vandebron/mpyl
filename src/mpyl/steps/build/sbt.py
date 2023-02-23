@@ -26,7 +26,7 @@ class BuildSbt(Step):
         )
 
     def execute(self, step_input: Input) -> Output:
-        with open(SbtConfig.java_opts_file_name, 'r') as jvm_opts:
+        with open(SbtConfig.java_opts_file_name, 'w+') as jvm_opts:
             jvm_opts.write(SbtConfig.sbt_opts.replace(' ', '\n'))
             check_fmt: Optional[str] = \
                 'scalafmtCheckAll' if step_input.run_properties.target == Target.PULL_REQUEST else None
@@ -40,7 +40,7 @@ class BuildSbt(Step):
                 ] if command is not None
             ]
             try:
-                subprocess.run(f'{SbtConfig.sbt_command} {"; ".join(commands)}', check=True)
+                subprocess.run([f'{SbtConfig.sbt_command}', "; ".join(commands)], check=True, shell=True)
                 artifact = input_to_artifact(ArtifactType.DOCKER_IMAGE, step_input, {'image': image_name})
                 return Output(success=True, message=f"Built {step_input.project.name}", produced_artifact=artifact)
             except subprocess.CalledProcessError:
