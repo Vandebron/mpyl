@@ -65,7 +65,7 @@ def test_probe_deserialization_failure_should_throw():
 
 def test_load_config():
     yaml_values = parse_config(resource_path / "config.yml")
-    docker_config = DockerConfig(yaml_values)
+    docker_config = DockerConfig.from_dict(yaml_values)
     assert docker_config.host_name == 'bigdataregistry.azurecr.io'
 
 

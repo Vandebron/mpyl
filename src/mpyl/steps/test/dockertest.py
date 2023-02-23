@@ -22,7 +22,7 @@ class TestDocker(Step):
         ), produced_artifact=ArtifactType.JUNIT_TESTS, required_artifact=ArtifactType.NONE)
 
     def execute(self, step_input: Input) -> Output:
-        docker_config = DockerConfig(step_input.run_properties.config)
+        docker_config = DockerConfig.from_dict(step_input.run_properties.config)
         test_target = docker_config.test_target
         if not test_target:
             raise ValueError('docker.testTarget must be specified')
