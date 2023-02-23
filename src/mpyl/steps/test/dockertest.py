@@ -2,9 +2,9 @@
 
 from logging import Logger
 
-from ..step import Step
 from ..build import DockerConfig
-from ..models import Meta, Input, Output, ArtifactType, Artifact
+from ..models import Meta, Input, Output, ArtifactType
+from ..step import Step
 from ...project import Stage
 
 

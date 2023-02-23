@@ -3,9 +3,10 @@ Step implementations relating to the `Build` Stage. These steps produce Docker i
 """
 
 from logging import Logger
+from typing import Dict
+
 from docker import APIClient  # type: ignore
 
-from typing import Dict
 from ..models import Input, Artifact
 
 

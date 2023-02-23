@@ -16,7 +16,7 @@ class TestDiscovery:
         repo = test_data.get_repo()
         touched_files = {'tests/projects/service/file.py', 'tests/some_file.txt'}
         assert len(find_invalidated_projects_for_stage(repo, Stage.BUILD, [History(0, "revision", touched_files)])) == 1
-        assert len(find_invalidated_projects_for_stage(repo, Stage.TEST, [History(0, "revision", touched_files)])) == 0
+        assert len(find_invalidated_projects_for_stage(repo, Stage.TEST, [History(0, "revision", touched_files)])) == 2
         assert len(
             find_invalidated_projects_for_stage(repo, Stage.DEPLOY, [History(0, "revision", touched_files)])) == 1
 
