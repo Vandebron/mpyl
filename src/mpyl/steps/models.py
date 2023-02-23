@@ -19,6 +19,10 @@ class VersioningProperties:
     pr_number: Optional[int]
     tag: Optional[str]
 
+    def __post_init__(self):
+        if not self.pr_number and not self.tag:
+            raise ValueError('Either pr_number or tag need to be set')
+
     @property
     def identifier(self):
         return f'pr-{self.pr_number}' if self.pr_number else self.tag
