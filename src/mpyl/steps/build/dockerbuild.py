@@ -2,7 +2,7 @@
 
 from logging import Logger
 
-from . import DockerConfig
+from . import DockerConfig, build
 from .docker_after_build import AfterBuildDocker
 from ..models import Meta, Input, Output, ArtifactType
 from ..step import Step
@@ -22,6 +22,6 @@ class BuildDocker(Step):
                          after=AfterBuildDocker(logger=logger))
 
     def execute(self, step_input: Input) -> Output:
-        docker_config = DockerConfig(step_input.run_properties.config, self._logger)
-        artifact = DockerConfig.build(docker_config, step_input, self.produced_artifact)
+        docker_config = DockerConfig(step_input.run_properties.config)
+        artifact = build(self._logger, step_input, self.produced_artifact, docker_config)
         return Output(success=True, message=f"Built {step_input.project.name}", produced_artifact=artifact)
