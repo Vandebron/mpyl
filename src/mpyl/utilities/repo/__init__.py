@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Dict
 
 from git import Git, Repo
-from ..project import Project
+from src.mpyl.project import Project
 
 
 @dataclass(frozen=True)
