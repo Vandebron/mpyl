@@ -8,8 +8,6 @@ from python_on_whales import docker
 from ...project import Project
 from ...steps.models import Input
 
-DockerConfigT = TypeVar('DockerConfigT', bound='DockerConfig')
-
 
 @dataclass(frozen=True)
 class DockerConfig:
@@ -22,10 +20,10 @@ class DockerConfig:
     docker_file_name: str
 
     @staticmethod
-    def construct_docker_config(config: dict) -> DockerConfigT:
+    def from_dict(config: Dict):
         try:
-            registry: dict = config['docker']['registry']
-            build_config: dict = config['docker']['build'],
+            registry: Dict = config['docker']['registry']
+            build_config: Dict = config['docker']['build']
             return DockerConfig(
                 host_name=registry['hostName'],
                 user_name=registry['userName'],

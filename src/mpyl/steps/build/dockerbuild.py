@@ -23,7 +23,7 @@ class BuildDocker(Step):
                          after=AfterBuildDocker(logger=logger))
 
     def execute(self, step_input: Input) -> Output:
-        docker_config = DockerConfig(step_input.run_properties.config)
+        docker_config = DockerConfig.from_dict(step_input.run_properties.config)
         build_target = docker_config.build_target
         if not build_target:
             raise ValueError('docker.buildTarget must be specified')

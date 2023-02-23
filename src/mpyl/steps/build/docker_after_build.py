@@ -31,7 +31,7 @@ class AfterBuildDocker(Step):
         image_name = built_image.spec['image']
         self._logger.debug(f'Image to publish: {image_name}')
 
-        docker_config = DockerConfig(step_input.run_properties.config)
+        docker_config = DockerConfig.from_dict(step_input.run_properties.config)
 
         full_image_path = os.path.join(docker_config.host_name, image_name)
         artifact = Artifact(ArtifactType.DOCKER_IMAGE, step_input.run_properties.versioning.revision, self.meta.name,
