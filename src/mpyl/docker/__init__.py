@@ -1,6 +1,4 @@
-"""
-Step implementations relating to the `Build` Stage. These steps produce Docker images by default
-"""
+"""Docker related utility methods"""
 
 from logging import Logger
 from typing import Dict, Optional
@@ -8,7 +6,8 @@ from typing import Dict, Optional
 from docker import APIClient  # type: ignore
 from docker.errors import APIError
 
-from ..models import Input, Artifact, ArtifactType
+from ..project import Project
+from ..steps.models import Input
 
 
 class DockerConfig:
@@ -48,24 +47,33 @@ def __stream_docker_logging(logger: Logger, generator, task_name: str = 'docker 
             break
 
 
-def build(logger: Logger, step_input: Input, target: str, config: DockerConfig) -> bool:
+def docker_image_tag(step_input: Input):
+    git = step_input.run_properties.versioning
+    tag = f"pr-{git.pr_number}" if git.pr_number else git.tag
+    return f"{step_input.project.name.lower()}:{tag}".replace('/', '_')
+
+
+def docker_file_path(project: Project, docker_config: DockerConfig):
+    return f'{project.deployment_path}/{docker_config.docker_file_name}'
+
+
+def build(logger: Logger, root_path: str, file_path: str, image_tag: str, target: str) -> bool:
     """
     :param logger: the logger
-    :param step_input: information about the image that should be built
+    :param root_path: the root path to which `docker_file_path` is relative
+    :param file_path: path to the docker file to be built
+    :param image_tag: the tag of the image
     :param target: the 'target' within the multi-stage docker image
-    :param config: global docker configuration
     :return: True if success, False if failure
     """
     low_level_client = APIClient()
     logger.debug(low_level_client.version())
-    summary = f"target '{target}' for project {step_input.project.name}"
+    summary = f"target '{target}' for {docker_file_path}"
     logger.info(f"Building docker image with {summary}")
 
     try:
-        logs = low_level_client.build(path=config.root_folder,
-                                      dockerfile=f'{step_input.project.deployment_path}/{config.docker_file_name}',
-                                      tag=step_input.docker_image_tag(),
-                                      rm=True, target=target, decode=True)
+        logs = low_level_client.build(path=root_path, dockerfile=file_path, tag=image_tag, rm=True, target=target,
+                                      decode=True)
         __stream_docker_logging(logger, logs)
         logger.debug(logs)
     except APIError:
