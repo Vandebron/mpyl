@@ -6,9 +6,9 @@ from logging import Logger
 
 from docker import DockerClient
 
-from . import DockerConfig
 from ..models import Meta, Input, Output, Artifact, ArtifactType
 from ..step import Step
+from ...docker import DockerConfig
 from ...project import Stage
 
 
