@@ -1,12 +1,14 @@
 """Docker related utility methods"""
 from dataclasses import dataclass
 from logging import Logger
-from typing import Dict, Optional
+from typing import Dict, Optional, TypeVar
 
 from python_on_whales import docker
 
 from ...project import Project
 from ...steps.models import Input
+
+DockerConfigT = TypeVar('DockerConfigT', bound='DockerConfig')
 
 
 @dataclass(frozen=True)
@@ -19,22 +21,22 @@ class DockerConfig:
     test_target: Optional[str]
     docker_file_name: str
 
-
-def construct_docker_config(config: dict) -> DockerConfig:
-    try:
-        registry = config['docker']['registry']
-        build_config = config['docker']['build'],
-        return DockerConfig(
-            host_name=registry['hostName'],
-            user_name=registry['userName'],
-            password=registry['password'],
-            root_folder=build_config['rootFolder'],
-            build_target=build_config.get('buildTarget', None),
-            test_target=build_config.get('testTarget', None),
-            docker_file_name=build_config['dockerFileName']
-        )
-    except KeyError as exc:
-        raise KeyError(f'Docker config could not be loaded from {config}') from exc
+    @staticmethod
+    def construct_docker_config(config: dict) -> DockerConfigT:
+        try:
+            registry: dict = config['docker']['registry']
+            build_config: dict = config['docker']['build'],
+            return DockerConfig(
+                host_name=registry['hostName'],
+                user_name=registry['userName'],
+                password=registry['password'],
+                root_folder=build_config['rootFolder'],
+                build_target=build_config.get('buildTarget', None),
+                test_target=build_config.get('testTarget', None),
+                docker_file_name=build_config['dockerFileName']
+            )
+        except KeyError as exc:
+            raise KeyError(f'Docker config could not be loaded from {config}') from exc
 
 
 def __stream_docker_logging(logger: Logger, generator, task_name: str = 'docker command execution') -> None:
