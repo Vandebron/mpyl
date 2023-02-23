@@ -5,6 +5,7 @@ from src.mpyl.reporting.simple import to_string, to_test_report
 from src.mpyl.steps.models import Output, Artifact, ArtifactType
 from src.mpyl.steps.run import RunResult
 from src.mpyl.steps.steps import StepResult
+from src.mpyl.utilities.junit import TEST_OUTPUT_PATH_KEY
 from tests import root_test_path
 from tests.test_resources import test_data
 from tests.test_resources.test_data import assert_roundtrip
@@ -37,6 +38,6 @@ class TestReporting:
     def test_should_convert_test_report_to_string(self):
         test_artifact = Artifact(artifact_type=ArtifactType.JUNIT_TESTS, revision='revision',
                                  producing_step='Docker Test',
-                                 spec={'test_output_path': self.test_resource_path})
+                                 spec={TEST_OUTPUT_PATH_KEY: self.test_resource_path})
         test_report = to_test_report(test_artifact)
         assert_roundtrip(self.test_resource_path / "simple_test.txt", test_report, overwrite=False)
