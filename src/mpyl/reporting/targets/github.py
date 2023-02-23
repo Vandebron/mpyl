@@ -11,7 +11,7 @@ from github.PullRequest import PullRequest
 
 from .. import Reporter
 from ..simple import to_string
-from ...repo import Repository, RepoConfig
+from ...utilities.repo import Repository, RepoConfig
 from ...steps.models import RunProperties
 from ...steps.run import RunResult
 

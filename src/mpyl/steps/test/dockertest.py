@@ -8,7 +8,7 @@ from docker import APIClient
 
 from ..models import Meta, Input, Output, ArtifactType, input_to_artifact, Artifact
 from ..step import Step
-from ...docker import DockerConfig, build, docker_image_tag, docker_file_path
+from ...utilities.docker import DockerConfig, build, docker_image_tag, docker_file_path
 from ...project import Stage, Project
 
 
