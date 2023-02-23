@@ -28,6 +28,7 @@ class DockerConfig:
             build_config: dict = config['docker']['build']
             self.root_folder = build_config['rootFolder']
             self.build_target = build_config['buildTarget']
+            self.test_target = build_config['testTarget']
             self.docker_file_name = build_config['dockerFileName']
 
         except KeyError as exc:
@@ -54,7 +55,7 @@ def build(logger: Logger, step_input: Input, artifact_type: ArtifactType, config
     logs = low_level_client.build(path=config.root_folder,
                                   dockerfile=f'{step_input.project.deployment_path}/{config.docker_file_name}',
                                   tag=step_input.docker_image_tag(),
-                                  rm=True, target=config.build_target, decode=True)
+                                  rm=True, target=config.test_target, decode=True)
     __log_docker_output(logger, logs)
     logger.debug(logs)
 

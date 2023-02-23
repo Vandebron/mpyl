@@ -101,6 +101,10 @@ definitions:
       rootFolder:
         type: string
       buildTarget:
+        description: "The target in the multi-stage docker file to build in the 'build' stage"
+        type: string
+      testTarget:
+        description: "The target in the multi-stage docker file to build in the 'test' stage"
         type: string
       dockerFileName:
         type: string
