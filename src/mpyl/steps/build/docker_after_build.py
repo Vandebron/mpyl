@@ -4,12 +4,12 @@ ArtifactType.DOCKER_IMAGE as `mpyl.steps.models.ArtifactType`."""
 import os
 from logging import Logger
 
-from docker import DockerClient
+from python_on_whales import docker
 
 from ..models import Meta, Input, Output, Artifact, ArtifactType
 from ..step import Step
-from ...utilities.docker import DockerConfig
 from ...project import Stage
+from ...utilities.docker import DockerConfig
 
 
 class AfterBuildDocker(Step):
@@ -28,8 +28,6 @@ class AfterBuildDocker(Step):
             self._logger.warn("After docker has image required artifact")
             return Output(success=False, message=f"After docker has image required artifact {step_input.project.name}")
 
-        client = DockerClient.from_env()
-
         image_name = built_image.spec['image']
         self._logger.debug(f'Image to publish: {image_name}')
 
@@ -44,20 +42,12 @@ class AfterBuildDocker(Step):
                           produced_artifact=artifact)
 
         self._logger.info(f"Logging in with user '{docker_config.user_name}'")
-        login_result = client.login(username=docker_config.user_name, password=docker_config.password,
-                                    registry=f'https://{docker_config.host_name}')
-        self._logger.debug(f"Docker login result: {login_result}")
+        docker.login(server=f'https://{docker_config.host_name}', username=docker_config.user_name,
+                     password=docker_config.password)
+        image = docker.image.inspect(image_name)
+        self._logger.debug(f'Found image {image}')
+        docker.image.tag(image, full_image_path)
 
-        tagged = client.images.get(image_name).tag(full_image_path)
-        if tagged:
-            stream = client.images.push(full_image_path, stream=True, decode=True)
-            previous_status = ""
-            for line in stream:
-                status = line.get('status')
-                if status and status != previous_status:
-                    self._logger.info(status)
-                    previous_status = status
-        else:
-            return Output(success=False, message=f"Could not tag {full_image_path}")
+        docker.image.push(full_image_path, quiet=False)
 
         return Output(success=True, message=f"Pushed {full_image_path}", produced_artifact=artifact)
