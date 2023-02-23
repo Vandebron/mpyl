@@ -198,7 +198,7 @@ if __name__ == "__main__":
     result = run_build.execute_in_process(run_config={
         'loggers': {'mpyl_logger': {'config': {'log_level': 'INFO'}}},
         'ops': {
-            'build_project': {'config': {'dry_run': True}},
+            'build_project': {'config': {'dry_run': False}},
             'deploy_projects': {'config': {'dry_run': True}}
         }
     })
