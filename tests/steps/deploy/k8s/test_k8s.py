@@ -4,7 +4,7 @@ import pytest
 from kubernetes.client import V1Probe, V1ObjectMeta
 from pyaml_env import parse_config
 
-from src.mpyl.docker import DockerConfig
+from src.mpyl.utilities.docker import DockerConfig
 from src.mpyl.project import load_project
 from src.mpyl.steps import Target
 from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml

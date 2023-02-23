@@ -3,7 +3,7 @@ import os
 import pytest
 
 from src.mpyl.project import Stage
-from src.mpyl.repo import History
+from src.mpyl.utilities.repo import History
 from src.mpyl.stages.discovery import find_invalidated_projects_for_stage
 from tests.test_resources import test_data
 

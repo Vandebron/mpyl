@@ -3,13 +3,13 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Union
 
-from dagster import job, op, In, Nothing, DynamicOut, DynamicOutput, get_dagster_logger, Output, Failure, logger, Field
+from dagster import job, op, DynamicOut, DynamicOutput, get_dagster_logger, Output, Failure, logger, Field
 from pyaml_env import parse_config
 from rich.logging import RichHandler, Console
 from rich.text import Text
 
 from src.mpyl.project import load_project, Project, Stage
-from src.mpyl.repo import Repository, RepoConfig
+from src.mpyl.utilities.repo import Repository, RepoConfig
 from src.mpyl.reporting.simple import to_string
 from src.mpyl.reporting.targets.github import GithubReport
 from src.mpyl.steps.models import RunProperties
