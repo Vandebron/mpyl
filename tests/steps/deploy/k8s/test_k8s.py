@@ -1,3 +1,4 @@
+from logging import Logger
 from pathlib import Path
 
 import pytest
@@ -65,7 +66,7 @@ def test_probe_deserialization_failure_should_throw():
 
 def test_load_config():
     yaml_values = parse_config(resource_path / "config.yml")
-    config = DockerConfig(yaml_values)
+    config = DockerConfig(yaml_values, Logger.manager.getLogger('test'))
     assert config.host_name == 'bigdataregistry.azurecr.io'
 
 
