@@ -12,7 +12,6 @@ from ...project import Stage
 class BuildDocker(Step):
 
     def __init__(self, logger: Logger) -> None:
-
         super().__init__(logger=logger, meta=Meta(
             name='Docker Build',
             description='Build docker image',
@@ -23,5 +22,10 @@ class BuildDocker(Step):
 
     def execute(self, step_input: Input) -> Output:
         docker_config = DockerConfig(step_input.run_properties.config)
-        artifact = build(self._logger, step_input, self.produced_artifact, docker_config)
+        build_target = docker_config.test_target
+        if not build_target:
+            raise ValueError('docker.testTarget must be specified')
+
+        artifact = build(logger=self._logger, step_input=step_input, target=build_target,
+                         artifact_type=self.produced_artifact, config=docker_config)
         return Output(success=True, message=f"Built {step_input.project.name}", produced_artifact=artifact)
