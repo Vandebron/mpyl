@@ -109,7 +109,7 @@ class Steps:
             except Exception as exc:
                 self._logger.warning(
                     f"Execution of '{executor.meta.name}' for project '{project.name}' in stage {stage} "
-                    f"failed with exception: ", exc_info=True)
+                    f"failed with exception: {str(exc)}", exc_info=True)
                 raise ValueError from exc
         else:
             self._logger.warning(f"No executor found for {stage_name} in stage {stage}")

@@ -106,7 +106,8 @@ class CustomRichHandler(RichHandler):
     def emit(self, record: logging.LogRecord) -> None:
         meta = getattr(record, 'dagster_meta', None)
         if meta:
-            record.pathname = meta['step_key']
+            step_key = meta['step_key']
+            record.pathname = str(step_key) if step_key else ''
             record.lineno = None
         super().emit(record)
 

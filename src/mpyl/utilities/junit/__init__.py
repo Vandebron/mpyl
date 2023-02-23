@@ -2,9 +2,12 @@
 
 import os
 from dataclasses import dataclass
+
 from junitparser import JUnitXml, TestSuite
 
 from ...steps.models import Artifact, ArtifactType
+
+TEST_OUTPUT_PATH_KEY = 'test_output_path'
 
 
 @dataclass(frozen=True)
@@ -14,11 +17,15 @@ class TestRunSummary:
     errors: int
     skipped: int
 
+    @property
+    def is_success(self):
+        return self.errors == 0 and self.failures == 0
+
 
 def to_test_suites(artifact: Artifact):
     if artifact.artifact_type != ArtifactType.JUNIT_TESTS:
         raise ValueError(f'Artifact {artifact} should be of type {ArtifactType.JUNIT_TESTS}')
-    junit_result_path = artifact.spec['test_output_path']
+    junit_result_path = artifact.spec[TEST_OUTPUT_PATH_KEY]
 
     xml = JUnitXml()
     for file_name in [fn for fn in os.listdir(junit_result_path) if fn.endswith('.xml')]:
