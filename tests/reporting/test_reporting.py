@@ -28,9 +28,10 @@ class TestReporting:
                                  timestamp=datetime.fromisoformat('2019-01-04T16:41:26+02:00')))
         result.append(StepResult(stage=Stage.TEST, project=other_project,
                                  output=Output(success=True, message='Tests successful',
-                                               produced_artifact=Artifact(artifact_type=ArtifactType.JUNIT_TESTS,
-                                                                          revision='revision',
-                                                                          producing_step='Docker Test', spec={})),
+                                               produced_artifact=
+                                               Artifact(artifact_type=ArtifactType.JUNIT_TESTS, revision='revision',
+                                                        producing_step='Docker Test',
+                                                        spec={TEST_OUTPUT_PATH_KEY: self.test_resource_path})),
                                  timestamp=datetime.fromisoformat('2019-01-04T16:41:45+02:00')))
         simple_report = to_string(result)
         assert_roundtrip(self.test_resource_path / "simple_run.txt", simple_report)
