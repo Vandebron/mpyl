@@ -125,3 +125,8 @@ class Meta:
 
     def __str__(self) -> str:
         return f'{self.name}: {self.version}'
+
+
+def input_to_artifact(artifact_type: ArtifactType, step_input: Input, spec: dict):
+    return Artifact(artifact_type=artifact_type, revision=step_input.run_properties.versioning.revision,
+                    producing_step=step_input.project.name, spec=spec)
