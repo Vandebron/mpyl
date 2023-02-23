@@ -2,13 +2,11 @@
 
 from logging import Logger
 
-from docker import APIClient
-
 from .docker_after_build import AfterBuildDocker
 from ..models import Meta, Input, Output, ArtifactType, input_to_artifact
 from ..step import Step
-from ...utilities.docker import DockerConfig, build, docker_image_tag, docker_file_path
 from ...project import Stage
+from ...utilities.docker import DockerConfig, build, docker_image_tag, docker_file_path
 
 
 class BuildDocker(Step):
@@ -31,7 +29,7 @@ class BuildDocker(Step):
         image_tag = docker_image_tag(step_input)
         dockerfile = docker_file_path(project=step_input.project, docker_config=docker_config)
 
-        success = build(logger=self._logger, docker_client=APIClient(), root_path=docker_config.root_folder,
+        success = build(logger=self._logger, root_path=docker_config.root_folder,
                         file_path=dockerfile, image_tag=image_tag,
                         target=build_target)
         artifact = input_to_artifact(ArtifactType.DOCKER_IMAGE, step_input, {'image': image_tag})
