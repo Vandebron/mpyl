@@ -19,5 +19,10 @@ class TestDocker(Step):
 
     def execute(self, step_input: Input) -> Output:
         docker_config = DockerConfig(step_input.run_properties.config)
-        artifact = build(self._logger, step_input, self.produced_artifact, docker_config)
+        test_target = docker_config.test_target
+        if not test_target:
+            raise ValueError('docker.testTarget must be specified')
+
+        artifact = build(logger=self._logger, step_input=step_input, target=test_target,
+                         artifact_type=self.produced_artifact, config=docker_config)
         return Output(success=True, message=f"Tested {step_input.project.name}", produced_artifact=artifact)
