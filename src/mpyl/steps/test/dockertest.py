@@ -10,6 +10,7 @@ from ..models import Meta, Input, Output, ArtifactType, input_to_artifact, Artif
 from ..step import Step
 from ...utilities.docker import DockerConfig, build, docker_image_tag, docker_file_path
 from ...project import Stage, Project
+from ...utilities.junit import to_test_suites, sum_suites, TEST_OUTPUT_PATH_KEY
 
 
 class TestDocker(Step):
@@ -39,10 +40,15 @@ class TestDocker(Step):
         if success:
             artifact = self.extract_test_results(self._logger, client, project, tag, step_input)
 
-            return Output(success=True, message=f"Tests succeeded for {project.name}",
+            suite = to_test_suites(artifact)
+            summary = sum_suites([suite])
+
+            return Output(success=summary.is_success, message=f"Tests results produced for {project.name}",
                           produced_artifact=artifact)
 
-        return Output(success=False, message=f"Test failure in {project.name}", produced_artifact=None)
+        return Output(success=False,
+                      message=f"Tests failed to run for {project.name}. No test results have been recorded.",
+                      produced_artifact=None)
 
     @staticmethod
     def extract_test_results(logger: Logger, client: APIClient, project: Project, tag, step_input: Input) -> Artifact:
@@ -61,5 +67,5 @@ class TestDocker(Step):
         with tarfile.open(tar_path) as tar_file:
             tar_file.extractall(path=test_result_path)
 
-        return input_to_artifact(ArtifactType.JUNIT_TESTS, step_input,
-                                 {'test_path': f'{test_result_path}/test-reports'})
+        return input_to_artifact(artifact_type=ArtifactType.JUNIT_TESTS, step_input=step_input,
+                                 spec={TEST_OUTPUT_PATH_KEY: f'{test_result_path}/test-reports'})
