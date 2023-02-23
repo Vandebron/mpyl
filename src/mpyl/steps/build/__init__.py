@@ -6,6 +6,7 @@ from logging import Logger
 from typing import Dict, Optional
 
 from docker import APIClient  # type: ignore
+from docker.errors import APIError
 
 from ..models import Input, Artifact, ArtifactType
 
@@ -35,7 +36,7 @@ class DockerConfig:
             raise KeyError(f'Docker config could not be loaded from {config}') from exc
 
 
-def __log_docker_output(logger: Logger, generator, task_name: str = 'docker command execution') -> None:
+def __stream_docker_logging(logger: Logger, generator, task_name: str = 'docker command execution') -> None:
     while True:
         try:
             output = next(generator)
@@ -47,18 +48,27 @@ def __log_docker_output(logger: Logger, generator, task_name: str = 'docker comm
             break
 
 
-def build(logger: Logger, step_input: Input, target: str, artifact_type: ArtifactType,
-          config: DockerConfig) -> Artifact:
+def build(logger: Logger, step_input: Input, target: str, config: DockerConfig) -> bool:
+    """
+    :param logger: the logger
+    :param step_input: information about the image that should be built
+    :param target: the 'target' within the multi-stage docker image
+    :param config: global docker configuration
+    :return: True if success, False if failure
+    """
     low_level_client = APIClient()
     logger.debug(low_level_client.version())
-    logger.info(f"Running DockerClient with target '{target}' for project {step_input.project.name}")
+    summary = f"target '{target}' for project {step_input.project.name}"
+    logger.info(f"Building docker image with {summary}")
 
-    logs = low_level_client.build(path=config.root_folder,
-                                  dockerfile=f'{step_input.project.deployment_path}/{config.docker_file_name}',
-                                  tag=step_input.docker_image_tag(),
-                                  rm=True, target=target, decode=True)
-    __log_docker_output(logger, logs)
-    logger.debug(logs)
-
-    return Artifact(artifact_type, step_input.run_properties.versioning.revision, step_input.project.name,
-                    {'image': step_input.docker_image_tag()})
+    try:
+        logs = low_level_client.build(path=config.root_folder,
+                                      dockerfile=f'{step_input.project.deployment_path}/{config.docker_file_name}',
+                                      tag=step_input.docker_image_tag(),
+                                      rm=True, target=target, decode=True)
+        __stream_docker_logging(logger, logs)
+        logger.debug(logs)
+    except APIError:
+        logger.warning(f'Error while building {summary}', exc_info=True)
+        return False
+    return True
