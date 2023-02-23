@@ -41,10 +41,9 @@ def build_project(context, project: Project) -> Output:
     return Output(execute_step(project, Stage.BUILD, dry_run))
 
 
-@op
-def test_project(context, projects: list[Project], _ignored: Output) -> Output:
-    for project in projects:
-        return Output(execute_step(project, Stage.TEST))
+@op(description="Test stage. Test steps produce junit compatible test results")
+def test_project(context, step_result: StepResult) -> Output:
+    return Output(execute_step(step_result.project, Stage.TEST))
 
 
 @op(description="Deploy a project to the target specified in the step", config_schema={"dry_run": bool})
@@ -161,11 +160,7 @@ def mpyl_logger(init_context):
 @job(logger_defs={"mpyl_logger": mpyl_logger})
 def run_build():
     projects = find_projects()
-    build_results = projects.map(build_project)
-    test_project(
-        projects.collect(),
-        build_results.collect()
-    )
+    build_results = projects.map(build_project).map(test_project)
     deploy_results = deploy_projects(
         projects=projects.collect(),
         outputs=build_results.collect()

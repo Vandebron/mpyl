@@ -41,9 +41,9 @@ class TestDocker(Step):
             artifact = self.extract_test_results(self._logger, client, project, tag, step_input)
 
             suite = to_test_suites(artifact)
-            summary = sum_suites([suite])
+            summary = sum_suites(suite)
 
-            return Output(success=summary.is_success, message=f"Tests results produced for {project.name}",
+            return Output(success=summary.is_success, message=f"Tests results produced for {project.name} ({summary})",
                           produced_artifact=artifact)
 
         return Output(success=False,
