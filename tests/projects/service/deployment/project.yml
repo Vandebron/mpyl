@@ -2,6 +2,7 @@ name: 'service'
 description: 'This is a test container. For testing the MPL pipelines, not to be deployed anywhere.'
 stages:
   build: Docker Build
+  test: Docker Test
   deploy: Kubernetes Deploy
 maintainer: [ 'Marketplace', 'Energy Trading' ]
 build:

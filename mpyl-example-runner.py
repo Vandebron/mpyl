@@ -9,7 +9,7 @@ from rich.logging import RichHandler, Console
 from rich.text import Text
 
 from src.mpyl.project import load_project, Project, Stage
-from src.mpyl.repo import Repository, RepoConfig
+from src.mpyl.utilities.repo import Repository, RepoConfig
 from src.mpyl.reporting.simple import to_string
 from src.mpyl.reporting.targets.github import GithubReport
 from src.mpyl.steps.models import RunProperties
@@ -41,9 +41,9 @@ def build_project(context, project: Project) -> Output:
     return Output(execute_step(project, Stage.BUILD, dry_run))
 
 
-@op
-def test_project(context, project: Project) -> Output:
-    return Output(execute_step(project, Stage.TEST))
+@op(description="Test stage. Test steps produce junit compatible test results")
+def test_project(context, step_result: StepResult) -> Output:
+    return Output(execute_step(step_result.project, Stage.TEST))
 
 
 @op(description="Deploy a project to the target specified in the step", config_schema={"dry_run": bool})
@@ -105,7 +105,8 @@ class CustomRichHandler(RichHandler):
     def emit(self, record: logging.LogRecord) -> None:
         meta = getattr(record, 'dagster_meta', None)
         if meta:
-            record.pathname = meta['step_key']
+            step_key = meta['step_key']
+            record.pathname = str(step_key) if step_key else ''
             record.lineno = None
         super().emit(record)
 
@@ -159,7 +160,7 @@ def mpyl_logger(init_context):
 @job(logger_defs={"mpyl_logger": mpyl_logger})
 def run_build():
     projects = find_projects()
-    build_results = projects.map(build_project)
+    build_results = projects.map(build_project).map(test_project)
     deploy_results = deploy_projects(
         projects=projects.collect(),
         outputs=build_results.collect()

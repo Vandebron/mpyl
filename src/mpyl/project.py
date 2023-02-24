@@ -285,6 +285,10 @@ class Project:
     def target_path(self) -> str:
         return str(Path(self.deployment_path, '.mpl'))
 
+    @property
+    def test_report_path(self) -> str:
+        return str(Path(self.root_path, 'target/test-reports'))
+
     @staticmethod
     def from_yaml(values: dict, project_path: str):
         deployment = values.get('deployment')

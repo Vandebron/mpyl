@@ -4,7 +4,7 @@ output artifact."""
 
 from ..project import Project
 from ..projects.find import load_projects
-from ..repo import History, Repository
+from ..utilities.repo import History, Repository
 from ..project import Stage
 from ..steps.models import Output
 

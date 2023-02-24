@@ -19,6 +19,10 @@ class VersioningProperties:
     pr_number: Optional[int]
     tag: Optional[str]
 
+    def __post_init__(self):
+        if not self.pr_number and not self.tag:
+            raise ValueError('Either pr_number or tag need to be set')
+
     @property
     def identifier(self):
         return f'pr-{self.pr_number}' if self.pr_number else self.tag
@@ -85,11 +89,6 @@ class Input:
     required_artifact: Optional[Artifact] = None
     dry_run: bool = False
 
-    def docker_image_tag(self):
-        git = self.run_properties.versioning
-        tag = f"pr-{git.pr_number}" if git.pr_number else git.tag
-        return f"{self.project.name.lower()}:{tag}".replace('/', '_')
-
 
 @yaml_object(yaml)
 @dataclass()
@@ -125,3 +124,8 @@ class Meta:
 
     def __str__(self) -> str:
         return f'{self.name}: {self.version}'
+
+
+def input_to_artifact(artifact_type: ArtifactType, step_input: Input, spec: dict):
+    return Artifact(artifact_type=artifact_type, revision=step_input.run_properties.versioning.revision,
+                    producing_step=step_input.project.name, spec=spec)
