@@ -114,12 +114,5 @@ The `tester` stage needs run the unittests and write the results (in [Junit XML 
 to a folder named `$WORKDIR/target/test-reports/`.
 See this [example](test/docker/deployment/Dockerfile-mpl).
 
-# How do I?
-
-## ..create a custom step
-## ..report the outcome of a pipeline run
-To report the outcome to Github, see `mpyl.reporting.targets.github`
-
-
 
 
