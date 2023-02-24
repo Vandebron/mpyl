@@ -9,6 +9,8 @@
 This tool is loosely based on the principles described in https://www.jenkins.io/blog/2019/01/08/mpl-modular-pipeline-library/
 but completely independent of Jenkins
 
+:books: Online documentation can be found [here](https://vandebron.github.io/mpyl/)
+
 # What is MPyL?
 
 ## Proposed implementation
