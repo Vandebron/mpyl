@@ -11,7 +11,7 @@ from rich.text import Text
 from src.mpyl.project import load_project, Project, Stage
 from src.mpyl.utilities.repo import Repository, RepoConfig
 from src.mpyl.reporting.simple import to_string
-from src.mpyl.reporting.targets.github import GithubReport, GithubCheck
+from src.mpyl.reporting.targets.github import PullRequestComment, CommitCheck
 from src.mpyl.steps.models import RunProperties
 from src.mpyl.steps.run import RunResult
 from src.mpyl.steps.steps import Steps, StepResult
@@ -26,8 +26,8 @@ class StepParam:
 @dataclass
 class Reporter:
     results: RunResult
-    check: GithubCheck
-    report: GithubReport
+    check: CommitCheck
+    report: PullRequestComment
 
 
 def execute_step(proj: Project, stage: Stage, dry_run: bool = False) -> StepResult:
@@ -174,10 +174,10 @@ def init_reporting() -> Reporter:
     config = parse_config("config.yml")
     run_properties = RunProperties.from_configuration(parse_config("run_properties.yml"), config)
 
-    check = GithubCheck(config)
+    check = CommitCheck(config)
     run_result = RunResult(run_properties)
     check.send_report(run_result)
-    return Reporter(results=run_result, check=check, report=GithubReport(config))
+    return Reporter(results=run_result, check=check, report=PullRequestComment(config))
 
 
 @job(logger_defs={"mpyl_logger": mpyl_logger})

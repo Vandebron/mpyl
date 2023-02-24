@@ -15,7 +15,7 @@ jobs:
         uses: actions/cache@v2
         id: cache-dependencies
         with:
-          path: /github/home/.local/share/virtualenvs/*
+          path: /targets/home/.local/share/virtualenvs/*
           key: ${{ runner.os }}-pip-${{ hashFiles('**/Pipfile.lock') }}
           restore-keys: |
             ${{ runner.os }}-pipenv
@@ -56,22 +56,22 @@ jobs:
       - name: Find PR number
         uses: jwalton/gh-find-current-pr@v1
         id: findPr
-        if: github.ref_name != 'main'
+        if: targets.ref_name != 'main'
         with:
           state: open
 
       - name: Build
         uses: VaultVulp/action-pipenv@v2.0.1
-        if: github.ref_name != 'main'
+        if: targets.ref_name != 'main'
         env:
           PIPENV_DONT_LOAD_ENV: true
-          MPYL_VERSION: "${{ steps.findPr.outputs.pr }}-${{ github.run_number }}"
+          MPYL_VERSION: "${{ steps.findPr.outputs.pr }}-${{ targets.run_number }}"
         with:
           command: run build
 
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@release/v1
-        if: github.ref_name != 'main'
+        if: targets.ref_name != 'main'
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
           repository_url: https://test.pypi.org/legacy/
