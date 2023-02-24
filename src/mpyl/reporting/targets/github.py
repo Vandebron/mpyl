@@ -14,7 +14,6 @@ from github.Repository import Repository as GithubRepository
 
 from .. import Reporter
 from ..markdown import run_result_to_markdown
-from ..simple import to_string
 from ...steps.models import RunProperties
 from ...steps.run import RunResult
 from ...utilities.repo import Repository, RepoConfig
@@ -81,9 +80,9 @@ class GithubReport(Reporter):
         comments_for_user = [c for c in comments if c.user.id == authenticated_user.id]
         if comments_for_user:
             comment_to_update: IssueComment = comments_for_user.pop()
-            comment_to_update.edit(to_string(results))
+            comment_to_update.edit(run_result_to_markdown(results))
         else:
-            pull_request.create_issue_comment(to_string(results))
+            pull_request.create_issue_comment(run_result_to_markdown(results))
 
 
 class GithubCheck(Reporter):
@@ -117,4 +116,5 @@ class GithubCheck(Reporter):
             run = repo.get_check_run(self._check_run_id)
             run.edit(completed_at=datetime.now(), conclusion='success', output=self._to_output(results))
         else:
-            self._check_run_id = repo.create_check_run(name='MPyL run', head_sha=self.git_repository.get_sha).id
+            self._check_run_id = repo.create_check_run(name='MPyL run', head_sha=self.git_repository.get_sha,
+                                                       status='in_progress').id
