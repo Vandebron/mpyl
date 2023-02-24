@@ -9,6 +9,8 @@
 This tool is loosely based on the principles described in https://www.jenkins.io/blog/2019/01/08/mpl-modular-pipeline-library/
 but completely independent of Jenkins
 
+:books: Online documentation can be found [here](https://vandebron.github.io/mpyl/)
+
 # What is MPyL?
 
 ## Proposed implementation
@@ -113,13 +115,6 @@ a `tester` stage.
 The `tester` stage needs run the unittests and write the results (in [Junit XML format](https://llg.cubic.org/docs/junit/))
 to a folder named `$WORKDIR/target/test-reports/`.
 See this [example](test/docker/deployment/Dockerfile-mpl).
-
-# How do I?
-
-## ..create a custom step
-## ..report the outcome of a pipeline run
-To report the outcome to Github, see `mpyl.reporting.targets.github`
-
 
 
 

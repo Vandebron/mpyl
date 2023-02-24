@@ -3,8 +3,7 @@
 from logging import Logger
 from typing import Dict, Optional
 
-from docker import APIClient  # type: ignore
-from docker.errors import APIError
+from python_on_whales import docker
 
 from ...project import Project
 from ...steps.models import Input
@@ -39,9 +38,7 @@ def __stream_docker_logging(logger: Logger, generator, task_name: str = 'docker 
     while True:
         try:
             output = next(generator)
-            if 'stream' in output:
-                output_str = output['stream'].strip('\n')
-                logger.info(output_str)
+            logger.info(str(output).strip('\n'))
         except StopIteration:
             logger.info(f'{task_name} complete.')
             break
@@ -57,27 +54,19 @@ def docker_file_path(project: Project, docker_config: DockerConfig):
     return f'{project.deployment_path}/{docker_config.docker_file_name}'
 
 
-def build(logger: Logger, docker_client: APIClient, root_path: str, file_path: str, image_tag: str,
-          target: str) -> bool:
+def build(logger: Logger, root_path: str, file_path: str, image_tag: str, target: str) -> bool:
     """
     :param logger: the logger
-    :param docker_client: the docker API client
     :param root_path: the root path to which `docker_file_path` is relative
     :param file_path: path to the docker file to be built
     :param image_tag: the tag of the image
     :param target: the 'target' within the multi-stage docker image
     :return: True if success, False if failure
     """
-    logger.debug(docker_client.version())
-    summary = f"target '{target}' for {docker_file_path}"
     logger.info(f"Building docker image with {file_path}")
 
-    try:
-        logs = docker_client.build(path=root_path, dockerfile=file_path, tag=image_tag, rm=True, target=target,
-                                   decode=True)
-        __stream_docker_logging(logger, logs)
-        logger.debug(logs)
-    except APIError:
-        logger.warning(f'Error while building {summary}', exc_info=True)
-        return False
+    logs = docker.buildx.build(context_path=root_path, file=file_path, tags=[image_tag], target=target,
+                               stream_logs=True)
+    __stream_docker_logging(logger, logs)
+    logger.debug(logs)
     return True
