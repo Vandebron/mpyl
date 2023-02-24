@@ -13,10 +13,11 @@ from github.PullRequest import PullRequest
 from github.Repository import Repository as GithubRepository
 
 from .. import Reporter
+from ..markdown import run_result_to_markdown
 from ..simple import to_string
-from ...utilities.repo import Repository, RepoConfig
 from ...steps.models import RunProperties
 from ...steps.run import RunResult
+from ...utilities.repo import Repository, RepoConfig
 
 
 @dataclass
@@ -98,7 +99,7 @@ class GithubCheck(Reporter):
     def _to_output(results: RunResult) -> dict:
         build_id = results.run_properties.build_id
         summary = ':white_check_mark: Build successful' if results.is_success else ':x: Build failed'
-        return {'title': f'Build {build_id}', 'summary': summary, 'text': to_string(results)}
+        return {'title': f'Build {build_id}', 'summary': summary, 'text': run_result_to_markdown(results)}
 
     def send_report(self, results: RunResult) -> None:
         config = self._config.app_config
