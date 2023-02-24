@@ -4,13 +4,13 @@ import pytest
 from kubernetes.client import V1Probe, V1ObjectMeta
 from pyaml_env import parse_config
 
-from src.mpyl.project import load_project, Probe
-from src.mpyl.steps.build import DockerConfig
-from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml
-from src.mpyl.steps.deploy.k8s.service import ServiceChart
-from src.mpyl.steps.models import RunProperties, VersioningProperties, Input
+from src.mpyl.utilities.docker import DockerConfig
+from src.mpyl.project import load_project
 from src.mpyl.steps import Target
+from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml
 from src.mpyl.steps.deploy.k8s.resources.customresources import V1AlphaIngressRoute
+from src.mpyl.steps.deploy.k8s.service import ServiceChart
+from src.mpyl.steps.models import Input
 from tests import root_test_path
 from tests.test_resources import test_data
 from tests.test_resources.test_data import assert_roundtrip
@@ -65,8 +65,8 @@ def test_probe_deserialization_failure_should_throw():
 
 def test_load_config():
     yaml_values = parse_config(resource_path / "config.yml")
-    config = DockerConfig(yaml_values)
-    assert config.host_name == 'bigdataregistry.azurecr.io'
+    docker_config = DockerConfig(yaml_values)
+    assert docker_config.host_name == 'bigdataregistry.azurecr.io'
 
 
 def test_should_validate_against_crd_schema():

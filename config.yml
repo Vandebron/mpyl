@@ -12,6 +12,7 @@ docker:
   build:
     rootFolder: '.'
     buildTarget: 'builder'
+    testTarget: 'tester'
     dockerFileName: 'Dockerfile-mpl'
 kubernetes:
   rancher:

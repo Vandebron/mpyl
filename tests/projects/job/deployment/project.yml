@@ -3,6 +3,7 @@ description: "A job"
 maintainer: ["Marketplace"]
 stages:
   build: "Echo Build"
+  test: "Echo Test"
   deploy: "Echo Deploy"
 dependencies:
   test:

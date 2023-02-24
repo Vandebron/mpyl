@@ -54,7 +54,7 @@ class TestSteps:
     def test_should_return_error_if_stage_not_defined(self):
         config_values = parse_config(self.resource_path / "config.yml")
         config_values['kubernetes']['rancher']['cluster']['test']['invalid'] = 'somevalue'
-        properties = RunProperties("id", Target.PULL_REQUEST, VersioningProperties("", "", None), config_values)
+        properties = RunProperties("id", Target.PULL_REQUEST, VersioningProperties("", 1, None), config_values)
         with pytest.raises(ValidationError) as excinfo:
             Steps(logger=Logger.manager.getLogger('logger'), properties=properties)
         assert "('invalid' was unexpected)" in excinfo.value.message
