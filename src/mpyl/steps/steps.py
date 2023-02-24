@@ -12,6 +12,8 @@ from ruamel.yaml import YAML  # type: ignore
 
 from .build.dockerbuild import BuildDocker
 from .build.echo import BuildEcho
+from .test.echo import TestEcho
+from .test.dockertest import TestDocker
 from .deploy.echo import DeployEcho
 from .deploy.kubernetes import DeployKubernetes
 from .models import Output, Input, RunProperties, ArtifactType, Artifact
@@ -45,7 +47,14 @@ class Steps:
             validate(properties.config, schema)
 
         self._logger = logger
-        self._step_executors = {BuildEcho(logger), DeployEcho(logger), BuildDocker(logger), DeployKubernetes(logger)}
+        self._step_executors = {
+            BuildEcho(logger),
+            TestEcho(logger),
+            DeployEcho(logger),
+            BuildDocker(logger),
+            TestDocker(logger),
+            DeployKubernetes(logger)
+        }
         self._properties = properties
         for step in self._step_executors:
             self._logger.debug(f"Registered executor '{step.meta.name}'")
@@ -100,8 +109,8 @@ class Steps:
             except Exception as exc:
                 self._logger.warning(
                     f"Execution of '{executor.meta.name}' for project '{project.name}' in stage {stage} "
-                    f"failed with exception: ", exc_info=True)
-                raise Exception from exc
+                    f"failed with exception: {str(exc)}", exc_info=True)
+                raise ValueError from exc
         else:
             self._logger.warning(f"No executor found for {stage_name} in stage {stage}")
 

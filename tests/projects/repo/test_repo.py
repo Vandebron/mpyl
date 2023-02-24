@@ -3,7 +3,7 @@ import os
 import pytest
 from pyaml_env import parse_config
 
-from src.mpyl.repo import RepoConfig
+from src.mpyl.utilities.repo import RepoConfig
 from tests import root_test_path
 from tests.test_resources import test_data
 
