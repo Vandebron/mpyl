@@ -28,6 +28,10 @@ class RunResult:
     def extend(self, results: list[StepResult]):
         self._results.extend(results)
 
+    @property
+    def is_success(self):
+        return all(r.output.success for r in self._results)
+
     @staticmethod
     def sort_chronologically(results: list[StepResult]) -> list[StepResult]:
         return sorted(results, key=operator.attrgetter('timestamp'))

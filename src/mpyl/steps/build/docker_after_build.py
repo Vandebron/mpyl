@@ -8,7 +8,7 @@ from docker import DockerClient
 
 from ..models import Meta, Input, Output, Artifact, ArtifactType
 from ..step import Step
-from src.mpyl.utilities.docker import DockerConfig
+from ...utilities.docker import DockerConfig
 from ...project import Stage
 
 

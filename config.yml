@@ -4,6 +4,9 @@ cvs:
   github:
     repository: 'Vandebron/mpyl'
     token: !ENV ${GITHUB_TOKEN}
+    app:
+      privateKeyPath: 'mpyl-pipeline.2023-02-20.private-key.pem'
+      appId: '295700'
 docker:
   registry:
     hostName: 'bigdataregistry.azurecr.io'

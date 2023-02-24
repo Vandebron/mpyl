@@ -12,6 +12,8 @@ docker = "==6.0.1"
 kubernetes = "==25.3.0"
 junitparser = "==2.8.0"
 pygithub = "==1.57"
+pyjwt = "==2.5.0" # forced downgrade due to https://stackoverflow.com/questions/33198428/jwt-module-object-has-no-attribute-encode
+cryptography = "==39.0.1"
 
 [dev-packages]
 toml = "==0.10.2"
@@ -34,11 +36,11 @@ python_version = "3.9"
 [scripts]
 build = "python setup.py install bdist bdist_wheel"
 lint = "pylint --rcfile .pylintrc src/"
-test = "pytest"
+test = "pytest -W ignore::pytest.PytestCollectionWarning"
 test-ci = "pytest --junitxml=build/test-result/test.xml"
 doc = "python -m pdoc -d restructuredtext -o docs/ src/mpyl"
 doc-preview = "python -m pdoc -d restructuredtext src/mpyl"
-check-types ="mypy src/mpyl/"
-validate = "bash -c 'mypy src/mpyl/ && pytest && pylint src/'"
+check-types = "mypy --explicit-package-bases src/mpyl/ "
+validate = "bash -c 'mypy --explicit-package-bases src/mpyl/ && pytest -W ignore::pytest.PytestCollectionWarning && pylint src/'"
 install-types ="mypy --install-types --non-interactive src/mpyl/  "
 run = "python mpyl-example-runner.py"
