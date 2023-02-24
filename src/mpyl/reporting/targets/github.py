@@ -68,7 +68,7 @@ class GithubConfig:
     app_config: Optional[GithubAppConfig] = None
 
     def __init__(self, config: Dict):
-        github = config['cvs']['targets']
+        github = config['cvs']['github']
         self.repository = github['repository']
         parts = self.repository.split('/')
         self.owner = parts[0]
@@ -134,7 +134,7 @@ class CommitCheck(Reporter):
     def send_report(self, results: RunResult) -> None:
         config = self._config.app_config
         if not config:
-            raise ValueError("targets.app config needs to be defined")
+            raise ValueError("github.app config needs to be defined")
 
         private_key = Path(config.private_app_key_path).read_text(encoding='utf-8')
         integration = GithubIntegration(integration_id=config.app_key, private_key=private_key)
