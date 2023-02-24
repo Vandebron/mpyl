@@ -1,5 +1,34 @@
 """
-Report `mpyl.steps.run.RunResult` to Github
+# Github reporter
+
+## PR comment
+Pipeline results can be reported in the form of a user comment on the pull request, using the `PullRequestComment`
+ reporter.
+You are recommended to use a bot account as the authenticated user.
+
+### Installation instructions
+ 1. Go to your bot user's personal Github profile settings
+ 2. Under *Developer Settings* -> *Personal access tokens* -> *Fine grained tokens*, click **Generate new token**
+ 3. Enable `Read` / `Write` access for *Pull requests*
+ 4. Make sure that this token is present as `GITHUB_TOKEN` env var in your pipeline's runner.
+
+## Checks
+
+The `CommitCheck` reporter reports your build pipeline's result in the form of a
+[check](https://docs.github.com/en/rest/checks).
+![Pull request check](documentation_images/pr-check.png)
+
+Checks can be referred to from branch protection rules, in order to prevent faulty code from being merged.
+
+### Installation instructions
+
+ 1. Install the [https://github.com/apps/mpyl-pipeline](https://github.com/apps/mpyl-pipeline)
+ Github app to your repository.
+ 2. Go to your repository's *Setting* -> *Integrations* -> *Github Apps* and click **Configure** for*_MPyL Pipeline*
+ 3. In the app's settings page, scroll down and click **Generate a private key**
+ 4. The private key needs to be made available at the location configured in `csv.targets.app.privateKeyPath` at
+  runtime.
+
 """
 
 from dataclasses import dataclass
@@ -12,7 +41,7 @@ from github.IssueComment import IssueComment
 from github.PullRequest import PullRequest
 from github.Repository import Repository as GithubRepository
 
-from .. import Reporter
+from . import Reporter
 from ..markdown import run_result_to_markdown
 from ..simple import to_string
 from ...steps.models import RunProperties
@@ -39,7 +68,7 @@ class GithubConfig:
     app_config: Optional[GithubAppConfig] = None
 
     def __init__(self, config: Dict):
-        github = config['cvs']['github']
+        github = config['cvs']['targets']
         self.repository = github['repository']
         parts = self.repository.split('/')
         self.owner = parts[0]
@@ -51,7 +80,7 @@ class GithubConfig:
             self.app_config = GithubAppConfig(app_config)
 
 
-class GithubReport(Reporter):
+class PullRequestComment(Reporter):
     _config: GithubConfig
 
     def __init__(self, config: Dict):
@@ -86,7 +115,7 @@ class GithubReport(Reporter):
             pull_request.create_issue_comment(run_result_to_markdown(results))
 
 
-class GithubCheck(Reporter):
+class CommitCheck(Reporter):
     _config: GithubConfig
     _check_run_id: Optional[int]
 
@@ -105,7 +134,7 @@ class GithubCheck(Reporter):
     def send_report(self, results: RunResult) -> None:
         config = self._config.app_config
         if not config:
-            raise ValueError("github.app config needs to be defined")
+            raise ValueError("targets.app config needs to be defined")
 
         private_key = Path(config.private_app_key_path).read_text(encoding='utf-8')
         integration = GithubIntegration(integration_id=config.app_key, private_key=private_key)
