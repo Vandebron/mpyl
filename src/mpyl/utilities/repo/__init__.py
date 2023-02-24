@@ -1,12 +1,13 @@
 """ Defines information about the repository, any changes made to it and the containing projects.
-`mpyl.repo.Repository` is a facade for the Version Control System. At this moment Git is the only supported VCS.
+`mpyl.utilities.repo.Repository` is a facade for the Version Control System.
+At this moment Git is the only supported VCS.
 """
 
 from dataclasses import dataclass
 from typing import Dict
 
 from git import Git, Repo
-from src.mpyl.project import Project
+from ...project import Project
 
 
 @dataclass(frozen=True)

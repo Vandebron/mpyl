@@ -6,8 +6,8 @@ from typing import Dict, Optional
 from docker import APIClient  # type: ignore
 from docker.errors import APIError
 
-from src.mpyl.project import Project
-from src.mpyl.steps.models import Input
+from ...project import Project
+from ...steps.models import Input
 
 
 class DockerConfig:
