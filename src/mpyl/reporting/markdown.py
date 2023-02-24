@@ -1,10 +1,14 @@
 """
 Markdown run result formatters
 """
+import itertools
+
+from junitparser import TestSuite
 
 from src.mpyl.project import Stage
-from src.mpyl.steps.models import ArtifactType, Artifact
+from src.mpyl.steps.models import ArtifactType
 from src.mpyl.steps.run import RunResult
+from src.mpyl.steps.steps import StepResult
 from src.mpyl.utilities.junit import TestRunSummary, to_test_suites, sum_suites
 
 
@@ -13,25 +17,36 @@ def summary_to_markdown(summary: TestRunSummary):
            f":broken_heart: {summary.errors} :see_no_evil: {summary.skipped}"
 
 
+def __to_oneliner(result: list[StepResult]):
+    project_names = list(map(lambda r: r.project.name, result))
+    return f'{project_names}'
+
+
+def __collect_test_results(step_results: list[StepResult]) -> list[TestSuite]:
+    test_artifacts = [res.output.produced_artifact for res in step_results if
+                      (res.output.produced_artifact and
+                       res.output.produced_artifact.artifact_type == ArtifactType.JUNIT_TESTS)]
+
+    suites: list[list[TestSuite]] = list(map(to_test_suites, test_artifacts))
+    flattened = list(itertools.chain(*suites))
+    return flattened
+
+
 def run_result_to_markdown(run_result: RunResult) -> str:
     result: str = ""
+
     for stage in Stage:
-        run_results = run_result.results_for_stage(stage)
-        if run_results:
-            result += f"{stage}\n"
-            for res in run_results:
-                result += f"{res.project.name} - {res.stage} - success: {res.output.success} \n"
-                artifact = res.output.produced_artifact
-                if artifact and artifact.artifact_type == ArtifactType.JUNIT_TESTS:
-                    result += to_markdown_test_report(artifact)
+        step_results: list[StepResult] = run_result.results_for_stage(stage)
+        if step_results:
+            result += f"_{stage}_\n"
+            result += __to_oneliner(step_results) + "\n"
+            test_results = __collect_test_results(step_results)
+            if test_results:
+                result += to_markdown_test_report(test_results)
 
     return result
 
 
-def to_markdown_test_report(artifact: Artifact):
-    test_result = ""
-    suites = to_test_suites(artifact)
+def to_markdown_test_report(suites: list[TestSuite]):
     total_tests = sum_suites(suites)
-    test_result += f"{summary_to_markdown(total_tests)} \n\n"
-
-    return test_result
+    return f"{summary_to_markdown(total_tests)}"
