@@ -14,6 +14,7 @@ from github.Repository import Repository as GithubRepository
 
 from .. import Reporter
 from ..markdown import run_result_to_markdown
+from ..simple import to_string
 from ...steps.models import RunProperties
 from ...steps.run import RunResult
 from ...utilities.repo import Repository, RepoConfig
@@ -98,7 +99,8 @@ class GithubCheck(Reporter):
     def _to_output(results: RunResult) -> dict:
         build_id = results.run_properties.build_id
         summary = ':white_check_mark: Build successful' if results.is_success else ':x: Build failed'
-        return {'title': f'Build {build_id}', 'summary': summary, 'text': run_result_to_markdown(results)}
+        return {'title': f'Build {build_id}', 'summary': summary + '\n' + run_result_to_markdown(results),
+                'text': to_string(results)}
 
     def send_report(self, results: RunResult) -> None:
         config = self._config.app_config
@@ -116,5 +118,5 @@ class GithubCheck(Reporter):
             run = repo.get_check_run(self._check_run_id)
             run.edit(completed_at=datetime.now(), conclusion='success', output=self._to_output(results))
         else:
-            self._check_run_id = repo.create_check_run(name='MPyL run', head_sha=self.git_repository.get_sha,
+            self._check_run_id = repo.create_check_run(name='Pipeline build', head_sha=self.git_repository.get_sha,
                                                        status='in_progress').id

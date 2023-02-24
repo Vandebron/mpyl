@@ -12,7 +12,7 @@ resource_path = root_test_path / "test_resources"
 config_values = parse_config(resource_path / "config.yml")
 
 RUN_PROPERTIES = RunProperties("id", Target.PULL_REQUEST,
-                               VersioningProperties("2ad3293a7675d08bc037ef0846ef55897f38ec8f", "1234", None),
+                               VersioningProperties("2ad3293a7675d08bc037ef0846ef55897f38ec8f", 1234, None),
                                config_values)
 
 
