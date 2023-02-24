@@ -11,7 +11,7 @@ from rich.text import Text
 from src.mpyl.project import load_project, Project, Stage
 from src.mpyl.utilities.repo import Repository, RepoConfig
 from src.mpyl.reporting.simple import to_string
-from src.mpyl.reporting.targets.github import GithubReport
+from src.mpyl.reporting.targets.github import PullRequestComment, CommitCheck
 from src.mpyl.steps.models import RunProperties
 from src.mpyl.steps.run import RunResult
 from src.mpyl.steps.steps import Steps, StepResult
@@ -21,6 +21,13 @@ from src.mpyl.steps.steps import Steps, StepResult
 class StepParam:
     stage: Stage
     project: Project
+
+
+@dataclass
+class Reporter:
+    results: RunResult
+    check: CommitCheck
+    report: PullRequestComment
 
 
 def execute_step(proj: Project, stage: Stage, dry_run: bool = False) -> StepResult:
@@ -61,26 +68,31 @@ def deploy_projects(context, projects: list[Project], outputs: list[StepResult])
     return Output(res)
 
 
-@op(description="Log run results and send to Github")
-def report_results(build_results: list[StepResult], deploy_results: list[StepResult]) -> bool:
+@op(description="Combine and reduce all results")
+def reduce_results(build_results: list[StepResult], deploy_results: list[StepResult]) -> RunResult:
     config = parse_config("config.yml")
-
     properties = RunProperties.from_configuration(parse_config("run_properties.yml"), config)
-
     run_result = RunResult(properties)
     run_result.extend(build_results)
     run_result.extend(deploy_results)
 
-    get_dagster_logger().info(to_string(run_result))
+    return RunResult(properties)
 
-    report = GithubReport(config)
-    report.send_report(run_result)
+
+@op(description="Report the final results")
+def report_results(reporter: Reporter, run_result: RunResult) -> bool:
+    get_dagster_logger().info(to_string(reporter.results))
+    reporter.results = run_result
+
+    reporter.report.send_report(reporter.results)
+    reporter.check.send_report(reporter.results)
     return True
 
 
 @op(out=DynamicOut(), description="Find artifacts that need to be built")
-def find_projects() -> list[DynamicOutput[Project]]:
+def find_projects(_ignored: Reporter) -> list[DynamicOutput[Project]]:
     yaml_values = parse_config("config.yml")
+
     repo = Repository(RepoConfig(yaml_values))
     project_paths = repo.find_projects()
     projects = map(lambda p: load_project(".", p), project_paths)
@@ -157,15 +169,29 @@ def mpyl_logger(init_context):
     return logger_
 
 
+@op(description="Initialize reporting at start of run")
+def init_reporting() -> Reporter:
+    config = parse_config("config.yml")
+    run_properties = RunProperties.from_configuration(parse_config("run_properties.yml"), config)
+
+    check = CommitCheck(config)
+    run_result = RunResult(run_properties)
+    check.send_report(run_result)
+    return Reporter(results=run_result, check=check, report=PullRequestComment(config))
+
+
 @job(logger_defs={"mpyl_logger": mpyl_logger})
 def run_build():
-    projects = find_projects()
+    reporter: Reporter = init_reporting()
+    projects = find_projects(reporter)
     build_results = projects.map(build_project).map(test_project)
     deploy_results = deploy_projects(
         projects=projects.collect(),
         outputs=build_results.collect()
     )
-    report_results(build_results=build_results.collect(), deploy_results=deploy_results)
+
+    run_result = reduce_results(build_results=build_results.collect(), deploy_results=deploy_results)
+    report_results(reporter, run_result)
 
 
 if __name__ == "__main__":
