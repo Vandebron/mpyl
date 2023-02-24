@@ -1,17 +1,19 @@
-import subprocess
 from logging import Logger
 from typing import Optional
 
+from .docker_after_build import AfterBuildDocker
 from .. import Target
 from ..step import Step
 from ...project import Stage
 from ...steps.models import Meta, ArtifactType, Input, Output, input_to_artifact
 from ...utilities.docker import docker_image_tag
 from ...utilities.sbt import SbtConfig
+from ...utilities.subprocess import custom_check_output
 
 
 class BuildSbt(Step):
     def __init__(self, logger: Logger) -> None:
+        self.logger = logger
         super().__init__(
             logger=logger,
             meta=Meta(
@@ -22,7 +24,7 @@ class BuildSbt(Step):
             ),
             produced_artifact=ArtifactType.DOCKER_IMAGE,
             required_artifact=ArtifactType.NONE,
-            after=None  # AfterBuildDocker(logger=logger)
+            after=AfterBuildDocker(logger=logger)
         )
 
     def execute(self, step_input: Input) -> Output:
@@ -39,10 +41,15 @@ class BuildSbt(Step):
                     'docker'
                 ] if command is not None
             ]
-            try:
-                subprocess.run([f'{SbtConfig.sbt_command}', "; ".join(commands)], check=True, shell=True)
-                artifact = input_to_artifact(ArtifactType.DOCKER_IMAGE, step_input, {'image': image_name})
+            output = custom_check_output(
+                self.logger,
+                command=[f'{SbtConfig.sbt_command}', "; ".join(commands)],
+                shell=True,
+                pipe_output=False
+            )
+            artifact = input_to_artifact(ArtifactType.DOCKER_IMAGE, step_input, {'image': image_name})
+            if output.success:
                 return Output(success=True, message=f"Built {step_input.project.name}", produced_artifact=artifact)
-            except subprocess.CalledProcessError:
+            else:
                 return Output(success=False, message=f"Failed to build sbt project for {step_input.project.name}",
                               produced_artifact=None)
