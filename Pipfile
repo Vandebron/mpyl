@@ -13,6 +13,7 @@ junitparser = "==2.8.0"
 pyjwt = "==2.5.0" # forced downgrade due to https://stackoverflow.com/questions/33198428/jwt-module-object-has-no-attribute-encode
 cryptography = "==39.0.1"
 python-on-whales = "==0.59.0"
+pygithub = "==1.58.0"
 
 [dev-packages]
 toml = "==0.10.2"
