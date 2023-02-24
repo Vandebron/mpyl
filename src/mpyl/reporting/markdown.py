@@ -19,7 +19,7 @@ def summary_to_markdown(summary: TestRunSummary):
 
 def __to_oneliner(result: list[StepResult]):
     project_names = list(map(lambda r: r.project.name, result))
-    return f'{project_names}'
+    return f'{", ".join(project_names)}'
 
 
 def __collect_test_results(step_results: list[StepResult]) -> list[TestSuite]:
@@ -38,8 +38,7 @@ def run_result_to_markdown(run_result: RunResult) -> str:
     for stage in Stage:
         step_results: list[StepResult] = run_result.results_for_stage(stage)
         if step_results:
-            result += f"_{stage}_\n"
-            result += __to_oneliner(step_results) + "\n"
+            result += f"**{stage}** _{__to_oneliner(step_results)}_ \n"
             test_results = __collect_test_results(step_results)
             if test_results:
                 result += to_markdown_test_report(test_results) + '\n'
