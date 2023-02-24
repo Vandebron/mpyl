@@ -42,7 +42,7 @@ def run_result_to_markdown(run_result: RunResult) -> str:
             result += __to_oneliner(step_results) + "\n"
             test_results = __collect_test_results(step_results)
             if test_results:
-                result += to_markdown_test_report(test_results)
+                result += to_markdown_test_report(test_results) + '\n'
 
     return result
 
