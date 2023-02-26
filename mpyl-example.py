@@ -69,7 +69,8 @@ if __name__ == "__main__":
     logging.basicConfig(
         level="INFO", format=FORMAT, datefmt="[%X]",
         handlers=[
-            RichHandler(markup=True, console=Console(markup=True, width=None if args.local else 160), show_path=True)]
+            RichHandler(markup=True, console=Console(markup=True, width=None if args.local else 135, no_color=False,
+                                                     color_system='256'), show_path=True)]
     )
 
     yaml_values = parse_config("config.yml")
