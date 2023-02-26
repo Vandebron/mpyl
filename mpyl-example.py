@@ -71,7 +71,7 @@ if __name__ == "__main__":
         handlers=[
             RichHandler(markup=True,
                         console=Console(markup=True, width=None if args.local else 135, no_color=False, log_path=False,
-                                        color_system='256'), show_path=True)]
+                                        color_system='256'), show_path=args.local)]
     )
 
     yaml_values = parse_config("config.yml")
