@@ -44,8 +44,9 @@ class Repository:
         return self._root_dir
 
     def pull_main_branch(self):
-        remote = Remote(self._repo, f'origin/{self._config.main_branch}')
-        return remote.pull()
+        remote = Remote(self._repo, f'origin')
+        return remote.fetch("+refs/heads/main:refs/heads/main")
+        # return remote.pull()
 
     def changes_in_branch(self) -> list[History]:
         revisions = reversed(list(self._repo.iter_commits(f"{self._config.main_branch}..HEAD")))
