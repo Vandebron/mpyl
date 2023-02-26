@@ -14,7 +14,7 @@ from src.mpyl.steps.run import RunResult
 from src.mpyl.steps.steps import Steps
 
 
-def main(repo: Repository, log: Logger):
+def main(repo: Repository, log: Logger, dry_run: bool):
     changes_in_branch: list[History] = repo.changes_in_branch()
     project_paths = repo.find_projects()
     logging.info(f" Projects: {len(project_paths)}")
@@ -28,6 +28,7 @@ def main(repo: Repository, log: Logger):
 
     config = parse_config("config.yml")
     properties = parse_config("run_properties.yml")
+    properties['build']['versioning']['revision'] = repo.get_sha
     run_properties = RunProperties.from_configuration(run_properties=properties, config=config)
     executor = Steps(logger=log, properties=run_properties)
     log.info(" Building projects")
@@ -35,11 +36,11 @@ def main(repo: Repository, log: Logger):
     run_result = RunResult(run_properties)
 
     for proj in find_invalidated_projects_for_stage(repo, Stage.BUILD, changes_in_branch):
-        run_result.append(executor.execute(Stage.BUILD, proj))
+        run_result.append(executor.execute(Stage.BUILD, proj, dry_run))
     for proj in find_invalidated_projects_for_stage(repo, Stage.TEST, changes_in_branch):
-        run_result.append(executor.execute(Stage.TEST, proj))
+        run_result.append(executor.execute(Stage.TEST, proj, dry_run))
     for proj in find_invalidated_projects_for_stage(repo, Stage.DEPLOY, changes_in_branch):
-        run_result.append(executor.execute(Stage.DEPLOY, proj))
+        run_result.append(executor.execute(Stage.DEPLOY, proj, dry_run))
 
     print(to_string(run_result))
 
@@ -48,8 +49,8 @@ if __name__ == "__main__":
     FORMAT = "%(name)s  %(message)s"
     logging.basicConfig(
         level="INFO", format=FORMAT, datefmt="[%X]",
-        handlers=[RichHandler(markup=True, console=Console(width=255), show_path=True)]
+        handlers=[RichHandler(markup=True, console=Console(), show_path=True)]
     )
 
     yaml_values = parse_config("config.yml")
-    main(Repository(RepoConfig(yaml_values)), logging.getLogger("mpl"))
+    main(Repository(RepoConfig(yaml_values)), logging.getLogger("mpl"), dry_run=True)
