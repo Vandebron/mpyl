@@ -56,7 +56,8 @@ if __name__ == "__main__":
 
     logger = logging.getLogger("mpl")
     repo = Repository(RepoConfig(yaml_values))
-    repo.pull_main_branch()
+    pull_result = repo.pull_main_branch()
+    logger.info(pull_result)
     project_paths = repo.find_projects()
     logger.info(project_paths)
 
