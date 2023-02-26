@@ -6,6 +6,7 @@ from rich.console import Console
 from rich.logging import RichHandler
 
 from src.mpyl.project import load_project, Stage
+from src.mpyl.reporting.markdown import run_result_to_markdown
 from src.mpyl.utilities.repo import Repository, RepoConfig, History
 from src.mpyl.reporting.simple import to_string
 from src.mpyl.stages.discovery import find_invalidated_projects_for_stage
@@ -42,14 +43,14 @@ def main(repo: Repository, log: Logger, dry_run: bool):
     for proj in find_invalidated_projects_for_stage(repo, Stage.DEPLOY, changes_in_branch):
         run_result.append(executor.execute(Stage.DEPLOY, proj, dry_run))
 
-    print(to_string(run_result))
+    log.info(run_result_to_markdown(run_result), extra={"markup": True})
 
 
 if __name__ == "__main__":
     FORMAT = "%(name)s  %(message)s"
     logging.basicConfig(
         level="INFO", format=FORMAT, datefmt="[%X]",
-        handlers=[RichHandler(markup=True, console=Console(), show_path=True)]
+        handlers=[RichHandler(markup=True, console=Console(markup=True), show_path=True)]
     )
 
     yaml_values = parse_config("config.yml")
