@@ -53,4 +53,11 @@ if __name__ == "__main__":
     )
 
     yaml_values = parse_config("config.yml")
-    main(Repository(RepoConfig(yaml_values)), logging.getLogger("mpl"), dry_run=True)
+
+    logger = logging.getLogger("mpl")
+    repo = Repository(RepoConfig(yaml_values))
+    repo.pull_main_branch9=()
+    project_paths = repo.find_projects()
+    logger.info(project_paths)
+
+    main(repo, logger, dry_run=True)
