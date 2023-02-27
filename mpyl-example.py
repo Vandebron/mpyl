@@ -20,7 +20,7 @@ def main(log: Logger, args: argparse.Namespace):
     log.info(f"Running with {args}")
     if not args.local:
         pull_result = repo.pull_main_branch()
-        log.info(f'Pulled `{pull_result[0].remote_ref_path}` to local')
+        log.info(f'Pulled `{pull_result[0].remote_ref_path.strip()}` to local')
 
     changes_in_branch: list[History] = repo.changes_in_branch()
     logging.debug(f'Changes: {changes_in_branch}')
@@ -32,11 +32,11 @@ def main(log: Logger, args: argparse.Namespace):
 
     all_projects = set(map(lambda p: load_project(".", p, False), project_paths))
 
-    build_projects = all_projects if build_all else find_invalidated_projects_for_stage(repo, Stage.BUILD,
+    build_projects = all_projects if build_all else find_invalidated_projects_for_stage(all_projects, Stage.BUILD,
                                                                                         changes_in_branch)
-    test_projects = all_projects if build_all else find_invalidated_projects_for_stage(repo, Stage.TEST,
+    test_projects = all_projects if build_all else find_invalidated_projects_for_stage(all_projects, Stage.TEST,
                                                                                        changes_in_branch)
-    deploy_projects = all_projects if build_all else find_invalidated_projects_for_stage(repo, Stage.DEPLOY,
+    deploy_projects = all_projects if build_all else find_invalidated_projects_for_stage(all_projects, Stage.DEPLOY,
                                                                                          changes_in_branch)
 
     log.info(f" Build stage: {', '.join(p.name for p in build_projects)}")
