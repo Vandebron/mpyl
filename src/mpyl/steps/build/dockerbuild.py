@@ -24,9 +24,9 @@ class BuildDocker(Step):
 
     def execute(self, step_input: Input) -> Output:
         docker_config = DockerConfig(step_input.run_properties.config)
-        build_target = docker_config.test_target
+        build_target = docker_config.build_target
         if not build_target:
-            raise ValueError('docker.testTarget must be specified')
+            raise ValueError('docker.buildTarget must be specified')
 
         image_tag = docker_image_tag(step_input)
         dockerfile = docker_file_path(project=step_input.project, docker_config=docker_config)
