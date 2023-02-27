@@ -15,7 +15,8 @@ from src.mpyl.steps.steps import Steps
 from src.mpyl.utilities.repo import Repository, RepoConfig, History
 
 
-def main(repo: Repository, log: Logger, args: argparse.Namespace):
+def main(log: Logger, args: argparse.Namespace):
+    repo = Repository(RepoConfig(parse_config("config.yml")))
     if not args.local:
         pull_result = repo.pull_main_branch()
         log.info(f'Pulled `{pull_result[0].remote_ref_path}` to local')
@@ -24,14 +25,16 @@ def main(repo: Repository, log: Logger, args: argparse.Namespace):
     project_paths = repo.find_projects()
     logging.info(f" Projects: {len(project_paths)}")
 
-    all = args.all
+    build_all = args.all
 
     all_projects = set(map(lambda p: load_project(".", p, False), project_paths))
 
-    build_projects = all_projects if all else find_invalidated_projects_for_stage(repo, Stage.BUILD, changes_in_branch)
-    test_projects = all_projects if all else find_invalidated_projects_for_stage(repo, Stage.TEST, changes_in_branch)
-    deploy_projects = all_projects if all else find_invalidated_projects_for_stage(repo, Stage.DEPLOY,
-                                                                                   changes_in_branch)
+    build_projects = all_projects if build_all else find_invalidated_projects_for_stage(repo, Stage.BUILD,
+                                                                                        changes_in_branch)
+    test_projects = all_projects if build_all else find_invalidated_projects_for_stage(repo, Stage.TEST,
+                                                                                       changes_in_branch)
+    deploy_projects = all_projects if build_all else find_invalidated_projects_for_stage(repo, Stage.DEPLOY,
+                                                                                         changes_in_branch)
 
     log.info(f" Build stage: {', '.join(p.name for p in build_projects)}")
     log.info(f" Test stage: {', '.join(p.name for p in test_projects)}")
@@ -71,5 +74,4 @@ if __name__ == "__main__":
                                               log_path=False, color_system='256'), show_path=parsed_args.local)]
     )
 
-    yaml_values = parse_config("config.yml")
-    main(Repository(RepoConfig(yaml_values)), logging.getLogger("mpl"), parsed_args)
+    main(logging.getLogger("mpl"), parsed_args)
