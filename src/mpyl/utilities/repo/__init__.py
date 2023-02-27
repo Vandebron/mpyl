@@ -6,7 +6,7 @@ At this moment Git is the only supported VCS.
 from dataclasses import dataclass
 from typing import Dict
 
-from git import Git, Repo
+from git import Git, Repo, Remote
 from ...project import Project
 
 
@@ -47,6 +47,11 @@ class Repository:
         return [History(count, str(rev),
                         self._repo.git.diff_tree(no_commit_id=True, name_only=True, r=str(rev)).splitlines()) for
                 count, rev in enumerate(revisions)]
+
+    def pull_main_branch(self):
+        remote = Remote(self._repo, 'origin')
+        main = self._config.main_branch
+        return remote.fetch(f"+refs/heads/{main}:refs/heads/{main}")
 
     def changes_in_commit(self) -> set[str]:
         return set(self._repo.git.diff(None, name_only=True).splitlines())
