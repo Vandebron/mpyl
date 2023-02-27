@@ -1,3 +1,4 @@
+import argparse
 import logging
 from logging import Logger
 
@@ -14,7 +15,11 @@ from src.mpyl.steps.run import RunResult
 from src.mpyl.steps.steps import Steps
 
 
-def main(repo: Repository, log: Logger):
+def main(repo: Repository, log: Logger, arguments: argparse.Namespace):
+    if not arguments.local:
+        pull_result = repo.pull_main_branch()
+        log.info(f'Pulled {pull_result[0].remote_ref_path} to local')
+
     changes_in_branch: list[History] = repo.changes_in_branch()
     project_paths = repo.find_projects()
     logging.info(f" Projects: {len(project_paths)}")
@@ -45,6 +50,10 @@ def main(repo: Repository, log: Logger):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Simple MPL pipeline')
+    parser.add_argument('--local', '-l', help='a local developer run', default=False, action='store_true')
+    args: argparse.Namespace = parser.parse_args()
+
     FORMAT = "%(name)s  %(message)s"
     logging.basicConfig(
         level="INFO", format=FORMAT, datefmt="[%X]",
@@ -52,4 +61,4 @@ if __name__ == "__main__":
     )
 
     yaml_values = parse_config("config.yml")
-    main(Repository(RepoConfig(yaml_values)), logging.getLogger("mpl"))
+    main(Repository(RepoConfig(yaml_values)), logging.getLogger("mpl"), args)
