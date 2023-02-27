@@ -23,7 +23,7 @@ pipeline {
 
                         echo "Running dagster..."
                         sh "pipenv install -d --skip-lock"
-                        sh "pipenv run run"
+                        sh "pipenv run run-ci"
                     }
                 }}
             }
