@@ -143,3 +143,4 @@ tmp*/
 
 node_modules/
 *.pem
+.dockerignore

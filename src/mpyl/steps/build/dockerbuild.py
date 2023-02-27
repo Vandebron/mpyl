@@ -8,6 +8,8 @@ from ..step import Step
 from ...project import Stage
 from ...utilities.docker import DockerConfig, build, docker_image_tag, docker_file_path
 
+DOCKER_IGNORE_DEFAULT = ['**/target/*', '**/.mpl/*']
+
 
 class BuildDocker(Step):
 
@@ -33,6 +35,10 @@ class BuildDocker(Step):
                         file_path=dockerfile, image_tag=image_tag,
                         target=build_target)
         artifact = input_to_artifact(ArtifactType.DOCKER_IMAGE, step_input, {'image': image_tag})
+
+        with open('.dockerignore', 'w+', encoding='utf-8') as ignore_file:
+            contents = '\n'.join(DOCKER_IGNORE_DEFAULT)
+            ignore_file.write(contents)
 
         if success:
             return Output(success=True, message=f"Built {step_input.project.name}", produced_artifact=artifact)
