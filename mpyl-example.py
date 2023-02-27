@@ -23,16 +23,16 @@ def main(repo: Repository, log: Logger, args: Namespace):
 
     all = args.all
 
-    all_projects = list(map(lambda p: load_project(".", p, False), project_paths))
+    all_projects = set(map(lambda p: load_project(".", p, False), project_paths))
 
     build_projects = all_projects if all else find_invalidated_projects_for_stage(repo, Stage.BUILD, changes_in_branch)
     test_projects = all_projects if all else find_invalidated_projects_for_stage(repo, Stage.TEST, changes_in_branch)
     deploy_projects = all_projects if all else find_invalidated_projects_for_stage(repo, Stage.DEPLOY,
                                                                                    changes_in_branch)
 
-    log.info(f" Build stage: {len(build_projects)}")
-    log.info(f" Test stage: {len(test_projects)}")
-    log.info(f" Deploy stage: {len(deploy_projects)}")
+    log.info(f" Build stage: {', '.join(p.name for p in build_projects)}")
+    log.info(f" Test stage: {', '.join(p.name for p in test_projects)}")
+    log.info(f" Deploy stage: {', '.join(p.name for p in deploy_projects)}")
     log.info(
         f" Post deploy stage: {len(find_invalidated_projects_for_stage(repo, Stage.POST_DEPLOY, changes_in_branch))}")
 

@@ -316,7 +316,9 @@ def load_project(root_dir, project_path: str, strict: bool = True) -> Project:
                 schema = yaml.load(template.decode('utf-8'))
                 validate(yaml_values, schema)
 
-            return Project.from_yaml(yaml_values, project_path)
+            project = Project.from_yaml(yaml_values, project_path)
+            logging.debug(f'Loaded project {project.path}')
+            return project
         except jsonschema.exceptions.ValidationError as exc:
             logging.warning(f'{project_path} does not comply with schema: {exc.message}')
             raise
