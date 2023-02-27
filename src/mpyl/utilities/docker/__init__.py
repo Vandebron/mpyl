@@ -63,7 +63,7 @@ def build(logger: Logger, root_path: str, file_path: str, image_tag: str, target
     :param target: the 'target' within the multi-stage docker image
     :return: True if success, False if failure
     """
-    logger.info(f"Building docker image with {file_path}")
+    logger.info(f"Building docker image with {file_path} and target {target}")
 
     logs = docker.buildx.build(context_path=root_path, file=file_path, tags=[image_tag], target=target,
                                stream_logs=True)
