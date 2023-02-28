@@ -39,13 +39,12 @@ def are_invalidated(project: Project, stage: Stage, change_history: list[History
     return len(set(filter(lambda c: is_invalidated(project, stage, c), relevant_changes))) > 0
 
 
-def find_invalidated_projects_for_stage(repository: Repository, stage: Stage,
+def find_invalidated_projects_for_stage(all_projects: set[Project], stage: Stage,
                                         change_history: list[History]) -> set[Project]:
-    projects = repository.find_projects()
-    all_projects: set[Project] = set(load_projects(repository.root_dir(), projects))
     return set(filter(lambda p: are_invalidated(p, stage, change_history), all_projects))
 
 
 def find_projects_for_stage(repository: Repository, stage: Stage) -> set[Project]:
     change_set = repository.changes_in_branch()
-    return find_invalidated_projects_for_stage(repository, stage, change_set)
+    all_projects = set(load_projects(repository.root_dir(), repository.find_projects()))
+    return find_invalidated_projects_for_stage(all_projects, stage, change_set)
