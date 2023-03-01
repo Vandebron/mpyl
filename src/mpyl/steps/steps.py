@@ -10,14 +10,15 @@ from typing import Optional
 
 from ruamel.yaml import YAML  # type: ignore
 
+from . import Step
 from .build.dockerbuild import BuildDocker
 from .build.echo import BuildEcho
-from .test.echo import TestEcho
-from .test.dockertest import TestDocker
+from .build.sbt import BuildSbt
 from .deploy.echo import DeployEcho
 from .deploy.kubernetes import DeployKubernetes
 from .models import Output, Input, RunProperties, ArtifactType, Artifact
-from .step import Step
+from .test.dockertest import TestDocker
+from .test.echo import TestEcho
 from ..project import Project
 from ..project import Stage
 from ..validation import validate
@@ -49,10 +50,11 @@ class Steps:
         self._logger = logger
         self._step_executors = {
             BuildEcho(logger),
-            TestEcho(logger),
-            DeployEcho(logger),
+            BuildSbt(logger),
             BuildDocker(logger),
+            TestEcho(logger),
             TestDocker(logger),
+            DeployEcho(logger),
             DeployKubernetes(logger)
         }
         self._properties = properties

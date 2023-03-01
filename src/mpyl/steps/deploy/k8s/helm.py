@@ -3,29 +3,12 @@ step.
 """
 
 import shutil
-import subprocess
 from logging import Logger
 from pathlib import Path
 
 from .service import ServiceChart
 from ...models import RunProperties, Input, Output
-
-
-def custom_check_output(logger: Logger, command: str) -> Output:
-    logger.info(f"Executing: `{command}`")
-    message = ''
-    try:
-        output = subprocess.run(command.split(" "), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-        if output.returncode == 0:
-            message = output.stdout.decode()
-            logger.info(message)
-            return Output(success=True, message='Helm deploy successful')
-
-    except subprocess.CalledProcessError as exc:
-        message = f"'{command}': return code: {exc.returncode}"
-        logger.warning(exc.stderr.decode(), exc_info=True)
-
-    return Output(success=False, message=f'Helm deploy failed for {message}')
+from ....utilities.subprocess import custom_check_output
 
 
 def to_chart(chart_name: str, run_properties: RunProperties):
