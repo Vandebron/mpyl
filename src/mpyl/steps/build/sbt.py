@@ -33,7 +33,7 @@ class BuildSbt(Step):
         with open(SbtConfig.java_opts_file_name, 'w+', encoding='utf-8') as jvm_opts:
             jvm_opts.write(SbtConfig.sbt_opts.replace(' ', '\n'))
             image_name = docker_image_tag(step_input)
-            command = self.__construct_sbt_command(step_input, image_name)
+            command = self._construct_sbt_command(step_input, image_name)
 
             output = custom_check_output(self.logger, command=command)
             artifact = input_to_artifact(ArtifactType.DOCKER_IMAGE, step_input, {'image': image_name})
@@ -44,7 +44,7 @@ class BuildSbt(Step):
                           produced_artifact=None)
 
     @staticmethod
-    def __construct_sbt_command(step_input: Input, image_name: str):
+    def _construct_sbt_command(step_input: Input, image_name: str):
         check_fmt: Optional[str] = \
             'scalafmtCheckAll' if step_input.run_properties.target == Target.PULL_REQUEST else None
         commands: list[str] = [
