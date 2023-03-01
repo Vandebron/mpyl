@@ -21,7 +21,6 @@ pipeline {
                         def privateKey = sh(script: "cat $PIPELINEKEY", returnStdout: true)
                         writeFile(file: 'mpyl-pipeline.2023-02-20.private-key.pem', text: privateKey)
 
-                        echo "Running dagster..."
                         sh "pipenv install -d --skip-lock"
                         sh "pipenv run run-ci"
                     }
