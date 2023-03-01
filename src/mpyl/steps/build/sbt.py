@@ -36,14 +36,15 @@ class BuildSbt(Step):
             commands: list[str] = [
                 command for command in [
                     f'project {step_input.project.name}',
-                    f'set docker / imageNames := Seq(ImageName("${image_name}"))',
+                    f'set docker / imageNames := Seq(ImageName("{image_name}"))',
                     check_fmt,
                     'docker'
                 ] if command is not None
             ]
+            joint = "; ".join(commands)
             output = custom_check_output(
                 self.logger,
-                command=[f'{SbtConfig.sbt_command}', "; ".join(commands)],
+                command=[f'{SbtConfig.sbt_command}', "'" + joint + "'"],
                 shell=True,
                 pipe_output=False
             )
