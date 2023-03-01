@@ -1,4 +1,6 @@
-""" Step that builds a docker image from a project in a multi-project sbt. Assuming `sbt-docker` plugin is present"""
+""" Step that builds a docker image from a project in a multi-project sbt. Assumes that the
+[sbt-docker](https://github.com/marcuslonnberg/sbt-docker) plugin is present.
+"""
 
 from logging import Logger
 from typing import Optional
