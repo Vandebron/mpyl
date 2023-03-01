@@ -3,6 +3,9 @@ pipeline {
     options {
         ansiColor('xterm')
     }
+    parameters {
+        string(name: 'BULD_PARAMS', defaultValue: '', description: 'Build parameters passed along with the run. Example: --help or --all')
+    }
     stages {
         stage('Initialise') {
             steps {
@@ -22,7 +25,7 @@ pipeline {
                         writeFile(file: 'mpyl-pipeline.2023-02-20.private-key.pem', text: privateKey)
 
                         sh "pipenv install -d --skip-lock"
-                        sh "pipenv run run-ci"
+                        sh "pipenv run run-ci ${params.BULD_PARAMS}"
                     }
                 }}
             }
