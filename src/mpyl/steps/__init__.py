@@ -12,10 +12,11 @@ in a docker image.
 A step can either be *built in* to `MPyL` or defined within the context of a particular pipeline. The latter is easier
 to do and is the best option if the likelihood of the logic being of use in other contexts is small.
 
- > **Note:** it is recommended to have your steps produce any of the standard artifact types. This allows you to benefit from
- > the tooling embedded in MPyL to process them. For example: if a step in the `Test` stage produces an artifact of type
- > `ArtifactType.JUNIT_TESTS`, the test results can be reported in a unified way bay any of the `mpyl.reporting` reporters
- > regardless of whether the tests were run by a `jest` or a `scala` test.
+.. note:: The benefits of standard artifact types
+   It is recommended to have your steps produce any of the standard artifact types. This allows you to benefit from
+   the tooling embedded in MPyL to process them. For example: if a step in the `Test` stage produces an artifact of type
+   `ArtifactType.JUNIT_TESTS`, the test results can be reported in a unified way bay any of the `mpyl.reporting`
+   reporters regardless of whether the tests were run by a `jest` or a `scala` test.
 
 
 ### Implementation
@@ -101,8 +102,8 @@ class Step(metaclass=IPluginRegistry):
     produced_artifact: ArtifactType
     """The type of the artifact produced by this step """
     required_artifact: ArtifactType
-    """Is set to something other than `ArtifactType.NONE` if this step depends on an artifact produced by the execution 
-    of an earlier step. For example: a step in the `Deploy` stage, may need to deploy a docker image that was produced 
+    """Is set to something other than `ArtifactType.NONE` if this step depends on an artifact produced by the execution
+    of an earlier step. For example: a step in the `Deploy` stage, may need to deploy a docker image that was produced
     in the `Build` stage."""
     before: Optional[Step]
     after: Optional[Step]
