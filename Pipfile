@@ -35,6 +35,7 @@ python_version = "3.9"
 
 [scripts]
 build = "python setup.py install bdist bdist_wheel"
+create-graph = "pyreverse -o png src/mpyl"
 lint = "pylint --rcfile .pylintrc src/"
 test = "pytest -W ignore::pytest.PytestCollectionWarning"
 test-ci = "pytest --junitxml=build/test-result/test.xml"

@@ -2,9 +2,9 @@
 
 from logging import Logger
 
-from ..step import Step
+from .. import Step, Meta
 
-from ..models import Meta, Input, Output, ArtifactType
+from ..models import Input, Output, ArtifactType
 from ...project import Stage
 
 

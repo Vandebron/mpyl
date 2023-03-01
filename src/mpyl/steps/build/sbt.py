@@ -4,10 +4,9 @@ from logging import Logger
 from typing import Optional
 
 from .docker_after_build import AfterBuildDocker
-from .. import Target
-from ..step import Step
-from ...project import Stage
-from ...steps.models import Meta, ArtifactType, Input, Output, input_to_artifact
+from .. import Step, Meta
+from ...project import Stage, Target
+from ...steps.models import ArtifactType, Input, Output, input_to_artifact
 from ...utilities.docker import docker_image_tag
 from ...utilities.sbt import SbtConfig
 from ...utilities.subprocess import custom_check_output

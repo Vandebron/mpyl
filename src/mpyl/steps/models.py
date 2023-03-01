@@ -7,8 +7,7 @@ from typing import Optional, Dict
 
 from ruamel.yaml import YAML, yaml_object  # type: ignore
 
-from ..project import Project, Stage
-from ..steps import Target
+from ..project import Project, Stage, Target
 
 yaml = YAML()
 
@@ -114,16 +113,6 @@ class Output:
                 return yaml.load(file)
         return None
 
-
-@dataclass(frozen=True)
-class Meta:
-    name: str
-    description: str
-    version: str
-    stage: Stage
-
-    def __str__(self) -> str:
-        return f'{self.name}: {self.version}'
 
 
 def input_to_artifact(artifact_type: ArtifactType, step_input: Input, spec: dict):

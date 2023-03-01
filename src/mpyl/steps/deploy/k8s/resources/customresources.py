@@ -3,8 +3,7 @@ Custom Resource Definitions, implementing `mpyl.steps.deploy.k8s.resources.crd.C
 """
 from kubernetes.client import V1ObjectMeta
 
-from .....steps import Target
-from .....project import Host
+from .....project import Host, Target
 from .crd import CustomResourceDefinition
 
 
