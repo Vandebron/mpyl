@@ -13,7 +13,7 @@ def custom_check_output(logger: Logger, command: list[str], pipe_output=True, sh
         process = subprocess.Popen(command, stdout=subprocess.PIPE, text=True)
         for line in iter(process.stdout.readline, ""):
             if line:
-                logger.info(line.strip())
+                print(line.strip())
             if process.poll() is not None:
                 break
         exit_code = process.wait()
