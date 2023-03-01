@@ -2,11 +2,15 @@
 
 import subprocess
 from logging import Logger
+from typing import Union
 
 from ...steps.models import Output
 
 
-def custom_check_output(logger: Logger, command: list[str]) -> Output:
+def custom_check_output(logger: Logger, command: Union[str, list[str]]) -> Output:
+    if isinstance(command, str):
+        command = command.split(' ')
+
     command_argument = ' '.join(command)
     logger.info(f"Executing: '{command_argument}'")
     try:
