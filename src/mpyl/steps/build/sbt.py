@@ -41,10 +41,12 @@ class BuildSbt(Step):
                     'docker'
                 ] if command is not None
             ]
-            joint = "; ".join(commands)
+
+            command = SbtConfig.sbt_command.split(' ')
+            command.append("; ".join(commands))
             output = custom_check_output(
                 self.logger,
-                command=['sbt', joint],
+                command=command,
                 shell=True,
                 pipe_output=False
             )
