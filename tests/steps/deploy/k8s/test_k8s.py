@@ -4,16 +4,15 @@ import pytest
 from kubernetes.client import V1Probe, V1ObjectMeta
 from pyaml_env import parse_config
 
-from src.mpyl.utilities.docker import DockerConfig
-from src.mpyl.project import load_project
 from src.mpyl.steps import Target
 from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml
 from src.mpyl.steps.deploy.k8s.resources.customresources import V1AlphaIngressRoute
 from src.mpyl.steps.deploy.k8s.service import ServiceChart
 from src.mpyl.steps.models import Input
+from src.mpyl.utilities.docker import DockerConfig
 from tests import root_test_path
 from tests.test_resources import test_data
-from tests.test_resources.test_data import assert_roundtrip
+from tests.test_resources.test_data import assert_roundtrip, get_project
 
 resource_path = root_test_path / "test_resources"
 template_path = root_test_path / "steps" / "deploy" / "k8s" / "chart" / "templates"
@@ -29,8 +28,7 @@ def _roundtrip(file_name: Path, chart: str, as_yaml: dict[str, str], overwrite: 
 
 
 def _build_chart():
-    project = load_project("", str(resource_path / "test_project.yml"), False)
-    return ServiceChart(step_input=Input(project, test_data.RUN_PROPERTIES, None),
+    return ServiceChart(step_input=Input(get_project(), test_data.RUN_PROPERTIES, None),
                         image_name='registry/image:123').to_chart()
 
 
