@@ -46,7 +46,7 @@ jobs:
           command: run test-ci
 
       - name: Publish Test Report
-        uses: EnricoMi/publish-unit-test-result-action@v1
+        uses: EnricoMi/publish-unit-test-result-action@v2
         if: always() # always run even if the previous step fails
         with:
           job_summary: true
