@@ -6,8 +6,7 @@ from jsonschema import ValidationError
 from pyaml_env import parse_config
 from ruamel.yaml import YAML  # type: ignore
 
-from src.mpyl.project import Project, Stages, Stage
-from src.mpyl.steps import Target
+from src.mpyl.project import Project, Stages, Stage, Target
 from src.mpyl.steps.models import Output, Artifact, ArtifactType, RunProperties, VersioningProperties
 from src.mpyl.steps.steps import Steps
 from tests import root_test_path

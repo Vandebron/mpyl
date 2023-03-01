@@ -6,8 +6,8 @@ from kubernetes import config, client
 
 from .k8s import helm
 from .k8s.rancher import rancher_namespace_metadata, cluster_config
-from ..models import Meta, Input, Output, ArtifactType
-from ..step import Step
+from .. import Step, Meta
+from ..models import Input, Output, ArtifactType
 from ...project import Stage
 
 

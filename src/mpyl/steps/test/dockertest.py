@@ -5,8 +5,8 @@ from pathlib import Path
 
 from python_on_whales import docker
 
-from ..models import Meta, Input, Output, ArtifactType, input_to_artifact, Artifact
-from ..step import Step
+from .. import Step, Meta
+from ..models import Input, Output, ArtifactType, input_to_artifact, Artifact
 from ...project import Stage, Project
 from ...utilities.docker import DockerConfig, build, docker_image_tag, docker_file_path
 from ...utilities.junit import to_test_suites, sum_suites, TEST_OUTPUT_PATH_KEY
