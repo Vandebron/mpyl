@@ -38,8 +38,24 @@ setup(
     description="Modular Pipeline Library",
     long_description=readme,
     long_description_content_type="text/markdown",
+    url="https://vandebron.github.io/mpyl",
+    project_urls={
+        'Documentation': 'https://vandebron.github.io/mpyl',
+        'Source': 'https://github.com/Vandebron/mpyl',
+        'Tracker': 'https://github.com/Vandebron/mpyl/issues',
+    },
+    classifiers=[
+        "Topic :: Software Development :: Build Tools",
+        "Topic :: Utilities",
+        "Development Status :: 4 - Beta",
+        "Environment :: Console",
+        "Intended Audience :: Developers",
+        "Operating System :: OS Independent",
+        'Programming Language :: Python :: 3 :: Only',
+    ],
     install_requires=get_install_requirements(),
     package_dir={'': 'src'},
     include_package_data=True,
-    packages=setuptools.find_packages(where="./src")
+    packages=setuptools.find_packages(where="./src"),
+    python_requires='>= 3.9'
 )
