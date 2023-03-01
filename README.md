@@ -3,70 +3,23 @@
 ![build-and-test-module](https://github.com/Vandebron/pympl/actions/workflows/build-package.yml/badge.svg?branch=main)
 [![publish-documentation](https://github.com/Vandebron/mpyl/actions/workflows/docs.yml/badge.svg?branch=main)](https://vandebron.github.io/mpyl)
 [![version](https://img.shields.io/github/v/tag/Vandebron/pympl.svg?color=blue&include_prereleases=&sort=semver)](https://pypi.org/project/mpyl/)
+[![package downloads](https://img.shields.io/pypi/dw/mpyl.svg)](https://pypi.org/project/mpyl)
 [![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
 [![linting: pylint](https://img.shields.io/badge/linting-pylint-yellowgreen)](https://github.com/PyCQA/pylint)
 
-This tool is loosely based on the principles described in https://www.jenkins.io/blog/2019/01/08/mpl-modular-pipeline-library/
-but completely independent of Jenkins
-
-:books: Online documentation can be found [here](https://vandebron.github.io/mpyl/)
 
 # What is MPyL?
 
-## Proposed implementation
+MPyL stands for Modular Pipeline Library (in Python).
 
-- Usability
-  - Self documented where possible: `project.yml` schema, CLI --help for each argument, concise and guiding logging
-  - Built for us and by us. This should not be a one-person project.
-  - Easily extensible via custom build steps
-  - Strikes the right balance between concise, intuitive <-> explicit, transparent
-- Clearly defined data model and interfaces for:
-  - project metadata (name, env vars, dependencies)
-  - run specific information (initiator, branch/tag, build target)
-  - input and output types of individual steps
-- Replaceablity
-  - Independent from Jenkins (or any other build executor)
-  - Runs locally, with no OS dependencies in as far as possible.
-  - Where OS dependencies e.g. kubectl, helm are unavoidable, they are included in a docker image that can be used inside the executor
-- Non functional
-  - Implemented in our default scripting language: Python
-  - Type safe (mypy)
-  - Extensively unit tested
-
-## Analysis of Jenkins based MPL
-
-### The good
-
-- keeps knowledge local
-- truly modular: reusable but independent steps
-- simple build but effective build orchestration
-- completely tailored to our needs: no bloat or overabstraction
-- unit tested logic
-- `project.yml` metadata
-  - gives useful information about the project it relates to
-  - is self documented via a schema
-  - gives insight in project depenendencies
-- supports PR centered development via staging environments
-- basic workflow is simple: build, test, deploy, acceptance test
-
-### The bad
-
-- implicitly depends on presence of Jenkins plugins
-- many caveats due to running in Jenkins sandbox
-- hard to grasp for new developers
-
-### The ugly
-
-- awkward Jenkins module project structure
-- very obscure error messages and exceptions
-- deploy steps cannot be executed or simulated locally
-- logic needs to be written in groovy
-- code that depends on IO is virtually untestable
+This library is loosely based on the principles described in https://www.jenkins.io/blog/2019/01/08/mpl-modular-pipeline-library/
+but completely independent of Jenkins or any other CI/CD platform.
+It's mission statement is described [here](./README-motivation.md).
 
 # Quickstart
 
-### Documentation
-Detailed, searchable, documentation can be found at [https://vandebron.github.io/mpyl](https://vandebron.github.io/mpyl)
+###  📚 Documentation
+ Detailed, searchable, documentation can be found at [https://vandebron.github.io/mpyl](https://vandebron.github.io/mpyl)
 
 ### Run instructions
 

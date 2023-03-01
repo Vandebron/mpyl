@@ -1,0 +1,4 @@
+  name: 'sbtService'
+  stages:
+    build: Sbt Build
+  description: 'Demonstrates how an SBT project can be built'

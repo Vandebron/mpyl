@@ -8,7 +8,7 @@ from rich.logging import RichHandler
 
 from src.mpyl.project import load_project, Stage
 from src.mpyl.reporting.markdown import run_result_to_markdown
-from src.mpyl.stages.discovery import find_invalidated_projects_for_stage
+from src.mpyl.stages.discovery import find_invalidated_projects_per_stage
 from src.mpyl.steps.models import RunProperties
 from src.mpyl.steps.run import RunResult
 from src.mpyl.steps.steps import Steps
@@ -32,16 +32,12 @@ def main(log: Logger, args: argparse.Namespace):
 
     all_projects = set(map(lambda p: load_project(".", p, False), project_paths))
 
-    build_projects = all_projects if build_all else find_invalidated_projects_for_stage(all_projects, Stage.BUILD,
-                                                                                        changes_in_branch)
-    test_projects = all_projects if build_all else find_invalidated_projects_for_stage(all_projects, Stage.TEST,
-                                                                                       changes_in_branch)
-    deploy_projects = all_projects if build_all else find_invalidated_projects_for_stage(all_projects, Stage.DEPLOY,
-                                                                                         changes_in_branch)
+    projects_per_stage = {Stage.BUILD: all_projects, Stage.TEST: all_projects,
+                          Stage.DEPLOY: all_projects} if build_all else \
+        find_invalidated_projects_per_stage(all_projects, changes_in_branch)
 
-    log.info(f" Build stage: {', '.join(p.name for p in build_projects)}")
-    log.info(f" Test stage: {', '.join(p.name for p in test_projects)}")
-    log.info(f" Deploy stage: {', '.join(p.name for p in deploy_projects)}")
+    for stage, projects in projects_per_stage.items():
+        log.info(f" Stage {stage}: {', '.join(p.name for p in projects)}")
 
     config = parse_config("config.yml")
     properties = parse_config("run_properties.yml")
@@ -50,16 +46,13 @@ def main(log: Logger, args: argparse.Namespace):
 
     run_properties = RunProperties.from_configuration(run_properties=properties, config=config)
     executor = Steps(logger=log, properties=run_properties)
-    log.info(" Building projects")
+    log.info("Building projects")
 
     run_result = RunResult(run_properties)
 
-    for proj in build_projects:
-        run_result.append(executor.execute(Stage.BUILD, proj, args.dryrun))
-    for proj in test_projects:
-        run_result.append(executor.execute(Stage.TEST, proj, args.dryrun))
-    for proj in deploy_projects:
-        run_result.append(executor.execute(Stage.DEPLOY, proj, args.dryrun))
+    for stage, projects in projects_per_stage.items():
+        for proj in projects:
+            run_result.append(executor.execute(stage, proj, args.dryrun))
 
     logging.info(run_result_to_markdown(run_result))
 
