@@ -1,3 +1,5 @@
+""" Step that builds a docker image from a project in a multi-project sbt. Assuming `sbt-docker` plugin is present"""
+
 from logging import Logger
 from typing import Optional
 
@@ -28,31 +30,31 @@ class BuildSbt(Step):
         )
 
     def execute(self, step_input: Input) -> Output:
-        with open(SbtConfig.java_opts_file_name, 'w+') as jvm_opts:
+        with open(SbtConfig.java_opts_file_name, 'w+', encoding='utf-8') as jvm_opts:
             jvm_opts.write(SbtConfig.sbt_opts.replace(' ', '\n'))
-            check_fmt: Optional[str] = \
-                'scalafmtCheckAll' if step_input.run_properties.target == Target.PULL_REQUEST else None
-            image_name: str = docker_image_tag(step_input)
-            commands: list[str] = [
-                command for command in [
-                    f'project {step_input.project.name}',
-                    f'set docker / imageNames := Seq(ImageName("{image_name}"))',
-                    check_fmt,
-                    'docker'
-                ] if command is not None
-            ]
+            image_name = docker_image_tag(step_input)
+            command = self.__construct_sbt_command(step_input, image_name)
 
-            command = SbtConfig.sbt_command.split(' ')
-            command.append("; ".join(commands))
-            output = custom_check_output(
-                self.logger,
-                command=command,
-                shell=True,
-                pipe_output=False
-            )
+            output = custom_check_output(self.logger, command=command)
             artifact = input_to_artifact(ArtifactType.DOCKER_IMAGE, step_input, {'image': image_name})
             if output.success:
                 return Output(success=True, message=f"Built {step_input.project.name}", produced_artifact=artifact)
-            else:
-                return Output(success=False, message=f"Failed to build sbt project for {step_input.project.name}",
-                              produced_artifact=None)
+
+            return Output(success=False, message=f"Failed to build sbt project for {step_input.project.name}",
+                          produced_artifact=None)
+
+    @staticmethod
+    def __construct_sbt_command(step_input: Input, image_name: str):
+        check_fmt: Optional[str] = \
+            'scalafmtCheckAll' if step_input.run_properties.target == Target.PULL_REQUEST else None
+        commands: list[str] = [
+            command for command in [
+                f'project {step_input.project.name}',
+                f'set docker / imageNames := Seq(ImageName("{image_name}"))',
+                check_fmt,
+                'docker'
+            ] if command is not None
+        ]
+        command = SbtConfig.sbt_command.split(' ')
+        command.append("; ".join(commands))
+        return command
