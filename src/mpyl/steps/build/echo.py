@@ -15,7 +15,7 @@ class BuildEcho(Step):
             description='Dummy build step to test the framework',
             version='0.0.1',
             stage=Stage.BUILD
-        ), ArtifactType.NONE, ArtifactType.NONE)
+        ), produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.NONE)
 
     def execute(self, step_input: Input) -> Output:
         self._logger.info(f"Building project {step_input.project.name}")

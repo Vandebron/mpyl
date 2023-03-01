@@ -34,7 +34,7 @@ class BuildDocker(Step):
         success = build(logger=self._logger, root_path=docker_config.root_folder,
                         file_path=dockerfile, image_tag=image_tag,
                         target=build_target)
-        artifact = input_to_artifact(ArtifactType.DOCKER_IMAGE, step_input, {'image': image_tag})
+        artifact = input_to_artifact(ArtifactType.DOCKER_IMAGE, step_input, spec={'image': image_tag})
 
         with open('.dockerignore', 'w+', encoding='utf-8') as ignore_file:
             contents = '\n'.join(DOCKER_IGNORE_DEFAULT)

@@ -67,7 +67,9 @@ class ArtifactType(Enum):
                                             f'{node._name_}-{node._value_}')  # pylint: disable=protected-access
 
     DOCKER_IMAGE = 1
+    """A docker image"""
     JUNIT_TESTS = 2
+    """A test suite in junit compatible `.xml` format"""
     NONE = 3
 
 
@@ -85,6 +87,7 @@ class Artifact:
 class Input:
     project: Project
     run_properties: RunProperties
+    """Run specific properties"""
     required_artifact: Optional[Artifact] = None
     dry_run: bool = False
 
@@ -112,7 +115,6 @@ class Output:
             with open(path, encoding='utf-8') as file:
                 return yaml.load(file)
         return None
-
 
 
 def input_to_artifact(artifact_type: ArtifactType, step_input: Input, spec: dict):
