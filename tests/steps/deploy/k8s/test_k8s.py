@@ -4,7 +4,7 @@ import pytest
 from kubernetes.client import V1Probe, V1ObjectMeta
 from pyaml_env import parse_config
 
-from src.mpyl.steps import Target
+from src.mpyl.project import Target
 from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml
 from src.mpyl.steps.deploy.k8s.resources.customresources import V1AlphaIngressRoute
 from src.mpyl.steps.deploy.k8s.service import ServiceChart

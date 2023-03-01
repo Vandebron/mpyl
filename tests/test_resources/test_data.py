@@ -2,10 +2,9 @@ from pathlib import Path
 
 from pyaml_env import parse_config
 
-from src.mpyl.project import load_project
-from src.mpyl.utilities.repo import Repository, RepoConfig
-from src.mpyl.steps import Target
+from src.mpyl.project import load_project, Target
 from src.mpyl.steps.models import RunProperties, VersioningProperties
+from src.mpyl.utilities.repo import Repository, RepoConfig
 from tests import root_test_path
 
 resource_path = root_test_path / "test_resources"

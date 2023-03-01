@@ -3,8 +3,8 @@
 from logging import Logger
 
 from .docker_after_build import AfterBuildDocker
-from ..models import Meta, Input, Output, ArtifactType, input_to_artifact
-from ..step import Step
+from .. import Step, Meta
+from ..models import Input, Output, ArtifactType, input_to_artifact
 from ...project import Stage
 from ...utilities.docker import DockerConfig, build, docker_image_tag, docker_file_path
 

@@ -6,8 +6,8 @@ from logging import Logger
 
 from python_on_whales import docker
 
-from ..models import Meta, Input, Output, Artifact, ArtifactType
-from ..step import Step
+from .. import Step, Meta
+from ..models import Input, Output, Artifact, ArtifactType
 from ...project import Stage
 from ...utilities.docker import DockerConfig
 
