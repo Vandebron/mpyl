@@ -51,7 +51,7 @@ def install(logger: Logger, step_input: Input, name_space: str, kube_context: st
 
     if step_input.dry_run:
         cmd = f"helm upgrade -i {chart_name} -n namespace --kube-context {kube_context} {chart_path} --debug --dry-run"
-        return custom_check_output(logger, cmd.split(" "))
+        return custom_check_output(logger, cmd)
 
     cmd = f"helm upgrade -i {chart_name} -n {name_space} --kube-context {kube_context} {chart_path}"
-    return custom_check_output(logger, cmd.split(" "))
+    return custom_check_output(logger, cmd)
