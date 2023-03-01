@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from ....steps import Target
+from ....project import Target
 
 
 @dataclass(frozen=True)

@@ -5,8 +5,8 @@ from pathlib import Path
 
 from python_on_whales import docker
 
-from ..models import Meta, Input, Output, ArtifactType, input_to_artifact, Artifact
-from ..step import Step
+from .. import Step, Meta
+from ..models import Input, Output, ArtifactType, input_to_artifact, Artifact
 from ...project import Stage, Project
 from ...utilities.docker import DockerConfig, build, docker_image_tag, docker_file_path
 from ...utilities.junit import to_test_suites, sum_suites, TEST_OUTPUT_PATH_KEY
@@ -22,7 +22,7 @@ class TestDocker(Step):
         ), produced_artifact=ArtifactType.JUNIT_TESTS, required_artifact=ArtifactType.NONE)
 
     def execute(self, step_input: Input) -> Output:
-        docker_config = DockerConfig(step_input.run_properties.config)
+        docker_config = DockerConfig.from_dict(step_input.run_properties.config)
         test_target = docker_config.test_target
         if not test_target:
             raise ValueError('docker.testTarget must be specified')

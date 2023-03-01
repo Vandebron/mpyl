@@ -1,7 +1,7 @@
 """Docker related utility methods"""
-
+from dataclasses import dataclass
 from logging import Logger
-from typing import Dict, Optional
+from typing import Dict, Optional, TypeVar
 
 from python_on_whales import docker
 
@@ -9,6 +9,7 @@ from ...project import Project
 from ...steps.models import Input
 
 
+@dataclass(frozen=True)
 class DockerConfig:
     host_name: str
     user_name: str
@@ -18,18 +19,20 @@ class DockerConfig:
     test_target: Optional[str]
     docker_file_name: str
 
-    def __init__(self, config: Dict):
+    @staticmethod
+    def from_dict(config: Dict):
         try:
-            registry: dict = config['docker']['registry']
-            self.host_name = registry['hostName']
-            self.user_name = registry['userName']
-            self.password = registry['password']
-            build_config: dict = config['docker']['build']
-            self.root_folder = build_config['rootFolder']
-            self.build_target = build_config.get('buildTarget', None)
-            self.test_target = build_config.get('testTarget', None)
-            self.docker_file_name = build_config['dockerFileName']
-
+            registry: Dict = config['docker']['registry']
+            build_config: Dict = config['docker']['build']
+            return DockerConfig(
+                host_name=registry['hostName'],
+                user_name=registry['userName'],
+                password=registry['password'],
+                root_folder=build_config['rootFolder'],
+                build_target=build_config.get('buildTarget', None),
+                test_target=build_config.get('testTarget', None),
+                docker_file_name=build_config['dockerFileName']
+            )
         except KeyError as exc:
             raise KeyError(f'Docker config could not be loaded from {config}') from exc
 

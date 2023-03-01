@@ -3,8 +3,8 @@
 from logging import Logger
 
 from .docker_after_build import AfterBuildDocker
-from ..models import Meta, Input, Output, ArtifactType, input_to_artifact
-from ..step import Step
+from .. import Step, Meta
+from ..models import Input, Output, ArtifactType, input_to_artifact
 from ...project import Stage
 from ...utilities.docker import DockerConfig, build, docker_image_tag, docker_file_path
 
@@ -23,7 +23,7 @@ class BuildDocker(Step):
                          after=AfterBuildDocker(logger=logger))
 
     def execute(self, step_input: Input) -> Output:
-        docker_config = DockerConfig(step_input.run_properties.config)
+        docker_config = DockerConfig.from_dict(step_input.run_properties.config)
         build_target = docker_config.build_target
         if not build_target:
             raise ValueError('docker.buildTarget must be specified')
@@ -34,7 +34,7 @@ class BuildDocker(Step):
         success = build(logger=self._logger, root_path=docker_config.root_folder,
                         file_path=dockerfile, image_tag=image_tag,
                         target=build_target)
-        artifact = input_to_artifact(ArtifactType.DOCKER_IMAGE, step_input, {'image': image_tag})
+        artifact = input_to_artifact(ArtifactType.DOCKER_IMAGE, step_input, spec={'image': image_tag})
 
         with open('.dockerignore', 'w+', encoding='utf-8') as ignore_file:
             contents = '\n'.join(DOCKER_IGNORE_DEFAULT)
