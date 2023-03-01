@@ -44,7 +44,7 @@ class BuildSbt(Step):
             joint = "; ".join(commands)
             output = custom_check_output(
                 self.logger,
-                command=[f'{SbtConfig.sbt_command}', "'" + joint + "'"],
+                command=['sbt', joint],
                 shell=True,
                 pipe_output=False
             )
