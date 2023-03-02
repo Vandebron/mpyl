@@ -54,7 +54,7 @@ class TestSbt(Step):
     def _construct_sbt_command_compile(step_input: Input) -> list[str]:
         return [
             f'project {step_input.project.name}',
-            # 'coverageOn', # TODO: fix plugin definition?
+            'coverageOn',
             'test:compile'
         ]
 
@@ -63,7 +63,7 @@ class TestSbt(Step):
         return [
             f'project {step_input.project.name}',
             'test',
-            # 'coverageOff'
+            'coverageOff'
         ]
 
     @staticmethod
