@@ -6,6 +6,8 @@ from pyaml_env import parse_config
 from rich.console import Console
 from rich.logging import RichHandler
 
+from src.mpyl.stages.discovery import for_stage
+
 
 def main(log: Logger, args: argparse.Namespace):
     if args.local:
@@ -41,8 +43,9 @@ def main(log: Logger, args: argparse.Namespace):
 
     all_projects = set(map(lambda p: load_project(".", p, False), project_paths))
 
-    projects_per_stage = {Stage.BUILD: all_projects, Stage.TEST: all_projects,
-                          Stage.DEPLOY: all_projects} if build_all else \
+    projects_per_stage = {Stage.BUILD: for_stage(all_projects, Stage.BUILD),
+                          Stage.TEST: for_stage(all_projects, Stage.TEST),
+                          Stage.DEPLOY: for_stage(all_projects, Stage.DEPLOY)} if build_all else \
         find_invalidated_projects_per_stage(all_projects, changes_in_branch)
 
     for stage, projects in projects_per_stage.items():
@@ -52,6 +55,7 @@ def main(log: Logger, args: argparse.Namespace):
     properties = parse_config("run_properties.yml")
     if args.local:
         properties['build']['versioning']['revision'] = repo.get_sha
+        properties['build']['versioning']['pr_number'] = '123'
 
     run_properties = RunProperties.from_configuration(run_properties=properties, config=config)
     executor = Steps(logger=log, properties=run_properties)

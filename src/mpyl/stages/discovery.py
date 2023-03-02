@@ -54,7 +54,5 @@ def find_invalidated_projects_per_stage(all_projects: set[Project], change_histo
     return projects_for_stage
 
 
-def find_projects_for_stage(repository: Repository, stage: Stage) -> set[Project]:
-    change_set = repository.changes_in_branch()
-    all_projects = set(load_projects(repository.root_dir(), repository.find_projects()))
-    return find_invalidated_projects_for_stage(all_projects, stage, change_set)
+def for_stage(projects: set[Project], stage: Stage) -> set[Project]:
+    return set(filter(lambda p: p.stages.for_stage(stage), projects))
