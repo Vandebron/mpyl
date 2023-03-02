@@ -3,10 +3,10 @@ from logging import Logger
 from typing import Callable
 
 from .. import Input, Output, Step
-from ...project import Stage
+from ..models import Artifact, input_to_artifact
+from ...project import Stage, Project
 from ...steps import Meta, ArtifactType
-from ...utilities.docker import docker_image_tag
-from ...utilities.junit import to_test_suites, sum_suites, extract_test_results
+from ...utilities.junit import TEST_OUTPUT_PATH_KEY, to_test_suites, sum_suites
 from ...utilities.sbt import SbtConfig
 from ...utilities.subprocess import custom_check_output
 
@@ -35,12 +35,10 @@ class TestSbt(Step):
 
             custom_check_output(self.logger, command_compile)
             output = custom_check_output(self.logger, command_test)
-
             project = step_input.project
 
             if output.success:
-                tag = docker_image_tag(step_input) + '-test'
-                artifact = extract_test_results(project, tag, step_input)
+                artifact = self._extract_test_report(project, step_input)
                 suite = to_test_suites(artifact)
                 summary = sum_suites(suite)
 
@@ -56,14 +54,16 @@ class TestSbt(Step):
     def _construct_sbt_command_compile(step_input: Input) -> list[str]:
         return [
             f'project {step_input.project.name}',
-            'coverageOn',
+            # 'coverageOn', # TODO: fix plugin definition?
             'test:compile'
         ]
 
     @staticmethod
     def _construct_sbt_command_test(step_input: Input):
         return [
-            f'-Dspecs2.color=true "project ${step_input.project.name};test;coverageOff"'
+            f'project {step_input.project.name}',
+            'test',
+            # 'coverageOff'
         ]
 
     @staticmethod
@@ -71,3 +71,8 @@ class TestSbt(Step):
         command = SbtConfig.sbt_command.split(' ')
         command.append("; ".join(commands_fn(step_input)))
         return command
+
+    @staticmethod
+    def _extract_test_report(project: Project, step_input: Input) -> Artifact:
+        return input_to_artifact(artifact_type=ArtifactType.JUNIT_TESTS, step_input=step_input,
+                                 spec={TEST_OUTPUT_PATH_KEY: f'{project.test_report_path}'})
