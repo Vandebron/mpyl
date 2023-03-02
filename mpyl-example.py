@@ -6,16 +6,25 @@ from pyaml_env import parse_config
 from rich.console import Console
 from rich.logging import RichHandler
 
-from src.mpyl.project import load_project, Stage
-from src.mpyl.reporting.markdown import run_result_to_markdown
-from src.mpyl.stages.discovery import find_invalidated_projects_per_stage
-from src.mpyl.steps.models import RunProperties
-from src.mpyl.steps.run import RunResult
-from src.mpyl.steps.steps import Steps
-from src.mpyl.utilities.repo import Repository, RepoConfig, History
-
 
 def main(log: Logger, args: argparse.Namespace):
+    if args.local:
+        from src.mpyl.project import load_project, Stage
+        from src.mpyl.reporting.markdown import run_result_to_markdown
+        from src.mpyl.stages.discovery import find_invalidated_projects_per_stage
+        from src.mpyl.steps.models import RunProperties
+        from src.mpyl.steps.run import RunResult
+        from src.mpyl.steps.steps import Steps
+        from src.mpyl.utilities.repo import Repository, RepoConfig, History
+    else:
+        from mpyl.project import load_project, Stage
+        from mpyl.reporting.markdown import run_result_to_markdown
+        from mpyl.stages.discovery import find_invalidated_projects_per_stage
+        from mpyl.steps.models import RunProperties
+        from mpyl.steps.run import RunResult
+        from mpyl.steps.steps import Steps
+        from mpyl.utilities.repo import Repository, RepoConfig, History
+
     repo = Repository(RepoConfig(parse_config("config.yml")))
     log.info(f"Running with {args}")
     if not args.local:
