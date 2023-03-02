@@ -1,4 +1,45 @@
-  name: 'sbtService'
-  stages:
-    build: Sbt Build
-  description: 'Demonstrates how an SBT project can be built'
+name: 'sbtService'
+stages:
+  build: Sbt Build
+  test: Sbt Test
+  deploy: Kubernetes Deploy
+description: 'Demonstrates how an SBT project can be built and tested'
+deployment:
+  properties:
+    env:
+      - key: SOME_ENV
+        test: "Test"
+        acceptance: "Acceptance"
+        production: "Production"
+  kubernetes:
+    livenessProbe:
+      path:
+        all: /health
+      successThreshold: 0
+      failureThreshold: 99
+    portMappings:
+      8081: 8081
+    metrics:
+      enabled: false
+    resources:
+      instances:
+        all: 1
+      limit:
+        cpus:
+          all: 0.5
+        mem:
+          all: 1024
+  traefik:
+    hosts:
+      - host:
+          pr: "Host(`payments-{PR-NUMBER}.test.vdbinfra.nl`)"
+          test: "Host(`payments.test.vdbinfra.nl`)"
+          acceptance: "Host(`payments.acceptance1.vdbinfra.nl`)"
+          production: "Host(`payments.vandebron.nl`)"
+        tls:
+          all: "le-custom-prod-wildcard-cert"
+        insecure: true
+      - host:
+          all: "Host(`some.other.host.com`)"
+        servicePort: 4091
+        priority: 1000
