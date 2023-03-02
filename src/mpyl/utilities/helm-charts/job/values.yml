@@ -1,0 +1,63 @@
+# Default values for job.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+replicaCount: 1
+
+metadata:
+  name: ""
+  labels: {}
+
+image: ""
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+command: []
+args: []
+cron:
+  schedule: ""
+  successfulJobHistory: 3
+  failedJobHistory: 1
+  concurrencyPolicy: "Allow"
+
+# list of environment variables
+env: []
+sealedSecrets:
+sealedSecretsName: ""
+
+ttlSecondsAfterFinished: 3600 # 60s*60m
+
+#activeDeadlineSeconds: 86400 # 60s*60m*24h
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+spark:
+  mainClass: ""
+  mainApplicationFile: ""
+
+role: {}
+#   resources: []
+#   verbs: []
+
+resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    cpu: 0.1
+    memory: 100Mi
+  #     ephemeral-storage:
+  requests:
+    cpu: 0.1
+    memory: 100Mi
+#     ephemeral-storage:
+
+backoffLimit: 0  # number of retries after a job fails

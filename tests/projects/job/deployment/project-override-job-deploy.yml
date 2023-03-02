@@ -1,0 +1,14 @@
+name: JobDeploy
+stages:
+  deploy: "Kubernetes Job Deploy"
+deployment:
+  namespace: 'folder'
+  properties:
+    sealedSecret:
+      - key: SOME_SECRET_ENV
+        test: "Test"
+        acceptance: "Acceptance"
+        production: "Production"
+  kubernetes:
+    cron:
+      schedule: "0 22 * * *"
