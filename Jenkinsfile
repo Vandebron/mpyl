@@ -4,7 +4,7 @@ pipeline {
         ansiColor('xterm')
     }
     parameters {
-        string(name: 'BUILD_PARAMS', defaultValue: '', description: 'Build parameters passed along with the run. Example: --help or --all')
+        string(name: 'BUILD_PARAMS', defaultValue: '--all', description: 'Build parameters passed along with the run. Example: --help or --all')
     }
     stages {
         stage('Initialise') {
