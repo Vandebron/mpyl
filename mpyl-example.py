@@ -59,9 +59,18 @@ def main(log: Logger, args: argparse.Namespace):
 
     run_result = RunResult(run_properties)
 
+    check = None
+
+    if args.local:
+        from mpyl.reporting.targets.github import CommitCheck
+        check = CommitCheck(config)
+
     for stage, projects in projects_per_stage.items():
         for proj in projects:
             run_result.append(executor.execute(stage, proj, args.dryrun))
+
+    if check:
+        check.send_report(run_result)
 
     logging.info(run_result_to_markdown(run_result))
 
