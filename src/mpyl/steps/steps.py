@@ -19,6 +19,7 @@ from .deploy.kubernetes import DeployKubernetes
 from .models import Output, Input, RunProperties, ArtifactType, Artifact
 from .test.dockertest import TestDocker
 from .test.echo import TestEcho
+from .test.sbt import TestSbt
 from ..project import Project
 from ..project import Stage
 from ..validation import validate
@@ -48,15 +49,24 @@ class Steps:
             validate(properties.config, schema)
 
         self._logger = logger
-        self._step_executors = {
+
+        build_executors: set[Step] = {
             BuildEcho(logger),
             BuildSbt(logger),
-            BuildDocker(logger),
+            BuildDocker(logger)
+        }
+        test_executors: set[Step] = {
             TestEcho(logger),
-            TestDocker(logger),
+            TestSbt(logger),
+            TestDocker(logger)
+        }
+        deploy_executors: set[Step] = {
             DeployEcho(logger),
             DeployKubernetes(logger)
         }
+
+        self._step_executors: set[Step] = set.union(build_executors, test_executors, deploy_executors)
+
         self._properties = properties
         for step in self._step_executors:
             self._logger.debug(f"Registered executor '{step.meta.name}'")
