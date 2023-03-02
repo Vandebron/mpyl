@@ -3,10 +3,9 @@ discovered projects have been invalidated due to changes in the source code sinc
 output artifact."""
 
 from ..project import Project
-from ..projects.find import load_projects
-from ..utilities.repo import History, Repository
 from ..project import Stage
 from ..steps.models import Output
+from ..utilities.repo import History
 
 
 def is_invalidated(project: Project, stage: Stage, path: str) -> bool:
