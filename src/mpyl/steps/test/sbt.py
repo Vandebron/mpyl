@@ -1,3 +1,4 @@
+"""A step to compile and run tests for an Sbt project"""
 from logging import Logger
 from typing import Callable
 
@@ -28,11 +29,15 @@ class TestSbt(Step):
     def execute(self, step_input: Input) -> Output:
         with open(SbtConfig.java_opts_file_name, 'w+', encoding='utf-8') as jvm_opts:
             jvm_opts.write(SbtConfig.sbt_opts.replace(' ', '\n'))
+
             command_compile = self._construct_sbt_command(step_input, self._construct_sbt_command_compile)
             command_test = self._construct_sbt_command(step_input, self._construct_sbt_command_test)
+
             custom_check_output(self.logger, command_compile)
             output = custom_check_output(self.logger, command_test)
+
             project = step_input.project
+
             if output.success:
                 tag = docker_image_tag(step_input) + '-test'
                 artifact = extract_test_results(project, tag, step_input)
@@ -42,6 +47,7 @@ class TestSbt(Step):
                 return Output(success=summary.is_success,
                               message=f"Tests results produced for {project.name} ({summary})",
                               produced_artifact=artifact)
+
             return Output(success=False,
                           message=f"Tests failed to run for {project.name}. No test results have been recorded.",
                           produced_artifact=None)
