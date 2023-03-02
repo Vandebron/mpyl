@@ -1,4 +1,4 @@
-name: 'sbtService'
+name: 'sbtservice'
 stages:
   build: Sbt Build
   test: Sbt Test

@@ -4,6 +4,6 @@ scalaVersion in ThisBuild := "2.12.3"
 
 lazy val mpyl = project
   .in(file("."))
-  .aggregate(sbtService)
+  .aggregate(sbtservice)
 
-lazy val sbtService = (project in file("tests/projects/sbt-service")).settings(name := "sbtService")
+lazy val sbtservice = (project in file("tests/projects/sbt-service")).settings(name := "sbtservice")
