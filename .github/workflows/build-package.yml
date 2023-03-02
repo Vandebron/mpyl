@@ -65,7 +65,7 @@ jobs:
         if: github.ref_name != 'main'
         env:
           PIPENV_DONT_LOAD_ENV: true
-          MPYL_VERSION: "${{ steps.findPr.outputs.pr }}-${{ github.run_number }}"
+          MPYL_VERSION: "${{ steps.findPr.outputs.pr }}.${{ github.run_number }}"
         with:
           command: run build
 
