@@ -23,7 +23,7 @@ pipeline {
                     withCredentials([file(credentialsId: '4bee8d6f-6180-4b28-89e3-8cbfc2b9e8b8', variable: 'PIPELINEKEY')]) {
                         def privateKey = sh(script: "cat $PIPELINEKEY", returnStdout: true)
                         writeFile(file: 'mpyl-pipeline.2023-02-20.private-key.pem', text: privateKey)
-
+                        sh "pipenv install --index https://test.pypi.org/simple/ mpyl"
                         sh "pipenv install -d --skip-lock"
                         sh "pipenv run run-ci ${params.BUILD_PARAMS}"
                     }
