@@ -42,8 +42,8 @@ from github.PullRequest import PullRequest
 from github.Repository import Repository as GithubRepository
 
 from . import Reporter
-from ..markdown import run_result_to_markdown
-from ..simple import to_string
+from ...reporting.formatting.markdown import run_result_to_markdown
+from ...reporting.formatting.text import to_string
 from ...steps.models import RunProperties
 from ...steps.run import RunResult
 from ...utilities.repo import Repository, RepoConfig
