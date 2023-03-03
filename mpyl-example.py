@@ -71,13 +71,17 @@ def main(log: Logger, args: argparse.Namespace):
         check = CommitCheck(config)
         check.send_report(run_result)
 
-    for stage, projects in projects_per_stage.items():
-        for proj in projects:
-            result = executor.execute(stage, proj, args.dryrun)
-            run_result.append(result)
-            if not result.output.success:
-                logging.warning(f'Build failed at {stage} for {proj.name}')
-                break
+    def __run_build(accumulator: RunResult):
+        for stage, projects in projects_per_stage.items():
+            for proj in projects:
+                result = executor.execute(stage, proj, args.dryrun)
+                accumulator.append(result)
+                if not result.output.success:
+                    logging.warning(f'Build failed at {stage} for {proj.name}')
+                    return accumulator
+        return accumulator
+
+    run_result = __run_build(run_result)
 
     if not args.local:
         check.send_report(run_result)

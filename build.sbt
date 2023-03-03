@@ -1,6 +1,6 @@
 name := "sbt-multi-project-example"
-organization in ThisBuild := "vandebron.nl"
-scalaVersion in ThisBuild := "2.12.3"
+ThisBuild / organization := "vandebron.nl"
+ThisBuild / scalaVersion := "2.12.3"
 
 lazy val mpyl = project
   .in(file("."))
