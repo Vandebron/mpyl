@@ -37,7 +37,7 @@ class StepResult:
 
 class Steps:
     """ Executor of individual steps within a pipeline. """
-    _step_executors: set[Step]
+    _step_executors: dict[Stage, set[Step]]
     _logger: Logger
     _properties: RunProperties
 
@@ -50,29 +50,30 @@ class Steps:
 
         self._logger = logger
 
-        build_executors: set[Step] = {
-            BuildEcho(logger),
-            BuildSbt(logger),
-            BuildDocker(logger)
+        self._step_executors: dict[Stage, set[Step]] = {
+            Stage.BUILD: {
+                BuildEcho(logger),
+                BuildSbt(logger),
+                BuildDocker(logger)
+            },
+            Stage.TEST: {
+                TestEcho(logger),
+                TestSbt(logger),
+                TestDocker(logger)
+            },
+            Stage.DEPLOY: {
+                DeployEcho(logger),
+                DeployKubernetes(logger)
+            }
         }
-        test_executors: set[Step] = {
-            TestEcho(logger),
-            TestSbt(logger),
-            TestDocker(logger)
-        }
-        deploy_executors: set[Step] = {
-            DeployEcho(logger),
-            DeployKubernetes(logger)
-        }
-
-        self._step_executors: set[Step] = set.union(build_executors, test_executors, deploy_executors)
 
         self._properties = properties
-        for step in self._step_executors:
-            self._logger.debug(f"Registered executor '{step.meta.name}'")
+        for stage, steps in self._step_executors.items():
+            self._logger.info(f"Registered executors for stage {stage.name}: "
+                              f"{[step.meta.name for step in steps]}")
 
     def _find_executor(self, stage: Stage, step_name: str) -> Optional[Step]:
-        executors = filter(lambda e: e.meta.stage == stage and step_name == e.meta.name, self._step_executors)
+        executors = filter(lambda e: e.meta.stage == stage and step_name == e.meta.name, self._step_executors[stage])
         return next(executors, None)
 
     def _execute(self, executor: Step, project: Project, properties: RunProperties,
