@@ -20,7 +20,7 @@ def main(log: Logger, args: argparse.Namespace):
         from src.mpyl.utilities.repo import Repository, RepoConfig, History
     else:
         from mpyl.project import load_project, Stage
-        from mpyl.reporting.markdown import run_result_to_markdown
+        from mpyl.reporting.formatting.markdown import run_result_to_markdown
         from mpyl.stages.discovery import find_invalidated_projects_per_stage
         from mpyl.steps.models import RunProperties
         from mpyl.steps.run import RunResult
