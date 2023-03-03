@@ -114,6 +114,22 @@ properties:
         examples:
           - example.azurecr.io
         type: string
+  sbt:
+    description: Defines SBT related configuration
+    type: object
+    additionalProperties: false
+    properties:
+      command:
+        description: Name of the sbt executable
+        examples:
+          - sbt
+        type: string
+      javaOpts:
+        description: Java options to run with
+        type: string
+      sbtOpts:
+        description: Java options to run with
+        type: string
   build:
     type: object
     additionalProperties: false

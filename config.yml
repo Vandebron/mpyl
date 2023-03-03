@@ -17,6 +17,10 @@ docker:
     buildTarget: 'builder'
     testTarget: 'tester'
     dockerFileName: 'Dockerfile-mpl'
+sbt:
+  command: 'sbt'
+  javaOpts: '-Xmx4G -Xms4G -XX:+UseG1GC -XX:+CMSClassUnloadingEnabled -Xss2M'
+  sbtOpts: 'user.timezone=GMT sbt.log.noformat=true'
 kubernetes:
   rancher:
     cluster:
