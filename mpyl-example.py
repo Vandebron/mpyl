@@ -1,5 +1,6 @@
 import argparse
 import logging
+import sys
 from logging import Logger
 
 from pyaml_env import parse_config
@@ -82,6 +83,7 @@ def main(log: Logger, args: argparse.Namespace):
         check.send_report(run_result)
 
     logging.info(run_result_to_markdown(run_result))
+    sys.exit(0 if run_result.is_success else 1)
 
 
 if __name__ == "__main__":
