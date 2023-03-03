@@ -1,12 +1,22 @@
 """SBT config"""
 from dataclasses import dataclass
+from typing import Dict
 
 
 @dataclass(frozen=True)
 class SbtConfig:
-    java_opts = '-Xmx4G -Xms4G -XX:+UseG1GC -XX:+CMSClassUnloadingEnabled -Xss2M'
-    sbt_opts: str = 'user.timezone=GMT sbt.log.noformat=true'
-    sbt_command: str = 'sbt'
+    java_opts: str
+    sbt_opts: str
+    sbt_command: str
+
+    @staticmethod
+    def from_config(config: Dict):
+        try:
+            return SbtConfig(sbt_command=config['sbt']['command'],
+                             java_opts=config['sbt']['javaOpts'],
+                             sbt_opts=config['sbt']['sbtOpts'])
+        except KeyError as exc:
+            raise KeyError(f'Sbt config could not be loaded from {config}') from exc
 
     def to_command(self):
         cmd = [self.sbt_command, '-v']
