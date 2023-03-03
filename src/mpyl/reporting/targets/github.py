@@ -42,8 +42,8 @@ from github.PullRequest import PullRequest
 from github.Repository import Repository as GithubRepository
 
 from . import Reporter
-from ..markdown import run_result_to_markdown
-from ..simple import to_string
+from ...reporting.formatting.markdown import run_result_to_markdown
+from ...reporting.formatting.text import to_string
 from ...steps.models import RunProperties
 from ...steps.run import RunResult
 from ...utilities.repo import Repository, RepoConfig
@@ -145,7 +145,8 @@ class CommitCheck(Reporter):
         repo = github.get_repo(self._config.repository)
         if self._check_run_id:
             run = repo.get_check_run(self._check_run_id)
-            run.edit(completed_at=datetime.now(), conclusion='success', output=self._to_output(results))
+            conclusion = 'success' if results.is_success else 'failure'
+            run.edit(completed_at=datetime.now(), conclusion=conclusion, output=self._to_output(results))
         else:
             self._check_run_id = repo.create_check_run(name='Pipeline build', head_sha=self.git_repository.get_sha,
                                                        status='in_progress').id

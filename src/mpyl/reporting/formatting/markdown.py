@@ -5,11 +5,11 @@ import itertools
 
 from junitparser import TestSuite
 
-from ..project import Stage
-from ..steps.models import ArtifactType
-from ..steps.run import RunResult
-from ..steps.steps import StepResult
-from ..utilities.junit import TestRunSummary, to_test_suites, sum_suites
+from ...project import Stage
+from ...steps.models import ArtifactType
+from ...steps.run import RunResult
+from ...steps.steps import StepResult
+from ...utilities.junit import TestRunSummary, to_test_suites, sum_suites
 
 
 def summary_to_markdown(summary: TestRunSummary):

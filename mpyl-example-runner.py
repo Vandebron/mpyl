@@ -10,7 +10,7 @@ from rich.text import Text
 
 from src.mpyl.project import load_project, Project, Stage
 from src.mpyl.utilities.repo import Repository, RepoConfig
-from src.mpyl.reporting.simple import to_string
+from src.mpyl.reporting.formatting.text import to_string
 from src.mpyl.reporting.targets.github import PullRequestComment, CommitCheck
 from src.mpyl.steps.models import RunProperties
 from src.mpyl.steps.run import RunResult

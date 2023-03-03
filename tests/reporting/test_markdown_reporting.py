@@ -1,4 +1,4 @@
-from src.mpyl.reporting.markdown import summary_to_markdown, run_result_to_markdown
+from src.mpyl.reporting.formatting.markdown import summary_to_markdown, run_result_to_markdown
 from src.mpyl.utilities.junit import TestRunSummary
 from tests import root_test_path
 from tests.reporting import create_test_result
