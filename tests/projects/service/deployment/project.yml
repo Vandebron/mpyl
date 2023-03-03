@@ -1,4 +1,4 @@
-name: 'service'
+name: 'nodeservice'
 description: 'This is a test container. For testing the MPL pipelines, not to be deployed anywhere.'
 stages:
   build: Docker Build
@@ -43,10 +43,10 @@ deployment:
   traefik:
     hosts:
       - host:
-          pr: "Host(`payments-{PR-NUMBER}.test.vdbinfra.nl`)"
-          test: "Host(`payments.test.vdbinfra.nl`)"
-          acceptance: "Host(`payments.acceptance1.vdbinfra.nl`)"
-          production: "Host(`payments.vandebron.nl`)"
+          pr: "Host(`nodeservice-{PR-NUMBER}.test.vdbinfra.nl`)"
+          test: "Host(`nodeservice.test.vdbinfra.nl`)"
+          acceptance: "Host(`nodeservice.acceptance1.vdbinfra.nl`)"
+          production: "Host(`nodeservice.vandebron.nl`)"
         tls:
           all: "le-custom-prod-wildcard-cert"
         insecure: true
