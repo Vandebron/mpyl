@@ -27,28 +27,25 @@ class TestSbt(Step):
         )
 
     def execute(self, step_input: Input) -> Output:
-        with open(SbtConfig.java_opts_file_name, 'w+', encoding='utf-8') as jvm_opts:
-            jvm_opts.write(SbtConfig.sbt_opts.replace(' ', '\n'))
+        command_compile = self._construct_sbt_command(step_input, self._construct_sbt_command_compile)
+        command_test = self._construct_sbt_command(step_input, self._construct_sbt_command_test)
 
-            command_compile = self._construct_sbt_command(step_input, self._construct_sbt_command_compile)
-            command_test = self._construct_sbt_command(step_input, self._construct_sbt_command_test)
+        custom_check_output(self.logger, command_compile)
+        output = custom_check_output(self.logger, command_test)
+        project = step_input.project
 
-            custom_check_output(self.logger, command_compile)
-            output = custom_check_output(self.logger, command_test)
-            project = step_input.project
+        if output.success:
+            artifact = self._extract_test_report(project, step_input)
+            suite = to_test_suites(artifact)
+            summary = sum_suites(suite)
 
-            if output.success:
-                artifact = self._extract_test_report(project, step_input)
-                suite = to_test_suites(artifact)
-                summary = sum_suites(suite)
+            return Output(success=summary.is_success,
+                          message=f"Tests results produced for {project.name} ({summary})",
+                          produced_artifact=artifact)
 
-                return Output(success=summary.is_success,
-                              message=f"Tests results produced for {project.name} ({summary})",
-                              produced_artifact=artifact)
-
-            return Output(success=False,
-                          message=f"Tests failed to run for {project.name}. No test results have been recorded.",
-                          produced_artifact=None)
+        return Output(success=False,
+                      message=f"Tests failed to run for {project.name}. No test results have been recorded.",
+                      produced_artifact=None)
 
     @staticmethod
     def _construct_sbt_command_compile(step_input: Input) -> list[str]:
@@ -68,7 +65,7 @@ class TestSbt(Step):
 
     @staticmethod
     def _construct_sbt_command(step_input: Input, commands_fn: Callable[[Input], list[str]]):
-        command = SbtConfig.sbt_command.split(' ')
+        command = SbtConfig().to_command()
         command.append("; ".join(commands_fn(step_input)))
         return command
 
