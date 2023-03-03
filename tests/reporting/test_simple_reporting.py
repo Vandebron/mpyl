@@ -1,4 +1,4 @@
-from src.mpyl.reporting.simple import to_string, to_test_report
+from src.mpyl.reporting.formatting.text import to_string, to_test_report
 from src.mpyl.steps.models import Artifact, ArtifactType
 from src.mpyl.utilities.junit import TEST_OUTPUT_PATH_KEY
 from tests import root_test_path

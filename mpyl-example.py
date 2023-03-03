@@ -12,7 +12,7 @@ from src.mpyl.stages.discovery import for_stage
 def main(log: Logger, args: argparse.Namespace):
     if args.local:
         from src.mpyl.project import load_project, Stage
-        from src.mpyl.reporting.markdown import run_result_to_markdown
+        from src.mpyl.reporting.formatting.markdown import run_result_to_markdown
         from src.mpyl.stages.discovery import find_invalidated_projects_per_stage
         from src.mpyl.steps.models import RunProperties
         from src.mpyl.steps.run import RunResult
