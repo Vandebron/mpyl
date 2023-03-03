@@ -20,7 +20,7 @@ def custom_check_output(logger: Logger, command: Union[str, list[str]]) -> Outpu
 
             for line in iter(process.stdout.readline, ""):
                 if line:
-                    print(line.strip())
+                    print(line.rstrip())
                 if process.poll() is not None:
                     break
             exit_code = process.wait()
