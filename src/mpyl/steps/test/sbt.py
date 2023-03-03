@@ -40,7 +40,7 @@ class TestSbt(Step):
                 return Output(success=summary.is_success,
                               message=f"Tests results produced for {project.name} ({summary})",
                               produced_artifact=artifact)
-            
+
         return Output(success=False,
                       message=f"Tests failed to run for {project.name}. No test results have been recorded.",
                       produced_artifact=None)
