@@ -72,7 +72,11 @@ def main(log: Logger, args: argparse.Namespace):
 
     for stage, projects in projects_per_stage.items():
         for proj in projects:
-            run_result.append(executor.execute(stage, proj, args.dryrun))
+            result = executor.execute(stage, proj, args.dryrun)
+            run_result.append(result)
+            if not result.output.success:
+                logging.warning(f'Build failed at {stage} for {proj.name}')
+                break
 
     if not args.local:
         check.send_report(run_result)
