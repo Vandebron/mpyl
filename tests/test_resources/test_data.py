@@ -3,16 +3,17 @@ from pathlib import Path
 from pyaml_env import parse_config
 
 from src.mpyl.project import load_project, Target
-from src.mpyl.steps.models import RunProperties, VersioningProperties
+from src.mpyl.steps.models import RunProperties, VersioningProperties, RunContext
 from src.mpyl.utilities.repo import Repository, RepoConfig
 from tests import root_test_path
 
 resource_path = root_test_path / "test_resources"
 config_values = parse_config(resource_path / "config.yml")
 
-RUN_PROPERTIES = RunProperties("id", Target.PULL_REQUEST,
-                               VersioningProperties("2ad3293a7675d08bc037ef0846ef55897f38ec8f", 1234, None),
-                               config_values)
+RUN_PROPERTIES = RunProperties(
+    RunContext("id", "http://localhost", "http://localhost", "somebody", "somebody@somwhere.nl"), Target.PULL_REQUEST,
+    VersioningProperties("2ad3293a7675d08bc037ef0846ef55897f38ec8f", 1234, None),
+    config_values)
 
 
 def get_project():

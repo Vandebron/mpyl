@@ -1,7 +1,8 @@
 build:
   run:
     id: !ENV ${BUILD_ID:1}
-    url: !ENV ${RUN_DISPLAY_URL:http://localhost:3000/}
+    run_url: !ENV ${RUN_DISPLAY_URL:http://localhost:3000/}
+    change_url: !ENV ${GIT_URL:http://localhost:3000/}
     user: !ENV ${BUILD_USER:anonymous}
     user_email: !ENV ${BUILD_USER_EMAIL:someone@somewhere.nl}
   parameters:

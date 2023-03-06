@@ -15,6 +15,8 @@ definitions:
         "$ref": "#/definitions/Project"
       sbt:
         "$ref": "#/definitions/Sbt"
+      slack:
+        "$ref": "#/definitions/Slack"
     required:
       - cvs
       - docker
@@ -177,4 +179,12 @@ definitions:
         additionalProperties: false
         properties:
           kubernetes:
-            "$ref": "project.schema.yml#/definitions/kubernetes"
+             "$ref": "project.schema.yml#/definitions/kubernetes"
+  Slack:
+    type: object
+    additionalProperties: false
+    properties:
+      botToken:
+          type: string
+    required:
+      - botToken
