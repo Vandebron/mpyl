@@ -1,5 +1,34 @@
 """ Slack result reporter. Install https://api.slack.com/apps/A04T5GFMUU8 to create a token with the required
 permissions.
+Use either the suggested app, or create your own with the following settings:
+```yaml
+display_information:
+  name: MPyL
+  description: CI/CD pipeline
+  background_color: "#2f6327"
+features:
+  bot_user:
+    display_name: MPyL
+    always_online: false
+oauth_config:
+  scopes:
+    bot:
+      - users.profile:read
+      - chat:write
+      - files:write
+      - reactions:write
+      - users:read
+      - users:read.email
+      - channels:join
+      - groups:write
+      - im:write
+      - mpim:write
+      - channels:manage
+settings:
+  org_deploy_enabled: true
+  socket_mode_enabled: false
+  token_rotation_enabled: false
+```
 """
 import re
 from dataclasses import dataclass
@@ -44,7 +73,7 @@ class SlackReporter(Reporter):
         self._client = WebClient(token=slack_config['botToken'])
         self._channel = channel
         self._title = title
-        icons = config['icons']
+        icons = slack_config['icons']
         self._icons = SlackIcons(success=icons['success'], failure=icons['failure'])
 
     def send_report(self, results: RunResult) -> None:

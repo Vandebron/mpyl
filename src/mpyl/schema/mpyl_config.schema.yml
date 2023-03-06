@@ -193,5 +193,7 @@ definitions:
             type: string
           failure:
             type: string
+        required: ['success', 'failure']
     required:
       - botToken
+      - icons
