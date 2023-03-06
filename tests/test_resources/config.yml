@@ -16,7 +16,7 @@ docker:
 sbt:
   command: 'sbt'
   javaOpts: '-Xmx4G -Xms4G -XX:+UseG1GC -XX:+CMSClassUnloadingEnabled -Xss2M'
-  sbtOpts: 'user.timezone=GMT sbt.log.noformat=true'
+  sbtOpts: 'user.timezone=GMT jline.terminal=jline.UnixTerminal'
 kubernetes:
   rancher:
     cluster:
