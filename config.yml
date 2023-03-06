@@ -7,6 +7,8 @@ cvs:
     app:
       privateKeyBase64Encoded: !ENV ${MPYL_GITHUB_APP_PRIVATE_KEY}
       appId: '295700'
+slack:
+  botToken: !ENV ${SLACK_TOKEN}
 docker:
   registry:
     hostName: 'bigdataregistry.azurecr.io'
