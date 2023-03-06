@@ -31,18 +31,16 @@ class BuildSbt(Step):
         )
 
     def execute(self, step_input: Input) -> Output:
-        with open(SbtConfig.java_opts_file_name, 'w+', encoding='utf-8') as jvm_opts:
-            jvm_opts.write(SbtConfig.sbt_opts.replace(' ', '\n'))
-            image_name = docker_image_tag(step_input)
-            command = self._construct_sbt_command(step_input, image_name)
+        image_name = docker_image_tag(step_input)
+        command = self._construct_sbt_command(step_input, image_name)
 
-            output = custom_check_output(self.logger, command=command)
-            artifact = input_to_artifact(ArtifactType.DOCKER_IMAGE, step_input, {'image': image_name})
-            if output.success:
-                return Output(success=True, message=f"Built {step_input.project.name}", produced_artifact=artifact)
+        output = custom_check_output(self.logger, command=command)
+        artifact = input_to_artifact(ArtifactType.DOCKER_IMAGE, step_input, {'image': image_name})
+        if output.success:
+            return Output(success=True, message=f"Built {step_input.project.name}", produced_artifact=artifact)
 
-            return Output(success=False, message=f"Failed to build sbt project for {step_input.project.name}",
-                          produced_artifact=None)
+        return Output(success=False, message=f"Failed to build sbt project for {step_input.project.name}",
+                      produced_artifact=None)
 
     @staticmethod
     def _construct_sbt_command(step_input: Input, image_name: str):
@@ -56,6 +54,6 @@ class BuildSbt(Step):
                 'docker'
             ] if command is not None
         ]
-        command = SbtConfig.sbt_command.split(' ')
+        command = SbtConfig.from_config(config=step_input.run_properties.config).to_command()
         command.append("; ".join(commands))
         return command

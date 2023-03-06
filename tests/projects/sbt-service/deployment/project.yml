@@ -1,4 +1,42 @@
-  name: 'sbtService'
-  stages:
-    build: Sbt Build
-  description: 'Demonstrates how an SBT project can be built'
+name: 'sbtservice'
+maintainer: [ 'Marketplace', 'Energy Trading' ]
+stages:
+  build: Sbt Build
+  test: Sbt Test
+  deploy: Kubernetes Deploy
+description: 'Demonstrates how an SBT project can be built and tested'
+deployment:
+  properties:
+    env:
+      - key: SOME_ENV
+        test: "Test"
+        acceptance: "Acceptance"
+        production: "Production"
+  kubernetes:
+    livenessProbe:
+      path:
+        all: /health
+      successThreshold: 0
+      failureThreshold: 99
+    portMappings:
+      8080: 8080
+    metrics:
+      enabled: false
+    resources:
+      instances:
+        all: 1
+      limit:
+        cpus:
+          all: 0.5
+        mem:
+          all: 1024
+  traefik:
+    hosts:
+      - host:
+          pr: "Host(`sbtservice-{PR-NUMBER}.test.vdbinfra.nl`)"
+          test: "Host(`sbtservice.test.vdbinfra.nl`)"
+          acceptance: "Host(`sbtservice.acceptance1.vdbinfra.nl`)"
+          production: "Host(`sbtservice.vandebron.nl`)"
+        tls:
+          all: "le-custom-prod-wildcard-cert"
+        insecure: true
