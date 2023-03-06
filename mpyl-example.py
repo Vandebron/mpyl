@@ -65,10 +65,13 @@ def main(log: Logger, args: argparse.Namespace):
     run_result = RunResult(run_properties)
 
     check = None
+    slack = None
 
     if not args.local:
         from mpyl.reporting.targets.github import CommitCheck
+        from mpyl.reporting.targets.slack import SlackReporter
         check = CommitCheck(config=config)
+        slack = SlackReporter(config, '#project-mpyl')
         check.send_report(run_result)
 
     def __run_build(accumulator: RunResult):
@@ -85,6 +88,7 @@ def main(log: Logger, args: argparse.Namespace):
 
     if not args.local:
         check.send_report(run_result)
+        slack.send_report(run_result)
 
     logging.info(run_result_to_markdown(run_result))
     sys.exit(0 if run_result.is_success else 1)

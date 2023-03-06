@@ -28,11 +28,12 @@ def to_slack_markdown(markdown: str) -> str:
 
 class SlackReporter(Reporter):
 
-    def __init__(self, config: Dict):
+    def __init__(self, config: Dict, channel: str):
         slack_config = config.get('slack')
         if not slack_config:
             raise ValueError('slack config not set')
         self._client = WebClient(token=slack_config['botToken'])
+        self._channel = channel
 
     def send_report(self, results: RunResult) -> None:
         user = self._client.users_lookupByEmail(email='sam@vandebron.nl')
@@ -51,9 +52,7 @@ class SlackReporter(Reporter):
                   ContextBlock(elements=[MarkdownTextObject(text=context)])
                   ]
 
-        self._client.chat_postMessage(channel='#notification-test', icon_emoji=':robot_face:',
-                                      mrkdwn=True,
-                                      blocks=blocks)
+        self._client.chat_postMessage(channel=self._channel, icon_emoji=':robot_face:', mrkdwn=True, blocks=blocks)
 
     @staticmethod
     def compose_context(build_props, details) -> str:
