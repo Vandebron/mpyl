@@ -32,10 +32,10 @@ settings:
 """
 import re
 from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, Optional
 
 from slack_sdk import WebClient
-from slack_sdk.models.blocks import HeaderBlock, SectionBlock, MarkdownTextObject, ContextBlock
+from slack_sdk.models.blocks import HeaderBlock, SectionBlock, MarkdownTextObject, ContextBlock, ImageElement
 
 from . import Reporter
 from ..formatting.markdown import run_result_to_markdown
@@ -80,28 +80,34 @@ class SlackReporter(Reporter):
         build_props = results.run_properties
 
         icon = self._icons.success if results.is_success else self._icons.failure
-        context = self.compose_context(build_props, icon)
 
-        initiator = ''
-        if not results.is_success:
-            user = self._client.users_lookupByEmail(email=build_props.details.user_email)
-            user_id = user['user']['id']
-            initiator = f'<@{user_id}>' if user_id else ''
+        user = self._client.users_lookupByEmail(email=build_props.details.user_email)
+        user_id = user['user']['id']
 
-        text = to_slack_markdown(
-            run_result_to_markdown(results) + initiator)
+        resp = self._client.users_profile_get(user=user_id)
+        profile_data: dict[str, str] = resp.get('profile', {})
+        user_name = profile_data.get('real_name_normalized', 'Anonymous')
+        profile_image = profile_data.get('image_24',
+                                         'https://upload.wikimedia.org/wikipedia/en/1/1b/NPC_wojak_meme.png')
+
+        context = self.compose_context(build_props, icon, user_name)
+
+        initiator = f'<@{user_id}>' if results.is_success else ''
+        text = to_slack_markdown(run_result_to_markdown(results) + initiator)
 
         blocks = [HeaderBlock(text=self._title),
                   SectionBlock(text=MarkdownTextObject(text=text)),
-                  ContextBlock(elements=[MarkdownTextObject(text=context)])
+                  ContextBlock(elements=[MarkdownTextObject(text=context),
+                                         ImageElement(image_url=profile_image, alt_text=user_name)])
                   ]
 
         self._client.chat_postMessage(channel=self._channel, icon_emoji=':robot_face:', mrkdwn=True, blocks=blocks,
                                       text=text)
 
     @staticmethod
-    def compose_context(build_props: RunProperties, icon: str) -> str:
+    def compose_context(build_props: RunProperties, icon: str, user: Optional[str]) -> str:
         details = build_props.details
+        user_name = user if user else details.user
         return f":{icon}: Build <{details.run_url}|{details.build_id.upper()}> and changes in " \
                f"<{details.change_url}|{build_props.versioning.identifier.upper()}> " \
-               f"started by _{details.user}_"
+               f"started by _{user_name}_"

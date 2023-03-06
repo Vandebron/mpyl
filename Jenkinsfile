@@ -27,7 +27,7 @@ pipeline {
                         sh "pipenv requirements"
                         sh "pipenv run run-ci ${params.BUILD_PARAMS}"
                     }
-                }}
+                }}}
             }
         }
     }
