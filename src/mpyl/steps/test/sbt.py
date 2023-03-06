@@ -33,17 +33,17 @@ class TestSbt(Step):
 
         if custom_check_output(self.logger, command_compile).success:
             output = custom_check_output(self.logger, command_test)
-            if output.success:
-                artifact = self._extract_test_report(project, step_input)
-                suite = to_test_suites(artifact)
-                summary = sum_suites(suite)
-                return Output(success=summary.is_success,
-                              message=f"Tests results produced for {project.name} ({summary})",
-                              produced_artifact=artifact)
+            if not output.success:
+                return Output(success=False,
+                              message=f"Tests failed to run for {project.name}. No test results have been recorded.",
+                              produced_artifact=None)
 
-        return Output(success=False,
-                      message=f"Tests failed to run for {project.name}. No test results have been recorded.",
-                      produced_artifact=None)
+        artifact = self._extract_test_report(project, step_input)
+        suite = to_test_suites(artifact)
+        summary = sum_suites(suite)
+        return Output(success=summary.is_success,
+                      message=f"Tests results produced for {project.name} ({summary})",
+                      produced_artifact=artifact)
 
     @staticmethod
     def _construct_sbt_command_compile(step_input: Input) -> list[str]:
