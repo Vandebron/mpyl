@@ -21,12 +21,13 @@ pipeline {
             steps {
                 script {
                     withKubeConfig([credentialsId: 'jenkins-rancher-service-account-kubeconfig-test']) {
+                    wrap([$class: 'BuildUser']) {
                         sh "pipenv install --index https://test.pypi.org/simple/ 'mpyl==$CHANGE_ID.*'"
                         sh "pipenv install -d --skip-lock"
                         sh "pipenv requirements"
                         sh "pipenv run run-ci ${params.BUILD_PARAMS}"
                     }
-                }
+                }}
             }
         }
     }
