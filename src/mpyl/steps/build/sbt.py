@@ -54,7 +54,6 @@ class BuildSbt(Step):
                 'docker'
             ] if command is not None
         ]
-        sbt_config = SbtConfig.from_config(config=step_input.run_properties.config)
-        command = sbt_config.to_command()
+        command = SbtConfig.from_config(config=step_input.run_properties.config).to_command()
         command.append("; ".join(commands))
         return command
