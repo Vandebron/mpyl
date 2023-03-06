@@ -10,8 +10,8 @@ cvs:
 slack:
   botToken: !ENV ${SLACK_TOKEN}
   icons:
-    success: ':thug-parrot:'
-    failure: ':sadparrot:'
+    success: 'thug-parrot'
+    failure: 'sadparrot'
 docker:
   registry:
     hostName: 'bigdataregistry.azurecr.io'
