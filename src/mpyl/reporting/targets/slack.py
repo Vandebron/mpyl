@@ -96,7 +96,8 @@ class SlackReporter(Reporter):
                   ContextBlock(elements=[MarkdownTextObject(text=context)])
                   ]
 
-        self._client.chat_postMessage(channel=self._channel, icon_emoji=':robot_face:', mrkdwn=True, blocks=blocks)
+        self._client.chat_postMessage(channel=self._channel, icon_emoji=':robot_face:', mrkdwn=True, blocks=blocks,
+                                      text=text)
 
     @staticmethod
     def compose_context(build_props: RunProperties, icon: str) -> str:
