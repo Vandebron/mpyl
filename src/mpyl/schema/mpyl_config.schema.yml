@@ -186,5 +186,12 @@ definitions:
     properties:
       botToken:
           type: string
+      icons:
+        type: object
+        properties:
+          success:
+            type: string
+          failure:
+            type: string
     required:
       - botToken
