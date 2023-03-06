@@ -13,6 +13,8 @@ definitions:
         "$ref": "#/definitions/Kubernetes"
       project:
         "$ref": "#/definitions/Project"
+      sbt:
+        "$ref": "#/definitions/Sbt"
     required:
       - cvs
       - docker
@@ -103,7 +105,7 @@ definitions:
       registry:
         "$ref": "#/definitions/Registry"
       build:
-        "$ref" : "#/definitions/Build"
+        "$ref": "#/definitions/Build"
     required:
       - registry
     title: Docker
@@ -137,6 +139,21 @@ definitions:
       - password
       - userName
     title: Registry
+  Sbt:
+    type: object
+    additionalProperties: false
+    properties:
+      command:
+        type: string
+      javaOpts:
+        type: string
+      sbtOpts:
+        type: string
+    required:
+      - command
+      - javaOpts
+      - sbtOpts
+    title: Sbt
   Project:
     type: object
     additionalProperties: false
@@ -146,4 +163,4 @@ definitions:
         additionalProperties: false
         properties:
           kubernetes:
-             "$ref": "project.schema.yml#/definitions/kubernetes"
+            "$ref": "project.schema.yml#/definitions/kubernetes"

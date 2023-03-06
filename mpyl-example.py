@@ -1,5 +1,6 @@
 import argparse
 import logging
+import sys
 from logging import Logger
 
 from pyaml_env import parse_config
@@ -70,14 +71,23 @@ def main(log: Logger, args: argparse.Namespace):
         check = CommitCheck(config)
         check.send_report(run_result)
 
-    for stage, projects in projects_per_stage.items():
-        for proj in projects:
-            run_result.append(executor.execute(stage, proj, args.dryrun))
+    def __run_build(accumulator: RunResult):
+        for stage, projects in projects_per_stage.items():
+            for proj in projects:
+                result = executor.execute(stage, proj, args.dryrun)
+                accumulator.append(result)
+                if not result.output.success:
+                    logging.warning(f'Build failed at {stage} for {proj.name}')
+                    return accumulator
+        return accumulator
+
+    run_result = __run_build(run_result)
 
     if not args.local:
         check.send_report(run_result)
 
     logging.info(run_result_to_markdown(run_result))
+    sys.exit(0 if run_result.is_success else 1)
 
 
 if __name__ == "__main__":

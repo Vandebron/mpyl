@@ -1,9 +1,8 @@
 name := "sbt-multi-project-example"
-organization in ThisBuild := "vandebron.nl"
-scalaVersion in ThisBuild := "2.12.3"
+ThisBuild / organization := "vandebron.nl"
 
 lazy val mpyl = project
   .in(file("."))
-  .aggregate(sbtService)
+  .aggregate(sbtservice)
 
-lazy val sbtService = (project in file("tests/projects/sbt-service")).settings(name := "sbtService")
+lazy val sbtservice = (project in file("tests/projects/sbt-service")).settings(name := "sbtservice")

@@ -19,6 +19,7 @@ from .deploy.kubernetes import DeployKubernetes
 from .models import Output, Input, RunProperties, ArtifactType, Artifact
 from .test.dockertest import TestDocker
 from .test.echo import TestEcho
+from .test.sbt import TestSbt
 from ..project import Project
 from ..project import Stage
 from ..validation import validate
@@ -36,7 +37,7 @@ class StepResult:
 
 class Steps:
     """ Executor of individual steps within a pipeline. """
-    _step_executors: set[Step]
+    _step_executors: dict[Stage, set[Step]]
     _logger: Logger
     _properties: RunProperties
 
@@ -48,21 +49,31 @@ class Steps:
             validate(properties.config, schema)
 
         self._logger = logger
-        self._step_executors = {
-            BuildEcho(logger),
-            BuildSbt(logger),
-            BuildDocker(logger),
-            TestEcho(logger),
-            TestDocker(logger),
-            DeployEcho(logger),
-            DeployKubernetes(logger)
+
+        self._step_executors: dict[Stage, set[Step]] = {
+            Stage.BUILD: {
+                BuildEcho(logger),
+                BuildSbt(logger),
+                BuildDocker(logger)
+            },
+            Stage.TEST: {
+                TestEcho(logger),
+                TestSbt(logger),
+                TestDocker(logger)
+            },
+            Stage.DEPLOY: {
+                DeployEcho(logger),
+                DeployKubernetes(logger)
+            }
         }
+
         self._properties = properties
-        for step in self._step_executors:
-            self._logger.debug(f"Registered executor '{step.meta.name}'")
+        for stage, steps in self._step_executors.items():
+            self._logger.debug(f"Registered executors for stage {stage.name}: "
+                               f"{[step.meta.name for step in steps]}")
 
     def _find_executor(self, stage: Stage, step_name: str) -> Optional[Step]:
-        executors = filter(lambda e: e.meta.stage == stage and step_name == e.meta.name, self._step_executors)
+        executors = filter(lambda e: e.meta.stage == stage and step_name == e.meta.name, self._step_executors[stage])
         return next(executors, None)
 
     def _execute(self, executor: Step, project: Project, properties: RunProperties,
