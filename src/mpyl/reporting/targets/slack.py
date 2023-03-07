@@ -45,6 +45,7 @@ from ...steps.run import RunResult
 
 def to_slack_markdown(markdown: str) -> str:
     regex_replace = (
+        (re.compile(r'\[(.*)\]\((.*)\)', flags=re.M), r'<\2|\1>'),
         (re.compile(r'^- ', flags=re.M), '• '),
         (re.compile(r'^  - ', flags=re.M), '  ◦ '),
         (re.compile(r'^    - ', flags=re.M), '    ⬩ '),
