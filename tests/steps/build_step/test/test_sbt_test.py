@@ -22,3 +22,13 @@ class TestBuildSbt:
         assert ' '.join(command) == ('sbt -v -J-Xmx4G -J-Xms4G -J-XX:+UseG1GC -J-XX:+CMSClassUnloadingEnabled '
                                      '-J-Xss2M -Duser.timezone=GMT -Djline.terminal=jline.UnixTerminal project '
                                      'dockertest; test; coverageOff')
+
+    def test_sbt_test_without_coverage_command_should_be_properly_constructed(self):
+        sbt_config = self.sbt_config
+        sbt_config_with_coverage = SbtConfig(sbt_config.java_opts, sbt_config.sbt_opts,
+                                             sbt_command=sbt_config.sbt_command, test_with_coverage=False)
+        command = TestSbt._construct_sbt_command(self.step_input, sbt_config_with_coverage,
+                                                 TestSbt._construct_sbt_command_test_without_coverage)
+        assert ' '.join(command) == ('sbt -v -J-Xmx4G -J-Xms4G -J-XX:+UseG1GC -J-XX:+CMSClassUnloadingEnabled '
+                                     '-J-Xss2M -Duser.timezone=GMT -Djline.terminal=jline.UnixTerminal '
+                                     'dockertest/test')

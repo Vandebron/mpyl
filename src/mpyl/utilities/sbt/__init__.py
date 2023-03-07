@@ -1,4 +1,5 @@
 """SBT config"""
+import ast
 from dataclasses import dataclass
 from typing import Dict
 
@@ -18,7 +19,7 @@ class SbtConfig:
         return SbtConfig(sbt_command=sbt_config['command'],
                          java_opts=sbt_config['javaOpts'],
                          sbt_opts=sbt_config['sbtOpts'],
-                         test_with_coverage=bool(sbt_config['testWithCoverage']))
+                         test_with_coverage=(str(sbt_config['testWithCoverage']).lower() == 'true'))
 
     def to_command(self):
         cmd = [self.sbt_command, '-v']
