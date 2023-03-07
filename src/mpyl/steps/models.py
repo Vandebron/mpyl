@@ -36,6 +36,8 @@ class RunContext:
     """Link back to the run executor"""
     change_url: str
     """Link to changes"""
+    tests_url: str
+    """Link to test results"""
     user: str
     """Name of of the user that triggered the run"""
     user_email: str
@@ -44,8 +46,8 @@ class RunContext:
     @staticmethod
     def from_configuration(run_details: Dict):
         return RunContext(build_id=run_details['id'], run_url=run_details['run_url'],
-                          change_url=run_details['change_url'], user=run_details['user'],
-                          user_email=run_details['user_email'])
+                          change_url=run_details['change_url'], tests_url=run_details['tests_url'],
+                          user=run_details['user'], user_email=run_details['user_email'])
 
 
 @yaml_object(yaml)
