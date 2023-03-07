@@ -40,7 +40,7 @@ class RunContext:
     """Link to test results"""
     user: str
     """Name of of the user that triggered the run"""
-    user_email: str
+    user_email: Optional[str]
     """Email of of the user that triggered the run"""
 
     @staticmethod

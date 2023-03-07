@@ -24,7 +24,6 @@ from typing import Optional
 from atlassian import Jira
 
 from . import Reporter
-
 from ...steps.run import RunResult
 
 
@@ -95,7 +94,9 @@ class JiraReporter(Reporter):
 
         self.__move_ticket_forward(ticket)
 
-        self.__assign_ticket(results.run_properties.details.user_email, ticket)
+        user_email = results.run_properties.details.user_email
+        if user_email:
+            self.__assign_ticket(user_email, ticket)
         return None
 
     def __assign_ticket(self, run_user_email: str, ticket: JiraTicket):
