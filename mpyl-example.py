@@ -3,7 +3,6 @@ import logging
 import sys
 from logging import Logger
 
-from pyaml_env import parse_config
 from rich.console import Console
 from rich.logging import RichHandler
 
@@ -20,6 +19,7 @@ def main(logger: Logger, args: argparse.Namespace):
         from src.mpyl.steps.run import RunResult
         from src.mpyl.steps.steps import Steps
         from src.mpyl.utilities.repo import Repository, RepoConfig, History
+        from src.mpyl.utilities.pyaml_env import parse_config
     else:
         from mpyl.project import load_project, Stage
         from mpyl.reporting.formatting.markdown import run_result_to_markdown
@@ -28,6 +28,7 @@ def main(logger: Logger, args: argparse.Namespace):
         from mpyl.steps.run import RunResult
         from mpyl.steps.steps import Steps
         from mpyl.utilities.repo import Repository, RepoConfig, History
+        from mpyl.utilities.pyaml_env import parse_config
 
     config = parse_config("config.yml")
     properties = parse_config("run_properties.yml")

@@ -81,20 +81,24 @@ class SlackReporter(Reporter):
 
         icon = self._icons.success if results.is_success else self._icons.failure
 
-        user = self._client.users_lookupByEmail(email=build_props.details.user_email)
-        user_id = user['user']['id']
+        user_email = build_props.details.user_email
+        initiator = ''
+        profile_data: dict[str, str] = {}
+        if user_email:
+            user = self._client.users_lookupByEmail(email=user_email)
+            user_id = user['user']['id']
+            if not results.is_success:
+                initiator = f'<@{user_id}>'
 
-        resp = self._client.users_profile_get(user=user_id)
-        profile_data: dict[str, str] = resp.get('profile', {})
+            resp = self._client.users_profile_get(user=user_id)
+            profile_data = resp.get('profile', {})
+
         user_name = profile_data.get('real_name_normalized', 'Anonymous')
         profile_image = profile_data.get('image_24',
                                          'https://upload.wikimedia.org/wikipedia/en/1/1b/NPC_wojak_meme.png')
 
         context = self.compose_context(build_props, icon, user_name)
-
-        initiator = '' if results.is_success else f'<@{user_id}>'
         text = to_slack_markdown(run_result_to_markdown(results) + initiator)
-
         blocks = [HeaderBlock(text=self._title),
                   SectionBlock(text=MarkdownTextObject(text=text)),
                   ContextBlock(elements=[MarkdownTextObject(text=context),
