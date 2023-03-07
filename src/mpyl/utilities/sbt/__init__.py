@@ -8,15 +8,17 @@ class SbtConfig:
     java_opts: str
     sbt_opts: str
     sbt_command: str
+    test_with_coverage: bool
 
     @staticmethod
     def from_config(config: Dict):
-        try:
-            return SbtConfig(sbt_command=config['sbt']['command'],
-                             java_opts=config['sbt']['javaOpts'],
-                             sbt_opts=config['sbt']['sbtOpts'])
-        except KeyError as exc:
-            raise KeyError(f'Sbt config could not be loaded from {config}') from exc
+        sbt_config = config.get('sbt', None)
+        if not sbt_config:
+            raise KeyError(f"'sbt' could not be loaded from {config}")
+        return SbtConfig(sbt_command=sbt_config['command'],
+                         java_opts=sbt_config['javaOpts'],
+                         sbt_opts=sbt_config['sbtOpts'],
+                         test_with_coverage=bool(sbt_config['testWithCoverage']))
 
     def to_command(self):
         cmd = [self.sbt_command, '-v']

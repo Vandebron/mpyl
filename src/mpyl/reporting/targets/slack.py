@@ -94,8 +94,7 @@ class SlackReporter(Reporter):
             profile_data = resp.get('profile', {})
 
         user_name = profile_data.get('real_name_normalized', 'Anonymous')
-        profile_image = profile_data.get('image_24',
-                                         'https://upload.wikimedia.org/wikipedia/en/1/1b/NPC_wojak_meme.png')
+        profile_image = profile_data.get('image_24', 'https://avatars.githubusercontent.com/u/18010732')
 
         context = self.compose_context(build_props, icon, user_name)
         text = to_slack_markdown(run_result_to_markdown(results) + initiator)
