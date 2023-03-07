@@ -33,4 +33,15 @@ pipeline {
             }
         }
     }
+    post {
+        always {
+            script {
+                def testResults = findFiles(glob: "**/*test*/*.xml")
+                for (xml in testResults) {
+                    touch xml.getPath()
+                    junit "${xml.getPath()}"
+                }
+            }
+        }
+    }
 }

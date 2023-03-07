@@ -11,7 +11,9 @@ resource_path = root_test_path / "test_resources"
 config_values = parse_config(resource_path / "config.yml")
 
 RUN_PROPERTIES = RunProperties(
-    RunContext("id", "http://localhost", "http://localhost", "somebody", "sam@vandebron.nl"), Target.PULL_REQUEST,
+    RunContext("id", "http://localhost/run", "http://localhost/changes", "http://localhost/tests", "somebody",
+               "sam@vandebron.nl"),
+    Target.PULL_REQUEST,
     VersioningProperties("2ad3293a7675d08bc037ef0846ef55897f38ec8f", "feature/ARC-123-branch", 1234, None),
     config_values)
 
