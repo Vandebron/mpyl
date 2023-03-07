@@ -163,6 +163,8 @@ definitions:
     properties:
       command:
         type: string
+      testWithCoverage:
+        type: string
       javaOpts:
         type: string
       sbtOpts:
