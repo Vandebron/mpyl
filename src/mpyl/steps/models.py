@@ -15,6 +15,7 @@ yaml = YAML()
 @dataclass(frozen=True)
 class VersioningProperties:
     revision: str
+    branch: Optional[str]
     pr_number: Optional[int]
     tag: Optional[str]
 
@@ -65,10 +66,11 @@ class RunProperties:
     def from_configuration(run_properties: Dict, config: Dict):
         build = run_properties['build']
         versioning = build['versioning']
+        versioning = VersioningProperties(revision=versioning['revision'], branch=versioning['branch'],
+                                          pr_number=int(versioning.get('pr_number')), tag=versioning.get('tag'))
+
         return RunProperties(details=RunContext.from_configuration(build['run']),
-                             target=Target(build['parameters']['deploy_target']),
-                             versioning=VersioningProperties(versioning['revision'], int(versioning.get('pr_number')),
-                                                             versioning.get('tag')), config=config)
+                             target=Target(build['parameters']['deploy_target']), versioning=versioning, config=config)
 
 
 @yaml_object(yaml)

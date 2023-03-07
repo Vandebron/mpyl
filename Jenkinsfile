@@ -17,6 +17,8 @@ pipeline {
                 DOCKER_REGISTRY = credentials('91751de6-20aa-4b12-8459-6e16094a233a')
                 GITHUB_TOKEN = credentials('github-pat-mpyl-vandebronjenkins')
                 MPYL_GITHUB_APP_PRIVATE_KEY = credentials('mpyl_pipeline_github_app_private_key')
+                SLACK_TOKEN = credentials('JENKINS_MPYL_APP_OAUTH_TOKEN')
+                JIRA_USER_PASSWORD = credentials('JIRA_USER_PASSWORD')
             }
             steps {
                 script {
@@ -27,7 +29,7 @@ pipeline {
                         sh "pipenv requirements"
                         sh "pipenv run run-ci ${params.BUILD_PARAMS}"
                     }
-                }}}
+                }}
             }
         }
     }
