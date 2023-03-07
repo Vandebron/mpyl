@@ -15,7 +15,7 @@ to do and is the best option if the likelihood of the logic being of use in othe
 .. note:: The benefits of standard artifact types
    It is recommended to have your steps produce any of the standard artifact types. This allows you to benefit from
    the tooling embedded in MPyL to process them. For example: if a step in the `Test` stage produces an artifact of type
-   `ArtifactType.JUNIT_TESTS`, the test results can be reported in a unified way bay any of the `mpyl.reporting`
+   `ArtifactType.JUNIT_TESTS`, the test results can be reported in a unified way by any of the `mpyl.reporting`
    reporters regardless of whether the tests were run by a `jest` or a `scala` test.
 
 

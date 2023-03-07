@@ -12,11 +12,15 @@ slack:
   icons:
     success: 'thug-parrot'
     failure: 'sadparrot'
+jira:
+  site: 'https://vandebron.atlassian.net'
+  userName: !ENV ${JIRA_USER_PASSWORD_USR:jira_user}
+  password: !ENV ${JIRA_USER_PASSWORD_PSW:jira_password}
 docker:
   registry:
     hostName: 'bigdataregistry.azurecr.io'
-    userName: !ENV ${DOCKER_REGISTRY_USR:user}
-    password: !ENV ${DOCKER_REGISTRY_PSW:password}
+    userName: !ENV ${DOCKER_REGISTRY_USR:docker_user}
+    password: !ENV ${DOCKER_REGISTRY_PSW:docker_password}
   build:
     rootFolder: '.'
     buildTarget: 'builder'

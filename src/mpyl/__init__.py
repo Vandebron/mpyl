@@ -4,8 +4,8 @@
 # How do I?
 
 ## ..report the outcome of a pipeline run
-To report the outcome to Github, see `mpyl.reporting.targets.github`
+MPyL comes with built-in reporters for *Github*, *Jira* and *Slack*. See `mpyl.reporting.targets` how to configure
+them and for instructions on how to create your own reporter.
 ## ..create a custom step
-For creating your own step, see `mpyl.steps`
-
+See `mpyl.steps`.
 """
