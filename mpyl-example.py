@@ -7,6 +7,7 @@ from pyaml_env import parse_config
 from rich.console import Console
 from rich.logging import RichHandler
 
+from src.mpyl.reporting.targets.jira import JiraReporter
 from src.mpyl.stages.discovery import for_stage
 
 
@@ -28,7 +29,10 @@ def main(log: Logger, args: argparse.Namespace):
         from mpyl.steps.steps import Steps
         from mpyl.utilities.repo import Repository, RepoConfig, History
 
-    repo = Repository(RepoConfig(parse_config("config.yml")))
+    config = parse_config("config.yml")
+    properties = parse_config("run_properties.yml")
+
+    repo = Repository(RepoConfig(config))
     log.info(f"Running with {args}")
     if not args.local:
         pull_result = repo.pull_main_branch()
@@ -52,8 +56,6 @@ def main(log: Logger, args: argparse.Namespace):
     for stage, projects in projects_per_stage.items():
         log.info(f" Stage {stage}: {', '.join(p.name for p in projects)}")
 
-    config = parse_config("config.yml")
-    properties = parse_config("run_properties.yml")
     if args.local:
         properties['build']['versioning']['revision'] = repo.get_sha
         properties['build']['versioning']['pr_number'] = '123'
@@ -66,12 +68,14 @@ def main(log: Logger, args: argparse.Namespace):
 
     check = None
     slack = None
+    jira = None
 
     if not args.local:
         from mpyl.reporting.targets.github import CommitCheck
         from mpyl.reporting.targets.slack import SlackReporter
         check = CommitCheck(config=config)
         slack = SlackReporter(config, '#project-mpyl', 'MPyL test build')
+        jira = JiraReporter(config, run_properties.versioning.branch or repo.get_branch)
         check.send_report(run_result)
 
     def __run_build(accumulator: RunResult):
@@ -89,6 +93,7 @@ def main(log: Logger, args: argparse.Namespace):
     if not args.local:
         check.send_report(run_result)
         slack.send_report(run_result)
+        jira.send_report(run_result)
 
     logging.info(run_result_to_markdown(run_result))
     sys.exit(0 if run_result.is_success else 1)

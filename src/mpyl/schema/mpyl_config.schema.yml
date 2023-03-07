@@ -17,6 +17,8 @@ definitions:
         "$ref": "#/definitions/Sbt"
       slack:
         "$ref": "#/definitions/Slack"
+      jira:
+        "$ref": "#/definitions/Jira"
     required:
       - cvs
       - docker
@@ -197,3 +199,19 @@ definitions:
     required:
       - botToken
       - icons
+  Jira:
+    type: object
+    additionalProperties: false
+    properties:
+      site:
+        description: "Only works with the cloud version of Jira"
+        type: string
+        format: uri
+      userName:
+        type: string
+      password:
+        type: string
+    required:
+      - site
+      - userName
+      - password
