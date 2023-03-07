@@ -36,7 +36,7 @@ pipeline {
     post {
         always {
             script {
-                def testResults = findFiles(glob: "**/*test*/*.xml")
+                def testResults = findFiles(glob: "tests/projects/**/*test*/*.xml")
                 for (xml in testResults) {
                     touch xml.getPath()
                     junit "${xml.getPath()}"
