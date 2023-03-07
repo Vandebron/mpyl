@@ -11,7 +11,7 @@ from src.mpyl.reporting.targets.jira import JiraReporter
 from src.mpyl.stages.discovery import for_stage
 
 
-def main(log: Logger, args: argparse.Namespace):
+def main(logger: Logger, args: argparse.Namespace):
     if args.local:
         from src.mpyl.project import load_project, Stage
         from src.mpyl.reporting.formatting.markdown import run_result_to_markdown
@@ -33,10 +33,10 @@ def main(log: Logger, args: argparse.Namespace):
     properties = parse_config("run_properties.yml")
 
     repo = Repository(RepoConfig(config))
-    log.info(f"Running with {args}")
+    logger.info(f"Running with {args}")
     if not args.local:
         pull_result = repo.pull_main_branch()
-        log.info(f'Pulled `{pull_result[0].remote_ref_path.strip()}` to local')
+        logger.info(f'Pulled `{pull_result[0].remote_ref_path.strip()}` to local')
 
     changes_in_branch: list[History] = repo.changes_in_branch()
     logging.debug(f'Changes: {changes_in_branch}')
@@ -54,15 +54,15 @@ def main(log: Logger, args: argparse.Namespace):
         find_invalidated_projects_per_stage(all_projects, changes_in_branch)
 
     for stage, projects in projects_per_stage.items():
-        log.info(f" Stage {stage}: {', '.join(p.name for p in projects)}")
+        logger.info(f" Stage {stage}: {', '.join(p.name for p in projects)}")
 
     if args.local:
         properties['build']['versioning']['revision'] = repo.get_sha
         properties['build']['versioning']['pr_number'] = '123'
 
     run_properties = RunProperties.from_configuration(run_properties=properties, config=config)
-    executor = Steps(logger=log, properties=run_properties)
-    log.info("Building projects")
+    executor = Steps(logger=logger, properties=run_properties)
+    logger.info("Building projects")
 
     run_result = RunResult(run_properties)
 
@@ -73,9 +73,9 @@ def main(log: Logger, args: argparse.Namespace):
     if not args.local:
         from mpyl.reporting.targets.github import CommitCheck
         from mpyl.reporting.targets.slack import SlackReporter
-        check = CommitCheck(config=config)
+        check = CommitCheck(config=config, logger=logger)
         slack = SlackReporter(config, '#project-mpyl', 'MPyL test build')
-        jira = JiraReporter(config, run_properties.versioning.branch or repo.get_branch)
+        jira = JiraReporter(config=config, branch=run_properties.versioning.branch or repo.get_branch, logger=logger)
         check.send_report(run_result)
 
     def __run_build(accumulator: RunResult):
