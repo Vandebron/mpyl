@@ -18,6 +18,7 @@ Configure hostname and credentials under `jira` in the `config.yml`
 """
 import re
 from dataclasses import dataclass
+from logging import Logger
 from typing import Optional
 
 from atlassian import Jira
@@ -73,7 +74,7 @@ class JiraConfig:
 
 class JiraReporter(Reporter):
 
-    def __init__(self, config: dict, branch: str):
+    def __init__(self, config: dict, branch: str, logger: Logger):
         jira_config = config.get('jira')
         if not jira_config:
             raise ValueError('jira section needs to be defined in config.yml')
@@ -83,6 +84,7 @@ class JiraReporter(Reporter):
         self._config = jira_config
         self._jira = Jira(url=jira_config.site, username=jira_config.user_name, password=jira_config.password,
                           api_version='3', cloud=True)
+        self._logger = logger
 
     def send_report(self, results: RunResult) -> None:
         if not self._ticket:
@@ -101,6 +103,7 @@ class JiraReporter(Reporter):
             jira_user = self._jira.user_find_by_user_string(query=run_user_email)
             if jira_user:
                 account_id = jira_user.pop().get('accountId')
+                self._logger.info(f'Assigning {ticket.ticket_id} to {account_id}')
                 self._jira.assign_issue(self._ticket, account_id=account_id)
 
     def __move_ticket_forward(self, ticket: JiraTicket):
@@ -108,4 +111,6 @@ class JiraReporter(Reporter):
         for idx, transition in enumerate(transitions):
             if transition['name'] == ticket.status_name:
                 if idx == 0:
-                    self._jira.issue_transition(self._ticket, transitions[idx + 1]['name'])
+                    target_state = transitions[idx + 1]['name']
+                    self._logger.info(f'Moving {ticket.ticket_id} to {target_state}')
+                    self._jira.issue_transition(self._ticket, target_state)
