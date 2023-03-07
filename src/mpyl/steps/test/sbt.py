@@ -44,9 +44,9 @@ class TestSbt(Step):
         return Output(success=True, message="Success")
 
     def _test_without_coverage(self, step_input: Input, sbt_config: SbtConfig) -> Output:
-        command_compile = self._construct_sbt_command(step_input, sbt_config,
-                                                      self._construct_sbt_command_test_without_coverage)
-        run_outcome = custom_check_output(self._logger, command_compile)
+        command_test_without_coverage = self._construct_sbt_command(step_input, sbt_config,
+                                                                    self._construct_sbt_command_test_without_coverage)
+        run_outcome = custom_check_output(self._logger, command_test_without_coverage)
         if not run_outcome.success:
             return Output(success=False, message=f"Tests without coverage failed to run for {step_input.project.name}",
                           produced_artifact=None)
@@ -55,6 +55,7 @@ class TestSbt(Step):
     def execute(self, step_input: Input) -> Output:
         project = step_input.project
         sbt_config = SbtConfig.from_config(config=step_input.run_properties.config)
+        self.logger.debug(f'Config {sbt_config}')
 
         test_result = self._test_with_coverage(step_input, sbt_config) if sbt_config.test_with_coverage \
             else self._test_without_coverage(step_input, sbt_config)
@@ -87,7 +88,7 @@ class TestSbt(Step):
 
     @staticmethod
     def _construct_sbt_command_test_without_coverage(step_input: Input):
-        return [f'project {step_input.project.name}/test']
+        return [f'{step_input.project.name}/test']
 
     @staticmethod
     def _construct_sbt_command(step_input: Input, config: SbtConfig, commands_fn: Callable[[Input], list[str]]):
