@@ -1,10 +1,8 @@
 # syntax=docker/dockerfile:1.4
-FROM python:3.9-alpine as installer
+FROM node:12.18.2 AS installer
 COPY --link tests/projects/job/ /tests/projects/job/
-WORKDIR /tests/projects/job
+WORKDIR tests/projects/job/
+RUN yarn install
 
 FROM installer as builder
-COPY tests/projects/job/src/hello-world.py helloworld.py
-ENTRYPOINT ["python", "helloworld.py"]
-
-
+ENTRYPOINT [ "yarn", "start" ]

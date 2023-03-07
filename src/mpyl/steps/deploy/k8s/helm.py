@@ -7,6 +7,7 @@ from logging import Logger
 from pathlib import Path
 
 from .service import ServiceChart
+from .job import JobChart
 from ...models import RunProperties, Input, Output
 from ....utilities.subprocess import custom_check_output
 
@@ -26,10 +27,13 @@ def install(logger: Logger, step_input: Input, name_space: str, kube_context: st
         image_name = step_input.required_artifact.spec['image']
     else:
         raise ValueError('Required artifact must be defined')
-    service_chart = ServiceChart(step_input, image_name)
 
-    templates = service_chart.to_chart()
+    if step_input.project.deployment.kind == 'Job':
+        deploy_chart = JobChart(step_input, image_name)
+    else:
+        deploy_chart = ServiceChart(step_input, image_name)
 
+    templates = deploy_chart.to_chart()
     chart_path = Path(step_input.project.target_path) / "chart"
 
     shutil.rmtree(chart_path, ignore_errors=True)

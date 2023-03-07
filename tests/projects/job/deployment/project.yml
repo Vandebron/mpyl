@@ -1,12 +1,22 @@
 name: 'job'
-kind: Job
-description: "A test job"
+description: 'This is a test container. For testing the MPyL pipelines, not to be deployed anywhere.'
 stages:
-  build: "Docker Build"
-  test: "Echo Test"
-  deploy: "Kubernetes Job Deploy"
+  build: Docker Build
+  test: Echo Test
+  deploy: Kubernetes Deploy
 maintainer: [ 'Marketplace', 'Energy Trading' ]
+build:
+  args:
+    plain:
+      - key: SOME_ENV
+        test: "Test"
+        acceptance: "Acceptance"
+        production: "Production"
+dependencies:
+  build:
+    - 'test/docker/'
 deployment:
+  kind: Job
   properties:
     env:
       - key: SOME_ENV
@@ -20,7 +30,7 @@ deployment:
       successThreshold: 0
       failureThreshold: 99
     portMappings:
-      8081: 8081
+      8080: 8080
     metrics:
       enabled: false
     resources:
@@ -36,10 +46,10 @@ deployment:
   traefik:
     hosts:
       - host:
-          pr: "Host(`nodeservice-{PR-NUMBER}.test.vdbinfra.nl`)"
-          test: "Host(`nodeservice.test.vdbinfra.nl`)"
-          acceptance: "Host(`nodeservice.acceptance1.vdbinfra.nl`)"
-          production: "Host(`nodeservice.vandebron.nl`)"
+          pr: "Host(`payments-{PR-NUMBER}.test.vdbinfra.nl`)"
+          test: "Host(`payments.test.vdbinfra.nl`)"
+          acceptance: "Host(`payments.acceptance1.vdbinfra.nl`)"
+          production: "Host(`payments.vandebron.nl`)"
         tls:
           all: "le-custom-prod-wildcard-cert"
         insecure: true
@@ -47,3 +57,5 @@ deployment:
           all: "Host(`some.other.host.com`)"
         servicePort: 4091
         priority: 1000
+  namespace: 'folder'
+
