@@ -92,7 +92,7 @@ class SlackReporter(Reporter):
 
         context = self.compose_context(build_props, icon, user_name)
 
-        initiator = f'<@{user_id}>' if results.is_success else ''
+        initiator = '' if results.is_success else f'<@{user_id}>'
         text = to_slack_markdown(run_result_to_markdown(results) + initiator)
 
         blocks = [HeaderBlock(text=self._title),
