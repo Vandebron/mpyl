@@ -35,11 +35,11 @@ class ResourceDefaults:
     mem: TargetProperty[int]
 
     @staticmethod
-    def from_yaml(resources: dict):
+    def from_config(resources: dict):
         limit = resources['limit']
-        return ResourceDefaults(instances=TargetProperty.from_yaml(resources['instances']),
-                                cpus=TargetProperty.from_yaml(limit['cpus']),
-                                mem=TargetProperty.from_yaml(limit['mem']))
+        return ResourceDefaults(instances=TargetProperty.from_config(resources['instances']),
+                                cpus=TargetProperty.from_config(limit['cpus']),
+                                mem=TargetProperty.from_config(limit['mem']))
 
 
 @dataclass(frozen=True)
@@ -49,8 +49,8 @@ class KubernetesConfig:
     startup_probe_defaults: dict
 
     @staticmethod
-    def from_yaml(values: dict):
-        return KubernetesConfig(resources_defaults=ResourceDefaults.from_yaml(values['resources']),
+    def from_config(values: dict):
+        return KubernetesConfig(resources_defaults=ResourceDefaults.from_config(values['resources']),
                                 liveness_probe_defaults=values['livenessProbe'],
                                 startup_probe_defaults=values['startupProbe'])
 
@@ -78,7 +78,7 @@ class ServiceChart:
         if kubernetes_config_dict is None:
             raise KeyError("Configuration should have project.deployment.kubernetes section")
 
-        self.kubernetes_config = KubernetesConfig.from_yaml(kubernetes_config_dict)
+        self.kubernetes_config = KubernetesConfig.from_config(kubernetes_config_dict)
 
         self.deployment = project.deployment
         properties = self.deployment.properties
