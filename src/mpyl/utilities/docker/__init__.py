@@ -11,6 +11,24 @@ from ...steps.models import Input
 
 
 @dataclass(frozen=True)
+class DockerComposeConfig:
+    period_seconds: int
+    failure_threshold: int
+
+    @property
+    def total_duration(self):
+        return self.period_seconds * self.failure_threshold
+
+    @staticmethod
+    def from_yaml(config: dict):
+        compose_config = config.get('docker', {}).get('compose')
+        if not compose_config:
+            raise KeyError('docker.compose needs to be defined')
+        return DockerComposeConfig(period_seconds=int(compose_config['periodSeconds']),
+                                   failure_threshold=int(compose_config['failureThreshold']))
+
+
+@dataclass(frozen=True)
 class DockerConfig:
     host_name: str
     user_name: str
