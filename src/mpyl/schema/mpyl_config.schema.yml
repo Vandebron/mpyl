@@ -163,6 +163,9 @@ definitions:
     properties:
       command:
         type: string
+      verbose:
+        default: false
+        type: boolean
       testWithCoverage:
         type: string
       javaOpts:
