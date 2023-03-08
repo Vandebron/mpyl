@@ -30,7 +30,7 @@ Checks can be referred to from branch protection rules, in order to prevent faul
   runtime.
 
 """
-
+import base64
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -51,11 +51,16 @@ from ...utilities.repo import Repository, RepoConfig
 
 @dataclass
 class GithubAppConfig:
-    private_app_key_path: str
+    private_app_key_path: Optional[str]
+    private_key_base_64_encoded: Optional[str]
     app_key: str
 
     def __init__(self, config: Dict):
-        self.private_app_key_path = config['privateKeyPath']
+        self.private_app_key_path = config.get('privateKeyPath')
+        self.private_key_base_64_encoded = config.get('privateKeyBase64Encoded')
+        if not self.private_key_base_64_encoded and not self.private_app_key_path:
+            raise KeyError("Either 'privateKeyPath' or 'privateKeyBase64Encoded' need to be defined")
+
         self.app_key = config['appId']
 
 
@@ -134,9 +139,12 @@ class CommitCheck(Reporter):
     def send_report(self, results: RunResult) -> None:
         config = self._config.app_config
         if not config:
-            raise ValueError("github.app config needs to be defined")
+            raise KeyError("github.app config needs to be defined")
 
-        private_key = Path(config.private_app_key_path).read_text(encoding='utf-8')
+        private_key = Path(config.private_app_key_path or '').read_text(
+            encoding='utf-8') if config.private_app_key_path else base64.b64decode(
+            config.private_key_base_64_encoded or '').decode('utf-8')
+
         integration = GithubIntegration(integration_id=config.app_key, private_key=private_key)
 
         install = integration.get_installation(self._config.owner, self._config.repo_name)

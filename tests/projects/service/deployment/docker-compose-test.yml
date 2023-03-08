@@ -3,8 +3,8 @@ services:
   postgres:
     image: postgres:13.4
     environment:
-      POSTGRES_DB: batterypack
-      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: test_db
+      POSTGRES_PASSWORD: test_password
     ports:
       - "5432:5432"
     healthcheck:
