@@ -2,6 +2,7 @@
 from logging import Logger
 from typing import Callable
 
+from .before_test import IntegrationTestBefore
 from .. import Input, Output, Step
 from ..models import Artifact, input_to_artifact
 from ...project import Stage, Project
@@ -23,7 +24,8 @@ class TestSbt(Step):
                 stage=Stage.TEST
             ),
             produced_artifact=ArtifactType.JUNIT_TESTS,
-            required_artifact=ArtifactType.NONE
+            required_artifact=ArtifactType.NONE,
+            before=IntegrationTestBefore(logger)
         )
 
     def execute(self, step_input: Input) -> Output:
