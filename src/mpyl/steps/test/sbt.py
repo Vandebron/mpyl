@@ -1,7 +1,8 @@
-"""A step to compile and run tests for an Sbt project"""
+"""A step to compile and run tests for an SBT project"""
 from logging import Logger
 from typing import Callable
 
+from .after_test import IntegrationTestAfter
 from .before_test import IntegrationTestBefore
 from .. import Input, Output, Step
 from ..models import Artifact, input_to_artifact
@@ -14,18 +15,14 @@ from ...utilities.subprocess import custom_check_output
 
 class TestSbt(Step):
     def __init__(self, logger: Logger) -> None:
-        self.logger = logger
+        meta = Meta(name='Sbt Test', description='Run sbt tests', version='0.0.1', stage=Stage.TEST)
         super().__init__(
             logger=logger,
-            meta=Meta(
-                name='Sbt Test',
-                description='Run sbt tests',
-                version='0.0.1',
-                stage=Stage.TEST
-            ),
+            meta=meta,
             produced_artifact=ArtifactType.JUNIT_TESTS,
             required_artifact=ArtifactType.NONE,
-            before=IntegrationTestBefore(logger)
+            before=IntegrationTestBefore(logger),
+            after=IntegrationTestAfter(logger)
         )
 
     def execute(self, step_input: Input) -> Output:
@@ -33,8 +30,8 @@ class TestSbt(Step):
         command_test = self._construct_sbt_command(step_input, self._construct_sbt_command_test)
         project = step_input.project
 
-        if custom_check_output(self.logger, command_compile).success:
-            output = custom_check_output(self.logger, command_test)
+        if custom_check_output(self._logger, command_compile).success:
+            output = custom_check_output(self._logger, command_test)
             if not output.success:
                 return Output(success=False,
                               message=f"Tests failed to run for {project.name}. No test results have been recorded.",

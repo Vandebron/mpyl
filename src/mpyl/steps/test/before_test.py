@@ -1,7 +1,6 @@
 """ Before test step. Starts docker-compose if necessary."""
 import os
 import time
-from dataclasses import dataclass
 from logging import Logger
 
 from python_on_whales import DockerClient, Container
@@ -10,22 +9,7 @@ from python_on_whales.components.compose.models import ComposeProject
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
 from ...project import Stage
-from ...utilities.docker import stream_docker_logging
-
-
-@dataclass(frozen=True)
-class DockerComposeConfig:
-    period_seconds: int
-    failure_threshold: int
-
-    @property
-    def total_duration(self):
-        return self.period_seconds * self.failure_threshold
-
-    @staticmethod
-    def from_yaml(config: dict):
-        return DockerComposeConfig(period_seconds=int(config['periodSeconds']),
-                                   failure_threshold=int(config['failureThreshold']))
+from ...utilities.docker import stream_docker_logging, DockerComposeConfig
 
 
 class IntegrationTestBefore(Step):
@@ -42,11 +26,7 @@ class IntegrationTestBefore(Step):
         if not os.path.exists(compose_file):
             return Output(success=True, message='No containers to start')
 
-        compose_config = step_input.run_properties.config.get('docker', {}).get('compose')
-        if not compose_config:
-            raise KeyError('docker.compose needs to be defined')
-
-        config = DockerComposeConfig.from_yaml(compose_config)
+        config = DockerComposeConfig.from_yaml(step_input.run_properties.config)
 
         self._logger.debug(f"Starting containers in {compose_file}")
         docker_client = DockerClient(compose_files=[compose_file])
