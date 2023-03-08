@@ -29,6 +29,7 @@ docker:
 sbt:
   command: 'sbt'
   testWithCoverage: !ENV ${SBT_RUN_WITH_COVERAGE:true}
+  verbose: true
   javaOpts: '-Xmx4G -Xms4G -XX:+UseG1GC -XX:+CMSClassUnloadingEnabled -Xss2M'
   sbtOpts: 'user.timezone=GMT jline.terminal=jline.UnixTerminal'
 kubernetes:
