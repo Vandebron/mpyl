@@ -5,7 +5,7 @@ cvs:
     repository: 'Vandebron/mpyl'
     token: !ENV ${GITHUB_TOKEN}
     app:
-      privateKeyPath: 'mpyl-pipeline.2023-02-20.private-key.pem'
+      privateKeyBase64Encoded: !ENV ${MPYL_GITHUB_APP_PRIVATE_KEY}
       appId: '295700'
 docker:
   registry:

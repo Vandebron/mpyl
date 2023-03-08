@@ -87,12 +87,14 @@ definitions:
           privateKeyPath:
             description: Used to authenticate with github if the app is used (https://github.com/apps/mpyl-pipeline)
             type: string
+          privateKeyBase64Encoded:
+            description: Used to authenticate with github if the app is used (https://github.com/apps/mpyl-pipeline)
+            type: string
           appId:
             description: The id of the github app (https://github.com/apps/mpyl-pipeline) that has permission to update checks
             type: string
             default: 295700
         required:
-          - privateKeyPath
           - appId
     required:
       - repository
