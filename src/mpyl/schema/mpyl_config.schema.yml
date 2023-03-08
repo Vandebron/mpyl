@@ -106,6 +106,18 @@ definitions:
         "$ref": "#/definitions/Registry"
       build:
         "$ref": "#/definitions/Build"
+      compose:
+        type: object
+        properties:
+          periodSeconds:
+            description: "Polling interval for checking if containers are up"
+            type: integer
+            default: 2
+          failureThreshold:
+            description: "Maximum number of times to poll before considering 'docker-compose up' failed"
+            type: integer
+            default: 20
+        required: ['periodSeconds', 'failureThreshold']
     required:
       - registry
     title: Docker

@@ -112,8 +112,12 @@ class Steps:
         if executor:
             try:
                 artifact: Optional[Artifact] = self._find_required_artifact(project, executor)
-
-                result = self._execute(executor, project, self._properties, artifact, dry_run)
+                result = Output(success=True, message='')
+                if executor.before:
+                    result = self._execute(executor.before, project, self._properties,
+                                           self._find_required_artifact(project, executor.before), dry_run)
+                if result.success:
+                    result = self._execute(executor, project, self._properties, artifact, dry_run)
                 if executor.after:
                     executor = executor.after
                     result = self._execute(executor, project, self._properties, result.produced_artifact, dry_run)
