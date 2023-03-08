@@ -6,11 +6,11 @@ More info: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/c
 from dataclasses import dataclass
 from typing import Dict, Optional
 
-from kubernetes.client import V1Job, V1Container, V1JobSpec, V1ObjectMeta, V1PodSpec, \
+from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1ObjectMeta, V1PodSpec, \
     V1RollingUpdateDeployment, V1LabelSelector, V1ContainerPort, V1EnvVar, V1Service, \
     V1ServiceSpec, V1ServicePort, V1ServiceAccount, V1LocalObjectReference, \
     V1EnvVarSource, V1SecretKeySelector, V1Probe, ApiClient, V1HTTPGetAction, V1ResourceRequirements, \
-    V1PodTemplateSpec
+    V1PodTemplateSpec, V1DeploymentStrategy, V1Job, V1JobSpec
 from ruamel.yaml import YAML
 
 from .resources.crd import to_yaml  # pylint: disable = no-name-in-module
@@ -35,11 +35,11 @@ class ResourceDefaults:
     mem: TargetProperty[int]
 
     @staticmethod
-    def from_yaml(resources: dict):
+    def from_config(resources: dict):
         limit = resources['limit']
-        return ResourceDefaults(instances=TargetProperty.from_yaml(resources['instances']),
-                                cpus=TargetProperty.from_yaml(limit['cpus']),
-                                mem=TargetProperty.from_yaml(limit['mem']))
+        return ResourceDefaults(instances=TargetProperty.from_config(resources['instances']),
+                                cpus=TargetProperty.from_config(limit['cpus']),
+                                mem=TargetProperty.from_config(limit['mem']))
 
 
 @dataclass(frozen=True)
@@ -49,13 +49,13 @@ class KubernetesConfig:
     startup_probe_defaults: dict
 
     @staticmethod
-    def from_yaml(values: dict):
-        return KubernetesConfig(resources_defaults=ResourceDefaults.from_yaml(values['resources']),
+    def from_config(values: dict):
+        return KubernetesConfig(resources_defaults=ResourceDefaults.from_config(values['resources']),
                                 liveness_probe_defaults=values['livenessProbe'],
                                 startup_probe_defaults=values['startupProbe'])
 
 
-class JobChart:
+class BuildChart:
     step_input: Input
     project: Project
     mappings: dict[int, int]
@@ -78,7 +78,7 @@ class JobChart:
         if kubernetes_config_dict is None:
             raise KeyError("Configuration should have project.deployment.kubernetes section")
 
-        self.kubernetes_config = KubernetesConfig.from_yaml(kubernetes_config_dict)
+        self.kubernetes_config = KubernetesConfig.from_config(kubernetes_config_dict)
 
         self.deployment = project.deployment
         properties = self.deployment.properties
@@ -124,18 +124,24 @@ class JobChart:
     def _to_probe(probe: Probe, defaults: dict, target: Target) -> V1Probe:
         values = defaults.copy()
         values.update(probe.values)
-        v1_probe: V1Probe = JobChart._to_k8s_model(values, V1Probe)
+        v1_probe: V1Probe = BuildChart._to_k8s_model(values, V1Probe)
         path = probe.path.get_value(target)
         v1_probe.http_get = V1HTTPGetAction(path='/health' if path is None else path, port='port-0')
         return v1_probe
 
-    # def to_service(self) -> V1Service:
-    #     service_ports = list(map(lambda key: V1ServicePort(port=key, target_port=self.mappings[key], protocol="TCP",
-    #                                                        name=f"{key}-webservice-port"), self.mappings.keys()))
-    #
-    #     return V1Service(api_version='v1', kind='Job', metadata=self._to_object_meta(),
-    #                      spec=V1ServiceSpec(type="ClusterIP", ports=service_ports,
-    #                                         selector=self._to_selector().match_labels))
+    def to_service(self) -> V1Service:
+        service_ports = list(map(lambda key: V1ServicePort(port=key, target_port=self.mappings[key], protocol="TCP",
+                                                           name=f"{key}-webservice-port"), self.mappings.keys()))
+
+        service = V1Service(api_version='v1', kind='Service', metadata=self._to_object_meta(),
+                            spec=V1ServiceSpec(type="ClusterIP", ports=service_ports,
+                                               selector=self._to_selector().match_labels))
+        return service
+
+    def to_job(self) -> V1Job:
+        deployment = self.to_deployment()
+        return V1Job(api_version='batch/v1', kind='Job', metadata=self._to_object_meta(),
+                     spec=V1JobSpec(template=deployment.spec.template))
 
     def to_ingress_routes(self) -> Optional[V1AlphaIngressRoute]:
         if not self.deployment.traefik:
@@ -143,17 +149,17 @@ class JobChart:
         return V1AlphaIngressRoute(metadata=self._to_object_meta(), hosts=self.deployment.traefik.hosts,
                                    service_port=123, name=self.release_name, target=self.target)
 
-    # def to_service_account(self) -> V1ServiceAccount:
-    #     return V1ServiceAccount(api_version="v1", kind="ServiceAccount", metadata=self._to_object_meta(),
-    #                             image_pull_secrets=[V1LocalObjectReference("bigdataregistry")])
+    def to_service_account(self) -> V1ServiceAccount:
+        return V1ServiceAccount(api_version="v1", kind="ServiceAccount", metadata=self._to_object_meta(),
+                                image_pull_secrets=[V1LocalObjectReference("bigdataregistry")])
 
-    def to_job(self) -> V1Job:
-        return V1Job(api_version='batch/v1', kind='Job', metadata=self._to_object_meta(),
-                     spec=V1JobSpec())
-
-    def to_chart(self) -> dict[str, str]:
-        chart = {'deployment': to_yaml(self.to_job()),
-                 'job': to_yaml(self.to_job())}
+    def to_chart(self, cron=None) -> dict[str, str]:
+        if cron:
+            chart = {'deployment': to_yaml(self.to_deployment()), 'serviceaccount': to_yaml(self.to_service_account()),
+                     'job': to_yaml(self.to_job())}
+        else:
+            chart = {'deployment': to_yaml(self.to_deployment()), 'serviceaccount': to_yaml(self.to_service_account()),
+                     'service': to_yaml(self.to_service())}
         if self.sealed_secrets:
             chart['sealedsecrets'] = to_yaml(self.to_sealed_secrets())
 
@@ -161,7 +167,6 @@ class JobChart:
             chart['ingress-https-route'] = to_yaml(self.to_ingress_routes())
 
         return chart
-
 
     def to_sealed_secrets(self) -> Optional[V1SealedSecret]:
         if self.sealed_secrets is None:
@@ -185,7 +190,7 @@ class JobChart:
         return V1ResourceRequirements(limits={'cpu': f'{int(cpus_limit)}m', 'memory': f'{int(mem_limit)}Mi'},
                                       requests={'cpu': f'{int(cpus_request)}m', 'memory': f'{int(mem_request)}Mi'})
 
-    def to_job(self) -> V1Job:
+    def to_deployment(self) -> V1Deployment:
         kubernetes = self.deployment.kubernetes
         if kubernetes is None:
             raise AttributeError("deployment.kubernetes field should be set")
@@ -213,23 +218,30 @@ class JobChart:
             env=env_vars + sealed_secrets,
             ports=ports,
             image_pull_policy="Always",
-            resources=JobChart._to_resources(resources, defaults, self.target),
-            liveness_probe=JobChart._to_probe(kubernetes.liveness_probe,
+            resources=BuildChart._to_resources(resources, defaults, self.target),
+            liveness_probe=BuildChart._to_probe(kubernetes.liveness_probe,
                                                   self.kubernetes_config.liveness_probe_defaults,
                                                   self.target) if kubernetes.liveness_probe else None,
-            startup_probe=JobChart._to_probe(kubernetes.startup_probe,
+            startup_probe=BuildChart._to_probe(kubernetes.startup_probe,
                                                  self.kubernetes_config.startup_probe_defaults,
                                                  self.target) if kubernetes.startup_probe else None
         )
 
-        return V1Job(
+        return V1Deployment(
             api_version="apps/v1",
-            kind="Job",
+            kind="Deployment",
             metadata=V1ObjectMeta(annotations=self._to_annotations(), name=self.release_name,
                                   labels=self._to_labels()),
-            spec=V1JobSpec(
+            spec=V1DeploymentSpec(
+                replicas=instances.get_value(target=self.target),
                 template=V1PodTemplateSpec(
                     metadata=self._to_object_meta(),
                     spec=V1PodSpec(containers=[container], service_account=self.release_name,
                                    service_account_name=self.release_name),
-                )))
+                ),
+                strategy=V1DeploymentStrategy(
+                    rolling_update=V1RollingUpdateDeployment(max_surge="25%", max_unavailable="25%"),
+                    type="RollingUpdate"),
+                selector=self._to_selector(),
+            ),
+        )

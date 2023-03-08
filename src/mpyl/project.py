@@ -196,6 +196,7 @@ class Kubernetes:
     startup_probe: Optional[Probe]
     metrics: Optional[Metrics]
     resources: Resources
+    cron: Optional[str]
 
     @staticmethod
     def from_config(values: dict):
@@ -204,11 +205,14 @@ class Kubernetes:
         startup_probe = values.get('startupProbe')
         metrics = values.get('metrics')
         resources = values.get('resources')
+        cron = values.get('cron')
+
         return Kubernetes(port_mappings=mappings if mappings else {},
                           liveness_probe=Probe.from_config(liveness_probe) if liveness_probe else None,
                           startup_probe=Probe.from_config(startup_probe) if startup_probe else None,
                           metrics=Metrics.from_config(metrics) if metrics else None,
-                          resources=Resources.from_config(resources) if resources else None)
+                          resources=Resources.from_config(resources) if resources else None,
+                          cron=cron if cron else None)
 
 
 @dataclass(frozen=True)

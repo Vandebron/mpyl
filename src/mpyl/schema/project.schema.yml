@@ -16,12 +16,6 @@ properties:
     examples:
       - invoices
       - keycloak
-  kind:
-    description: Type of project to deploy
-    type: string
-    examples:
-      - Job
-      - CronJob
   description:
     description: A one-liner to describe this project's role
     type: string

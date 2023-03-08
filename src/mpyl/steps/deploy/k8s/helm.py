@@ -6,8 +6,7 @@ import shutil
 from logging import Logger
 from pathlib import Path
 
-from .service import ServiceChart
-from .job import JobChart
+from .buildchart import BuildChart
 from ...models import RunProperties, Input, Output
 from ....utilities.subprocess import custom_check_output
 
@@ -21,19 +20,15 @@ version: 0.1.0
 appVersion: "{run_properties.versioning.identifier}"
 """
 
-
 def install(logger: Logger, step_input: Input, name_space: str, kube_context: str) -> Output:
     if step_input.required_artifact:
         image_name = step_input.required_artifact.spec['image']
     else:
         raise ValueError('Required artifact must be defined')
 
-    if step_input.project.deployment.kind == 'Job':
-        deploy_chart = JobChart(step_input, image_name)
-    else:
-        deploy_chart = ServiceChart(step_input, image_name)
+    deploy_chart = BuildChart(step_input, image_name)
 
-    templates = deploy_chart.to_chart()
+    templates = deploy_chart.to_chart(cron=step_input.project.kubernetes.cron)
     chart_path = Path(step_input.project.target_path) / "chart"
 
     shutil.rmtree(chart_path, ignore_errors=True)
