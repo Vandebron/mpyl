@@ -5,6 +5,7 @@ from pathlib import Path
 
 from python_on_whales import docker
 
+from .after_test import IntegrationTestAfter
 from .before_test import IntegrationTestBefore
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType, input_to_artifact, Artifact
@@ -15,13 +16,14 @@ from ...utilities.junit import to_test_suites, sum_suites, TEST_OUTPUT_PATH_KEY
 
 class TestDocker(Step):
     def __init__(self, logger: Logger) -> None:
-        super().__init__(logger=logger, meta=Meta(
-            name='Docker Test',
-            description='Test docker image',
-            version='0.0.1',
-            stage=Stage.TEST
-        ), produced_artifact=ArtifactType.JUNIT_TESTS, required_artifact=ArtifactType.NONE,
-                         before=IntegrationTestBefore(logger))
+        meta = Meta(name='Docker Test', description='Test docker image', version='0.0.1', stage=Stage.TEST)
+        super().__init__(
+            logger=logger, meta=meta,
+            produced_artifact=ArtifactType.JUNIT_TESTS,
+            required_artifact=ArtifactType.NONE,
+            before=IntegrationTestBefore(logger),
+            after=IntegrationTestAfter(logger)
+        )
 
     def execute(self, step_input: Input) -> Output:
         docker_config = DockerConfig.from_dict(step_input.run_properties.config)
