@@ -1,4 +1,5 @@
 """Docker related utility methods"""
+import logging
 from dataclasses import dataclass
 from logging import Logger
 from typing import Dict, Optional, TypeVar
@@ -37,11 +38,11 @@ class DockerConfig:
             raise KeyError(f'Docker config could not be loaded from {config}') from exc
 
 
-def __stream_docker_logging(logger: Logger, generator, task_name: str = 'docker command execution') -> None:
+def stream_docker_logging(logger: Logger, generator, task_name: str, level=logging.DEBUG) -> None:
     while True:
         try:
             output = next(generator)
-            logger.info(str(output).strip('\n'))
+            logger.log(level, str(output).strip('\n'))
         except StopIteration:
             logger.info(f'{task_name} complete.')
             break
@@ -70,6 +71,6 @@ def build(logger: Logger, root_path: str, file_path: str, image_tag: str, target
 
     logs = docker.buildx.build(context_path=root_path, file=file_path, tags=[image_tag], target=target,
                                stream_logs=True)
-    __stream_docker_logging(logger, logs)
+    stream_docker_logging(logger=logger, generator=logs, task_name=f'Build {file_path}:{target}')
     logger.debug(logs)
     return True
