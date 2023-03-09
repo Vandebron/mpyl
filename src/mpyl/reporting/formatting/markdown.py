@@ -41,7 +41,8 @@ def run_result_to_markdown(run_result: RunResult) -> str:
             result += f"**{stage}** _{__to_oneliner(step_results)}_ \n"
             test_results = __collect_test_results(step_results)
             if test_results:
-                result += to_markdown_test_report(test_results) + '\n'
+                result += to_markdown_test_report(
+                    test_results) + f' [link]({run_result.run_properties.details.tests_url}) \n'
 
     return result
 

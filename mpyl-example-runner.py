@@ -174,7 +174,7 @@ def init_reporting() -> Reporter:
     config = parse_config("config.yml")
     run_properties = RunProperties.from_configuration(parse_config("run_properties.yml"), config)
 
-    check = CommitCheck(config)
+    check = CommitCheck(config, get_dagster_logger())
     run_result = RunResult(run_properties)
     check.send_report(run_result)
     return Reporter(results=run_result, check=check, report=PullRequestComment(config))
@@ -198,7 +198,7 @@ if __name__ == "__main__":
     result = run_build.execute_in_process(run_config={
         'loggers': {'mpyl_logger': {'config': {'log_level': 'INFO'}}},
         'ops': {
-            'build_project': {'config': {'dry_run': False}},
+            'build_project': {'config': {'dry_run': True}},
             'deploy_projects': {'config': {'dry_run': True}}
         }
     })

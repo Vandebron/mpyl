@@ -14,6 +14,8 @@ pyjwt = "==2.5.0" # forced downgrade due to https://stackoverflow.com/questions/
 cryptography = "==39.0.1"
 python-on-whales = "==0.59.0"
 pygithub = "==1.58.0"
+slack-sdk = "==3.20.0"
+atlassian-python-api = "==3.34.0"
 
 [dev-packages]
 toml = "==0.10.2"
@@ -27,7 +29,7 @@ dagster = "==1.1.17"
 pyaml-env = "==1.2.1"
 pylint = "==2.15.10"
 pytest = "==7.2.1"
-pdoc = "==12.3.1"
+pdoc = "==13.0.0"
 sqlalchemy = "<2.0.0" # forced downgrade https://github.com/dagster-io/dagster/discussions/11881
 
 [requires]

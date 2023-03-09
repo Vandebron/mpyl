@@ -74,7 +74,7 @@ class TargetProperty(Generic[T]):
         return None
 
     @staticmethod
-    def from_yaml(values: dict):
+    def from_config(values: dict):
         return TargetProperty(pr=values.get('pr'), test=values.get('test'), acceptance=values.get('acceptance'),
                               production=values.get('production'), all=values.get('all'))
 
@@ -84,7 +84,7 @@ class KeyValueProperty(TargetProperty[str]):
     key: str
 
     @staticmethod
-    def from_yaml(values: dict):
+    def from_config(values: dict):
         return KeyValueProperty(key=values['key'], pr=values.get('pr'), test=values.get('test'),
                                 acceptance=values.get('acceptance'), production=values.get('production'),
                                 all=values.get('all'))
@@ -111,7 +111,7 @@ class StageSpecificProperty(Generic[T]):
 class Stages(StageSpecificProperty[str]):
 
     @staticmethod
-    def from_yaml(values: dict):
+    def from_config(values: dict):
         return Stages(build=values.get('build'), test=values.get('test'), deploy=values.get('deploy'),
                       postdeploy=values.get('postdeploy'))
 
@@ -124,7 +124,7 @@ class Dependencies(StageSpecificProperty[set[str]]):
         return deps_for_stage if deps_for_stage else set()
 
     @staticmethod
-    def from_yaml(values: dict):
+    def from_config(values: dict):
         return Dependencies(build=set(values.get('build', [])), test=set(values.get('test', [])),
                             deploy=set(values.get('deploy', [])), postdeploy=set(values.get('postdeploy', [])))
 
@@ -132,8 +132,8 @@ class Dependencies(StageSpecificProperty[set[str]]):
 @dataclass(frozen=True)
 class Env:
     @staticmethod
-    def from_yaml(values: list[dict]):
-        return list(map(KeyValueProperty.from_yaml, values))
+    def from_config(values: list[dict]):
+        return list(map(KeyValueProperty.from_config, values))
 
 
 @dataclass(frozen=True)
@@ -142,10 +142,10 @@ class Properties:
     sealed_secret: list[KeyValueProperty]
 
     @staticmethod
-    def from_yaml(values: Dict[Any, Any]):
-        return Properties(env=list(map(KeyValueProperty.from_yaml, values.get('env', []))),
+    def from_config(values: Dict[Any, Any]):
+        return Properties(env=list(map(KeyValueProperty.from_config, values.get('env', []))),
                           sealed_secret=list(
-                              map(KeyValueProperty.from_yaml, values.get('sealedSecret', []))))
+                              map(KeyValueProperty.from_config, values.get('sealedSecret', []))))
 
 
 @dataclass(frozen=True)
@@ -154,9 +154,9 @@ class Probe:
     values: dict
 
     @staticmethod
-    def from_yaml(values: dict):
+    def from_config(values: dict):
         path = values['path']
-        return Probe(path=TargetProperty.from_yaml(path), values=values)
+        return Probe(path=TargetProperty.from_config(path), values=values)
 
 
 @dataclass(frozen=True)
@@ -165,7 +165,7 @@ class Metrics:
     enabled: bool
 
     @staticmethod
-    def from_yaml(values: dict):
+    def from_config(values: dict):
         return Metrics(path=values.get('path', '/metrics'), enabled=values.get('enabled', False))
 
 
@@ -177,16 +177,16 @@ class Resources:
     disk: Optional[TargetProperty[int]]
 
     @staticmethod
-    def from_yaml(values: dict):
+    def from_config(values: dict):
         instances = values.get('instances')
         limits = values.get('limit', {})
         cpus = limits.get('cpus')
         mem = limits.get('mem')
         disk = limits.get('disk')
-        return Resources(instances=TargetProperty.from_yaml(instances) if instances else None,
-                         cpus=TargetProperty.from_yaml(cpus) if cpus else None,
-                         mem=TargetProperty.from_yaml(mem) if mem else None,
-                         disk=TargetProperty.from_yaml(disk) if disk else None)
+        return Resources(instances=TargetProperty.from_config(instances) if instances else None,
+                         cpus=TargetProperty.from_config(cpus) if cpus else None,
+                         mem=TargetProperty.from_config(mem) if mem else None,
+                         disk=TargetProperty.from_config(disk) if disk else None)
 
 
 @dataclass(frozen=True)
@@ -198,17 +198,17 @@ class Kubernetes:
     resources: Resources
 
     @staticmethod
-    def from_yaml(values: dict):
+    def from_config(values: dict):
         mappings = values.get('portMappings')
         liveness_probe = values.get('livenessProbe')
         startup_probe = values.get('startupProbe')
         metrics = values.get('metrics')
         resources = values.get('resources')
         return Kubernetes(port_mappings=mappings if mappings else {},
-                          liveness_probe=Probe.from_yaml(liveness_probe) if liveness_probe else None,
-                          startup_probe=Probe.from_yaml(startup_probe) if startup_probe else None,
-                          metrics=Metrics.from_yaml(metrics) if metrics else None,
-                          resources=Resources.from_yaml(resources) if resources else None)
+                          liveness_probe=Probe.from_config(liveness_probe) if liveness_probe else None,
+                          startup_probe=Probe.from_config(startup_probe) if startup_probe else None,
+                          metrics=Metrics.from_config(metrics) if metrics else None,
+                          resources=Resources.from_config(resources) if resources else None)
 
 
 @dataclass(frozen=True)
@@ -218,13 +218,13 @@ class Host:
     whitelists: TargetProperty[list[str]]
 
     @staticmethod
-    def from_yaml(values: dict):
+    def from_config(values: dict):
         host = values.get('host')
         tls = values.get('tls')
         whitelists = values.get('whitelists')
-        return Host(host=TargetProperty.from_yaml(host) if host else None,
-                    tls=TargetProperty.from_yaml(tls) if tls else None,
-                    whitelists=TargetProperty.from_yaml(whitelists) if whitelists else None)
+        return Host(host=TargetProperty.from_config(host) if host else None,
+                    tls=TargetProperty.from_config(tls) if tls else None,
+                    whitelists=TargetProperty.from_config(whitelists) if whitelists else None)
 
 
 @dataclass(frozen=True)
@@ -232,9 +232,9 @@ class Traefik:
     hosts: list[Host]
 
     @staticmethod
-    def from_yaml(values: dict):
+    def from_config(values: dict):
         hosts = values.get('hosts')
-        return Traefik(hosts=(list(map(Host.from_yaml, hosts) if hosts else [])))
+        return Traefik(hosts=(list(map(Host.from_config, hosts) if hosts else [])))
 
 
 @dataclass(frozen=True)
@@ -245,13 +245,14 @@ class Deployment:
     traefik: Optional[Traefik]
 
     @staticmethod
-    def from_yaml(values: dict):
+    def from_config(values: dict):
         props = values.get('properties')
         kubernetes = values.get('kubernetes')
         traefik = values.get('traefik')
-        return Deployment(namespace=values.get('namespace'), properties=Properties.from_yaml(props) if props else None,
-                          kubernetes=Kubernetes.from_yaml(kubernetes) if kubernetes else None,
-                          traefik=Traefik.from_yaml(traefik) if traefik else None)
+        return Deployment(namespace=values.get('namespace'),
+                          properties=Properties.from_config(props) if props else None,
+                          kubernetes=Kubernetes.from_config(kubernetes) if kubernetes else None,
+                          traefik=Traefik.from_config(traefik) if traefik else None)
 
 
 @dataclass(frozen=True)
@@ -304,13 +305,13 @@ class Project:
         return str(Path(self.root_path, 'target/test-reports'))
 
     @staticmethod
-    def from_yaml(values: dict, project_path: str):
+    def from_config(values: dict, project_path: str):
         deployment = values.get('deployment')
         dependencies = values.get('dependencies')
         return Project(name=values['name'], description=values['description'], path=project_path,
-                       stages=Stages.from_yaml(values.get('stages', {})), maintainer=values.get('maintainer', []),
-                       deployment=Deployment.from_yaml(deployment) if deployment else None,
-                       dependencies=Dependencies.from_yaml(dependencies) if dependencies else None)
+                       stages=Stages.from_config(values.get('stages', {})), maintainer=values.get('maintainer', []),
+                       deployment=Deployment.from_config(deployment) if deployment else None,
+                       dependencies=Dependencies.from_config(dependencies) if dependencies else None)
 
 
 def load_project(root_dir, project_path: str, strict: bool = True) -> Project:
@@ -330,7 +331,7 @@ def load_project(root_dir, project_path: str, strict: bool = True) -> Project:
                 schema = yaml.load(template.decode('utf-8'))
                 validate(yaml_values, schema)
 
-            project = Project.from_yaml(yaml_values, project_path)
+            project = Project.from_config(yaml_values, project_path)
             logging.debug(f'Loaded project {project.path}')
             return project
         except jsonschema.exceptions.ValidationError as exc:

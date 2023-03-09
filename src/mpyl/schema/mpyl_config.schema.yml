@@ -15,6 +15,10 @@ definitions:
         "$ref": "#/definitions/Project"
       sbt:
         "$ref": "#/definitions/Sbt"
+      slack:
+        "$ref": "#/definitions/Slack"
+      jira:
+        "$ref": "#/definitions/Jira"
     required:
       - cvs
       - docker
@@ -159,6 +163,11 @@ definitions:
     properties:
       command:
         type: string
+      verbose:
+        default: false
+        type: boolean
+      testWithCoverage:
+        type: string
       javaOpts:
         type: string
       sbtOpts:
@@ -177,4 +186,37 @@ definitions:
         additionalProperties: false
         properties:
           kubernetes:
-            "$ref": "project.schema.yml#/definitions/kubernetes"
+             "$ref": "project.schema.yml#/definitions/kubernetes"
+  Slack:
+    type: object
+    additionalProperties: false
+    properties:
+      botToken:
+          type: string
+      icons:
+        type: object
+        properties:
+          success:
+            type: string
+          failure:
+            type: string
+        required: ['success', 'failure']
+    required:
+      - botToken
+      - icons
+  Jira:
+    type: object
+    additionalProperties: false
+    properties:
+      site:
+        description: "Only works with the cloud version of Jira"
+        type: string
+        format: uri
+      userName:
+        type: string
+      password:
+        type: string
+    required:
+      - site
+      - userName
+      - password
