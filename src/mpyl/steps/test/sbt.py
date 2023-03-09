@@ -55,7 +55,7 @@ class TestSbt(Step):
     def execute(self, step_input: Input) -> Output:
         project = step_input.project
         sbt_config = SbtConfig.from_config(config=step_input.run_properties.config)
-        self.logger.debug(f'Config {sbt_config}')
+        self._logger.debug(f'Config {sbt_config}')
 
         test_result = self._test_with_coverage(step_input, sbt_config) if sbt_config.test_with_coverage \
             else self._test_without_coverage(step_input, sbt_config)
