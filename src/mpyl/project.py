@@ -296,6 +296,10 @@ class Project:
         return str(Path(self.deployment_path, '.mpl'))
 
     @property
+    def test_containers_path(self) -> str:
+        return str(Path(self.deployment_path, 'docker-compose-test.yml'))
+
+    @property
     def test_report_path(self) -> str:
         return str(Path(self.root_path, 'target/test-reports'))
 
