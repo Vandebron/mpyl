@@ -7,7 +7,7 @@ from pyaml_env import parse_config
 from src.mpyl.project import Target
 from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml
 from src.mpyl.steps.deploy.k8s.resources.customresources import V1AlphaIngressRoute
-from src.mpyl.steps.deploy.k8s.buildchart import BuildChart
+from src.mpyl.steps.deploy.k8s.chartbuilder import ChartBuilder
 from src.mpyl.steps.models import Input
 from src.mpyl.utilities.docker import DockerConfig
 from tests import root_test_path
@@ -28,8 +28,8 @@ def _roundtrip(file_name: Path, chart: str, as_yaml: dict[str, str], overwrite: 
 
 
 def _build_chart():
-    return BuildChart(step_input=Input(get_project(), test_data.RUN_PROPERTIES, None),
-                        image_name='registry/image:123').service_chart()
+    return ChartBuilder(step_input=Input(get_project(), test_data.RUN_PROPERTIES, None),
+                        image_name='registry/image:123').to_chart()
 
 
 def test_probe_values_should_be_customizable():
@@ -42,7 +42,7 @@ def test_probe_values_should_be_customizable():
     assert probe.values['successThreshold'] == custom_success_threshold
     assert probe.values['failureThreshold'] == custom_failure_threshold
 
-    v1_probe: V1Probe = BuildChart._to_probe(probe, liveness_probe_defaults, target=Target.PULL_REQUEST)
+    v1_probe: V1Probe = ChartBuilder._to_probe(probe, liveness_probe_defaults, target=Target.PULL_REQUEST)
     assert v1_probe.success_threshold == custom_success_threshold
     assert v1_probe.failure_threshold == custom_failure_threshold
 
@@ -57,7 +57,7 @@ def test_probe_deserialization_failure_should_throw():
     probe.values['httpGet'] = 'incorrect'
 
     with pytest.raises(ValueError) as exc_info:
-        BuildChart._to_probe(probe, liveness_probe_defaults, target=Target.PULL_REQUEST)
+        ChartBuilder._to_probe(probe, liveness_probe_defaults, target=Target.PULL_REQUEST)
     assert 'Invalid value for `port`, must not be `None`' in str(exc_info.value)
 
 
