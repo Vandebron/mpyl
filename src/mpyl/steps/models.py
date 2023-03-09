@@ -15,6 +15,7 @@ yaml = YAML()
 @dataclass(frozen=True)
 class VersioningProperties:
     revision: str
+    branch: Optional[str]
     pr_number: Optional[int]
     tag: Optional[str]
 
@@ -27,13 +28,34 @@ class VersioningProperties:
         return f'pr-{self.pr_number}' if self.pr_number else self.tag
 
 
+@dataclass(frozen=True)
+class RunContext:
+    build_id: str
+    """Uniquely identifies the run. Typically a monotonically increasing number"""
+    run_url: str
+    """Link back to the run executor"""
+    change_url: str
+    """Link to changes"""
+    tests_url: str
+    """Link to test results"""
+    user: str
+    """Name of of the user that triggered the run"""
+    user_email: Optional[str]
+    """Email of of the user that triggered the run"""
+
+    @staticmethod
+    def from_configuration(run_details: Dict):
+        return RunContext(build_id=run_details['id'], run_url=run_details['run_url'],
+                          change_url=run_details['change_url'], tests_url=run_details['tests_url'],
+                          user=run_details['user'], user_email=run_details['user_email'])
+
+
 @yaml_object(yaml)
 @dataclass(frozen=True)
 class RunProperties:
-    """ Contains information that is specific to a particular run of the pipeline
-    """
-    build_id: str
-    """Uniquely identifies the run. Typically a monotonically increasing number"""
+    """ Contains information that is specific to a particular run of the pipeline"""
+    details: RunContext
+    """Run specific details"""
     target: Target
     """The deploy target"""
     versioning: VersioningProperties
@@ -46,9 +68,11 @@ class RunProperties:
     def from_configuration(run_properties: Dict, config: Dict):
         build = run_properties['build']
         versioning = build['versioning']
-        return RunProperties(build_id=build['run']['id'], target=Target(build['parameters']['deploy_target']),
-                             versioning=VersioningProperties(versioning['revision'], int(versioning.get('pr_number')),
-                                                             versioning.get('tag')), config=config)
+        versioning = VersioningProperties(revision=versioning['revision'], branch=versioning['branch'],
+                                          pr_number=int(versioning.get('pr_number')), tag=versioning.get('tag'))
+
+        return RunProperties(details=RunContext.from_configuration(build['run']),
+                             target=Target(build['parameters']['deploy_target']), versioning=versioning, config=config)
 
 
 @yaml_object(yaml)

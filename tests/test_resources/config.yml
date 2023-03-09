@@ -4,17 +4,32 @@ cvs:
   github:
     repository: 'Vandebron/mpyl'
     token: !ENV ${GITHUB_TOKEN}
+    app:
+      privateKeyPath: 'mpyl-pipeline.2023-02-20.private-key.pem'
+      appId: '295700'
+slack:
+  botToken: !ENV ${SLACK_TOKEN}
+  icons:
+    success: 'thug-parrot'
+    failure: 'sadparrot'
+jira:
+  site: 'https://vandebron.atlassian.net'
+  userName: !ENV ${JIRA_USER_PASSWORD_USR:jira_user}
+  password: !ENV ${JIRA_USER_PASSWORD_PSW:jira_password}
 docker:
   registry:
     hostName: 'bigdataregistry.azurecr.io'
-    userName: !ENV ${DOCKER_REGISTRY_USR:user}
-    password: !ENV ${DOCKER_REGISTRY_PSW:password}
+    userName: !ENV ${DOCKER_REGISTRY_USR:docker_user}
+    password: !ENV ${DOCKER_REGISTRY_PSW:docker_password}
   build:
     rootFolder: '.'
     buildTarget: 'builder'
+    testTarget: 'tester'
     dockerFileName: 'Dockerfile-mpl'
 sbt:
   command: 'sbt'
+  testWithCoverage: !ENV ${SBT_RUN_WITH_COVERAGE:true}
+  verbose: true
   javaOpts: '-Xmx4G -Xms4G -XX:+UseG1GC -XX:+CMSClassUnloadingEnabled -Xss2M'
   sbtOpts: 'user.timezone=GMT jline.terminal=jline.UnixTerminal'
 kubernetes:
@@ -35,7 +50,7 @@ kubernetes:
         projectId: p-lb52t
         clusterEnv: prd
         context: vdb-core-digital-k8s-prod
-project:
+project: # default values
   deployment:
     kubernetes:
       resources:
@@ -55,8 +70,6 @@ project:
             test: 1024
             acceptance: 1024
             production: 2048
-          disk:
-
       startupProbe:
         path:
           all: '/health'
