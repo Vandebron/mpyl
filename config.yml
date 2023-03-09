@@ -5,7 +5,7 @@ cvs:
     repository: 'Vandebron/mpyl'
     token: !ENV ${GITHUB_TOKEN}
     app:
-      privateKeyPath: 'mpyl-pipeline.2023-02-20.private-key.pem'
+      privateKeyBase64Encoded: !ENV ${MPYL_GITHUB_APP_PRIVATE_KEY}
       appId: '295700'
 docker:
   registry:
@@ -17,6 +17,9 @@ docker:
     buildTarget: 'builder'
     testTarget: 'tester'
     dockerFileName: 'Dockerfile-mpl'
+  compose:
+    periodSeconds: 2
+    failureThreshold: 20
 sbt:
   command: 'sbt'
   javaOpts: '-Xmx4G -Xms4G -XX:+UseG1GC -XX:+CMSClassUnloadingEnabled -Xss2M'
