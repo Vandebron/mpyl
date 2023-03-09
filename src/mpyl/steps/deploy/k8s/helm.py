@@ -20,15 +20,17 @@ version: 0.1.0
 appVersion: "{run_properties.versioning.identifier}"
 """
 
-def install(logger: Logger, step_input: Input, name_space: str, kube_context: str) -> Output:
+
+def install(logger: Logger, step_input: Input, name_space: str, kube_context: str,
+            chart_builder: ChartBuilder) -> Output:
     if step_input.required_artifact:
         image_name = step_input.required_artifact.spec['image']
     else:
         raise ValueError('Required artifact must be defined')
 
-    deploy_chart = ChartBuilder(step_input, image_name)
-
-    templates = deploy_chart.to_chart(cron=step_input.project.kubernetes.cron)
+    # deploy_chart = ChartBuilder(step_input, image_name)
+    # templates = deploy_chart.to_chart(cron=step_input.project.kubernetes.cron)
+    templates = chart_builder.set_input(step_input, image_name).to_chart()
     chart_path = Path(step_input.project.target_path) / "chart"
 
     shutil.rmtree(chart_path, ignore_errors=True)

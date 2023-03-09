@@ -2,7 +2,7 @@
 Data classes for the composition of Custom Resource Definitions.
 More info: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/
 """
-
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Dict, Optional
 
@@ -55,7 +55,7 @@ class KubernetesConfig:
                                 startup_probe_defaults=values['startupProbe'])
 
 
-class ChartBuilder:
+class ChartBuilder(ABC):
     step_input: Input
     project: Project
     mappings: dict[int, int]
@@ -67,7 +67,11 @@ class ChartBuilder:
     image_name: str
     kubernetes_config: KubernetesConfig
 
-    def __init__(self, step_input: Input, image_name: str):
+    @abstractmethod
+    def to_chart(self):
+        pass
+
+    def set_input(self, step_input: Input, image_name: str):
         self.step_input = step_input
         project = self.step_input.project
         self.project = project
@@ -88,6 +92,8 @@ class ChartBuilder:
         self.target = step_input.run_properties.target
         self.release_name = self.project.name.lower()
         self.image_name = image_name
+
+        return self
 
     def _to_labels(self) -> Dict:
         run_properties = self.step_input.run_properties
@@ -152,21 +158,6 @@ class ChartBuilder:
     def to_service_account(self) -> V1ServiceAccount:
         return V1ServiceAccount(api_version="v1", kind="ServiceAccount", metadata=self._to_object_meta(),
                                 image_pull_secrets=[V1LocalObjectReference("bigdataregistry")])
-
-    def to_chart(self, cron=None) -> dict[str, str]:
-        if cron:
-            chart = {'deployment': to_yaml(self.to_deployment()), 'serviceaccount': to_yaml(self.to_service_account()),
-                     'job': to_yaml(self.to_job())}
-        else:
-            chart = {'deployment': to_yaml(self.to_deployment()), 'serviceaccount': to_yaml(self.to_service_account()),
-                     'service': to_yaml(self.to_service())}
-        if self.sealed_secrets:
-            chart['sealedsecrets'] = to_yaml(self.to_sealed_secrets())
-
-        if self.deployment.traefik:
-            chart['ingress-https-route'] = to_yaml(self.to_ingress_routes())
-
-        return chart
 
     def to_sealed_secrets(self) -> Optional[V1SealedSecret]:
         if self.sealed_secrets is None:
@@ -245,3 +236,30 @@ class ChartBuilder:
                 selector=self._to_selector(),
             ),
         )
+
+
+class ServiceChartBuilder(ChartBuilder):
+    def to_chart(self) -> dict[str, str]:
+        chart = {'deployment': to_yaml(self.to_deployment()),
+                 'serviceaccount': to_yaml(self.to_service_account()),
+                 'service': to_yaml(self.to_service())}
+
+        if self.sealed_secrets:
+            chart['sealedsecrets'] = to_yaml(self.to_sealed_secrets())
+
+        if self.deployment.traefik:
+            chart['ingress-https-route'] = to_yaml(self.to_ingress_routes())
+
+        return chart
+
+
+class JobChartBuilder(ChartBuilder):
+    def to_chart(self, ) -> dict[str, str]:
+        chart = {'deployment': to_yaml(self.to_deployment()),
+                 'serviceaccount': to_yaml(self.to_service_account()),
+                 'job': to_yaml(self.to_job())}
+
+        if self.sealed_secrets:
+            chart['sealedsecrets'] = to_yaml(self.to_sealed_secrets())
+
+        return chart
