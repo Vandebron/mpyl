@@ -135,26 +135,6 @@ class ChartBuilder(ABC):
         v1_probe.http_get = V1HTTPGetAction(path='/health' if path is None else path, port='port-0')
         return v1_probe
 
-    def to_service(self) -> V1Service:
-        service_ports = list(map(lambda key: V1ServicePort(port=key, target_port=self.mappings[key], protocol="TCP",
-                                                           name=f"{key}-webservice-port"), self.mappings.keys()))
-
-        service = V1Service(api_version='v1', kind='Service', metadata=self._to_object_meta(),
-                            spec=V1ServiceSpec(type="ClusterIP", ports=service_ports,
-                                               selector=self._to_selector().match_labels))
-        return service
-
-    def to_job(self) -> V1Job:
-        deployment = self.to_deployment()
-        return V1Job(api_version='batch/v1', kind='Job', metadata=self._to_object_meta(),
-                     spec=V1JobSpec(template=deployment.spec.template))
-
-    def to_ingress_routes(self) -> Optional[V1AlphaIngressRoute]:
-        if not self.deployment.traefik:
-            return None
-        return V1AlphaIngressRoute(metadata=self._to_object_meta(), hosts=self.deployment.traefik.hosts,
-                                   service_port=123, name=self.release_name, target=self.target)
-
     def to_service_account(self) -> V1ServiceAccount:
         return V1ServiceAccount(api_version="v1", kind="ServiceAccount", metadata=self._to_object_meta(),
                                 image_pull_secrets=[V1LocalObjectReference("bigdataregistry")])
@@ -252,6 +232,21 @@ class ServiceChartBuilder(ChartBuilder):
 
         return chart
 
+    def to_service(self) -> V1Service:
+        service_ports = list(map(lambda key: V1ServicePort(port=key, target_port=self.mappings[key], protocol="TCP",
+                                                           name=f"{key}-webservice-port"), self.mappings.keys()))
+
+        service = V1Service(api_version='v1', kind='Service', metadata=self._to_object_meta(),
+                            spec=V1ServiceSpec(type="ClusterIP", ports=service_ports,
+                                               selector=self._to_selector().match_labels))
+        return service
+
+    def to_ingress_routes(self) -> Optional[V1AlphaIngressRoute]:
+        if not self.deployment.traefik:
+            return None
+        return V1AlphaIngressRoute(metadata=self._to_object_meta(), hosts=self.deployment.traefik.hosts,
+                                   service_port=123, name=self.release_name, target=self.target)
+
 
 class JobChartBuilder(ChartBuilder):
     def to_chart(self, ) -> dict[str, str]:
@@ -263,3 +258,8 @@ class JobChartBuilder(ChartBuilder):
             chart['sealedsecrets'] = to_yaml(self.to_sealed_secrets())
 
         return chart
+
+    def to_job(self) -> V1Job:
+        deployment = self.to_deployment()
+        return V1Job(api_version='batch/v1', kind='Job', metadata=self._to_object_meta(),
+                     spec=V1JobSpec(template=deployment.spec.template))
