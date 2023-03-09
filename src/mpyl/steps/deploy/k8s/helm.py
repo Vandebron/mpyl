@@ -6,7 +6,7 @@ import shutil
 from logging import Logger
 from pathlib import Path
 
-from .buildchart import BuildChart
+from .chartbuilder import ChartBuilder
 from ...models import RunProperties, Input, Output
 from ....utilities.subprocess import custom_check_output
 
@@ -26,7 +26,7 @@ def install(logger: Logger, step_input: Input, name_space: str, kube_context: st
     else:
         raise ValueError('Required artifact must be defined')
 
-    deploy_chart = BuildChart(step_input, image_name)
+    deploy_chart = ChartBuilder(step_input, image_name)
 
     templates = deploy_chart.to_chart(cron=step_input.project.kubernetes.cron)
     chart_path = Path(step_input.project.target_path) / "chart"
