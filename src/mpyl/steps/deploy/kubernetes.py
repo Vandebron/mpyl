@@ -1,25 +1,22 @@
 """ Step that deploys the docker image produced in the build stage to Kubernetes, using HELM. """
-
+from abc import abstractmethod
 from logging import Logger
 
 from kubernetes import config, client
 
 from .k8s import helm
+from .k8s.chartbuilder import ServiceChartBuilder, ChartBuilder, JobChartBuilder
 from .k8s.rancher import rancher_namespace_metadata, cluster_config
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
 from ...project import Stage
 
 
-class DeployKubernetes(Step):
-
-    def __init__(self, logger: Logger) -> None:
-        super().__init__(logger, Meta(
-            name='Kubernetes Deploy',
-            description='Deploy to k8s',
-            version='0.0.1',
-            stage=Stage.DEPLOY
-        ), produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.DOCKER_IMAGE)
+class AbstractKubernetesDeploy(Step):
+    @property
+    @abstractmethod
+    def chart_builder(self) -> ChartBuilder:
+        pass
 
     def execute(self, step_input: Input) -> Output:
         self._logger.info(f"Deploying project {step_input.project.name} with dry run: {step_input.dry_run}")
@@ -43,6 +40,38 @@ class DeployKubernetes(Step):
         else:
             self._logger.info(f"Found namespace {namespace}")
 
-        helm_result = helm.install(self._logger, step_input, namespace, context)
+        helm_result = helm.install(self._logger, step_input, namespace, context, self.chart_builder)
         self._logger.info(helm_result.message)
         return helm_result
+
+
+class DeployKubernetes(AbstractKubernetesDeploy):
+    def __init__(self, logger: Logger) -> None:
+        super().__init__(logger, Meta(
+            name='Kubernetes Deploy',
+            description='Deploy to k8s',
+            version='0.0.1',
+            stage=Stage.DEPLOY
+        ), produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.DOCKER_IMAGE)
+
+    def chart_builder(self) -> ChartBuilder:
+        return ServiceChartBuilder()
+
+    def execute(self, step_input: Input) -> Output:
+        return super().execute(step_input)
+
+
+class DeployKubernetesJob(AbstractKubernetesDeploy):
+    def __init__(self, logger: Logger) -> None:
+        super().__init__(logger, Meta(
+            name='Kubernetes Job Deploy',
+            description='Deploy to k8s',
+            version='0.0.1',
+            stage=Stage.DEPLOY
+        ), produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.DOCKER_IMAGE)
+
+    def chart_builder(self) -> ChartBuilder:
+        return JobChartBuilder()
+
+    def execute(self, step_input: Input) -> Output:
+        return super().execute(step_input)
