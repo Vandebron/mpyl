@@ -54,11 +54,10 @@ class DeployKubernetes(AbstractKubernetesDeploy):
             stage=Stage.DEPLOY
         ), produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.DOCKER_IMAGE)
 
-    def chart_builder(self) -> ChartBuilder:
-        return ServiceChartBuilder()
+    chart_builder: ChartBuilder = ServiceChartBuilder()
 
     def execute(self, step_input: Input) -> Output:
-        return super().execute(step_input)
+        return self.execute(step_input)
 
 
 class DeployKubernetesJob(AbstractKubernetesDeploy):
@@ -70,8 +69,7 @@ class DeployKubernetesJob(AbstractKubernetesDeploy):
             stage=Stage.DEPLOY
         ), produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.DOCKER_IMAGE)
 
-    def chart_builder(self) -> ChartBuilder:
-        return JobChartBuilder()
+    chart_builder: ChartBuilder = JobChartBuilder()
 
     def execute(self, step_input: Input) -> Output:
-        return super().execute(step_input)
+        return self.execute(step_input)
