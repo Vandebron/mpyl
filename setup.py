@@ -36,6 +36,7 @@ setup(
     name="mpyl",
     version=version,
     description="Modular Pipeline Library",
+    author="Vandebron Energie BV",
     long_description=readme,
     long_description_content_type="text/markdown",
     url="https://vandebron.github.io/mpyl",

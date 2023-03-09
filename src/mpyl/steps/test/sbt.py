@@ -25,17 +25,43 @@ class TestSbt(Step):
             after=IntegrationTestAfter(logger)
         )
 
-    def execute(self, step_input: Input) -> Output:
-        command_compile = self._construct_sbt_command(step_input, self._construct_sbt_command_compile)
-        command_test = self._construct_sbt_command(step_input, self._construct_sbt_command_test)
-        project = step_input.project
+    def _test_with_coverage(self, step_input: Input, sbt_config: SbtConfig) -> Output:
+        command_compile = self._construct_sbt_command(step_input, sbt_config,
+                                                      self._construct_sbt_command_compile_with_coverage)
+        compile_outcome = custom_check_output(self._logger, command_compile)
+        project_name = step_input.project.name
+        if not compile_outcome.success:
+            return Output(success=False, message=f"Tests failed to compile for {project_name}",
+                          produced_artifact=None)
 
-        if custom_check_output(self._logger, command_compile).success:
-            output = custom_check_output(self._logger, command_test)
-            if not output.success:
-                return Output(success=False,
-                              message=f"Tests failed to run for {project.name}. No test results have been recorded.",
-                              produced_artifact=None)
+        command_test = self._construct_sbt_command(step_input, sbt_config,
+                                                   self._construct_sbt_command_test_with_coverage)
+        test_outcome = custom_check_output(self._logger, command_test)
+        if not test_outcome.success:
+            return Output(success=False,
+                          message=f"Tests failed to run for {project_name}. No test results have been recorded.",
+                          produced_artifact=None)
+        return Output(success=True, message="Success")
+
+    def _test_without_coverage(self, step_input: Input, sbt_config: SbtConfig) -> Output:
+        command_test_without_coverage = self._construct_sbt_command(step_input, sbt_config,
+                                                                    self._construct_sbt_command_test_without_coverage)
+        run_outcome = custom_check_output(self._logger, command_test_without_coverage)
+        if not run_outcome.success:
+            return Output(success=False, message=f"Tests without coverage failed to run for {step_input.project.name}",
+                          produced_artifact=None)
+        return Output(success=True, message="Success")
+
+    def execute(self, step_input: Input) -> Output:
+        project = step_input.project
+        sbt_config = SbtConfig.from_config(config=step_input.run_properties.config)
+        self._logger.debug(f'Config {sbt_config}')
+
+        test_result = self._test_with_coverage(step_input, sbt_config) if sbt_config.test_with_coverage \
+            else self._test_without_coverage(step_input, sbt_config)
+
+        if not test_result.success:
+            return test_result
 
         artifact = self._extract_test_report(project, step_input)
         suite = to_test_suites(artifact)
@@ -45,7 +71,7 @@ class TestSbt(Step):
                       produced_artifact=artifact)
 
     @staticmethod
-    def _construct_sbt_command_compile(step_input: Input) -> list[str]:
+    def _construct_sbt_command_compile_with_coverage(step_input: Input) -> list[str]:
         return [
             f'project {step_input.project.name}',
             'coverageOn',
@@ -53,7 +79,7 @@ class TestSbt(Step):
         ]
 
     @staticmethod
-    def _construct_sbt_command_test(step_input: Input):
+    def _construct_sbt_command_test_with_coverage(step_input: Input):
         return [
             f'project {step_input.project.name}',
             'test',
@@ -61,8 +87,12 @@ class TestSbt(Step):
         ]
 
     @staticmethod
-    def _construct_sbt_command(step_input: Input, commands_fn: Callable[[Input], list[str]]):
-        command = SbtConfig.from_config(config=step_input.run_properties.config).to_command()
+    def _construct_sbt_command_test_without_coverage(step_input: Input):
+        return [f'{step_input.project.name}/test']
+
+    @staticmethod
+    def _construct_sbt_command(step_input: Input, config: SbtConfig, commands_fn: Callable[[Input], list[str]]):
+        command = config.to_command()
         command.append("; ".join(commands_fn(step_input)))
         return command
 

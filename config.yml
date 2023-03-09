@@ -7,11 +7,20 @@ cvs:
     app:
       privateKeyBase64Encoded: !ENV ${MPYL_GITHUB_APP_PRIVATE_KEY}
       appId: '295700'
+slack:
+  botToken: !ENV ${SLACK_TOKEN}
+  icons:
+    success: 'thug-parrot'
+    failure: 'sadparrot'
+jira:
+  site: 'https://vandebron.atlassian.net'
+  userName: !ENV ${JIRA_USER_PASSWORD_USR:jira_user}
+  password: !ENV ${JIRA_USER_PASSWORD_PSW:jira_password}
 docker:
   registry:
     hostName: 'bigdataregistry.azurecr.io'
-    userName: !ENV ${DOCKER_REGISTRY_USR:user}
-    password: !ENV ${DOCKER_REGISTRY_PSW:password}
+    userName: !ENV ${DOCKER_REGISTRY_USR:docker_user}
+    password: !ENV ${DOCKER_REGISTRY_PSW:docker_password}
   build:
     rootFolder: '.'
     buildTarget: 'builder'
@@ -22,6 +31,8 @@ docker:
     failureThreshold: 20
 sbt:
   command: 'sbt'
+  testWithCoverage: !ENV ${SBT_RUN_WITH_COVERAGE:false}
+  verbose: false
   javaOpts: '-Xmx4G -Xms4G -XX:+UseG1GC -XX:+CMSClassUnloadingEnabled -Xss2M'
   sbtOpts: 'user.timezone=GMT jline.terminal=jline.UnixTerminal'
 kubernetes:

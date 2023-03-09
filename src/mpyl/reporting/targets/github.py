@@ -33,6 +33,7 @@ Checks can be referred to from branch protection rules, in order to prevent faul
 import base64
 from dataclasses import dataclass
 from datetime import datetime
+from logging import Logger
 from pathlib import Path
 from typing import Dict, Optional
 
@@ -124,14 +125,15 @@ class CommitCheck(Reporter):
     _config: GithubConfig
     _check_run_id: Optional[int]
 
-    def __init__(self, config: Dict):
+    def __init__(self, config: Dict, logger: Logger):
         self._config = GithubConfig(config)
         self.git_repository = Repository(RepoConfig(config))
         self._check_run_id = None
+        self._logger = logger
 
     @staticmethod
     def _to_output(results: RunResult) -> dict:
-        build_id = results.run_properties.build_id
+        build_id = results.run_properties.details.build_id
         summary = ':white_check_mark: Build successful' if results.is_success else ':x: Build failed'
         return {'title': f'Build {build_id}', 'summary': summary + '\n' + run_result_to_markdown(results),
                 'text': to_string(results)}
@@ -154,6 +156,7 @@ class CommitCheck(Reporter):
         if self._check_run_id:
             run = repo.get_check_run(self._check_run_id)
             conclusion = 'success' if results.is_success else 'failure'
+            self._logger.info(f'Setting check to {conclusion}')
             run.edit(completed_at=datetime.now(), conclusion=conclusion, output=self._to_output(results))
         else:
             self._check_run_id = repo.create_check_run(name='Pipeline build', head_sha=self.git_repository.get_sha,
