@@ -28,8 +28,6 @@ def install(logger: Logger, step_input: Input, name_space: str, kube_context: st
     else:
         raise ValueError('Required artifact must be defined')
 
-    # deploy_chart = ChartBuilder(step_input, image_name)
-    # templates = deploy_chart.to_chart(cron=step_input.project.kubernetes.cron)
     templates = chart_builder.set_input(step_input, image_name).to_chart()
     chart_path = Path(step_input.project.target_path) / "chart"
 

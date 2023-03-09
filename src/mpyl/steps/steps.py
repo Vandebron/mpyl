@@ -15,7 +15,7 @@ from .build.dockerbuild import BuildDocker
 from .build.echo import BuildEcho
 from .build.sbt import BuildSbt
 from .deploy.echo import DeployEcho
-from .deploy.kubernetes import DeployKubernetes
+from .deploy.kubernetes import DeployKubernetes, DeployKubernetesJob
 from .models import Output, Input, RunProperties, ArtifactType, Artifact
 from .test.dockertest import TestDocker
 from .test.echo import TestEcho
@@ -62,7 +62,8 @@ class Steps:
             },
             Stage.DEPLOY: {
                 DeployEcho(logger),
-                DeployKubernetes(logger)
+                DeployKubernetes(logger),
+                DeployKubernetesJob(logger)
             }
         }
 
