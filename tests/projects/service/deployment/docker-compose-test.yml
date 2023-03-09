@@ -1,0 +1,14 @@
+version: '2.1'
+services:
+  postgres:
+    image: postgres:13.4
+    environment:
+      POSTGRES_DB: test_db
+      POSTGRES_PASSWORD: test_password
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 2s
+      timeout: 5s
+      retries: 10

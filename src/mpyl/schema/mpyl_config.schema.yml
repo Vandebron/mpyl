@@ -87,12 +87,14 @@ definitions:
           privateKeyPath:
             description: Used to authenticate with github if the app is used (https://github.com/apps/mpyl-pipeline)
             type: string
+          privateKeyBase64Encoded:
+            description: Used to authenticate with github if the app is used (https://github.com/apps/mpyl-pipeline)
+            type: string
           appId:
             description: The id of the github app (https://github.com/apps/mpyl-pipeline) that has permission to update checks
             type: string
             default: 295700
         required:
-          - privateKeyPath
           - appId
     required:
       - repository
@@ -106,6 +108,18 @@ definitions:
         "$ref": "#/definitions/Registry"
       build:
         "$ref": "#/definitions/Build"
+      compose:
+        type: object
+        properties:
+          periodSeconds:
+            description: "Polling interval for checking if containers are up"
+            type: integer
+            default: 2
+          failureThreshold:
+            description: "Maximum number of times to poll before considering 'docker-compose up' failed"
+            type: integer
+            default: 20
+        required: ['periodSeconds', 'failureThreshold']
     required:
       - registry
     title: Docker

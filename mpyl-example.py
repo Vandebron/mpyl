@@ -68,7 +68,7 @@ def main(log: Logger, args: argparse.Namespace):
 
     if not args.local:
         from mpyl.reporting.targets.github import CommitCheck
-        check = CommitCheck(config)
+        check = CommitCheck(config=config)
         check.send_report(run_result)
 
     def __run_build(accumulator: RunResult):
