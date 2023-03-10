@@ -64,10 +64,17 @@ class SlackIcons:
     failure: str
 
 
+@dataclass(frozen=True)
+class MessageIdentifier:
+    channel_id: str
+    ts: str
+
+
 class SlackReporter(Reporter):
     _icons: SlackIcons
+    _message_identifier: Optional[MessageIdentifier]
 
-    def __init__(self, config: Dict, channel: str, title: str):
+    def __init__(self, config: Dict, channel: str, title: str, message_identifier: Optional[MessageIdentifier] = None):
         slack_config = config.get('slack')
         if not slack_config:
             raise ValueError('slack config not set')
@@ -76,6 +83,7 @@ class SlackReporter(Reporter):
         self._title = title
         icons = slack_config['icons']
         self._icons = SlackIcons(success=icons['success'], failure=icons['failure'])
+        self._message_identifier = message_identifier
 
     def send_report(self, results: RunResult) -> None:
         build_props = results.run_properties
@@ -105,8 +113,14 @@ class SlackReporter(Reporter):
                                          ImageElement(image_url=profile_image, alt_text=user_name)])
                   ]
 
-        self._client.chat_postMessage(channel=self._channel, icon_emoji=':robot_face:', mrkdwn=True, blocks=blocks,
-                                      text=text)
+        if self._message_identifier:
+            self._client.chat_update(channel=self._message_identifier.channel_id, ts=self._message_identifier.ts,
+                                     icon_emoji=':robot_face:', mrkdwn=True, blocks=blocks, text=text)
+            return
+
+        response = self._client.chat_postMessage(channel=self._channel, icon_emoji=':robot_face:', mrkdwn=True,
+                                                 blocks=blocks, text=text)
+        self._message_identifier = MessageIdentifier(channel_id=response.get('channel'), ts=response.get('ts'))
 
     @staticmethod
     def compose_context(build_props: RunProperties, icon: str, user: Optional[str]) -> str:
