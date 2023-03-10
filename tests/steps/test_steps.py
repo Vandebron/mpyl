@@ -1,3 +1,4 @@
+import logging
 from io import StringIO
 from logging import Logger
 
@@ -18,6 +19,7 @@ yaml.preserve_quotes = True
 
 class TestSteps:
     resource_path = root_test_path / "test_resources"
+    executor = Steps(logger=logging.getLogger(), properties=test_data.RUN_PROPERTIES)
 
     @staticmethod
     def _roundtrip(output):
@@ -53,7 +55,27 @@ class TestSteps:
     def test_should_return_error_if_stage_not_defined(self):
         config_values = parse_config(self.resource_path / "config.yml")
         config_values['kubernetes']['rancher']['cluster']['test']['invalid'] = 'somevalue'
-        properties = RunProperties("id", Target.PULL_REQUEST, VersioningProperties("", "feature/ARC-123", 1, None), config_values)
+        properties = RunProperties("id", Target.PULL_REQUEST, VersioningProperties("", "feature/ARC-123", 1, None),
+                                   config_values)
         with pytest.raises(ValidationError) as excinfo:
             Steps(logger=Logger.manager.getLogger('logger'), properties=properties)
         assert "('invalid' was unexpected)" in excinfo.value.message
+
+    def test_should_succeed_if_executor_is_known(self):
+        project = test_data.get_project_with_stages({'build': 'Echo Build'})
+        result = self.executor.execute(stage=Stage.BUILD, project=project)
+        assert result.output.success
+        assert result.output.message == 'Built test'
+        assert result.output.produced_artifact is None
+
+    def test_should_succeed_if_executor_is_not_known(self):
+        project = test_data.get_project_with_stages({'build': 'Unknown Build'})
+        result = self.executor.execute(stage=Stage.BUILD, project=project)
+        assert not result.output.success
+        assert result.output.message == "Executor 'Unknown Build' for 'build' not known or registered"
+
+    def test_should_succeed_if_bla(self):
+        project = test_data.get_project_with_stages({'test': 'Some Test'})
+        result = self.executor.execute(stage=Stage.BUILD, project=project)
+        assert not result.output.success
+        assert result.output.message == "Stage 'build' not defined on project 'test'"

@@ -132,7 +132,7 @@ class Steps:
         else:
             self._logger.warning(f"No executor found for {stage_name} in stage {stage}")
 
-        return Output(success=False, message=f"Executor {stage.value} not defined on project {project.name}")
+        return Output(success=False, message=f"Executor '{stage_name}' for '{stage.value}' not known or registered")
 
     def execute(self, stage: Stage, project: Project, dry_run: bool = False) -> StepResult:
         step_output = self._execute_stage(stage, project, dry_run)

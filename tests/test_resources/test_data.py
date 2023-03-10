@@ -2,7 +2,7 @@ from pathlib import Path
 
 from pyaml_env import parse_config
 
-from src.mpyl.project import load_project, Target, Project
+from src.mpyl.project import load_project, Target, Project, Stages
 from src.mpyl.steps.models import RunProperties, VersioningProperties, RunContext
 from src.mpyl.utilities.repo import Repository, RepoConfig
 from tests import root_test_path
@@ -20,6 +20,11 @@ RUN_PROPERTIES = RunProperties(
 
 def get_project() -> Project:
     return load_project(resource_path, "test_project.yml", False)
+
+
+def get_project_with_stages(stage_config: dict):
+    stages = Stages.from_config(stage_config)
+    return Project('test', 'Test project', '', stages, [], None, None)
 
 
 def get_repo() -> Repository:
