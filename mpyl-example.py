@@ -19,7 +19,7 @@ def main(logger: Logger, args: argparse.Namespace):
         from src.mpyl.steps.run import RunResult
         from src.mpyl.steps.steps import Steps
         from src.mpyl.utilities.pyaml_env import parse_config
-        from src.mpyl.utilities.repo import Repository, RepoConfig, History
+        from src.mpyl.utilities.repo import Repository, RepoConfig, Revision
     else:
         from mpyl.project import Project
         from mpyl.project import load_project, Stage
@@ -42,7 +42,7 @@ def main(logger: Logger, args: argparse.Namespace):
         pull_result = repo.pull_main_branch()
         logger.info(f'Pulled `{pull_result[0].remote_ref_path.strip()}` to local')
 
-    changes_in_branch: list[History] = repo.changes_in_branch()
+    changes_in_branch: list[Revision] = repo.changes_in_branch()
     logging.debug(f'Changes: {changes_in_branch}')
 
     project_paths = repo.find_projects()
