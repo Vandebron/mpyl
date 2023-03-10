@@ -52,6 +52,7 @@ def to_slack_markdown(markdown: str) -> str:
         (re.compile(r'^      - ', flags=re.M), '    ◽ '),
         (re.compile(r'^#+ (.+)$', flags=re.M), r'*\1*'),
         (re.compile(r'\*\*'), '*'),
+        (re.compile(r'~~'), '~'),
     )
     for regex, replacement in regex_replace:
         markdown = regex.sub(replacement, markdown)
