@@ -111,6 +111,7 @@ class Steps:
         executor = self._find_executor(stage, stage_name)
         if executor:
             try:
+                self._logger.info(f'Executing {stage} for {project.name}')
                 artifact: Optional[Artifact] = self._find_required_artifact(project, executor)
                 result = Output(success=True, message='')
                 if executor.before:

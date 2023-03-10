@@ -13,12 +13,24 @@ test_resource_path = root_test_path / "reporting" / "test_resources"
 
 def create_test_result() -> RunResult:
     result = RunResult(run_properties=test_data.RUN_PROPERTIES)
+    append_results(result)
+    return result
 
-    stages = Stages(build=None, test=None, deploy=None, postdeploy=None)
-    other_project = Project('test', 'Test project', '', stages, [], None, None)
 
+def create_test_result_with_plan() -> RunResult:
+    build_projects = [test_data.get_project(), __get_other_project()]
+    test_projects = [__get_other_project()]
+    run_plan = {
+        Stage.BUILD: set(build_projects),
+        Stage.TEST: set(test_projects)
+    }
+    return RunResult(run_properties=test_data.RUN_PROPERTIES, run_plan=run_plan)
+
+
+def append_results(result: RunResult) -> None:
+    other_project = __get_other_project()
     result.append(StepResult(stage=Stage.BUILD, project=test_data.get_project(),
-                             output=Output(success=True, message='Build sucessful'),
+                             output=Output(success=False, message='Build failed'),
                              timestamp=datetime.fromisoformat('2019-01-04T16:41:24+02:00')))
     result.append(StepResult(stage=Stage.BUILD, project=other_project,
                              output=Output(success=True, message='Build successful'),
@@ -30,4 +42,8 @@ def create_test_result() -> RunResult:
                                                     producing_step='Docker Test',
                                                     spec={TEST_OUTPUT_PATH_KEY: test_resource_path})),
                              timestamp=datetime.fromisoformat('2019-01-04T16:41:45+02:00')))
-    return result
+
+
+def __get_other_project():
+    stages = Stages(build=None, test=None, deploy=None, postdeploy=None)
+    return Project('test', 'Test project', '', stages, [], None, None)
