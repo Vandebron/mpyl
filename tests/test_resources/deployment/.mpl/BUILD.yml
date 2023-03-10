@@ -6,4 +6,4 @@ produced_artifact: !Artifact
   revision: '123'
   producing_step: Producing Step
   spec:
-    a: b
+    image: image:latest
