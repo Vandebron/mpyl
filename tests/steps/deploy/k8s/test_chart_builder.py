@@ -5,7 +5,7 @@ from kubernetes.client import V1Probe, V1ObjectMeta
 from pyaml_env import parse_config
 
 from src.mpyl.project import Target
-from src.mpyl.steps.deploy.k8s.chartbuilder import ChartBuilder, ServiceChartBuilder
+from src.mpyl.steps.deploy.k8s.chartbuilder import ChartBuilder, ServiceChartBuilder, JobChartBuilder
 from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml
 from src.mpyl.steps.deploy.k8s.resources.customresources import V1AlphaIngressRoute
 from src.mpyl.steps.models import Input
@@ -16,6 +16,7 @@ from tests.test_resources.test_data import assert_roundtrip, get_project
 
 resource_path = root_test_path / "test_resources"
 template_path = root_test_path / "steps" / "deploy" / "k8s" / "chart" / "templates"
+job_template_path = root_test_path / "steps" / "deploy" / "k8s" / "chart" / "job_templates"
 
 config = parse_config(resource_path / "config.yml")
 liveness_probe_defaults = config['project']['deployment']['kubernetes']['livenessProbe']
@@ -27,9 +28,9 @@ def _roundtrip(file_name: Path, chart: str, as_yaml: dict[str, str], overwrite: 
     assert_roundtrip(name_chart, chart_yaml, overwrite)
 
 
-def _build_service_chart():
-    return ServiceChartBuilder().set_input(step_input=Input(get_project(), test_data.RUN_PROPERTIES, None),
-                                           image_name='registry/image:123').to_chart()
+def _build_chart(chart_builder: ChartBuilder):
+    return chart_builder.set_input(step_input=Input(get_project(), test_data.RUN_PROPERTIES, None),
+                                   image_name='registry/image:123').to_chart()
 
 
 def test_probe_values_should_be_customizable():
@@ -80,6 +81,13 @@ def test_should_validate_against_crd_schema():
 
 @pytest.mark.parametrize('template',
                          ['deployment', 'service', 'serviceaccount', 'sealedsecrets', 'ingress-https-route'])
-def test_chart_roundtrip(template):
-    charts = _build_service_chart()
+def test_service_chart_roundtrip(template):
+    charts = _build_chart(ServiceChartBuilder())
     _roundtrip(template_path, template, charts)
+
+
+@pytest.mark.parametrize('a',
+                         ['configmap', 'cronjob', 'scheduledsparkapplication', 'sealedsecret', 'serviceaccount'])
+def test_job_chart_roundtrip(a):
+    charts = _build_chart(JobChartBuilder())
+    _roundtrip(job_template_path, a, charts)

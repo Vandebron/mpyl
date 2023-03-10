@@ -10,7 +10,7 @@ from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1Obj
     V1RollingUpdateDeployment, V1LabelSelector, V1ContainerPort, V1EnvVar, V1Service, \
     V1ServiceSpec, V1ServicePort, V1ServiceAccount, V1LocalObjectReference, \
     V1EnvVarSource, V1SecretKeySelector, V1Probe, ApiClient, V1HTTPGetAction, V1ResourceRequirements, \
-    V1PodTemplateSpec, V1DeploymentStrategy, V1Job, V1JobSpec
+    V1PodTemplateSpec, V1DeploymentStrategy, V1Job, V1JobSpec, V1CronJob, V1CronJobSpec
 from ruamel.yaml import YAML
 
 from .resources.crd import to_yaml  # pylint: disable = no-name-in-module
@@ -249,10 +249,14 @@ class ServiceChartBuilder(ChartBuilder):
 
 
 class JobChartBuilder(ChartBuilder):
-    def to_chart(self, ) -> dict[str, str]:
+    def to_chart(self) -> dict[str, str]:
         chart = {'deployment': to_yaml(self.to_deployment()),
-                 'serviceaccount': to_yaml(self.to_service_account()),
-                 'job': to_yaml(self.to_job())}
+                 'serviceaccount': to_yaml(self.to_service_account())}
+
+        if self.step_input.project.kubernetes.cron:
+            chart['cronjob'] = to_yaml(self.to_cronjob())
+        else:
+            chart['job'] = to_yaml(self.to_job())
 
         if self.sealed_secrets:
             chart['sealedsecrets'] = to_yaml(self.to_sealed_secrets())
@@ -263,3 +267,8 @@ class JobChartBuilder(ChartBuilder):
         deployment = self.to_deployment()
         return V1Job(api_version='batch/v1', kind='Job', metadata=self._to_object_meta(),
                      spec=V1JobSpec(template=deployment.spec.template))
+
+    def to_cronjob(self) -> V1CronJob:
+        deployment = self.to_deployment()
+        return V1CronJob(api_version='batch/v1', kind='CronJob', metadata=self._to_object_meta(),
+                         spec=V1CronJobSpec(job_template=deployment.spec.template))
