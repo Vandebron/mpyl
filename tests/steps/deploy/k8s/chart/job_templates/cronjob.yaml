@@ -1,0 +1,51 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: release-name-job
+  namespace: pr-123
+  labels:
+    helm.sh/chart: job-0.1.0
+    app.kubernetes.io/name: job
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "PR-1231"
+    app.kubernetes.io/managed-by: Helm
+    name: send-slack-notification
+    version: PR-1231
+spec:
+  schedule: "* * * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  concurrencyPolicy: Allow
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 3600
+      template:
+        metadata:
+          annotations:
+            image: "bigdataregistry.azurecr.io/send-slack-notification:PR-1231"
+        spec:
+          serviceAccountName: release-name-job
+          containers:
+            - name: release-name-job
+              image: bigdataregistry.azurecr.io/send-slack-notification:PR-1231
+              command:
+                - python
+                - -m
+                - job_testing_mpl_k8s.main_send_slack_notification
+              args:
+                [ ]
+              imagePullPolicy: Always
+              env:
+                - name: DA_SLACK_BOT_TOKEN
+                  value: xoxb-65778094515-2212272125044-E7qttf3XLQi2vaL0dGkBstLD
+                - name: DEPLOY_ENV
+                  value: test
+              resources:
+                limits:
+                  cpu: "0.3"
+                  memory: 1024Mi
+                requests:
+                  cpu: "0.3"
+                  memory: 1024Mi
+          restartPolicy: Never
+      backoffLimit: 0

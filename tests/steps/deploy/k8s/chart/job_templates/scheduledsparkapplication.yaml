@@ -1,0 +1,73 @@
+apiVersion: "sparkoperator.k8s.io/v1beta2"
+kind: ScheduledSparkApplication
+metadata:
+  name: release-name-job
+  namespace: pr-370
+
+spec:
+  schedule: "* * * * *"
+  template:
+    # Static
+    type: Scala
+    mode: cluster
+    imagePullPolicy: Always
+    sparkVersion: "3.1.1"
+    restartPolicy:
+      type: Never
+
+    # spark-config ConfigMap was made manually now, contains log4j.properties. Do we also want to make this deployable?
+    sparkConfigMap: release-name-log4j
+
+    # Depends on the application
+    image: bigdataregistry.azurecr.io/send-slack-notification:PR-1231
+    mainClass:
+    mainApplicationFile:
+
+    # Sparkplug specific - CLI commands
+    arguments:
+      - python
+      - -m
+      - job_testing_mpl_k8s.main_send_slack_notification
+
+    # Driver configuration - no longer in spark.conf
+    driver:
+      cores: 1
+      coreLimit: "1200m"
+      memory: "3G"
+      memoryOverhead: "1024"
+      labels:
+        version: 3.1.1
+      serviceAccount: release-name-job
+      # non-secrets
+      envVars:
+        DA_SLACK_BOT_TOKEN: "xoxb-65778094515-2212272125044-E7qttf3XLQi2vaL0dGkBstLD"
+        DEPLOY_ENV: "test"
+      # secrets
+      envSecretKeyRefs:
+
+    # Executor configuration - No longer in spark.conf.
+    # DO NOT FORGET TO SET NUMBER OF INSTANCES!
+    executor:
+      cores: 1
+      instances: 1
+      memory: "3G"
+      memoryOverhead: "2048"
+      labels:
+        version: 3.1.1
+      # non-secrets
+      envVars:
+        DA_SLACK_BOT_TOKEN: "xoxb-65778094515-2212272125044-E7qttf3XLQi2vaL0dGkBstLD"
+        DEPLOY_ENV: "test"
+      # secrets
+      envSecretKeyRefs:
+
+    # Static dependency - only needed for apps which use this?
+    deps:
+      jars:
+        - "https://repo1.maven.org/maven2/com/microsoft/sqlserver/mssql-jdbc/11.2.1.jre8/mssql-jdbc-11.2.1.jre8.jar"
+
+    # Static, manual spark.conf entries - related to the above dependency
+    sparkConf:
+      spark.driver.extraClassPath: "mssql-jdbc-11.2.1.jre8.jar"
+      spark.executor.extraClassPath: "mssql-jdbc-11.2.1.jre8.jar"
+      spark.sql.legacy.timeParserPolicy: "LEGACY"
