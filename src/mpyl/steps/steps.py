@@ -88,12 +88,11 @@ class Steps:
         return result
 
     @staticmethod
-    def _find_required_artifact(project: Project, step: Step) -> Optional[Artifact]:
-        if step.required_artifact is None:
+    def _find_required_artifact(project: Project, required_artifact: Optional[ArtifactType]) -> Optional[Artifact]:
+        if not required_artifact:
             return None
 
-        required_artifact = step.required_artifact
-        if step.required_artifact and required_artifact != ArtifactType.NONE:
+        if required_artifact and required_artifact != ArtifactType.NONE:
             output: Optional[Output] = Output.try_read(project.target_path, Stage.BUILD)
             if output is None or output.produced_artifact \
                     and output.produced_artifact.artifact_type != required_artifact:
@@ -112,11 +111,12 @@ class Steps:
         if executor:
             try:
                 self._logger.info(f'Executing {stage} for {project.name}')
-                artifact: Optional[Artifact] = self._find_required_artifact(project, executor)
+                artifact: Optional[Artifact] = self._find_required_artifact(project, executor.required_artifact)
                 result = Output(success=True, message='')
                 if executor.before:
                     result = self._execute(executor.before, project, self._properties,
-                                           self._find_required_artifact(project, executor.before), dry_run)
+                                           self._find_required_artifact(project, executor.before.required_artifact),
+                                           dry_run)
                 if result.success:
                     result = self._execute(executor, project, self._properties, artifact, dry_run)
                 if executor.after:

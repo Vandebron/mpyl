@@ -22,9 +22,9 @@ def get_project() -> Project:
     return load_project(resource_path, "test_project.yml", False)
 
 
-def get_project_with_stages(stage_config: dict):
+def get_project_with_stages(stage_config: dict, path: str = ''):
     stages = Stages.from_config(stage_config)
-    return Project('test', 'Test project', '', stages, [], None, None)
+    return Project('test', 'Test project', path, stages, [], None, None)
 
 
 def get_repo() -> Repository:
