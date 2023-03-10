@@ -102,8 +102,7 @@ class SlackReporter(Reporter):
         if not self._channel:
             raise ValueError('Channel not explicitly set and initiator could not be determined')
 
-        text = to_slack_markdown(
-            run_result_to_markdown(results) + (f'<@{user_info.initiator}>' if results.is_success else ''))
+        text = to_slack_markdown(run_result_to_markdown(results))
         blocks = self.__compose_blocks(results, text, user_info)
 
         if self._message_identifier:
@@ -122,6 +121,7 @@ class SlackReporter(Reporter):
 
     def __get_user_info(self, user_email: Optional[str]):
         profile_data: dict[str, str] = {}
+        user_id = None
         if user_email:
             user = self._client.users_lookupByEmail(email=user_email)
             user_id = user['user']['id']
