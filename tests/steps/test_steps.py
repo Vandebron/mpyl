@@ -52,10 +52,13 @@ class TestSteps:
         assert_roundtrip(test_resource_path / "deployment" / ".mpl" / "BUILD.yml", value)
 
     def test_find_required_output(self):
-        project = test_data.get_project_with_stages({'build': 'Echo Build'}, path=str(self.resource_path))
-
-        found_artifact = Steps._find_required_artifact(project, ArtifactType.DOCKER_IMAGE)
+        found_artifact = Steps._find_required_artifact(self.build_project, ArtifactType.DOCKER_IMAGE)
         assert found_artifact == self.docker_image.produced_artifact
+
+    def test_find_not_required_output(self):
+        with pytest.raises(ValueError) as exc_info:
+            Steps._find_required_artifact(self.build_project, ArtifactType.JUNIT_TESTS)
+        assert str(exc_info.value) == 'Artifact ArtifactType.JUNIT_TESTS required for test not found'
 
     def test_find_required_output_should_handle_none(self):
         assert Steps._find_required_artifact(self.build_project, None) is None
