@@ -19,7 +19,7 @@ class TestSlackReporter:
                                          'icons': {'success': 'thug-parrot', 'failure': 'sadparrot'}
                                          },
                                },
-                              '#notification-test', 'MPyL test build')
+                              None, 'MPyL test build')
         slack.send_report(run_result)
         append_results(run_result)
         slack.send_report(run_result)

@@ -74,14 +74,15 @@ class MessageIdentifier:
 class UserInfo:
     user_name: str
     profile_image: str
-    initiator: str
+    initiator: Optional[str]
 
 
 class SlackReporter(Reporter):
     _icons: SlackIcons
     _message_identifier: Optional[MessageIdentifier]
 
-    def __init__(self, config: Dict, channel: str, title: str, message_identifier: Optional[MessageIdentifier] = None):
+    def __init__(self, config: Dict, channel: Optional[str], title: str,
+                 message_identifier: Optional[MessageIdentifier] = None):
         slack_config = config.get('slack')
         if not slack_config:
             raise ValueError('slack config not set')
@@ -93,12 +94,16 @@ class SlackReporter(Reporter):
         self._message_identifier = message_identifier
 
     def send_report(self, results: RunResult) -> None:
-        build_props = results.run_properties
+        user_info = self.__get_user_info(results.run_properties.details.user_email)
 
-        user_email = build_props.details.user_email
-        user_info = self.__get_user_info(results, user_email)
+        if not self._channel and user_info.initiator:
+            self._channel = self.__open_conversation_with_user(user_info.initiator)
 
-        text = to_slack_markdown(run_result_to_markdown(results) + user_info.initiator)
+        if not self._channel:
+            raise ValueError('Channel not explicitly set and initiator could not be determined')
+
+        text = to_slack_markdown(
+            run_result_to_markdown(results) + (f'<@{user_info.initiator}>' if results.is_success else ''))
         blocks = self.__compose_blocks(results, text, user_info)
 
         if self._message_identifier:
@@ -111,7 +116,11 @@ class SlackReporter(Reporter):
                                                  blocks=blocks, text=text)
         self._message_identifier = MessageIdentifier(channel_id=response['channel'], time_stamp=response['ts'])
 
-    def __get_user_info(self, results, user_email: Optional[str]):
+    def __open_conversation_with_user(self, user_id: str):
+        opened_channel = self._client.conversations_open(users=[user_id])
+        return opened_channel['channel']['id']
+
+    def __get_user_info(self, user_email: Optional[str]):
         profile_data: dict[str, str] = {}
         if user_email:
             user = self._client.users_lookupByEmail(email=user_email)
@@ -122,7 +131,7 @@ class SlackReporter(Reporter):
         return UserInfo(user_name=profile_data.get('real_name_normalized', 'Anonymous'),
                         profile_image=profile_data.get('image_24',
                                                        'https://avatars.githubusercontent.com/u/18010732'),
-                        initiator='' if results.is_success else f'<@{user_id}>')
+                        initiator=user_id)
 
     def __compose_blocks(self, results: RunResult, text: str, user_info: UserInfo) -> list[Block]:
         icon = self._icons.success if results.is_success else self._icons.failure
