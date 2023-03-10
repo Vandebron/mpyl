@@ -4,16 +4,16 @@ import pytest
 
 from src.mpyl.reporting.targets.slack import to_slack_markdown, SlackReporter
 from tests import root_test_path
-from tests.reporting import create_test_result
+from tests.reporting import create_test_result_with_plan, append_results
 from tests.test_resources.test_data import assert_roundtrip
 
 
 class TestSlackReporter:
     test_resource_path = root_test_path / "reporting" / "test_resources"
 
-    @pytest.mark.skip(reason="for a local quick test roundtrip")
+    @pytest.mark.skip(reason="for a quick local test roundtrip")
     def test_send_test_message(self):
-        run_result = create_test_result()
+        run_result = create_test_result_with_plan()
 
         slack = SlackReporter({'slack': {'botToken': os.environ['SLACK_TOKEN'],
                                          'icons': {'success': 'thug-parrot', 'failure': 'sadparrot'}
@@ -21,6 +21,7 @@ class TestSlackReporter:
                                },
                               '#notification-test', 'MPyL test build')
         slack.send_report(run_result)
+        append_results(run_result)
         slack.send_report(run_result)
 
     def test_convert_md_to_slack(self):

@@ -6,29 +6,32 @@ from logging import Logger
 from rich.console import Console
 from rich.logging import RichHandler
 
-from src.mpyl.reporting.targets.jira import JiraReporter
-from src.mpyl.stages.discovery import for_stage
-
 
 def main(logger: Logger, args: argparse.Namespace):
     if args.local:
+        from src.mpyl.project import Project
         from src.mpyl.project import load_project, Stage
         from src.mpyl.reporting.formatting.markdown import run_result_to_markdown
+        from src.mpyl.reporting.targets.jira import JiraReporter
         from src.mpyl.stages.discovery import find_invalidated_projects_per_stage
+        from src.mpyl.stages.discovery import for_stage
         from src.mpyl.steps.models import RunProperties
         from src.mpyl.steps.run import RunResult
         from src.mpyl.steps.steps import Steps
-        from src.mpyl.utilities.repo import Repository, RepoConfig, History
         from src.mpyl.utilities.pyaml_env import parse_config
+        from src.mpyl.utilities.repo import Repository, RepoConfig, History
     else:
+        from mpyl.project import Project
         from mpyl.project import load_project, Stage
         from mpyl.reporting.formatting.markdown import run_result_to_markdown
+        from mpyl.reporting.targets.jira import JiraReporter
         from mpyl.stages.discovery import find_invalidated_projects_per_stage
+        from mpyl.stages.discovery import for_stage
         from mpyl.steps.models import RunProperties
         from mpyl.steps.run import RunResult
         from mpyl.steps.steps import Steps
-        from mpyl.utilities.repo import Repository, RepoConfig, History
         from mpyl.utilities.pyaml_env import parse_config
+        from mpyl.utilities.repo import Repository, RepoConfig, History
 
     config = parse_config("config.yml")
     properties = parse_config("run_properties.yml")
@@ -49,7 +52,7 @@ def main(logger: Logger, args: argparse.Namespace):
 
     all_projects = set(map(lambda p: load_project(".", p, False), project_paths))
 
-    projects_per_stage = {Stage.BUILD: for_stage(all_projects, Stage.BUILD),
+    projects_per_stage: dict[Stage, set[Project]] = {Stage.BUILD: for_stage(all_projects, Stage.BUILD),
                           Stage.TEST: for_stage(all_projects, Stage.TEST),
                           Stage.DEPLOY: for_stage(all_projects, Stage.DEPLOY)} if build_all else \
         find_invalidated_projects_per_stage(all_projects, changes_in_branch)
@@ -65,7 +68,7 @@ def main(logger: Logger, args: argparse.Namespace):
     executor = Steps(logger=logger, properties=run_properties)
     logger.info("Building projects")
 
-    run_result = RunResult(run_properties)
+    run_result = RunResult(run_properties=run_properties, run_plan=projects_per_stage)
 
     check = None
     slack = None
@@ -84,6 +87,8 @@ def main(logger: Logger, args: argparse.Namespace):
             for proj in projects:
                 result = executor.execute(stage, proj, args.dryrun)
                 accumulator.append(result)
+                if slack:
+                    slack.send_report(accumulator)
                 if not result.output.success:
                     logging.warning(f'Build failed at {stage} for {proj.name}')
                     return accumulator
