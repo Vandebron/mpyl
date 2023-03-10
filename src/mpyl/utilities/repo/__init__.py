@@ -11,10 +11,13 @@ from ...project import Project
 
 
 @dataclass(frozen=True)
-class History:
+class Revision:
     ord: int
-    revision: str
+    """Ordinal number indicating how this revision ranks historically"""
+    hash: str
+    """Git hash for this revision"""
     files_touched: set[str]
+    """Paths to files that were altered in this hash"""
 
 
 class RepoConfig:
@@ -42,11 +45,16 @@ class Repository:
     def root_dir(self) -> str:
         return self._root_dir
 
-    def changes_in_branch(self) -> list[History]:
+    def changes_in_branch(self) -> list[Revision]:
         revisions = reversed(list(self._repo.iter_commits(f"{self._config.main_branch}..HEAD")))
-        return [History(count, str(rev),
-                        self._repo.git.diff_tree(no_commit_id=True, name_only=True, r=str(rev)).splitlines()) for
+        return [Revision(count, str(rev),
+                         self._repo.git.diff_tree(no_commit_id=True, name_only=True, r=str(rev)).splitlines()) for
                 count, rev in enumerate(revisions)]
+
+    def changes_in_branch_including_local(self) -> list[Revision]:
+        in_branch = self.changes_in_branch()
+        in_branch.append(Revision(len(in_branch), '', self.changes_in_commit()))
+        return in_branch
 
     def pull_main_branch(self):
         remote = Remote(self._repo, 'origin')
@@ -54,7 +62,8 @@ class Repository:
         return remote.fetch(f"+refs/heads/{main}:refs/heads/{main}")
 
     def changes_in_commit(self) -> set[str]:
-        return set(self._repo.git.diff(None, name_only=True).splitlines())
+        changed: set[str] = set(self._repo.git.diff(None, name_only=True).splitlines())
+        return changed.union(self._repo.untracked_files)
 
     def find_projects(self) -> set[str]:
         """ returns a set of all project.yml files """
