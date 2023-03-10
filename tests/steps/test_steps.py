@@ -12,7 +12,7 @@ from src.mpyl.steps.models import Output, Artifact, ArtifactType, RunProperties,
 from src.mpyl.steps.steps import Steps
 from tests import root_test_path, test_resource_path
 from tests.test_resources import test_data
-from tests.test_resources.test_data import assert_roundtrip
+from tests.test_resources.test_data import assert_roundtrip, get_output
 
 yaml = YAML()
 yaml.preserve_quotes = True
@@ -21,10 +21,8 @@ yaml.preserve_quotes = True
 class TestSteps:
     resource_path = root_test_path / "test_resources"
     executor = Steps(logger=logging.getLogger(), properties=test_data.RUN_PROPERTIES)
-    meta_data = {'a': 'b'}
-    docker_image = Output(success=True, message="build success",
-                          produced_artifact=Artifact(artifact_type=ArtifactType.DOCKER_IMAGE, revision="123",
-                                                     producing_step="Producing Step", spec=meta_data))
+
+    docker_image = get_output()
     build_project = test_data.get_project_with_stages({'build': 'Echo Build'}, path=str(resource_path))
 
     @staticmethod
@@ -43,7 +41,7 @@ class TestSteps:
     def test_output_roundtrip(self):
         output: Output = self._roundtrip(self.docker_image)
         assert output.produced_artifact.artifact_type.name == "DOCKER_IMAGE"
-        assert output.produced_artifact.spec == self.meta_data
+        assert output.produced_artifact.spec == {'image': 'image:latest'}
 
     def test_write_output(self):
         stream = StringIO()

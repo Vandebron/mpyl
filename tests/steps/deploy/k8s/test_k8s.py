@@ -1,3 +1,5 @@
+import logging
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -5,6 +7,7 @@ from kubernetes.client import V1Probe, V1ObjectMeta
 from pyaml_env import parse_config
 
 from src.mpyl.project import Target
+from src.mpyl.steps.deploy.k8s.helm import install, write_chart, to_chart_metadata
 from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml
 from src.mpyl.steps.deploy.k8s.resources.customresources import V1AlphaIngressRoute
 from src.mpyl.steps.deploy.k8s.service import ServiceChart
@@ -22,12 +25,14 @@ class TestKubernetesChart:
     config = parse_config(resource_path / "config.yml")
     liveness_probe_defaults = config['project']['deployment']['kubernetes']['livenessProbe']
 
-    def _roundtrip(self, file_name: Path, chart: str, as_yaml: dict[str, str], overwrite: bool = False):
+    @staticmethod
+    def _roundtrip(file_name: Path, chart: str, as_yaml: dict[str, str], overwrite: bool = False):
         name_chart = file_name / f"{chart}.yaml"
         chart_yaml = as_yaml[chart]
         assert_roundtrip(name_chart, chart_yaml, overwrite)
 
-    def _build_chart(self):
+    @staticmethod
+    def _build_chart():
         return ServiceChart(step_input=Input(get_project(), test_data.RUN_PROPERTIES, None),
                             image_name='registry/image:123').to_chart()
 
