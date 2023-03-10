@@ -10,8 +10,9 @@ from ruamel.yaml import YAML  # type: ignore
 from src.mpyl.project import Project, Stages, Stage, Target
 from src.mpyl.steps.models import Output, Artifact, ArtifactType, RunProperties, VersioningProperties
 from src.mpyl.steps.steps import Steps
-from tests import root_test_path
+from tests import root_test_path, test_resource_path
 from tests.test_resources import test_data
+from tests.test_resources.test_data import assert_roundtrip
 
 yaml = YAML()
 yaml.preserve_quotes = True
@@ -20,6 +21,11 @@ yaml.preserve_quotes = True
 class TestSteps:
     resource_path = root_test_path / "test_resources"
     executor = Steps(logger=logging.getLogger(), properties=test_data.RUN_PROPERTIES)
+    meta_data = {'a': 'b'}
+    docker_image = Output(success=True, message="build success",
+                          produced_artifact=Artifact(artifact_type=ArtifactType.DOCKER_IMAGE, revision="123",
+                                                     producing_step="Producing Step", spec=meta_data))
+    build_project = test_data.get_project_with_stages({'build': 'Echo Build'}, path=str(resource_path))
 
     @staticmethod
     def _roundtrip(output):
@@ -35,14 +41,24 @@ class TestSteps:
         assert output.message == "build success"
 
     def test_output_roundtrip(self):
-        meta_data = {'a': 'b'}
-        output: Output = self._roundtrip(Output(success=True, message="build success",
-                                                produced_artifact=Artifact(artifact_type=ArtifactType.DOCKER_IMAGE,
-                                                                           revision="123",
-                                                                           producing_step="Producing Step",
-                                                                           spec=meta_data)))
+        output: Output = self._roundtrip(self.docker_image)
         assert output.produced_artifact.artifact_type.name == "DOCKER_IMAGE"
-        assert output.produced_artifact.spec == meta_data
+        assert output.produced_artifact.spec == self.meta_data
+
+    def test_write_output(self):
+        stream = StringIO()
+        yaml.dump(self.docker_image, stream)
+        value = stream.getvalue()
+        assert_roundtrip(test_resource_path / "deployment" / ".mpl" / "BUILD.yml", value)
+
+    def test_find_required_output(self):
+        project = test_data.get_project_with_stages({'build': 'Echo Build'}, path=str(self.resource_path))
+
+        found_artifact = Steps._find_required_artifact(project, ArtifactType.DOCKER_IMAGE)
+        assert found_artifact == self.docker_image.produced_artifact
+
+    def test_find_required_output_should_handle_none(self):
+        assert Steps._find_required_artifact(self.build_project, None) is None
 
     def test_should_return_error_if_stage_not_defined(self):
         steps = Steps(logger=Logger.manager.getLogger('logger'), properties=test_data.RUN_PROPERTIES)

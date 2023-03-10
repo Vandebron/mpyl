@@ -1,6 +1,7 @@
 # Modular Pypeline Library
 [![python](https://img.shields.io/badge/Python-3.9-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
 ![build-and-test-module](https://github.com/Vandebron/pympl/actions/workflows/build-package.yml/badge.svg?branch=main)
+![coverage](https://camo.githubusercontent.com/e35bc0e8a0231ed12f0b23394c8abbaffb720b84f620de4cc84134ecec8ca704/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f436f6465253230436f7665726167652d37362532352d737563636573733f7374796c653d666c6174)
 [![publish-documentation](https://github.com/Vandebron/mpyl/actions/workflows/docs.yml/badge.svg?branch=main)](https://vandebron.github.io/mpyl)
 [![version](https://img.shields.io/github/v/tag/Vandebron/pympl.svg?color=blue&include_prereleases=&sort=semver)](https://pypi.org/project/mpyl/)
 [![package downloads](https://img.shields.io/pypi/dw/mpyl.svg)](https://pypi.org/project/mpyl)
