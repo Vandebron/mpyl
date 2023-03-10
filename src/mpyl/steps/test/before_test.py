@@ -42,6 +42,9 @@ class IntegrationTestBefore(Step):
         while not goal_reached:
             proj: ComposeProject = docker_client.compose.ls()[0]
             goal_reached = (proj.created + proj.restarting + proj.exited + proj.paused + proj.dead) == 0
+            if not goal_reached:
+                self._logger.debug(f'Project stats: {proj}')
+
             poll += 1
             if poll >= config.failure_threshold:
                 return Output(success=False,
