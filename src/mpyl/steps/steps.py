@@ -89,18 +89,15 @@ class Steps:
 
     @staticmethod
     def _find_required_artifact(project: Project, required_artifact: Optional[ArtifactType]) -> Optional[Artifact]:
-        if not required_artifact:
+        if not required_artifact or required_artifact == ArtifactType.NONE:
             return None
 
-        if required_artifact and required_artifact != ArtifactType.NONE:
-            output: Optional[Output] = Output.try_read(project.target_path, Stage.BUILD)
-            if output is None or output.produced_artifact \
-                    and output.produced_artifact.artifact_type != required_artifact:
-                raise ValueError(
-                    f"Artifact {required_artifact} required for {project.name}, found: {output}")
+        for stage in Stage:
+            output: Optional[Output] = Output.try_read(project.target_path, stage)
+            if output and output.produced_artifact and output.produced_artifact.artifact_type == required_artifact:
+                return output.produced_artifact
 
-            return output.produced_artifact
-        return None
+        raise ValueError(f"Artifact {required_artifact} required for {project.name} not found")
 
     def _execute_stage(self, stage: Stage, project: Project, dry_run: bool = False) -> Output:
         stage_name = project.stages.for_stage(stage)
