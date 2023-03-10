@@ -78,7 +78,7 @@ def main(logger: Logger, args: argparse.Namespace):
         from mpyl.reporting.targets.github import CommitCheck
         from mpyl.reporting.targets.slack import SlackReporter
         check = CommitCheck(config=config, logger=logger)
-        slack = SlackReporter(config, '#project-mpyl', 'MPyL test build')
+        slack = SlackReporter(config, None, 'MPyL test build')
         jira = JiraReporter(config=config, branch=run_properties.versioning.branch or repo.get_branch, logger=logger)
         check.send_report(run_result)
 
