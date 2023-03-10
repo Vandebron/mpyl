@@ -190,13 +190,18 @@ class Resources:
 
 
 @dataclass(frozen=True)
+class CronSchedule:
+    schedule: str
+
+
+@dataclass(frozen=True)
 class Kubernetes:
     port_mappings: dict[int, int]
     liveness_probe: Optional[Probe]
     startup_probe: Optional[Probe]
     metrics: Optional[Metrics]
     resources: Resources
-    cron: Optional[str]
+    cron: Optional[CronSchedule]
 
     @staticmethod
     def from_config(values: dict):

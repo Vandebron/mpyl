@@ -14,7 +14,7 @@ from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1Obj
 from ruamel.yaml import YAML
 
 from .resources.crd import to_yaml  # pylint: disable = no-name-in-module
-from .resources.customresources import V1AlphaIngressRoute, V1SealedSecret  # pylint: disable = no-name-in-module
+from .resources.customresources import V1SealedSecret, V1AlphaIngressRoute  # pylint: disable = no-name-in-module
 from ...models import Input
 from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target
 
@@ -135,6 +135,12 @@ class ChartBuilder(ABC):
         v1_probe.http_get = V1HTTPGetAction(path='/health' if path is None else path, port='port-0')
         return v1_probe
 
+    def to_ingress_routes(self) -> Optional[V1AlphaIngressRoute]:
+        if not self.deployment.traefik:
+            return None
+        return V1AlphaIngressRoute(metadata=self._to_object_meta(), hosts=self.deployment.traefik.hosts,
+                                   service_port=123, name=self.release_name, target=self.target)
+
     def to_service_account(self) -> V1ServiceAccount:
         return V1ServiceAccount(api_version="v1", kind="ServiceAccount", metadata=self._to_object_meta(),
                                 image_pull_secrets=[V1LocalObjectReference("bigdataregistry")])
@@ -241,12 +247,6 @@ class ServiceChartBuilder(ChartBuilder):
                                                selector=self._to_selector().match_labels))
         return service
 
-    def to_ingress_routes(self) -> Optional[V1AlphaIngressRoute]:
-        if not self.deployment.traefik:
-            return None
-        return V1AlphaIngressRoute(metadata=self._to_object_meta(), hosts=self.deployment.traefik.hosts,
-                                   service_port=123, name=self.release_name, target=self.target)
-
 
 class JobChartBuilder(ChartBuilder):
     def to_chart(self) -> dict[str, str]:
@@ -271,4 +271,5 @@ class JobChartBuilder(ChartBuilder):
     def to_cronjob(self) -> V1CronJob:
         deployment = self.to_deployment()
         return V1CronJob(api_version='batch/v1', kind='CronJob', metadata=self._to_object_meta(),
-                         spec=V1CronJobSpec(job_template=deployment.spec.template))
+                         spec=V1CronJobSpec(job_template=deployment.spec.template,
+                                            schedule=self.project.kubernetes.cron.schedule))
