@@ -72,14 +72,17 @@ def main(logger: Logger, args: argparse.Namespace):
     run_result = RunResult(run_properties=run_properties, run_plan=projects_per_stage)
 
     check = None
-    slack = None
+    slack_channel = None
+    slack_personal = None
     jira = None
 
     if not args.local:
         from mpyl.reporting.targets.github import CommitCheck
         from mpyl.reporting.targets.slack import SlackReporter
         check = CommitCheck(config=config, logger=logger)
-        slack = SlackReporter(config, None, 'MPyL test build')
+        slack_channel = SlackReporter(config, '#project-mpyl', f'MPyL test {run_properties.versioning.identifier}')
+        if run_properties.details.user_email:
+            slack_personal = SlackReporter(config, None, f'MPyL test {run_properties.versioning.identifier}')
         jira = JiraReporter(config=config, branch=run_properties.versioning.branch or repo.get_branch, logger=logger)
         check.send_report(run_result)
 
@@ -88,8 +91,8 @@ def main(logger: Logger, args: argparse.Namespace):
             for proj in projects:
                 result = executor.execute(stage, proj, args.dryrun)
                 accumulator.append(result)
-                if slack:
-                    slack.send_report(accumulator)
+                if slack_personal:
+                    slack_personal.send_report(accumulator)
                 if not result.output.success:
                     logging.warning(f'Build failed at {stage} for {proj.name}')
                     return accumulator
@@ -99,7 +102,7 @@ def main(logger: Logger, args: argparse.Namespace):
 
     if not args.local:
         check.send_report(run_result)
-        slack.send_report(run_result)
+        slack_channel.send_report(run_result)
         jira.send_report(run_result)
 
     logging.info(run_result_to_markdown(run_result))
