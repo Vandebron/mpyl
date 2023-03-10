@@ -8,19 +8,18 @@ from tests import root_test_path
 from tests.test_resources import test_data
 
 
-class RepoTestCase:
+class TestRepo:
     resource_path = root_test_path / "test_resources"
 
     @pytest.mark.skipif(condition="GITHUB_JOB" in os.environ, reason="main is not available in github action")
-    def test_changes_in_commit_should_be_in_branch(self):
-        repo = test_data.TEST_REPO
-        changes_in_branch = repo.changes_in_branch()
+    def test_changes_local_and_un_versioned_should_be_included(self):
+        repo = test_data.get_repo()
+        changes_in_branch = repo.changes_in_branch_including_local()
         changes_in_commit = repo.changes_in_commit()
 
-        assert changes_in_commit.issubset(changes_in_branch), "should be subset"
+        assert changes_in_branch[-1].files_touched == changes_in_commit
 
     def test_load_config(self):
         yaml_values = parse_config(self.resource_path / "config.yml")
         config = RepoConfig(yaml_values)
         assert config.main_branch == 'main'
-

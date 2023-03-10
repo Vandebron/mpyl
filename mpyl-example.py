@@ -19,7 +19,7 @@ def main(logger: Logger, args: argparse.Namespace):
         from src.mpyl.steps.run import RunResult
         from src.mpyl.steps.steps import Steps
         from src.mpyl.utilities.pyaml_env import parse_config
-        from src.mpyl.utilities.repo import Repository, RepoConfig, Revision
+        from src.mpyl.utilities.repo import Repository, RepoConfig
     else:
         from mpyl.project import Project
         from mpyl.project import load_project, Stage
@@ -31,7 +31,7 @@ def main(logger: Logger, args: argparse.Namespace):
         from mpyl.steps.run import RunResult
         from mpyl.steps.steps import Steps
         from mpyl.utilities.pyaml_env import parse_config
-        from mpyl.utilities.repo import Repository, RepoConfig, History
+        from mpyl.utilities.repo import Repository, RepoConfig
 
     config = parse_config("config.yml")
     properties = parse_config("run_properties.yml")
@@ -42,7 +42,7 @@ def main(logger: Logger, args: argparse.Namespace):
         pull_result = repo.pull_main_branch()
         logger.info(f'Pulled `{pull_result[0].remote_ref_path.strip()}` to local')
 
-    changes_in_branch: list[Revision] = repo.changes_in_branch()
+    changes_in_branch = repo.changes_in_branch_including_local() if args.local else repo.changes_in_branch()
     logging.debug(f'Changes: {changes_in_branch}')
 
     project_paths = repo.find_projects()
@@ -53,8 +53,9 @@ def main(logger: Logger, args: argparse.Namespace):
     all_projects = set(map(lambda p: load_project(".", p, False), project_paths))
 
     projects_per_stage: dict[Stage, set[Project]] = {Stage.BUILD: for_stage(all_projects, Stage.BUILD),
-                          Stage.TEST: for_stage(all_projects, Stage.TEST),
-                          Stage.DEPLOY: for_stage(all_projects, Stage.DEPLOY)} if build_all else \
+                                                     Stage.TEST: for_stage(all_projects, Stage.TEST),
+                                                     Stage.DEPLOY: for_stage(all_projects,
+                                                                             Stage.DEPLOY)} if build_all else \
         find_invalidated_projects_per_stage(all_projects, changes_in_branch)
 
     for stage, projects in projects_per_stage.items():
