@@ -1,18 +1,19 @@
+"""Entrypoint for cli"""
+
 import click
 
-from cli.meta_info import MetaInfo
+from .cli.build import build
+from .cli.meta_info import version
+from .cli.projects import projects
 
 
-@click.command()
-@click.option('--version', help='Shows MPyL version', is_flag=True)
-@click.option('--about', help='Shows legal info and metadata', is_flag=True)
-def main(version, about):
+@click.group(name='mpyl')
+def main():
     """Command Line Interface for MPyL"""
-    if version:
-        click.echo(MetaInfo().version)
-    if about:
-        click.echo(MetaInfo().about)
 
 
 if __name__ == '__main__':
+    main.add_command(projects)
+    main.add_command(build)
+    main.add_command(version)
     main()  # pylint: disable = no-value-for-parameter
