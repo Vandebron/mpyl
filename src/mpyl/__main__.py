@@ -1,19 +1,9 @@
 """Entrypoint for cli"""
 
-import click
+if __name__ == '__main__' and __package__ is None:
+    # https://peps.python.org/pep-0366/
+    __package__ = "mpyl"  # pylint: disable=redefined-builtin
 
-from .cli.build import build
-from .cli.meta_info import version
-from .cli.projects import projects
+    from . import main
 
-
-@click.group(name='mpyl')
-def main():
-    """Command Line Interface for MPyL"""
-
-
-if __name__ == '__main__':
-    main.add_command(projects)
-    main.add_command(build)
-    main.add_command(version)
-    main()  # pylint: disable = no-value-for-parameter
+    main()
