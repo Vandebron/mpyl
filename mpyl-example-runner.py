@@ -93,10 +93,10 @@ def report_results(reporter: Reporter, run_result: RunResult) -> bool:
 def find_projects(_ignored: Reporter) -> list[DynamicOutput[Project]]:
     yaml_values = parse_config("config.yml")
 
-    repo = Repository(RepoConfig(yaml_values))
-    project_paths = repo.find_projects()
-    projects = map(lambda p: load_project(".", p), project_paths)
-    return list(map(lambda project: DynamicOutput(project, mapping_key=project.name), projects))
+    with Repository(RepoConfig(yaml_values)) as repo:
+        project_paths = repo.find_projects()
+        projects = map(lambda p: load_project(".", p), project_paths)
+        return list(map(lambda project: DynamicOutput(project, mapping_key=project.name), projects))
 
 
 class CustomRichHandler(RichHandler):
