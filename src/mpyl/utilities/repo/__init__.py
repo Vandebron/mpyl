@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Dict
 
 from git import Git, Repo, Remote
+
 from ...project import Project
 
 
@@ -32,7 +33,14 @@ class Repository:
     def __init__(self, config: RepoConfig):
         self._config = config
         self._root_dir = Git().rev_parse('--show-toplevel')
-        self._repo = Repo(self._root_dir)
+
+    def __enter__(self):
+        self._repo = Repo(self._root_dir)  # pylint: disable=attribute-defined-outside-init
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._repo.close()
+        return self
 
     @property
     def get_sha(self):
