@@ -1,10 +1,9 @@
+import os
 import sys
 
 import setuptools
-from setuptools import setup
 import toml
-
-import os
+from setuptools import setup
 
 version_name = 'MPYL_VERSION'
 version = os.environ.get(version_name, None)
@@ -40,6 +39,9 @@ setup(
     long_description=readme,
     long_description_content_type="text/markdown",
     url="https://vandebron.github.io/mpyl",
+    entry_points={
+        'console_scripts': ['mpyl=mpyl:main']
+    },
     project_urls={
         'Documentation': 'https://vandebron.github.io/mpyl',
         'Source': 'https://github.com/Vandebron/mpyl',
