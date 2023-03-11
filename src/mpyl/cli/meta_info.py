@@ -3,6 +3,8 @@
 import os
 from importlib.metadata import version as version_meta, distribution
 
+import click
+
 VDB_LOGO = """
                                          .::.               
                                          :~~~^:.            
@@ -33,13 +35,21 @@ VDB_LOGO = """
 """
 
 
-class MetaInfo:
-    @property
-    def version(self):
-        return f"Version {version_meta('mpyl')}"
+def simple_version():
+    return f"Version {version_meta('mpyl')}"
 
-    @property
-    def about(self):
-        dist = distribution('mpyl')
-        print(os.linesep.join(str(dist.metadata).split(os.linesep)[1:16]))
-        print(VDB_LOGO)
+
+def about():
+    dist = distribution('mpyl')
+    details = os.linesep.join(str(dist.metadata).split(os.linesep)[1:16])
+    return f'{details}{VDB_LOGO}'
+
+
+@click.command()
+@click.option('--verbose', '-v', is_flag=True, default=False, help="Print more output.")
+def version(verbose):
+    """Version information"""
+    if verbose:
+        click.echo(about())
+    else:
+        click.echo(simple_version())
