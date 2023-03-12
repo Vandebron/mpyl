@@ -8,9 +8,9 @@
 
 import click
 
-from .cli.build import build
-from .cli.meta_info import version
-from .cli.projects import projects
+from .cli.commands.build import build
+from .cli.commands.meta_info import version
+from .cli.commands.projects import projects
 from .utilities.pyaml_env import parse_config
 from .utilities.repo import RepoConfig, Repository
 
