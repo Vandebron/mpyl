@@ -4,9 +4,9 @@ from pathlib import Path
 import click
 import jsonschema
 
-from ..project import validate_project
-from ..utilities.pyaml_env import parse_config
-from ..utilities.repo import Repository, RepoConfig
+from ...project import validate_project
+from ...utilities.pyaml_env import parse_config
+from ...utilities.repo import Repository, RepoConfig
 
 
 @click.group('projects')
