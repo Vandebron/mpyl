@@ -38,7 +38,6 @@ from typing import Dict, Optional
 
 from github import Github, GithubIntegration
 from github.IssueComment import IssueComment
-from github.PullRequest import PullRequest
 from github.Repository import Repository as GithubRepository
 
 from . import Reporter
@@ -46,7 +45,7 @@ from ...reporting.formatting.markdown import run_result_to_markdown
 from ...reporting.formatting.text import to_string
 from ...steps.models import RunProperties
 from ...steps.run import RunResult
-from ...utilities.github import GithubConfig
+from ...utilities.github import GithubConfig, get_pr_for_branch
 from ...utilities.repo import Repository, RepoConfig
 
 
@@ -62,12 +61,7 @@ class PullRequestComment(Reporter):
             return repo.get_pull(run_properties.versioning.pr_number)
 
         current_branch = self.git_repository.get_branch
-        pulls: list[PullRequest] = repo.get_pulls(head=f'{repo.full_name}:{current_branch}').get_page(0)
-
-        if len(pulls) == 0:
-            raise ValueError(f'No PR related to {current_branch} were found')
-
-        return pulls.pop()
+        return get_pr_for_branch(repo, current_branch)
 
     def send_report(self, results: RunResult) -> None:
         github = Github(self._config.token)
