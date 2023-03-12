@@ -2,6 +2,9 @@
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+from github.PullRequest import PullRequest
+from github.Repository import Repository
+
 
 @dataclass
 class GithubAppConfig:
@@ -37,3 +40,12 @@ class GithubConfig:
         app_config = github.get('app', {})
         if app_config:
             self.app_config = GithubAppConfig(app_config)
+
+
+def get_pr_for_branch(repo: Repository, branch: str) -> PullRequest:
+    pulls = repo.get_pulls(head=f'{repo.full_name}:{branch}').get_page(0)
+
+    if len(pulls) == 0:
+        raise ValueError(f'No PR related to {branch} were found')
+
+    return pulls.pop()
