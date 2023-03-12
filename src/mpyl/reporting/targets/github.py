@@ -31,7 +31,6 @@ Checks can be referred to from branch protection rules, in order to prevent faul
 
 """
 import base64
-from dataclasses import dataclass
 from datetime import datetime
 from logging import Logger
 from pathlib import Path
@@ -47,43 +46,8 @@ from ...reporting.formatting.markdown import run_result_to_markdown
 from ...reporting.formatting.text import to_string
 from ...steps.models import RunProperties
 from ...steps.run import RunResult
+from ...utilities.github import GithubConfig
 from ...utilities.repo import Repository, RepoConfig
-
-
-@dataclass
-class GithubAppConfig:
-    private_app_key_path: Optional[str]
-    private_key_base_64_encoded: Optional[str]
-    app_key: str
-
-    def __init__(self, config: Dict):
-        self.private_app_key_path = config.get('privateKeyPath')
-        self.private_key_base_64_encoded = config.get('privateKeyBase64Encoded')
-        if not self.private_key_base_64_encoded and not self.private_app_key_path:
-            raise KeyError("Either 'privateKeyPath' or 'privateKeyBase64Encoded' need to be defined")
-
-        self.app_key = config['appId']
-
-
-@dataclass
-class GithubConfig:
-    repository: str
-    owner: str
-    repo_name: str
-    token: str
-    app_config: Optional[GithubAppConfig] = None
-
-    def __init__(self, config: Dict):
-        github = config['cvs']['github']
-        self.repository = github['repository']
-        parts = self.repository.split('/')
-        self.owner = parts[0]
-        self.repo_name = parts[1]
-        self.token = github['token']
-
-        app_config = github.get('app', {})
-        if app_config:
-            self.app_config = GithubAppConfig(app_config)
 
 
 class PullRequestComment(Reporter):
