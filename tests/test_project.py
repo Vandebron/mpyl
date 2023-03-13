@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from jsonschema import ValidationError
 
@@ -9,7 +11,7 @@ class TestMplSchema:
     resource_path = root_test_path / "test_resources"
 
     def test_schema_load(self):
-        project = load_project("", str(self.resource_path / "test_project.yml"))
+        project = load_project(Path(""), self.resource_path / "test_project.yml")
         assert project.name == 'dockertest'
         assert project.maintainer, ['Marketplace' == 'Energy Trading']
         envs = project.deployment.properties.env
@@ -35,7 +37,7 @@ class TestMplSchema:
 
     def test_schema_load_validation(self):
         with pytest.raises(ValidationError) as exc:
-            load_project("", str(self.resource_path / "test_project_invalid.yml"))
+            load_project(Path(""), self.resource_path / "test_project_invalid.yml")
         assert exc.value.message == "'maintainer' is a dependency of 'deployment'"
 
     def test_target_by_value(self):

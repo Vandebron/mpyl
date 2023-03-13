@@ -31,7 +31,6 @@ Checks can be referred to from branch protection rules, in order to prevent faul
 
 """
 import base64
-from dataclasses import dataclass
 from datetime import datetime
 from logging import Logger
 from pathlib import Path
@@ -39,7 +38,6 @@ from typing import Dict, Optional
 
 from github import Github, GithubIntegration
 from github.IssueComment import IssueComment
-from github.PullRequest import PullRequest
 from github.Repository import Repository as GithubRepository
 
 from . import Reporter
@@ -47,43 +45,8 @@ from ...reporting.formatting.markdown import run_result_to_markdown
 from ...reporting.formatting.text import to_string
 from ...steps.models import RunProperties
 from ...steps.run import RunResult
+from ...utilities.github import GithubConfig, get_pr_for_branch
 from ...utilities.repo import Repository, RepoConfig
-
-
-@dataclass
-class GithubAppConfig:
-    private_app_key_path: Optional[str]
-    private_key_base_64_encoded: Optional[str]
-    app_key: str
-
-    def __init__(self, config: Dict):
-        self.private_app_key_path = config.get('privateKeyPath')
-        self.private_key_base_64_encoded = config.get('privateKeyBase64Encoded')
-        if not self.private_key_base_64_encoded and not self.private_app_key_path:
-            raise KeyError("Either 'privateKeyPath' or 'privateKeyBase64Encoded' need to be defined")
-
-        self.app_key = config['appId']
-
-
-@dataclass
-class GithubConfig:
-    repository: str
-    owner: str
-    repo_name: str
-    token: str
-    app_config: Optional[GithubAppConfig] = None
-
-    def __init__(self, config: Dict):
-        github = config['cvs']['github']
-        self.repository = github['repository']
-        parts = self.repository.split('/')
-        self.owner = parts[0]
-        self.repo_name = parts[1]
-        self.token = github['token']
-
-        app_config = github.get('app', {})
-        if app_config:
-            self.app_config = GithubAppConfig(app_config)
 
 
 class PullRequestComment(Reporter):
@@ -98,12 +61,7 @@ class PullRequestComment(Reporter):
             return repo.get_pull(run_properties.versioning.pr_number)
 
         current_branch = self.git_repository.get_branch
-        pulls: list[PullRequest] = repo.get_pulls(head=f'{repo.full_name}:{current_branch}').get_page(0)
-
-        if len(pulls) == 0:
-            raise ValueError(f'No PR related to {current_branch} were found')
-
-        return pulls.pop()
+        return get_pr_for_branch(repo, current_branch)
 
     def send_report(self, results: RunResult) -> None:
         github = Github(self._config.token)
@@ -122,12 +80,12 @@ class PullRequestComment(Reporter):
 
 
 class CommitCheck(Reporter):
-    _config: GithubConfig
+    _github_config: GithubConfig
     _check_run_id: Optional[int]
 
     def __init__(self, config: Dict, logger: Logger):
-        self._config = GithubConfig(config)
-        self.git_repository = Repository(RepoConfig(config))
+        self._config = config
+        self._github_config = GithubConfig(config)
         self._check_run_id = None
         self._logger = logger
 
@@ -139,25 +97,30 @@ class CommitCheck(Reporter):
                 'text': to_string(results)}
 
     def send_report(self, results: RunResult) -> None:
-        config = self._config.app_config
-        if not config:
-            raise KeyError("github.app config needs to be defined")
+        try:
+            config = self._github_config.app_config
+            if not config:
+                raise KeyError("github.app config needs to be defined")
 
-        private_key = Path(config.private_app_key_path or '').read_text(
-            encoding='utf-8') if config.private_app_key_path else base64.b64decode(
-            config.private_key_base_64_encoded or '').decode('utf-8')
+            private_key = Path(config.private_app_key_path or '').read_text(
+                encoding='utf-8') if config.private_app_key_path else base64.b64decode(
+                config.private_key_base_64_encoded or '').decode('utf-8')
 
-        integration = GithubIntegration(integration_id=config.app_key, private_key=private_key)
+            integration = GithubIntegration(integration_id=config.app_key, private_key=private_key)
 
-        install = integration.get_installation(self._config.owner, self._config.repo_name)
-        access_token = integration.get_access_token(install.id)
-        github = Github(login_or_token=access_token.token)
-        repo = github.get_repo(self._config.repository)
-        if self._check_run_id:
-            run = repo.get_check_run(self._check_run_id)
-            conclusion = 'success' if results.is_success else 'failure'
-            self._logger.info(f'Setting check to {conclusion}')
-            run.edit(completed_at=datetime.now(), conclusion=conclusion, output=self._to_output(results))
-        else:
-            self._check_run_id = repo.create_check_run(name='Pipeline build', head_sha=self.git_repository.get_sha,
-                                                       status='in_progress').id
+            install = integration.get_installation(self._github_config.owner, self._github_config.repo_name)
+            access_token = integration.get_access_token(install.id)
+            github = Github(login_or_token=access_token.token)
+            repo = github.get_repo(self._github_config.repository)
+            if self._check_run_id:
+                run = repo.get_check_run(self._check_run_id)
+                conclusion = 'success' if results.is_success else 'failure'
+                self._logger.info(f'Setting check to {conclusion}')
+                run.edit(completed_at=datetime.now(), conclusion=conclusion, output=self._to_output(results))
+            else:
+                with Repository(RepoConfig(self._config)) as git_repository:
+                    self._check_run_id = repo.create_check_run(name='Pipeline build', head_sha=git_repository.get_sha,
+                                                               status='in_progress').id
+        except Exception as exc:
+            self._logger.warning(f'Unexpected exception: {exc}', exc_info=True)
+            raise exc
