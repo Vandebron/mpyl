@@ -17,12 +17,13 @@ from .utilities.pyaml_env import parse_config
 from .utilities.repo import RepoConfig, Repository
 
 
-@click.group(name='mpyl', help=f"Command Line Interface for MPyL {version_meta('mpyl')}")
+@click.group(name='mpyl')
 def main_group():
     """Command Line Interface for MPyL"""
 
 
 def main():
+    main_group.help = f"Command Line Interface for MPyL {version_meta('mpyl')}"
     main_group.add_command(projects)
     main_group.add_command(build)
     main_group.add_command(version)
