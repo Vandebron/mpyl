@@ -2,6 +2,7 @@ import argparse
 import logging
 import sys
 from logging import Logger
+from pathlib import Path
 
 from rich.console import Console
 from rich.logging import RichHandler
@@ -50,7 +51,7 @@ def main(logger: Logger, args: argparse.Namespace):
 
         build_all = args.all
 
-        all_projects = set(map(lambda p: load_project(".", p, False), project_paths))
+        all_projects = set(map(lambda p: load_project(Path("."), Path(p), False), project_paths))
 
         projects_per_stage: dict[Stage, set[Project]] = {Stage.BUILD: for_stage(all_projects, Stage.BUILD),
                                                          Stage.TEST: for_stage(all_projects, Stage.TEST),
@@ -83,7 +84,8 @@ def main(logger: Logger, args: argparse.Namespace):
             slack_channel = SlackReporter(config, '#project-mpyl', f'MPyL test {run_properties.versioning.identifier}')
             if run_properties.details.user_email:
                 slack_personal = SlackReporter(config, None, f'MPyL test {run_properties.versioning.identifier}')
-            jira = JiraReporter(config=config, branch=run_properties.versioning.branch or repo.get_branch, logger=logger)
+            jira = JiraReporter(config=config, branch=run_properties.versioning.branch or repo.get_branch,
+                                logger=logger)
             check.send_report(run_result)
 
         def __run_build(accumulator: RunResult):
@@ -125,5 +127,9 @@ if __name__ == "__main__":
                               console=Console(markup=True, width=None if parsed_args.local else 135, no_color=False,
                                               log_path=False, color_system='256'), show_path=parsed_args.local)]
     )
-
-    main(logging.getLogger("mpl"), parsed_args)
+    logger = logging.getLogger("mpl")
+    try:
+        main(logger, parsed_args)
+    except Exception as e:
+        logger.warning(f'Unexpected exception: {e}', exc_info=True)
+        raise e

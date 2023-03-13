@@ -29,22 +29,25 @@ def run_build(run_config: JenkinsRunParameters):
         config = parse_config('config.yml')
         github_config = GithubConfig(config)
         with Repository(RepoConfig(config)) as git_repo:
-            github = Github(login_or_token=github_config.token)
-            repo = github.get_repo(github_config.repository)
-
-            pull = get_pr_for_branch(repo, git_repo.get_branch)
-
-            jenkins_config = JenkinsConfig.from_config(config)
-            pipeline_info = Pipeline(target=Target.PULL_REQUEST, tag=f'{pull.number}', url=pull.url,
-                                     pipeline=run_config.pipeline, body=pull.body, jenkins_config=jenkins_config)
-
-            status.start()
-            status.update(f'Fetching Jenkins info for {pipeline_info.human_readable()} ...')
-
             try:
+                github = Github(login_or_token=github_config.token)
+                repo = github.get_repo(github_config.repository)
+
+                pull = get_pr_for_branch(repo, git_repo.get_branch)
+
+                jenkins_config = JenkinsConfig.from_config(config)
+                pipeline_info = Pipeline(target=Target.PULL_REQUEST, tag=f'{pull.number}', url=pull.url,
+                                         pipeline=run_config.pipeline, body=pull.body, jenkins_config=jenkins_config)
+
+                status.start()
+                status.update(f'Fetching Jenkins info for {pipeline_info.human_readable()} ...')
+
                 runner = JenkinsRunner(pipeline=pipeline_info,
                                        jenkins=Jenkins(jenkins_config.url, username=run_config.jenkins_user,
                                                        password=run_config.jenkins_password), status=status)
                 runner.run()
             except requests.ConnectionError:
-                status.console.log('⚠️ Could not connect to Jenkins. Are you on VPN?')
+                status.console.log('⚠️ Could not connect. Are you on VPN?')
+            except Exception as exc:
+                status.console.log(f'Unexpected exception: {exc}')
+                raise exc
