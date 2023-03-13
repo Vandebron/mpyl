@@ -2,6 +2,7 @@
 from typing import Any, Optional
 
 import click
+from click import Parameter, Context
 
 from ..build.jenkins import JenkinsRunParameters, run_build
 from ...utilities.pyaml_env import parse_config
@@ -34,16 +35,19 @@ class DynamicChoice(click.Choice):
         super().__init__([])
 
     def convert(
-            self, value: Any, param: Optional["Parameter"], ctx: Optional["Context"]
+            self, value: Any, param: Optional[Parameter], ctx: Optional[Context]
     ) -> Any:
-        parsed = ctx.obj['config']
+        if ctx is None:
+            raise KeyError("Context needs to be set. Did you use @click.pass_context in the parent group?")
+
+        config = ctx.obj['config']
         if value is None:
-            value = parsed['jenkins']['defaultPipeline']
-        self.choices = parsed['jenkins']['pipelines'].keys()
+            value = config['jenkins']['defaultPipeline']
+        self.choices = config['jenkins']['pipelines'].keys()
         return super().convert(value, param, ctx)
 
 
-@build.command()
+@build.command(help='Run a multi branch pipeline build on Jenkins')
 @click.option(
     '--user', '-u',
     help='Authentication API user. Can be set via env var JENKINS_USER',
@@ -67,7 +71,7 @@ class DynamicChoice(click.Choice):
     default=lambda: get_default(click.get_current_context(silent=True))
 )
 @click.pass_obj
-def run(obj, user, password, pipeline):
+def jenkins(obj, user, password, pipeline):
     run_argument = JenkinsRunParameters(user, password, obj['config'], pipeline)
     run_build(run_argument)
 
