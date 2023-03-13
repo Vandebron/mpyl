@@ -6,6 +6,8 @@
 .. include:: ../../README-dev.md
 """
 
+from importlib.metadata import version as version_meta
+
 import click
 
 from .cli.commands.build import build
@@ -15,7 +17,7 @@ from .utilities.pyaml_env import parse_config
 from .utilities.repo import RepoConfig, Repository
 
 
-@click.group(name='mpyl')
+@click.group(name='mpyl', help=f"Command Line Interface for MPyL {version_meta('mpyl')}")
 def main_group():
     """Command Line Interface for MPyL"""
 
