@@ -1,7 +1,11 @@
 """Commands related to build"""
+from typing import Any, Optional
+
 import click
+from click import Parameter, Context
 
 from ..build.jenkins import JenkinsRunParameters, run_build
+from ...utilities.pyaml_env import parse_config
 
 
 @click.group('build')
@@ -11,7 +15,7 @@ def build(ctx, config):
     """Pipeline build commands"""
     if ctx.obj is None:
         ctx.obj = {}
-    ctx.obj["config_path"] = config
+    ctx.obj["config"] = parse_config(config)
 
 
 @build.command()
@@ -19,7 +23,31 @@ def status():
     click.echo('build status')
 
 
-@build.command()
+def get_default(ctx):
+    if not ctx:
+        return 'config.jenkins.defaultPipeline'
+
+    return ctx.obj['config']['jenkins']['defaultPipeline']
+
+
+class DynamicChoice(click.Choice):
+    def __init__(self):
+        super().__init__([])
+
+    def convert(
+            self, value: Any, param: Optional[Parameter], ctx: Optional[Context]
+    ) -> Any:
+        if ctx is None:
+            raise KeyError("Context needs to be set. Did you use @click.pass_context in the parent group?")
+
+        config = ctx.obj['config']
+        if value is None:
+            value = config['jenkins']['defaultPipeline']
+        self.choices = config['jenkins']['pipelines'].keys()
+        return super().convert(value, param, ctx)
+
+
+@build.command(help='Run a multi branch pipeline build on Jenkins')
 @click.option(
     '--user', '-u',
     help='Authentication API user. Can be set via env var JENKINS_USER',
@@ -34,9 +62,17 @@ def status():
     type=click.STRING,
     required=True
 )
+@click.option(
+    '--pipeline', '-pl',
+    help='The pipeline to run. Must be one of the pipelines listed in `jenkins.pipelines`. '
+         'Default value is `jenkins.defaultPipeline',
+    type=DynamicChoice(),
+    required=True,
+    default=lambda: get_default(click.get_current_context(silent=True))
+)
 @click.pass_obj
-def run(obj, user, password):
-    run_argument = JenkinsRunParameters(user, password, obj['config_path'], 'mpyl-test')
+def jenkins(obj, user, password, pipeline):
+    run_argument = JenkinsRunParameters(user, password, obj['config'], pipeline)
     run_build(run_argument)
 
 

@@ -121,15 +121,17 @@ if __name__ == "__main__":
     FORMAT = "%(name)s  %(message)s"
 
     parsed_args = parser.parse_args()
+    console = Console(markup=True, width=None if parsed_args.local else 135, no_color=False, log_path=False,
+                      color_system='256')
     logging.basicConfig(
         level="DEBUG" if parsed_args.verbose else "INFO", format=FORMAT, datefmt="[%X]",
         handlers=[RichHandler(markup=True,
-                              console=Console(markup=True, width=None if parsed_args.local else 135, no_color=False,
-                                              log_path=False, color_system='256'), show_path=parsed_args.local)]
+                              console=console, show_path=parsed_args.local)]
     )
     logger = logging.getLogger("mpl")
     try:
         main(logger, parsed_args)
     except Exception as e:
-        logger.warning(f'Unexpected exception: {e}', exc_info=True)
+        logger.warning(f'Unexpected exception: {e}')
+        console.print_exception(show_locals=True)
         raise e
