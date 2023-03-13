@@ -29,14 +29,6 @@ docker:
   compose:
     periodSeconds: 2
     failureThreshold: 20
-jenkins:
-  url: 'https://jenkins.k8s-serv-backend.vdbinfra.nl/'
-  pipelines:
-    monorepo: 'Mpl-Pipeline'
-    monorepo-all: 'MPL Pipeline - All'
-    mpl: 'MPL Pipeline - Test'
-    mpyl-test: 'MPyL Pipeline - Test'
-  defaultPipeline: 'mpyl-test'
 sbt:
   command: 'sbt'
   testWithCoverage: !ENV ${SBT_RUN_WITH_COVERAGE:false}
