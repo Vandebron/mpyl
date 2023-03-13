@@ -23,14 +23,16 @@ def build(ctx, config):
 @build.command(help='Run an MPyL build')
 @click.option('--properties', '-p', required=True, type=click.Path(exists=True), help='Path to run properties',
               default='run_properties.yml')
-@click.option('--local', '-l', is_flag=True, default=True)
+@click.option('--local', '-l', is_flag=True, default=True, help='Local vs CI build')
+@click.option('--all', 'all_', is_flag=True, default=False, help='Build all projects, regardless of changes on branch')
+@click.option('--verbose', '-v', is_flag=True, default=False)
 @click.pass_obj
-def run(obj, properties, local):
+def run(obj, properties, local, all_, verbose):
     run_parameters = MpylRunParameters(
-        config=MpylRunConfig(config=obj['config'], run_properties=parse_config(properties)),
-        parameters=MpylCliParameters(local=local)
+        run_config=MpylRunConfig(config=obj['config'], run_properties=parse_config(properties)),
+        parameters=MpylCliParameters(local=local, all=all_, verbose=verbose)
     )
-    run_mpyl(run_parameters)
+    run_mpyl(run_parameters, None)
 
 
 @build.command()
