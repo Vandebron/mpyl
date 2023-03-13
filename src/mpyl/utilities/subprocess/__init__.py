@@ -27,8 +27,12 @@ def custom_check_output(logger: Logger, command: Union[str, list[str]]) -> Outpu
 
             return Output(success=exit_code == 0, message='Subprocess executed successfully')
 
+
     except subprocess.CalledProcessError as exc:
-        message = f"'{command_argument}': failed with return code: {exc.returncode} err: {exc.stderr.decode()}"
-        logger.warning(message, exc_info=True)
+        logger.warning(f"'{command_argument}': failed with return code: {exc.returncode} err: {exc.stderr.decode()}",
+                       exc_info=True)
+
+    except FileNotFoundError:
+        logger.warning(f"'{command_argument}: file not found", exc_info=True)
 
     return Output(success=False, message='Subprocess failed')

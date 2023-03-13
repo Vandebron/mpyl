@@ -2,8 +2,8 @@ from pathlib import Path
 
 from pyaml_env import parse_config
 
-from src.mpyl.project import load_project, Target, Project
-from src.mpyl.steps.models import RunProperties, VersioningProperties, RunContext
+from src.mpyl.project import load_project, Target, Project, Stages
+from src.mpyl.steps.models import RunProperties, VersioningProperties, RunContext, Output, ArtifactType, Artifact
 from src.mpyl.utilities.repo import Repository, RepoConfig
 from tests import root_test_path
 
@@ -20,6 +20,17 @@ RUN_PROPERTIES = RunProperties(
 
 def get_project() -> Project:
     return load_project(resource_path, "test_project.yml", False)
+
+
+def get_output() -> Output:
+    return Output(success=True, message="build success",
+                  produced_artifact=Artifact(artifact_type=ArtifactType.DOCKER_IMAGE, revision="123",
+                                             producing_step="Producing Step", spec={'image': 'image:latest'}))
+
+
+def get_project_with_stages(stage_config: dict, path: str = ''):
+    stages = Stages.from_config(stage_config)
+    return Project('test', 'Test project', path, stages, [], None, None)
 
 
 def get_repo() -> Repository:
