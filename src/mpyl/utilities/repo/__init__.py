@@ -4,9 +4,11 @@ At this moment Git is the only supported VCS.
 """
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Dict
 
 from git import Git, Repo, Remote
+
 from ...project import Project
 
 
@@ -32,7 +34,14 @@ class Repository:
     def __init__(self, config: RepoConfig):
         self._config = config
         self._root_dir = Git().rev_parse('--show-toplevel')
-        self._repo = Repo(self._root_dir)
+
+    def __enter__(self):
+        self._repo = Repo(self._root_dir)  # pylint: disable=attribute-defined-outside-init
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._repo.close()
+        return self
 
     @property
     def get_sha(self):
@@ -42,8 +51,8 @@ class Repository:
     def get_branch(self):
         return self._repo.active_branch.name
 
-    def root_dir(self) -> str:
-        return self._root_dir
+    def root_dir(self) -> Path:
+        return Path(self._root_dir)
 
     def changes_in_branch(self) -> list[Revision]:
         revisions = reversed(list(self._repo.iter_commits(f"{self._config.main_branch}..HEAD")))

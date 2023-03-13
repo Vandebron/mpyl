@@ -19,7 +19,7 @@ import traceback
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Optional, TypeVar, Dict, Any
+from typing import Optional, TypeVar, Dict, Any, TextIO
 
 import jsonschema
 from mypy.checker import Generic
@@ -305,16 +305,31 @@ class Project:
         return str(Path(self.root_path, 'target/test-reports'))
 
     @staticmethod
-    def from_config(values: dict, project_path: str):
+    def from_config(values: dict, project_path: Path):
         deployment = values.get('deployment')
         dependencies = values.get('dependencies')
-        return Project(name=values['name'], description=values['description'], path=project_path,
+        return Project(name=values['name'], description=values['description'], path=str(project_path),
                        stages=Stages.from_config(values.get('stages', {})), maintainer=values.get('maintainer', []),
                        deployment=Deployment.from_config(deployment) if deployment else None,
                        dependencies=Dependencies.from_config(dependencies) if dependencies else None)
 
 
-def load_project(root_dir, project_path: str, strict: bool = True) -> Project:
+def validate_project(file: TextIO) -> dict:
+    """
+    :file the file to validate
+    :return: the validated schema
+    :raises `jsonschema.exceptions.ValidationError` when validation fails
+    """
+    yaml_values = YAML().load(file)
+    template = pkgutil.get_data(__name__, "schema/project.schema.yml")
+    if not template:
+        raise ValueError('Schema project.schema.yml not found in package')
+    validate(yaml_values, template.decode('utf-8'))
+
+    return yaml_values
+
+
+def load_project(root_dir: Path, project_path: Path, strict: bool = True) -> Project:
     """
     Load a `project.yml` to `Project` data class
     :param root_dir: root source directory
@@ -322,14 +337,9 @@ def load_project(root_dir, project_path: str, strict: bool = True) -> Project:
     :param strict: indicates whether the schema should be validated
     :return: `Project` data class
     """
-    with open(f'{root_dir}/{project_path}', encoding='utf-8') as file:
+    with open(root_dir / project_path, encoding='utf-8') as file:
         try:
-            yaml = YAML()
-            yaml_values = yaml.load(file)
-            template = pkgutil.get_data(__name__, "schema/project.schema.yml")
-            if strict and template:
-                schema = yaml.load(template.decode('utf-8'))
-                validate(yaml_values, schema)
+            yaml_values = validate_project(file) if strict else YAML().load(file)
 
             project = Project.from_config(yaml_values, project_path)
             logging.debug(f'Loaded project {project.path}')
