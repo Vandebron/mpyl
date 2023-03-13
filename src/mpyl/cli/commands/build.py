@@ -4,18 +4,33 @@ from typing import Any, Optional
 import click
 from click import Parameter, Context
 
-from ..build.jenkins import JenkinsRunParameters, run_build
+from ..build.jenkins import JenkinsRunParameters, run_jenkins
+from ..build.mpyl import MpylRunParameters, run_mpyl, MpylCliParameters, MpylRunConfig
 from ...utilities.pyaml_env import parse_config
 
 
 @click.group('build')
-@click.option('--config', '-c', required=True, type=click.Path(exists=True), help='Path to config.yml')
+@click.option('--config', '-c', required=True, type=click.Path(exists=True), help='Path to config.yml',
+              default='config.yml')
 @click.pass_context
 def build(ctx, config):
     """Pipeline build commands"""
     if ctx.obj is None:
         ctx.obj = {}
     ctx.obj["config"] = parse_config(config)
+
+
+@build.command(help='Run an MPyL build')
+@click.option('--properties', '-p', required=True, type=click.Path(exists=True), help='Path to run properties',
+              default='run_properties.yml')
+@click.option('--local', '-l', is_flag=True, default=True)
+@click.pass_obj
+def run(obj, properties, local):
+    run_parameters = MpylRunParameters(
+        config=MpylRunConfig(config=obj['config'], run_properties=parse_config(properties)),
+        parameters=MpylCliParameters(local=local)
+    )
+    run_mpyl(run_parameters)
 
 
 @build.command()
@@ -73,7 +88,7 @@ class DynamicChoice(click.Choice):
 @click.pass_obj
 def jenkins(obj, user, password, pipeline):
     run_argument = JenkinsRunParameters(user, password, obj['config'], pipeline)
-    run_build(run_argument)
+    run_jenkins(run_argument)
 
 
 if __name__ == '__main__':
