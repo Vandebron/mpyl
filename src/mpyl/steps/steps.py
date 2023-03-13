@@ -45,7 +45,8 @@ class Steps:
         schema_dict = pkgutil.get_data(__name__, "../schema/mpyl_config.schema.yml")
 
         if schema_dict:
-            validate(properties.config, schema_dict.decode('utf-8'))
+            schema = yaml.load(schema_dict.decode('utf-8'))
+            validate(properties.config, schema)
 
         self._logger = logger
 

@@ -29,7 +29,7 @@ def __to_oneliner(result: list[StepResult], plan: set[Project]) -> str:
     else:
         project_names = list(map(lambda r: f'_{r.project.name}_', result))
 
-    return f'{", ".join(sorted(project_names))}'
+    return f'{", ".join(project_names)}'
 
 
 def __collect_test_results(step_results: list[StepResult]) -> list[TestSuite]:
