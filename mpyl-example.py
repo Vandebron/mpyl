@@ -14,8 +14,7 @@ def main(logger: Logger, args: argparse.Namespace):
         from src.mpyl.project import load_project, Stage
         from src.mpyl.reporting.formatting.markdown import run_result_to_markdown
         from src.mpyl.reporting.targets.jira import JiraReporter
-        from src.mpyl.stages.discovery import find_invalidated_projects_per_stage
-        from src.mpyl.stages.discovery import for_stage
+        from src.mpyl.cli.build.mpyl import find_build_set, run_build
         from src.mpyl.steps.models import RunProperties
         from src.mpyl.steps.run import RunResult
         from src.mpyl.steps.steps import Steps
@@ -26,8 +25,7 @@ def main(logger: Logger, args: argparse.Namespace):
         from mpyl.project import load_project, Stage
         from mpyl.reporting.formatting.markdown import run_result_to_markdown
         from mpyl.reporting.targets.jira import JiraReporter
-        from mpyl.stages.discovery import find_invalidated_projects_per_stage
-        from mpyl.stages.discovery import for_stage
+        from mpyl.cli.build.mpyl import find_build_set, run_build
         from mpyl.steps.models import RunProperties
         from mpyl.steps.run import RunResult
         from mpyl.steps.steps import Steps
@@ -53,11 +51,7 @@ def main(logger: Logger, args: argparse.Namespace):
 
         all_projects = set(map(lambda p: load_project(Path("."), Path(p), False), project_paths))
 
-        projects_per_stage: dict[Stage, set[Project]] = {Stage.BUILD: for_stage(all_projects, Stage.BUILD),
-                                                         Stage.TEST: for_stage(all_projects, Stage.TEST),
-                                                         Stage.DEPLOY: for_stage(all_projects,
-                                                                                 Stage.DEPLOY)} if build_all else \
-            find_invalidated_projects_per_stage(all_projects, changes_in_branch)
+        projects_per_stage: dict[Stage, set[Project]] = find_build_set(all_projects, changes_in_branch, build_all)
 
         for stage, projects in projects_per_stage.items():
             logger.info(f" Stage {stage}: {', '.join(p.name for p in projects)}")
@@ -88,19 +82,7 @@ def main(logger: Logger, args: argparse.Namespace):
                                 logger=logger)
             check.send_report(run_result)
 
-        def __run_build(accumulator: RunResult):
-            for stage, projects in projects_per_stage.items():
-                for proj in projects:
-                    result = executor.execute(stage, proj, args.dryrun)
-                    accumulator.append(result)
-                    if slack_personal:
-                        slack_personal.send_report(accumulator)
-                    if not result.output.success:
-                        logging.warning(f'Build failed at {stage} for {proj.name}')
-                        return accumulator
-            return accumulator
-
-        run_result = __run_build(run_result)
+        run_result = run_build(run_result, executor, slack_personal)
 
         if not args.local:
             check.send_report(run_result)
