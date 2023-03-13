@@ -13,9 +13,9 @@ class TestRepo:
 
     @pytest.mark.skipif(condition="GITHUB_JOB" in os.environ, reason="main is not available in github action")
     def test_changes_local_and_un_versioned_should_be_included(self):
-        with test_data.get_repo() as repo:
-            changes_in_branch = repo.changes_in_branch_including_local()
-            changes_in_commit = repo.changes_in_commit()
+        repo = test_data.get_repo()
+        changes_in_branch = repo.changes_in_branch_including_local()
+        changes_in_commit = repo.changes_in_commit()
 
         assert changes_in_branch[-1].files_touched == changes_in_commit
 
