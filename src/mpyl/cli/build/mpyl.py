@@ -34,14 +34,14 @@ class MpylCliParameters:
 
 @dataclass(frozen=True)
 class MpylRunParameters:
-    config: MpylRunConfig
+    run_config: MpylRunConfig
     parameters: MpylCliParameters
 
 
 FORMAT = "%(name)s  %(message)s"
 
 
-def run_mpyl(mpyl_run_parameters: MpylRunParameters):
+def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter]) -> RunResult:
     params = mpyl_run_parameters.parameters
     console = Console(markup=True, width=None if params.local else 135, no_color=False, log_path=False,
                       color_system='256')
@@ -52,7 +52,8 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters):
     )
     logger = logging.getLogger('mpyl')
     try:
-        with Repository(RepoConfig(mpyl_run_parameters.config.config)) as repo:
+        with Repository(RepoConfig(mpyl_run_parameters.run_config.config)) as repo:
+
             logger.info(f"Running with {params}")
             if not params.local:
                 pull_result = repo.pull_main_branch()
@@ -68,11 +69,12 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters):
             projects_per_stage: dict[Stage, set[Project]] = find_build_set(all_projects, changes_in_branch, params.all)
 
             if params.local:
-                mpyl_run_parameters.config.run_properties['build']['versioning']['revision'] = repo.get_sha
-                mpyl_run_parameters.config.run_properties['build']['versioning']['pr_number'] = '123'
+                mpyl_run_parameters.run_config.run_properties['build']['versioning']['revision'] = repo.get_sha
+                mpyl_run_parameters.run_config.run_properties['build']['versioning']['pr_number'] = '123'
 
-            run_properties = RunProperties.from_configuration(run_properties=mpyl_run_parameters.config.run_properties,
-                                                              config=mpyl_run_parameters.config.config)
+            run_properties = RunProperties.from_configuration(
+                run_properties=mpyl_run_parameters.run_config.run_properties,
+                config=mpyl_run_parameters.run_config.config)
             if not projects_per_stage.items():
                 logger.info("Nothing to do. Exiting..")
                 sys.exit()
@@ -81,13 +83,10 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters):
             run_plan = RunResult(run_properties=run_properties, run_plan=projects_per_stage)
             logger.info(f"\n\n{run_result_to_markdown(run_plan)}")
 
-            run_result = run_build(run_plan, Steps(logger=logger, properties=run_properties), None)
+            run_result = run_build(run_plan, Steps(logger=logger, properties=run_properties), reporter)
 
             logger.info(run_result_to_markdown(run_result))
-            if run_result.is_success:
-                sys.exit(0)
-            console.bell()
-            sys.exit(1)
+            return run_result
 
     except Exception as exc:
         console.log(f'Unexpected exception: {exc}')
