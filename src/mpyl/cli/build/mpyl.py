@@ -4,12 +4,14 @@ import logging
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 from rich.console import Console
 from rich.logging import RichHandler
 
 from ...project import load_project, Stage, Project
 from ...reporting.formatting.markdown import run_result_to_markdown
+from ...reporting.targets import Reporter
 from ...stages.discovery import for_stage, find_invalidated_projects_per_stage
 from ...steps.models import RunProperties
 from ...steps.run import RunResult
@@ -79,7 +81,7 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters):
             run_plan = RunResult(run_properties=run_properties, run_plan=projects_per_stage)
             logger.info(f"\n\n{run_result_to_markdown(run_plan)}")
 
-            run_result = run_build(run_plan, Steps(logger=logger, properties=run_properties))
+            run_result = run_build(run_plan, Steps(logger=logger, properties=run_properties), None)
 
             logger.info(run_result_to_markdown(run_result))
             if run_result.is_success:
@@ -102,11 +104,14 @@ def find_build_set(all_projects, changes_in_branch, build_all: bool) -> dict[Sta
     return find_invalidated_projects_per_stage(all_projects, changes_in_branch)
 
 
-def run_build(accumulator: RunResult, executor: Steps):
+def run_build(accumulator: RunResult, executor: Steps, reporter: Optional[Reporter] = None):
     for stage, projects in accumulator.run_plan.items():
         for proj in projects:
             result = executor.execute(stage, proj, True)
             accumulator.append(result)
+            if reporter:
+                reporter.send_report(accumulator)
+
             if not result.output.success:
                 logging.warning(f'Build failed at {stage} for {proj.name}')
                 return accumulator
