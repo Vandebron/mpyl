@@ -80,12 +80,12 @@ class PullRequestComment(Reporter):
 
 
 class CommitCheck(Reporter):
-    _config: GithubConfig
+    _github_config: GithubConfig
     _check_run_id: Optional[int]
 
     def __init__(self, config: Dict, logger: Logger):
-        self._config = GithubConfig(config)
-        self.git_repository = Repository(RepoConfig(config))
+        self._config = config
+        self._github_config = GithubConfig(config)
         self._check_run_id = None
         self._logger = logger
 
@@ -97,25 +97,30 @@ class CommitCheck(Reporter):
                 'text': to_string(results)}
 
     def send_report(self, results: RunResult) -> None:
-        config = self._config.app_config
-        if not config:
-            raise KeyError("github.app config needs to be defined")
+        try:
+            config = self._github_config.app_config
+            if not config:
+                raise KeyError("github.app config needs to be defined")
 
-        private_key = Path(config.private_app_key_path or '').read_text(
-            encoding='utf-8') if config.private_app_key_path else base64.b64decode(
-            config.private_key_base_64_encoded or '').decode('utf-8')
+            private_key = Path(config.private_app_key_path or '').read_text(
+                encoding='utf-8') if config.private_app_key_path else base64.b64decode(
+                config.private_key_base_64_encoded or '').decode('utf-8')
 
-        integration = GithubIntegration(integration_id=config.app_key, private_key=private_key)
+            integration = GithubIntegration(integration_id=config.app_key, private_key=private_key)
 
-        install = integration.get_installation(self._config.owner, self._config.repo_name)
-        access_token = integration.get_access_token(install.id)
-        github = Github(login_or_token=access_token.token)
-        repo = github.get_repo(self._config.repository)
-        if self._check_run_id:
-            run = repo.get_check_run(self._check_run_id)
-            conclusion = 'success' if results.is_success else 'failure'
-            self._logger.info(f'Setting check to {conclusion}')
-            run.edit(completed_at=datetime.now(), conclusion=conclusion, output=self._to_output(results))
-        else:
-            self._check_run_id = repo.create_check_run(name='Pipeline build', head_sha=self.git_repository.get_sha,
-                                                       status='in_progress').id
+            install = integration.get_installation(self._github_config.owner, self._github_config.repo_name)
+            access_token = integration.get_access_token(install.id)
+            github = Github(login_or_token=access_token.token)
+            repo = github.get_repo(self._github_config.repository)
+            if self._check_run_id:
+                run = repo.get_check_run(self._check_run_id)
+                conclusion = 'success' if results.is_success else 'failure'
+                self._logger.info(f'Setting check to {conclusion}')
+                run.edit(completed_at=datetime.now(), conclusion=conclusion, output=self._to_output(results))
+            else:
+                with Repository(RepoConfig(self._config)) as git_repository:
+                    self._check_run_id = repo.create_check_run(name='Pipeline build', head_sha=git_repository.get_sha,
+                                                               status='in_progress').id
+        except Exception as exc:
+            self._logger.warning(f'Unexpected exception: {exc}', exc_info=True)
+            raise exc
