@@ -15,15 +15,15 @@ class TestDiscovery:
     @pytest.mark.skipif(condition="GITHUB_JOB" in os.environ,
                         reason="fatal: detected dubious ownership in repository at '/github/workspace'")
     def test_should_find_invalidated_test_dependencies(self):
-        repo = test_data.get_repo()
-        touched_files = {'tests/projects/service/file.py', 'tests/some_file.txt'}
-        projects = set(load_projects(repo.root_dir(), repo.find_projects()))
-        assert len(
-            find_invalidated_projects_for_stage(projects, Stage.BUILD, [Revision(0, "revision", touched_files)])) == 1
-        assert len(
-            find_invalidated_projects_for_stage(projects, Stage.TEST, [Revision(0, "revision", touched_files)])) == 2
-        assert len(
-            find_invalidated_projects_for_stage(projects, Stage.DEPLOY, [Revision(0, "revision", touched_files)])) == 1
+        with test_data.get_repo() as repo:
+            touched_files = {'tests/projects/service/file.py', 'tests/some_file.txt'}
+            projects = set(load_projects(repo.root_dir(), repo.find_projects()))
+            assert len(find_invalidated_projects_for_stage(projects, Stage.BUILD,
+                                                           [Revision(0, "revision", touched_files)])) == 1
+            assert len(find_invalidated_projects_for_stage(projects, Stage.TEST,
+                                                           [Revision(0, "revision", touched_files)])) == 2
+            assert len(find_invalidated_projects_for_stage(projects, Stage.DEPLOY,
+                                                           [Revision(0, "revision", touched_files)])) == 1
 
     def test_should_find_invalidated_dependencies(self):
         projs = {'projects/job/deployment/project.yml', 'projects/service/deployment/project.yml',
