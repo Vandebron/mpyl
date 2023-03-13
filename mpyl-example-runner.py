@@ -1,6 +1,7 @@
 import logging
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 from typing import Union
 
 from dagster import job, op, DynamicOut, DynamicOutput, get_dagster_logger, Output, Failure, logger, Field
@@ -9,12 +10,12 @@ from rich.logging import RichHandler, Console
 from rich.text import Text
 
 from src.mpyl.project import load_project, Project, Stage
-from src.mpyl.utilities.repo import Repository, RepoConfig
 from src.mpyl.reporting.formatting.text import to_string
 from src.mpyl.reporting.targets.github import PullRequestComment, CommitCheck
 from src.mpyl.steps.models import RunProperties
 from src.mpyl.steps.run import RunResult
 from src.mpyl.steps.steps import Steps, StepResult
+from src.mpyl.utilities.repo import Repository, RepoConfig
 
 
 @dataclass
@@ -95,7 +96,7 @@ def find_projects(_ignored: Reporter) -> list[DynamicOutput[Project]]:
 
     with Repository(RepoConfig(yaml_values)) as repo:
         project_paths = repo.find_projects()
-        projects = map(lambda p: load_project(".", p), project_paths)
+        projects = map(lambda p: load_project(Path("."), Path(p)), project_paths)
         return list(map(lambda project: DynamicOutput(project, mapping_key=project.name), projects))
 
 
