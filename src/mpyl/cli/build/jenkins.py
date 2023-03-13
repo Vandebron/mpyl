@@ -10,7 +10,6 @@ from ...project import Target
 from ...utilities.github import GithubConfig, get_pr_for_branch
 from ...utilities.jenkins import JenkinsConfig, Pipeline
 from ...utilities.jenkins.runner import JenkinsRunner
-from ...utilities.pyaml_env import parse_config
 from ...utilities.repo import RepoConfig
 from ...utilities.repo import Repository
 
@@ -19,14 +18,14 @@ from ...utilities.repo import Repository
 class JenkinsRunParameters:
     jenkins_user: str
     jenkins_password: str
-    config_path: str
+    config: dict
     pipeline: str
 
 
 def run_build(run_config: JenkinsRunParameters):
     log_console = Console(log_path=False, log_time=False)
     with log_console.status('Fetching Github info.. [blue]>gh pr view[/blue]') as status:
-        config = parse_config('config.yml')
+        config = run_config.config
         github_config = GithubConfig(config)
         with Repository(RepoConfig(config)) as git_repo:
             try:
@@ -50,4 +49,5 @@ def run_build(run_config: JenkinsRunParameters):
                 status.console.log('⚠️ Could not connect. Are you on VPN?')
             except Exception as exc:
                 status.console.log(f'Unexpected exception: {exc}')
+                status.console.print_exception()
                 raise exc

@@ -8,13 +8,19 @@ from ...project import Target
 class JenkinsConfig:
     url: str
     pipelines: dict[str, str]
+    default: str
 
     @staticmethod
     def from_config(values: dict):
         jenkins_config = values.get('jenkins')
         if not jenkins_config:
             raise KeyError('jenkins should be defined in config')
-        return JenkinsConfig(url=jenkins_config['url'], pipelines=jenkins_config['pipelines'])
+        return JenkinsConfig(url=jenkins_config['url'], pipelines=jenkins_config['pipelines'],
+                             default=jenkins_config['defaultPipeline'])
+
+    @property
+    def default_pipeline(self) -> str:
+        return self.pipelines[self.default_pipeline]
 
 
 @dataclass(frozen=True)
