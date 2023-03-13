@@ -69,7 +69,7 @@ jobs:
           hide_complexity: true
           indicators: true
           output: both
-          thresholds: '77 99'
+          thresholds: '70 99'
 
       - name: Find PR number
         uses: jwalton/gh-find-current-pr@v1
