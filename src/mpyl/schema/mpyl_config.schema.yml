@@ -216,6 +216,8 @@ definitions:
       pipelines:
         type: object
         additionalProperties: {"type": "string"}
+      defaultPipeline:
+        type: string
   Jira:
     type: object
     additionalProperties: false
