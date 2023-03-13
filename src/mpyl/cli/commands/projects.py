@@ -10,7 +10,8 @@ from ...utilities.repo import Repository, RepoConfig
 
 
 @click.group('projects')
-@click.option('--config', '-c', required=True, type=click.Path(exists=True), help='Path to config.yml')
+@click.option('--config', '-c', required=True, type=click.Path(exists=True), help='Path to config.yml',
+              default='config.yml')
 @click.pass_context
 def projects(ctx, config):
     """Commands related to projects"""
@@ -22,7 +23,8 @@ def projects(ctx, config):
 @click.pass_obj
 def list_projects(repo):
     found_projects = repo.find_projects()
-    click.echo(f'projects {found_projects}')
+    for proj in found_projects:
+        click.echo(proj)
 
 
 @projects.command(help='Validate the yaml of found projects against their schema')
