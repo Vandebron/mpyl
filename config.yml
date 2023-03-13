@@ -36,6 +36,7 @@ jenkins:
     monorepo-all: 'MPL Pipeline - All'
     mpl: 'MPL Pipeline - Test'
     mpyl-test: 'MPyL Pipeline - Test'
+  defaultPipeline: 'mpyl-test'
 sbt:
   command: 'sbt'
   testWithCoverage: !ENV ${SBT_RUN_WITH_COVERAGE:false}
