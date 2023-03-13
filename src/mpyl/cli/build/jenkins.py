@@ -22,7 +22,7 @@ class JenkinsRunParameters:
     pipeline: str
 
 
-def run_build(run_config: JenkinsRunParameters):
+def run_jenkins(run_config: JenkinsRunParameters):
     log_console = Console(log_path=False, log_time=False)
     with log_console.status('Fetching Github info.. [blue]>gh pr view[/blue]') as status:
         config = run_config.config
