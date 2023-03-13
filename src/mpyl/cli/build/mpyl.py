@@ -71,14 +71,21 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters):
 
             run_properties = RunProperties.from_configuration(run_properties=mpyl_run_parameters.config.run_properties,
                                                               config=mpyl_run_parameters.config.config)
-            logger.info("Building projects")
+            if not projects_per_stage.items():
+                logger.info("Nothing to do. Exiting..")
+                sys.exit()
+
+            logger.info("Building plan:")
             run_plan = RunResult(run_properties=run_properties, run_plan=projects_per_stage)
-            logger.info(run_result_to_markdown(run_plan))
+            logger.info(f"\n\n{run_result_to_markdown(run_plan)}")
 
             run_result = run_build(run_plan, Steps(logger=logger, properties=run_properties))
 
-            logging.info(run_result_to_markdown(run_result))
-            sys.exit(0 if run_result.is_success else 1)
+            logger.info(run_result_to_markdown(run_result))
+            if run_result.is_success:
+                sys.exit(0)
+            console.bell()
+            sys.exit(1)
 
     except Exception as exc:
         console.log(f'Unexpected exception: {exc}')
