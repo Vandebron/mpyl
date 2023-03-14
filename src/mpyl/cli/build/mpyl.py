@@ -83,7 +83,13 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter
             run_plan = RunResult(run_properties=run_properties, run_plan=projects_per_stage)
             logger.info(f"\n\n{run_result_to_markdown(run_plan)}")
 
-            run_result = run_build(run_plan, Steps(logger=logger, properties=run_properties), reporter)
+            run_result = run_plan
+            try:
+                run_result = run_build(run_plan, Steps(logger=logger, properties=run_properties), reporter)
+            except Exception as exc:  # pylint: disable=broad-except
+                console.log(f'Exception during build execution: {exc}')
+                console.print_exception()
+                return run_result
 
             logger.info(run_result_to_markdown(run_result))
             return run_result
