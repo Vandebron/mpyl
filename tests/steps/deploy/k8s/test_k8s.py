@@ -5,7 +5,7 @@ from kubernetes.client import V1Probe, V1ObjectMeta
 from pyaml_env import parse_config
 
 from src.mpyl.project import Target
-from src.mpyl.steps.deploy.k8s.chart import ChartBuilder, to_service_chart
+from src.mpyl.steps.deploy.k8s.chart import ChartBuilder, to_service_chart, to_job_chart
 from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml, CustomResourceDefinition
 from src.mpyl.steps.deploy.k8s.resources.customresources import V1AlphaIngressRoute
 from src.mpyl.steps.models import Input, Artifact, ArtifactType
@@ -30,17 +30,16 @@ class TestKubernetesChart:
         assert_roundtrip(name_chart, to_yaml(resource), overwrite)
 
     @staticmethod
-    def _build_chart():
+    def _get_builder():
         required_artifact = Artifact(
             artifact_type=ArtifactType.DOCKER_IMAGE, revision="revision",
             producing_step="build_docker_Step",
             spec={'image': 'registry/image:123'}
         )
-        builder = ChartBuilder(
+        return ChartBuilder(
             step_input=Input(get_project(), run_properties=test_data.RUN_PROPERTIES,
                              required_artifact=required_artifact)
         )
-        return to_service_chart(builder)
 
     def test_probe_values_should_be_customizable(self):
         project = test_data.get_project()
@@ -86,6 +85,13 @@ class TestKubernetesChart:
 
     @pytest.mark.parametrize('template',
                              ['deployment', 'service', 'serviceaccount', 'sealedsecrets', 'ingress-https-route'])
-    def test_chart_roundtrip(self, template):
-        charts = self._build_chart()
-        self._roundtrip(self.template_path, template, charts)
+    def test_service_chart_roundtrip(self, template):
+        builder = self._get_builder()
+        chart = to_service_chart(builder)
+        self._roundtrip(self.template_path / "service", template, chart)
+
+    @pytest.mark.parametrize('template', ['deployment', 'job', 'serviceaccount', 'sealedsecrets'])
+    def test_job_chart_roundtrip(self, template):
+        builder = self._get_builder()
+        chart = to_job_chart(builder)
+        self._roundtrip(self.template_path / "job", template, chart)
