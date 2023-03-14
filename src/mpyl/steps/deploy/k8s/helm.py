@@ -6,7 +6,7 @@ import shutil
 from logging import Logger
 from pathlib import Path
 
-from .service import ServiceChart
+from .chart import ChartBuilder
 from ...models import RunProperties, Input, Output
 from ....utilities.subprocess import custom_check_output
 
@@ -27,7 +27,7 @@ def write_chart(step_input: Input, chart_path: Path, chart_metadata: str) -> Non
     else:
         raise ValueError('Required artifact must be defined')
 
-    service_chart = ServiceChart(step_input, image_name)
+    service_chart = ChartBuilder(step_input, image_name)
 
     shutil.rmtree(chart_path, ignore_errors=True)
     template_path = chart_path / Path("templates")

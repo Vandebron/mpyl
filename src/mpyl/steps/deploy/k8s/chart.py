@@ -55,7 +55,7 @@ class KubernetesConfig:
                                 startup_probe_defaults=values['startupProbe'])
 
 
-class ServiceChart:
+class ChartBuilder:
     step_input: Input
     project: Project
     mappings: dict[int, int]
@@ -124,7 +124,7 @@ class ServiceChart:
     def _to_probe(probe: Probe, defaults: dict, target: Target) -> V1Probe:
         values = defaults.copy()
         values.update(probe.values)
-        v1_probe: V1Probe = ServiceChart._to_k8s_model(values, V1Probe)
+        v1_probe: V1Probe = ChartBuilder._to_k8s_model(values, V1Probe)
         path = probe.path.get_value(target)
         v1_probe.http_get = V1HTTPGetAction(path='/health' if path is None else path, port='port-0')
         return v1_probe
@@ -208,11 +208,11 @@ class ServiceChart:
             env=env_vars + sealed_secrets,
             ports=ports,
             image_pull_policy="Always",
-            resources=ServiceChart._to_resources(resources, defaults, self.target),
-            liveness_probe=ServiceChart._to_probe(kubernetes.liveness_probe,
+            resources=ChartBuilder._to_resources(resources, defaults, self.target),
+            liveness_probe=ChartBuilder._to_probe(kubernetes.liveness_probe,
                                                   self.kubernetes_config.liveness_probe_defaults,
                                                   self.target) if kubernetes.liveness_probe else None,
-            startup_probe=ServiceChart._to_probe(kubernetes.startup_probe,
+            startup_probe=ChartBuilder._to_probe(kubernetes.startup_probe,
                                                  self.kubernetes_config.startup_probe_defaults,
                                                  self.target) if kubernetes.startup_probe else None
         )

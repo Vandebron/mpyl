@@ -1,5 +1,3 @@
-import logging
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -7,10 +5,9 @@ from kubernetes.client import V1Probe, V1ObjectMeta
 from pyaml_env import parse_config
 
 from src.mpyl.project import Target
-from src.mpyl.steps.deploy.k8s.helm import install, write_chart, to_chart_metadata
+from src.mpyl.steps.deploy.k8s.chart import ChartBuilder
 from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml
 from src.mpyl.steps.deploy.k8s.resources.customresources import V1AlphaIngressRoute
-from src.mpyl.steps.deploy.k8s.service import ServiceChart
 from src.mpyl.steps.models import Input
 from src.mpyl.utilities.docker import DockerConfig
 from tests import root_test_path
@@ -33,7 +30,7 @@ class TestKubernetesChart:
 
     @staticmethod
     def _build_chart():
-        return ServiceChart(step_input=Input(get_project(), test_data.RUN_PROPERTIES, None),
+        return ChartBuilder(step_input=Input(get_project(), test_data.RUN_PROPERTIES, None),
                             image_name='registry/image:123').to_chart()
 
     def test_probe_values_should_be_customizable(self):
@@ -46,7 +43,7 @@ class TestKubernetesChart:
         assert probe.values['successThreshold'] == custom_success_threshold
         assert probe.values['failureThreshold'] == custom_failure_threshold
 
-        v1_probe: V1Probe = ServiceChart._to_probe(probe, self.liveness_probe_defaults, target=Target.PULL_REQUEST)
+        v1_probe: V1Probe = ChartBuilder._to_probe(probe, self.liveness_probe_defaults, target=Target.PULL_REQUEST)
         assert v1_probe.success_threshold == custom_success_threshold
         assert v1_probe.failure_threshold == custom_failure_threshold
 
@@ -60,7 +57,7 @@ class TestKubernetesChart:
         probe.values['httpGet'] = 'incorrect'
 
         with pytest.raises(ValueError) as exc_info:
-            ServiceChart._to_probe(probe, self.liveness_probe_defaults, target=Target.PULL_REQUEST)
+            ChartBuilder._to_probe(probe, self.liveness_probe_defaults, target=Target.PULL_REQUEST)
         assert 'Invalid value for `port`, must not be `None`' in str(exc_info.value)
 
     def test_load_config(self):
