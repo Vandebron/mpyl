@@ -15,7 +15,7 @@ from ruamel.yaml import YAML
 
 from .resources.crd import CustomResourceDefinition  # pylint: disable = no-name-in-module
 from .resources.customresources import V1AlphaIngressRoute, V1SealedSecret  # pylint: disable = no-name-in-module
-from ...models import Input
+from ...models import Input, ArtifactType
 from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target
 
 yaml = YAML()
@@ -67,7 +67,7 @@ class ChartBuilder:
     image_name: str
     kubernetes_config: KubernetesConfig
 
-    def __init__(self, step_input: Input, image_name: str):
+    def __init__(self, step_input: Input):
         self.step_input = step_input
         project = self.step_input.project
         self.project = project
@@ -87,7 +87,6 @@ class ChartBuilder:
         self.mappings = self.project.kubernetes.port_mappings
         self.target = step_input.run_properties.target
         self.release_name = self.project.name.lower()
-        self.image_name = image_name
 
     def _to_labels(self) -> Dict:
         run_properties = self.step_input.run_properties
@@ -177,6 +176,10 @@ class ChartBuilder:
         if kubernetes is None:
             raise AttributeError("deployment.kubernetes field should be set")
 
+        docker_image = self.step_input.required_artifact
+        if not docker_image or docker_image.artifact_type != ArtifactType.DOCKER_IMAGE:
+            raise ValueError(f'Required artifact of type {ArtifactType.DOCKER_IMAGE.name}  must be defined')
+
         ports = [
             V1ContainerPort(container_port=key, host_port=self.mappings[key], protocol="TCP", name=f'port-{idx}')
             for idx, key in enumerate(self.mappings.keys())
@@ -196,7 +199,7 @@ class ChartBuilder:
 
         container = V1Container(
             name=self.project.name,
-            image=self.image_name,
+            image=docker_image.spec['image'],
             env=env_vars + sealed_secrets,
             ports=ports,
             image_pull_policy="Always",
