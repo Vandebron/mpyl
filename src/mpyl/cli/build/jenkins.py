@@ -46,6 +46,7 @@ def run_jenkins(run_config: JenkinsRunParameters):
                                                        password=run_config.jenkins_password), status=status)
                 runner.run()
             except requests.ConnectionError:
+                status.console.bell()
                 status.console.log('⚠️ Could not connect. Are you on VPN?')
             except Exception as exc:
                 status.console.log(f'Unexpected exception: {exc}')
