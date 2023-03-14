@@ -147,17 +147,6 @@ class ChartBuilder:
         return V1ServiceAccount(api_version="v1", kind="ServiceAccount", metadata=self._to_object_meta(),
                                 image_pull_secrets=[V1LocalObjectReference("bigdataregistry")])
 
-    def to_chart(self) -> dict[str, str]:
-        chart = {'deployment': to_yaml(self.to_deployment()), 'serviceaccount': to_yaml(self.to_service_account()),
-                 'service': to_yaml(self.to_service())}
-        if self.sealed_secrets:
-            chart['sealedsecrets'] = to_yaml(self.to_sealed_secrets())
-
-        if self.deployment.traefik:
-            chart['ingress-https-route'] = to_yaml(self.to_ingress_routes())
-
-        return chart
-
     def to_sealed_secrets(self) -> Optional[V1SealedSecret]:
         if self.sealed_secrets is None:
             return None
@@ -235,3 +224,15 @@ class ChartBuilder:
                 selector=self._to_selector(),
             ),
         )
+
+
+def to_service_chart(builder: ChartBuilder) -> dict[str, str]:
+    chart = {'deployment': to_yaml(builder.to_deployment()), 'serviceaccount': to_yaml(builder.to_service_account()),
+             'service': to_yaml(builder.to_service())}
+    if builder.sealed_secrets:
+        chart['sealedsecrets'] = to_yaml(builder.to_sealed_secrets())
+
+    if builder.deployment.traefik:
+        chart['ingress-https-route'] = to_yaml(builder.to_ingress_routes())
+
+    return chart
