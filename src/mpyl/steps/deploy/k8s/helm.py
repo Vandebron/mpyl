@@ -23,12 +23,7 @@ appVersion: "{run_properties.versioning.identifier}"
 
 
 def write_chart(step_input: Input, chart_path: Path, chart_metadata: str) -> None:
-    if step_input.required_artifact:
-        image_name = step_input.required_artifact.spec['image']
-    else:
-        raise ValueError('Required artifact must be defined')
-
-    builder = ChartBuilder(step_input, image_name)
+    builder = ChartBuilder(step_input)
 
     shutil.rmtree(chart_path, ignore_errors=True)
     template_path = chart_path / Path("templates")

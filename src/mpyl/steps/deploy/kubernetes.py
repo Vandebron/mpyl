@@ -43,6 +43,4 @@ class DeployKubernetes(Step):
         else:
             self._logger.info(f"Found namespace {namespace}")
 
-        helm_result = helm.install(self._logger, step_input, namespace, context)
-        self._logger.info(helm_result.message)
-        return helm_result
+        return helm.install(self._logger, step_input, namespace, context)
