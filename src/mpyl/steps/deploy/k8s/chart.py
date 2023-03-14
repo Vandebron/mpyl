@@ -81,8 +81,8 @@ class ChartBuilder:
 
         self.deployment = project.deployment
         properties = self.deployment.properties
-        self.env = properties.env if properties.env else []
-        self.sealed_secrets = properties.sealed_secret if properties.sealed_secret else []
+        self.env = properties.env if properties and properties.env else []
+        self.sealed_secrets = properties.sealed_secret if properties and properties.sealed_secret else []
         self.mappings = self.project.kubernetes.port_mappings
         self.target = step_input.run_properties.target
         self.release_name = self.project.name.lower()
