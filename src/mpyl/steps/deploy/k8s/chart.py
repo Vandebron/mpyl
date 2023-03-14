@@ -187,7 +187,7 @@ class ChartBuilder:
             filter(lambda v: v.value, map(lambda e: V1EnvVar(name=e.key, value=e.get_value(self.target)), self.env)))
 
         sealed_for_target = list(
-            filter(lambda v: v.get_value(self.target) is not None, self.deployment.properties.sealed_secret))
+            filter(lambda v: v.get_value(self.target) is not None, self.sealed_secrets))
         sealed_secrets = list(map(lambda e: V1EnvVar(name=e.key, value_from=V1EnvVarSource(
             secret_key_ref=V1SecretKeySelector(key=e.key, name=self.release_name, optional=False))),
                                   sealed_for_target))
