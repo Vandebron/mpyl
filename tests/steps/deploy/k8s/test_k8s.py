@@ -5,7 +5,7 @@ from kubernetes.client import V1Probe, V1ObjectMeta
 from pyaml_env import parse_config
 
 from src.mpyl.project import Target, Project
-from src.mpyl.steps.deploy.k8s.chart import ChartBuilder, to_service_chart, to_job_chart
+from src.mpyl.steps.deploy.k8s.chart import ChartBuilder, to_service_chart, to_job_chart, to_cron_job_chart
 from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml, CustomResourceDefinition
 from src.mpyl.steps.deploy.k8s.resources.customresources import V1AlphaIngressRoute
 from src.mpyl.steps.models import Input, Artifact, ArtifactType
@@ -95,3 +95,8 @@ class TestKubernetesChart:
         builder = self._get_builder(get_job_project())
         chart = to_job_chart(builder)
         self._roundtrip(self.template_path / "job", template, chart)
+
+    def test_cron_job_chart_roundtrip(self):
+        builder = self._get_builder(get_job_project())
+        chart = to_cron_job_chart(builder)
+        self._roundtrip(self.template_path / "cronjob", 'cronjob', chart)
