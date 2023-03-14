@@ -7,6 +7,7 @@ from logging import Logger
 from pathlib import Path
 
 from .chart import ChartBuilder, to_service_chart
+from .resources.crd import to_yaml
 from ...models import RunProperties, Input, Output
 from ....utilities.subprocess import custom_check_output
 
@@ -39,8 +40,10 @@ def write_chart(step_input: Input, chart_path: Path, chart_metadata: str) -> Non
         file.write("# This file is intentionally left empty. All values in /templates have been pre-interpolated")
 
     templates = to_service_chart(builder)
-    for name, template in templates.items():
-        with open(template_path / str(name), mode='w+', encoding='utf-8') as file:
+    my_dictionary: dict[str, str] = dict(map(lambda item: (item[0], to_yaml(item[1])), templates.items()))
+
+    for name, template in my_dictionary.items():
+        with open(template_path / name, mode='w+', encoding='utf-8') as file:
             file.write(template)
 
 
