@@ -221,49 +221,9 @@ properties:
           - bucket
         properties:
           bucket:
-            type: object
-            additionalProperties: false
-            oneOf:
-              - required:
-                  - pr
-                  - test
-                  - acceptance
-                  - production
-              - required:
-                  - all
-            properties:
-              pr:
-                type: string
-              test:
-                type: string
-              acceptance:
-                type: string
-              production:
-                type: string
-              all:
-                type: string
+            $ref: '#/definitions/dtapValue'
           path:
-            type: object
-            additionalProperties: false
-            oneOf:
-              - required:
-                  - pr
-                  - test
-                  - acceptance
-                  - production
-              - required:
-                  - all
-            properties:
-              pr:
-                type: string
-              test:
-                type: string
-              acceptance:
-                type: string
-              production:
-                type: string
-              all:
-                type: string
+            $ref: '#/definitions/dtapValue'
       kubernetes:
         $ref: '#/definitions/kubernetes'
       traefik:
@@ -372,6 +332,28 @@ definitions:
         type: string
       all:
         type: string
+  dtapNumberValue:
+    type: object
+    additionalProperties: false
+    oneOf:
+      - required:
+          - pr
+          - test
+          - acceptance
+          - production
+      - required:
+          - all
+    properties:
+      pr:
+        type: number
+      test:
+        type: number
+      acceptance:
+        type: number
+      production:
+        type: number
+      all:
+        type: number
   traefikHost:
     type: object
     additionalProperties: false
@@ -682,31 +664,11 @@ definitions:
             default: '512'
             type: integer
       disk:
-        type: object
-        additionalProperties: false
+        $ref: '#/definitions/dtapValue'
         description: >-
           Sets the amount of swap space a pod can use. Note: this is not
           persistent storage.
           https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/
-        oneOf:
-          - required:
-              - pr
-              - test
-              - acceptance
-              - production
-          - required:
-              - all
-        properties:
-          pr:
-            type: number
-          test:
-            type: number
-          acceptance:
-            type: number
-          production:
-            type: number
-          all:
-            type: number
   limitResources:
     type: object
     additionalProperties: false
@@ -772,31 +734,11 @@ definitions:
           all:
             type: integer
       disk:
-        type: object
-        additionalProperties: false
+        $ref: '#/definitions/dtapNumberValue'
         description: >-
           Sets the amount of swap space a pod can use. Note: this is not
           persistent storage.
           https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/
-        oneOf:
-          - required:
-              - pr
-              - test
-              - acceptance
-              - production
-          - required:
-              - all
-        properties:
-          pr:
-            type: number
-          test:
-            type: number
-          acceptance:
-            type: number
-          production:
-            type: number
-          all:
-            type: number
   alert:
     type: object
     required:
@@ -872,49 +814,10 @@ definitions:
           check are restarted.
         $ref: '#/definitions/livenessProbe'
       cmd:
-        type: object
-        additionalProperties: false
-        oneOf:
-          - required:
-              - pr
-              - test
-              - acceptance
-              - production
-          - required:
-              - all
-        properties:
-          pr:
-            type: string
-          test:
-            type: string
-          acceptance:
-            type: string
-          production:
-            type: string
-          all:
-            type: string
+        $ref: '#/definitions/dtapValue'
       args:
         type: object
-        additionalProperties: false
-        oneOf:
-          - required:
-              - pr
-              - test
-              - acceptance
-              - production
-          - required:
-              - all
-        properties:
-          pr:
-            type: string
-          test:
-            type: string
-          acceptance:
-            type: string
-          production:
-            type: string
-          all:
-            type: string
+        $ref: '#/definitions/dtapValue'
       resources:
         type: object
         properties:
@@ -954,49 +857,9 @@ definitions:
       portMappings:
         type: object
       ttlSecondsAfterFinished:
-        type: object
-        additionalProperties: false
-        oneOf:
-          - required:
-              - pr
-              - test
-              - acceptance
-              - production
-          - required:
-              - all
-        properties:
-          pr:
-            type: number
-          test:
-            type: number
-          acceptance:
-            type: number
-          production:
-            type: number
-          all:
-            type: number
+        $ref: '#/definitions/dtapNumberValue'
       activeDeadlineSeconds:
-        type: object
-        additionalProperties: false
-        oneOf:
-          - required:
-              - pr
-              - test
-              - acceptance
-              - production
-          - required:
-              - all
-        properties:
-          pr:
-            type: number
-          test:
-            type: number
-          acceptance:
-            type: number
-          production:
-            type: number
-          all:
-            type: number
+        $ref: '#/definitions/dtapNumberValue'
       role:
         type: object
         additionalProperties: false
