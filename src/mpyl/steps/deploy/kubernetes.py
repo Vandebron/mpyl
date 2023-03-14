@@ -20,8 +20,5 @@ class DeployKubernetes(Step):
         ), produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.DOCKER_IMAGE)
 
     def execute(self, step_input: Input) -> Output:
-        if not step_input.required_artifact:
-            return Output(success=False, message=f"Step requires artifact of type {self.required_artifact}")
-
         builder = ChartBuilder(step_input)
         return deploy_helm_chart(self._logger, to_service_chart(builder), step_input, builder.release_name)

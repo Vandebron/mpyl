@@ -241,3 +241,15 @@ def to_service_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinitio
         chart['ingress-https-route'] = builder.to_ingress_routes()
 
     return chart
+
+
+def to_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
+    chart = {'deployment': builder.to_deployment(),
+             'serviceaccount': builder.to_service_account()}
+
+    if builder.sealed_secrets:
+        chart['sealedsecrets'] = builder.to_sealed_secrets()
+
+    chart['job'] = builder.to_job()
+
+    return chart
