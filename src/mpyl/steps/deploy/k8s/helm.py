@@ -14,7 +14,7 @@ from ....utilities.subprocess import custom_check_output
 def to_chart_metadata(chart_name: str, run_properties: RunProperties):
     return f"""apiVersion: v3
 name: {chart_name}
-description: A helm chart used by the MPL pipeline
+description: A helm chart used by the MPyL pipeline
 type: application
 version: 0.1.0
 appVersion: "{run_properties.versioning.identifier}"
