@@ -10,10 +10,10 @@ from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1Obj
     V1RollingUpdateDeployment, V1LabelSelector, V1ContainerPort, V1EnvVar, V1Service, \
     V1ServiceSpec, V1ServicePort, V1ServiceAccount, V1LocalObjectReference, \
     V1EnvVarSource, V1SecretKeySelector, V1Probe, ApiClient, V1HTTPGetAction, V1ResourceRequirements, \
-    V1PodTemplateSpec, V1DeploymentStrategy, V1Job, V1JobSpec
+    V1PodTemplateSpec, V1DeploymentStrategy, V1Job, V1JobSpec, V1CronJob, V1CronJobSpec, V1JobTemplateSpec
 from ruamel.yaml import YAML
 
-from .resources.crd import CustomResourceDefinition  # pylint: disable = no-name-in-module
+from .resources.crd import CustomResourceDefinition, to_dict  # pylint: disable = no-name-in-module
 from .resources.customresources import V1AlphaIngressRoute, V1SealedSecret  # pylint: disable = no-name-in-module
 from ...models import Input, ArtifactType
 from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target
@@ -148,6 +148,14 @@ class ChartBuilder:
         return V1Job(api_version='batch/v1', kind='Job', metadata=self._to_object_meta(),
                      spec=V1JobSpec(ttl_seconds_after_finished=3600, template=pod_template))
 
+    def to_cron_job(self) -> V1CronJob:
+        values = self._get_kubernetes().cron
+        job_template = V1JobTemplateSpec(spec=self.to_job().spec)
+        template_dict = to_dict(job_template)
+        values['jobTemplate'] = template_dict
+        v1_cron_job_spec: V1CronJobSpec = ChartBuilder._to_k8s_model(values, V1CronJobSpec)
+        return V1CronJob(api_version='batch/v1', kind='CronJob', metadata=self._to_object_meta(), spec=v1_cron_job_spec)
+
     def to_ingress_routes(self) -> V1AlphaIngressRoute:
         if self.deployment.traefik is None:
             raise AttributeError("deployment.traefik field should be set")
@@ -268,6 +276,15 @@ def to_service_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinitio
 
 def to_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
     chart = {'job': builder.to_job(), 'serviceaccount': builder.to_service_account()}
+
+    if builder.sealed_secrets:
+        chart['sealedsecrets'] = builder.to_sealed_secrets()
+
+    return chart
+
+
+def to_cron_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
+    chart = {'cronjob': builder.to_cron_job(), 'serviceaccount': builder.to_service_account()}
 
     if builder.sealed_secrets:
         chart['sealedsecrets'] = builder.to_sealed_secrets()
