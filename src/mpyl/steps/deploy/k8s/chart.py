@@ -4,16 +4,16 @@ More info: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/c
 """
 
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Dict
 
 from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1ObjectMeta, V1PodSpec, \
     V1RollingUpdateDeployment, V1LabelSelector, V1ContainerPort, V1EnvVar, V1Service, \
     V1ServiceSpec, V1ServicePort, V1ServiceAccount, V1LocalObjectReference, \
     V1EnvVarSource, V1SecretKeySelector, V1Probe, ApiClient, V1HTTPGetAction, V1ResourceRequirements, \
-    V1PodTemplateSpec, V1DeploymentStrategy
+    V1PodTemplateSpec, V1DeploymentStrategy, V1Job, V1JobSpec
 from ruamel.yaml import YAML
 
-from .resources.crd import to_yaml  # pylint: disable = no-name-in-module
+from .resources.crd import CustomResourceDefinition  # pylint: disable = no-name-in-module
 from .resources.customresources import V1AlphaIngressRoute, V1SealedSecret  # pylint: disable = no-name-in-module
 from ...models import Input
 from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target
@@ -137,9 +137,15 @@ class ChartBuilder:
                          spec=V1ServiceSpec(type="ClusterIP", ports=service_ports,
                                             selector=self._to_selector().match_labels))
 
-    def to_ingress_routes(self) -> Optional[V1AlphaIngressRoute]:
-        if not self.deployment.traefik:
-            return None
+    def to_job(self) -> V1Job:
+        deployment = self.to_deployment()
+        return V1Job(api_version='batch/v1', kind='Job', metadata=self._to_object_meta(),
+                     spec=V1JobSpec(template=deployment.spec.template))
+
+    def to_ingress_routes(self) -> V1AlphaIngressRoute:
+        if self.deployment.traefik is None:
+            raise AttributeError("deployment.traefik field should be set")
+
         return V1AlphaIngressRoute(metadata=self._to_object_meta(), hosts=self.deployment.traefik.hosts,
                                    service_port=123, name=self.release_name, target=self.target)
 
@@ -147,10 +153,7 @@ class ChartBuilder:
         return V1ServiceAccount(api_version="v1", kind="ServiceAccount", metadata=self._to_object_meta(),
                                 image_pull_secrets=[V1LocalObjectReference("bigdataregistry")])
 
-    def to_sealed_secrets(self) -> Optional[V1SealedSecret]:
-        if self.sealed_secrets is None:
-            return None
-
+    def to_sealed_secrets(self) -> V1SealedSecret:
         secrets: dict[str, str] = {}
         for secret in self.sealed_secrets:
             secrets[secret.key] = secret.get_value(self.target)
@@ -226,13 +229,13 @@ class ChartBuilder:
         )
 
 
-def to_service_chart(builder: ChartBuilder) -> dict[str, str]:
-    chart = {'deployment': to_yaml(builder.to_deployment()), 'serviceaccount': to_yaml(builder.to_service_account()),
-             'service': to_yaml(builder.to_service())}
+def to_service_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
+    chart = {'deployment': builder.to_deployment(), 'serviceaccount': builder.to_service_account(),
+             'service': builder.to_service()}
     if builder.sealed_secrets:
-        chart['sealedsecrets'] = to_yaml(builder.to_sealed_secrets())
+        chart['sealedsecrets'] = builder.to_sealed_secrets()
 
     if builder.deployment.traefik:
-        chart['ingress-https-route'] = to_yaml(builder.to_ingress_routes())
+        chart['ingress-https-route'] = builder.to_ingress_routes()
 
     return chart

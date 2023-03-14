@@ -6,7 +6,7 @@ from pyaml_env import parse_config
 
 from src.mpyl.project import Target
 from src.mpyl.steps.deploy.k8s.chart import ChartBuilder, to_service_chart
-from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml
+from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml, CustomResourceDefinition
 from src.mpyl.steps.deploy.k8s.resources.customresources import V1AlphaIngressRoute
 from src.mpyl.steps.models import Input
 from src.mpyl.utilities.docker import DockerConfig
@@ -23,10 +23,11 @@ class TestKubernetesChart:
     liveness_probe_defaults = config['project']['deployment']['kubernetes']['livenessProbe']
 
     @staticmethod
-    def _roundtrip(file_name: Path, chart: str, as_yaml: dict[str, str], overwrite: bool = False):
+    def _roundtrip(file_name: Path, chart: str, resources: dict[str, CustomResourceDefinition],
+                   overwrite: bool = False):
         name_chart = file_name / f"{chart}.yaml"
-        chart_yaml = as_yaml[chart]
-        assert_roundtrip(name_chart, chart_yaml, overwrite)
+        resource = resources[chart]
+        assert_roundtrip(name_chart, to_yaml(resource), overwrite)
 
     @staticmethod
     def _build_chart():
