@@ -5,7 +5,7 @@ from kubernetes.client import V1Probe, V1ObjectMeta
 from pyaml_env import parse_config
 
 from src.mpyl.project import Target
-from src.mpyl.steps.deploy.k8s.chart import ChartBuilder
+from src.mpyl.steps.deploy.k8s.chart import ChartBuilder, to_service_chart
 from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml
 from src.mpyl.steps.deploy.k8s.resources.customresources import V1AlphaIngressRoute
 from src.mpyl.steps.models import Input
@@ -30,8 +30,9 @@ class TestKubernetesChart:
 
     @staticmethod
     def _build_chart():
-        return ChartBuilder(step_input=Input(get_project(), test_data.RUN_PROPERTIES, None),
-                            image_name='registry/image:123').to_chart()
+        builder = ChartBuilder(step_input=Input(get_project(), test_data.RUN_PROPERTIES, None),
+                               image_name='registry/image:123')
+        return to_service_chart(builder)
 
     def test_probe_values_should_be_customizable(self):
         project = test_data.get_project()

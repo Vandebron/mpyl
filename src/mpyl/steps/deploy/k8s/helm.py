@@ -6,7 +6,7 @@ import shutil
 from logging import Logger
 from pathlib import Path
 
-from .chart import ChartBuilder
+from .chart import ChartBuilder, to_service_chart
 from ...models import RunProperties, Input, Output
 from ....utilities.subprocess import custom_check_output
 
@@ -27,7 +27,7 @@ def write_chart(step_input: Input, chart_path: Path, chart_metadata: str) -> Non
     else:
         raise ValueError('Required artifact must be defined')
 
-    service_chart = ChartBuilder(step_input, image_name)
+    builder = ChartBuilder(step_input, image_name)
 
     shutil.rmtree(chart_path, ignore_errors=True)
     template_path = chart_path / Path("templates")
@@ -38,7 +38,7 @@ def write_chart(step_input: Input, chart_path: Path, chart_metadata: str) -> Non
     with open(chart_path / Path("values.yaml"), mode='w+', encoding='utf-8') as file:
         file.write("# This file is intentionally left empty. All values in /templates have been pre-interpolated")
 
-    templates = service_chart.to_chart()
+    templates = to_service_chart(builder)
     for name, template in templates.items():
         with open(template_path / str(name), mode='w+', encoding='utf-8') as file:
             file.write(template)
