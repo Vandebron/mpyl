@@ -65,10 +65,12 @@ class JiraConfig:
     site: str
     user_name: str
     password: str
+    token: Optional[str]
 
     @staticmethod
     def from_config(config: dict):
-        return JiraConfig(site=config['site'], user_name=config['userName'], password=config['password'])
+        return JiraConfig(site=config['site'], user_name=config['userName'], password=config['password'],
+                          token=config.get('token'))
 
 
 class JiraReporter(Reporter):
@@ -81,8 +83,11 @@ class JiraReporter(Reporter):
 
         jira_config = JiraConfig.from_config(jira_config)
         self._config = jira_config
-        self._jira = Jira(url=jira_config.site, username=jira_config.user_name, password=jira_config.password,
-                          api_version='3', cloud=True)
+        self._jira = Jira(url=jira_config.site, token=jira_config.token, api_version='3',
+                          cloud=True) if jira_config.token else Jira(url=jira_config.site,
+                                                                     username=jira_config.user_name,
+                                                                     password=jira_config.password,
+                                                                     api_version='3', cloud=True)
         self._logger = logger
 
     def send_report(self, results: RunResult) -> None:
