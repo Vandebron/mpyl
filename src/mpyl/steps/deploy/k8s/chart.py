@@ -136,9 +136,17 @@ class ChartBuilder:
                                             selector=self._to_selector().match_labels))
 
     def to_job(self) -> V1Job:
-        deployment = self.to_deployment()
+        job_container = V1Container(
+            name=self.project.name, image=self._get_image(), env=self._get_env_vars(), image_pull_policy="Always",
+            resources=self._get_resources()
+        )
+        pod_template = V1PodTemplateSpec(
+            metadata=self._to_object_meta(),
+            spec=V1PodSpec(containers=[job_container], service_account=self.release_name,
+                           service_account_name=self.release_name),
+        )
         return V1Job(api_version='batch/v1', kind='Job', metadata=self._to_object_meta(),
-                     spec=V1JobSpec(template=deployment.spec.template))
+                     spec=V1JobSpec(ttl_seconds_after_finished=3600, template=pod_template))
 
     def to_ingress_routes(self) -> V1AlphaIngressRoute:
         if self.deployment.traefik is None:
@@ -160,46 +168,59 @@ class ChartBuilder:
 
     @staticmethod
     def _to_resources(resources: Resources, defaults: ResourceDefaults, target: Target):
-        cpus = resources.cpus if resources.cpus else defaults.cpus
+        cpus = resources.cpus if resources and resources.cpus else defaults.cpus
         cpus_limit = cpus.get_value(target=target) * 1000.0
         cpus_request = cpus_limit * CPU_REQUEST_SCALE_FACTOR
 
-        mem = resources.mem if resources.mem else defaults.mem
+        mem = resources.mem if resources and resources.mem else defaults.mem
         mem_limit = mem.get_value(target=target)
         mem_request = mem_limit * MEM_REQUEST_SCALE_FACTOR
         return V1ResourceRequirements(limits={'cpu': f'{int(cpus_limit)}m', 'memory': f'{int(mem_limit)}Mi'},
                                       requests={'cpu': f'{int(cpus_request)}m', 'memory': f'{int(mem_request)}Mi'})
 
-    def to_deployment(self) -> V1Deployment:
-        kubernetes = self.deployment.kubernetes
-        if kubernetes is None:
-            raise AttributeError("deployment.kubernetes field should be set")
-
+    def _get_image(self):
         docker_image = self.step_input.required_artifact
         if not docker_image or docker_image.artifact_type != ArtifactType.DOCKER_IMAGE:
             raise ValueError(f'Required artifact of type {ArtifactType.DOCKER_IMAGE.name} must be defined')
+        return docker_image.spec['image']
 
-        ports = [
-            V1ContainerPort(container_port=key, host_port=self.mappings[key], protocol="TCP", name=f'port-{idx}')
-            for idx, key in enumerate(self.mappings.keys())
-        ]
+    def _get_kubernetes(self):
+        kubernetes = self.deployment.kubernetes
+        if kubernetes is None:
+            raise AttributeError("deployment.kubernetes field should be set")
+        return kubernetes
+
+    def _get_resources(self):
+        kubernetes = self._get_kubernetes()
+        resources = kubernetes.resources
+        defaults = self.kubernetes_config.resources_defaults
+        return ChartBuilder._to_resources(resources, defaults, self.target)
+
+    def _get_env_vars(self):
         env_vars = list(
             filter(lambda v: v.value, map(lambda e: V1EnvVar(name=e.key, value=e.get_value(self.target)), self.env)))
-
         sealed_for_target = list(
             filter(lambda v: v.get_value(self.target) is not None, self.sealed_secrets))
         sealed_secrets = list(map(lambda e: V1EnvVar(name=e.key, value_from=V1EnvVarSource(
             secret_key_ref=V1SecretKeySelector(key=e.key, name=self.release_name, optional=False))),
                                   sealed_for_target))
+        return env_vars + sealed_secrets
 
+    def to_deployment(self) -> V1Deployment:
+
+        ports = [
+            V1ContainerPort(container_port=key, host_port=self.mappings[key], protocol="TCP", name=f'port-{idx}')
+            for idx, key in enumerate(self.mappings.keys())
+        ]
+
+        kubernetes = self._get_kubernetes()
         resources = kubernetes.resources
         defaults = self.kubernetes_config.resources_defaults
-        instances = resources.instances if resources.instances else defaults.instances
 
         container = V1Container(
             name=self.project.name,
-            image=docker_image.spec['image'],
-            env=env_vars + sealed_secrets,
+            image=self._get_image(),
+            env=self._get_env_vars(),
             ports=ports,
             image_pull_policy="Always",
             resources=ChartBuilder._to_resources(resources, defaults, self.target),
@@ -210,6 +231,8 @@ class ChartBuilder:
                                                  self.kubernetes_config.startup_probe_defaults,
                                                  self.target) if kubernetes.startup_probe else None
         )
+
+        instances = resources.instances if resources.instances else defaults.instances
 
         return V1Deployment(
             api_version="apps/v1",
@@ -244,12 +267,9 @@ def to_service_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinitio
 
 
 def to_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
-    chart = {'deployment': builder.to_deployment(),
-             'serviceaccount': builder.to_service_account()}
+    chart = {'job': builder.to_job(), 'serviceaccount': builder.to_service_account()}
 
     if builder.sealed_secrets:
         chart['sealedsecrets'] = builder.to_sealed_secrets()
-
-    chart['job'] = builder.to_job()
 
     return chart

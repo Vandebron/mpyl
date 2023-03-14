@@ -4,7 +4,7 @@ import pytest
 from kubernetes.client import V1Probe, V1ObjectMeta
 from pyaml_env import parse_config
 
-from src.mpyl.project import Target
+from src.mpyl.project import Target, Project
 from src.mpyl.steps.deploy.k8s.chart import ChartBuilder, to_service_chart, to_job_chart
 from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml, CustomResourceDefinition
 from src.mpyl.steps.deploy.k8s.resources.customresources import V1AlphaIngressRoute
@@ -12,7 +12,7 @@ from src.mpyl.steps.models import Input, Artifact, ArtifactType
 from src.mpyl.utilities.docker import DockerConfig
 from tests import root_test_path
 from tests.test_resources import test_data
-from tests.test_resources.test_data import assert_roundtrip, get_project
+from tests.test_resources.test_data import assert_roundtrip, get_project, get_job_project
 
 
 class TestKubernetesChart:
@@ -30,14 +30,14 @@ class TestKubernetesChart:
         assert_roundtrip(name_chart, to_yaml(resource), overwrite)
 
     @staticmethod
-    def _get_builder():
+    def _get_builder(project: Project):
         required_artifact = Artifact(
             artifact_type=ArtifactType.DOCKER_IMAGE, revision="revision",
             producing_step="build_docker_Step",
             spec={'image': 'registry/image:123'}
         )
         return ChartBuilder(
-            step_input=Input(get_project(), run_properties=test_data.RUN_PROPERTIES,
+            step_input=Input(project, run_properties=test_data.RUN_PROPERTIES,
                              required_artifact=required_artifact)
         )
 
@@ -86,12 +86,12 @@ class TestKubernetesChart:
     @pytest.mark.parametrize('template',
                              ['deployment', 'service', 'serviceaccount', 'sealedsecrets', 'ingress-https-route'])
     def test_service_chart_roundtrip(self, template):
-        builder = self._get_builder()
+        builder = self._get_builder(get_project())
         chart = to_service_chart(builder)
         self._roundtrip(self.template_path / "service", template, chart)
 
-    @pytest.mark.parametrize('template', ['deployment', 'job', 'serviceaccount', 'sealedsecrets'])
+    @pytest.mark.parametrize('template', ['job', 'serviceaccount', 'sealedsecrets'])
     def test_job_chart_roundtrip(self, template):
-        builder = self._get_builder()
+        builder = self._get_builder(get_job_project())
         chart = to_job_chart(builder)
         self._roundtrip(self.template_path / "job", template, chart)
