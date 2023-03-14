@@ -5,6 +5,7 @@ from logging import Logger
 from kubernetes import config, client
 
 from .k8s import helm
+from .k8s.chart import ChartBuilder, to_service_chart
 from .k8s.rancher import rancher_namespace_metadata, cluster_config
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
@@ -43,4 +44,6 @@ class DeployKubernetes(Step):
         else:
             self._logger.info(f"Found namespace {namespace}")
 
-        return helm.install(self._logger, step_input, namespace, context)
+        builder = ChartBuilder(step_input)
+        return helm.install(self._logger, to_service_chart(builder), step_input, builder.release_name, namespace,
+                            context)

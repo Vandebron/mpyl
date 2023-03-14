@@ -64,7 +64,6 @@ class ChartBuilder:
     deployment: Deployment
     target: Target
     release_name: str
-    image_name: str
     kubernetes_config: KubernetesConfig
 
     def __init__(self, step_input: Input):
@@ -178,7 +177,7 @@ class ChartBuilder:
 
         docker_image = self.step_input.required_artifact
         if not docker_image or docker_image.artifact_type != ArtifactType.DOCKER_IMAGE:
-            raise ValueError(f'Required artifact of type {ArtifactType.DOCKER_IMAGE.name}  must be defined')
+            raise ValueError(f'Required artifact of type {ArtifactType.DOCKER_IMAGE.name} must be defined')
 
         ports = [
             V1ContainerPort(container_port=key, host_port=self.mappings[key], protocol="TCP", name=f'port-{idx}')

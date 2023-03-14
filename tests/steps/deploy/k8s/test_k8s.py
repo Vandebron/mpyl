@@ -8,7 +8,7 @@ from src.mpyl.project import Target
 from src.mpyl.steps.deploy.k8s.chart import ChartBuilder, to_service_chart
 from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml, CustomResourceDefinition
 from src.mpyl.steps.deploy.k8s.resources.customresources import V1AlphaIngressRoute
-from src.mpyl.steps.models import Input
+from src.mpyl.steps.models import Input, Artifact, ArtifactType
 from src.mpyl.utilities.docker import DockerConfig
 from tests import root_test_path
 from tests.test_resources import test_data
@@ -31,8 +31,15 @@ class TestKubernetesChart:
 
     @staticmethod
     def _build_chart():
-        builder = ChartBuilder(step_input=Input(get_project(), test_data.RUN_PROPERTIES, None),
-                               image_name='registry/image:123')
+        required_artifact = Artifact(
+            artifact_type=ArtifactType.DOCKER_IMAGE, revision="revision",
+            producing_step="build_docker_Step",
+            spec={'image': 'registry/image:123'}
+        )
+        builder = ChartBuilder(
+            step_input=Input(get_project(), run_properties=test_data.RUN_PROPERTIES,
+                             required_artifact=required_artifact)
+        )
         return to_service_chart(builder)
 
     def test_probe_values_should_be_customizable(self):
