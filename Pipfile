@@ -43,6 +43,7 @@ python_version = "3.9"
 
 [scripts]
 cli = "python src/mpyl/__main__.py"
+cli2 = "bash -c \"python $(dirname \\$PIPENV_PIPFILE)/src/mpyl/__main__.py $(echo $0) $(echo $@)\""
 build = "python setup.py install bdist bdist_wheel"
 create-graph = "pyreverse -o png src/mpyl"
 lint = "pylint --rcfile .pylintrc src/"
