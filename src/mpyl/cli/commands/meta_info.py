@@ -36,7 +36,7 @@ VDB_LOGO = """
 
 
 def simple_version():
-    return f"Version {version_meta('mpyl')}"
+    return f"MPyL v{version_meta('mpyl')}"
 
 
 def about():
