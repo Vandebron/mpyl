@@ -53,7 +53,7 @@ def stage_to_icon(stage: Stage):
 
 
 def run_result_to_markdown(run_result: RunResult) -> str:
-    result: str = ""
+    result: str = f':exclamation: Exception: \n```\n{run_result.exception}\n```\n' if run_result.exception else ""
 
     for stage in Stage:
         step_results: list[StepResult] = run_result.results_for_stage(stage)

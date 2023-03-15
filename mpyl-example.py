@@ -69,4 +69,4 @@ if __name__ == "__main__":
         main(mpl_logger, parsed_args)
     except Exception as e:
         mpl_logger.warning(f'Unexpected exception: {e}', exc_info=True)
-        raise e
+        sys.exit(1)

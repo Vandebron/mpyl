@@ -1,21 +1,18 @@
-import logging
-import tempfile
 from pathlib import Path
 
 import pytest
 from kubernetes.client import V1Probe, V1ObjectMeta
 from pyaml_env import parse_config
 
-from src.mpyl.project import Target
-from src.mpyl.steps.deploy.k8s.helm import install, write_chart, to_chart_metadata
-from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml
+from src.mpyl.project import Target, Project
+from src.mpyl.steps.deploy.k8s.chart import ChartBuilder, to_service_chart, to_job_chart, to_cron_job_chart
+from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml, CustomResourceDefinition
 from src.mpyl.steps.deploy.k8s.resources.customresources import V1AlphaIngressRoute
-from src.mpyl.steps.deploy.k8s.service import ServiceChart
-from src.mpyl.steps.models import Input
+from src.mpyl.steps.models import Input, Artifact, ArtifactType
 from src.mpyl.utilities.docker import DockerConfig
 from tests import root_test_path
 from tests.test_resources import test_data
-from tests.test_resources.test_data import assert_roundtrip, get_project
+from tests.test_resources.test_data import assert_roundtrip, get_project, get_job_project
 
 
 class TestKubernetesChart:
@@ -26,15 +23,23 @@ class TestKubernetesChart:
     liveness_probe_defaults = config['project']['deployment']['kubernetes']['livenessProbe']
 
     @staticmethod
-    def _roundtrip(file_name: Path, chart: str, as_yaml: dict[str, str], overwrite: bool = False):
+    def _roundtrip(file_name: Path, chart: str, resources: dict[str, CustomResourceDefinition],
+                   overwrite: bool = False):
         name_chart = file_name / f"{chart}.yaml"
-        chart_yaml = as_yaml[chart]
-        assert_roundtrip(name_chart, chart_yaml, overwrite)
+        resource = resources[chart]
+        assert_roundtrip(name_chart, to_yaml(resource), overwrite)
 
     @staticmethod
-    def _build_chart():
-        return ServiceChart(step_input=Input(get_project(), test_data.RUN_PROPERTIES, None),
-                            image_name='registry/image:123').to_chart()
+    def _get_builder(project: Project):
+        required_artifact = Artifact(
+            artifact_type=ArtifactType.DOCKER_IMAGE, revision="revision",
+            producing_step="build_docker_Step",
+            spec={'image': 'registry/image:123'}
+        )
+        return ChartBuilder(
+            step_input=Input(project, run_properties=test_data.RUN_PROPERTIES,
+                             required_artifact=required_artifact)
+        )
 
     def test_probe_values_should_be_customizable(self):
         project = test_data.get_project()
@@ -46,7 +51,7 @@ class TestKubernetesChart:
         assert probe.values['successThreshold'] == custom_success_threshold
         assert probe.values['failureThreshold'] == custom_failure_threshold
 
-        v1_probe: V1Probe = ServiceChart._to_probe(probe, self.liveness_probe_defaults, target=Target.PULL_REQUEST)
+        v1_probe: V1Probe = ChartBuilder._to_probe(probe, self.liveness_probe_defaults, target=Target.PULL_REQUEST)
         assert v1_probe.success_threshold == custom_success_threshold
         assert v1_probe.failure_threshold == custom_failure_threshold
 
@@ -60,7 +65,7 @@ class TestKubernetesChart:
         probe.values['httpGet'] = 'incorrect'
 
         with pytest.raises(ValueError) as exc_info:
-            ServiceChart._to_probe(probe, self.liveness_probe_defaults, target=Target.PULL_REQUEST)
+            ChartBuilder._to_probe(probe, self.liveness_probe_defaults, target=Target.PULL_REQUEST)
         assert 'Invalid value for `port`, must not be `None`' in str(exc_info.value)
 
     def test_load_config(self):
@@ -80,6 +85,18 @@ class TestKubernetesChart:
 
     @pytest.mark.parametrize('template',
                              ['deployment', 'service', 'serviceaccount', 'sealedsecrets', 'ingress-https-route'])
-    def test_chart_roundtrip(self, template):
-        charts = self._build_chart()
-        self._roundtrip(self.template_path, template, charts)
+    def test_service_chart_roundtrip(self, template):
+        builder = self._get_builder(get_project())
+        chart = to_service_chart(builder)
+        self._roundtrip(self.template_path / "service", template, chart)
+
+    @pytest.mark.parametrize('template', ['job', 'serviceaccount', 'sealedsecrets'])
+    def test_job_chart_roundtrip(self, template):
+        builder = self._get_builder(get_job_project())
+        chart = to_job_chart(builder)
+        self._roundtrip(self.template_path / "job", template, chart)
+
+    def test_cron_job_chart_roundtrip(self):
+        builder = self._get_builder(get_job_project())
+        chart = to_cron_job_chart(builder)
+        self._roundtrip(self.template_path / "cronjob", 'cronjob', chart)
