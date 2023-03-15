@@ -19,8 +19,9 @@ def main(log: Logger, args: argparse.Namespace):
 
     config = parse_config("config.yml")
     properties = parse_config("run_properties.yml")
+    run_properties = RunProperties.from_configuration(run_properties=properties, config=config)
     params = MpylRunParameters(
-        run_config=MpylRunConfig(config=config, run_properties=properties),
+        run_config=MpylRunConfig(config=config, run_properties=run_properties),
         parameters=MpylCliParameters(
             local=args.local,
             verbose=args.verbose,
@@ -31,7 +32,7 @@ def main(log: Logger, args: argparse.Namespace):
     slack_channel = None
     slack_personal = None
     jira = None
-    run_properties = RunProperties.from_configuration(run_properties=properties, config=config)
+
 
     if not args.local:
         from mpyl.reporting.targets.github import CommitCheck
