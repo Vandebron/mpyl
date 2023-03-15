@@ -781,8 +781,13 @@ definitions:
               are: - "Allow" (default): allows CronJobs to run concurrently; - "Forbid": forbids
               concurrent runs, skipping next run if previous run hasn''t finished yet; - "Replace":
               cancels currently running job and replaces it with a new one
+              See https://kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/#concurrency-policy
               '
             type: string
+            enum:
+              - Allow
+              - Forbid
+              - Replace
           failedJobsHistoryLimit:
             description: The number of failed finished jobs to retain. This is a pointer to
               distinguish between explicit zero and not specified. Defaults to 1.
