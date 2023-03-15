@@ -19,7 +19,11 @@ RUN_PROPERTIES = RunProperties(
 
 
 def get_project() -> Project:
-    return load_project(resource_path, "test_project.yml", False)
+    return load_project(resource_path, Path("test_project.yml"), True)
+
+
+def get_job_project() -> Project:
+    return load_project(resource_path, Path("test_job_project.yml"), True)
 
 
 def get_output() -> Output:

@@ -230,7 +230,7 @@ definitions:
         type: string
       password:
         type: string
+      token:
+        type: string
     required:
       - site
-      - userName
-      - password
