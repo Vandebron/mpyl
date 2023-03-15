@@ -65,6 +65,11 @@ class RunProperties:
      """
 
     @staticmethod
+    def for_local_run(config: Dict, revision: str, branch: Optional[str]):
+        return RunProperties(details=RunContext("", "", "", "", "", None), target=Target.PULL_REQUEST,
+                             versioning=VersioningProperties(revision, branch, 123, None), config=config)
+
+    @staticmethod
     def from_configuration(run_properties: Dict, config: Dict):
         build = run_properties['build']
         versioning = build['versioning']

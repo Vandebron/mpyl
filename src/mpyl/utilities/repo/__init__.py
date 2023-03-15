@@ -48,6 +48,10 @@ class Repository:
         return self._repo.head.commit.hexsha
 
     @property
+    def get_short_sha(self):
+        return self._repo.git.rev_parse(self._repo.head, short=True)
+
+    @property
     def get_branch(self):
         return self._repo.active_branch.name
 

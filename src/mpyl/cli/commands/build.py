@@ -3,21 +3,29 @@ from typing import Any, Optional
 
 import click
 from click import Parameter, Context
+from rich.markdown import Markdown
 
+from . import CliContext
+from .. import get_cli_logger
 from ..build.jenkins import JenkinsRunParameters, run_jenkins
-from ..build.mpyl import MpylRunParameters, run_mpyl, MpylCliParameters, MpylRunConfig
+from ..build.mpyl import MpylRunParameters, run_mpyl, MpylCliParameters, MpylRunConfig, find_build_set
+from ...reporting.formatting.markdown import run_result_to_markdown
+from ...steps.models import RunProperties
+from ...steps.run import RunResult
 from ...utilities.pyaml_env import parse_config
+from ...utilities.repo import Repository, RepoConfig
 
 
 @click.group('build')
 @click.option('--config', '-c', required=True, type=click.Path(exists=True), help='Path to config.yml',
-              default='config.yml')
+              envvar="MPYL_CONFIG_PATH", default='config.yml')
 @click.pass_context
 def build(ctx, config):
     """Pipeline build commands"""
-    if ctx.obj is None:
-        ctx.obj = {}
-    ctx.obj["config"] = parse_config(config)
+    console = get_cli_logger(local=False)
+    parsed_config = parse_config(config)
+    repo = ctx.with_resource(Repository(config=RepoConfig(parsed_config)))
+    ctx.obj = CliContext(parsed_config, repo, console)
 
 
 @build.command(help='Run an MPyL build')
@@ -29,15 +37,22 @@ def build(ctx, config):
 @click.pass_obj
 def run(obj, properties, local, all_, verbose):
     run_parameters = MpylRunParameters(
-        run_config=MpylRunConfig(config=obj['config'], run_properties=parse_config(properties)),
+        run_config=MpylRunConfig(config=obj.config, run_properties=parse_config(properties)),
         parameters=MpylCliParameters(local=local, all=all_, verbose=verbose)
     )
     run_mpyl(run_parameters, None)
 
 
 @build.command()
-def status():
-    click.echo('build status')
+@click.pass_obj
+def status(obj: CliContext):
+    changes_in_branch = obj.repo.changes_in_branch_including_local()
+    build_set = find_build_set(obj.repo, changes_in_branch, False)
+    run_properties = RunProperties.for_local_run(obj.config, obj.repo.get_short_sha, obj.repo.get_branch)
+    result = RunResult(run_properties=run_properties, run_plan=build_set)
+    version = run_properties.versioning
+    header: str = f"**Revision:** `{version.branch}` at `{version.revision}`\n\n"
+    obj.console.print(Markdown(markup=header + "**Execution plan:** " + run_result_to_markdown(result)))
 
 
 def get_default(ctx):
@@ -89,7 +104,7 @@ class DynamicChoice(click.Choice):
 )
 @click.pass_obj
 def jenkins(obj, user, password, pipeline):
-    run_argument = JenkinsRunParameters(user, password, obj['config'], pipeline)
+    run_argument = JenkinsRunParameters(user, password, obj.config, pipeline)
     run_jenkins(run_argument)
 
 
