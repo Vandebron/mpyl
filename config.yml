@@ -16,7 +16,6 @@ jira:
   site: 'https://vandebron.atlassian.net'
   userName: !ENV ${JIRA_USER_PASSWORD_USR:jira_user}
   password: !ENV ${JIRA_USER_PASSWORD_PSW:jira_password}
-  token: !ENV ${MPYL_JIRA_TOKEN}
 docker:
   registry:
     hostName: 'bigdataregistry.azurecr.io'
