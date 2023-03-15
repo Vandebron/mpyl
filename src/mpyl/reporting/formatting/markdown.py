@@ -44,12 +44,12 @@ def __collect_test_results(step_results: list[StepResult]) -> list[TestSuite]:
 
 def stage_to_icon(stage: Stage):
     if stage == Stage.BUILD:
-        return 'building_construction'
+        return '🏗️'
     if stage == Stage.TEST:
-        return 'test_tube'
+        return '🧪'
     if stage == Stage.DEPLOY:
-        return 'rocket'
-    return 'arrow_right'
+        return '🚀'
+    return '➡️'
 
 
 def run_result_to_markdown(run_result: RunResult) -> str:
@@ -59,7 +59,7 @@ def run_result_to_markdown(run_result: RunResult) -> str:
         step_results: list[StepResult] = run_result.results_for_stage(stage)
         plan: set[Project] = run_result.plan_for_stage(stage)
         if step_results or plan:
-            result += f":{stage_to_icon(stage)}: {__to_oneliner(step_results, plan)} \n"
+            result += f"{stage_to_icon(stage)}  {__to_oneliner(step_results, plan)} \n"
             test_results = __collect_test_results(step_results)
             if test_results:
                 result += to_markdown_test_report(

@@ -49,11 +49,8 @@ def get_build_plan(logger: logging.Logger, repo: Repository, mpyl_run_parameters
 
     changes_in_branch = repo.changes_in_branch_including_local() if params.local else repo.changes_in_branch()
     logger.debug(f'Changes: {changes_in_branch}')
-    project_paths = repo.find_projects()
 
-    all_projects = set(map(lambda p: load_project(Path("."), Path(p), False), project_paths))
-
-    projects_per_stage: dict[Stage, set[Project]] = find_build_set(all_projects, changes_in_branch, params.all)
+    projects_per_stage: dict[Stage, set[Project]] = find_build_set(repo, changes_in_branch, params.all)
 
     config = mpyl_run_parameters.run_config
     if params.local:
@@ -88,6 +85,10 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter
             logger.info("Building plan:")
             logger.info(f"\n\n{run_result_to_markdown(run_plan)}")
 
+            if params.local:
+                mpyl_run_parameters.run_config.run_properties['build']['versioning']['revision'] = repo.get_sha
+                mpyl_run_parameters.run_config.run_properties['build']['versioning']['pr_number'] = '123'
+
             run_properties = RunProperties.from_configuration(
                 run_properties=mpyl_run_parameters.run_config.run_properties,
                 config=mpyl_run_parameters.run_config.config)
@@ -110,7 +111,10 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter
         raise exc
 
 
-def find_build_set(all_projects, changes_in_branch, build_all: bool) -> dict[Stage, set[Project]]:
+def find_build_set(repo: Repository, changes_in_branch, build_all: bool) -> dict[Stage, set[Project]]:
+    project_paths = repo.find_projects()
+    all_projects = set(map(lambda p: load_project(Path("."), Path(p), False), project_paths))
+
     if build_all:
         return {Stage.BUILD: for_stage(all_projects, Stage.BUILD),
                 Stage.TEST: for_stage(all_projects, Stage.TEST),
