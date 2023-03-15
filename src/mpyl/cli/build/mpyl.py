@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
+from rich.markdown import Markdown
 from rich.console import Console
 from rich.logging import RichHandler
 
@@ -21,7 +22,7 @@ from ...utilities.repo import Repository, RepoConfig
 @dataclass(frozen=True)
 class MpylRunConfig:
     config: dict
-    run_properties: dict
+    run_properties: RunProperties
 
 
 @dataclass(frozen=True)
@@ -51,16 +52,7 @@ def get_build_plan(logger: logging.Logger, repo: Repository, mpyl_run_parameters
     logger.debug(f'Changes: {changes_in_branch}')
 
     projects_per_stage: dict[Stage, set[Project]] = find_build_set(repo, changes_in_branch, params.all)
-
-    config = mpyl_run_parameters.run_config
-    if params.local:
-        config.run_properties['build']['versioning']['revision'] = repo.get_sha
-        config.run_properties['build']['versioning']['pr_number'] = '123'
-
-    run_properties = RunProperties.from_configuration(
-        run_properties=config.run_properties,
-        config=config.config)
-    return RunResult(run_properties=run_properties, run_plan=projects_per_stage)
+    return RunResult(run_properties=mpyl_run_parameters.run_config.run_properties, run_plan=projects_per_stage)
 
 
 def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter]) -> RunResult:
@@ -83,26 +75,18 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter
                 return run_plan
 
             logger.info("Building plan:")
-            logger.info(f"\n\n{run_result_to_markdown(run_plan)}")
-
-            if params.local:
-                mpyl_run_parameters.run_config.run_properties['build']['versioning']['revision'] = repo.get_sha
-                mpyl_run_parameters.run_config.run_properties['build']['versioning']['pr_number'] = '123'
-
-            run_properties = RunProperties.from_configuration(
-                run_properties=mpyl_run_parameters.run_config.run_properties,
-                config=mpyl_run_parameters.run_config.config)
+            console.print(Markdown(f"\n\n{run_result_to_markdown(run_plan)}"))
 
             run_result: RunResult = run_plan
             try:
-                steps = Steps(logger=logger, properties=run_properties)
+                steps = Steps(logger=logger, properties=mpyl_run_parameters.run_config.run_properties)
                 run_result = run_build(run_plan, steps, reporter)
             except Exception as exc:  # pylint: disable=broad-except
                 console.log(f'Exception during build execution: {exc}')
                 console.print_exception()
                 run_result.exception = exc
 
-            logger.info(run_result_to_markdown(run_result))
+            console.print(Markdown(run_result_to_markdown(run_result)))
             return run_result
 
     except Exception as exc:
