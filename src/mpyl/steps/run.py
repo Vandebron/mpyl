@@ -21,6 +21,15 @@ class RunResult:
             run_plan = {}
         self._run_properties = run_properties
         self._run_plan = run_plan
+        self._exception = None
+
+    @property
+    def exception(self) -> Optional[Exception]:
+        return self._exception
+
+    @exception.setter
+    def exception(self, exception: Exception):
+        self._exception = exception
 
     @property
     def run_properties(self) -> RunProperties:
@@ -38,6 +47,8 @@ class RunResult:
 
     @property
     def is_success(self):
+        if self._exception:
+            return False
         return all(r.output.success for r in self._results)
 
     @staticmethod
