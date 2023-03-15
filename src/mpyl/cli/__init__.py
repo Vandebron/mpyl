@@ -17,8 +17,7 @@ def create_console_logger(local: bool, verbose: bool) -> Console:
     return console
 
 
-def set_cli_logger(local: bool, verbose: bool):
-    logging.basicConfig(
-        level="DEBUG" if verbose else "INFO", format=FORMAT, datefmt="[%X]",
-        handlers=[RichHandler(markup=True, show_path=local, show_level=False, show_time=False)]
-    )
+def get_cli_logger(local: bool) -> Console:
+    console = Console(markup=True, emoji=True, emoji_variant='text', width=None if local else 135, no_color=False,
+                      log_path=False, color_system='256', log_time=False)
+    return console
