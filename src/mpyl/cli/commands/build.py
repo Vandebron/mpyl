@@ -29,21 +29,24 @@ def build(ctx, config):
 
 
 @build.command(help='Run an MPyL build')
-@click.option('--properties', '-p', required=True, type=click.Path(exists=True), help='Path to run properties',
-              default='run_properties.yml')
+@click.option('--properties', '-p', required=False, type=click.Path(exists=False), help='Path to run properties',
+              envvar="MPYL_RUN_PROPERTIES_PATH", default='run_properties.yml')
 @click.option('--local', '-l', is_flag=True, default=True, help='Local vs CI build')
 @click.option('--all', 'all_', is_flag=True, default=False, help='Build all projects, regardless of changes on branch')
 @click.option('--verbose', '-v', is_flag=True, default=False)
 @click.pass_obj
 def run(obj, properties, local, all_, verbose):
+    run_properties = RunProperties.from_configuration(parse_config(properties), obj.config) if local \
+        else RunProperties.for_local_run(obj.config, obj.repo.get_short_sha, obj.repo.get_branch)
+
     run_parameters = MpylRunParameters(
-        run_config=MpylRunConfig(config=obj.config, run_properties=parse_config(properties)),
+        run_config=MpylRunConfig(config=obj.config, run_properties=run_properties),
         parameters=MpylCliParameters(local=local, all=all_, verbose=verbose)
     )
     run_mpyl(run_parameters, None)
 
 
-@build.command()
+@build.command(help="The status of the current local branch from MPyL's perspective")
 @click.pass_obj
 def status(obj: CliContext):
     changes_in_branch = obj.repo.changes_in_branch_including_local()
@@ -51,15 +54,15 @@ def status(obj: CliContext):
     run_properties = RunProperties.for_local_run(obj.config, obj.repo.get_short_sha, obj.repo.get_branch)
     result = RunResult(run_properties=run_properties, run_plan=build_set)
     version = run_properties.versioning
-    header: str = f"**Revision:** `{version.branch}` at `{version.revision}`\n\n"
-    obj.console.print(Markdown(markup=header + "**Execution plan:** " + run_result_to_markdown(result)))
+    header: str = f"**Revision:** `{version.branch}` at `{version.revision}`  \n"
+    obj.console.print(Markdown(markup=header + "**Execution plan:**  \n" + run_result_to_markdown(result)))
 
 
 def get_default(ctx):
     if not ctx:
         return 'config.jenkins.defaultPipeline'
 
-    return ctx.obj['config']['jenkins']['defaultPipeline']
+    return ctx.obj.config['jenkins']['defaultPipeline']
 
 
 class DynamicChoice(click.Choice):
@@ -72,7 +75,7 @@ class DynamicChoice(click.Choice):
         if ctx is None:
             raise KeyError("Context needs to be set. Did you use @click.pass_context in the parent group?")
 
-        config = ctx.obj['config']
+        config = ctx.obj.config
         if value is None:
             value = config['jenkins']['defaultPipeline']
         self.choices = config['jenkins']['pipelines'].keys()
