@@ -209,6 +209,15 @@ class Job:
 
 
 @dataclass(frozen=True)
+class Job:
+    cron: dict
+
+    @staticmethod
+    def from_config(values: dict):
+        return Job(cron=values.get('cron', {}))
+
+
+@dataclass(frozen=True)
 class Kubernetes:
     port_mappings: dict[int, int]
     liveness_probe: Optional[Probe]
