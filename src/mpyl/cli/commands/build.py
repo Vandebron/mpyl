@@ -36,7 +36,6 @@ def build(ctx, config, verbose):
 @click.option('--all', 'all_', is_flag=True, default=False, help='Build all projects, regardless of changes on branch')
 @click.pass_obj
 def run(obj, properties, local, all_, verbose):
-    local = True
     run_properties = RunProperties.for_local_run(obj.config, obj.repo.get_sha, obj.repo.get_branch) if local \
         else RunProperties.from_configuration(parse_config(properties), obj.config)
 
