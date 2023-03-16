@@ -15,6 +15,7 @@ in the `deployment/project.yml`. It defines how the source code to which it rela
 
 import logging
 import pkgutil
+import time
 import traceback
 from dataclasses import dataclass
 from enum import Enum
@@ -324,7 +325,7 @@ def validate_project(file: TextIO) -> dict:
     :return: the validated schema
     :raises `jsonschema.exceptions.ValidationError` when validation fails
     """
-    yaml_values = YAML().load(file)
+    yaml_values = YAML(typ='unsafe').load(file)
     template = pkgutil.get_data(__name__, "schema/project.schema.yml")
     if not template:
         raise ValueError('Schema project.schema.yml not found in package')
@@ -343,10 +344,10 @@ def load_project(root_dir: Path, project_path: Path, strict: bool = True) -> Pro
     """
     with open(root_dir / project_path, encoding='utf-8') as file:
         try:
-            yaml_values = validate_project(file) if strict else YAML().load(file)
-
+            start = time.time()
+            yaml_values = validate_project(file) if strict else YAML(typ='unsafe').load(file)
             project = Project.from_config(yaml_values, project_path)
-            logging.debug(f'Loaded project {project.path}')
+            logging.debug(f'Loaded project {project.path} in {(time.time() - start) * 1000} ms')
             return project
         except jsonschema.exceptions.ValidationError as exc:
             logging.warning(f'{project_path} does not comply with schema: {exc.message}')

@@ -24,6 +24,14 @@ class RunResult:
         self._exception = None
 
     @property
+    def status_line(self) -> str:
+        if self._exception:
+            return '❗Failed with exception'
+        if self._results_success():
+            return '✅Successful'
+        return '❌Failed'
+
+    @property
     def exception(self) -> Optional[Exception]:
         return self._exception
 
@@ -49,6 +57,9 @@ class RunResult:
     def is_success(self):
         if self._exception:
             return False
+        return self._results_success()
+
+    def _results_success(self):
         return all(r.output.success for r in self._results)
 
     @staticmethod

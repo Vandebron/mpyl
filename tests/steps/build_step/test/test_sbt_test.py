@@ -27,7 +27,7 @@ class TestBuildSbt:
         sbt_config = self.sbt_config
         sbt_config_with_coverage = SbtConfig(sbt_config.java_opts, sbt_config.sbt_opts,
                                              sbt_command=sbt_config.sbt_command, test_with_coverage=False,
-                                             verbose=False)
+                                             verbose=False, build_with_client=True, test_with_client=False)
         command = TestSbt._construct_sbt_command(self.step_input, sbt_config_with_coverage,
                                                  TestSbt._construct_sbt_command_test_without_coverage)
         assert ' '.join(command) == ('sbt -J-Xmx4G -J-Xms4G -J-XX:+UseG1GC -J-XX:+CMSClassUnloadingEnabled '

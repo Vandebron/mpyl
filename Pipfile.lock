@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "7ff72998a8adbda6bf4d6711848048a0c8322d291d30d1bb510d7df0198ba304"
+            "sha256": "b88c6d2d635d8330e84e1bbb8d42a24f54b458fee353b7ab74d5cbe97f6a6bdf"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -878,11 +878,11 @@
         },
         "astroid": {
             "hashes": [
-                "sha256:6891f444625b6edb2ac798829b689e95297e100ddf89dbed5a8c610e34901501",
-                "sha256:df164d5ac811b9f44105a72b8f9d5edfb7b5b2d7e979b04ea377a77b3229114a"
+                "sha256:525f126d5dc1b8b0b6ee398b33159105615d92dc4a17f2cd064125d57f6186fa",
+                "sha256:e3e4d0ffc2d15d954065579689c36aac57a339a4679a679579af6401db4d3fdb"
             ],
             "markers": "python_full_version >= '3.7.2'",
-            "version": "==2.13.5"
+            "version": "==2.15.0"
         },
         "attrs": {
             "hashes": [
@@ -1153,10 +1153,10 @@
         },
         "graphene": {
             "hashes": [
-                "sha256:2ef689f514ba9e65e88961798cf4c637ca580e541168f9aee2ffbe21fd46f388",
-                "sha256:722243a9da2caeab703b1af9ec0deec602589c97035f86c486106a52d0c67082"
+                "sha256:5b03e72770dc901f40be55784058d6bb1d952a49eb819a4a085962d5e1cf5fcf",
+                "sha256:753de13948cbf42e32cc87fb533167c88907066eb984251fdbb006c0aab8da00"
             ],
-            "version": "==3.2.1"
+            "version": "==3.2.2"
         },
         "graphql-core": {
             "hashes": [
@@ -1725,11 +1725,11 @@
         },
         "pylint": {
             "hashes": [
-                "sha256:9df0d07e8948a1c3ffa3b6e2d7e6e63d9fb457c5da5b961ed63106594780cc7e",
-                "sha256:b3dc5ef7d33858f297ac0d06cc73862f01e4f2e74025ec3eff347ce0bc60baf5"
+                "sha256:1460829b6397cb5eb0cdb0b4fc4b556348e515cdca32115f74a1eb7c20b896b4",
+                "sha256:e097d8325f8c88e14ad12844e3fe2d963d3de871ea9a8f8ad25ab1c109889ddc"
             ],
             "index": "pypi",
-            "version": "==2.15.10"
+            "version": "==2.17.0"
         },
         "pytest": {
             "hashes": [
@@ -1929,11 +1929,11 @@
         },
         "starlette": {
             "hashes": [
-                "sha256:5b80b546ed60d43da45f80113c05ff9f4c44fae95ee884945958eba685c56253",
-                "sha256:af0e54d08afed70fcbc53ae01e71c9c62c8ab038ff8cfd3f7477bf0f086b5ab4"
+                "sha256:41da799057ea8620e4667a3e69a5b1923ebd32b1819c8fa75634bbe8d8bea9bd",
+                "sha256:e87fce5d7cbdde34b76f0ac69013fd9d190d581d80681493016666e6f96c6d5e"
             ],
             "markers": "python_version >= '3.7'",
-            "version": "==0.26.0.post1"
+            "version": "==0.26.1"
         },
         "tabulate": {
             "hashes": [
