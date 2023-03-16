@@ -18,7 +18,7 @@ from .resources.customresources import V1AlphaIngressRoute, V1SealedSecret, \
     V1SparkApplication  # pylint: disable = no-name-in-module
 from .resources.spark import to_spark_body, get_spark_config_map_data
 from ...models import Input, ArtifactType
-from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target, Kubernetes, Job
+from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target
 
 yaml = YAML()
 
@@ -158,7 +158,7 @@ class ChartBuilder:
                      spec=V1JobSpec(ttl_seconds_after_finished=3600, template=pod_template))
 
     def to_cron_job(self) -> V1CronJob:
-        values = self._get_job().cron
+        values = self.project.job.cron
         job_template = V1JobTemplateSpec(spec=self.to_job().spec)
         template_dict = to_dict(job_template)
         values['jobTemplate'] = template_dict
@@ -208,21 +208,8 @@ class ChartBuilder:
                 f'Required artifact of type {ArtifactType.DOCKER_IMAGE.name} must be defined')  # pylint: disable=E1101
         return docker_image.spec['image']
 
-    def _get_kubernetes(self) -> Kubernetes:
-        kubernetes = self.deployment.kubernetes
-        if kubernetes is None:
-            raise AttributeError("deployment.kubernetes field should be set")
-        return kubernetes
-
-    def _get_job(self) -> Job:
-        job = self._get_kubernetes().job
-        if job is None:
-            raise AttributeError("deployment.kubernetes.job field should be set")
-        return job
-
     def _get_resources(self):
-        kubernetes = self._get_kubernetes()
-        resources = kubernetes.resources
+        resources = self.project.kubernetes.resources
         defaults = self.kubernetes_config.resources_defaults
         return ChartBuilder._to_resources(resources, defaults, self.target)
 
@@ -243,8 +230,9 @@ class ChartBuilder:
             for idx, key in enumerate(self.mappings.keys())
         ]
 
-        kubernetes = self._get_kubernetes()
-        resources = kubernetes.resources
+        project = self.project
+        resources = project.resources
+        kubernetes = project.kubernetes
         defaults = self.kubernetes_config.resources_defaults
 
         container = V1Container(
@@ -254,12 +242,16 @@ class ChartBuilder:
             ports=ports,
             image_pull_policy="Always",
             resources=ChartBuilder._to_resources(resources, defaults, self.target),
-            liveness_probe=ChartBuilder._to_probe(kubernetes.liveness_probe,
-                                                  self.kubernetes_config.liveness_probe_defaults,
-                                                  self.target) if kubernetes.liveness_probe else None,
-            startup_probe=ChartBuilder._to_probe(kubernetes.startup_probe,
-                                                 self.kubernetes_config.startup_probe_defaults,
-                                                 self.target) if kubernetes.startup_probe else None
+            liveness_probe=ChartBuilder._to_probe(
+                kubernetes.liveness_probe,
+                self.kubernetes_config.liveness_probe_defaults,
+                self.target
+            ) if kubernetes.liveness_probe else None,
+            startup_probe=ChartBuilder._to_probe(
+                kubernetes.startup_probe,
+                self.kubernetes_config.startup_probe_defaults,
+                self.target)
+            if kubernetes.startup_probe else None
         )
 
         instances = resources.instances if resources.instances else defaults.instances
