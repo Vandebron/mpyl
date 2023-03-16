@@ -92,7 +92,7 @@ class TestSbt(Step):
 
     @staticmethod
     def _construct_sbt_command(step_input: Input, config: SbtConfig, commands_fn: Callable[[Input], list[str]]):
-        command = config.to_command()
+        command = config.to_command(config.test_with_client)
         command.append("; ".join(commands_fn(step_input)))
         return command
 

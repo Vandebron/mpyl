@@ -6,7 +6,7 @@ from click import Parameter, Context
 from rich.markdown import Markdown
 
 from . import CliContext
-from .. import get_cli_logger
+from .. import create_console_logger
 from ..build.jenkins import JenkinsRunParameters, run_jenkins
 from ..build.mpyl import MpylRunParameters, run_mpyl, MpylCliParameters, MpylRunConfig, find_build_set
 from ...reporting.formatting.markdown import run_result_to_markdown
@@ -19,13 +19,14 @@ from ...utilities.repo import Repository, RepoConfig
 @click.group('build')
 @click.option('--config', '-c', required=True, type=click.Path(exists=True), help='Path to config.yml',
               envvar="MPYL_CONFIG_PATH", default='config.yml')
+@click.option('--verbose', '-v', is_flag=True, default=False)
 @click.pass_context
-def build(ctx, config):
+def build(ctx, config, verbose):
     """Pipeline build commands"""
-    console = get_cli_logger(local=False)
+    console = create_console_logger(local=False, verbose=verbose)
     parsed_config = parse_config(config)
     repo = ctx.with_resource(Repository(config=RepoConfig(parsed_config)))
-    ctx.obj = CliContext(parsed_config, repo, console)
+    ctx.obj = CliContext(parsed_config, repo, console, verbose)
 
 
 @build.command(help='Run an MPyL build')
@@ -33,11 +34,11 @@ def build(ctx, config):
               envvar="MPYL_RUN_PROPERTIES_PATH", default='run_properties.yml')
 @click.option('--local', '-l', is_flag=True, default=True, help='Local vs CI build')
 @click.option('--all', 'all_', is_flag=True, default=False, help='Build all projects, regardless of changes on branch')
-@click.option('--verbose', '-v', is_flag=True, default=False)
 @click.pass_obj
 def run(obj, properties, local, all_, verbose):
-    run_properties = RunProperties.from_configuration(parse_config(properties), obj.config) if local \
-        else RunProperties.for_local_run(obj.config, obj.repo.get_short_sha, obj.repo.get_branch)
+    local = True
+    run_properties = RunProperties.for_local_run(obj.config, obj.repo.get_sha, obj.repo.get_branch) if local \
+        else RunProperties.from_configuration(parse_config(properties), obj.config)
 
     run_parameters = MpylRunParameters(
         run_config=MpylRunConfig(config=obj.config, run_properties=run_properties),
