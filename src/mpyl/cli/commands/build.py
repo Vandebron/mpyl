@@ -32,16 +32,19 @@ def build(ctx, config, verbose):
 @build.command(help='Run an MPyL build')
 @click.option('--properties', '-p', required=False, type=click.Path(exists=False), help='Path to run properties',
               envvar="MPYL_RUN_PROPERTIES_PATH", default='run_properties.yml')
-@click.option('--local', '-l', is_flag=True, default=True, help='Local vs CI build')
-@click.option('--all', 'all_', is_flag=True, default=False, help='Build all projects, regardless of changes on branch')
+@click.option('--ci', is_flag=True,
+              help='Run as CI build instead of local. Ignores un versioned changes.')
+@click.option('--all', 'all_', is_flag=True, help='Build all projects, regardless of changes on branch')
 @click.pass_obj
-def run(obj, properties, local, all_, verbose):
-    run_properties = RunProperties.for_local_run(obj.config, obj.repo.get_sha, obj.repo.get_branch) if local \
-        else RunProperties.from_configuration(parse_config(properties), obj.config)
+def run(obj: CliContext, properties, ci, all_):  # pylint: disable=invalid-name
+    run_properties = RunProperties.from_configuration(parse_config(properties), obj.config) if ci \
+        else RunProperties.for_local_run(obj.config, obj.repo.get_sha, obj.repo.get_branch)
 
+    parameters = MpylCliParameters(local=not ci, all=all_, verbose=obj.verbose)
+    obj.console.log(parameters)
     run_parameters = MpylRunParameters(
         run_config=MpylRunConfig(config=obj.config, run_properties=run_properties),
-        parameters=MpylCliParameters(local=local, all=all_, verbose=verbose)
+        parameters=parameters
     )
     run_mpyl(run_parameters, None)
 
