@@ -45,7 +45,7 @@ from ...reporting.formatting.markdown import run_result_to_markdown
 from ...reporting.formatting.text import to_string
 from ...steps.models import RunProperties
 from ...steps.run import RunResult
-from ...utilities.github import GithubConfig, get_pr_for_branch
+from ...utilities.github import GithubConfig, get_pr_for_branch, GithubAppConfig
 from ...utilities.repo import Repository, RepoConfig
 
 
@@ -98,7 +98,7 @@ class CommitCheck(Reporter):
 
     def send_report(self, results: RunResult) -> None:
         try:
-            config = self._github_config.app_config
+            config: GithubAppConfig = self._github_config.get_app_config
             if not config:
                 raise KeyError("github.app config needs to be defined")
 
