@@ -76,6 +76,8 @@ class TargetProperty(Generic[T]):
 
     @staticmethod
     def from_config(values: dict):
+        if not values:
+            return None
         return TargetProperty(pr=values.get('pr'), test=values.get('test'), acceptance=values.get('acceptance'),
                               production=values.get('production'), all=values.get('all'))
 
@@ -179,15 +181,13 @@ class Resources:
 
     @staticmethod
     def from_config(values: dict):
-        instances = values.get('instances')
         limits = values.get('limit', {})
-        cpus = limits.get('cpus')
-        mem = limits.get('mem')
-        disk = limits.get('disk')
-        return Resources(instances=TargetProperty.from_config(instances) if instances else None,
-                         cpus=TargetProperty.from_config(cpus) if cpus else None,
-                         mem=TargetProperty.from_config(mem) if mem else None,
-                         disk=TargetProperty.from_config(disk) if disk else None)
+        return Resources(
+            instances=TargetProperty.from_config(limits.get('instances', {})),
+            cpus=TargetProperty.from_config(limits.get('cpus', {})),
+            mem=TargetProperty.from_config(limits.get('mem', {})),
+            disk=TargetProperty.from_config(limits.get('disk', {}))
+        )
 
 
 @dataclass(frozen=True)
@@ -234,12 +234,11 @@ class Host:
 
     @staticmethod
     def from_config(values: dict):
-        host = values.get('host')
-        tls = values.get('tls')
-        whitelists = values.get('whitelists')
-        return Host(host=TargetProperty.from_config(host) if host else None,
-                    tls=TargetProperty.from_config(tls) if tls else None,
-                    whitelists=TargetProperty.from_config(whitelists) if whitelists else None)
+        return Host(
+            host=TargetProperty.from_config(values.get('host', {})),
+            tls=TargetProperty.from_config(values.get('tls', {})),
+            whitelists=TargetProperty.from_config(values.get('whitelists', {}))
+        )
 
 
 @dataclass(frozen=True)
