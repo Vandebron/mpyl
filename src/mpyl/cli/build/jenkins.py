@@ -5,6 +5,7 @@ import requests
 from github import Github
 from jenkinsapi.jenkins import Jenkins
 from rich.console import Console
+from rich.markdown import Markdown
 
 from ...project import Target
 from ...utilities.github import GithubConfig, get_pr_for_branch
@@ -20,6 +21,7 @@ class JenkinsRunParameters:
     jenkins_password: str
     config: dict
     pipeline: str
+    verbose: bool
 
 
 def run_jenkins(run_config: JenkinsRunParameters):
@@ -49,6 +51,7 @@ def run_jenkins(run_config: JenkinsRunParameters):
                 status.console.bell()
                 status.console.log('⚠️ Could not connect. Are you on VPN?')
             except Exception as exc:
-                status.console.log(f'Unexpected exception: {exc}')
-                status.console.print_exception()
+                status.console.print(Markdown(f'Unexpected exception: {exc}'))
+                if run_config.verbose:
+                    status.console.print_exception()
                 raise exc
