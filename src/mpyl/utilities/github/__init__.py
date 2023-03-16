@@ -44,8 +44,8 @@ class GithubConfig:
 
 def get_pr_for_branch(repo: Repository, branch: str) -> PullRequest:
     pulls = repo.get_pulls(head=f'{repo.full_name}:{branch}').get_page(0)
-
+    print(pulls)
     if len(pulls) == 0:
-        raise ValueError(f'No PR related to {branch} were found')
+        raise ValueError(f'No PR related to {branch} were found. Did create a PR? `gh pr create --draft`')
 
     return pulls.pop()

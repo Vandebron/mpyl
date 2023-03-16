@@ -106,8 +106,8 @@ class DynamicChoice(click.Choice):
     default=lambda: get_default(click.get_current_context(silent=True))
 )
 @click.pass_obj
-def jenkins(obj, user, password, pipeline):
-    run_argument = JenkinsRunParameters(user, password, obj.config, pipeline)
+def jenkins(obj: CliContext, user, password, pipeline):
+    run_argument = JenkinsRunParameters(user, password, obj.config, pipeline, obj.verbose)
     run_jenkins(run_argument)
 
 
