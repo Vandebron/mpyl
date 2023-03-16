@@ -29,7 +29,7 @@ class SbtConfig:
             test_with_client=(str(sbt_config.get('clientMode', {}).get('test')).lower() == 'true')
         )
 
-    def to_command(self, client_mode: bool):
+    def to_command(self, client_mode: bool, sbt_commands: list[str]):
         cmd = [self.sbt_command]
         if self.verbose:
             cmd.append('-v')
@@ -37,4 +37,7 @@ class SbtConfig:
             cmd.append('--client')
         cmd.extend([f'-J{opt}' for opt in self.java_opts.split(' ')])
         cmd.extend([f'-D{opt}' for opt in self.sbt_opts.split(' ')])
+
+        joined_commands = "; ".join(sbt_commands)
+        cmd.append(f"'{joined_commands}" if client_mode else joined_commands)
         return cmd
