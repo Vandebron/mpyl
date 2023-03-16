@@ -16,7 +16,8 @@ class GithubAppConfig:
         self.private_app_key_path = config.get('privateKeyPath')
         self.private_key_base_64_encoded = config.get('privateKeyBase64Encoded')
         if not self.private_key_base_64_encoded and not self.private_app_key_path:
-            raise KeyError("Either 'privateKeyPath' or 'privateKeyBase64Encoded' need to be defined")
+            raise KeyError("When github.app is configured, either 'privateKeyPath' "
+                           "or 'privateKeyBase64Encoded' need to be defined")
 
         self.app_key = config['appId']
 
@@ -27,7 +28,7 @@ class GithubConfig:
     owner: str
     repo_name: str
     token: str
-    app_config: Optional[GithubAppConfig] = None
+    app_config: dict
 
     def __init__(self, config: Dict):
         github = config['cvs']['github']
@@ -36,15 +37,16 @@ class GithubConfig:
         self.owner = parts[0]
         self.repo_name = parts[1]
         self.token = github['token']
+        self.app_config = github.get('app', {})
 
-        app_config = github.get('app', {})
-        if app_config:
-            self.app_config = GithubAppConfig(app_config)
+    @property
+    def get_app_config(self) -> GithubAppConfig:
+        return GithubAppConfig(self.app_config)
 
 
 def get_pr_for_branch(repo: Repository, branch: str) -> PullRequest:
     pulls = repo.get_pulls(head=f'{repo.full_name}:{branch}').get_page(0)
-    print(pulls)
+
     if len(pulls) == 0:
         raise ValueError(f'No PR related to {branch} were found. Did create a PR? `gh pr create --draft`')
 
