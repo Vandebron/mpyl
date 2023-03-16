@@ -189,7 +189,8 @@ class ChartBuilder:
     def _get_image(self):
         docker_image = self.step_input.required_artifact
         if not docker_image or docker_image.artifact_type != ArtifactType.DOCKER_IMAGE:
-            raise ValueError(f'Required artifact of type {ArtifactType.DOCKER_IMAGE.name} must be defined')
+            raise ValueError(
+                f'Required artifact of type {ArtifactType.DOCKER_IMAGE.name} must be defined')  # pylint: disable=E1101
         return docker_image.spec['image']
 
     def _get_kubernetes(self):
