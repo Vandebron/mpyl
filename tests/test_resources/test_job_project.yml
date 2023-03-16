@@ -17,12 +17,20 @@ deployment:
         acceptance: "Acceptance"
         production: "Production"
   kubernetes:
-    cron:
-      suspend: true
-      schedule: "0 22 * * *"
-      successfulJobsHistoryLimit: 3
-      failedJobsHistoryLimit: 1
-      concurrencyPolicy: Allow
+    job:
+      ttlSecondsAfterFinished:
+        pr: 5
+        test: 10
+        acceptance: 10
+        production: 10
+      activeDeadlineSeconds:
+        all: 20
+      cron:
+        suspend: true
+        schedule: "0 22 * * *"
+        successfulJobsHistoryLimit: 3
+        failedJobsHistoryLimit: 1
+        concurrencyPolicy: Allow
 dependencies:
   test:
     - tests/projects/service/file.py

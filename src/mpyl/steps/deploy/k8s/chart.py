@@ -16,7 +16,7 @@ from ruamel.yaml import YAML
 from .resources.crd import CustomResourceDefinition, to_dict  # pylint: disable = no-name-in-module
 from .resources.customresources import V1AlphaIngressRoute, V1SealedSecret  # pylint: disable = no-name-in-module
 from ...models import Input, ArtifactType
-from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target
+from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target, Kubernetes, Job
 
 yaml = YAML()
 
@@ -149,7 +149,7 @@ class ChartBuilder:
                      spec=V1JobSpec(ttl_seconds_after_finished=3600, template=pod_template))
 
     def to_cron_job(self) -> V1CronJob:
-        values = self._get_kubernetes().cron
+        values = self._get_job().cron
         job_template = V1JobTemplateSpec(spec=self.to_job().spec)
         template_dict = to_dict(job_template)
         values['jobTemplate'] = template_dict
@@ -193,11 +193,17 @@ class ChartBuilder:
                 f'Required artifact of type {ArtifactType.DOCKER_IMAGE.name} must be defined')  # pylint: disable=E1101
         return docker_image.spec['image']
 
-    def _get_kubernetes(self):
+    def _get_kubernetes(self) -> Kubernetes:
         kubernetes = self.deployment.kubernetes
         if kubernetes is None:
             raise AttributeError("deployment.kubernetes field should be set")
         return kubernetes
+
+    def _get_job(self) -> Job:
+        job = self._get_kubernetes().job
+        if job is None:
+            raise AttributeError("deployment.kubernetes.job field should be set")
+        return job
 
     def _get_resources(self):
         kubernetes = self._get_kubernetes()
