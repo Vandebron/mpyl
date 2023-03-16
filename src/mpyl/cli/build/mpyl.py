@@ -5,9 +5,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-from rich.markdown import Markdown
 from rich.console import Console
 from rich.logging import RichHandler
+from rich.markdown import Markdown
 
 from ...project import load_project, Stage, Project
 from ...reporting.formatting.markdown import run_result_to_markdown
@@ -86,6 +86,7 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter
                 console.print_exception()
                 run_result.exception = exc
 
+            console.print(run_result.status_line)
             console.print(Markdown(run_result_to_markdown(run_result)))
             return run_result
 
