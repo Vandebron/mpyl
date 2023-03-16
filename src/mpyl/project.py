@@ -295,6 +295,16 @@ class Project:
             raise AttributeError(f"Project '{self.name}' does not have kubernetes configuration")
         return self.deployment.kubernetes
 
+    @property
+    def resources(self) -> Resources:
+        return self.kubernetes.resources
+
+    @property
+    def job(self) -> Job:
+        if self.kubernetes.job is None:
+            raise AttributeError(f"Project '{self.name}' does not have kubernetes configuration")
+        return self.kubernetes.job
+
     @staticmethod
     def project_yaml_path() -> str:
         return 'deployment/project.yml'
