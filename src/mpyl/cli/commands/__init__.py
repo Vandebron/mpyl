@@ -11,3 +11,4 @@ class CliContext:
     config: dict
     repo: Repository
     console: Console
+    verbose: bool
