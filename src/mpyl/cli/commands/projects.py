@@ -28,15 +28,14 @@ def projects(ctx, config, verbose):
 @click.pass_obj
 def list_projects(obj: CliContext):
     found_projects = obj.repo.find_projects()
-    for proj in sorted(found_projects):
+    for proj in found_projects:
         obj.console.log(proj)
 
 
 @projects.command(help='Validate the yaml of found projects against their schema')
 @click.pass_obj
 def lint(obj: CliContext):
-    found_projects: set[str] = obj.repo.find_projects()
-    for project in sorted(found_projects):
+    for project in obj.repo.find_projects():
         try:
             project_path = Path('.') / Path(project)
             with open(project_path, encoding='utf-8') as file:
