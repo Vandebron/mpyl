@@ -48,6 +48,10 @@ class Repository:
         return self._repo.head.commit.hexsha
 
     @property
+    def get_short_sha(self):
+        return self._repo.git.rev_parse(self._repo.head, short=True)
+
+    @property
     def get_branch(self):
         return self._repo.active_branch.name
 
@@ -74,6 +78,7 @@ class Repository:
         changed: set[str] = set(self._repo.git.diff(None, name_only=True).splitlines())
         return changed.union(self._repo.untracked_files)
 
-    def find_projects(self) -> set[str]:
+    def find_projects(self) -> list[str]:
         """ returns a set of all project.yml files """
-        return set(self._repo.git.ls_files(f'**/{Project.project_yaml_path()}').splitlines())
+        projects = set(self._repo.git.ls_files(f'**/{Project.project_yaml_path()}').splitlines())
+        return sorted(projects)

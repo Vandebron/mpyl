@@ -92,9 +92,7 @@ class TestSbt(Step):
 
     @staticmethod
     def _construct_sbt_command(step_input: Input, config: SbtConfig, commands_fn: Callable[[Input], list[str]]):
-        command = config.to_command()
-        command.append("; ".join(commands_fn(step_input)))
-        return command
+        return config.to_command(config.test_with_client, commands_fn(step_input))
 
     @staticmethod
     def _extract_test_report(project: Project, step_input: Input) -> Artifact:

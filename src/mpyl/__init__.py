@@ -37,11 +37,10 @@ MPyL is extensible and has a minimal footprint. Having said that, batteries for 
 
 .. include:: ../../README-dev.md
 """
-import importlib
-from importlib.metadata import version as version_meta
 
 import click
 
+from .cli.commands import get_version
 from .cli.commands.build import build
 from .cli.commands.meta_info import version
 from .cli.commands.projects import projects
@@ -52,13 +51,6 @@ from .utilities.repo import RepoConfig, Repository
 @click.group(name='mpyl')
 def main_group():
     """Command Line Interface for MPyL"""
-
-
-def get_version():
-    try:
-        return version_meta('mpyl')
-    except importlib.metadata.PackageNotFoundError:
-        return ''
 
 
 def main():
