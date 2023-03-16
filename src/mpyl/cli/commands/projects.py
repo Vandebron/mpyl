@@ -39,7 +39,7 @@ def projects(ctx, config, verbose, filter_):
 @click.pass_obj
 def list_projects(obj: ProjectsContext):
     found_projects = obj.cli.repo.find_projects(obj.filter)
-    #
+
     if len(found_projects) == 1:
         project = found_projects[0]
         text = Path(project).read_text(encoding='utf-8')
@@ -53,7 +53,6 @@ def list_projects(obj: ProjectsContext):
         table.add_row("Maintainer", f"{info.maintainer}")
         table.add_row("Stages", f"{info.stages}")
         obj.cli.console.print(table)
-
     else:
         for proj in found_projects:
             name = load_project(Path("."), Path(proj), False).name
