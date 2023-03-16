@@ -5,7 +5,7 @@ import click
 import jsonschema
 
 from . import CliContext
-from .. import get_cli_logger
+from .. import create_console_logger
 from ...project import validate_project
 from ...utilities.pyaml_env import parse_config
 from ...utilities.repo import Repository, RepoConfig
@@ -14,12 +14,14 @@ from ...utilities.repo import Repository, RepoConfig
 @click.group('projects')
 @click.option('--config', '-c', required=True, type=click.Path(exists=True), help='Path to the config.yml',
               envvar="MPYL_CONFIG_PATH", default='config.yml')
+@click.option('--verbose', '-v', is_flag=True, default=False)
 @click.pass_context
-def projects(ctx, config):
+def projects(ctx, config, verbose):
     """Commands related to projects"""
-    console = get_cli_logger(local=False)
+    console = create_console_logger(local=False, verbose=verbose)
     parsed_config = parse_config(config)
-    ctx.obj = CliContext(parsed_config, ctx.with_resource(Repository(config=RepoConfig(parsed_config))), console)
+    ctx.obj = CliContext(parsed_config, ctx.with_resource(Repository(config=RepoConfig(parsed_config))), console,
+                         verbose)
 
 
 @projects.command(name='list', help='List found projects')
