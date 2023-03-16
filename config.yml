@@ -44,7 +44,7 @@ sbt:
   javaOpts: '-Xmx4G -Xms4G -XX:+UseG1GC -XX:+CMSClassUnloadingEnabled -Xss2M'
   sbtOpts: 'user.timezone=GMT jline.terminal=jline.UnixTerminal'
   clientMode:
-    build: true
+    build: false
     test: false
 kubernetes:
   rancher:
