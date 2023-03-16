@@ -55,6 +55,5 @@ class BuildSbt(Step):
             ] if command is not None
         ]
         config = SbtConfig.from_config(config=step_input.run_properties.config)
-        command = config.to_command(config.build_with_client)
-        command.append("; ".join(commands))
+        command = config.to_command(config.build_with_client, commands)
         return command
