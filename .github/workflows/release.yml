@@ -25,7 +25,8 @@ jobs:
           command: run build
 
       - name: Publish package
-        uses: pypa/gh-action-pypi-publish@release/v1.7.0
+        #fix to 1.7.0
+        uses: pypa/gh-action-pypi-publish@7104b6e981edc64651f8fc454998a67914173bdb
         with:
           password: ${{ secrets.PYPI_RELEASE_API_TOKEN }}
           verbose: true
