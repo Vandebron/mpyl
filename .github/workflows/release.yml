@@ -25,8 +25,7 @@ jobs:
           command: run build
 
       - name: Publish package
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@release/v1.8.0
         with:
-          repository_url: https://upload.pypi.org/legacy/
           password: ${{ secrets.PYPI_RELEASE_API_TOKEN }}
           verbose: true
