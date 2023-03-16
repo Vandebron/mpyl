@@ -1,9 +1,11 @@
 """Extractors for package meta information"""
 
 import os
-from importlib.metadata import version as version_meta, distribution
+from importlib.metadata import distribution
 
 import click
+
+from . import get_version
 
 VDB_LOGO = """
                                          .::.               
@@ -36,7 +38,7 @@ VDB_LOGO = """
 
 
 def simple_version():
-    return f"MPyL v{version_meta('mpyl')}"
+    return f"MPyL {get_version()}"
 
 
 def about():
