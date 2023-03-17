@@ -26,13 +26,13 @@ class RunResult:
     @property
     def status_line(self) -> str:
         if self._exception:
-            return '❗Failed with exception'
+            return '❗ Failed with exception'
         if self.is_in_progress:
-            return '🏗️Building'
+            return '🏗️ Building'
         if self._results_success():
-            return '✅Successful'
+            return '✅ Successful'
 
-        return '❌Failed'
+        return '❌ Failed'
 
     @property
     def exception(self) -> Optional[Exception]:
