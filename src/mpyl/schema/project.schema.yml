@@ -228,15 +228,7 @@ properties:
       kubernetes:
         $ref: '#/definitions/kubernetes'
       traefik:
-        additionalProperties: false
-        type: object
-        properties:
-          enabled:
-            type: boolean
-          hosts:
-            type: array
-            items:
-              $ref: '#/definitions/traefikHost'
+        $ref: '#/definitions/traefik'
       nuc:
         type: object
         required:
@@ -311,6 +303,16 @@ properties:
         minItems: 1
     additionalProperties: false
 definitions:
+  traefik:
+    additionalProperties: false
+    type: object
+    properties:
+      enabled:
+        type: boolean
+      hosts:
+        type: array
+        items:
+          $ref: '#/definitions/traefikHost'
   dtapValue:
     type: object
     additionalProperties: false
