@@ -61,6 +61,7 @@ def to_slack_markdown(markdown: str) -> str:
 
 @dataclass(frozen=True)
 class SlackIcons:
+    building: str
     success: str
     failure: str
 
@@ -91,7 +92,7 @@ class SlackReporter(Reporter):
         self._channel = channel
         self._title = title
         icons = slack_config['icons']
-        self._icons = SlackIcons(success=icons['success'], failure=icons['failure'])
+        self._icons = SlackIcons(success=icons['success'], failure=icons['failure'], building=icons['building'])
         self._message_identifier = message_identifier
 
     def send_report(self, results: RunResult) -> None:
@@ -134,8 +135,16 @@ class SlackReporter(Reporter):
                                                        'https://avatars.githubusercontent.com/u/18010732'),
                         initiator=user_id)
 
+    def __get_icon(self, results: RunResult):
+        if results.is_in_progress:
+            return self._icons.building
+        if results.is_success:
+            return self._icons.success
+        return self._icons.failure
+
     def __compose_blocks(self, results: RunResult, text: str, user_info: UserInfo) -> list[Block]:
-        icon = self._icons.success if results.is_success else self._icons.failure
+        icon = self.__get_icon(results)
+
         context = self.compose_context(results.run_properties, icon, user_info.user_name)
         return [HeaderBlock(text=self._title),
                 SectionBlock(text=MarkdownTextObject(text=text)),

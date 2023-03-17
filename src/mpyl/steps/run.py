@@ -26,10 +26,13 @@ class RunResult:
     @property
     def status_line(self) -> str:
         if self._exception:
-            return '❗Failed with exception'
+            return '❗ Failed with exception'
+        if self.is_in_progress:
+            return '🏗️ Building'
         if self._results_success():
-            return '✅Successful'
-        return '❌Failed'
+            return '✅ Successful'
+
+        return '❌ Failed'
 
     @property
     def exception(self) -> Optional[Exception]:
@@ -58,6 +61,19 @@ class RunResult:
         if self._exception:
             return False
         return self._results_success()
+
+    @property
+    def is_finished(self):
+        for stage, projects in self.run_plan.items():
+            finished_project_names = set(map(lambda r: r.project.name, self.results_for_stage(stage)))
+            for project in projects:
+                if project.name not in finished_project_names:
+                    return False
+        return True
+
+    @property
+    def is_in_progress(self):
+        return self.is_success and not self.is_finished
 
     def _results_success(self):
         return all(r.output.success for r in self._results)

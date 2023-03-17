@@ -21,3 +21,8 @@ def get_version():
         return f"v{version_meta('mpyl')}"
     except importlib.metadata.PackageNotFoundError:
         return '(local)'
+
+
+CONFIG_PATH_HELP = 'Path to the config.yml. Needs to comply with schema at ' \
+                   'https://vandebron.github.io/mpyl/schema/mpyl_config.schema.yml ' \
+                   'Can be set via `MPYL_CONFIG_PATH` env var. '

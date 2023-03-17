@@ -7,6 +7,8 @@ on:
 jobs:
   Build_Package:
     runs-on: ubuntu-latest
+    env:
+      PIPENV_VENV_IN_PROJECT: true
     steps:
       - name: Checkout Source
         uses: actions/checkout@v3
@@ -15,12 +17,13 @@ jobs:
         uses: actions/cache@v2
         id: cache-dependencies
         with:
-          path: /github/home/.local/share/virtualenvs/*
+          path: ./.venv
           key: ${{ runner.os }}-pip-${{ hashFiles('**/Pipfile.lock') }}
           restore-keys: |
             ${{ runner.os }}-pipenv
 
       - name: Install dependencies
+        if: steps.cache-dependencies.outputs.cache-hit != 'true'
         uses: VaultVulp/action-pipenv@v2.0.1
         with:
           command: install -d
@@ -31,6 +34,7 @@ jobs:
           command: run lint
 
       - name: Install Types
+        if: steps.cache-dependencies.outputs.cache-hit != 'true'
         uses: VaultVulp/action-pipenv@v2.0.1
         with:
           command: run install-types
@@ -95,11 +99,11 @@ jobs:
           command: run build
 
       - name: Publish package
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@a3a3bafbb3e5a75a854ae1bc53ae128cf22c4af4
         if: github.ref_name != 'main'
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
-          repository_url: https://test.pypi.org/legacy/
+          repository-url: https://test.pypi.org/legacy/
           verbose: true
-          print_hash: true
-          skip_existing: true
+          print-hash: true
+          skip-existing: true
