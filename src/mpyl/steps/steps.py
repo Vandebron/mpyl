@@ -70,7 +70,7 @@ class Steps:
 
         self._properties = properties
         for stage, steps in self._step_executors.items():
-            self._logger.debug(f"Registered executors for stage {stage.name}: "
+            self._logger.debug(f"Registered executors for stage {stage.name}: " # pylint: disable=E1101
                                f"{[step.meta.name for step in steps]}")
 
     def _find_executor(self, stage: Stage, step_name: str) -> Optional[Step]:

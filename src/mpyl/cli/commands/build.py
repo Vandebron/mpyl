@@ -5,7 +5,7 @@ import click
 from click import Parameter, Context
 from rich.markdown import Markdown
 
-from . import CliContext
+from . import CliContext, CONFIG_PATH_HELP
 from .. import create_console_logger
 from ..build.jenkins import JenkinsRunParameters, run_jenkins
 from ..build.mpyl import MpylRunParameters, run_mpyl, MpylCliParameters, MpylRunConfig, find_build_set
@@ -17,7 +17,7 @@ from ...utilities.repo import Repository, RepoConfig
 
 
 @click.group('build')
-@click.option('--config', '-c', required=True, type=click.Path(exists=True), help='Path to config.yml',
+@click.option('--config', '-c', required=True, type=click.Path(exists=True), help=CONFIG_PATH_HELP,
               envvar="MPYL_CONFIG_PATH", default='config.yml')
 @click.option('--verbose', '-v', is_flag=True, default=False)
 @click.pass_context
@@ -32,16 +32,19 @@ def build(ctx, config, verbose):
 @build.command(help='Run an MPyL build')
 @click.option('--properties', '-p', required=False, type=click.Path(exists=False), help='Path to run properties',
               envvar="MPYL_RUN_PROPERTIES_PATH", default='run_properties.yml')
-@click.option('--local', '-l', is_flag=True, default=True, help='Local vs CI build')
-@click.option('--all', 'all_', is_flag=True, default=False, help='Build all projects, regardless of changes on branch')
+@click.option('--ci', is_flag=True,
+              help='Run as CI build instead of local. Ignores unversioned changes.')
+@click.option('--all', 'all_', is_flag=True, help='Build all projects, regardless of changes on branch')
 @click.pass_obj
-def run(obj, properties, local, all_, verbose):
-    run_properties = RunProperties.for_local_run(obj.config, obj.repo.get_sha, obj.repo.get_branch) if local \
-        else RunProperties.from_configuration(parse_config(properties), obj.config)
+def run(obj: CliContext, properties, ci, all_):  # pylint: disable=invalid-name
+    run_properties = RunProperties.from_configuration(parse_config(properties), obj.config) if ci \
+        else RunProperties.for_local_run(obj.config, obj.repo.get_sha, obj.repo.get_branch)
 
+    parameters = MpylCliParameters(local=not ci, all=all_, verbose=obj.verbose)
+    obj.console.log(parameters)
     run_parameters = MpylRunParameters(
         run_config=MpylRunConfig(config=obj.config, run_properties=run_properties),
-        parameters=MpylCliParameters(local=local, all=all_, verbose=verbose)
+        parameters=parameters
     )
     run_mpyl(run_parameters, None)
 
@@ -106,8 +109,8 @@ class DynamicChoice(click.Choice):
     default=lambda: get_default(click.get_current_context(silent=True))
 )
 @click.pass_obj
-def jenkins(obj, user, password, pipeline):
-    run_argument = JenkinsRunParameters(user, password, obj.config, pipeline)
+def jenkins(obj: CliContext, user, password, pipeline):
+    run_argument = JenkinsRunParameters(user, password, obj.config, pipeline, obj.verbose)
     run_jenkins(run_argument)
 
 
