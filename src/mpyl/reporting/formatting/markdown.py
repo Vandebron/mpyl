@@ -13,8 +13,8 @@ from ...utilities.junit import TestRunSummary, to_test_suites, sum_suites
 
 
 def summary_to_markdown(summary: TestRunSummary):
-    return f":test_tube: {summary.tests} :x: {summary.failures} " \
-           f":broken_heart: {summary.errors} :see_no_evil: {summary.skipped}"
+    return f"🧪 {summary.tests} ❌ {summary.failures} " \
+           f"💔 {summary.errors} 🙈 {summary.skipped}"
 
 
 def __to_oneliner(result: list[StepResult], plan: set[Project]) -> str:
@@ -53,7 +53,9 @@ def stage_to_icon(stage: Stage):
 
 
 def run_result_to_markdown(run_result: RunResult) -> str:
-    result: str = f'❗Exception: \n```\n{run_result.exception}\n```\n' if run_result.exception else ""
+    result: str = f'{run_result.status_line}  ' if run_result.is_finished else ""
+    if run_result.exception:
+        result += f"\n```\n{run_result.exception}\n```\n"
 
     for stage in Stage:
         step_results: list[StepResult] = run_result.results_for_stage(stage)

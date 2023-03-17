@@ -1,3 +1,3 @@
-🏗️   *test*, ~dockertest~  
+❌Failed  🏗️   *test*, ~dockertest~  
 🧪  *test*  
-:test_tube: 51 :x: 1 :broken_heart: 1 :see_no_evil: 0 <http://localhost/tests|link> 
+🧪 51 ❌ 1 💔 1 🙈 0 <http://localhost/tests|link> 

@@ -10,6 +10,7 @@ cvs:
 slack:
   botToken: !ENV ${SLACK_TOKEN}
   icons:
+    building: '60fps_parrot'
     success: 'thug-parrot'
     failure: 'sadparrot'
 jira:
