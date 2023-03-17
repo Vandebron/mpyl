@@ -26,7 +26,7 @@ jobs:
         if: steps.cache-dependencies.outputs.cache-hit != 'true'
         uses: VaultVulp/action-pipenv@v2.0.1
         with:
-          command: install -d --verbose
+          command: install -d
 
       - name: Run lint
         uses: VaultVulp/action-pipenv@v2.0.1
