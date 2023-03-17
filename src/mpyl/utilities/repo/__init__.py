@@ -78,7 +78,9 @@ class Repository:
         changed: set[str] = set(self._repo.git.diff(None, name_only=True).splitlines())
         return changed.union(self._repo.untracked_files)
 
-    def find_projects(self) -> list[str]:
-        """ returns a set of all project.yml files """
-        projects = set(self._repo.git.ls_files(f'**/{Project.project_yaml_path()}').splitlines())
+    def find_projects(self, folder_pattern: str = '') -> list[str]:
+        """ returns a set of all project.yml files
+        :type folder_pattern: project paths are filtered on this pattern
+        """
+        projects = set(self._repo.git.ls_files(f'*{folder_pattern}*/{Project.project_yaml_path()}').splitlines())
         return sorted(projects)
