@@ -5,7 +5,7 @@ import click
 from click import Parameter, Context
 from rich.markdown import Markdown
 
-from . import CliContext
+from . import CliContext, CONFIG_PATH_HELP
 from .. import create_console_logger
 from ..build.jenkins import JenkinsRunParameters, run_jenkins
 from ..build.mpyl import MpylRunParameters, run_mpyl, MpylCliParameters, MpylRunConfig, find_build_set
@@ -17,7 +17,7 @@ from ...utilities.repo import Repository, RepoConfig
 
 
 @click.group('build')
-@click.option('--config', '-c', required=True, type=click.Path(exists=True), help='Path to config.yml',
+@click.option('--config', '-c', required=True, type=click.Path(exists=True), help=CONFIG_PATH_HELP,
               envvar="MPYL_CONFIG_PATH", default='config.yml')
 @click.option('--verbose', '-v', is_flag=True, default=False)
 @click.pass_context
@@ -33,7 +33,7 @@ def build(ctx, config, verbose):
 @click.option('--properties', '-p', required=False, type=click.Path(exists=False), help='Path to run properties',
               envvar="MPYL_RUN_PROPERTIES_PATH", default='run_properties.yml')
 @click.option('--ci', is_flag=True,
-              help='Run as CI build instead of local. Ignores un versioned changes.')
+              help='Run as CI build instead of local. Ignores unversioned changes.')
 @click.option('--all', 'all_', is_flag=True, help='Build all projects, regardless of changes on branch')
 @click.pass_obj
 def run(obj: CliContext, properties, ci, all_):  # pylint: disable=invalid-name
