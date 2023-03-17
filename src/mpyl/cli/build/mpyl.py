@@ -86,7 +86,6 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter
                 console.print_exception()
                 run_result.exception = exc
 
-            console.print(run_result.status_line)
             console.print(Markdown(run_result_to_markdown(run_result)))
             return run_result
 
