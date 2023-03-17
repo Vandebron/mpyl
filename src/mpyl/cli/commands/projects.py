@@ -6,7 +6,7 @@ import click
 import jsonschema
 from rich.markdown import Markdown
 
-from . import CliContext
+from . import CliContext, CONFIG_PATH_HELP
 from .. import create_console_logger
 from ...project import validate_project
 from ...utilities.pyaml_env import parse_config
@@ -20,18 +20,18 @@ class ProjectsContext:
 
 
 @click.group('projects')
-@click.option('--config', '-c', required=True, type=click.Path(exists=True), help='Path to the config.yml',
+@click.option('--config', '-c', required=True, type=click.Path(exists=True), help=CONFIG_PATH_HELP,
               envvar="MPYL_CONFIG_PATH", default='config.yml')
 @click.option('--verbose', '-v', is_flag=True, default=False)
 @click.option('--filter', '-f', required=False, type=click.STRING, help='Filter based on filepath ')
 @click.pass_context
-def projects(ctx, config, verbose, filter):
+def projects(ctx, config, verbose, filter_):
     """Commands related to projects"""
     console = create_console_logger(local=False, verbose=verbose)
     parsed_config = parse_config(config)
     ctx.obj = ProjectsContext(
         cli=CliContext(config=parsed_config, repo=ctx.with_resource(Repository(config=RepoConfig(parsed_config))),
-                       console=console, verbose=verbose), filter=filter if filter else '')
+                       console=console, verbose=verbose), filter=filter_ if filter_ else '')
 
 
 @projects.command(name='list', help='List found projects')
@@ -41,7 +41,7 @@ def list_projects(obj: ProjectsContext):
     #
     if len(found_projects) == 1:
         project = found_projects[0]
-        text = Path(project).read_text()
+        text = Path(project).read_text(encoding='utf-8')
         obj.cli.console.print(Markdown(f'```yaml\n{text}```', inline_code_lexer='yaml'))
         obj.cli.console.print(Markdown(f'`{project}`'))
     else:
