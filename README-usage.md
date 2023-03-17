@@ -11,7 +11,7 @@ Install MPyL
 
 ##### Command structure
 
-Top level commands options are passed on to sub commands and need to be specified _before_ the sub command.
+Top level commands options are passed on to sub commands and need to be specified *before* the sub command.
 In ```mpyl projects --filter <name> list ```, the `--filter` option applies to all `project` commands, like `list`
 or `lint`.
 
@@ -19,7 +19,7 @@ or `lint`.
 
 MPyL can be configured through a file that adheres to the `config.yml`
 [schema](https://vandebron.github.io/mpyl/schema/mpyl_config.schema.yml).  
-Which configuration fields need to be set depends on your usecase. The error messages that you may
+Which configuration fields need to be set depends on your usecase. The error messages that you
 encounter while using the cli may guide you through the process.
 <details>
   <summary>Example config</summary>
