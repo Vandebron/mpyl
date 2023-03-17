@@ -29,12 +29,18 @@ def run_jenkins(run_config: JenkinsRunParameters):
     with log_console.status('Fetching Github info.. [blue]>gh pr view[/blue]') as status:
         config = run_config.config
         github_config = GithubConfig(config)
-        with Repository(RepoConfig(config)) as git_repo:
+        repo_config = RepoConfig(config)
+        with Repository(repo_config) as git_repo:
             try:
                 github = Github(login_or_token=github_config.token)
                 repo = github.get_repo(github_config.repository)
 
-                pull = get_pr_for_branch(repo, git_repo.get_branch)
+                branch = git_repo.get_branch
+                if repo_config.main_branch == branch:
+                    status.console.log(f'On main branch ({branch}), cannot determine which PR to build')
+                    return
+
+                pull = get_pr_for_branch(repo, branch)
 
                 jenkins_config = JenkinsConfig.from_config(config)
                 pipeline_info = Pipeline(target=Target.PULL_REQUEST, tag=f'{pull.number}', url=pull.url,
