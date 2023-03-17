@@ -19,6 +19,7 @@ def main(log: Logger, args: argparse.Namespace):
 
     config = parse_config("mpyl_config.yml")
     properties = parse_config("run_properties.yml")
+    log.info(f"here with: {properties['build']['versioning']}")
     run_properties = RunProperties.from_configuration(run_properties=properties, config=config)
     params = MpylRunParameters(
         run_config=MpylRunConfig(config=config, run_properties=run_properties),
@@ -32,7 +33,6 @@ def main(log: Logger, args: argparse.Namespace):
     slack_channel = None
     slack_personal = None
     jira = None
-
 
     if not args.local:
         from mpyl.reporting.targets.github import CommitCheck
