@@ -208,11 +208,13 @@ definitions:
       icons:
         type: object
         properties:
+          building:
+            type: string
           success:
             type: string
           failure:
             type: string
-        required: ['success', 'failure']
+        required: ['success', 'failure', 'building']
     required:
       - botToken
       - icons
