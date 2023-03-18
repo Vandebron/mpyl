@@ -12,8 +12,6 @@ from tests.test_resources import test_data
 
 class TestDiscovery:
 
-    @pytest.mark.skipif(condition="GITHUB_JOB" in os.environ,
-                        reason="fatal: detected dubious ownership in repository at '/github/workspace'")
     def test_should_find_invalidated_test_dependencies(self):
         with test_data.get_repo() as repo:
             touched_files = {'tests/projects/service/file.py', 'tests/some_file.txt'}
