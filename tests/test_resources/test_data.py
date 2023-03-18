@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from pyaml_env import parse_config
@@ -37,8 +38,26 @@ def get_project_with_stages(stage_config: dict, path: str = ''):
     return Project('test', 'Test project', path, stages, [], None, None)
 
 
+class MockRepository(Repository):
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return self
+
+    def find_projects(self, folder_pattern: str = '') -> list[str]:
+        projects = Path(self.root_dir()).glob(f'*{folder_pattern}*/{Project.project_yaml_path()}')
+        return sorted(map(str, projects))
+
+
 def get_repo() -> Repository:
-    return Repository(RepoConfig({'cvs': {'git': {'mainBranch': 'main'}}}))
+    config = RepoConfig({'cvs': {'git': {'mainBranch': 'main'}}})
+
+    if 'GITHUB_JOB' in os.environ:
+        return MockRepository(config)
+
+    return Repository(config)
 
 
 def assert_roundtrip(file_path: Path, expected_contents: str, overwrite: bool = False):
