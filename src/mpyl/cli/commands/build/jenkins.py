@@ -7,12 +7,11 @@ from jenkinsapi.jenkins import Jenkins
 from rich.console import Console
 from rich.markdown import Markdown
 
-from ...project import Target
-from ...utilities.github import GithubConfig, get_pr_for_branch
-from ...utilities.jenkins import JenkinsConfig, Pipeline
-from ...utilities.jenkins.runner import JenkinsRunner
-from ...utilities.repo import RepoConfig
-from ...utilities.repo import Repository
+from ....project import Target
+from ....utilities.github import GithubConfig, get_pr_for_branch
+from ....utilities.jenkins import JenkinsConfig, Pipeline
+from ....utilities.jenkins.runner import JenkinsRunner
+from ....utilities.repo import RepoConfig, Repository
 
 
 @dataclass(frozen=True)
