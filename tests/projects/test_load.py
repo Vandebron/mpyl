@@ -13,7 +13,7 @@ class TestProjectLoad:
     def test_load_all_project_dependencies(self):
         with test_data.get_repo() as repo:
             dependencies = find_all_dependencies(repo.root_dir(), repo.find_projects())
-            deps: dict[str, ProjectWithDependents] = dict(map(lambda d: (d.project.name, d), dependencies))
+            deps: dict[str, ProjectWithDependents] = dict(map(lambda d: (d.name, d), dependencies))
 
         assert len(dependencies) == 3
         assert len(deps['job'].dependent_projects) == 1
