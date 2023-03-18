@@ -12,7 +12,7 @@ class TestProjectLoad:
 
     def test_load_all_project_dependencies(self):
         with test_data.get_repo() as repo:
-            dependencies: list[ProjectWithDependents] = find_all_dependencies(repo.root_dir(), repo.find_projects())
+            dependencies = find_all_dependencies(repo.root_dir(), repo.find_projects())
             deps: dict[str, ProjectWithDependents] = dict(map(lambda d: (d.project.name, d), dependencies))
 
         assert len(dependencies) == 3
