@@ -3,7 +3,6 @@
 from pathlib import Path
 
 from rich.console import Console
-from rich.markdown import Markdown
 from rich.table import Table
 
 from ... import Repository
@@ -16,9 +15,6 @@ def print_project(repo: Repository, console: Console, project_path: str):
     other_projects = load_projects(repo.root_dir(), repo.find_projects())
 
     with_dependencies = find_dependencies(project, other_projects)
-
-    text = Path(project_path).read_text(encoding='utf-8')
-    console.print(Markdown(f'```yaml\n{text}```', inline_code_lexer='yaml'))
 
     table = Table(title=f"Project {project.name}", show_header=False)
     table.add_row("Name", project.name)

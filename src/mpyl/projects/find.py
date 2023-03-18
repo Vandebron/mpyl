@@ -25,13 +25,12 @@ def find_dependencies(project: Project, other_projects: set[Project]) -> Project
         for dep in proj.project.dependencies.set_for_stage(Stage.TEST) if proj.project.dependencies else set():
             found = find_by_contract_dep(dep, other)
             if found:
-                found_name = found.project.name
-                if found_name not in discovery_stack:
-                    discovery_stack.append(found_name)
+                if found.name not in discovery_stack:
+                    discovery_stack.append(found.name)
                     recursively_find(found, other, discovery_stack[:])
-                    dependent_projects[found_name] = Dependency(found.project, {Contract(Protocol.UNKNOWN, dep)})
-                elif found_name in dependent_projects:
-                    dependent_projects[found_name].contracts.add(Contract(Protocol.UNKNOWN, dep))
+                    dependent_projects[found.name] = Dependency(found.project, {Contract(Protocol.UNKNOWN, dep)})
+                elif found.name in dependent_projects:
+                    dependent_projects[found.name].contracts.add(Contract(Protocol.UNKNOWN, dep))
 
         proj.dependent_projects = dependent_projects
         return proj
