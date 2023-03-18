@@ -24,7 +24,12 @@ class Dependency:
     project: Project
     contracts: set[Contract]
 
+
 @dataclass
 class ProjectWithDependents:
     project: Project
     dependent_projects: dict[str, Dependency]
+
+    @property
+    def name(self):
+        return self.project.name
