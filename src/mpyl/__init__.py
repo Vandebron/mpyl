@@ -40,8 +40,10 @@ MPyL is extensible and has a minimal footprint. Having said that, batteries for 
 
 import click
 
-from .cli import get_version, build, projects
+from .cli.build import build
+from .cli.meta_info import get_version
 from .cli.meta_info import version
+from .cli.projects import projects
 from .utilities.pyaml_env import parse_config
 from .utilities.repo import RepoConfig, Repository
 

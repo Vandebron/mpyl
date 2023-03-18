@@ -5,9 +5,9 @@ from pathlib import Path
 import click
 import jsonschema
 from rich.markdown import Markdown
-from rich.table import Table
 
 from . import CliContext, CONFIG_PATH_HELP, create_console_logger
+from .commands.projects.formatting import print_project
 from ..project import validate_project, load_project
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
@@ -41,17 +41,7 @@ def list_projects(obj: ProjectsContext):
 
     if len(found_projects) == 1:
         project = found_projects[0]
-        text = Path(project).read_text(encoding='utf-8')
-        obj.cli.console.print(Markdown(f'```yaml\n{text}```', inline_code_lexer='yaml'))
-        info = load_project(Path("commands"), Path(project), False)
-
-        table = Table(title=f"Project {info.name}", show_header=False)
-        table.add_row("Name", info.name)
-        table.add_row("Path", info.path)
-        table.add_row("Description", info.description)
-        table.add_row("Maintainer", f"{info.maintainer}")
-        table.add_row("Stages", f"{info.stages}")
-        obj.cli.console.print(table)
+        print_project(obj.cli.repo, obj.cli.console, project)
     else:
         for proj in found_projects:
             name = load_project(Path("commands"), Path(proj), False).name
