@@ -5,8 +5,8 @@
 Install MPyL
 
 ```shell
-> pip install mpyl
-> mpyl --help
+pip install mpyl
+mpyl --help
 ```
 
 ##### Command structure
