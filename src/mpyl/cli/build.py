@@ -6,14 +6,14 @@ from click import Parameter, Context
 from rich.markdown import Markdown
 
 from . import CliContext, CONFIG_PATH_HELP
-from .. import create_console_logger
-from ..build.jenkins import JenkinsRunParameters, run_jenkins
-from ..build.mpyl import MpylRunParameters, run_mpyl, MpylCliParameters, MpylRunConfig, find_build_set
-from ...reporting.formatting.markdown import run_result_to_markdown
-from ...steps.models import RunProperties
-from ...steps.run import RunResult
-from ...utilities.pyaml_env import parse_config
-from ...utilities.repo import Repository, RepoConfig
+from . import create_console_logger
+from .commands.build.jenkins import JenkinsRunParameters, run_jenkins
+from .commands.build.mpyl import MpylRunParameters, run_mpyl, MpylCliParameters, MpylRunConfig, find_build_set
+from ..reporting.formatting.markdown import run_result_to_markdown
+from ..steps.models import RunProperties
+from ..steps.run import RunResult
+from ..utilities.pyaml_env import parse_config
+from ..utilities.repo import Repository, RepoConfig
 
 
 @click.group('build')

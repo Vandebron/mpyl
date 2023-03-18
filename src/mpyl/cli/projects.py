@@ -7,11 +7,10 @@ import jsonschema
 from rich.markdown import Markdown
 from rich.table import Table
 
-from . import CliContext, CONFIG_PATH_HELP
-from .. import create_console_logger
-from ...project import validate_project, load_project
-from ...utilities.pyaml_env import parse_config
-from ...utilities.repo import Repository, RepoConfig
+from . import CliContext, CONFIG_PATH_HELP, create_console_logger
+from ..project import validate_project, load_project
+from ..utilities.pyaml_env import parse_config
+from ..utilities.repo import Repository, RepoConfig
 
 
 @dataclass
@@ -44,7 +43,7 @@ def list_projects(obj: ProjectsContext):
         project = found_projects[0]
         text = Path(project).read_text(encoding='utf-8')
         obj.cli.console.print(Markdown(f'```yaml\n{text}```', inline_code_lexer='yaml'))
-        info = load_project(Path("."), Path(project), False)
+        info = load_project(Path("commands"), Path(project), False)
 
         table = Table(title=f"Project {info.name}", show_header=False)
         table.add_row("Name", info.name)
@@ -55,7 +54,7 @@ def list_projects(obj: ProjectsContext):
         obj.cli.console.print(table)
     else:
         for proj in found_projects:
-            name = load_project(Path("."), Path(proj), False).name
+            name = load_project(Path("commands"), Path(proj), False).name
             obj.cli.console.print(Markdown(f"{proj} `{name}`"))
 
 
@@ -64,7 +63,7 @@ def list_projects(obj: ProjectsContext):
 def lint(obj: ProjectsContext):
     for project in obj.cli.repo.find_projects(obj.filter):
         try:
-            project_path = Path('.') / Path(project)
+            project_path = Path('commands') / Path(project)
             with open(project_path, encoding='utf-8') as file:
                 validate_project(file)
         except jsonschema.exceptions.ValidationError as exc:
