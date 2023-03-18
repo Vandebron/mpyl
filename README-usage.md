@@ -1,6 +1,6 @@
 # Usage
 
-## ..quickstart
+## ..MPyL CLI
 
 Install MPyL
 
@@ -28,8 +28,25 @@ encounter while using the cli may guide you through the process.
 ```
 </details>
 
+#### Auto completion
+Usability of the CLI is *greatly enhanced* by autocompletion. 
+To enable autocompletion, depending on your terminal, do the following:
 
-
+###### Bash
+Add this to ``~/.bashrc``:
+```shell
+eval "$(_MPYL_COMPLETE=bash_source mpyl)"
+```
+###### Zsh
+Add this to ``~/.zshrc``:
+```shell
+eval "$(_MPYL_COMPLETE=zsh_source mpyl)"
+```
+###### Fish
+Add this to ``~/.config/fish/completions/foo-bar.fish``:
+```shell
+eval (env _MPYL_COMPLETE=fish_source mpyl)
+```
 
 
 ## ..defining projects
