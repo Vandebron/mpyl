@@ -30,18 +30,22 @@ properties:
           run_url:
             description: Link back to the run executor
             type: string
+            format: url
           change_url:
             description: Link to changes
             type: string
+            format: url
           tests_url:
             description: Link to test results
             type: string
+            format: url
           user:
             description: Name of of the user that triggered the run
             type: string
           user_email:
             description: Email of of the user that triggered the run
             type: string
+            format: idn-email
       parameters:
         description: defines the run properties
         type: object
@@ -52,15 +56,17 @@ properties:
           deploy_target:
             description: The deploy target.
             type: string
+            enum:
+              - 'PullRequest'
+              - 'PullRequestBase'
+              - 'Acceptance'
+              - 'Production'
       versioning:
         description:
         type: object
         additionalProperties: false
         required:
           - revision
-          - branch
-          - pr_number
-          - tag
         properties:
           revision:
             description: an id to reference an object in git (usually a commit).
