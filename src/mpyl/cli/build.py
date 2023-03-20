@@ -1,10 +1,10 @@
 """Commands related to build"""
 import shutil
 from pathlib import Path
-from typing import Any, Optional
 
 import click
-from click import Parameter, Context
+from click import ParamType, BadParameter
+from click.shell_completion import CompletionItem
 from rich.console import Console
 from rich.markdown import Markdown
 
@@ -81,28 +81,21 @@ def status(obj: CliContext):
         obj.console.print("No changes detected, nothing to do.")
 
 
-def get_default(ctx):
-    if not ctx:
-        return 'config.jenkins.defaultPipeline'
+class Pipeline(ParamType):
+    name = 'pipeline'
 
-    return ctx.obj.config['jenkins']['defaultPipeline']
+    def shell_complete(self, ctx: click.Context, param, incomplete: str):
+        if not ctx.parent or ctx.parent.params['config'] is None or not Path(ctx.parent.params['config']).exists():
+            raise BadParameter('Either --config parameter must or MPYL_CONFIG_PATH env var must be set', ctx=ctx,
+                               param=param)
 
+        config: dict = parse_config(ctx.parent.params['config'])
+        parsed_config: dict[str, str] = config['jenkins']['pipelines']
 
-class DynamicChoice(click.Choice):
-    def __init__(self):
-        super().__init__([])
-
-    def convert(
-            self, value: Any, param: Optional[Parameter], ctx: Optional[Context]
-    ) -> Any:
-        if ctx is None:
-            raise KeyError("Context needs to be set. Did you use @click.pass_context in the parent group?")
-
-        config = ctx.obj.config
-        if value is None:
-            value = config['jenkins']['defaultPipeline']
-        self.choices = config['jenkins']['pipelines'].keys()
-        return super().convert(value, param, ctx)
+        return [
+            CompletionItem(value=pl[0], help=pl[1]) for pl in parsed_config.items() if
+            incomplete in pl[0]
+        ]
 
 
 @build.command(help='Run a multi branch pipeline build on Jenkins')
@@ -123,15 +116,15 @@ class DynamicChoice(click.Choice):
 @click.option(
     '--pipeline', '-pl',
     help='The pipeline to run. Must be one of the pipelines listed in `jenkins.pipelines`. '
-         'Default value is `jenkins.defaultPipeline',
-    type=DynamicChoice(),
-    required=True,
-    default=lambda: get_default(click.get_current_context(silent=True))
+         'Default value is `jenkins.defaultPipeline`',
+    type=Pipeline(),
+    required=False
 )
-@click.pass_obj
-def jenkins(obj: CliContext, user, password, pipeline):
-    warn_if_update(obj.console)
-    run_argument = JenkinsRunParameters(user, password, obj.config, pipeline, obj.verbose)
+@click.pass_context
+def jenkins(ctx, user, password, pipeline):
+    warn_if_update(ctx.obj.console)
+    selected_pipeline = pipeline if pipeline else ctx.obj.config['jenkins']['defaultPipeline']
+    run_argument = JenkinsRunParameters(user, password, ctx.obj.config, selected_pipeline, ctx.obj.verbose)
     run_jenkins(run_argument)
 
 

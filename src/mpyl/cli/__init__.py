@@ -46,7 +46,7 @@ def get_version():
             update = check_updates()
             if update:
                 return f"v{meta}. ⚠️ \033[1;33;40m You can upgrade MPyL {meta} -> {update}: " \
-                       f"`pip install -U mpyl=={update}`"
+                       f"`pip install -U mpyl=={update}`\033[0m"
         except requests.exceptions.RequestException:
             pass
         return f"v{meta}"
