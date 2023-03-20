@@ -27,8 +27,8 @@ class JenkinsRunParameters:
 def __get_token(github_config: GithubConfig):
     if github_config.token:
         return github_config.token
-    return subprocess.run(['gh', 'auth', 'token'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout.decode(
-        'utf-8').strip()
+    return subprocess.run(['gh', 'auth', 'token'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                          check=True).stdout.decode('utf-8').strip()
 
 
 def run_jenkins(run_config: JenkinsRunParameters):
