@@ -1,4 +1,5 @@
 """Jenkins multibranch pipeline build tool"""
+import subprocess
 from dataclasses import dataclass
 
 import requests
@@ -23,6 +24,13 @@ class JenkinsRunParameters:
     verbose: bool
 
 
+def __get_token(github_config: GithubConfig):
+    if github_config.token:
+        return github_config.token
+    return subprocess.run(['gh', 'auth', 'token'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout.decode(
+        'utf-8').strip()
+
+
 def run_jenkins(run_config: JenkinsRunParameters):
     log_console = Console(log_path=False, log_time=False)
     with log_console.status('Fetching Github info.. [blue]>gh pr view[/blue]') as status:
@@ -30,7 +38,8 @@ def run_jenkins(run_config: JenkinsRunParameters):
         github_config = GithubConfig(config)
         with Repository(RepoConfig(config)) as git_repo:
             try:
-                github = Github(login_or_token=github_config.token)
+                github = Github(login_or_token=__get_token(github_config))
+
                 repo = github.get_repo(github_config.repository)
 
                 if git_repo.main_branch == git_repo.get_branch:
