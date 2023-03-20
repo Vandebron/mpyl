@@ -9,14 +9,14 @@ from rich.console import Console
 from rich.logging import RichHandler
 from rich.markdown import Markdown
 
-from ...project import load_project, Stage, Project
-from ...reporting.formatting.markdown import run_result_to_markdown
-from ...reporting.targets import Reporter
-from ...stages.discovery import for_stage, find_invalidated_projects_per_stage
-from ...steps.models import RunProperties
-from ...steps.run import RunResult
-from ...steps.steps import Steps
-from ...utilities.repo import Repository, RepoConfig
+from ....project import load_project, Stage, Project
+from ....reporting.formatting.markdown import run_result_to_markdown
+from ....reporting.targets import Reporter
+from ....stages.discovery import for_stage, find_invalidated_projects_per_stage
+from ....steps.models import RunProperties
+from ....steps.run import RunResult
+from ....steps.steps import Steps
+from ....utilities.repo import Repository, RepoConfig
 
 
 @dataclass(frozen=True)
@@ -86,7 +86,6 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter
                 console.print_exception()
                 run_result.exception = exc
 
-            console.print(run_result.status_line)
             console.print(Markdown(run_result_to_markdown(run_result)))
             return run_result
 
@@ -98,7 +97,7 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter
 
 def find_build_set(repo: Repository, changes_in_branch, build_all: bool) -> dict[Stage, set[Project]]:
     project_paths = repo.find_projects()
-    all_projects = set(map(lambda p: load_project(Path("."), Path(p), False), project_paths))
+    all_projects = set(map(lambda p: load_project(Path(""), Path(p), False), project_paths))
 
     if build_all:
         return {Stage.BUILD: for_stage(all_projects, Stage.BUILD),
