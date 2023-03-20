@@ -4,14 +4,15 @@ from pathlib import Path
 
 import click
 import jsonschema
+from click import ParamType, BadParameter
+from click.shell_completion import CompletionItem
 from rich.markdown import Markdown
-from rich.table import Table
 
-from . import CliContext, CONFIG_PATH_HELP
-from .. import create_console_logger
-from ...project import validate_project, load_project
-from ...utilities.pyaml_env import parse_config
-from ...utilities.repo import Repository, RepoConfig
+from . import CliContext, CONFIG_PATH_HELP, create_console_logger
+from .commands.projects.formatting import print_project
+from ..project import validate_project, load_project, Project
+from ..utilities.pyaml_env import parse_config
+from ..utilities.repo import Repository, RepoConfig
 
 
 @dataclass
@@ -40,23 +41,33 @@ def projects(ctx, config, verbose, filter_):
 def list_projects(obj: ProjectsContext):
     found_projects = obj.cli.repo.find_projects(obj.filter)
 
-    if len(found_projects) == 1:
-        project = found_projects[0]
-        text = Path(project).read_text(encoding='utf-8')
-        obj.cli.console.print(Markdown(f'```yaml\n{text}```', inline_code_lexer='yaml'))
-        info = load_project(Path("."), Path(project), False)
+    for proj in found_projects:
+        name = load_project(obj.cli.repo.root_dir(), Path(proj), False).name
+        obj.cli.console.print(Markdown(f"{proj} `{name}`"))
 
-        table = Table(title=f"Project {info.name}", show_header=False)
-        table.add_row("Name", info.name)
-        table.add_row("Path", info.path)
-        table.add_row("Description", info.description)
-        table.add_row("Maintainer", f"{info.maintainer}")
-        table.add_row("Stages", f"{info.stages}")
-        obj.cli.console.print(table)
-    else:
-        for proj in found_projects:
-            name = load_project(Path("."), Path(proj), False).name
-            obj.cli.console.print(Markdown(f"{proj} `{name}`"))
+
+class ProjectPath(ParamType):
+    name = 'project_path'
+
+    def shell_complete(self, ctx: click.Context, param, incomplete: str):
+        if not ctx.parent or ctx.parent.params['config'] is None or not Path(ctx.parent.params['config']).exists():
+            raise BadParameter('Either --config parameter must or MPYL_CONFIG_PATH env var must be set', ctx=ctx,
+                               param=param)
+
+        parsed_config = parse_config(ctx.parent.params['config'])
+        repo = ctx.with_resource(Repository(config=RepoConfig(parsed_config)))
+        found_projects = repo.find_projects(incomplete)
+        return [
+            CompletionItem(value=proj.replace(f'/{Project.project_yaml_path()}', ''))
+            for proj in found_projects
+        ]
+
+
+@projects.command(name='show', help='Show details of a project')
+@click.argument('name', required=True, type=ProjectPath())
+@click.pass_obj
+def show_project(obj, name):
+    print_project(obj.cli.repo, obj.cli.console, f'{name}/{Project.project_yaml_path()}')
 
 
 @projects.command(help='Validate the yaml of found projects against their schema')
@@ -64,7 +75,7 @@ def list_projects(obj: ProjectsContext):
 def lint(obj: ProjectsContext):
     for project in obj.cli.repo.find_projects(obj.filter):
         try:
-            project_path = Path('.') / Path(project)
+            project_path = Path(obj.cli.repo.root_dir()) / Path(project)
             with open(project_path, encoding='utf-8') as file:
                 validate_project(file)
         except jsonschema.exceptions.ValidationError as exc:

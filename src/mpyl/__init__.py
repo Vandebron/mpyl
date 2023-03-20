@@ -7,7 +7,6 @@
 The following technologies are expected to be present on the local OS:
  - [Python](https://www.python.org/) >= 3.9
  - [Pip](https://pypi.org/project/pip/) >= 23.0.1
- - [Pipenv](https://pypi.org/project/pipenv/) >= 2023.2.18
  - [Docker](https://www.docker.com/) > 20
  - [Docker compose](https://docs.docker.com/compose/install/linux/)
  installed as plugin (`docker compose version`) >= v2.2.3
@@ -20,6 +19,7 @@ MPyL is extensible and has a minimal footprint. Having said that, batteries for 
 ###### Build
  - [Docker](https://www.docker.com/) `mpyl.steps.build.dockerbuild`
  - [Scala (SBT)](https://www.scala-sbt.org/) `mpyl.steps.build.sbt`
+ - [Jenkins](https://www.jenkins.io/)  `mpyl.cli.build.jenkins` and `mpyl.utilities.jenkins.runner.JenkinsRunner`
 
 ###### Testing
  - [Junit](https://junit.org/) `mpyl.steps.models.ArtifactType.JUNIT_TESTS`
@@ -40,10 +40,10 @@ MPyL is extensible and has a minimal footprint. Having said that, batteries for 
 
 import click
 
-from .cli.commands import get_version
-from .cli.commands.build import build
-from .cli.commands.meta_info import version
-from .cli.commands.projects import projects
+from .cli.build import build
+from .cli.meta_info import get_version
+from .cli.meta_info import version
+from .cli.projects import projects
 from .utilities.pyaml_env import parse_config
 from .utilities.repo import RepoConfig, Repository
 
