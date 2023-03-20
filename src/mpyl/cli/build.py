@@ -1,10 +1,13 @@
 """Commands related to build"""
+import shutil
+from pathlib import Path
 from typing import Any, Optional
 
 import click
 from click import Parameter, Context
 from rich.markdown import Markdown
 
+from ..project import load_project
 from . import CliContext, CONFIG_PATH_HELP
 from . import create_console_logger
 from .commands.build.jenkins import JenkinsRunParameters, run_jenkins
@@ -112,6 +115,18 @@ class DynamicChoice(click.Choice):
 def jenkins(obj: CliContext, user, password, pipeline):
     run_argument = JenkinsRunParameters(user, password, obj.config, pipeline, obj.verbose)
     run_jenkins(run_argument)
+
+
+@build.command(help='Clean MPyL metadata in `.mpl` folders')
+@click.option('--filter', '-f', 'filter_', required=False, type=click.STRING, help='Filter based on filepath ')
+@click.pass_obj
+def clean(obj: CliContext, filter_):
+    found_projects = obj.repo.find_projects(filter_ if filter_ else '')
+    for project in found_projects:
+        target_path = Path(load_project(obj.repo.root_dir(), Path(project), strict=False).target_path)
+        if target_path.exists():
+            shutil.rmtree(target_path)
+            obj.console.print(f"🧹 Cleaned up {target_path}")
 
 
 if __name__ == '__main__':
