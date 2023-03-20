@@ -3,6 +3,7 @@ import importlib
 import logging
 from dataclasses import dataclass
 from importlib.metadata import version as version_meta
+from typing import Optional
 
 import requests
 from rich.console import Console
@@ -23,14 +24,29 @@ class CliContext:
     verbose: bool
 
 
-def get_version():
+def check_updates() -> Optional[str]:
     try:
         meta = version_meta('mpyl')
         try:
             resp = requests.get("https://pypi.org/pypi/mpyl/json", timeout=3)
             latest = resp.json().get('info', {}).get('version')
             if meta != latest:
-                return f"v{meta}. ⚠️ \033[1;33;40m A newer version is available: `pip install -U {latest}`"
+                return latest
+        except requests.exceptions.RequestException:
+            pass
+    except importlib.metadata.PackageNotFoundError:
+        pass
+    return None
+
+
+def get_version():
+    try:
+        meta = version_meta('mpyl')
+        try:
+            update = check_updates()
+            if update:
+                return f"v{meta}. ⚠️ \033[1;33;40m You can upgrade MPyL {meta} -> {update}: " \
+                       f"`pip install -U mpyl=={update}`"
         except requests.exceptions.RequestException:
             pass
         return f"v{meta}"
