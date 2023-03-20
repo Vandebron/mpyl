@@ -23,7 +23,7 @@ class ProjectsContext:
 
 @click.group('projects')
 @click.option('--config', '-c', required=True, type=click.Path(exists=True), help=CONFIG_PATH_HELP,
-              envvar="MPYL_CONFIG_PATH", default='config.yml')
+              envvar="MPYL_CONFIG_PATH", default='mpyl_config.yml')
 @click.option('--verbose', '-v', is_flag=True, default=False)
 @click.option('--filter', '-f', 'filter_', required=False, type=click.STRING, help='Filter based on filepath ')
 @click.pass_context

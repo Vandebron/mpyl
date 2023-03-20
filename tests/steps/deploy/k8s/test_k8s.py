@@ -19,7 +19,7 @@ class TestKubernetesChart:
     resource_path = root_test_path / "test_resources"
     template_path = root_test_path / "steps" / "deploy" / "k8s" / "chart" / "templates"
 
-    config = parse_config(resource_path / "config.yml")
+    config = parse_config(resource_path / "mpyl_config.yml")
     liveness_probe_defaults = config['project']['deployment']['kubernetes']['livenessProbe']
 
     @staticmethod
@@ -69,7 +69,7 @@ class TestKubernetesChart:
         assert 'Invalid value for `port`, must not be `None`' in str(exc_info.value)
 
     def test_load_config(self):
-        yaml_values = parse_config(self.resource_path / "config.yml")
+        yaml_values = parse_config(self.resource_path / "mpyl_config.yml")
         docker_config = DockerConfig.from_dict(yaml_values)
         assert docker_config.host_name == 'bigdataregistry.azurecr.io'
 
