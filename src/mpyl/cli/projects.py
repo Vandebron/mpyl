@@ -41,13 +41,9 @@ def projects(ctx, config, verbose, filter_):
 def list_projects(obj: ProjectsContext):
     found_projects = obj.cli.repo.find_projects(obj.filter)
 
-    if len(found_projects) == 1:
-        project = found_projects[0]
-        print_project(obj.cli.repo, obj.cli.console, project)
-    else:
-        for proj in found_projects:
-            name = load_project(obj.cli.repo.root_dir(), Path(proj), False).name
-            obj.cli.console.print(Markdown(f"{proj} `{name}`"))
+    for proj in found_projects:
+        name = load_project(obj.cli.repo.root_dir(), Path(proj), False).name
+        obj.cli.console.print(Markdown(f"{proj} `{name}`"))
 
 
 class ProjectPath(ParamType):
