@@ -15,7 +15,7 @@ def main(log: Logger, args: argparse.Namespace):
         from mpyl.reporting.targets.jira import JiraReporter
         from mpyl.steps.models import RunProperties
         from mpyl.utilities.pyaml_env import parse_config
-        from mpyl.cli.build.mpyl import run_mpyl, MpylRunParameters, MpylRunConfig, MpylCliParameters
+        from mpyl.cli.commands.build.mpyl import run_mpyl, MpylRunParameters, MpylRunConfig, MpylCliParameters
 
     config = parse_config("config.yml")
     properties = parse_config("run_properties.yml")
