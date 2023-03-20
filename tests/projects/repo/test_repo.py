@@ -20,6 +20,6 @@ class TestRepo:
         assert changes_in_branch[-1].files_touched == changes_in_commit
 
     def test_load_config(self):
-        yaml_values = parse_config(self.resource_path / "config.yml")
+        yaml_values = parse_config(self.resource_path / "mpyl_config.yml")
         config = RepoConfig(yaml_values)
         assert config.main_branch == 'main'

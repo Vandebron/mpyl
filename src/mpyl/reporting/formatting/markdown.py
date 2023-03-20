@@ -53,7 +53,7 @@ def stage_to_icon(stage: Stage):
 
 
 def run_result_to_markdown(run_result: RunResult) -> str:
-    result: str = f'{run_result.status_line}  \n' if run_result.is_finished else ""
+    result: str = f'{run_result.status_line}  \n' if run_result.is_finished and run_result.run_plan else ""
     if run_result.exception:
         result += f"\n```\n{run_result.exception}\n```\n"
 

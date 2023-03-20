@@ -32,7 +32,7 @@ class Reporter:
 
 
 def execute_step(proj: Project, stage: Stage, dry_run: bool = False) -> StepResult:
-    config = parse_config("config.yml")
+    config = parse_config("mpyl_config.yml")
     properties = parse_config("run_properties.yml")
     run_properties = RunProperties.from_configuration(run_properties=properties, config=config)
     dagster_logger = get_dagster_logger()
@@ -71,7 +71,7 @@ def deploy_projects(context, projects: list[Project], outputs: list[StepResult])
 
 @op(description="Combine and reduce all results")
 def reduce_results(build_results: list[StepResult], deploy_results: list[StepResult]) -> RunResult:
-    config = parse_config("config.yml")
+    config = parse_config("mpyl_config.yml")
     properties = RunProperties.from_configuration(parse_config("run_properties.yml"), config)
     run_result = RunResult(properties)
     run_result.extend(build_results)
@@ -92,7 +92,7 @@ def report_results(reporter: Reporter, run_result: RunResult) -> bool:
 
 @op(out=DynamicOut(), description="Find artifacts that need to be built")
 def find_projects(_ignored: Reporter) -> list[DynamicOutput[Project]]:
-    yaml_values = parse_config("config.yml")
+    yaml_values = parse_config("mpyl_config.yml")
 
     with Repository(RepoConfig(yaml_values)) as repo:
         project_paths = repo.find_projects()
@@ -172,7 +172,7 @@ def mpyl_logger(init_context):
 
 @op(description="Initialize reporting at start of run")
 def init_reporting() -> Reporter:
-    config = parse_config("config.yml")
+    config = parse_config("mpyl_config.yml")
     run_properties = RunProperties.from_configuration(parse_config("run_properties.yml"), config)
 
     check = CommitCheck(config, get_dagster_logger())
