@@ -1,0 +1,76 @@
+$schema: http://json-schema.org/draft-07/schema#
+$id: schema/run_properties.schema.yml
+required:
+  - build
+additionalProperties: false
+properties:
+  build:
+    description: defines the build parameters
+    type: object
+    additionalProperties: false
+    required:
+      - run
+      - parameters
+      - versioning
+    properties:
+      run:
+        description: defines the run properties
+        type: object
+        additionalProperties: false
+        required:
+          - id
+          - run_url
+          - change_url
+          - tests_url
+          - user
+        properties:
+          id:
+            description: Uniquely identifies the run. Typically a monotonically increasing number.
+            type: string
+          run_url:
+            description: Link back to the run executor
+            type: string
+          change_url:
+            description: Link to changes
+            type: string
+          tests_url:
+            description: Link to test results
+            type: string
+          user:
+            description: Name of of the user that triggered the run
+            type: string
+          user_email:
+            description: Email of of the user that triggered the run
+            type: string
+      parameters:
+        description: defines the run properties
+        type: object
+        additionalProperties: false
+        required:
+          - deploy_target
+        properties:
+          deploy_target:
+            description: The deploy target.
+            type: string
+      versioning:
+        description:
+        type: object
+        additionalProperties: false
+        required:
+          - revision
+          - branch
+          - pr_number
+          - tag
+        properties:
+          revision:
+            description: an id to reference an object in git (usually a commit).
+            type: string
+          branch:
+            description: name of the branch
+            type: string
+          pr_number:
+            description: id of the pull request
+            type: int
+          tag:
+            description: reference that points to the MPyL version
+            type: string
