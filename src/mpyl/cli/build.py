@@ -23,12 +23,12 @@ from ..utilities.repo import Repository, RepoConfig
 def warn_if_update(console: Console):
     update = check_updates()
     if update:
-        console.print(Markdown(f"⚠️ **You can upgrade to {update} :** `pip install -U mpyl=={update}`"))
+        console.print(Markdown(f"⚠️  **You can upgrade to {update} :** `pip install -U mpyl=={update}`"))
 
 
 @click.group('build')
 @click.option('--config', '-c', required=True, type=click.Path(exists=True), help=CONFIG_PATH_HELP,
-              envvar="MPYL_CONFIG_PATH", default='config.yml')
+              envvar="MPYL_CONFIG_PATH", default='mpyl_config.yml')
 @click.option('--verbose', '-v', is_flag=True, default=False)
 @click.pass_context
 def build(ctx, config, verbose):
@@ -75,7 +75,10 @@ def status(obj: CliContext):
     result = RunResult(run_properties=run_properties, run_plan=build_set)
     version = run_properties.versioning
     header: str = f"**Revision:** `{version.branch}` at `{version.revision}`  \n"
-    obj.console.print(Markdown(markup=header + "**Execution plan:**  \n" + run_result_to_markdown(result)))
+    if result.run_plan:
+        obj.console.print(Markdown(markup=header + "**Execution plan:**  \n" + run_result_to_markdown(result)))
+    else:
+        obj.console.print("No changes detected, nothing to do.")
 
 
 def get_default(ctx):
