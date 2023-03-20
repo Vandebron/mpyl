@@ -36,6 +36,7 @@ class JenkinsRunner:
 
             while True:
                 try:
+                    self.jenkins.jobs_container = None  # force update of job info
                     return self.jenkins.get_job(name)
                 except KeyError:
                     self.status.update(f'Waiting for {self.pipeline.human_readable()} to appear...')
