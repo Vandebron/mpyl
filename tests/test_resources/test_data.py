@@ -40,6 +40,10 @@ def get_project_with_stages(stage_config: dict, path: str = ''):
 
 class MockRepository(Repository):
 
+    def __init__(self, config: RepoConfig):
+        self._config = config
+        self._root_dir = '.'
+
     def __enter__(self):
         return self
 
@@ -55,6 +59,7 @@ def get_repo() -> Repository:
     config = RepoConfig({'cvs': {'git': {'mainBranch': 'main'}}})
 
     if 'GITHUB_JOB' in os.environ:
+        print("Running in github, falling back onto mock repository bypassing Git")
         return MockRepository(config)
 
     return Repository(config)
