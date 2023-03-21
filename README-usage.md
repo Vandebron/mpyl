@@ -38,6 +38,7 @@ Required properties are:
 Check the [schema](https://vandebron.github.io/mpyl/schema/run_properties.schema.yml) for `run_properties.yml`, which contains detailed
 documentation and can be used to enable on-the-fly validation and auto-completion in your IDE.
 
+##### Auto completion
 Usability of the CLI is *greatly enhanced* by autocompletion. 
 To enable autocompletion, depending on your terminal, do the following:
 
