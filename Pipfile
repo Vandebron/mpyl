@@ -5,7 +5,7 @@ name = "pypi"
 
 [packages]
 jsonschema = "==4.17.0"
-mypy = "==0.991"
+mypy = "==1.1.1"
 gitpython = "==3.1.30"
 "ruamel.yaml" = "==0.17.21"
 kubernetes = "==25.3.0"
