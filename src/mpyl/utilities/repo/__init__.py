@@ -58,6 +58,11 @@ class Repository:
     def root_dir(self) -> Path:
         return Path(self._root_dir)
 
+    @property
+    def main_branch(self) -> str:
+        return self._config.main_branch
+
+
     def changes_in_branch(self) -> list[Revision]:
         revisions = reversed(list(self._repo.iter_commits(f"{self._config.main_branch}..HEAD")))
         return [Revision(count, str(rev),

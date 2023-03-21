@@ -1,19 +1,29 @@
 """Commands related to build"""
+import shutil
+from pathlib import Path
 from typing import Any, Optional
 
 import click
 from click import Parameter, Context
+from rich.console import Console
 from rich.markdown import Markdown
 
-from . import CliContext, CONFIG_PATH_HELP
-from .. import create_console_logger
-from ..build.jenkins import JenkinsRunParameters, run_jenkins
-from ..build.mpyl import MpylRunParameters, run_mpyl, MpylCliParameters, MpylRunConfig, find_build_set
-from ...reporting.formatting.markdown import run_result_to_markdown
-from ...steps.models import RunProperties
-from ...steps.run import RunResult
-from ...utilities.pyaml_env import parse_config
-from ...utilities.repo import Repository, RepoConfig
+from . import CliContext, CONFIG_PATH_HELP, check_updates
+from . import create_console_logger
+from .commands.build.jenkins import JenkinsRunParameters, run_jenkins
+from .commands.build.mpyl import MpylRunParameters, run_mpyl, MpylCliParameters, MpylRunConfig, find_build_set
+from ..project import load_project
+from ..reporting.formatting.markdown import run_result_to_markdown
+from ..steps.models import RunProperties
+from ..steps.run import RunResult
+from ..utilities.pyaml_env import parse_config
+from ..utilities.repo import Repository, RepoConfig
+
+
+def warn_if_update(console: Console):
+    update = check_updates()
+    if update:
+        console.print(Markdown(f"⚠️ **You can upgrade to {update} :** `pip install -U mpyl=={update}`"))
 
 
 @click.group('build')
@@ -37,6 +47,7 @@ def build(ctx, config, verbose):
 @click.option('--all', 'all_', is_flag=True, help='Build all projects, regardless of changes on branch')
 @click.pass_obj
 def run(obj: CliContext, properties, ci, all_):  # pylint: disable=invalid-name
+    warn_if_update(obj.console)
     run_properties = RunProperties.from_configuration(parse_config(properties), obj.config) if ci \
         else RunProperties.for_local_run(obj.config, obj.repo.get_sha, obj.repo.get_branch)
 
@@ -52,6 +63,12 @@ def run(obj: CliContext, properties, ci, all_):  # pylint: disable=invalid-name
 @build.command(help="The status of the current local branch from MPyL's perspective")
 @click.pass_obj
 def status(obj: CliContext):
+    warn_if_update(obj.console)
+    branch = obj.repo.get_branch
+    if obj.repo.main_branch == obj.repo.get_branch:
+        obj.console.log(f'On main branch ({branch}), cannot determine build status')
+        return
+
     changes_in_branch = obj.repo.changes_in_branch_including_local()
     build_set = find_build_set(obj.repo, changes_in_branch, False)
     run_properties = RunProperties.for_local_run(obj.config, obj.repo.get_short_sha, obj.repo.get_branch)
@@ -110,8 +127,21 @@ class DynamicChoice(click.Choice):
 )
 @click.pass_obj
 def jenkins(obj: CliContext, user, password, pipeline):
+    warn_if_update(obj.console)
     run_argument = JenkinsRunParameters(user, password, obj.config, pipeline, obj.verbose)
     run_jenkins(run_argument)
+
+
+@build.command(help='Clean MPyL metadata in `.mpl` folders')
+@click.option('--filter', '-f', 'filter_', required=False, type=click.STRING, help='Filter based on filepath ')
+@click.pass_obj
+def clean(obj: CliContext, filter_):
+    found_projects = obj.repo.find_projects(filter_ if filter_ else '')
+    for project in found_projects:
+        target_path = Path(load_project(obj.repo.root_dir(), Path(project), strict=False).target_path)
+        if target_path.exists():
+            shutil.rmtree(target_path)
+            obj.console.print(f"🧹 Cleaned up {target_path}")
 
 
 if __name__ == '__main__':

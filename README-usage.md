@@ -1,17 +1,17 @@
 # Usage
 
-## ..quickstart
+## ..MPyL CLI
 
 Install MPyL
 
 ```shell
-> pip install mpyl
-> mpyl --help
+pip install mpyl
+mpyl --help
 ```
 
 ##### Command structure
 
-Top level commands options are passed on to sub commands and need to be specified _before_ the sub command.
+Top level commands options are passed on to sub commands and need to be specified *before* the sub command.
 In ```mpyl projects --filter <name> list ```, the `--filter` option applies to all `project` commands, like `list`
 or `lint`.
 
@@ -19,7 +19,7 @@ or `lint`.
 
 MPyL can be configured through a file that adheres to the `config.yml`
 [schema](https://vandebron.github.io/mpyl/schema/mpyl_config.schema.yml).  
-Which configuration fields need to be set depends on your usecase. The error messages that you may
+Which configuration fields need to be set depends on your usecase. The error messages that you
 encounter while using the cli may guide you through the process.
 <details>
   <summary>Example config</summary>
@@ -37,6 +37,25 @@ Required properties are:
 
 Check the [schema](https://vandebron.github.io/mpyl/schema/run_properties.schema.yml) for `run_properties.yml`, which contains detailed
 documentation and can be used to enable on-the-fly validation and auto-completion in your IDE.
+
+Usability of the CLI is *greatly enhanced* by autocompletion. 
+To enable autocompletion, depending on your terminal, do the following:
+
+###### Bash
+Add this to ``~/.bashrc``:
+```shell
+eval "$(_MPYL_COMPLETE=bash_source mpyl)"
+```
+###### Zsh
+Add this to ``~/.zshrc``:
+```shell
+eval "$(_MPYL_COMPLETE=zsh_source mpyl)"
+```
+###### Fish
+Add this to ``~/.config/fish/completions/foo-bar.fish``:
+```shell
+eval (env _MPYL_COMPLETE=fish_source mpyl)
+```
 
 ## ..defining projects
 
