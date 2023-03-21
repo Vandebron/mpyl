@@ -28,9 +28,15 @@ encounter while using the cli may guide you through the process.
 ```
 </details>
 
+##### Run Properties
+The `run_properties` contains information that is specific to a particular run of the pipeline.
+Required properties are:
+- `run` uniquely defines the build and contains more info about the run 
+- `parameters` shows the deploy target
+- `versioning` defines an object containing info about the `version`, `branch`, `pr_number` or `tag`. Either `pr_number` or `tag` need to be set
 
-
-
+Check the [schema](https://vandebron.github.io/mpyl/schema/run_properties.schema.yml) for `run_properties.yml`, which contains detailed
+documentation and can be used to enable on-the-fly validation and auto-completion in your IDE.
 
 ## ..defining projects
 
