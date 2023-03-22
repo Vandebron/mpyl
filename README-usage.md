@@ -58,6 +58,15 @@ Add this to ``~/.config/fish/completions/foo-bar.fish``:
 eval (env _MPYL_COMPLETE=fish_source mpyl)
 ```
 
+#### YAML auto completion 
+###### Intellij IDEA or PyCharm
+Go to: `Preferences | Languages & Frameworks | Schemas and DTDs | JSON Schema Mappings`
+- Add new schema
+- Add matching schema file from ``src/mpyl/schema/``
+- Select version: ``JSON Schema Version 7``
+- Add YAML files 
+
+
 ## ..defining projects
 
 ### File structure
