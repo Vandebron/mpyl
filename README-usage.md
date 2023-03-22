@@ -64,7 +64,7 @@ Go to: `Preferences | Languages & Frameworks | Schemas and DTDs | JSON Schema Ma
 - Add new schema
 - Add matching schema file from ``src/mpyl/schema/``
 - Select version: ``JSON Schema Version 7``
-- Add YAML files 
+- Add YAML files corresponding to the schema or add the file pattern. (For instance, adding the file pattern `project.yml` to the `project.schema.yml` will take care autocompletion in any `project.yml`.)
 
 
 ## ..defining projects
