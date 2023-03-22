@@ -1,0 +1,15 @@
+build:
+  run:
+    id: !ENV ${BUILD_ID:1}
+    run_url: !ENV ${RUN_DISPLAY_URL:http://localhost:3000/}
+    change_url: !ENV ${GIT_URL:http://localhost:3000/}
+    tests_url: !ENV ${RUN_TESTS_DISPLAY_URL:http://localhost:3000/}
+    user: !ENV ${BUILD_USER:anonymous}
+    user_email: !ENV ${BUILD_USER_EMAIL}
+  parameters:
+    deploy_target: !ENV ${deployTarget:PullRequest}
+  versioning:
+    revision: !ENV ${GIT_COMMIT:hash}
+    branch: !ENV ${CHANGE_BRANCH}
+    pr_number: !ENV ${CHANGE_ID}
+    tag: !ENV ${TAG_NAME}
