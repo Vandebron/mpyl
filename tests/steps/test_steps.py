@@ -78,6 +78,9 @@ class TestSteps:
             Steps(logger=Logger.manager.getLogger('logger'), properties=properties)
         assert "('invalid' was unexpected)" in excinfo.value.message
 
+    def test_should_return_error_if_pr_number_or_tag_not_defined(self):
+        assert ""
+
     def test_should_succeed_if_executor_is_known(self):
         project = test_data.get_project_with_stages({'build': 'Echo Build'})
         result = self.executor.execute(stage=Stage.BUILD, project=project)
