@@ -13,7 +13,7 @@ yaml.preserve_quotes = True
 class TestModels:
     resource_path = root_test_path / "test_resources"
 
-    def test_should_return_error_if_user_not_defined(self):
+    def test_should_return_error_if_validation_fails(self):
         run_properties_values = parse_config(self.resource_path / "run_properties.yml")
         config_values = parse_config(self.resource_path / "config.yml")
 
