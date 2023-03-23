@@ -62,6 +62,10 @@ class Repository:
     def main_branch(self) -> str:
         return self._config.main_branch
 
+    @property
+    def latest_tag(self) -> str:
+        return str(sorted(self._repo.tags, key=lambda t: t.commit.committed_datetime)[-1])
+
     def changes_in_branch(self) -> list[Revision]:
         revisions = reversed(list(self._repo.iter_commits(f"{self._config.main_branch}..HEAD")))
         return [Revision(count, str(rev),
