@@ -80,9 +80,14 @@ class RunProperties:
 
         build = run_properties['build']
 
-        versioning = build['versioning']
-        versioning = VersioningProperties(revision=versioning['revision'], branch=versioning['branch'],
-                                          pr_number=int(versioning.get('pr_number')), tag=versioning.get('tag'))
+        versioning_config = build['versioning']
+        print(f"PR = {versioning_config.get('pr_number')}")
+        print(f"TAG = {versioning_config.get('tag')}")
+
+        versioning = VersioningProperties(revision=versioning_config['revision'],
+                                          branch=versioning_config['branch'],
+                                          pr_number=int(versioning_config.get('pr_number')),
+                                          tag=versioning_config.get('tag'))
 
         return RunProperties(details=RunContext.from_configuration(build['run']),
                              target=Target(build['parameters']['deploy_target']), versioning=versioning, config=config)
