@@ -38,11 +38,7 @@ async def check_updates() -> Optional[str]:
                     latest = body.get('info', {}).get('version')
                     if meta != latest:
                         return latest
-        except asyncio.exceptions.TimeoutError:
-            pass
-        except ClientConnectorError:
-            pass
-        except requests.exceptions.RequestException:
+        except (asyncio.exceptions.TimeoutError, ClientConnectorError, requests.exceptions.RequestException):
             pass
     except importlib.metadata.PackageNotFoundError:
         pass
