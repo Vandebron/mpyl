@@ -1,4 +1,5 @@
 """Commands related to build"""
+import asyncio
 import shutil
 from pathlib import Path
 
@@ -20,8 +21,8 @@ from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
 
 
-def warn_if_update(console: Console):
-    update = check_updates()
+async def warn_if_update(console: Console):
+    update = await check_updates()
     if update:
         console.print(Markdown(f"⚠️  **You can upgrade to {update} :** `pip install -U mpyl=={update}`"))
 
@@ -47,7 +48,7 @@ def build(ctx, config, verbose):
 @click.option('--all', 'all_', is_flag=True, help='Build all projects, regardless of changes on branch')
 @click.pass_obj
 def run(obj: CliContext, properties, ci, all_):  # pylint: disable=invalid-name
-    warn_if_update(obj.console)
+    asyncio.run(warn_if_update(obj.console))
     run_properties = RunProperties.from_configuration(parse_config(properties), obj.config) if ci \
         else RunProperties.for_local_run(obj.config, obj.repo.get_sha, obj.repo.get_branch)
 
@@ -63,7 +64,7 @@ def run(obj: CliContext, properties, ci, all_):  # pylint: disable=invalid-name
 @build.command(help="The status of the current local branch from MPyL's perspective")
 @click.pass_obj
 def status(obj: CliContext):
-    warn_if_update(obj.console)
+    asyncio.run(warn_if_update(obj.console))
     branch = obj.repo.get_branch
     if obj.repo.main_branch == obj.repo.get_branch:
         obj.console.log(f'On main branch ({branch}), cannot determine build status')
@@ -122,7 +123,7 @@ class Pipeline(ParamType):
 )
 @click.pass_context
 def jenkins(ctx, user, password, pipeline):
-    warn_if_update(ctx.obj.console)
+    asyncio.run(warn_if_update(ctx.obj.console))
     selected_pipeline = pipeline if pipeline else ctx.obj.config['jenkins']['defaultPipeline']
     run_argument = JenkinsRunParameters(user, password, ctx.obj.config, selected_pipeline, ctx.obj.verbose)
     run_jenkins(run_argument)
