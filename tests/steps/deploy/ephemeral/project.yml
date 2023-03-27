@@ -1,0 +1,30 @@
+name: kong-sync
+maintainer: [ 'Marketplace', 'EV Home' ]
+description: 'Deployment of Kong config'
+stages:
+  build: Docker Build
+  deploy: Ephemeral Docker Deploy
+deployment:
+  properties:
+    env:
+      - key: KONG_ADMIN_ADDRESS
+        pr: "https://kong-gateway-admin.test-backend.vdbinfra.nl"
+        test: "https://kong-gateway-admin.test-backend.vdbinfra.nl"
+        acceptance: "https://kong-gateway-admin.acce-backend.vdbinfra.nl"
+        production: "https://kong-gateway-admin.prod-backend.vdbinfra.nl"
+      - key: KONG_DEFINITIONS_FILE
+        all: "kong.yaml"
+      - key: PUBLIC_API_FACADE_HOST
+        # For Ephemeral Docker Deploys we do not have our usual auto-replacing for URLs, so you need to set this manually for each PR.
+        pr: "publicApiFacade.svc.cluster.local"
+        test: "publicApiFacade.vdb-services.svc.cluster.local"
+        acceptance: "publicApiFacade.vdb-services.svc.cluster.local"
+        production: "publicApiFacade.vdb-services.svc.cluster.local"
+      - key: KEYCLOAK_HOST
+        pr: "keycloak.svc.cluster.local"
+        test: "keycloak.keycloak.svc.cluster.local"
+        acceptance: "keycloak.keycloak.svc.cluster.local"
+        production: "keycloak.keycloak.svc.cluster.local"
+    vault:
+      - key: ADMIN_API_KEY
+        path: "kong/gateway/admin_api_key"
