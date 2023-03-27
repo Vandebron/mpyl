@@ -1,0 +1,8 @@
+FROM pantsel/konga:0.14.9 AS builder
+
+RUN apk add gettext
+
+COPY /public-api/kong/dashboard/deployment/entrypoint-with-migrations.sh /entrypoint-with-migrations.sh
+COPY /public-api/kong/dashboard/deployment/seed_data /seed_data
+
+ENTRYPOINT ["/entrypoint-with-migrations.sh"]
