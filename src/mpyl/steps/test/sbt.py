@@ -37,20 +37,22 @@ class TestSbt(Step):
         command_test = self._construct_sbt_command(step_input, sbt_config,
                                                    self._construct_sbt_command_test_with_coverage)
         test_outcome = custom_check_output(self._logger, command_test)
+        artifact = self._extract_test_report(step_input.project, step_input)
         if not test_outcome.success:
             return Output(success=False,
                           message=f"Tests failed to run for {project_name}. No test results have been recorded.",
-                          produced_artifact=None)
-        return Output(success=True, message="Success")
+                          produced_artifact=artifact)
+        return Output(success=True, message="Success", produced_artifact=artifact)
 
     def _test_without_coverage(self, step_input: Input, sbt_config: SbtConfig) -> Output:
         command_test_without_coverage = self._construct_sbt_command(step_input, sbt_config,
                                                                     self._construct_sbt_command_test_without_coverage)
         run_outcome = custom_check_output(self._logger, command_test_without_coverage)
+        artifact = self._extract_test_report(step_input.project, step_input)
         if not run_outcome.success:
             return Output(success=False, message=f"Tests without coverage failed to run for {step_input.project.name}",
-                          produced_artifact=None)
-        return Output(success=True, message="Success")
+                          produced_artifact=artifact)
+        return Output(success=True, message="Success", produced_artifact=artifact)
 
     def execute(self, step_input: Input) -> Output:
         project = step_input.project
@@ -60,15 +62,14 @@ class TestSbt(Step):
         test_result = self._test_with_coverage(step_input, sbt_config) if sbt_config.test_with_coverage \
             else self._test_without_coverage(step_input, sbt_config)
 
-        if not test_result.success:
-            return test_result
+        if test_result.produced_artifact:
+            suite = to_test_suites(test_result.produced_artifact)
+            summary = sum_suites(suite)
+            return Output(success=summary.is_success,
+                          message=f"Tests results produced for {project.name} ({summary})",
+                          produced_artifact=test_result.produced_artifact)
 
-        artifact = self._extract_test_report(project, step_input)
-        suite = to_test_suites(artifact)
-        summary = sum_suites(suite)
-        return Output(success=summary.is_success,
-                      message=f"Tests results produced for {project.name} ({summary})",
-                      produced_artifact=artifact)
+        return test_result
 
     @staticmethod
     def _construct_sbt_command_compile_with_coverage(step_input: Input) -> list[str]:
