@@ -38,7 +38,7 @@ class RunResult:
     def progress_fraction(self) -> float:
         items = self.run_plan.items()
 
-        total = len(items)
+        total = sum(len(projects) for stage, projects in items)
         unfinished = 0
         for stage, projects in items:
             finished_project_names = set(map(lambda r: r.project.name, self.results_for_stage(stage)))
@@ -49,7 +49,7 @@ class RunResult:
         if unfinished == 0:
             return 1.0
 
-        return unfinished / total
+        return 1.0 - (unfinished / total)
 
     @property
     def exception(self) -> Optional[Exception]:

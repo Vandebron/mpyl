@@ -1,9 +1,7 @@
-from src.mpyl.project import Stage
 from src.mpyl.reporting.formatting.markdown import summary_to_markdown, run_result_to_markdown
 from src.mpyl.utilities.junit import TestRunSummary
 from tests import root_test_path
-from tests.reporting import create_test_result, create_test_result_with_plan
-from tests.test_resources import test_data
+from tests.reporting import create_test_result, create_test_result_with_plan, append_results
 from tests.test_resources.test_data import assert_roundtrip
 
 
@@ -24,3 +22,9 @@ class TestMarkdownReporting:
         summary = TestRunSummary(tests=20, failures=2, errors=1, skipped=0)
         test_report = summary_to_markdown(summary)
         assert_roundtrip(self.test_resource_path / "test_run_summary.md", test_report)
+
+    def test_should_measure_progress(self):
+        run_result = create_test_result_with_plan()
+        assert run_result.progress_fraction == 0.0
+        append_results(run_result)
+        assert run_result.progress_fraction == 1.0
