@@ -33,21 +33,26 @@ def main(log: Logger, args: argparse.Namespace):
     slack_personal = None
     jira = None
 
-
     if not args.local:
         from mpyl.reporting.targets.github import CommitCheck
         from mpyl.reporting.targets.slack import SlackReporter
         from mpyl.steps.run import RunResult
 
         check = CommitCheck(config=config, logger=log)
-        slack_channel = SlackReporter(config, '#project-mpyl-notifications',
-                                      f'MPyL test {run_properties.versioning.identifier}')
+        slack_channel = SlackReporter(
+            config,
+            '#project-mpyl-notifications',
+            f'MPyL test {run_properties.versioning.identifier}'
+        )
+
         if run_properties.details.user_email:
             slack_personal = SlackReporter(config, None, f'MPyL test {run_properties.versioning.identifier}')
+
         jira = JiraReporter(config=config, branch=run_properties.versioning.branch, logger=log)
         check.send_report(RunResult(run_properties=run_properties, run_plan={}))
 
     run_result = run_mpyl(params, slack_personal)
+
     if not args.local:
         check.send_report(run_result)
         slack_channel.send_report(run_result)
