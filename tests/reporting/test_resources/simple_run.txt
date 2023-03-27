@@ -3,7 +3,7 @@ Stage BUILD
 2019-01-04 16:41:26+02:00 - test - Stage.BUILD - success: True 
 Stage TEST
 2019-01-04 16:41:45+02:00 - test - Stage.TEST - success: True 
-TestRunSummary(tests=51, failures=1, errors=1, skipped=0) 
+TestRunSummary(tests=51, failures=1, errors=0, skipped=0) 
 
 Suite pytest
 Case test_schema_load 

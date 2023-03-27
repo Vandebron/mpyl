@@ -37,4 +37,4 @@ def to_test_suites(artifact: Artifact) -> list[TestSuite]:
 
 def sum_suites(suites: list[TestSuite]) -> TestRunSummary:
     return TestRunSummary(tests=sum(s.tests for s in suites), failures=sum(s.failures for s in suites),
-                          errors=sum(s.failures for s in suites), skipped=sum(s.skipped for s in suites))
+                          errors=sum(s.errors for s in suites), skipped=sum(s.skipped for s in suites))
