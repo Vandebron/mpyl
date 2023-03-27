@@ -63,7 +63,7 @@ class PullRequestComment(Reporter):
         current_branch = self.git_repository.get_branch
         return get_pr_for_branch(repo, current_branch)
 
-    def send_report(self, results: RunResult) -> None:
+    def send_report(self, results: RunResult, text: Optional[str] = None) -> None:
         github = Github(self._config.token)
         repo = github.get_repo(self._config.repository)
 
@@ -96,7 +96,7 @@ class CommitCheck(Reporter):
         return {'title': f'Build {build_id}', 'summary': summary + '\n' + run_result_to_markdown(results),
                 'text': to_string(results)}
 
-    def send_report(self, results: RunResult) -> None:
+    def send_report(self, results: RunResult, text: Optional[str] = None) -> None:
         try:
             config: GithubAppConfig = self._github_config.get_app_config
             if not config:

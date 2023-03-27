@@ -95,7 +95,7 @@ class SlackReporter(Reporter):
         self._icons = SlackIcons(success=icons['success'], failure=icons['failure'], building=icons['building'])
         self._message_identifier = message_identifier
 
-    def send_report(self, results: RunResult) -> None:
+    def send_report(self, results: RunResult, text: Optional[str] = None) -> None:
         user_info = self.__get_user_info(results.run_properties.details.user_email)
 
         if not self._channel and user_info.initiator:
@@ -104,18 +104,28 @@ class SlackReporter(Reporter):
         if not self._channel:
             raise ValueError('Channel not explicitly set and initiator could not be determined')
 
-        text = to_slack_markdown(run_result_to_markdown(results))
-        blocks = self.__compose_blocks(results, text, user_info)
+        body = to_slack_markdown(text if text else run_result_to_markdown(results))
+        blocks = self.__compose_blocks(results, body, user_info)
 
         if self._message_identifier:
             self._client.chat_update(channel=self._message_identifier.channel_id,
                                      ts=self._message_identifier.time_stamp,
-                                     icon_emoji=':robot_face:', mrkdwn=True, blocks=blocks, text=text)
+                                     icon_emoji=':robot_face:', mrkdwn=True, blocks=blocks, text=body)
             return
 
         response = self._client.chat_postMessage(channel=self._channel, icon_emoji=':robot_face:', mrkdwn=True,
-                                                 blocks=blocks, text=text)
+                                                 blocks=blocks, text=body)
         self._message_identifier = MessageIdentifier(channel_id=response['channel'], time_stamp=response['ts'])
+
+    def send_progress_update(self, results: RunResult, text: Optional[str]):
+        if not self._message_identifier:
+            raise ValueError('Message identifier not set. Cannot call update before `send_report` has been called')
+
+        result_markdown = text if text else run_result_to_markdown(results)
+        body = to_slack_markdown(result_markdown)
+        blocks = self.__compose_blocks(results, body, self.__get_user_info(results.run_properties.details.user_email))
+        self._client.chat_update(channel=self._message_identifier.channel_id, ts=self._message_identifier.time_stamp,
+                                 icon_emoji=':robot_face:', mrkdwn=True, blocks=blocks, text=body)
 
     def __open_conversation_with_user(self, user_id: str):
         opened_channel = self._client.conversations_open(users=[user_id])
