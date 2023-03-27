@@ -3,7 +3,7 @@ description: 'Graphical user interface to Kong API gateway'
 maintainer: [ 'Marketplace', 'EV Home' ]
 stages:
   build: Docker Build
-  deploy: Kubernetes Deploy
+  deploy: Ephemeral Docker Deploy
 deployment:
   namespace: kong
   kubernetes:
