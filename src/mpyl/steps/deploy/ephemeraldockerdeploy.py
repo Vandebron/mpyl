@@ -13,7 +13,7 @@ class EphemeralDockerDeploy(Step):
 
     def __init__(self, logger: Logger) -> None:
         super().__init__(logger, Meta(
-            name='Ephemeral Deploy',
+            name='Ephemeral Docker Deploy',
             description='Deploy ephemeral container',
             version='0.0.1',
             stage=Stage.DEPLOY
