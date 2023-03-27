@@ -87,7 +87,7 @@ class RunProperties:
 
         versioning = VersioningProperties(revision=versioning_config['revision'],
                                           branch=versioning_config['branch'],
-                                          pr_number=int(pr_num) if pr_num.isdigit() else None,
+                                          pr_number=int(pr_num) if pr_num else None,
                                           tag=tag)
 
         return RunProperties(details=RunContext.from_configuration(build['run']),
