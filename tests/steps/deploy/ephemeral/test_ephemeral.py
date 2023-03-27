@@ -3,7 +3,7 @@ from pathlib import Path
 
 from mpyl.project import load_project
 from mpyl.steps.models import Input
-from mpyl.utilities.docker.env import write_env_to_file
+from mpyl.utilities.docker import write_env_to_file
 from tests import root_test_path
 from tests.test_resources import test_data
 
