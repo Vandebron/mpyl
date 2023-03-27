@@ -1,10 +1,11 @@
+""" Step that deploys ephemeral the docker images produced in the build stage """
+
 from logging import Logger
 
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
 from ...project import Stage
-from ...utilities.docker import docker_image_tag
-from ...utilities.docker.env import write_env_to_file
+from ...utilities.docker import docker_image_tag, write_env_to_file
 from ...utilities.subprocess import custom_check_output
 
 
