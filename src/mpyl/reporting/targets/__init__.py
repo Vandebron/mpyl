@@ -7,6 +7,7 @@ You can transform `mpyl.steps.run.RunResult` to a report using any of the standa
 See the **Submodules** for built-in reporters.
 """
 from abc import abstractmethod
+from typing import Optional
 
 from ...steps.run import RunResult
 
@@ -14,5 +15,5 @@ from ...steps.run import RunResult
 class Reporter:
 
     @abstractmethod
-    def send_report(self, results: RunResult) -> None:
+    def send_report(self, results: RunResult, text: Optional[str] = None) -> None:
         pass
