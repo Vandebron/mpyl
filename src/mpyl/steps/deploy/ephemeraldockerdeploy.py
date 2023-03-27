@@ -9,7 +9,7 @@ from ...utilities.docker import docker_image_tag, write_env_to_file
 from ...utilities.subprocess import custom_check_output
 
 
-class Ephemeral(Step):
+class EphemeralDockerDeploy(Step):
 
     def __init__(self, logger: Logger) -> None:
         super().__init__(logger, Meta(
