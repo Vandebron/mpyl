@@ -2,12 +2,12 @@
 import logging
 from dataclasses import dataclass
 from logging import Logger
-from typing import Dict, Optional, TypeVar
+from typing import Dict, Optional
 
 from python_on_whales import docker
 
 from ...project import Project
-from ...steps.models import Input
+from ...steps.models import Input, RunProperties
 
 
 @dataclass(frozen=True)
@@ -92,3 +92,15 @@ def build(logger: Logger, root_path: str, file_path: str, image_tag: str, target
     stream_docker_logging(logger=logger, generator=logs, task_name=f'Build {file_path}:{target}')
     logger.debug(logs)
     return True
+
+
+def write_env_to_file(project: Project, run_properties: RunProperties) -> str:
+    env_str: str = '\n'.\
+        join([f'{e.key}={e.get_value(run_properties.target)}' for e in project.deployment.properties.env])
+    env_file_name: str = run_properties.config['docker']['envFileName']
+
+    with open(env_file_name, 'w+', encoding='utf-8') as env_file:
+        env_file.write(env_str)
+        env_file.close()
+
+    return env_file_name
