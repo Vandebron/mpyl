@@ -24,4 +24,4 @@ class EphemeralDockerDeploy(Step):
         docker_image_name = docker_image_tag(step_input)
 
         return custom_check_output(self._logger,
-                                   f"docker run --rm --env-file ${env_file_name} ${docker_image_name}")
+                                   f"docker run --rm --env-file {env_file_name} {docker_image_name}")
