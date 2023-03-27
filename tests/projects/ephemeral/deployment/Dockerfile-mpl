@@ -1,8 +1,8 @@
-FROM pantsel/konga:0.14.9 AS builder
+# syntax=docker/dockerfile:1.4
+FROM python:3.9-alpine as installer
+COPY --link tests/projects/job/ /tests/projects/job/
+WORKDIR /tests/projects/job
 
-RUN apk add gettext
-
-COPY /public-api/kong/dashboard/deployment/entrypoint-with-migrations.sh /entrypoint-with-migrations.sh
-COPY /public-api/kong/dashboard/deployment/seed_data /seed_data
-
+FROM installer as builder
+COPY tests/projects/job/src/hello-world.py helloworld.py
 ENTRYPOINT ["python", "helloworld.py"]
