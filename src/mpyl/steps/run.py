@@ -35,6 +35,23 @@ class RunResult:
         return '❌ Failed'
 
     @property
+    def progress_fraction(self) -> float:
+        items = self.run_plan.items()
+
+        total = len(items)
+        unfinished = 0
+        for stage, projects in items:
+            finished_project_names = set(map(lambda r: r.project.name, self.results_for_stage(stage)))
+            for project in projects:
+                if project.name not in finished_project_names:
+                    unfinished += 1
+
+        if unfinished == 0:
+            return 1.0
+
+        return unfinished / total
+
+    @property
     def exception(self) -> Optional[Exception]:
         return self._exception
 
@@ -64,12 +81,7 @@ class RunResult:
 
     @property
     def is_finished(self):
-        for stage, projects in self.run_plan.items():
-            finished_project_names = set(map(lambda r: r.project.name, self.results_for_stage(stage)))
-            for project in projects:
-                if project.name not in finished_project_names:
-                    return False
-        return True
+        return self.progress_fraction == 1.0
 
     @property
     def is_in_progress(self):
