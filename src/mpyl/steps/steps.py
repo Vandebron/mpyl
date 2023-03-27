@@ -81,7 +81,7 @@ class Steps:
 
         self._properties = properties
         for stage, steps in self._step_executors.items():
-            self._logger.debug(f"Registered executors for stage {stage.name}: " # pylint: disable=E1101
+            self._logger.debug(f"Registered executors for stage {stage.name}: "  # pylint: disable=E1101
                                f"{[step.meta.name for step in steps]}")
 
     def _find_executor(self, stage: Stage, step_name: str) -> Optional[Step]:
@@ -130,10 +130,13 @@ class Steps:
                     result = self._execute(executor, project, self._properties, artifact, dry_run)
                     result.write(project.target_path, stage)
                 if executor.after:
-                    executor = executor.after
-                    result = self._execute(executor, project, self._properties, result.produced_artifact, dry_run)
+                    main_step_artifact = result.produced_artifact
+                    result = self._execute(executor.after, project, self._properties, result.produced_artifact, dry_run)
                     if result.produced_artifact and result.produced_artifact.artifact_type != ArtifactType.NONE:
                         result.write(project.target_path, stage)
+                    else:
+                        result.produced_artifact = main_step_artifact
+
                 return result
             except Exception as exc:
                 self._logger.warning(
