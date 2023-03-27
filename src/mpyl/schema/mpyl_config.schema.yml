@@ -110,6 +110,9 @@ definitions:
     type: object
     additionalProperties: false
     properties:
+      envFileName:
+        description: "Name of the .env file required for ephemeral docker step"
+        type: string
       registry:
         "$ref": "#/definitions/Registry"
       build:
