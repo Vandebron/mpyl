@@ -12,7 +12,7 @@ from .steps import StepResult
 
 class RunResult:
     _run_plan: dict[Stage, set[Project]]
-    _results: list[StepResult] = []
+    _results: list[StepResult]
     _run_properties: RunProperties
     _exception: Optional[Exception]
 
@@ -22,6 +22,7 @@ class RunResult:
         self._run_properties = run_properties
         self._run_plan = run_plan
         self._exception = None
+        self._results = []
 
     @property
     def status_line(self) -> str:
@@ -36,18 +37,19 @@ class RunResult:
 
     @property
     def progress_fraction(self) -> float:
-        items = self.run_plan.items()
-
-        total = sum(len(projects) for stage, projects in items)
         unfinished = 0
-        for stage, projects in items:
+        finished = 0
+        for stage, projects in self.run_plan.items():
             finished_project_names = set(map(lambda r: r.project.name, self.results_for_stage(stage)))
             for project in projects:
-                if project.name not in finished_project_names:
+                if project.name in finished_project_names:
+                    finished += 1
+                else:
                     unfinished += 1
 
-        if unfinished == 0:
-            return 1.0
+        total = unfinished + finished
+        if total == 0:
+            return 0.0
 
         return 1.0 - (unfinished / total)
 
