@@ -19,7 +19,7 @@ class Ephemeral(Step):
         ), produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.DOCKER_IMAGE)
 
     def execute(self, step_input: Input) -> Output:
-        env_file_name = write_env_to_file(step_input.project, step_input.run_properties.target)
+        env_file_name = write_env_to_file(step_input.project, step_input.run_properties)
         docker_image_name = docker_image_tag(step_input)
 
         return custom_check_output(self._logger,
