@@ -90,7 +90,7 @@ class JiraReporter(Reporter):
                                                                      api_version='3', cloud=True)
         self._logger = logger
 
-    def send_report(self, results: RunResult) -> None:
+    def send_report(self, results: RunResult, text: Optional[str] = None) -> None:
         if not self._ticket:
             return None
 
