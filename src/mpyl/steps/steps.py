@@ -128,10 +128,12 @@ class Steps:
                                            dry_run)
                 if result.success:
                     result = self._execute(executor, project, self._properties, artifact, dry_run)
+                    result.write(project.target_path, stage)
                 if executor.after:
                     executor = executor.after
                     result = self._execute(executor, project, self._properties, result.produced_artifact, dry_run)
-                result.write(project.target_path, stage)
+                    if result.produced_artifact and result.produced_artifact.artifact_type != ArtifactType.NONE:
+                        result.write(project.target_path, stage)
                 return result
             except Exception as exc:
                 self._logger.warning(
