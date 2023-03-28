@@ -1,12 +1,13 @@
 """ Entry point of MPyL. Loads all available Step implementations and triggers their execution based on the specified
 Project and Stage.
 """
-
+import itertools
 import pkgutil
 from dataclasses import dataclass
 from datetime import datetime
 from logging import Logger
 from typing import Optional
+from unittest import TestSuite
 
 from ruamel.yaml import YAML  # type: ignore
 
@@ -24,6 +25,7 @@ from .test.echo import TestEcho
 from .test.sbt import TestSbt
 from ..project import Project
 from ..project import Stage
+from ..utilities.junit import to_test_suites
 from ..validation import validate
 
 yaml = YAML()
@@ -35,6 +37,15 @@ class StepResult:
     project: Project
     output: Output
     timestamp: datetime = datetime.now()
+
+
+def collect_test_results(step_results: list[StepResult]) -> list[TestSuite]:
+    test_artifacts = [res.output.produced_artifact for res in step_results if
+                      (res.output.produced_artifact and
+                       res.output.produced_artifact.artifact_type == ArtifactType.JUNIT_TESTS)]
+
+    suites: list[list[TestSuite]] = list(map(to_test_suites, test_artifacts))
+    return list(itertools.chain(*suites))
 
 
 class Steps:
@@ -119,10 +130,15 @@ class Steps:
                                            dry_run)
                 if result.success:
                     result = self._execute(executor, project, self._properties, artifact, dry_run)
+                    result.write(project.target_path, stage)
                 if executor.after:
-                    executor = executor.after
-                    result = self._execute(executor, project, self._properties, result.produced_artifact, dry_run)
-                result.write(project.target_path, stage)
+                    main_step_artifact = result.produced_artifact
+                    result = self._execute(executor.after, project, self._properties, result.produced_artifact, dry_run)
+                    if result.produced_artifact and result.produced_artifact.artifact_type != ArtifactType.NONE:
+                        result.write(project.target_path, stage)
+                    else:
+                        result.produced_artifact = main_step_artifact
+
                 return result
             except Exception as exc:
                 self._logger.warning(

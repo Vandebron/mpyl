@@ -17,7 +17,7 @@ def main(log: Logger, args: argparse.Namespace):
         from mpyl.utilities.pyaml_env import parse_config
         from mpyl.cli.commands.build.mpyl import run_mpyl, MpylRunParameters, MpylRunConfig, MpylCliParameters
 
-    config = parse_config("config.yml")
+    config = parse_config("mpyl_config.yml")
     properties = parse_config("run_properties.yml")
     run_properties = RunProperties.from_configuration(run_properties=properties, config=config)
     params = MpylRunParameters(

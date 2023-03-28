@@ -70,7 +70,7 @@ class TestSteps:
         assert output.message == "Stage 'build' not defined on project 'test'"
 
     def test_should_return_error_if_stage_not_defined(self):
-        config_values = parse_config(self.resource_path / "config.yml")
+        config_values = parse_config(self.resource_path / "mpyl_config.yml")
         config_values['kubernetes']['rancher']['cluster']['test']['invalid'] = 'somevalue'
         properties = RunProperties("id", Target.PULL_REQUEST, VersioningProperties("", "feature/ARC-123", 1, None),
                                    config_values)
