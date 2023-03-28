@@ -162,8 +162,9 @@ class Probe:
 
     @staticmethod
     def from_config(values: dict):
-        path = values['path']
-        return Probe(path=TargetProperty.from_config(path), values=values)
+        if not values:
+            return None
+        return Probe(path=TargetProperty.from_config(values['path']), values=values)
 
 
 @dataclass(frozen=True)
@@ -173,6 +174,8 @@ class Metrics:
 
     @staticmethod
     def from_config(values: dict):
+        if not values:
+            return None
         return Metrics(path=values.get('path', '/metrics'), enabled=values.get('enabled', False))
 
 
@@ -201,6 +204,8 @@ class Job:
 
     @staticmethod
     def from_config(values: dict):
+        if not values:
+            return None
         return Job(cron=values.get('cron', {}), job=without_keys(values, {'con'}))
 
 
@@ -216,19 +221,13 @@ class Kubernetes:
 
     @staticmethod
     def from_config(values: dict):
-        mappings = values.get('portMappings')
-        liveness_probe = values.get('livenessProbe')
-        startup_probe = values.get('startupProbe')
-        metrics = values.get('metrics')
-        resources = values.get('resources')
-        job = values.get('job')
         return Kubernetes(
-            port_mappings=mappings if mappings else {},
-            liveness_probe=Probe.from_config(liveness_probe) if liveness_probe else None,
-            startup_probe=Probe.from_config(startup_probe) if startup_probe else None,
-            metrics=Metrics.from_config(metrics) if metrics else None,
-            resources=Resources.from_config(resources) if resources else None,
-            job=Job.from_config(job) if job else None,
+            port_mappings=values.get('portMappings', {}),
+            liveness_probe=Probe.from_config(values.get('livenessProbe', {})),
+            startup_probe=Probe.from_config(values.get('startupProbe', {})),
+            metrics=Metrics.from_config(values.get('metrics', {})),
+            resources=Resources.from_config(values.get('resources', {})),
+            job=Job.from_config(values.get('job', {})),
             spark=values.get('spark', {})
         )
 
