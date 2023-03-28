@@ -52,7 +52,7 @@ spec:
                 memory: 512Mi
           serviceAccount: job
           serviceAccountName: job
-      ttlSecondsAfterFinished: 5
+      ttlSecondsAfterFinished: 3600
   schedule: 0 22 * * *
   successfulJobsHistoryLimit: 3
   suspend: true
