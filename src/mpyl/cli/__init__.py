@@ -1,11 +1,15 @@
 """Command Line Interface parsing for MPyL"""
+import asyncio
 import importlib
 import logging
 from dataclasses import dataclass
 from importlib.metadata import version as version_meta
 from typing import Optional
 
+import aiohttp
 import requests
+from aiohttp import ClientConnectorError, ClientTimeout
+
 from rich.console import Console
 from rich.logging import RichHandler
 
@@ -24,15 +28,17 @@ class CliContext:
     verbose: bool
 
 
-def check_updates() -> Optional[str]:
+async def check_updates() -> Optional[str]:
     try:
         meta = version_meta('mpyl')
         try:
-            resp = requests.get("https://pypi.org/pypi/mpyl/json", timeout=3)
-            latest = resp.json().get('info', {}).get('version')
-            if meta != latest:
-                return latest
-        except requests.exceptions.RequestException:
+            async with aiohttp.ClientSession(timeout=ClientTimeout(total=10)) as session:
+                async with session.get("https://pypi.org/pypi/mpyl/json") as response:
+                    body = await response.json()
+                    latest = body.get('info', {}).get('version')
+                    if meta != latest:
+                        return latest
+        except (asyncio.exceptions.TimeoutError, ClientConnectorError, requests.exceptions.RequestException):
             pass
     except importlib.metadata.PackageNotFoundError:
         pass
@@ -41,15 +47,7 @@ def check_updates() -> Optional[str]:
 
 def get_version():
     try:
-        meta = version_meta('mpyl')
-        try:
-            update = check_updates()
-            if update:
-                return f"v{meta}. ⚠️ \033[1;33;40m You can upgrade MPyL {meta} -> {update}: " \
-                       f"`pip install -U mpyl=={update}`"
-        except requests.exceptions.RequestException:
-            pass
-        return f"v{meta}"
+        return f"v{version_meta('mpyl')}"
     except importlib.metadata.PackageNotFoundError:
         return '(local)'
 

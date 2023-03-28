@@ -17,14 +17,14 @@ or `lint`.
 
 ##### MPyL configuration
 
-MPyL can be configured through a file that adheres to the `config.yml`
+MPyL can be configured through a file that adheres to the `mpyl_config.yml`
 [schema](https://vandebron.github.io/mpyl/schema/mpyl_config.schema.yml).  
 Which configuration fields need to be set depends on your usecase. The error messages that you
 encounter while using the cli may guide you through the process.
 <details>
   <summary>Example config</summary>
 ```yaml
-.. include:: config.yml
+.. include:: mpyl_config.yml
 ```
 </details>
 
