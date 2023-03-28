@@ -5,12 +5,12 @@ cvs:
     repository: 'Vandebron/mpyl'
     token: !ENV ${GITHUB_TOKEN}
     app:
-      privateKeyBase64Encoded: !ENV ${MPYL_GITHUB_APP_PRIVATE_KEY}
+      privateKeyPath: 'mpyl-pipeline.2023-02-20.private-key.pem'
       appId: '295700'
 slack:
   botToken: !ENV ${SLACK_TOKEN}
   icons:
-    building: '60fps_parrot'
+    building: '60fpsparrot'
     success: 'thug-parrot'
     failure: 'sadparrot'
 jira:
@@ -18,6 +18,7 @@ jira:
   userName: !ENV ${JIRA_USER_PASSWORD_USR:jira_user}
   password: !ENV ${JIRA_USER_PASSWORD_PSW:jira_password}
 docker:
+  envFileName: '.env'
   registry:
     hostName: 'bigdataregistry.azurecr.io'
     userName: !ENV ${DOCKER_REGISTRY_USR:docker_user}
@@ -27,26 +28,12 @@ docker:
     buildTarget: 'builder'
     testTarget: 'tester'
     dockerFileName: 'Dockerfile-mpl'
-  compose:
-    periodSeconds: 2
-    failureThreshold: 20
-jenkins:
-  url: 'https://jenkins.k8s-serv-backend.vdbinfra.nl/'
-  pipelines:
-    monorepo: 'Mpl-Pipeline'
-    monorepo-all: 'MPL Pipeline - All'
-    mpl: 'MPL Pipeline - Test'
-    mpyl-test: 'MPyL Pipeline - Test'
-  defaultPipeline: 'mpyl-test'
 sbt:
   command: 'sbt'
-  testWithCoverage: !ENV ${SBT_RUN_WITH_COVERAGE:false}
-  verbose: false
+  testWithCoverage: !ENV ${SBT_RUN_WITH_COVERAGE:true}
+  verbose: true
   javaOpts: '-Xmx4G -Xms4G -XX:+UseG1GC -XX:+CMSClassUnloadingEnabled -Xss2M'
   sbtOpts: 'user.timezone=GMT jline.terminal=jline.UnixTerminal'
-  clientMode:
-    build: false
-    test: false
 kubernetes:
   rancher:
     cluster:

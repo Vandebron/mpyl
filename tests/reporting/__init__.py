@@ -20,11 +20,10 @@ def create_test_result() -> RunResult:
 def create_test_result_with_plan() -> RunResult:
     build_projects = [test_data.get_project(), __get_other_project()]
     test_projects = [__get_other_project()]
-    run_plan = {
+    return RunResult(run_properties=test_data.RUN_PROPERTIES, run_plan={
         Stage.BUILD: set(build_projects),
         Stage.TEST: set(test_projects)
-    }
-    return RunResult(run_properties=test_data.RUN_PROPERTIES, run_plan=run_plan)
+    })
 
 
 def append_results(result: RunResult) -> None:
