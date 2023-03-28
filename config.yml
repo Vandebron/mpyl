@@ -18,7 +18,6 @@ jira:
   userName: !ENV ${JIRA_USER_PASSWORD_USR:jira_user}
   password: !ENV ${JIRA_USER_PASSWORD_PSW:jira_password}
 docker:
-  envFileName: '.env'
   registry:
     hostName: 'bigdataregistry.azurecr.io'
     userName: !ENV ${DOCKER_REGISTRY_USR:docker_user}

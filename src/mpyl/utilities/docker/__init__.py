@@ -94,19 +94,15 @@ def build(logger: Logger, root_path: str, file_path: str, image_tag: str, target
     return True
 
 
-def write_env_to_file(project: Project, run_properties: RunProperties) -> str:
+def get_env_variables(project: Project, run_properties: RunProperties) -> dict[str, str]:
     if project.deployment is None:
-        raise RuntimeError(f'No deployment information was found for project: {project.name}')
+        raise KeyError(f'No deployment information was found for project: {project.name}')
     if len(project.deployment.properties.env) == 0:
-        raise RuntimeError(f'No properties.env is defined for project: {project.name}')
+        raise KeyError(f'No properties.env is defined for project: {project.name}')
 
-    env_str: str = '\n'.join(
-        [f'{e.key}={e.get_value(run_properties.target)}' for e in project.deployment.properties.env]
-    )
-    env_file_name: str = run_properties.config['docker']['envFileName']
+    env_variables: dict[str, str] = {}
 
-    with open(env_file_name, 'w+', encoding='utf-8') as env_file:
-        env_file.write(env_str)
-        env_file.close()
+    for env_variable in project.deployment.properties.env:
+        env_variables[env_variable.key] = env_variable.get_value(run_properties.target)
 
-    return env_file_name
+    return env_variables
