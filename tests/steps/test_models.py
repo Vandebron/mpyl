@@ -14,10 +14,9 @@ class TestModels:
     resource_path = root_test_path / "test_resources"
 
     run_properties_values = parse_config(resource_path / "run_properties.yml")
-    config_values = parse_config(resource_path / "config.yml")
+    config_values = parse_config(resource_path / "mpyl_config.yml")
 
     def test_should_return_error_if_validation_fails(self):
-
         with pytest.raises(ValidationError) as excinfo:
             RunProperties.from_configuration(self.run_properties_values, self.config_values)
 
@@ -27,4 +26,5 @@ class TestModels:
         versioning = self.run_properties_values['build']['versioning']
 
         with pytest.raises(ValueError, match="Either pr_number or tag need to be set"):
-            VersioningProperties(versioning['revision'], versioning['branch'], versioning['pr_number'], versioning['tag'])
+            VersioningProperties(versioning['revision'], versioning['branch'], versioning['pr_number'],
+                                 versioning['tag'])
