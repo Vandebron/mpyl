@@ -18,7 +18,7 @@ from .resources.customresources import V1AlphaIngressRoute, V1SealedSecret, \
     V1SparkApplication  # pylint: disable = no-name-in-module
 from .resources.spark import to_spark_body, get_spark_config_map_data
 from ...models import Input, ArtifactType
-from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target
+from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target, Kubernetes, Job
 
 yaml = YAML()
 
@@ -239,6 +239,18 @@ class ChartBuilder:
         resources = self.project.kubernetes.resources
         defaults = self.kubernetes_config.resources_defaults
         return ChartBuilder._to_resources(resources, defaults, self.target)
+
+    def _get_kubernetes(self) -> Kubernetes:
+        kubernetes = self.deployment.kubernetes
+        if kubernetes is None:
+            raise AttributeError("deployment.kubernetes field should be set")
+        return kubernetes
+
+    def _get_job(self) -> Job:
+        job = self._get_kubernetes().job
+        if job is None:
+            raise AttributeError("deployment.kubernetes.job field should be set")
+        return job
 
     def _get_env_vars(self):
         env_vars = list(

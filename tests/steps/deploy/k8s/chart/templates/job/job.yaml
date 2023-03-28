@@ -13,7 +13,7 @@ metadata:
     revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
   name: job
 spec:
-  activeDeadlineSeconds: 10
+  activeDeadlineSeconds: 20
   template:
     metadata:
       labels:

@@ -428,7 +428,7 @@ definitions:
       - path
     properties:
       path:
-        description: URL to be used called for liveness probes
+        description: URL to be called for liveness probes
         $ref: '#/definitions/dtapValue'
       periodSeconds:
         description: >-
@@ -455,7 +455,7 @@ definitions:
       - path
     properties:
       path:
-        description: URL to be used called for startup probes
+        description: URL to be called for startup probes
         $ref: '#/definitions/dtapValue'
       initialDelaySeconds:
         description: >-
