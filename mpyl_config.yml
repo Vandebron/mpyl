@@ -68,6 +68,9 @@ kubernetes:
 project: # default values
   deployment:
     kubernetes:
+      job:
+        ttlSecondsAfterFinished:
+          all: 3600
       resources:
         instances:
           pr: 1
