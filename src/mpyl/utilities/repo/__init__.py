@@ -34,9 +34,9 @@ class Repository:
     def __init__(self, config: RepoConfig):
         self._config = config
         self._root_dir = Git().rev_parse('--show-toplevel')
+        self._repo = Repo(self._root_dir)  # pylint: disable=attribute-defined-outside-init
 
     def __enter__(self):
-        self._repo = Repo(self._root_dir)  # pylint: disable=attribute-defined-outside-init
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -62,6 +62,9 @@ class Repository:
     def main_branch(self) -> str:
         return self._config.main_branch
 
+    @property
+    def latest_tag(self) -> str:
+        return str(sorted(self._repo.tags, key=lambda t: t.commit.committed_datetime)[-1])
 
     def changes_in_branch(self) -> list[Revision]:
         revisions = reversed(list(self._repo.iter_commits(f"{self._config.main_branch}..HEAD")))

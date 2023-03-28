@@ -1,10 +1,11 @@
 """Commands related to build"""
+import asyncio
 import shutil
 from pathlib import Path
-from typing import Any, Optional
 
 import click
-from click import Parameter, Context
+from click import ParamType, BadParameter
+from click.shell_completion import CompletionItem
 from rich.console import Console
 from rich.markdown import Markdown
 
@@ -20,15 +21,15 @@ from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
 
 
-def warn_if_update(console: Console):
-    update = check_updates()
+async def warn_if_update(console: Console):
+    update = await check_updates()
     if update:
-        console.print(Markdown(f"⚠️ **You can upgrade to {update} :** `pip install -U mpyl=={update}`"))
+        console.print(Markdown(f"⚠️  **You can upgrade to {update} :** `pip install -U mpyl=={update}`"))
 
 
 @click.group('build')
 @click.option('--config', '-c', required=True, type=click.Path(exists=True), help=CONFIG_PATH_HELP,
-              envvar="MPYL_CONFIG_PATH", default='config.yml')
+              envvar="MPYL_CONFIG_PATH", default='mpyl_config.yml')
 @click.option('--verbose', '-v', is_flag=True, default=False)
 @click.pass_context
 def build(ctx, config, verbose):
@@ -47,7 +48,7 @@ def build(ctx, config, verbose):
 @click.option('--all', 'all_', is_flag=True, help='Build all projects, regardless of changes on branch')
 @click.pass_obj
 def run(obj: CliContext, properties, ci, all_):  # pylint: disable=invalid-name
-    warn_if_update(obj.console)
+    asyncio.run(warn_if_update(obj.console))
     run_properties = RunProperties.from_configuration(parse_config(properties), obj.config) if ci \
         else RunProperties.for_local_run(obj.config, obj.repo.get_sha, obj.repo.get_branch)
 
@@ -63,7 +64,7 @@ def run(obj: CliContext, properties, ci, all_):  # pylint: disable=invalid-name
 @build.command(help="The status of the current local branch from MPyL's perspective")
 @click.pass_obj
 def status(obj: CliContext):
-    warn_if_update(obj.console)
+    asyncio.run(warn_if_update(obj.console))
     branch = obj.repo.get_branch
     if obj.repo.main_branch == obj.repo.get_branch:
         obj.console.log(f'On main branch ({branch}), cannot determine build status')
@@ -75,31 +76,27 @@ def status(obj: CliContext):
     result = RunResult(run_properties=run_properties, run_plan=build_set)
     version = run_properties.versioning
     header: str = f"**Revision:** `{version.branch}` at `{version.revision}`  \n"
-    obj.console.print(Markdown(markup=header + "**Execution plan:**  \n" + run_result_to_markdown(result)))
+    if result.run_plan:
+        obj.console.print(Markdown(markup=header + "**Execution plan:**  \n" + run_result_to_markdown(result)))
+    else:
+        obj.console.print("No changes detected, nothing to do.")
 
 
-def get_default(ctx):
-    if not ctx:
-        return 'config.jenkins.defaultPipeline'
+class Pipeline(ParamType):
+    name = 'pipeline'
 
-    return ctx.obj.config['jenkins']['defaultPipeline']
+    def shell_complete(self, ctx: click.Context, param, incomplete: str):
+        if not ctx.parent or ctx.parent.params['config'] is None or not Path(ctx.parent.params['config']).exists():
+            raise BadParameter('Either --config parameter must or MPYL_CONFIG_PATH env var must be set', ctx=ctx,
+                               param=param)
 
+        config: dict = parse_config(ctx.parent.params['config'])
+        parsed_config: dict[str, str] = config['jenkins']['pipelines']
 
-class DynamicChoice(click.Choice):
-    def __init__(self):
-        super().__init__([])
-
-    def convert(
-            self, value: Any, param: Optional[Parameter], ctx: Optional[Context]
-    ) -> Any:
-        if ctx is None:
-            raise KeyError("Context needs to be set. Did you use @click.pass_context in the parent group?")
-
-        config = ctx.obj.config
-        if value is None:
-            value = config['jenkins']['defaultPipeline']
-        self.choices = config['jenkins']['pipelines'].keys()
-        return super().convert(value, param, ctx)
+        return [
+            CompletionItem(value=pl[0], help=pl[1]) for pl in parsed_config.items() if
+            incomplete in pl[0]
+        ]
 
 
 @build.command(help='Run a multi branch pipeline build on Jenkins')
@@ -120,15 +117,15 @@ class DynamicChoice(click.Choice):
 @click.option(
     '--pipeline', '-pl',
     help='The pipeline to run. Must be one of the pipelines listed in `jenkins.pipelines`. '
-         'Default value is `jenkins.defaultPipeline',
-    type=DynamicChoice(),
-    required=True,
-    default=lambda: get_default(click.get_current_context(silent=True))
+         'Default value is `jenkins.defaultPipeline`',
+    type=Pipeline(),
+    required=False
 )
-@click.pass_obj
-def jenkins(obj: CliContext, user, password, pipeline):
-    warn_if_update(obj.console)
-    run_argument = JenkinsRunParameters(user, password, obj.config, pipeline, obj.verbose)
+@click.pass_context
+def jenkins(ctx, user, password, pipeline):
+    asyncio.run(warn_if_update(ctx.obj.console))
+    selected_pipeline = pipeline if pipeline else ctx.obj.config['jenkins']['defaultPipeline']
+    run_argument = JenkinsRunParameters(user, password, ctx.obj.config, selected_pipeline, ctx.obj.verbose)
     run_jenkins(run_argument)
 
 
