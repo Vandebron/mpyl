@@ -30,6 +30,25 @@ CPU_REQUEST_SCALE_FACTOR = 0.2
 MEM_REQUEST_SCALE_FACTOR = 0.5
 
 
+def try_parse_target(value: object, target: Target):
+    if isinstance(value, dict):
+        maybe_value = TargetProperty.from_config(value).get_value(target)
+        if maybe_value:
+            return maybe_value
+
+    return value
+
+
+def with_target(dictionary: dict, target: Target) -> dict:
+    def with_targets_parsed(obj):
+        if isinstance(obj, dict):
+            return type(obj)((k, try_parse_target(with_targets_parsed(v), target)) for k, v in obj.items())
+
+        return obj
+
+    return with_targets_parsed(dictionary)
+
+
 @dataclass(frozen=True)
 class ResourceDefaults:
     instances: TargetProperty[int]
@@ -49,12 +68,13 @@ class KubernetesConfig:
     resources_defaults: ResourceDefaults
     liveness_probe_defaults: dict
     startup_probe_defaults: dict
+    job_defaults: dict
 
     @staticmethod
     def from_config(values: dict):
         return KubernetesConfig(resources_defaults=ResourceDefaults.from_config(values['resources']),
                                 liveness_probe_defaults=values['livenessProbe'],
-                                startup_probe_defaults=values['startupProbe'])
+                                startup_probe_defaults=values['startupProbe'], job_defaults=values.get('job', {}))
 
 
 class ChartBuilder:
@@ -154,8 +174,15 @@ class ChartBuilder:
             spec=V1PodSpec(containers=[job_container], service_account=self.release_name,
                            service_account_name=self.release_name),
         )
-        return V1Job(api_version='batch/v1', kind='Job', metadata=self._to_object_meta(),
-                     spec=V1JobSpec(ttl_seconds_after_finished=3600, template=pod_template))
+
+        defaults = with_target(self.kubernetes_config.job_defaults, self.target)
+        specified = defaults | with_target(self.project.job.job, self.target)
+
+        template_dict = to_dict(pod_template)
+        specified['template'] = template_dict
+        spec: V1JobSpec = ChartBuilder._to_k8s_model(specified, V1JobSpec)
+
+        return V1Job(api_version='batch/v1', kind='Job', metadata=self._to_object_meta(), spec=spec)
 
     def to_cron_job(self) -> V1CronJob:
         values = self.project.job.cron

@@ -31,6 +31,10 @@ from .validation import validate
 T = TypeVar('T')
 
 
+def without_keys(dictionary: dict, keys: set[str]):
+    return {k: dictionary[k] for k in dictionary.keys() - keys}
+
+
 @dataclass(frozen=True)
 class Target(Enum):
     def __eq__(self, other):
@@ -193,10 +197,11 @@ class Resources:
 @dataclass(frozen=True)
 class Job:
     cron: dict
+    job: dict
 
     @staticmethod
     def from_config(values: dict):
-        return Job(cron=values.get('cron', {}))
+        return Job(cron=values.get('cron', {}), job=without_keys(values, {'con'}))
 
 
 @dataclass(frozen=True)

@@ -17,6 +17,7 @@ spec:
   failedJobsHistoryLimit: 1
   jobTemplate:
     spec:
+      activeDeadlineSeconds: 10
       template:
         metadata:
           labels:
@@ -51,7 +52,7 @@ spec:
                 memory: 512Mi
           serviceAccount: job
           serviceAccountName: job
-      ttlSecondsAfterFinished: 3600
+      ttlSecondsAfterFinished: 5
   schedule: 0 22 * * *
   successfulJobsHistoryLimit: 3
   suspend: true
