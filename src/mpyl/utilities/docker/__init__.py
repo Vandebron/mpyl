@@ -100,9 +100,9 @@ def get_env_variables(project: Project, run_properties: RunProperties) -> dict[s
     if len(project.deployment.properties.env) == 0:
         raise KeyError(f'No properties.env is defined for project: {project.name}')
 
-    env_variables: dict[str, str] = {}
-
-    for env_variable in project.deployment.properties.env:
-        env_variables[env_variable.key] = env_variable.get_value(run_properties.target)
+    env_variables: dict[str, str] = {
+        env_variable.key: env_variable.get_value(run_properties.target) for env_variable in
+        project.deployment.properties.env
+    }
 
     return env_variables
