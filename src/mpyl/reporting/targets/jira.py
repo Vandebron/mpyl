@@ -78,7 +78,7 @@ class JiraReporter(Reporter):
     def __init__(self, config: dict, branch: str, logger: Logger):
         jira_config = config.get('jira')
         if not jira_config:
-            raise ValueError('jira section needs to be defined in config.yml')
+            raise ValueError('jira section needs to be defined in mpyl_config.yml')
         self._ticket = extract_ticket_from_branch(branch)
 
         jira_config = JiraConfig.from_config(jira_config)
@@ -90,7 +90,7 @@ class JiraReporter(Reporter):
                                                                      api_version='3', cloud=True)
         self._logger = logger
 
-    def send_report(self, results: RunResult) -> None:
+    def send_report(self, results: RunResult, text: Optional[str] = None) -> None:
         if not self._ticket:
             return None
 

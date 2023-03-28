@@ -1,15 +1,13 @@
 """
 Markdown run result formatters
 """
-import itertools
 
 from junitparser import TestSuite
 
 from ...project import Stage, Project
-from ...steps.models import ArtifactType
 from ...steps.run import RunResult
-from ...steps.steps import StepResult
-from ...utilities.junit import TestRunSummary, to_test_suites, sum_suites
+from ...steps.steps import StepResult, collect_test_results
+from ...utilities.junit import TestRunSummary, sum_suites
 
 
 def summary_to_markdown(summary: TestRunSummary):
@@ -32,16 +30,6 @@ def __to_oneliner(result: list[StepResult], plan: set[Project]) -> str:
     return f'{", ".join(sorted(project_names))}'
 
 
-def __collect_test_results(step_results: list[StepResult]) -> list[TestSuite]:
-    test_artifacts = [res.output.produced_artifact for res in step_results if
-                      (res.output.produced_artifact and
-                       res.output.produced_artifact.artifact_type == ArtifactType.JUNIT_TESTS)]
-
-    suites: list[list[TestSuite]] = list(map(to_test_suites, test_artifacts))
-    flattened = list(itertools.chain(*suites))
-    return flattened
-
-
 def stage_to_icon(stage: Stage):
     if stage == Stage.BUILD:
         return '🏗️ '
@@ -53,7 +41,7 @@ def stage_to_icon(stage: Stage):
 
 
 def run_result_to_markdown(run_result: RunResult) -> str:
-    result: str = f'{run_result.status_line}  \n' if run_result.is_finished else ""
+    result: str = f'{run_result.status_line}  \n' if run_result.is_finished and run_result.run_plan else ""
     if run_result.exception:
         result += f"\n```\n{run_result.exception}\n```\n"
 
@@ -62,7 +50,7 @@ def run_result_to_markdown(run_result: RunResult) -> str:
         plan: set[Project] = run_result.plan_for_stage(stage)
         if step_results or plan:
             result += f"{stage_to_icon(stage)}  {__to_oneliner(step_results, plan)}  \n"
-            test_results = __collect_test_results(step_results)
+            test_results = collect_test_results(step_results)
             if test_results:
                 result += to_markdown_test_report(
                     test_results) + f' [link]({run_result.run_properties.details.tests_url}) \n'
