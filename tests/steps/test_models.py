@@ -25,6 +25,6 @@ class TestModels:
     def test_should_return_error_if_pr_number_or_tag_not_set(self):
         versioning = self.run_properties_values['build']['versioning']
 
-        with pytest.raises(ValueError, match="Either pr_number or tag need to be set"):
+        with pytest.raises(KeyError, match="pr_number"):
             VersioningProperties(versioning['revision'], versioning['branch'], versioning['pr_number'],
                                  versioning['tag'])

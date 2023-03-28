@@ -28,13 +28,6 @@ encounter while using the cli may guide you through the process.
 ```
 </details>
 
-##### Run Properties
-The `run_properties` contains information that is specific to a particular run of the pipeline.
-Required properties are:
-- `run` uniquely defines the build and contains more info about the run 
-- `parameters` shows the deploy target
-- `versioning` defines an object containing info about the `version`, `branch`, `pr_number` or `tag`. Either `pr_number` or `tag` need to be set
-
 Check the [schema](https://vandebron.github.io/mpyl/schema/run_properties.schema.yml) for `run_properties.yml`, which contains detailed
 documentation and can be used to enable on-the-fly validation and auto-completion in your IDE.
 
@@ -62,9 +55,12 @@ eval (env _MPYL_COMPLETE=fish_source mpyl)
 ###### Intellij IDEA or PyCharm
 Go to: `Preferences | Languages & Frameworks | Schemas and DTDs | JSON Schema Mappings`
 - Add new schema
-- Add matching schema file from ``src/mpyl/schema/``
+- Add matching schema file from latest release:
+  - */deployment/project.yml -> https://vandebron.github.io/mpyl/schema/project.schema.yml
+  - mpyl_config.yml -> https://vandebron.github.io/mpyl/schema/mpyl_config.schema.yml
+  - run_properties.yml -> https://vandebron.github.io/mpyl/schema/run_properties.schema.yml
 - Select version: ``JSON Schema Version 7``
-- Add YAML files corresponding to the schema or add the file pattern. (For instance, adding the file pattern `project.yml` to the `project.schema.yml` will take care autocompletion in any `project.yml`.)
+- Add YAML files corresponding to the schema or add the file pattern. (For instance, adding the file pattern `project.yml` to the `project.schema.yml` will take care of autocompletion in any `project.yml`.)
 
 
 ## ..defining projects
