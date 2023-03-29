@@ -1,6 +1,6 @@
 name: job
 description: "A job"
-maintainer: ["Marketplace"]
+maintainer: [ "Marketplace" ]
 stages:
   build: "Docker Build"
   test: "Echo Test"
