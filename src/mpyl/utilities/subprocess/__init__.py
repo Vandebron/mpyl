@@ -8,6 +8,12 @@ from ...steps.models import Output
 
 
 def custom_check_output(logger: Logger, command: Union[str, list[str]]) -> Output:
+    """
+    Wrapper around subprocess.Popen
+    ⚠️ Using this function implies an implicit runtime OS dependency.
+    Avoid this if at all possible. For example, to run docker commands, use the bundled docker client (python-on-whales)
+    which makes the dependency on docker explicit and adds a lot of convenience methods.
+    """
     if isinstance(command, str):
         command = command.split(' ')
 
