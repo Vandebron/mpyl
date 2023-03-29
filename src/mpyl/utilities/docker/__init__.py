@@ -7,7 +7,7 @@ from typing import Dict, Optional
 from python_on_whales import docker
 
 from ...project import Project
-from ...steps.models import Input, RunProperties
+from ...steps.models import Input
 
 
 @dataclass(frozen=True)
@@ -92,17 +92,3 @@ def build(logger: Logger, root_path: str, file_path: str, image_tag: str, target
     stream_docker_logging(logger=logger, generator=logs, task_name=f'Build {file_path}:{target}')
     logger.debug(logs)
     return True
-
-
-def get_env_variables(project: Project, run_properties: RunProperties) -> dict[str, str]:
-    if project.deployment is None:
-        raise KeyError(f'No deployment information was found for project: {project.name}')
-    if len(project.deployment.properties.env) == 0:
-        raise KeyError(f'No properties.env is defined for project: {project.name}')
-
-    env_variables: dict[str, str] = {
-        env_variable.key: env_variable.get_value(run_properties.target) for env_variable in
-        project.deployment.properties.env
-    }
-
-    return env_variables

@@ -2,7 +2,7 @@ from pathlib import Path
 
 from mpyl.project import load_project
 from mpyl.steps.models import Input
-from mpyl.utilities.docker import get_env_variables
+from mpyl.utilities.ephemeral import get_env_variables
 from tests import root_test_path
 from tests.test_resources import test_data
 
@@ -14,5 +14,5 @@ class TestEphemeral:
         step_input = Input(load_project(self.resource_path, Path('project.yml'), True), test_data.RUN_PROPERTIES, None)
         assert len(step_input.project.deployment.properties.env) == 4
 
-        env_variables = get_env_variables(step_input.project, test_data.RUN_PROPERTIES)
+        env_variables = get_env_variables(step_input.project, test_data.RUN_PROPERTIES.target)
         assert len(env_variables) == 4

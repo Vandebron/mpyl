@@ -80,7 +80,7 @@ properties:
         type: string
         enum:
           - Docker Deploy
-          - Ephemeral Docker Deploy
+          - Deploy From Docker Container
           - Echo Deploy
           - NUC Deploy
           - Kubernetes Deploy
