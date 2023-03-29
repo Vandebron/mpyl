@@ -297,7 +297,7 @@ class Project:
     @property
     def kubernetes(self) -> Kubernetes:
         if self.deployment is None or self.deployment.kubernetes is None:
-            raise AttributeError(f"Project '{self.name}' does not have kubernetes configuration")
+            raise KeyError(f"Project '{self.name}' does not have kubernetes configuration")
         return self.deployment.kubernetes
 
     @property
@@ -307,7 +307,7 @@ class Project:
     @property
     def job(self) -> Job:
         if self.kubernetes.job is None:
-            raise AttributeError(f"Project '{self.name}' does not have kubernetes configuration")
+            raise KeyError(f"Project '{self.name}' does not have kubernetes.job configuration")
         return self.kubernetes.job
 
     @staticmethod
