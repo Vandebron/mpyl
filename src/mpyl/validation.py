@@ -4,7 +4,7 @@ import pkgutil
 from functools import lru_cache
 
 import jsonschema
-from jsonschema import RefResolver, Draft7Validator
+from jsonschema import RefResolver, Draft7Validator, validators
 from ruamel.yaml import YAML
 
 yaml = YAML()
@@ -25,7 +25,22 @@ def load_schema(schema_string: str) -> Draft7Validator:
         return {}
 
     resolver = RefResolver(referrer=schema, base_uri="", handlers={"": load_schema_from_local})
-    return jsonschema.validators.Draft7Validator(schema=schema, resolver=resolver)
+    all_validators = dict(Draft7Validator.VALIDATORS)
+    existing_validator = all_validators['type']
+
+    def allow_none_validator(validator, types, instance, yaml_schema):
+        for field_type in types:
+            if field_type is None and instance is None:
+                return None
+
+        return existing_validator(validator, types, instance, yaml_schema)
+
+    all_validators['type'] = allow_none_validator
+    type_checker = Draft7Validator.TYPE_CHECKER
+
+    extended_validator = validators.extend(jsonschema.validators.Draft7Validator, validators=all_validators,
+                                           type_checker=type_checker)
+    return extended_validator(schema=schema, resolver=resolver)
 
 
 def validate(values: dict, schema_string: str):
