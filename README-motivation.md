@@ -12,10 +12,10 @@
   - run specific information (initiator, branch/tag, build target)
   - input and output types of individual steps
 - Replaceablity
-  - Independent from Jenkins (or any other build executor)
+  - Independent of Jenkins (or any other build executor)
   - Runs locally, with no OS dependencies in as far as possible.
   - Where OS dependencies e.g. kubectl, helm are unavoidable, they are included in a docker image that can be used inside the executor
-- Non functional
+- Non-functional
   - Implemented in our default scripting language: Python
   - Type safe (mypy)
   - Extensively unit tested
@@ -27,12 +27,12 @@
 - keeps knowledge local
 - truly modular: reusable but independent steps
 - simple build but effective build orchestration
-- completely tailored to our needs: no bloat or overabstraction
+- completely tailored to our needs: no bloat or over abstraction
 - unit tested logic
 - `project.yml` metadata
   - gives useful information about the project it relates to
   - is self documented via a schema
-  - gives insight in project depenendencies
+  - gives insight in project dependencies
 - supports PR centered development via staging environments
 - basic workflow is simple: build, test, deploy, acceptance test
 
