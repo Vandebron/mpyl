@@ -3,7 +3,7 @@ maintainer: [ 'Marketplace', 'EV Home' ]
 description: 'Deployment of Kong config'
 stages:
   build: Docker Build
-  deploy: Ephemeral Docker Deploy
+  deploy: Deploy From Docker Container
 deployment:
   properties:
     env:
