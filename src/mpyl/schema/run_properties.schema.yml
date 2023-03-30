@@ -73,10 +73,10 @@ properties:
             type: string
           branch:
             description: name of the branch
-            type: [string, null]
+            type: ['string', 'null']
           pr_number:
             description: id of the pull request
-            type: [string, null]
+            type: ['string', 'null']
           tag:
             description: reference that points to the MPyL version
-            type: [string, null]
+            type: ['string', 'null']
