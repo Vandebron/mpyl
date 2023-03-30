@@ -1,4 +1,4 @@
-package projects.cron_job.src.test.scala.vandebron.mpyl
+package nl.vandebron.api.mpyl
 
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
