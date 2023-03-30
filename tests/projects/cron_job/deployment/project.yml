@@ -1,0 +1,62 @@
+name: 'enrichChargeSessionsJob'
+description: 'Job to enrich charge session with total amount earned'
+maintainer: [ 'Flex IoT' ]
+stages:
+  build: 'Sbt Build'
+  test: 'Sbt Test'
+  deploy: 'Kubernetes Spark Job Deploy'
+deployment:
+  namespace: 'batterypack-jobs'
+  properties:
+    env:
+      - key: DEPLOY_ENV
+        pr: "Test"
+        test: "Test"
+        acceptance: "Acceptance"
+        production: "Production"
+      - key: APP_NAME
+        all: "enrichChargeSessionsJob"
+      - key: CASSANDRA_HOST
+        all: "cassandra.cassandra.svc.cluster.local"
+      - key: CASSANDRA_DC
+        pr: "dc1_k8s_test"
+        test: "dc1_k8s_test"
+        acceptance: "dc1_k8s_acce"
+        production: "dc1_k8s_prod"
+      - key: VAULT_ENABLED
+        all: "true"
+      - key: VAULT_ADDR
+        all: "https://vs.vdbinfra.nl/"
+      - key: DEPLOY_MODE
+        all: "cluster"
+      - key: ELASTICSEARCH_HOST
+        all: "elastic-es-http.elastic"
+  kubernetes:
+    activeDeadlineSeconds:
+      all: 86400
+    spark:
+      mainClass: "nl.vandebron.batterypack.enrichchargesessions.EnrichChargeSessionsJobMain"
+      mainApplicationFile: "local:///app/enrichchargesessionsjob-assembly-1.0.jar"
+    cron:
+      schedule: "0 7 * * *"
+    resources:
+      instances:
+        all: 2
+      limit:
+        cpus:
+          all: 1.0
+        mem:
+          all: 2048
+    policies:
+      - 'ev-star-readonly'
+      - 'vdb-star-readonly'
+    role:
+      resources:
+        - 'pods'
+        - 'configmaps'
+      verbs:
+        - 'get'
+        - 'watch'
+        - 'create'
+        - 'list'
+        - 'delete'
