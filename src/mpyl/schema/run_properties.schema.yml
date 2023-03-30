@@ -79,4 +79,4 @@ properties:
             type: ['string', 'null']
           tag:
             description: reference that points to the MPyL version
-            type: ['string', 'null']
+            type: ['string']
