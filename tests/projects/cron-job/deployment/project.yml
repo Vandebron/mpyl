@@ -2,9 +2,9 @@ name: 'enrichChargeSessionsJob'
 description: 'Job to enrich charge session with total amount earned'
 maintainer: [ 'Flex IoT' ]
 stages:
-  build: 'Sbt Build'
-  test: 'Sbt Test'
-  deploy: 'Kubernetes Spark Job Deploy'
+  build: Sbt Build
+  test: Sbt Test
+  deploy: Kubernetes Job Deploy
 deployment:
   namespace: 'batterypack-jobs'
   properties:
