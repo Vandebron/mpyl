@@ -9,5 +9,3 @@ build:
   versioning:
     revision: !ENV ${GIT_COMMIT:hash}
     branch: !ENV ${CHANGE_BRANCH}
-    pr_number: Null
-    tag: Null
