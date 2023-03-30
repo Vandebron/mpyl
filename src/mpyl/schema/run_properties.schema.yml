@@ -76,7 +76,7 @@ properties:
             type: string
           pr_number:
             description: id of the pull request
-            type: string
+            type: [string, null]
           tag:
             description: reference that points to the MPyL version
-            type: string
+            type: [string, null]
