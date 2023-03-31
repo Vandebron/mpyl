@@ -21,6 +21,6 @@ class DeployKubernetesJob(Step):
 
     def execute(self, step_input: Input) -> Output:
         builder = ChartBuilder(step_input)
-        is_cron_job = builder.deployment.kubernetes and builder.deployment.kubernetes.cron
-        chart = to_cron_job_chart(builder) if is_cron_job else to_job_chart(builder)
+        chart = builder.create_chart()
+
         return deploy_helm_chart(self._logger, chart, step_input, builder.release_name)

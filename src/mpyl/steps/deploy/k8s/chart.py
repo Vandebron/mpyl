@@ -129,6 +129,19 @@ class ChartBuilder:
         v1_probe.http_get = V1HTTPGetAction(path='/health' if path is None else path, port='port-0')
         return v1_probe
 
+    def create_chart(self) -> Dict[str, CustomResourceDefinition]:
+        if self.deployment.kubernetes is None:
+            raise KeyError('kubernetes field should be set for creating a kubernetes chart')
+
+        if self.deployment.kubernetes.spark:
+            chart = self.to_spark_chart()
+        elif self.deployment.kubernetes.cron:
+            chart = to_cron_job_chart(self)
+        else:
+            chart = to_job_chart(self)
+
+        return chart
+
     def to_service(self) -> V1Service:
         service_ports = list(map(lambda key: V1ServicePort(port=key, target_port=self.mappings[key], protocol="TCP",
                                                            name=f"{key}-webservice-port"), self.mappings.keys()))
