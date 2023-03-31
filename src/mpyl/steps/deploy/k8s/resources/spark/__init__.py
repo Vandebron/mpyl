@@ -13,9 +13,7 @@ def to_spark_body(spark: dict[str, str]) -> dict:
         'sparkConfigMap': 'release-name-log4j',
         'image': 'bigdataregistry.azurecr.io/send-slack-notification:PR-1231',
         'arguments': [
-            'python',
-            '-m',
-            'job_testing_mpl_k8s.main_send_slack_notification'
+            1
         ],
         'driver': {
             'cores': 1,
@@ -48,7 +46,8 @@ def to_spark_body(spark: dict[str, str]) -> dict:
         },
         'deps': {
             'jars': [
-                'https://repo1.maven.org/maven2/com/microsoft/sqlserver/mssql-jdbc/11.2.1.jre8/mssql-jdbc-11.2.1.jre8.jar'  # pylint: disable=line-too-long
+                'https://repo1.maven.org/maven2/com/microsoft/sqlserver/mssql-jdbc/11.2.1.jre8/mssql-jdbc-11.2.1.jre8.jar'
+                # pylint: disable=line-too-long
             ]
         },
         'sparkConf': {
