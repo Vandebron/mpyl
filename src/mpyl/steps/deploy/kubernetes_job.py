@@ -3,7 +3,7 @@
 from logging import Logger
 
 from .k8s import deploy_helm_chart
-from .k8s.chart import ChartBuilder, to_job_chart, to_cron_job_chart
+from .k8s.chart import ChartBuilder
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
 from ...project import Stage
