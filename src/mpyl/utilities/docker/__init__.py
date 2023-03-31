@@ -2,7 +2,7 @@
 import logging
 from dataclasses import dataclass
 from logging import Logger
-from typing import Dict, Optional, TypeVar
+from typing import Dict, Optional
 
 from python_on_whales import docker
 
