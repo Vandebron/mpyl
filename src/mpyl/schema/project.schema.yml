@@ -778,10 +778,10 @@ definitions:
         additionalProperties: false
         properties:
           mainClass:
-            description: '??'
+            description: 'MainClass is the fully-qualified main class of the Spark application.'
             type: string
           mainApplicationFile:
-            description: '??'
+            description: 'MainFile is the path to a bundled JAR, Python, or R file of the application.'
             type: string
       cron:
         description: 'CronJobSpec describes how the job execution will look like and when it
