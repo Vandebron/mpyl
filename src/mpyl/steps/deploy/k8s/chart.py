@@ -136,9 +136,9 @@ class ChartBuilder:
         if self.deployment.kubernetes.spark:
             chart = self.to_spark_chart()
         elif self.deployment.kubernetes.cron:
-            chart = to_cron_job_chart(self)
+            chart = self.to_cron_job_chart()
         else:
-            chart = to_job_chart(self)
+            chart = self.to_job_chart()
 
         return chart
 
@@ -284,42 +284,32 @@ class ChartBuilder:
         )
 
     def to_spark_chart(self) -> dict[str, CustomResourceDefinition]:
-        chart = {
-            'spark': self.to_spark_application(),
-            'serviceaccount': self.to_service_account()
-        }
+        chart = self._to_common_chart() | {'spark': self.to_spark_application()}
+
+        return chart
+
+    def to_service_chart(self) -> dict[str, CustomResourceDefinition]:
+        chart = self._to_common_chart() | {'deployment': self.to_deployment(), 'service': self.to_service()}
+
+        if self.deployment.traefik:
+            chart['ingress-https-route'] = self.to_ingress_routes()
+
+        return chart
+
+    def to_job_chart(self) -> dict[str, CustomResourceDefinition]:
+        chart = self._to_common_chart() | {'job': self.to_job()}
+
+        return chart
+
+    def to_cron_job_chart(self) -> dict[str, CustomResourceDefinition]:
+        chart = self._to_common_chart() | {'cronjob': self.to_cron_job()}
+
+        return chart
+
+    def _to_common_chart(self) -> dict[str, CustomResourceDefinition]:
+        chart = {'serviceaccount': self.to_service_account()}
 
         if self.sealed_secrets:
             chart['sealedsecrets'] = self.to_sealed_secrets()
 
         return chart
-
-
-def to_service_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
-    chart = {'deployment': builder.to_deployment(), 'serviceaccount': builder.to_service_account(),
-             'service': builder.to_service()}
-    if builder.sealed_secrets:
-        chart['sealedsecrets'] = builder.to_sealed_secrets()
-
-    if builder.deployment.traefik:
-        chart['ingress-https-route'] = builder.to_ingress_routes()
-
-    return chart
-
-
-def to_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
-    chart = {'job': builder.to_job(), 'serviceaccount': builder.to_service_account()}
-
-    if builder.sealed_secrets:
-        chart['sealedsecrets'] = builder.to_sealed_secrets()
-
-    return chart
-
-
-def to_cron_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
-    chart = {'cronjob': builder.to_cron_job(), 'serviceaccount': builder.to_service_account()}
-
-    if builder.sealed_secrets:
-        chart['sealedsecrets'] = builder.to_sealed_secrets()
-
-    return chart
