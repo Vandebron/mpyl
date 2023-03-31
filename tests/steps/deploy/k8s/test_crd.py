@@ -6,8 +6,8 @@ from mpyl.project import load_project
 from mpyl.steps import Input
 from mpyl.steps.deploy.k8s.chart import ChartBuilder
 from mpyl.steps.deploy.k8s.resources.crd import to_yaml
-from test_resources import test_data
 from tests import root_test_path
+from tests.test_resources import test_data
 
 
 def get_builder_for_resource(resource_path: Path) -> ChartBuilder:
@@ -31,6 +31,7 @@ class TestCrdChart:
     def test_validate_crd_spark_chart(self):
         resource_path = root_test_path / 'projects' / 'spark-job' / 'deployment'
         chart = get_builder_for_resource(resource_path).create_chart()
+
         chart['spark'].spec['arguments'] = [1]  # arguments should be a list of string
 
         with pytest.raises(ValueError):
