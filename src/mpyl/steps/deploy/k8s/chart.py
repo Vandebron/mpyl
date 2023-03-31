@@ -14,7 +14,9 @@ from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1Obj
 from ruamel.yaml import YAML
 
 from .resources.crd import CustomResourceDefinition, to_dict  # pylint: disable = no-name-in-module
-from .resources.customresources import V1AlphaIngressRoute, V1SealedSecret  # pylint: disable = no-name-in-module
+from .resources.customresources import V1AlphaIngressRoute, V1SealedSecret, \
+    V1SparkApplication  # pylint: disable = no-name-in-module
+from .resources.spark import to_spark_body
 from ...models import Input, ArtifactType
 from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target
 
@@ -156,6 +158,12 @@ class ChartBuilder:
         v1_cron_job_spec: V1CronJobSpec = ChartBuilder._to_k8s_model(values, V1CronJobSpec)
         return V1CronJob(api_version='batch/v1', kind='CronJob', metadata=self._to_object_meta(), spec=v1_cron_job_spec)
 
+    def to_spark_application(self) -> V1SparkApplication:
+        return V1SparkApplication(
+            schedule=self.step_input.project.kubernetes.cron['schedule'],
+            body=to_spark_body(self.step_input.project.kubernetes.spark),
+        )
+
     def to_ingress_routes(self) -> V1AlphaIngressRoute:
         if self.deployment.traefik is None:
             raise AttributeError("deployment.traefik field should be set")
@@ -261,6 +269,17 @@ class ChartBuilder:
                 selector=self._to_selector(),
             ),
         )
+
+    def to_spark_chart(self) -> dict[str, CustomResourceDefinition]:
+        chart = {
+            'spark': self.to_spark_application(),
+            'serviceaccount': self.to_service_account()
+        }
+
+        if self.sealed_secrets:
+            chart['sealedsecrets'] = self.to_sealed_secrets()
+
+        return chart
 
 
 def to_service_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:

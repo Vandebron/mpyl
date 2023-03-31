@@ -31,13 +31,13 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
 class V1SparkApplication(CustomResourceDefinition):
     def __init__(self, schedule: Optional[str], body: dict):
         if schedule:
-            super().__init__(api_version="apiextensions.k8s.io/v1", kind="ScheduledSparkApplication",
+            super().__init__(api_version="sparkoperator.k8s.io/v1beta2", kind="ScheduledSparkApplication",
                              metadata=V1ObjectMeta(name="sparkapplications.sparkoperator.k8s.io"),
                              schema="sparkoperator.k8s.io_scheduledsparkapplications.yaml",
                              spec={'schedule': schedule,
                                    'template': body})
         else:
-            super().__init__(api_version="apiextensions.k8s.io/v1", kind="SparkApplication",
+            super().__init__(api_version="sparkoperator.k8s.io/v1beta2", kind="SparkApplication",
                              metadata=V1ObjectMeta(name="sparkapplications.sparkoperator.k8s.io"),
                              schema="sparkoperator.k8s.io_sparkapplications.yaml",
                              spec={'spec': body})
