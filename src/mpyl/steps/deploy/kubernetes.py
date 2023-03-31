@@ -3,7 +3,7 @@
 from logging import Logger
 
 from .k8s import deploy_helm_chart
-from .k8s.chart import ChartBuilder, to_service_chart
+from .k8s.chart import ChartBuilder
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
 from ...project import Stage
@@ -21,4 +21,4 @@ class DeployKubernetes(Step):
 
     def execute(self, step_input: Input) -> Output:
         builder = ChartBuilder(step_input)
-        return deploy_helm_chart(self._logger, to_service_chart(builder), step_input, builder.release_name)
+        return deploy_helm_chart(self._logger, builder.to_service_chart(), step_input, builder.release_name)
