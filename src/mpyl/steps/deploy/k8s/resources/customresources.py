@@ -1,10 +1,12 @@
 """
 Custom Resource Definitions, implementing `mpyl.steps.deploy.k8s.resources.crd.CustomResourceDefinition`
 """
+from typing import Optional
+
 from kubernetes.client import V1ObjectMeta
 
-from .....project import Host, Target
 from .crd import CustomResourceDefinition
+from .....project import Host, Target
 
 
 class V1SealedSecret(CustomResourceDefinition):
@@ -24,3 +26,18 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
 
         super().__init__(api_version='traefik.containo.us/v1alpha1', kind="IngressRoute", metadata=metadata,
                          spec={'routes': routes}, schema='traeffik.schema.yml')
+
+
+class V1SparkApplication(CustomResourceDefinition):
+    def __init__(self, schedule: Optional[str], body: dict):
+        if schedule:
+            super().__init__(api_version="apiextensions.k8s.io/v1", kind="ScheduledSparkApplication",
+                             metadata=V1ObjectMeta(name="sparkapplications.sparkoperator.k8s.io"),
+                             schema="sparkoperator.k8s.io_scheduledsparkapplications.yaml",
+                             spec={'schedule': schedule,
+                                   'template': body})
+        else:
+            super().__init__(api_version="apiextensions.k8s.io/v1", kind="SparkApplication",
+                             metadata=V1ObjectMeta(name="sparkapplications.sparkoperator.k8s.io"),
+                             schema="sparkoperator.k8s.io_sparkapplications.yaml",
+                             spec={'spec': body})
