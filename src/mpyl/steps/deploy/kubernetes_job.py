@@ -21,6 +21,6 @@ class DeployKubernetesJob(Step):
 
     def execute(self, step_input: Input) -> Output:
         builder = ChartBuilder(step_input)
-        chart = builder.create_chart()
+        chart = builder.create_job_chart()
 
         return deploy_helm_chart(self._logger, chart, step_input, builder.release_name)
