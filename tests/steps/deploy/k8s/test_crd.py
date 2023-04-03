@@ -32,7 +32,7 @@ class TestCrdChart:
         resource_path = root_test_path / 'projects' / 'spark-job' / 'deployment'
         chart = get_builder_for_resource(resource_path).create_chart()
 
-        chart['spark'].spec['arguments'] = [1]  # arguments should be a list of string
+        chart['spark'].spec = {'arguments': [1]}  # arguments should be a list of string
 
         with pytest.raises(ValueError):
             to_yaml(chart['spark'])
