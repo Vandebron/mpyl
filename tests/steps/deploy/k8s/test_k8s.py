@@ -12,7 +12,8 @@ from src.mpyl.steps.models import Input, Artifact, ArtifactType
 from src.mpyl.utilities.docker import DockerConfig
 from tests import root_test_path
 from tests.test_resources import test_data
-from tests.test_resources.test_data import assert_roundtrip, get_project, get_job_project
+from tests.test_resources.test_data import assert_roundtrip, get_project, get_job_project, get_spark_project, \
+    get_cron_job_project
 
 
 class TestKubernetesChart:
@@ -93,10 +94,16 @@ class TestKubernetesChart:
     @pytest.mark.parametrize('template', ['job', 'serviceaccount', 'sealedsecrets'])
     def test_job_chart_roundtrip(self, template):
         builder = self._get_builder(get_job_project())
-        chart = builder.to_job_chart()
+        chart = builder.create_chart()
         self._roundtrip(self.template_path / "job", template, chart)
 
     def test_cron_job_chart_roundtrip(self):
-        builder = self._get_builder(get_job_project())
-        chart = builder.to_cron_job_chart()
+        builder = self._get_builder(get_cron_job_project())
+        chart = builder.create_chart()
         self._roundtrip(self.template_path / "cronjob", 'cronjob', chart)
+
+    @pytest.mark.parametrize('template', ['spark', 'serviceaccount'])
+    def test_spark_chart_roundtrip(self, template):
+        builder = self._get_builder(get_spark_project())
+        chart = builder.create_chart()
+        self._roundtrip(self.template_path / "spark", template, chart)
