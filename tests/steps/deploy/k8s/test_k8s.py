@@ -85,25 +85,25 @@ class TestKubernetesChart:
         assert "Schema validation failed with 1234 is not of type 'string'" in str(exc_info.value)
 
     @pytest.mark.parametrize('template',
-                             ['deployment', 'service', 'serviceaccount', 'sealedsecrets', 'ingress-https-route'])
+                             ['deployment', 'service', 'service-account', 'sealed-secrets', 'ingress-https-route'])
     def test_service_chart_roundtrip(self, template):
         builder = self._get_builder(get_project())
         chart = builder.to_service_chart()
         self._roundtrip(self.template_path / "service", template, chart)
 
-    @pytest.mark.parametrize('template', ['job', 'serviceaccount', 'sealedsecrets'])
+    @pytest.mark.parametrize('template', ['job', 'service-account', 'sealed-secrets'])
     def test_job_chart_roundtrip(self, template):
         builder = self._get_builder(get_job_project())
-        chart = builder.create_chart()
+        chart = builder.create_job_chart()
         self._roundtrip(self.template_path / "job", template, chart)
 
     def test_cron_job_chart_roundtrip(self):
         builder = self._get_builder(get_cron_job_project())
-        chart = builder.create_chart()
+        chart = builder.create_job_chart()
         self._roundtrip(self.template_path / "cronjob", 'cronjob', chart)
 
-    @pytest.mark.parametrize('template', ['spark', 'serviceaccount'])
+    @pytest.mark.parametrize('template', ['spark', 'service-account', 'config-map'])
     def test_spark_chart_roundtrip(self, template):
         builder = self._get_builder(get_spark_project())
-        chart = builder.create_chart()
+        chart = builder.create_job_chart()
         self._roundtrip(self.template_path / "spark", template, chart)

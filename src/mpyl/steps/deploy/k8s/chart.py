@@ -10,13 +10,13 @@ from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1Obj
     V1RollingUpdateDeployment, V1LabelSelector, V1ContainerPort, V1EnvVar, V1Service, \
     V1ServiceSpec, V1ServicePort, V1ServiceAccount, V1LocalObjectReference, \
     V1EnvVarSource, V1SecretKeySelector, V1Probe, ApiClient, V1HTTPGetAction, V1ResourceRequirements, \
-    V1PodTemplateSpec, V1DeploymentStrategy, V1Job, V1JobSpec, V1CronJob, V1CronJobSpec, V1JobTemplateSpec
+    V1PodTemplateSpec, V1DeploymentStrategy, V1Job, V1JobSpec, V1CronJob, V1CronJobSpec, V1JobTemplateSpec, V1ConfigMap
 from ruamel.yaml import YAML
 
 from .resources.crd import CustomResourceDefinition, to_dict  # pylint: disable = no-name-in-module
 from .resources.customresources import V1AlphaIngressRoute, V1SealedSecret, \
     V1SparkApplication  # pylint: disable = no-name-in-module
-from .resources.spark import to_spark_body
+from .resources.spark import to_spark_body, get_spark_config_map_data
 from ...models import Input, ArtifactType
 from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target
 
@@ -129,16 +129,16 @@ class ChartBuilder:
         v1_probe.http_get = V1HTTPGetAction(path='/health' if path is None else path, port='port-0')
         return v1_probe
 
-    def create_chart(self) -> Dict[str, CustomResourceDefinition]:
+    def create_job_chart(self) -> Dict[str, CustomResourceDefinition]:
         if self.deployment.kubernetes is None:
             raise KeyError('kubernetes field should be set for creating a kubernetes chart')
 
         if self.deployment.kubernetes.spark:
-            chart = self.to_spark_chart()
+            chart = self._to_spark_chart()
         elif self.deployment.kubernetes.cron:
-            chart = self.to_cron_job_chart()
+            chart = self._to_cron_job_chart()
         else:
-            chart = self.to_job_chart()
+            chart = self._to_job_chart()
 
         return chart
 
@@ -283,8 +283,16 @@ class ChartBuilder:
             ),
         )
 
-    def to_spark_chart(self) -> dict[str, CustomResourceDefinition]:
-        chart = self._to_common_chart() | {'spark': self.to_spark_application()}
+    def _to_spark_chart(self) -> dict[str, CustomResourceDefinition]:
+        chart = self._to_common_chart() | {
+            'spark': self.to_spark_application(),
+            'config-map': V1ConfigMap(
+                api_version='v1',
+                kind='ConfigMap',
+                data=get_spark_config_map_data(),
+                metadata=self._to_object_meta()
+            )
+        }
 
         return chart
 
@@ -296,20 +304,20 @@ class ChartBuilder:
 
         return chart
 
-    def to_job_chart(self) -> dict[str, CustomResourceDefinition]:
+    def _to_job_chart(self) -> dict[str, CustomResourceDefinition]:
         chart = self._to_common_chart() | {'job': self.to_job()}
 
         return chart
 
-    def to_cron_job_chart(self) -> dict[str, CustomResourceDefinition]:
+    def _to_cron_job_chart(self) -> dict[str, CustomResourceDefinition]:
         chart = self._to_common_chart() | {'cronjob': self.to_cron_job()}
 
         return chart
 
     def _to_common_chart(self) -> dict[str, CustomResourceDefinition]:
-        chart = {'serviceaccount': self.to_service_account()}
+        chart = {'service-account': self.to_service_account()}
 
         if self.sealed_secrets:
-            chart['sealedsecrets'] = self.to_sealed_secrets()
+            chart['sealed-secrets'] = self.to_sealed_secrets()
 
         return chart
