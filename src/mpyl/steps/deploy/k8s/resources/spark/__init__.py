@@ -13,7 +13,9 @@ def to_spark_body(spark: dict[str, str]) -> dict:
         'sparkConfigMap': 'release-name-log4j',
         'image': 'bigdataregistry.azurecr.io/send-slack-notification:PR-1231',
         'arguments': [
-            1
+            'python',
+            '-m',
+            'job_testing_mpl_k8s.main_send_slack_notification'
         ],
         'driver': {
             'cores': 1,
