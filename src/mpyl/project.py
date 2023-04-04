@@ -198,6 +198,7 @@ class Kubernetes:
     metrics: Optional[Metrics]
     resources: Resources
     cron: dict
+    spark: dict
 
     @staticmethod
     def from_config(values: dict):
@@ -212,7 +213,8 @@ class Kubernetes:
             startup_probe=Probe.from_config(startup_probe) if startup_probe else None,
             metrics=Metrics.from_config(metrics) if metrics else None,
             resources=Resources.from_config(resources) if resources else None,
-            cron=values.get('cron', {})
+            cron=values.get('cron', {}),
+            spark=values.get('spark', {})
         )
 
 

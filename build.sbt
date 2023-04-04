@@ -1,4 +1,4 @@
-name := "sbt-multi-project-example"
+name                     := "sbt-multi-project-example"
 ThisBuild / organization := "vandebron.nl"
 
 lazy val mpyl = project
@@ -6,3 +6,5 @@ lazy val mpyl = project
   .aggregate(sbtservice)
 
 lazy val sbtservice = (project in file("tests/projects/sbt-service")).settings(name := "sbtservice")
+lazy val enrichChargeSessionsJob =
+  (project in file("tests/projects/spark-job")).settings(name := "enrichChargeSessionsJob")

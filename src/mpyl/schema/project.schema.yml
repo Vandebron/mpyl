@@ -773,6 +773,16 @@ definitions:
         properties:
           name:
             type: string
+      spark:
+        type: object
+        additionalProperties: false
+        properties:
+          mainClass:
+            description: 'MainClass is the fully-qualified main class of the Spark application.'
+            type: string
+          mainApplicationFile:
+            description: 'MainFile is the path to a bundled JAR, Python, or R file of the application.'
+            type: string
       cron:
         description: 'CronJobSpec describes how the job execution will look like and when it
           will actually run. Identical to See https://kubernetesjsonschema.dev/v1.14.0/_definitions.json#/definitions/io.k8s.api.batch.v1beta1.CronJobSpec

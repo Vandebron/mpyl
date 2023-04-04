@@ -5,14 +5,15 @@ from kubernetes.client import V1Probe, V1ObjectMeta
 from pyaml_env import parse_config
 
 from src.mpyl.project import Target, Project
-from src.mpyl.steps.deploy.k8s.chart import ChartBuilder, to_service_chart, to_job_chart, to_cron_job_chart
+from src.mpyl.steps.deploy.k8s.chart import ChartBuilder
 from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml, CustomResourceDefinition
 from src.mpyl.steps.deploy.k8s.resources.customresources import V1AlphaIngressRoute
 from src.mpyl.steps.models import Input, Artifact, ArtifactType
 from src.mpyl.utilities.docker import DockerConfig
 from tests import root_test_path
 from tests.test_resources import test_data
-from tests.test_resources.test_data import assert_roundtrip, get_project, get_job_project
+from tests.test_resources.test_data import assert_roundtrip, get_project, get_job_project, get_spark_project, \
+    get_cron_job_project
 
 
 class TestKubernetesChart:
@@ -84,19 +85,25 @@ class TestKubernetesChart:
         assert "Schema validation failed with 1234 is not of type 'string'" in str(exc_info.value)
 
     @pytest.mark.parametrize('template',
-                             ['deployment', 'service', 'serviceaccount', 'sealedsecrets', 'ingress-https-route'])
+                             ['deployment', 'service', 'service-account', 'sealed-secrets', 'ingress-https-route'])
     def test_service_chart_roundtrip(self, template):
         builder = self._get_builder(get_project())
-        chart = to_service_chart(builder)
+        chart = builder.to_service_chart()
         self._roundtrip(self.template_path / "service", template, chart)
 
-    @pytest.mark.parametrize('template', ['job', 'serviceaccount', 'sealedsecrets'])
+    @pytest.mark.parametrize('template', ['job', 'service-account', 'sealed-secrets'])
     def test_job_chart_roundtrip(self, template):
         builder = self._get_builder(get_job_project())
-        chart = to_job_chart(builder)
+        chart = builder.create_job_chart()
         self._roundtrip(self.template_path / "job", template, chart)
 
     def test_cron_job_chart_roundtrip(self):
-        builder = self._get_builder(get_job_project())
-        chart = to_cron_job_chart(builder)
+        builder = self._get_builder(get_cron_job_project())
+        chart = builder.create_job_chart()
         self._roundtrip(self.template_path / "cronjob", 'cronjob', chart)
+
+    @pytest.mark.parametrize('template', ['spark', 'service-account', 'config-map'])
+    def test_spark_chart_roundtrip(self, template):
+        builder = self._get_builder(get_spark_project())
+        chart = builder.create_job_chart()
+        self._roundtrip(self.template_path / "spark", template, chart)
