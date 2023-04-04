@@ -6,8 +6,8 @@ from . import ProjectWithDependents, Protocol, Contract, Dependency
 from ..project import Project, load_project, Stage
 
 
-def load_projects(root_dir: Path, paths: list[str]) -> set[Project]:
-    return set(map(lambda p: load_project(root_dir, Path(p), False), paths))
+def load_projects(root_dir: Path, paths: list[str], strict: bool = False) -> set[Project]:
+    return set(map(lambda p: load_project(root_dir, Path(p), strict), paths))
 
 
 def find_by_contract_dep(dep: str, projects: list[ProjectWithDependents]) -> Optional[ProjectWithDependents]:

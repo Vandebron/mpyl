@@ -1,0 +1,62 @@
+apiVersion: sparkoperator.k8s.io/v1beta2
+kind: ScheduledSparkApplication
+metadata:
+  name: sparkapplications.sparkoperator.k8s.io
+spec:
+  schedule: 0 7 * * *
+  template:
+    type: Scala
+    mode: cluster
+    imagePullPolicy: Always
+    sparkVersion: 3.1.1
+    restartPolicy:
+      type: Never
+    sparkConfigMap: enrichChargeSessionsJob
+    image: bigdataregistry.azurecr.io/send-slack-notification:PR-1231
+    arguments:
+    - python
+    - -m
+    - job_testing_mpl_k8s.main_send_slack_notification
+    driver:
+      cores: 1
+      coreLimit: 1200m
+      memory: 5G
+      memoryOverhead: '1024'
+      labels:
+        version: 3.1.1
+      serviceAccount: enrichChargeSessionsJob
+      envVars:
+        DEPLOY_ENV: Test
+        APP_NAME: enrichChargeSessionsJob
+        CASSANDRA_HOST: cassandra.cassandra.svc.cluster.local
+        CASSANDRA_DC: dc1_k8s_test
+        VAULT_ENABLED: 'true'
+        VAULT_ADDR: https://vs.vdbinfra.nl/
+        DEPLOY_MODE: cluster
+        ELASTICSEARCH_HOST: elastic-es-http.elastic
+    executor:
+      cores: 1
+      instances: 1
+      memory: 3G
+      memoryOverhead: '2048'
+      labels:
+        version: 3.1.1
+      envVars:
+        DEPLOY_ENV: Test
+        APP_NAME: enrichChargeSessionsJob
+        CASSANDRA_HOST: cassandra.cassandra.svc.cluster.local
+        CASSANDRA_DC: dc1_k8s_test
+        VAULT_ENABLED: 'true'
+        VAULT_ADDR: https://vs.vdbinfra.nl/
+        DEPLOY_MODE: cluster
+        ELASTICSEARCH_HOST: elastic-es-http.elastic
+    deps:
+      jars:
+      - https://repo1.maven.org/maven2/com/microsoft/sqlserver/mssql-jdbc/11.2.1.jre8/mssql-jdbc-11.2.1.jre8.jar
+    sparkConf:
+      spark.driver.extraClassPath: mssql-jdbc-11.2.1.jre8.jar
+      spark.executor.extraClassPath: mssql-jdbc-11.2.1.jre8.jar
+      spark.sql.legacy.timeParserPolicy: LEGACY
+      spark.sql.broadcastTimeout: '600'
+    mainClass: nl.vandebron.batterypack.enrichchargesessions.EnrichChargeSessionsJobMain
+    mainApplicationFile: local:///app/enrichchargesessionsjob-assembly-1.0.jar
