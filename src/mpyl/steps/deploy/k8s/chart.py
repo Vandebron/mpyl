@@ -10,11 +10,13 @@ from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1Obj
     V1RollingUpdateDeployment, V1LabelSelector, V1ContainerPort, V1EnvVar, V1Service, \
     V1ServiceSpec, V1ServicePort, V1ServiceAccount, V1LocalObjectReference, \
     V1EnvVarSource, V1SecretKeySelector, V1Probe, ApiClient, V1HTTPGetAction, V1ResourceRequirements, \
-    V1PodTemplateSpec, V1DeploymentStrategy, V1Job, V1JobSpec, V1CronJob, V1CronJobSpec, V1JobTemplateSpec
+    V1PodTemplateSpec, V1DeploymentStrategy, V1Job, V1JobSpec, V1CronJob, V1CronJobSpec, V1JobTemplateSpec, V1ConfigMap
 from ruamel.yaml import YAML
 
 from .resources.crd import CustomResourceDefinition, to_dict  # pylint: disable = no-name-in-module
-from .resources.customresources import V1AlphaIngressRoute, V1SealedSecret  # pylint: disable = no-name-in-module
+from .resources.customresources import V1AlphaIngressRoute, V1SealedSecret, \
+    V1SparkApplication  # pylint: disable = no-name-in-module
+from .resources.spark import to_spark_body, get_spark_config_map_data
 from ...models import Input, ArtifactType
 from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target
 
@@ -127,6 +129,19 @@ class ChartBuilder:
         v1_probe.http_get = V1HTTPGetAction(path='/health' if path is None else path, port='port-0')
         return v1_probe
 
+    def create_job_chart(self) -> Dict[str, CustomResourceDefinition]:
+        if self.deployment.kubernetes is None:
+            raise KeyError('kubernetes field should be set for creating a kubernetes chart')
+
+        if self.deployment.kubernetes.spark:
+            chart = self._to_spark_chart()
+        elif self.deployment.kubernetes.cron:
+            chart = self._to_cron_job_chart()
+        else:
+            chart = self._to_job_chart()
+
+        return chart
+
     def to_service(self) -> V1Service:
         service_ports = list(map(lambda key: V1ServicePort(port=key, target_port=self.mappings[key], protocol="TCP",
                                                            name=f"{key}-webservice-port"), self.mappings.keys()))
@@ -155,6 +170,12 @@ class ChartBuilder:
         values['jobTemplate'] = template_dict
         v1_cron_job_spec: V1CronJobSpec = ChartBuilder._to_k8s_model(values, V1CronJobSpec)
         return V1CronJob(api_version='batch/v1', kind='CronJob', metadata=self._to_object_meta(), spec=v1_cron_job_spec)
+
+    def to_spark_application(self) -> V1SparkApplication:
+        return V1SparkApplication(
+            schedule=self.project.kubernetes.cron['schedule'],
+            body=to_spark_body(self.project, self.target),
+        )
 
     def to_ingress_routes(self) -> V1AlphaIngressRoute:
         if self.deployment.traefik is None:
@@ -262,32 +283,41 @@ class ChartBuilder:
             ),
         )
 
+    def _to_spark_chart(self) -> dict[str, CustomResourceDefinition]:
+        chart = self._to_common_chart() | {
+            'spark': self.to_spark_application(),
+            'config-map': V1ConfigMap(
+                api_version='v1',
+                kind='ConfigMap',
+                data=get_spark_config_map_data(),
+                metadata=self._to_object_meta()
+            )
+        }
 
-def to_service_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
-    chart = {'deployment': builder.to_deployment(), 'serviceaccount': builder.to_service_account(),
-             'service': builder.to_service()}
-    if builder.sealed_secrets:
-        chart['sealedsecrets'] = builder.to_sealed_secrets()
+        return chart
 
-    if builder.deployment.traefik:
-        chart['ingress-https-route'] = builder.to_ingress_routes()
+    def to_service_chart(self) -> dict[str, CustomResourceDefinition]:
+        chart = self._to_common_chart() | {'deployment': self.to_deployment(), 'service': self.to_service()}
 
-    return chart
+        if self.deployment.traefik:
+            chart['ingress-https-route'] = self.to_ingress_routes()
 
+        return chart
 
-def to_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
-    chart = {'job': builder.to_job(), 'serviceaccount': builder.to_service_account()}
+    def _to_job_chart(self) -> dict[str, CustomResourceDefinition]:
+        chart = self._to_common_chart() | {'job': self.to_job()}
 
-    if builder.sealed_secrets:
-        chart['sealedsecrets'] = builder.to_sealed_secrets()
+        return chart
 
-    return chart
+    def _to_cron_job_chart(self) -> dict[str, CustomResourceDefinition]:
+        chart = self._to_common_chart() | {'cronjob': self.to_cron_job()}
 
+        return chart
 
-def to_cron_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
-    chart = {'cronjob': builder.to_cron_job(), 'serviceaccount': builder.to_service_account()}
+    def _to_common_chart(self) -> dict[str, CustomResourceDefinition]:
+        chart = {'service-account': self.to_service_account()}
 
-    if builder.sealed_secrets:
-        chart['sealedsecrets'] = builder.to_sealed_secrets()
+        if self.sealed_secrets:
+            chart['sealed-secrets'] = self.to_sealed_secrets()
 
-    return chart
+        return chart

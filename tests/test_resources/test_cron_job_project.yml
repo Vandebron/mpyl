@@ -17,26 +17,12 @@ deployment:
         acceptance: "Acceptance"
         production: "Production"
   kubernetes:
-    livenessProbe:
-      path:
-        all: /health
-      successThreshold: 0
-      failureThreshold: 99
-      grpc:
-        port: 123
-        service: 'grpcService'
-    portMappings:
-      8080: 8080
-    metrics:
-      enabled: false
-    resources:
-      instances:
-        all: 1
-      limit:
-        cpus:
-          all: 0.5
-        mem:
-          all: 1024
+    cron:
+      suspend: true
+      schedule: "0 22 * * *"
+      successfulJobsHistoryLimit: 3
+      failedJobsHistoryLimit: 1
+      concurrencyPolicy: Allow
 dependencies:
   test:
     - tests/projects/service/file.py
