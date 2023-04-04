@@ -173,8 +173,8 @@ class ChartBuilder:
 
     def to_spark_application(self) -> V1SparkApplication:
         return V1SparkApplication(
-            schedule=self.step_input.project.kubernetes.cron['schedule'],
-            body=to_spark_body(self.step_input.project.kubernetes.spark),
+            schedule=self.project.kubernetes.cron['schedule'],
+            body=to_spark_body(self.project, self.target),
         )
 
     def to_ingress_routes(self) -> V1AlphaIngressRoute:
