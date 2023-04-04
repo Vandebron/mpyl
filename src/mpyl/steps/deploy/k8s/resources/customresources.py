@@ -33,11 +33,11 @@ class V1SparkApplication(CustomResourceDefinition):
         if schedule:
             super().__init__(api_version="sparkoperator.k8s.io/v1beta2", kind="ScheduledSparkApplication",
                              metadata=V1ObjectMeta(name="sparkapplications.sparkoperator.k8s.io"),
-                             schema="sparkoperator.k8s.io_scheduledsparkapplications.yml",
+                             schema="sparkoperator.k8s.io_scheduledsparkapplications.schema.yml",
                              spec={'schedule': schedule,
                                    'template': body})
         else:
             super().__init__(api_version="sparkoperator.k8s.io/v1beta2", kind="SparkApplication",
                              metadata=V1ObjectMeta(name="sparkapplications.sparkoperator.k8s.io"),
-                             schema="sparkoperator.k8s.io_sparkapplications.yml",
+                             schema="sparkoperator.k8s.io_sparkapplications.schema.yml",
                              spec={'spec': body})
