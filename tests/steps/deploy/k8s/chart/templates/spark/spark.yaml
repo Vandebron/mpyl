@@ -24,10 +24,16 @@ spec:
       memoryOverhead: '1024'
       labels:
         version: 3.1.1
-      serviceAccount: release-name-job
+      serviceAccount: enrichChargeSessionsJob
       envVars:
-        DA_SLACK_BOT_TOKEN: xoxb-65778094515-2212272125044-E7qttf3XLQi2vaL0dGkBstLD
-        DEPLOY_ENV: test
+        DEPLOY_ENV: Test
+        APP_NAME: enrichChargeSessionsJob
+        CASSANDRA_HOST: cassandra.cassandra.svc.cluster.local
+        CASSANDRA_DC: dc1_k8s_test
+        VAULT_ENABLED: 'true'
+        VAULT_ADDR: https://vs.vdbinfra.nl/
+        DEPLOY_MODE: cluster
+        ELASTICSEARCH_HOST: elastic-es-http.elastic
     executor:
       cores: 1
       instances: 1
@@ -36,8 +42,14 @@ spec:
       labels:
         version: 3.1.1
       envVars:
-        DA_SLACK_BOT_TOKEN: xoxb-65778094515-2212272125044-E7qttf3XLQi2vaL0dGkBstLD
-        DEPLOY_ENV: test
+        DEPLOY_ENV: Test
+        APP_NAME: enrichChargeSessionsJob
+        CASSANDRA_HOST: cassandra.cassandra.svc.cluster.local
+        CASSANDRA_DC: dc1_k8s_test
+        VAULT_ENABLED: 'true'
+        VAULT_ADDR: https://vs.vdbinfra.nl/
+        DEPLOY_MODE: cluster
+        ELASTICSEARCH_HOST: elastic-es-http.elastic
     deps:
       jars:
       - https://repo1.maven.org/maven2/com/microsoft/sqlserver/mssql-jdbc/11.2.1.jre8/mssql-jdbc-11.2.1.jre8.jar
