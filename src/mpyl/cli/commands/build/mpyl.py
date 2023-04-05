@@ -97,7 +97,7 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter
 
 def find_build_set(repo: Repository, changes_in_branch, build_all: bool) -> dict[Stage, set[Project]]:
     project_paths = repo.find_projects()
-    all_projects = set(map(lambda p: load_project(Path(""), Path(p), False), project_paths))
+    all_projects = set(map(lambda p: load_project(Path(""), Path(p), True), project_paths))
 
     if build_all:
         return {Stage.BUILD: for_stage(all_projects, Stage.BUILD),
