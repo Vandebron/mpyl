@@ -125,19 +125,22 @@ class Steps:
                 artifact: Optional[Artifact] = self._find_required_artifact(project, executor.required_artifact)
                 result = Output(success=True, message='')
                 if executor.before:
-                    result = self._execute(executor.before, project, self._properties,
-                                           self._find_required_artifact(project, executor.before.required_artifact),
-                                           dry_run)
+                    for before_step in executor.before:
+                        result = self._execute(before_step, project, self._properties,
+                                               self._find_required_artifact(project, before_step.required_artifact),
+                                               dry_run)
                 if result.success:
                     result = self._execute(executor, project, self._properties, artifact, dry_run)
                     result.write(project.target_path, stage)
+
                 if executor.after:
-                    main_step_artifact = result.produced_artifact
-                    result = self._execute(executor.after, project, self._properties, result.produced_artifact, dry_run)
-                    if result.produced_artifact and result.produced_artifact.artifact_type != ArtifactType.NONE:
-                        result.write(project.target_path, stage)
-                    else:
-                        result.produced_artifact = main_step_artifact
+                    for after_step in executor.after:
+                        main_step_artifact = result.produced_artifact
+                        result = self._execute(after_step, project, self._properties, result.produced_artifact, dry_run)
+                        if result.produced_artifact and result.produced_artifact.artifact_type != ArtifactType.NONE:
+                            result.write(project.target_path, stage)
+                        else:
+                            result.produced_artifact = main_step_artifact
 
                 return result
             except Exception as exc:

@@ -6,6 +6,7 @@ from pathlib import Path
 from python_on_whales import docker
 
 from .after_test import IntegrationTestAfter
+from .dockerscan import ScanDocker
 from .before_test import IntegrationTestBefore
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType, input_to_artifact, Artifact
@@ -21,8 +22,8 @@ class TestDocker(Step):
             logger=logger, meta=meta,
             produced_artifact=ArtifactType.JUNIT_TESTS,
             required_artifact=ArtifactType.NONE,
-            before=IntegrationTestBefore(logger),
-            after=IntegrationTestAfter(logger)
+            before=[IntegrationTestBefore(logger)],
+            after=[ScanDocker(logger), IntegrationTestAfter(logger)]
         )
 
     def execute(self, step_input: Input) -> Output:
