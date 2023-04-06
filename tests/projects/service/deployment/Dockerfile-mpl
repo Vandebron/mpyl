@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.4
-FROM node:12.18.2 AS installer
+FROM node:16.20.0-bullseye-slim AS installer
 COPY --link tests/projects/service/ /tests/projects/service/
 WORKDIR /tests/projects/service
 RUN yarn install
@@ -10,3 +10,8 @@ ENTRYPOINT [ "yarn", "start" ]
 FROM installer as tester
 RUN mkdir -p /tests/projects/service/target/test-reports/
 RUN yarn test-ci
+
+FROM installer as scanner
+## Run vulnerability scan on build image
+COPY --from=aquasec/trivy:0.39.0 /usr/local/bin/trivy /usr/local/bin/trivy
+RUN TRIVY_INSECURE=true trivy fs --exit-code 1 --ignore-unfixed -s high /

@@ -20,7 +20,7 @@ class BuildDocker(Step):
             version='0.0.1',
             stage=Stage.BUILD
         ), produced_artifact=ArtifactType.DOCKER_IMAGE, required_artifact=ArtifactType.NONE,
-                         after=AfterBuildDocker(logger=logger))
+                         after=[AfterBuildDocker(logger=logger)])
 
     def execute(self, step_input: Input) -> Output:
         docker_config = DockerConfig.from_dict(step_input.run_properties.config)

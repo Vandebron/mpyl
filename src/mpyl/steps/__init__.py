@@ -111,7 +111,7 @@ class Step(metaclass=IPluginRegistry):
     produced docker image to a registry or filing test results."""
 
     def __init__(self, logger: Logger, meta: Meta, produced_artifact: ArtifactType,
-                 required_artifact: ArtifactType, before: Optional[Step] = None, after: Optional[Step] = None) -> None:
+                 required_artifact: ArtifactType, before: Optional[list[Step]] = None, after: Optional[list[Step]] = None) -> None:
         self._logger = logger.getChild(meta.name.replace(' ', ''))
         self.meta = meta
         self.produced_artifact = produced_artifact
