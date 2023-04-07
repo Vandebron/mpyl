@@ -105,8 +105,8 @@ class Step(metaclass=IPluginRegistry):
     """Is set to something other than `ArtifactType.NONE` if this step depends on an artifact produced by the execution
     of an earlier step. For example: a step in the `Deploy` stage, may need to deploy a docker image that was produced
     in the `Build` stage."""
-    before: Optional[Step]
-    after: Optional[Step]
+    before: Optional[list[Step]]
+    after: Optional[list[Step]]
     """Will be executed after completion of this step. Can be used for shared post processing steps, like pushing the
     produced docker image to a registry or filing test results."""
 
