@@ -1,5 +1,9 @@
 """
 .. include:: ../../README.md
+<details>
+  <summary>Mission statement</summary>
+.. include:: ../../README-motivation.md
+</details>
 
 ## Technologies
 
