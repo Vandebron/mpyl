@@ -19,6 +19,7 @@ from .resources.customresources import V1AlphaIngressRoute, V1SealedSecret, \
 from .resources.spark import to_spark_body, get_spark_config_map_data
 from ...models import Input, ArtifactType
 from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target, Kubernetes, Job
+from ....utilities.ephemeral import get_env_variables
 
 yaml = YAML()
 
@@ -195,7 +196,11 @@ class ChartBuilder:
     def to_spark_application(self) -> V1SparkApplication:
         return V1SparkApplication(
             schedule=self._get_job().cron['schedule'],
-            body=to_spark_body(self._get_job().spark, self.project, self.target),
+            body=to_spark_body(
+                project_name=self.project.name,
+                env_vars=get_env_variables(self.project, self.target),
+                spark=self._get_job().spark
+            ),
         )
 
     def to_ingress_routes(self) -> V1AlphaIngressRoute:
