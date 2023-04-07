@@ -3,7 +3,7 @@ from logging import Logger
 
 from kubernetes import config, client
 
-from ...deploy.k8s.resources.crd import CustomResourceDefinition
+from ...deploy.k8s.resources import CustomResourceDefinition
 from ....steps import Input, Output
 from ....steps.deploy.k8s import helm
 from ....steps.deploy.k8s.rancher import cluster_config, rancher_namespace_metadata

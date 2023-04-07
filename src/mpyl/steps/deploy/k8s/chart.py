@@ -13,10 +13,10 @@ from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1Obj
     V1PodTemplateSpec, V1DeploymentStrategy, V1Job, V1JobSpec, V1CronJob, V1CronJobSpec, V1JobTemplateSpec, V1ConfigMap
 from ruamel.yaml import YAML
 
-from .resources.crd import CustomResourceDefinition, to_dict  # pylint: disable = no-name-in-module
-from .resources.customresources import V1AlphaIngressRoute, V1SealedSecret, \
-    V1SparkApplication  # pylint: disable = no-name-in-module
-from .resources.spark import to_spark_body, get_spark_config_map_data
+from .resources import CustomResourceDefinition, to_dict  # pylint: disable = no-name-in-module
+from .resources.sealed_secret import V1SealedSecret
+from .resources.treaffik import V1AlphaIngressRoute  # pylint: disable = no-name-in-module
+from .resources.spark import to_spark_body, get_spark_config_map_data, V1SparkApplication
 from ...models import Input, ArtifactType
 from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target, Kubernetes, Job
 from ....utilities.ephemeral import get_env_variables

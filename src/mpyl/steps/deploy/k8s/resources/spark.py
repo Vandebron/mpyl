@@ -1,7 +1,11 @@
-""" Utilities to construct spark application yaml """
+"""
+This module contains the Spark job CRD class.
+"""
+from typing import Optional
 
-from ......project import Project, Target
-from ......utilities.ephemeral import get_env_variables
+from kubernetes.client import V1ObjectMeta
+
+from .. import CustomResourceDefinition
 
 
 def to_spark_body(project_name: str, env_vars: dict, spark: dict) -> dict:
@@ -111,3 +115,18 @@ def get_spark_config_map_data() -> dict:
             'log4j.logger.org.apache.hadoop.hive.metastore.RetryingHMSHandler=FATAL\n'
             'log4j.logger.org.apache.hadoop.hive.ql.exec.FunctionRegistry=ERROR',
     }
+
+
+class V1SparkApplication(CustomResourceDefinition):
+    def __init__(self, schedule: Optional[str], body: dict):
+        if schedule:
+            super().__init__(api_version="sparkoperator.k8s.io/v1beta2", kind="ScheduledSparkApplication",
+                             metadata=V1ObjectMeta(name="sparkapplications.sparkoperator.k8s.io"),
+                             schema="sparkoperator.k8s.io_scheduledsparkapplications.schema.yml",
+                             spec={'schedule': schedule,
+                                   'template': body})
+        else:
+            super().__init__(api_version="sparkoperator.k8s.io/v1beta2", kind="SparkApplication",
+                             metadata=V1ObjectMeta(name="sparkapplications.sparkoperator.k8s.io"),
+                             schema="sparkoperator.k8s.io_sparkapplications.schema.yml",
+                             spec={'spec': body})
