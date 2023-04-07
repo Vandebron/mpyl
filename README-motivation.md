@@ -1,6 +1,4 @@
-# Mission statement
-
-## Proposed implementation
+### Proposed implementation
 
 - Usability
   - Self documented where possible: `project.yml` schema, CLI --help for each argument, concise and guiding logging
@@ -20,9 +18,9 @@
   - Type safe (mypy)
   - Extensively unit tested
 
-## Analysis of Jenkins based MPL
+### Analysis of Jenkins based MPL
 
-### The good
+#### The good
 
 - keeps knowledge local
 - truly modular: reusable but independent steps
@@ -36,13 +34,13 @@
 - supports PR centered development via staging environments
 - basic workflow is simple: build, test, deploy, acceptance test
 
-### The bad
+#### The bad
 
 - implicitly depends on presence of Jenkins plugins
 - many caveats due to running in Jenkins sandbox
 - hard to grasp for new developers
 
-### The ugly
+#### The ugly
 
 - awkward Jenkins module project structure
 - very obscure error messages and exceptions
