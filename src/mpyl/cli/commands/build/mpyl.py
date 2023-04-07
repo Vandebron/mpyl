@@ -44,14 +44,15 @@ FORMAT = "%(name)s  %(message)s"
 def get_build_plan(logger: logging.Logger, repo: Repository, mpyl_run_parameters: MpylRunParameters) -> RunResult:
     params = mpyl_run_parameters.parameters
     logger.info(f"Running with {params}")
+
     if not params.local:
         pull_result = repo.pull_main_branch()
         logger.info(f'Pulled `{pull_result[0].remote_ref_path.strip()}` to local')
 
     changes_in_branch = repo.changes_in_branch_including_local() if params.local else repo.changes_in_branch()
     logger.debug(f'Changes: {changes_in_branch}')
-
     projects_per_stage: dict[Stage, set[Project]] = find_build_set(repo, changes_in_branch, params.all)
+
     return RunResult(run_properties=mpyl_run_parameters.run_config.run_properties, run_plan=projects_per_stage)
 
 
@@ -65,9 +66,9 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter
                               console=console, show_path=params.local)]
     )
     logger = logging.getLogger('mpyl')
+
     try:
         with Repository(RepoConfig(mpyl_run_parameters.run_config.config)) as repo:
-
             run_plan = get_build_plan(logger, repo, mpyl_run_parameters)
 
             if not run_plan.run_plan.items():

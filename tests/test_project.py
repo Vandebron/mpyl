@@ -1,9 +1,14 @@
+import os
 from pathlib import Path
+from unittest import mock
 
 import pytest
 from jsonschema import ValidationError
 
+from src.mpyl.cli.commands.build.mpyl import find_build_set
 from src.mpyl.project import load_project, Target
+from src.mpyl.utilities.repo import Repository
+from tests.test_resources import test_data
 from tests import root_test_path
 
 
@@ -39,6 +44,31 @@ class TestMplSchema:
         with pytest.raises(ValidationError) as exc:
             load_project(Path(""), self.resource_path / "test_project_invalid.yml")
         assert exc.value.message == "'maintainer' is a dependency of 'deployment'"
+
+    @mock.patch.dict(os.environ, {"GITHUB_TOKEN": ""})
+    def test_pre_build_fast_validation(self):
+        """Assert that run_build fast fails on project.yml validation for all projects before starting the build(s)"""
+
+        with mock.patch.object(Repository, 'find_projects') as find_projects_mocked:
+            find_projects_mocked.return_value = {
+                'tests/projects/job/deployment/project.yml', 'tests/projects/sbt-service/deployment/project.yml',
+                'tests/projects/ephemeral/deployment/project.yml', 'tests/projects/service/deployment/project.yml',
+                'tests/projects/spark-job/deployment/project.yml',
+                'tests/projects/invalid-project/deployment/project.yml'
+            }
+            os.chdir(root_test_path)
+            os.popen('mkdir -p projects/invalid-project/deployment')
+            os.popen('cp test_resources/test_project_invalid.yml projects/invalid-project/deployment/project.yml')
+            os.chdir(root_test_path.parent)
+            repo = test_data.get_repo()
+
+            try:
+                with pytest.raises(ValidationError) as exc:
+                    find_build_set(repo, repo.changes_in_branch_including_local(), True)
+                assert exc.value.message == "'maintainer' is a dependency of 'deployment'"
+            finally:
+                os.chdir(root_test_path)
+                os.popen('rm -r projects/invalid-project')
 
     def test_target_by_value(self):
         target = Target('PullRequest')
