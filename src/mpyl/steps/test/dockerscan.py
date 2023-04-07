@@ -2,7 +2,6 @@
 
 from logging import Logger
 
-from mpyl.steps.test.after_test import IntegrationTestAfter
 from mpyl.steps import Step, Meta
 from mpyl.steps.models import Input, Output, ArtifactType
 from mpyl.project import Stage
@@ -29,5 +28,5 @@ class ScanDocker(Step):
         if success:
             return Output(success=True, message=f"Successful vulnerability scan of container for {project.name})")
 
-        return Output(success=False, message=f"Vulnerability scan failed for {project.name}. Please check the logs for further info"
-                                             f"and update your base image.",)
+        return Output(success=False, message=f"Vulnerability scan failed for {project.name}. Please check the logs "
+                                             f"for further info and update your base image/other dependencies")
