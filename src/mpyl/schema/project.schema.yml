@@ -428,7 +428,7 @@ definitions:
       - path
     properties:
       path:
-        description: URL to be used called for liveness probes
+        description: URL to be called for liveness probes
         $ref: '#/definitions/dtapValue'
       periodSeconds:
         description: >-
@@ -455,7 +455,7 @@ definitions:
       - path
     properties:
       path:
-        description: URL to be used called for startup probes
+        description: URL to be called for startup probes
         $ref: '#/definitions/dtapValue'
       initialDelaySeconds:
         description: >-
@@ -773,56 +773,6 @@ definitions:
         properties:
           name:
             type: string
-      spark:
-        type: object
-        additionalProperties: false
-        properties:
-          mainClass:
-            description: 'MainClass is the fully-qualified main class of the Spark application.'
-            type: string
-          mainApplicationFile:
-            description: 'MainFile is the path to a bundled JAR, Python, or R file of the application.'
-            type: string
-      cron:
-        description: 'CronJobSpec describes how the job execution will look like and when it
-          will actually run. Identical to See https://kubernetesjsonschema.dev/v1.14.0/_definitions.json#/definitions/io.k8s.api.batch.v1beta1.CronJobSpec
-          but without jobTemplate'
-        additionalProperties: false
-        properties:
-          concurrencyPolicy:
-            description: 'Specifies how to treat concurrent executions of a Job. Valid values
-              are: - "Allow" (default): allows CronJobs to run concurrently; - "Forbid": forbids
-              concurrent runs, skipping next run if previous run hasn''t finished yet; - "Replace":
-              cancels currently running job and replaces it with a new one
-              See https://kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/#concurrency-policy
-              '
-            type: string
-            enum:
-              - Allow
-              - Forbid
-              - Replace
-          failedJobsHistoryLimit:
-            description: The number of failed finished jobs to retain. This is a pointer to
-              distinguish between explicit zero and not specified. Defaults to 1.
-            format: int32
-            type: integer
-          schedule:
-            description: The schedule in Cron format, see https://en.wikipedia.org/wiki/Cron.
-            type: string
-          startingDeadlineSeconds:
-            description: Optional deadline in seconds for starting the job if it misses scheduled
-              time for any reason.  Missed jobs executions will be counted as failed ones.
-            format: int64
-            type: integer
-          successfulJobsHistoryLimit:
-            description: The number of successful finished jobs to retain. This is a pointer
-              to distinguish between explicit zero and not specified. Defaults to 3.
-            format: int32
-            type: integer
-          suspend:
-            description: This flag tells the controller to suspend subsequent executions,
-              it does not apply to already started executions.  Defaults to false.
-            type: boolean
       policies:
         type: array
         minItems: 1
@@ -886,10 +836,64 @@ definitions:
         additionalProperties: false
       portMappings:
         type: object
-      ttlSecondsAfterFinished:
-        $ref: '#/definitions/dtapNumberValue'
-      activeDeadlineSeconds:
-        $ref: '#/definitions/dtapNumberValue'
+      job:
+        type: object
+        additionalProperties: true
+        properties:
+          ttlSecondsAfterFinished:
+            $ref: '#/definitions/dtapNumberValue'
+          activeDeadlineSeconds:
+            $ref: '#/definitions/dtapNumberValue'
+          cron:
+            description: 'CronJobSpec describes how the job execution will look like and when it
+              will actually run. Identical to See https://kubernetesjsonschema.dev/v1.14.0/_definitions.json#/definitions/io.k8s.api.batch.v1beta1.CronJobSpec
+              but without jobTemplate'
+            additionalProperties: false
+            properties:
+              concurrencyPolicy:
+                description: 'Specifies how to treat concurrent executions of a Job. Valid values
+                  are: - "Allow" (default): allows CronJobs to run concurrently; - "Forbid": forbids
+                  concurrent runs, skipping next run if previous run hasn''t finished yet; - "Replace":
+                  cancels currently running job and replaces it with a new one
+                  See https://kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/#concurrency-policy
+                  '
+                type: string
+                enum:
+                  - Allow
+                  - Forbid
+                  - Replace
+              failedJobsHistoryLimit:
+                description: The number of failed finished jobs to retain. This is a pointer to
+                  distinguish between explicit zero and not specified. Defaults to 1.
+                format: int32
+                type: integer
+              schedule:
+                description: The schedule in Cron format, see https://en.wikipedia.org/wiki/Cron.
+                type: string
+              startingDeadlineSeconds:
+                description: Optional deadline in seconds for starting the job if it misses scheduled
+                  time for any reason.  Missed jobs executions will be counted as failed ones.
+                format: int64
+                type: integer
+              successfulJobsHistoryLimit:
+                description: The number of successful finished jobs to retain. This is a pointer
+                  to distinguish between explicit zero and not specified. Defaults to 3.
+                format: int32
+                type: integer
+              suspend:
+                description: This flag tells the controller to suspend subsequent executions,
+                  it does not apply to already started executions.  Defaults to false.
+                type: boolean
+          spark:
+            type: object
+            additionalProperties: false
+            properties:
+              mainClass:
+                description: 'MainClass is the fully-qualified main class of the Spark application.'
+                type: string
+              mainApplicationFile:
+                description: 'MainFile is the path to a bundled JAR, Python, or R file of the application.'
+                type: string
       role:
         type: object
         additionalProperties: false

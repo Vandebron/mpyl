@@ -33,8 +33,6 @@ docker:
 jenkins:
   url: 'https://jenkins.k8s-serv-backend.vdbinfra.nl/'
   pipelines:
-    monorepo: 'Mpl-Pipeline'
-    monorepo-all: 'MPL Pipeline - All'
     mpl: 'MPL Pipeline - Test'
     mpyl-test: 'MPyL Pipeline - Test'
   defaultPipeline: 'mpyl-test'
@@ -68,6 +66,9 @@ kubernetes:
 project: # default values
   deployment:
     kubernetes:
+      job:
+        ttlSecondsAfterFinished:
+          all: 3600
       resources:
         instances:
           pr: 1
