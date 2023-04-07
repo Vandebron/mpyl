@@ -27,7 +27,7 @@ class BuildSbt(Step):
             ),
             produced_artifact=ArtifactType.DOCKER_IMAGE,
             required_artifact=ArtifactType.NONE,
-            after=AfterBuildDocker(logger=logger)
+            after=[AfterBuildDocker(logger=logger)]
         )
 
     def execute(self, step_input: Input) -> Output:
