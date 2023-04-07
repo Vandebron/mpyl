@@ -773,16 +773,6 @@ definitions:
         properties:
           name:
             type: string
-      spark:
-        type: object
-        additionalProperties: false
-        properties:
-          mainClass:
-            description: 'MainClass is the fully-qualified main class of the Spark application.'
-            type: string
-          mainApplicationFile:
-            description: 'MainFile is the path to a bundled JAR, Python, or R file of the application.'
-            type: string
       policies:
         type: array
         minItems: 1
@@ -894,6 +884,16 @@ definitions:
                 description: This flag tells the controller to suspend subsequent executions,
                   it does not apply to already started executions.  Defaults to false.
                 type: boolean
+          spark:
+            type: object
+            additionalProperties: false
+            properties:
+              mainClass:
+                description: 'MainClass is the fully-qualified main class of the Spark application.'
+                type: string
+              mainApplicationFile:
+                description: 'MainFile is the path to a bundled JAR, Python, or R file of the application.'
+                type: string
       role:
         type: object
         additionalProperties: false

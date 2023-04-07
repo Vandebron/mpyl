@@ -201,12 +201,13 @@ class Resources:
 class Job:
     cron: dict
     job: dict
+    spark: dict
 
     @staticmethod
     def from_config(values: dict):
         if not values:
             return None
-        return Job(cron=values.get('cron', {}), job=without_keys(values, {'con'}))
+        return Job(cron=values.get('cron', {}), job=without_keys(values, {'cron'}), spark=values.get('spark', {}))
 
 
 @dataclass(frozen=True)
@@ -217,7 +218,7 @@ class Kubernetes:
     metrics: Optional[Metrics]
     resources: Resources
     job: Optional[Job]
-    spark: dict
+
 
     @staticmethod
     def from_config(values: dict):
@@ -227,8 +228,7 @@ class Kubernetes:
             startup_probe=Probe.from_config(values.get('startupProbe', {})),
             metrics=Metrics.from_config(values.get('metrics', {})),
             resources=Resources.from_config(values.get('resources', {})),
-            job=Job.from_config(values.get('job', {})),
-            spark=values.get('spark', {})
+            job=Job.from_config(values.get('job', {}))
         )
 
 

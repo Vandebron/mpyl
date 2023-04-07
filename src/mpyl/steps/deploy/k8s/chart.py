@@ -150,7 +150,7 @@ class ChartBuilder:
         return v1_probe
 
     def create_job_chart(self) -> Dict[str, CustomResourceDefinition]:
-        if self._get_kubernetes().spark:
+        if self._get_job().spark:
             return self._to_spark_chart()
         if self._get_job().cron:
             return self._to_cron_job_chart()
@@ -195,7 +195,7 @@ class ChartBuilder:
     def to_spark_application(self) -> V1SparkApplication:
         return V1SparkApplication(
             schedule=self._get_job().cron['schedule'],
-            body=to_spark_body(self.project, self.target),
+            body=to_spark_body(self._get_job().spark, self.project, self.target),
         )
 
     def to_ingress_routes(self) -> V1AlphaIngressRoute:
