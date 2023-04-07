@@ -110,8 +110,8 @@ class Step(metaclass=IPluginRegistry):
     """Will be executed after completion of this step. Can be used for shared post processing steps, like pushing the
     produced docker image to a registry or filing test results."""
 
-    def __init__(self, logger: Logger, meta: Meta, produced_artifact: ArtifactType,
-                 required_artifact: ArtifactType, before: Optional[list[Step]] = None, after: Optional[list[Step]] = None) -> None:
+    def __init__(self, logger: Logger, meta: Meta, produced_artifact: ArtifactType, required_artifact: ArtifactType,
+                 before: Optional[list[Step]] = None, after: Optional[list[Step]] = None) -> None:
         self._logger = logger.getChild(meta.name.replace(' ', ''))
         self.meta = meta
         self.produced_artifact = produced_artifact
