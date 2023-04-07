@@ -4,7 +4,7 @@ maintainer: [ 'Flex IoT' ]
 stages:
   build: Sbt Build
   test: Sbt Test
-  deploy: Kubernetes Job Deploy
+  deploy: Kubernetes Spark Job Deploy
 deployment:
   namespace: 'batterypack-jobs'
   properties:
