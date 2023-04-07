@@ -7,8 +7,9 @@ stages:
   deploy: "Kubernetes Job Deploy"
 deployment:
   kubernetes:
-    cron:
-      schedule: "0 22 * * *"
+    job:
+      cron:
+        schedule: "0 22 * * *"
 dependencies:
   test:
     - tests/projects/service/file.py

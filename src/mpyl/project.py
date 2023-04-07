@@ -191,13 +191,22 @@ class Resources:
 
 
 @dataclass(frozen=True)
+class Job:
+    cron: dict
+
+    @staticmethod
+    def from_config(values: dict):
+        return Job(cron=values.get('cron', {}))
+
+
+@dataclass(frozen=True)
 class Kubernetes:
     port_mappings: dict[int, int]
     liveness_probe: Optional[Probe]
     startup_probe: Optional[Probe]
     metrics: Optional[Metrics]
     resources: Resources
-    cron: dict
+    job: Optional[Job]
     spark: dict
 
     @staticmethod
@@ -205,15 +214,16 @@ class Kubernetes:
         mappings = values.get('portMappings')
         liveness_probe = values.get('livenessProbe')
         startup_probe = values.get('startupProbe')
-        metrics = values.get('metrics', None)
+        metrics = values.get('metrics')
         resources = values.get('resources')
+        job = values.get('job')
         return Kubernetes(
             port_mappings=mappings if mappings else {},
             liveness_probe=Probe.from_config(liveness_probe) if liveness_probe else None,
             startup_probe=Probe.from_config(startup_probe) if startup_probe else None,
             metrics=Metrics.from_config(metrics) if metrics else None,
             resources=Resources.from_config(resources) if resources else None,
-            cron=values.get('cron', {}),
+            job=Job.from_config(job) if job else None,
             spark=values.get('spark', {})
         )
 
