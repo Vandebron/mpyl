@@ -4,7 +4,7 @@ from ......project import Project, Target
 from ......utilities.ephemeral import get_env_variables
 
 
-def to_spark_body(project: Project, target: Target) -> dict:
+def to_spark_body(spark: dict, project: Project, target: Target) -> dict:
     static_body = {
         'type': 'Scala',
         'mode': 'cluster',
@@ -45,8 +45,8 @@ def to_spark_body(project: Project, target: Target) -> dict:
         },
         'deps': {
             'jars': [
-                # pylint: disable-next=line-too-long
-                'https://repo1.maven.org/maven2/com/microsoft/sqlserver/mssql-jdbc/11.2.1.jre8/mssql-jdbc-11.2.1.jre8.jar'
+                'https://repo1.maven.org/maven2/com/microsoft/sqlserver/'
+                'mssql-jdbc/11.2.1.jre8/mssql-jdbc-11.2.1.jre8.jar'
             ]
         },
         'sparkConf': {
@@ -57,7 +57,7 @@ def to_spark_body(project: Project, target: Target) -> dict:
         }
     }
 
-    return static_body | project.kubernetes.spark
+    return static_body | spark
 
 
 def get_spark_config_map_data() -> dict:
