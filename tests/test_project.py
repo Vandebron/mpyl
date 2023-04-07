@@ -45,7 +45,6 @@ class TestMplSchema:
             load_project(Path(""), self.resource_path / "test_project_invalid.yml")
         assert exc.value.message == "'maintainer' is a dependency of 'deployment'"
 
-    @mock.patch.dict(os.environ, {"GITHUB_TOKEN": ""})
     def test_pre_build_fast_validation(self):
         """Assert that run_build fast fails on project.yml validation for all projects before starting the build(s)"""
 
@@ -53,22 +52,14 @@ class TestMplSchema:
             find_projects_mocked.return_value = {
                 'tests/projects/job/deployment/project.yml', 'tests/projects/sbt-service/deployment/project.yml',
                 'tests/projects/ephemeral/deployment/project.yml', 'tests/projects/service/deployment/project.yml',
-                'tests/projects/spark-job/deployment/project.yml',
-                'tests/projects/invalid-project/deployment/project.yml'
+                'tests/projects/spark-job/deployment/project.yml', 'tests/test_resources/test_project_invalid.yml'
             }
-            os.chdir(root_test_path)
-            os.popen('mkdir -p projects/invalid-project/deployment')
-            os.popen('cp test_resources/test_project_invalid.yml projects/invalid-project/deployment/project.yml')
             os.chdir(root_test_path.parent)
             repo = test_data.get_repo()
 
-            try:
-                with pytest.raises(ValidationError) as exc:
-                    find_build_set(repo, repo.changes_in_branch_including_local(), True)
-                assert exc.value.message == "'maintainer' is a dependency of 'deployment'"
-            finally:
-                os.chdir(root_test_path)
-                os.popen('rm -r projects/invalid-project')
+            with pytest.raises(ValidationError) as exc:
+                find_build_set(repo, [], True)
+            assert exc.value.message == "'maintainer' is a dependency of 'deployment'"
 
     def test_target_by_value(self):
         target = Target('PullRequest')
