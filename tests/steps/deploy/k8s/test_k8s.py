@@ -6,8 +6,8 @@ from pyaml_env import parse_config
 
 from src.mpyl.project import Target, Project
 from src.mpyl.steps.deploy.k8s.chart import ChartBuilder
-from src.mpyl.steps.deploy.k8s.resources.crd import to_yaml, CustomResourceDefinition
-from src.mpyl.steps.deploy.k8s.resources.customresources import V1AlphaIngressRoute
+from src.mpyl.steps.deploy.k8s.resources import to_yaml, CustomResourceDefinition
+from src.mpyl.steps.deploy.k8s.resources.treaffik import V1AlphaIngressRoute
 from src.mpyl.steps.models import Input, Artifact, ArtifactType
 from src.mpyl.utilities.docker import DockerConfig
 from tests import root_test_path
