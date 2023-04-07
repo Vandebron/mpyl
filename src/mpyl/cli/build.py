@@ -72,7 +72,7 @@ def status(obj: CliContext):
 
     changes_in_branch = obj.repo.changes_in_branch_including_local()
     build_set = find_build_set(obj.repo, changes_in_branch, False)
-    run_properties = RunProperties.for_local_run(obj.config, obj.repo.get_short_sha, obj.repo.get_branch)
+    run_properties = RunProperties.for_local_run(obj.config, obj.repo.get_sha, obj.repo.get_branch)
     result = RunResult(run_properties=run_properties, run_plan=build_set)
     version = run_properties.versioning
     header: str = f"**Revision:** `{version.branch}` at `{version.revision}`  \n"

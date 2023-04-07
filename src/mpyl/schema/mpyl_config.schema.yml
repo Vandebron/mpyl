@@ -86,7 +86,7 @@ definitions:
       repository:
         type: string
       token:
-        type: string
+        type: [string, null]
       app:
         type: object
         properties:
@@ -104,7 +104,6 @@ definitions:
           - appId
     required:
       - repository
-      - token
     title: Github
   Docker:
     type: object
@@ -204,7 +203,7 @@ definitions:
     additionalProperties: false
     properties:
       botToken:
-          type: string
+          type: [string, null]
       icons:
         type: object
         properties:

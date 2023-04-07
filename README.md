@@ -15,7 +15,6 @@ MPyL stands for Modular Pipeline Library (in Python).
 
 This library is loosely based on the principles described in https://www.jenkins.io/blog/2019/01/08/mpl-modular-pipeline-library/
 but completely independent of Jenkins or any other CI/CD platform.
-It's mission statement is described [here](./README-motivation.md).
 
 ###  📚 Documentation
 Detailed, searchable documentation can be found at [https://vandebron.github.io/mpyl](https://vandebron.github.io/mpyl)

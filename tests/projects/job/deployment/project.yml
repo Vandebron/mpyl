@@ -1,14 +1,15 @@
 name: job
 description: "A job"
-maintainer: ["Marketplace"]
+maintainer: [ "Marketplace" ]
 stages:
   build: "Docker Build"
   test: "Echo Test"
   deploy: "Kubernetes Job Deploy"
 deployment:
   kubernetes:
-    cron:
-      schedule: "0 22 * * *"
+    job:
+      cron:
+        schedule: "0 22 * * *"
 dependencies:
   test:
     - tests/projects/service/file.py

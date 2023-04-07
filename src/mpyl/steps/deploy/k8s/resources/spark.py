@@ -1,10 +1,14 @@
-""" Utilities to construct spark application yaml """
+"""
+This module contains the Spark job CRD class.
+"""
+from typing import Optional
 
-from ......project import Project, Target
-from ......utilities.ephemeral import get_env_variables
+from kubernetes.client import V1ObjectMeta
+
+from .. import CustomResourceDefinition
 
 
-def to_spark_body(project: Project, target: Target) -> dict:
+def to_spark_body(project_name: str, env_vars: dict, spark: dict) -> dict:
     static_body = {
         'type': 'Scala',
         'mode': 'cluster',
@@ -13,7 +17,7 @@ def to_spark_body(project: Project, target: Target) -> dict:
         'restartPolicy': {
             'type': 'Never'
         },
-        'sparkConfigMap': project.name,
+        'sparkConfigMap': project_name,
         'image': 'bigdataregistry.azurecr.io/send-slack-notification:PR-1231',
         'arguments': [
             'python',
@@ -28,8 +32,8 @@ def to_spark_body(project: Project, target: Target) -> dict:
             'labels': {
                 'version': '3.1.1'
             },
-            'serviceAccount': project.name,
-            'envVars': get_env_variables(project, target),
+            'serviceAccount': project_name,
+            'envVars': env_vars,
             'envSecretKeyRefs': None
         },
         'executor': {
@@ -40,13 +44,13 @@ def to_spark_body(project: Project, target: Target) -> dict:
             'labels': {
                 'version': '3.1.1'
             },
-            'envVars': get_env_variables(project, target),
+            'envVars': env_vars,
             'envSecretKeyRefs': None
         },
         'deps': {
             'jars': [
-                # pylint: disable-next=line-too-long
-                'https://repo1.maven.org/maven2/com/microsoft/sqlserver/mssql-jdbc/11.2.1.jre8/mssql-jdbc-11.2.1.jre8.jar'
+                'https://repo1.maven.org/maven2/com/microsoft/sqlserver/'
+                'mssql-jdbc/11.2.1.jre8/mssql-jdbc-11.2.1.jre8.jar'
             ]
         },
         'sparkConf': {
@@ -57,7 +61,7 @@ def to_spark_body(project: Project, target: Target) -> dict:
         }
     }
 
-    return static_body | project.kubernetes.spark
+    return static_body | spark
 
 
 def get_spark_config_map_data() -> dict:
@@ -106,8 +110,23 @@ def get_spark_config_map_data() -> dict:
             'log4j.logger.org.apache.spark.repl.SparkILoop$SparkILoopInterpreter=INFO\n'
             'log4j.logger.org.apache.parquet=ERROR\n'
             'log4j.logger.parquet=ERROR\n'
-            # pylint: disable-next=line-too-long
-            '# SPARK-9183: Settings to avoid annoying messages when looking up nonexistent UDFs in SparkSQL with Hive support\n'
+            '# SPARK-9183: Settings to avoid annoying messages when looking up '
+            'nonexistent UDFs in SparkSQL with Hive support\n'
             'log4j.logger.org.apache.hadoop.hive.metastore.RetryingHMSHandler=FATAL\n'
             'log4j.logger.org.apache.hadoop.hive.ql.exec.FunctionRegistry=ERROR',
     }
+
+
+class V1SparkApplication(CustomResourceDefinition):
+    def __init__(self, schedule: Optional[str], body: dict):
+        if schedule:
+            super().__init__(api_version="sparkoperator.k8s.io/v1beta2", kind="ScheduledSparkApplication",
+                             metadata=V1ObjectMeta(name="sparkapplications.sparkoperator.k8s.io"),
+                             schema="sparkoperator.k8s.io_scheduledsparkapplications.schema.yml",
+                             spec={'schedule': schedule,
+                                   'template': body})
+        else:
+            super().__init__(api_version="sparkoperator.k8s.io/v1beta2", kind="SparkApplication",
+                             metadata=V1ObjectMeta(name="sparkapplications.sparkoperator.k8s.io"),
+                             schema="sparkoperator.k8s.io_sparkapplications.schema.yml",
+                             spec={'spec': body})

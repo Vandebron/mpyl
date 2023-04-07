@@ -13,6 +13,7 @@ metadata:
     revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
   name: job
 spec:
+  activeDeadlineSeconds: 20
   template:
     metadata:
       labels:
@@ -47,4 +48,4 @@ spec:
             memory: 512Mi
       serviceAccount: job
       serviceAccountName: job
-  ttlSecondsAfterFinished: 3600
+  ttlSecondsAfterFinished: 5

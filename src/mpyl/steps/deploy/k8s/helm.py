@@ -6,7 +6,7 @@ import shutil
 from logging import Logger
 from pathlib import Path
 
-from .resources.crd import to_yaml, CustomResourceDefinition
+from .resources import to_yaml, CustomResourceDefinition
 from ...models import RunProperties, Output, Input
 from ....utilities.subprocess import custom_check_output
 
