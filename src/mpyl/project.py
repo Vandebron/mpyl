@@ -31,6 +31,10 @@ from .validation import validate
 T = TypeVar('T')
 
 
+def without_keys(dictionary: dict, keys: set[str]):
+    return {k: dictionary[k] for k in dictionary.keys() - keys}
+
+
 @dataclass(frozen=True)
 class Target(Enum):
     def __eq__(self, other):
@@ -76,6 +80,8 @@ class TargetProperty(Generic[T]):
 
     @staticmethod
     def from_config(values: dict):
+        if not values:
+            return None
         return TargetProperty(pr=values.get('pr'), test=values.get('test'), acceptance=values.get('acceptance'),
                               production=values.get('production'), all=values.get('all'))
 
@@ -156,8 +162,9 @@ class Probe:
 
     @staticmethod
     def from_config(values: dict):
-        path = values['path']
-        return Probe(path=TargetProperty.from_config(path), values=values)
+        if not values:
+            return None
+        return Probe(path=TargetProperty.from_config(values['path']), values=values)
 
 
 @dataclass(frozen=True)
@@ -167,6 +174,8 @@ class Metrics:
 
     @staticmethod
     def from_config(values: dict):
+        if not values:
+            return None
         return Metrics(path=values.get('path', '/metrics'), enabled=values.get('enabled', False))
 
 
@@ -179,15 +188,26 @@ class Resources:
 
     @staticmethod
     def from_config(values: dict):
-        instances = values.get('instances')
         limits = values.get('limit', {})
-        cpus = limits.get('cpus')
-        mem = limits.get('mem')
-        disk = limits.get('disk')
-        return Resources(instances=TargetProperty.from_config(instances) if instances else None,
-                         cpus=TargetProperty.from_config(cpus) if cpus else None,
-                         mem=TargetProperty.from_config(mem) if mem else None,
-                         disk=TargetProperty.from_config(disk) if disk else None)
+        return Resources(
+            instances=TargetProperty.from_config(limits.get('instances', {})),
+            cpus=TargetProperty.from_config(limits.get('cpus', {})),
+            mem=TargetProperty.from_config(limits.get('mem', {})),
+            disk=TargetProperty.from_config(limits.get('disk', {}))
+        )
+
+
+@dataclass(frozen=True)
+class Job:
+    cron: dict
+    job: dict
+    spark: dict
+
+    @staticmethod
+    def from_config(values: dict):
+        if not values:
+            return None
+        return Job(cron=values.get('cron', {}), job=without_keys(values, {'cron'}), spark=values.get('spark', {}))
 
 
 @dataclass(frozen=True)
@@ -197,24 +217,18 @@ class Kubernetes:
     startup_probe: Optional[Probe]
     metrics: Optional[Metrics]
     resources: Resources
-    cron: dict
-    spark: dict
+    job: Optional[Job]
+
 
     @staticmethod
     def from_config(values: dict):
-        mappings = values.get('portMappings')
-        liveness_probe = values.get('livenessProbe')
-        startup_probe = values.get('startupProbe')
-        metrics = values.get('metrics', None)
-        resources = values.get('resources')
         return Kubernetes(
-            port_mappings=mappings if mappings else {},
-            liveness_probe=Probe.from_config(liveness_probe) if liveness_probe else None,
-            startup_probe=Probe.from_config(startup_probe) if startup_probe else None,
-            metrics=Metrics.from_config(metrics) if metrics else None,
-            resources=Resources.from_config(resources) if resources else None,
-            cron=values.get('cron', {}),
-            spark=values.get('spark', {})
+            port_mappings=values.get('portMappings', {}),
+            liveness_probe=Probe.from_config(values.get('livenessProbe', {})),
+            startup_probe=Probe.from_config(values.get('startupProbe', {})),
+            metrics=Metrics.from_config(values.get('metrics', {})),
+            resources=Resources.from_config(values.get('resources', {})),
+            job=Job.from_config(values.get('job', {}))
         )
 
 
@@ -226,12 +240,11 @@ class Host:
 
     @staticmethod
     def from_config(values: dict):
-        host = values.get('host')
-        tls = values.get('tls')
-        whitelists = values.get('whitelists')
-        return Host(host=TargetProperty.from_config(host) if host else None,
-                    tls=TargetProperty.from_config(tls) if tls else None,
-                    whitelists=TargetProperty.from_config(whitelists) if whitelists else None)
+        return Host(
+            host=TargetProperty.from_config(values.get('host', {})),
+            tls=TargetProperty.from_config(values.get('tls', {})),
+            whitelists=TargetProperty.from_config(values.get('whitelists', {}))
+        )
 
 
 @dataclass(frozen=True)
@@ -284,8 +297,18 @@ class Project:
     @property
     def kubernetes(self) -> Kubernetes:
         if self.deployment is None or self.deployment.kubernetes is None:
-            raise AttributeError(f"Project '{self.name}' does not have kubernetes configuration")
+            raise KeyError(f"Project '{self.name}' does not have kubernetes configuration")
         return self.deployment.kubernetes
+
+    @property
+    def resources(self) -> Resources:
+        return self.kubernetes.resources
+
+    @property
+    def job(self) -> Job:
+        if self.kubernetes.job is None:
+            raise KeyError(f"Project '{self.name}' does not have kubernetes.job configuration")
+        return self.kubernetes.job
 
     @staticmethod
     def project_yaml_path() -> str:

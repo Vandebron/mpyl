@@ -1,5 +1,9 @@
 """
 .. include:: ../../README.md
+<details>
+  <summary>Mission statement</summary>
+.. include:: ../../README-motivation.md
+</details>
 
 ## Technologies
 
@@ -19,7 +23,8 @@ MPyL is extensible and has a minimal footprint. Having said that, batteries for 
 ###### Build
  - [Docker](https://www.docker.com/) `mpyl.steps.build.dockerbuild`
  - [Scala (SBT)](https://www.scala-sbt.org/) `mpyl.steps.build.sbt`
- - [Jenkins](https://www.jenkins.io/)  `mpyl.cli.build.jenkins` and `mpyl.utilities.jenkins.runner.JenkinsRunner`
+ - [Jenkins](https://www.jenkins.io/)  `mpyl.cli.commands.build.jenkins` and
+ `mpyl.utilities.jenkins.runner.JenkinsRunner`
 
 ###### Testing
  - [Junit](https://junit.org/) `mpyl.steps.models.ArtifactType.JUNIT_TESTS`

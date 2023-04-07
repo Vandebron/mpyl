@@ -74,7 +74,7 @@ class Repository:
 
     def changes_in_branch_including_local(self) -> list[Revision]:
         in_branch = self.changes_in_branch()
-        in_branch.append(Revision(len(in_branch), '', self.changes_in_commit()))
+        in_branch.append(Revision(len(in_branch), self.get_sha, self.changes_in_commit()))
         return in_branch
 
     def pull_main_branch(self):
