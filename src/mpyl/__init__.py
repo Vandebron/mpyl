@@ -46,6 +46,7 @@ MPyL is extensible and has a minimal footprint. Having said that, batteries for 
 import click
 
 from .cli.build import build
+from .cli.health import health
 from .cli.meta_info import get_version
 from .cli.meta_info import version
 from .cli.projects import projects
@@ -63,4 +64,5 @@ def main():
     main_group.add_command(projects)
     main_group.add_command(build)
     main_group.add_command(version)
+    main_group.add_command(health)
     main_group()  # pylint: disable = no-value-for-parameter

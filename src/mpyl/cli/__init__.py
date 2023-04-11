@@ -28,20 +28,28 @@ class CliContext:
     verbose: bool
 
 
-async def check_updates() -> Optional[str]:
+async def fetch_latest_version() -> Optional[str]:
     try:
-        meta = version_meta('mpyl')
-        try:
-            async with aiohttp.ClientSession(timeout=ClientTimeout(total=10)) as session:
-                async with session.get("https://pypi.org/pypi/mpyl/json") as response:
-                    body = await response.json()
-                    latest = body.get('info', {}).get('version')
-                    if meta != latest:
-                        return latest
-        except (asyncio.exceptions.TimeoutError, ClientConnectorError, requests.exceptions.RequestException):
-            pass
+        async with aiohttp.ClientSession(timeout=ClientTimeout(total=10)) as session:
+            async with session.get("https://pypi.org/pypi/mpyl/json") as response:
+                body = await response.json()
+                return body.get('info', {}).get('version')
+    except (asyncio.exceptions.TimeoutError, ClientConnectorError, requests.exceptions.RequestException):
+        return None
+
+
+def get_meta_version():
+    try:
+        return version_meta('mpyl')
     except importlib.metadata.PackageNotFoundError:
-        pass
+        return None
+
+
+async def check_updates() -> Optional[str]:
+    meta = get_meta_version()
+    latest = await fetch_latest_version()
+    if latest and meta != latest:
+        return latest
     return None
 
 
