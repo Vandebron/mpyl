@@ -70,7 +70,7 @@ properties:
         properties:
           revision:
             description: an id to reference an object in git (usually a commit).
-            type: string
+            type: ["string", "null"]
           branch:
             description: name of the branch
             type: ["string", "null"]
