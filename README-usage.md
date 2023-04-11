@@ -15,6 +15,14 @@ Top level commands options are passed on to sub commands and need to be specifie
 In ```mpyl projects --filter <name> list ```, the `--filter` option applies to all `project` commands, like `list`
 or `lint`.
 
+#### Health check
+
+```shell
+mpyl health
+```
+Will validate the configuration and check if all required tools are installed.
+
+
 ##### MPyL configuration
 
 MPyL can be configured through a file that adheres to the `mpyl_config.yml`
