@@ -92,6 +92,7 @@ properties:
           - Renew Lets Encrypt Deploy
           - Helm Deploy
           - Dagster Deploy
+          - Redis Cluster Deploy
       postdeploy:
         description: Additional steps that can be done after the project has been deployed.
         examples:

@@ -1,0 +1,5 @@
+name: 'redisclusterdeployment'
+description: 'Demonstrates a redis cluster deployment'
+stages:
+  deploy: 'Redis Cluster Deploy'
+maintainer: [ 'Marketplace', 'Energy Trading' ]
