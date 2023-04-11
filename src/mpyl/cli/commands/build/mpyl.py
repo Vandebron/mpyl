@@ -80,7 +80,7 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter
             run_result: RunResult = run_plan
             try:
                 steps = Steps(logger=logger, properties=mpyl_run_parameters.run_config.run_properties)
-                run_result = run_build(run_plan, steps, reporter)
+                run_result = run_build(run_plan, steps, reporter, dry_run=params.local)
             except Exception as exc:  # pylint: disable=broad-except
                 console.log(f'Exception during build execution: {exc}')
                 console.print_exception()
@@ -107,10 +107,11 @@ def find_build_set(repo: Repository, changes_in_branch, build_all: bool) -> dict
     return find_invalidated_projects_per_stage(all_projects, changes_in_branch)
 
 
-def run_build(accumulator: RunResult, executor: Steps, reporter: Optional[Reporter] = None):
+def run_build(accumulator: RunResult, executor: Steps, reporter: Optional[Reporter] = None,
+              dry_run: bool = False) -> RunResult:
     for stage, projects in accumulator.run_plan.items():
         for proj in projects:
-            result = executor.execute(stage, proj, True)
+            result = executor.execute(stage=stage, project=proj, dry_run=dry_run)
             accumulator.append(result)
             if reporter:
                 reporter.send_report(accumulator)

@@ -5,3 +5,7 @@ stages:
   deploy: 'Redis Cluster Deploy'
 deployment:
   namespace: 'sbtservice'
+  kubernetes:
+    resources:
+      instances:
+        all: 1
