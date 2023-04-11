@@ -45,8 +45,7 @@ def get_meta_version():
         return None
 
 
-async def check_updates() -> Optional[str]:
-    meta = get_meta_version()
+async def check_updates(meta: str) -> Optional[str]:
     latest = await fetch_latest_version()
     if latest and meta != latest:
         return latest
