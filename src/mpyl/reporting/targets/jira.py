@@ -54,7 +54,7 @@ class JiraTicket:
 
 
 def extract_ticket_from_branch(branch: str) -> Optional[str]:
-    pattern = r'[A-Za-z]{3}-\d+'
+    pattern = r'[A-Za-z]{3,}-\d+'
     ticket: Optional[str] = next(iter(re.findall(pattern, branch)), None)
     if ticket:
         return ticket.upper()
