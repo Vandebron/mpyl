@@ -1,0 +1,22 @@
+existingSecret: dockertest-redis-password
+existingSecretPasswordKey: password
+persistence:
+  size: 1Gi
+cluster:
+  nodes: 3
+  replicas: 0
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    extraArgs:
+      skip-tls-verification: true
+image:
+  tag: 7.0.8
+tls:
+  enabled: true
+  authClients: false
+  existingSecret: dockertest-redis-cert
+  certFilename: tls.crt
+  certKeyFilename: tls.key
+  certCAFilename: ca.crt

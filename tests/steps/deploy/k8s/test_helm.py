@@ -1,4 +1,5 @@
 import tempfile
+from pathlib import Path
 
 from src.mpyl.steps import Input
 from src.mpyl.steps.deploy.k8s.chart import ChartBuilder, to_service_chart
@@ -14,4 +15,4 @@ class TestHelm:
                            dry_run=True)
         with tempfile.TemporaryDirectory() as tempdir:
             builder = ChartBuilder(step_input)
-            write_chart(to_service_chart(builder), tempdir, to_chart_metadata('chart_name', test_data.RUN_PROPERTIES))
+            write_chart(to_service_chart(builder), Path(tempdir), to_chart_metadata('chart_name', test_data.RUN_PROPERTIES))
