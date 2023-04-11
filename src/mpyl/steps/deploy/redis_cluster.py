@@ -2,8 +2,43 @@
 
 from logging import Logger
 
+from .k8s.chart import ChartBuilder
 from .. import Step, Meta, ArtifactType, Input, Output
 from ...project import Stage
+
+
+def compose_values(step_input):
+    builder = ChartBuilder(step_input)
+    cluster_name = builder.release_name
+    return {
+        'existingSecret': f"{cluster_name}-redis-password",
+        'existingSecretPasswordKey': 'password',
+        'persistence': {'size': '1Gi'},
+        'cluster': {
+            'nodes': 3,
+            'replicas': 0,
+        },
+        'metrics': {
+            'enabled': True,
+            'serviceMonitor': {
+                'enabled': True,
+                'extraArgs': {
+                    'skip-tls-verification': True,
+                }
+            }
+        },
+        'image': {
+            'tag': '7.0.8'
+        },
+        'tls': {
+            'enabled': True,
+            'authClients': False,
+            'existingSecret': f'{cluster_name}-redis-cert',
+            'certFilename': "tls.crt",
+            'certKeyFilename': "tls.key",
+            'certCAFilename': "ca.crt"
+        }
+    }
 
 
 class RedisClusterDeploy(Step):
@@ -16,4 +51,5 @@ class RedisClusterDeploy(Step):
         ), produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.NONE)
 
     def execute(self, step_input: Input) -> Output:
+        compose_values(step_input)
         return Output(success=True, message=f"Redis cluster deploy successful for project {step_input.project.name}")
