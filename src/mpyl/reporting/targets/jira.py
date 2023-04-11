@@ -21,6 +21,7 @@ from dataclasses import dataclass
 from logging import Logger
 from typing import Optional
 
+import requests
 from atlassian import Jira
 
 from . import Reporter
@@ -53,7 +54,7 @@ class JiraTicket:
 
 
 def extract_ticket_from_branch(branch: str) -> Optional[str]:
-    pattern = r'[A-Za-z]{3}-\d+'
+    pattern = r'[A-Za-z]{3,}-\d+'
     ticket: Optional[str] = next(iter(re.findall(pattern, branch)), None)
     if ticket:
         return ticket.upper()
@@ -94,7 +95,12 @@ class JiraReporter(Reporter):
         if not self._ticket:
             return None
 
-        issue_response = self._jira.get_issue(self._ticket)
+        try:
+            issue_response = self._jira.get_issue(self._ticket)
+        except requests.exceptions.HTTPError as exc:
+            self._logger.warning(f'Could not find JIRA ticket {self._ticket}: {exc}')
+            raise exc
+
         ticket = JiraTicket.from_issue_response(issue_response)
 
         self.__move_ticket_forward(ticket)

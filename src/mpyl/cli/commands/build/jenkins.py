@@ -24,7 +24,7 @@ class JenkinsRunParameters:
     verbose: bool
 
 
-def __get_token(github_config: GithubConfig):
+def get_token(github_config: GithubConfig):
     if github_config.token:
         return github_config.token
     return subprocess.run(['gh', 'auth', 'token'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -38,7 +38,7 @@ def run_jenkins(run_config: JenkinsRunParameters):
         github_config = GithubConfig(config)
         with Repository(RepoConfig(config)) as git_repo:
             try:
-                github = Github(login_or_token=__get_token(github_config))
+                github = Github(login_or_token=get_token(github_config))
 
                 repo = github.get_repo(github_config.repository)
 
