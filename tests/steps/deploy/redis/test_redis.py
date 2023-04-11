@@ -11,17 +11,6 @@ from tests.test_resources.test_data import get_project, RUN_PROPERTIES, assert_r
 
 class TestRedisStep:
 
-    def test_redis_value_yaml(self):
-        """Test the redis step."""
-
-        step = RedisClusterDeploy(Logger('test'))
-        step_input = Input(get_project(), RUN_PROPERTIES, required_artifact=None, dry_run=True)
-
-        output = step.execute(step_input)
-
-        assert output.success
-        assert output.message == "Redis cluster deploy successful for project dockertest"
-
     def test_compose_values(self):
         step_input = Input(get_project(), RUN_PROPERTIES, required_artifact=None, dry_run=True)
         values_path = root_test_path / "steps" / "deploy" / "redis" / "resources"

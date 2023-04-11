@@ -2,6 +2,7 @@
 
 from logging import Logger
 
+from .k8s import deploy_external_helm_chart
 from .k8s.chart import ChartBuilder
 from .. import Step, Meta, ArtifactType, Input, Output
 from ...project import Stage
@@ -51,5 +52,7 @@ class RedisClusterDeploy(Step):
         ), produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.NONE)
 
     def execute(self, step_input: Input) -> Output:
-        compose_values(step_input)
-        return Output(success=True, message=f"Redis cluster deploy successful for project {step_input.project.name}")
+        values = compose_values(step_input)
+        builder = ChartBuilder(step_input)
+        return deploy_external_helm_chart(self._logger, values, step_input, builder.release_name, 'redis-cluster',
+                                          'https://charts.bitnami.com/bitnami/', '8.3.11')
