@@ -20,6 +20,7 @@ from .deploy.ephemeral_docker_deploy import EphemeralDockerDeploy
 from .deploy.kubernetes import DeployKubernetes
 from .deploy.kubernetes_job import DeployKubernetesJob
 from .deploy.kubernetes_spark_job import DeployKubernetesSparkJob
+from .deploy.redis_cluster import RedisClusterDeploy
 from .models import Output, Input, RunProperties, ArtifactType, Artifact
 from .test.dockertest import TestDocker
 from .test.echo import TestEcho
@@ -79,7 +80,8 @@ class Steps:
                 DeployKubernetes(logger),
                 DeployKubernetesJob(logger),
                 DeployKubernetesSparkJob(logger),
-                EphemeralDockerDeploy(logger)
+                EphemeralDockerDeploy(logger),
+                RedisClusterDeploy(logger)
             }
         }
 
