@@ -21,6 +21,7 @@ from dataclasses import dataclass
 from logging import Logger
 from typing import Optional
 
+import requests
 from atlassian import Jira
 
 from . import Reporter
@@ -94,7 +95,12 @@ class JiraReporter(Reporter):
         if not self._ticket:
             return None
 
-        issue_response = self._jira.get_issue(self._ticket)
+        try:
+            issue_response = self._jira.get_issue(self._ticket)
+        except requests.exceptions.HTTPError as exc:
+            self._logger.warning(f'Could not find JIRA ticket {self._ticket}: {exc}')
+            raise exc
+
         ticket = JiraTicket.from_issue_response(issue_response)
 
         self.__move_ticket_forward(ticket)
