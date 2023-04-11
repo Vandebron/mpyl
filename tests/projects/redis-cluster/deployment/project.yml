@@ -1,0 +1,7 @@
+name: 'testredis'
+description: 'A test project for redis'
+maintainer: [ 'Marketplace', 'Energy Trading' ]
+stages:
+  deploy: 'Redis Cluster Deploy'
+deployment:
+  namespace: 'sbtservice'
