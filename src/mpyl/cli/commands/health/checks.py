@@ -11,15 +11,35 @@ from rich.markdown import Markdown
 
 from ..build.jenkins import get_token
 from ....utilities.github import GithubConfig
+from ....utilities.jenkins import JenkinsConfig
 from ....utilities.pyaml_env import parse_config
 from ....cli import fetch_latest_version, get_meta_version
 from ....validation import validate
 
 
-def check_jenkins(console):
+def perform_health_checks(console: Console):
+    console.print(Markdown('*Version*'))
+    __check_version(console)
+
+    console.print(Markdown('*MPyL configuration*'))
+    __check_config(console, env_var='MPYL_CONFIG_PATH', default='mpyl_config.yml',
+                   schema_path='../../../schema/mpyl_config.schema.yml', name='config')
+
+    console.print(Markdown('*Run configuration*'))
+    __check_config(console, env_var='MPYL_RUN_PROPERTIES_PATH', default='run_properties.yml',
+                   schema_path='../../../schema/run_properties.schema.yml', name='run properties')
+
+    console.print(Markdown('*Jenkins*'))
+    __check_jenkins(console)
+
+
+def __check_jenkins(console):
+    path = os.environ.get('MPYL_CONFIG_PATH', default='mpyl_config.yml')
+    if not os.path.exists(path):
+        return
+
+    parsed = parse_config(path)
     try:
-        path = os.environ.get('MPYL_CONFIG_PATH', default='mpyl_config.yml')
-        parsed = parse_config(path)
         get_token(GithubConfig(parsed))
         console.log('  ✅ Github token found')
     except CalledProcessError:
@@ -29,6 +49,8 @@ def check_jenkins(console):
         console.log('  ✅ Jenkins user set')
     else:
         console.log("  ❌ Jenkins user not set via JENKINS_USER env var")
+        jenkins_url = f'{JenkinsConfig.from_config(parsed).url}user/me@vandebron.nl/configure'
+        console.log(f"     Create a user API token in Jenkins (user:password) API token: {jenkins_url}")
 
     if os.environ.get('JENKINS_PASSWORD'):
         console.log('  ✅ Jenkins password set')
@@ -36,23 +58,7 @@ def check_jenkins(console):
         console.log("  ❌ Jenkins password not set via JENKINS_PASSWORD env var")
 
 
-def perform_health_checks(console: Console):
-    console.print(Markdown('*Version*'))
-    check_version(console)
-
-    console.print(Markdown('*MPyL configuration*'))
-    check_config(console, env_var='MPYL_CONFIG_PATH', default='mpyl_config.yml',
-                 schema_path='../../../schema/mpyl_config.schema.yml', name='config')
-
-    console.print(Markdown('*Run configuration*'))
-    check_config(console, env_var='MPYL_RUN_PROPERTIES_PATH', default='run_properties.yml',
-                 schema_path='../../../schema/run_properties.schema.yml', name='run properties')
-
-    console.print(Markdown('*Jenkins*'))
-    check_jenkins(console)
-
-
-def check_version(console):
+def __check_version(console):
     update = asyncio.get_event_loop().run_until_complete(fetch_latest_version())
     meta_version = get_meta_version()
     if update and meta_version:
@@ -64,7 +70,7 @@ def check_version(console):
         console.log('  ❌ Could not determine latest version')
 
 
-def check_config(console, env_var, default, schema_path, name):
+def __check_config(console, env_var, default, schema_path, name):
     path = os.environ.get(env_var, default=default)
     location = f"{name} at '/{path}' via environment variable '{env_var}'" if os.environ.get(
         env_var) else f"{name} at '/{path}'"
