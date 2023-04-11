@@ -9,7 +9,7 @@ from click.shell_completion import CompletionItem
 from rich.console import Console
 from rich.markdown import Markdown
 
-from . import CliContext, CONFIG_PATH_HELP, check_updates
+from . import CliContext, CONFIG_PATH_HELP, check_updates, get_meta_version
 from . import create_console_logger
 from .commands.build.jenkins import JenkinsRunParameters, run_jenkins
 from .commands.build.mpyl import MpylRunParameters, run_mpyl, MpylCliParameters, MpylRunConfig, find_build_set
@@ -22,9 +22,10 @@ from ..utilities.repo import Repository, RepoConfig
 
 
 async def warn_if_update(console: Console):
-    update = await check_updates()
+    version = get_meta_version()
+    update = await check_updates(meta=version)
     if update:
-        console.print(Markdown(f"⚠️  **You can upgrade to {update} :** `pip install -U mpyl=={update}`"))
+        console.print(Markdown(f"⚠️  **You can upgrade from {version} to {update} :** `pip install -U mpyl=={update}`"))
 
 
 @click.group('build')
