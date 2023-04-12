@@ -7,7 +7,6 @@ from jsonschema import ValidationError
 
 from src.mpyl.cli.commands.build.mpyl import find_build_set
 from src.mpyl.project import load_project, Target
-from src.mpyl.utilities.repo import Repository
 from tests.test_resources import test_data
 from tests import root_test_path
 
@@ -48,14 +47,15 @@ class TestMplSchema:
     def test_pre_build_fast_validation(self):
         """Assert that run_build fast fails on project.yml validation for all projects before starting the build(s)"""
 
-        with mock.patch.object(Repository, 'find_projects') as find_projects_mocked:
+        repo = test_data.get_repo()
+
+        with mock.patch.object(repo, 'find_projects') as find_projects_mocked:
             find_projects_mocked.return_value = {
                 'tests/projects/job/deployment/project.yml', 'tests/projects/sbt-service/deployment/project.yml',
                 'tests/projects/ephemeral/deployment/project.yml', 'tests/projects/service/deployment/project.yml',
                 'tests/projects/spark-job/deployment/project.yml', 'tests/test_resources/test_project_invalid.yml'
             }
             os.chdir(root_test_path.parent)
-            repo = test_data.get_repo()
 
             with pytest.raises(ValidationError) as exc:
                 find_build_set(repo, [], True)
