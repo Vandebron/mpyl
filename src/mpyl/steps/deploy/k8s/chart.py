@@ -13,12 +13,13 @@ from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1Obj
     V1PodTemplateSpec, V1DeploymentStrategy, V1Job, V1JobSpec, V1CronJob, V1CronJobSpec, V1JobTemplateSpec, V1ConfigMap
 from ruamel.yaml import YAML
 
-from .resources.crd import CustomResourceDefinition, to_dict  # pylint: disable = no-name-in-module
-from .resources.customresources import V1AlphaIngressRoute, V1SealedSecret, \
-    V1SparkApplication  # pylint: disable = no-name-in-module
-from .resources.spark import to_spark_body, get_spark_config_map_data
+from .resources import CustomResourceDefinition, to_dict  # pylint: disable = no-name-in-module
+from .resources.sealed_secret import V1SealedSecret
+from .resources.treaffik import V1AlphaIngressRoute  # pylint: disable = no-name-in-module
+from .resources.spark import to_spark_body, get_spark_config_map_data, V1SparkApplication
 from ...models import Input, ArtifactType
-from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target
+from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target, Kubernetes, Job
+from ....utilities.ephemeral import get_env_variables
 
 yaml = YAML()
 
@@ -28,6 +29,25 @@ yaml = YAML()
 # Memory is cheaper, but poses a harder limit (OOM when exceeding limit), so we are more generous than with CPU.
 CPU_REQUEST_SCALE_FACTOR = 0.2
 MEM_REQUEST_SCALE_FACTOR = 0.5
+
+
+def try_parse_target(value: object, target: Target):
+    if isinstance(value, dict):
+        maybe_value = TargetProperty.from_config(value).get_value(target)
+        if maybe_value:
+            return maybe_value
+
+    return value
+
+
+def with_target(dictionary: dict, target: Target) -> dict:
+    def with_targets_parsed(obj):
+        if isinstance(obj, dict):
+            return type(obj)((k, try_parse_target(with_targets_parsed(v), target)) for k, v in obj.items())
+
+        return obj
+
+    return with_targets_parsed(dictionary)
 
 
 @dataclass(frozen=True)
@@ -49,12 +69,13 @@ class KubernetesConfig:
     resources_defaults: ResourceDefaults
     liveness_probe_defaults: dict
     startup_probe_defaults: dict
+    job_defaults: dict
 
     @staticmethod
     def from_config(values: dict):
         return KubernetesConfig(resources_defaults=ResourceDefaults.from_config(values['resources']),
                                 liveness_probe_defaults=values['livenessProbe'],
-                                startup_probe_defaults=values['startupProbe'])
+                                startup_probe_defaults=values['startupProbe'], job_defaults=values.get('job', {}))
 
 
 class ChartBuilder:
@@ -129,19 +150,6 @@ class ChartBuilder:
         v1_probe.http_get = V1HTTPGetAction(path='/health' if path is None else path, port='port-0')
         return v1_probe
 
-    def create_job_chart(self) -> Dict[str, CustomResourceDefinition]:
-        if self.deployment.kubernetes is None:
-            raise KeyError('kubernetes field should be set for creating a kubernetes chart')
-
-        if self.deployment.kubernetes.spark:
-            chart = self._to_spark_chart()
-        elif self.deployment.kubernetes.cron:
-            chart = self._to_cron_job_chart()
-        else:
-            chart = self._to_job_chart()
-
-        return chart
-
     def to_service(self) -> V1Service:
         service_ports = list(map(lambda key: V1ServicePort(port=key, target_port=self.mappings[key], protocol="TCP",
                                                            name=f"{key}-webservice-port"), self.mappings.keys()))
@@ -160,11 +168,18 @@ class ChartBuilder:
             spec=V1PodSpec(containers=[job_container], service_account=self.release_name,
                            service_account_name=self.release_name),
         )
-        return V1Job(api_version='batch/v1', kind='Job', metadata=self._to_object_meta(),
-                     spec=V1JobSpec(ttl_seconds_after_finished=3600, template=pod_template))
+
+        defaults = with_target(self.kubernetes_config.job_defaults, self.target)
+        specified = defaults | with_target(self.project.job.job, self.target)
+
+        template_dict = to_dict(pod_template)
+        specified['template'] = template_dict
+        spec: V1JobSpec = ChartBuilder._to_k8s_model(specified, V1JobSpec)
+
+        return V1Job(api_version='batch/v1', kind='Job', metadata=self._to_object_meta(), spec=spec)
 
     def to_cron_job(self) -> V1CronJob:
-        values = self._get_kubernetes().cron
+        values = self.project.job.cron
         job_template = V1JobTemplateSpec(spec=self.to_job().spec)
         template_dict = to_dict(job_template)
         values['jobTemplate'] = template_dict
@@ -173,8 +188,20 @@ class ChartBuilder:
 
     def to_spark_application(self) -> V1SparkApplication:
         return V1SparkApplication(
-            schedule=self.project.kubernetes.cron['schedule'],
-            body=to_spark_body(self.project, self.target),
+            schedule=self._get_job().cron['schedule'],
+            body=to_spark_body(
+                project_name=self.project.name,
+                env_vars=get_env_variables(self.project, self.target),
+                spark=self._get_job().spark
+            ),
+        )
+
+    def to_spark_config_map(self) -> V1ConfigMap:
+        return V1ConfigMap(
+            api_version='v1',
+            kind='ConfigMap',
+            data=get_spark_config_map_data(),
+            metadata=self._to_object_meta()
         )
 
     def to_ingress_routes(self) -> V1AlphaIngressRoute:
@@ -214,17 +241,22 @@ class ChartBuilder:
                 f'Required artifact of type {ArtifactType.DOCKER_IMAGE.name} must be defined')  # pylint: disable=E1101
         return docker_image.spec['image']
 
-    def _get_kubernetes(self):
+    def _get_resources(self):
+        resources = self.project.kubernetes.resources
+        defaults = self.kubernetes_config.resources_defaults
+        return ChartBuilder._to_resources(resources, defaults, self.target)
+
+    def _get_kubernetes(self) -> Kubernetes:
         kubernetes = self.deployment.kubernetes
         if kubernetes is None:
             raise AttributeError("deployment.kubernetes field should be set")
         return kubernetes
 
-    def _get_resources(self):
-        kubernetes = self._get_kubernetes()
-        resources = kubernetes.resources
-        defaults = self.kubernetes_config.resources_defaults
-        return ChartBuilder._to_resources(resources, defaults, self.target)
+    def _get_job(self) -> Job:
+        job = self._get_kubernetes().job
+        if job is None:
+            raise AttributeError("deployment.kubernetes.job field should be set")
+        return job
 
     def _get_env_vars(self):
         env_vars = list(
@@ -236,6 +268,10 @@ class ChartBuilder:
                                   sealed_for_target))
         return env_vars + sealed_secrets
 
+    @property
+    def is_cron_job(self) -> bool:
+        return len(self._get_job().cron.keys()) > 0
+
     def to_deployment(self) -> V1Deployment:
 
         ports = [
@@ -243,8 +279,9 @@ class ChartBuilder:
             for idx, key in enumerate(self.mappings.keys())
         ]
 
-        kubernetes = self._get_kubernetes()
-        resources = kubernetes.resources
+        project = self.project
+        resources = project.resources
+        kubernetes = project.kubernetes
         defaults = self.kubernetes_config.resources_defaults
 
         container = V1Container(
@@ -254,12 +291,16 @@ class ChartBuilder:
             ports=ports,
             image_pull_policy="Always",
             resources=ChartBuilder._to_resources(resources, defaults, self.target),
-            liveness_probe=ChartBuilder._to_probe(kubernetes.liveness_probe,
-                                                  self.kubernetes_config.liveness_probe_defaults,
-                                                  self.target) if kubernetes.liveness_probe else None,
-            startup_probe=ChartBuilder._to_probe(kubernetes.startup_probe,
-                                                 self.kubernetes_config.startup_probe_defaults,
-                                                 self.target) if kubernetes.startup_probe else None
+            liveness_probe=ChartBuilder._to_probe(
+                kubernetes.liveness_probe,
+                self.kubernetes_config.liveness_probe_defaults,
+                self.target
+            ) if kubernetes.liveness_probe else None,
+            startup_probe=ChartBuilder._to_probe(
+                kubernetes.startup_probe,
+                self.kubernetes_config.startup_probe_defaults,
+                self.target)
+            if kubernetes.startup_probe else None
         )
 
         instances = resources.instances if resources.instances else defaults.instances
@@ -283,41 +324,33 @@ class ChartBuilder:
             ),
         )
 
-    def _to_spark_chart(self) -> dict[str, CustomResourceDefinition]:
-        chart = self._to_common_chart() | {
-            'spark': self.to_spark_application(),
-            'config-map': V1ConfigMap(
-                api_version='v1',
-                kind='ConfigMap',
-                data=get_spark_config_map_data(),
-                metadata=self._to_object_meta()
-            )
-        }
-
-        return chart
-
-    def to_service_chart(self) -> dict[str, CustomResourceDefinition]:
-        chart = self._to_common_chart() | {'deployment': self.to_deployment(), 'service': self.to_service()}
-
-        if self.deployment.traefik:
-            chart['ingress-https-route'] = self.to_ingress_routes()
-
-        return chart
-
-    def _to_job_chart(self) -> dict[str, CustomResourceDefinition]:
-        chart = self._to_common_chart() | {'job': self.to_job()}
-
-        return chart
-
-    def _to_cron_job_chart(self) -> dict[str, CustomResourceDefinition]:
-        chart = self._to_common_chart() | {'cronjob': self.to_cron_job()}
-
-        return chart
-
-    def _to_common_chart(self) -> dict[str, CustomResourceDefinition]:
+    def to_common_chart(self) -> dict[str, CustomResourceDefinition]:
         chart = {'service-account': self.to_service_account()}
 
         if self.sealed_secrets:
             chart['sealed-secrets'] = self.to_sealed_secrets()
 
         return chart
+
+
+def to_service_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
+    return builder.to_common_chart() | {
+        'deployment': builder.to_deployment(),
+        'service': builder.to_service(),
+        'ingress-https-route': builder.to_ingress_routes()
+    }
+
+
+def to_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
+    return builder.to_common_chart() | {'job': builder.to_job()}
+
+
+def to_cron_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
+    return builder.to_common_chart() | {'cronjob': builder.to_cron_job()}
+
+
+def to_spark_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
+    return builder.to_common_chart() | {
+        'spark': builder.to_spark_application(),
+        'config-map': builder.to_spark_config_map()
+    }

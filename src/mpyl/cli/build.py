@@ -9,7 +9,7 @@ from click.shell_completion import CompletionItem
 from rich.console import Console
 from rich.markdown import Markdown
 
-from . import CliContext, CONFIG_PATH_HELP, check_updates
+from . import CliContext, CONFIG_PATH_HELP, check_updates, get_meta_version
 from . import create_console_logger
 from .commands.build.jenkins import JenkinsRunParameters, run_jenkins
 from .commands.build.mpyl import MpylRunParameters, run_mpyl, MpylCliParameters, MpylRunConfig, find_build_set
@@ -22,9 +22,10 @@ from ..utilities.repo import Repository, RepoConfig
 
 
 async def warn_if_update(console: Console):
-    update = await check_updates()
+    version = get_meta_version()
+    update = await check_updates(meta=version)
     if update:
-        console.print(Markdown(f"⚠️  **You can upgrade to {update} :** `pip install -U mpyl=={update}`"))
+        console.print(Markdown(f"⚠️  **You can upgrade from {version} to {update} :** `pip install -U mpyl=={update}`"))
 
 
 @click.group('build')
@@ -72,7 +73,7 @@ def status(obj: CliContext):
 
     changes_in_branch = obj.repo.changes_in_branch_including_local()
     build_set = find_build_set(obj.repo, changes_in_branch, False)
-    run_properties = RunProperties.for_local_run(obj.config, obj.repo.get_short_sha, obj.repo.get_branch)
+    run_properties = RunProperties.for_local_run(obj.config, obj.repo.get_sha, obj.repo.get_branch)
     result = RunResult(run_properties=run_properties, run_plan=build_set)
     version = run_properties.versioning
     header: str = f"**Revision:** `{version.branch}` at `{version.revision}`  \n"

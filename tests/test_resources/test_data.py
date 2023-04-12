@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from pyaml_env import parse_config
+from src.mpyl.utilities.pyaml_env import parse_config
 
 from src.mpyl.project import load_project, Target, Project, Stages
 from src.mpyl.steps.models import RunProperties, VersioningProperties, RunContext, Output, ArtifactType, Artifact

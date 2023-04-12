@@ -4,7 +4,7 @@ maintainer: [ 'Flex IoT' ]
 stages:
   build: Sbt Build
   test: Sbt Test
-  deploy: Kubernetes Job Deploy
+  deploy: Kubernetes Spark Job Deploy
 deployment:
   namespace: 'batterypack-jobs'
   properties:
@@ -32,13 +32,14 @@ deployment:
       - key: ELASTICSEARCH_HOST
         all: "elastic-es-http.elastic"
   kubernetes:
-    activeDeadlineSeconds:
-      all: 86400
-    spark:
-      mainClass: "nl.vandebron.batterypack.enrichchargesessions.EnrichChargeSessionsJobMain"
-      mainApplicationFile: "local:///app/enrichchargesessionsjob-assembly-1.0.jar"
-    cron:
-      schedule: "0 7 * * *"
+    job:
+      activeDeadlineSeconds:
+        all: 86400
+      cron:
+        schedule: "0 7 * * *"
+      spark:
+        mainClass: "nl.vandebron.batterypack.enrichchargesessions.EnrichChargeSessionsJobMain"
+        mainApplicationFile: "local:///app/enrichchargesessionsjob-assembly-1.0.jar"
     resources:
       instances:
         all: 2
