@@ -1,2 +1,2 @@
 load_from:
-  - python_file: mpyl-example-runner.py
+  - python_file: mpyl-local-runner.py
