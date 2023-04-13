@@ -53,7 +53,6 @@ def build_project(context, project: Project) -> Output:
 def test_project(context, step_result: StepResult) -> Output:
     return Output(execute_step(step_result.project, Stage.TEST))
 
-
 @op(description="Deploy a project to the target specified in the step", config_schema={"dry_run": bool})
 def deploy_project(context, project: Project) -> Output:
     dry_run: bool = context.op_config["dry_run"]

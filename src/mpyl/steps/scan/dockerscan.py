@@ -10,12 +10,12 @@ from mpyl.utilities.docker import DockerConfig, build, docker_image_tag, docker_
 
 class ScanDocker(Step):
     def __init__(self, logger: Logger) -> None:
-        meta = Meta(name='Docker Scan', description='Scan docker image', version='0.0.1', stage=Stage.TEST)
-        super().__init__(
-            logger=logger, meta=meta,
-            produced_artifact=ArtifactType.NONE,
-            required_artifact=ArtifactType.NONE,
-        )
+        super().__init__(logger, Meta(
+            name='Docker Scan',
+            description='Docker scan step to check vulnerabilities.',
+            version='0.0.1',
+            stage=Stage.TEST
+        ), ArtifactType.NONE, ArtifactType.NONE)
 
     def execute(self, step_input: Input) -> Output:
         docker_config = DockerConfig.from_dict(step_input.run_properties.config)

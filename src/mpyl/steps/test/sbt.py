@@ -21,8 +21,8 @@ class TestSbt(Step):
             meta=meta,
             produced_artifact=ArtifactType.JUNIT_TESTS,
             required_artifact=ArtifactType.NONE,
-            before=[IntegrationTestBefore(logger)],
-            after=[IntegrationTestAfter(logger)]
+            before=IntegrationTestBefore(logger),
+            after=IntegrationTestAfter(logger)
         )
 
     def _test_with_coverage(self, step_input: Input, sbt_config: SbtConfig) -> Output:
