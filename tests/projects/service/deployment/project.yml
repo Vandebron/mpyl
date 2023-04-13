@@ -3,6 +3,7 @@ description: 'This is a test container. For testing the MPL pipelines, not to be
 stages:
   build: Docker Build
   test: Docker Test
+  scan: Echo Scan
   deploy: Kubernetes Deploy
 maintainer: [ 'Marketplace', 'Energy Trading' ]
 build:

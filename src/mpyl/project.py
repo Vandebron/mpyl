@@ -49,6 +49,7 @@ class Stage(Enum):
 
     BUILD = 'build'
     TEST = 'test'
+    SCAN = 'scan'
     DEPLOY = 'deploy'
     POST_DEPLOY = 'postdeploy'
 
@@ -95,6 +96,7 @@ class KeyValueProperty(TargetProperty[str]):
 class StageSpecificProperty(Generic[T]):
     build: Optional[T]
     test: Optional[T]
+    scan: Optional[T]
     deploy: Optional[T]
     postdeploy: Optional[T]
 
@@ -103,6 +105,8 @@ class StageSpecificProperty(Generic[T]):
             return self.build
         if stage == Stage.TEST:
             return self.test
+        if stage == Stage.SCAN:
+            return self.scan
         if stage == Stage.DEPLOY:
             return self.deploy
         return self.postdeploy
@@ -113,7 +117,7 @@ class Stages(StageSpecificProperty[str]):
 
     @staticmethod
     def from_config(values: dict):
-        return Stages(build=values.get('build'), test=values.get('test'), deploy=values.get('deploy'),
+        return Stages(build=values.get('build'), test=values.get('test'), scan=values.get('scan'), deploy=values.get('deploy'),
                       postdeploy=values.get('postdeploy'))
 
 
@@ -127,6 +131,7 @@ class Dependencies(StageSpecificProperty[set[str]]):
     @staticmethod
     def from_config(values: dict):
         return Dependencies(build=set(values.get('build', [])), test=set(values.get('test', [])),
+                            scan=set(values.get('scan', [])),
                             deploy=set(values.get('deploy', [])), postdeploy=set(values.get('postdeploy', [])))
 
 

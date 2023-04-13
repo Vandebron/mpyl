@@ -102,6 +102,7 @@ def find_build_set(repo: Repository, changes_in_branch, build_all: bool) -> dict
     if build_all:
         return {Stage.BUILD: for_stage(all_projects, Stage.BUILD),
                 Stage.TEST: for_stage(all_projects, Stage.TEST),
+                Stage.SCAN: for_stage(all_projects, Stage.SCAN),
                 Stage.DEPLOY: for_stage(all_projects, Stage.DEPLOY)}
 
     return find_invalidated_projects_per_stage(all_projects, changes_in_branch)

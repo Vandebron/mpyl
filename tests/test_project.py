@@ -35,6 +35,8 @@ class TestMplSchema:
         assert host.host.get_value(Target.PULL_REQUEST_BASE) == 'Host(`payments.test.vdbinfra.nl`)'
         assert host.tls.get_value(Target.PULL_REQUEST_BASE) == 'le-custom-prod-wildcard-cert'
 
+        assert project.stages.scan == 'Echo Scan'
+
     def test_schema_load_validation(self):
         with pytest.raises(ValidationError) as exc:
             load_project(Path(""), self.resource_path / "test_project_invalid.yml")

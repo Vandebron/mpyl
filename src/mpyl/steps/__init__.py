@@ -105,13 +105,13 @@ class Step(metaclass=IPluginRegistry):
     """Is set to something other than `ArtifactType.NONE` if this step depends on an artifact produced by the execution
     of an earlier step. For example: a step in the `Deploy` stage, may need to deploy a docker image that was produced
     in the `Build` stage."""
-    before: Optional[list[Step]]
-    after: Optional[list[Step]]
+    before: Optional[Step]
+    after: Optional[Step]
     """Will be executed after completion of this step. Can be used for shared post processing steps, like pushing the
     produced docker image to a registry or filing test results."""
 
     def __init__(self, logger: Logger, meta: Meta, produced_artifact: ArtifactType, required_artifact: ArtifactType,
-                 before: Optional[list[Step]] = None, after: Optional[list[Step]] = None) -> None:
+                 before: Optional[Step] = None, after: Optional[Step] = None) -> None:
         self._logger = logger.getChild(meta.name.replace(' ', ''))
         self.meta = meta
         self.produced_artifact = produced_artifact
