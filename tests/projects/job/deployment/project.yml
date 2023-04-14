@@ -12,4 +12,4 @@ deployment:
         schedule: "0 22 * * *"
 dependencies:
   test:
-    - tests/projects/service/file.py
+    - tests/projects/caching-service/service/file.py
