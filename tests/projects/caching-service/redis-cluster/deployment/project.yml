@@ -4,7 +4,7 @@ maintainer: [ 'Marketplace', 'Energy Trading' ]
 stages:
   deploy: 'Redis Cluster Deploy'
 deployment:
-  namespace: 'sbtservice'
+  namespace: 'caching-service'
   kubernetes:
     resources:
       instances:
