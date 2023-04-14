@@ -1,5 +1,5 @@
 pipeline {
-    agent { node { label 'jenkins-test-dind-agent' } }
+    agent { node { label 'mpyl-dind-agent' } }
     options {
         ansiColor('xterm')
     }
