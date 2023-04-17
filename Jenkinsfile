@@ -28,6 +28,7 @@ pipeline {
                         sh "pipenv install --index https://test.pypi.org/simple/ 'mpyl==$CHANGE_ID.*'"
                         sh "pipenv install -d --skip-lock"
                         sh "pipenv requirements"
+                        sh "pipenv run lint"
                         sh "pipenv run run-ci ${params.BUILD_PARAMS}"
                     }
                 }}
