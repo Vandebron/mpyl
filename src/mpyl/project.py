@@ -14,7 +14,9 @@ in the `deployment/project.yml`. It defines how the source code to which it rela
 """
 
 import logging
+import os
 import pkgutil
+import re
 import time
 import traceback
 from dataclasses import dataclass
@@ -269,6 +271,13 @@ class Deployment:
         props = values.get('properties')
         kubernetes = values.get('kubernetes')
         traefik = values.get('traefik')
+        pr_number = os.getenv('CHANGE_ID')
+
+        if traefik and pr_number:
+            for hosts in traefik['hosts']:
+                if 'pr' in hosts['host']:
+                    hosts['host']['pr'] = re.sub('{PR-NUMBER}', pr_number, hosts['host']['pr'])
+
         return Deployment(namespace=values.get('namespace'),
                           properties=Properties.from_config(props) if props else None,
                           kubernetes=Kubernetes.from_config(kubernetes) if kubernetes else None,
