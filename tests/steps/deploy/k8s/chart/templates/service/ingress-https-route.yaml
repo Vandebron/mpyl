@@ -15,7 +15,7 @@ metadata:
 spec:
   routes:
   - kind: Rule
-    match: Host(`payments-123.test.vdbinfra.nl`)
+    match: Host(`payments-{PR-NUMBER}.test.vdbinfra.nl`)
     services:
     - name: dockertest
       kind: Service
