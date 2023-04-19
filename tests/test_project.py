@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import pytest
@@ -11,7 +12,9 @@ class TestMplSchema:
     resource_path = root_test_path / "test_resources"
 
     def test_schema_load(self):
+        os.environ['CHANGE_ID'] = '123'
         project = load_project(Path(""), self.resource_path / "test_project.yml")
+
         assert project.name == 'dockertest'
         assert project.maintainer, ['Marketplace' == 'Energy Trading']
         envs = project.deployment.properties.env
@@ -33,7 +36,10 @@ class TestMplSchema:
 
         host = project.deployment.traefik.hosts[0]
         assert host.host.get_value(Target.PULL_REQUEST_BASE) == 'Host(`payments.test.vdbinfra.nl`)'
+        assert host.host.get_value(Target.PULL_REQUEST) == 'Host(`payments-123.test.vdbinfra.nl`)'
         assert host.tls.get_value(Target.PULL_REQUEST_BASE) == 'le-custom-prod-wildcard-cert'
+
+        assert project.deployment.properties.env[2].all == 'prometheus-gateway.mpyl.svc.cluster.local'
 
     def test_schema_load_validation(self):
         with pytest.raises(ValidationError) as exc:
@@ -41,5 +47,15 @@ class TestMplSchema:
         assert exc.value.message == "'maintainer' is a dependency of 'deployment'"
 
     def test_target_by_value(self):
-        target = Target('PullRequest')
+        target = Target(Target.PULL_REQUEST)
         assert target == Target.PULL_REQUEST
+
+    def test_placeholder_replacement(self):
+        os.environ['CHANGE_ID'] = ''
+        project = load_project(Path(""), self.resource_path / "test_project.yml")
+        host = project.deployment.traefik.hosts[0]
+
+        assert host.host.get_value(Target.PULL_REQUEST) == 'Host(`payments-{PR-NUMBER}.test.vdbinfra.nl`)'
+
+        with pytest.raises(KeyError, match='Found "{namespace}" placeholder but no deployment.namespace was set in project.yml'):
+            load_project(Path(""), self.resource_path / "test_invalid_namespace.yml")
