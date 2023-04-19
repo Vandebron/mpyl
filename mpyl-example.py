@@ -32,13 +32,16 @@ def main(log: Logger, args: argparse.Namespace):
     slack_channel = None
     slack_personal = None
     jira = None
+    github_comment= None
 
     if not args.local:
         from mpyl.reporting.targets.github import CommitCheck
         from mpyl.reporting.targets.slack import SlackReporter
         from mpyl.steps.run import RunResult
+        from src.mpyl.reporting.targets.github import PullRequestComment
 
         check = CommitCheck(config=config, logger=log)
+        github_comment = PullRequestComment(config=config)
         slack_channel = SlackReporter(
             config,
             '#project-mpyl-notifications',
@@ -57,6 +60,7 @@ def main(log: Logger, args: argparse.Namespace):
         check.send_report(run_result)
         slack_channel.send_report(run_result)
         jira.send_report(run_result)
+        github_comment.send_report(run_result)
 
     sys.exit(0 if run_result.is_success else 1)
 
