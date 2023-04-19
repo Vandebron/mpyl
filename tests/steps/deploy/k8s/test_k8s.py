@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 import pytest
@@ -89,7 +88,6 @@ class TestKubernetesChart:
     @pytest.mark.parametrize('template',
                              ['deployment', 'service', 'service-account', 'sealed-secrets', 'ingress-https-route'])
     def test_service_chart_roundtrip(self, template):
-        os.environ['CHANGE_ID'] = '123'
         builder = self._get_builder(get_project())
         chart = to_service_chart(builder)
         self._roundtrip(self.template_path / "service", template, chart)
