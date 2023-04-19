@@ -274,15 +274,16 @@ class Deployment:
         traefik = values.get('traefik')
         pr_number = os.getenv('CHANGE_ID')
 
-        for env_prop in props['env']:
-            for key in env_prop.keys():
-                if '{namespace}' in env_prop[key]:
-                    if namespace is None:
-                        raise KeyError(
-                            'Found "{namespace}" template but no deployment.namespace was set in project.yml'
-                        )
+        if props:
+            for env_prop in props['env']:
+                for key in env_prop.keys():
+                    if '{namespace}' in env_prop[key]:
+                        if namespace is None:
+                            raise KeyError(
+                                'Found "{namespace}" placeholder but no deployment.namespace was set in project.yml'
+                            )
 
-                    env_prop[key] = re.sub('{namespace}', namespace, env_prop[key])
+                        env_prop[key] = re.sub('{namespace}', namespace, env_prop[key])
 
         if traefik and pr_number:
             for hosts in traefik['hosts']:
