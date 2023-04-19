@@ -4,7 +4,7 @@ Jira result reporter.
 ### Usage
 
 To determine which `Jira` ticket a pipeline run relates to, the branch is parsed.
-The following pattern is assumed `[A-Za-z]{3}-\\d+` to signify the Jira ticket key.
+The following pattern is assumed `[A-Za-z]{3,}-` to signify the Jira ticket key.
 If a Jira ticket key cannot be extracted from the branch, this reporter will fail silently.
 
 ### Actions
@@ -15,6 +15,11 @@ If a Jira ticket key cannot be extracted from the branch, this reporter will fai
 
 ### Configuration
 Configure hostname and credentials under `jira` in the `config.yml`
+
+.. note:: Use API token as password
+   You need to create a regular Jira account to represent the MPyL system integration.
+   The username is the email address of the account. Log in as this user and create an
+   [API token](https://id.atlassian.com/manage-profile/security/api-tokens) to be used as the password.
 """
 import re
 from dataclasses import dataclass
