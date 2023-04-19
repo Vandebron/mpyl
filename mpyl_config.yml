@@ -15,8 +15,8 @@ slack:
     failure: 'sadparrot'
 jira:
   site: 'https://vandebron.atlassian.net'
-  userName: !ENV ${JIRA_USER_PASSWORD_USR:jira_user}
-  password: !ENV ${JIRA_USER_PASSWORD_PSW:jira_password}
+  userName: !ENV ${MPYL_JIRA_TOKEN_USR:jira_user}
+  password: !ENV ${MPYL_JIRA_TOKEN_PSW:jira_password}
 docker:
   registry:
     hostName: 'bigdataregistry.azurecr.io'
