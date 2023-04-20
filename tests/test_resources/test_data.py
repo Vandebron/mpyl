@@ -73,11 +73,11 @@ def get_repo() -> Repository:
     return Repository(config)
 
 
-def assert_roundtrip(file_path: Path, expected_contents: str, overwrite: bool = False):
+def assert_roundtrip(file_path: Path, actual_contents: str, overwrite: bool = False):
     if overwrite:
         with open(file_path, 'w+', encoding='utf-8') as file:
-            file.write(expected_contents)
+            file.write(actual_contents)
             assert not overwrite, "Should not commit with overwrite"
 
     with open(file_path, encoding='utf-8') as file:
-        assert file.read() == expected_contents
+        assert actual_contents == file.read()
