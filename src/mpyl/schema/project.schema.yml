@@ -40,6 +40,7 @@ properties:
         - Energy Services And Flex Analytics
         - Finance
         - Portfolio Management
+        - MPyL
     uniqueItems: true
     minItems: 1
   stages:

@@ -5,7 +5,7 @@ cvs:
     repository: 'Vandebron/mpyl'
     token: !ENV ${GITHUB_TOKEN}
     app:
-      privateKeyPath: 'mpyl-pipeline.2023-02-20.private-key.pem'
+      privateKeyPath: 'mpyl-pipeline.private-key.pem'
       appId: '295700'
 slack:
   botToken: !ENV ${SLACK_TOKEN}
@@ -14,7 +14,7 @@ slack:
     success: 'thug-parrot'
     failure: 'sadparrot'
 jira:
-  site: 'https://vandebron.atlassian.net'
+  site: 'https://atlassian.net'
   userName: !ENV ${JIRA_USER_PASSWORD_USR:jira_user}
   password: !ENV ${JIRA_USER_PASSWORD_PSW:jira_password}
 docker:
@@ -37,20 +37,20 @@ kubernetes:
   rancher:
     cluster:
       test:
-        clusterId: c-z8wzm
-        projectId: p-k9l47
+        clusterId: c-xxxxx
+        projectId: p-11111
         clusterEnv: test
-        context: vdb-core-digital-k8s-test
+        context: digital-k8s-test
       acceptance:
-        clusterId: c-6mkzg
-        projectId: p-ckqxz
+        clusterId: c-zzzzz
+        projectId: p-22222
         clusterEnv: acce
-        context: vdb-core-digital-k8s-acce
+        context: digital-k8s-acce
       production:
-        clusterId: c-r8bj6
-        projectId: p-lb52t
+        clusterId: c-ccccc
+        projectId: p-33333
         clusterEnv: prd
-        context: vdb-core-digital-k8s-prod
+        context: digital-k8s-prod
 project: # default values
   deployment:
     kubernetes:

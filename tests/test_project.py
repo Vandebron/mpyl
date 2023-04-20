@@ -32,7 +32,7 @@ class TestMplSchema:
         assert not project.deployment.kubernetes.metrics.enabled, "metrics should be disabled"
 
         host = project.deployment.traefik.hosts[0]
-        assert host.host.get_value(Target.PULL_REQUEST_BASE) == 'Host(`payments.test.vdbinfra.nl`)'
+        assert host.host.get_value(Target.PULL_REQUEST_BASE) == 'Host(`payments.test.nl`)'
         assert host.tls.get_value(Target.PULL_REQUEST_BASE) == 'le-custom-prod-wildcard-cert'
 
     def test_schema_load_validation(self):
