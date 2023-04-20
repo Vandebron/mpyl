@@ -4,7 +4,7 @@ stages:
   build: Docker Build
   test: Docker Test
   deploy: Kubernetes Deploy
-maintainer: [ 'Marketplace', 'Energy Trading' ]
+maintainer: [ 'MPyL' ]
 build:
   args:
     plain:
@@ -55,10 +55,10 @@ deployment:
   traefik:
     hosts:
       - host:
-          pr: "Host(`payments-{PR-NUMBER}.test.vdbinfra.nl`)"
-          test: "Host(`payments.test.vdbinfra.nl`)"
-          acceptance: "Host(`payments.acceptance1.vdbinfra.nl`)"
-          production: "Host(`payments.vandebron.nl`)"
+          pr: "Host(`payments-{PR-NUMBER}.test.nl`)"
+          test: "Host(`payments.test.nl`)"
+          acceptance: "Host(`payments.acceptance1.nl`)"
+          production: "Host(`payments.nl`)"
         tls:
           all: "le-custom-prod-wildcard-cert"
         insecure: true

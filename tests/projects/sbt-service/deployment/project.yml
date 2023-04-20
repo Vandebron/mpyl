@@ -1,5 +1,5 @@
 name: 'sbtservice'
-maintainer: [ 'Marketplace', 'Energy Trading' ]
+maintainer: [ 'MPyL' ]
 stages:
   build: Sbt Build
   test: Sbt Test
@@ -33,10 +33,10 @@ deployment:
   traefik:
     hosts:
       - host:
-          pr: "Host(`sbtservice-{PR-NUMBER}.test.vdbinfra.nl`)"
-          test: "Host(`sbtservice.test.vdbinfra.nl`)"
-          acceptance: "Host(`sbtservice.acceptance1.vdbinfra.nl`)"
-          production: "Host(`sbtservice.vandebron.nl`)"
+          pr: "Host(`sbtservice-{PR-NUMBER}.test.nl`)"
+          test: "Host(`sbtservice.test.nl`)"
+          acceptance: "Host(`sbtservice.acceptance1.nl`)"
+          production: "Host(`sbtservice.nl`)"
         tls:
           all: "le-custom-prod-wildcard-cert"
         insecure: true
