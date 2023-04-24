@@ -8,7 +8,7 @@ from pyaml_env import parse_config
 from ruamel.yaml import YAML  # type: ignore
 
 from src.mpyl.project import Project, Stages, Stage, Target
-from src.mpyl.steps.models import Output, Artifact, ArtifactType, RunProperties, VersioningProperties
+from src.mpyl.steps.models import Output, ArtifactType, RunProperties, VersioningProperties
 from src.mpyl.steps.steps import Steps
 from tests import root_test_path, test_resource_path
 from tests.test_resources import test_data
@@ -91,7 +91,7 @@ class TestSteps:
         assert not result.output.success
         assert result.output.message == "Executor 'Unknown Build' for 'build' not known or registered"
 
-    def test_should_succeed_if_bla(self):
+    def test_should_succeed_if_stage_is_not_known(self):
         project = test_data.get_project_with_stages({'test': 'Some Test'})
         result = self.executor.execute(stage=Stage.BUILD, project=project)
         assert not result.output.success
