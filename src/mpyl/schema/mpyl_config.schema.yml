@@ -148,7 +148,7 @@ definitions:
     additionalProperties: false
     properties:
       hostName:
-        type: string
+        type: [string, null]
       userName:
         type: string
       password:
@@ -222,7 +222,7 @@ definitions:
     additionalProperties: false
     properties:
       url:
-        type: string
+        type: [string, null]
         format: url
       pipelines:
         type: object
@@ -235,7 +235,7 @@ definitions:
     properties:
       site:
         description: "Only works with the cloud version of Jira"
-        type: string
+        type: [string, null]
         format: uri
       userName:
         type: string
