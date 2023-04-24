@@ -19,7 +19,7 @@ jira:
   password: !ENV ${JIRA_USER_PASSWORD_PSW:jira_password}
 docker:
   registry:
-    hostName: !ENV ${DOCKER_HOST_NAME}
+    hostName: !ENV ${DOCKER_HOST_NAME:docker_host}
     userName: !ENV ${DOCKER_REGISTRY_USR:docker_user}
     password: !ENV ${DOCKER_REGISTRY_PSW:docker_password}
   build:
