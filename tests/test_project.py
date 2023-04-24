@@ -55,7 +55,7 @@ class TestMplSchema:
         project = load_project(Path(""), self.resource_path / "test_project.yml")
         host = project.deployment.traefik.hosts[0]
 
-        assert host.host.get_value(Target.PULL_REQUEST) == 'Host(`payments-{PR-NUMBER}.test.vdbinfra.nl`)'
+        assert host.host.get_value(Target.PULL_REQUEST) == 'Host(`payments-{PR-NUMBER}.test.nl`)'
 
         with pytest.raises(KeyError, match='Found "{namespace}" placeholder but no deployment.namespace was set in project.yml'):
             load_project(Path(""), self.resource_path / "test_invalid_namespace.yml")
