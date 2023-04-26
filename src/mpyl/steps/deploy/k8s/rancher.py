@@ -6,18 +6,17 @@ from ....steps import Input
 from ....project import Target
 
 
-@dataclass()
+@dataclass(frozen=True)
 class ClusterConfig:
     project_id: str
     cluster_id: str
     cluster_env: str
     context: str
 
-    def __init__(self, config: dict):
-        self.project_id = config['clusterId']
-        self.cluster_id = config['clusterId']
-        self.cluster_env = config['clusterEnv']
-        self.context = config['context']
+    @staticmethod
+    def from_config(config: dict):
+        return ClusterConfig(project_id=config['clusterId'], cluster_id=config['clusterId'],
+                             cluster_env=config['clusterEnv'], context=config['context'])
 
 
 def cluster_config(step_input: Input):
@@ -25,11 +24,11 @@ def cluster_config(step_input: Input):
     cluster_configs = step_input.run_properties.config['kubernetes']['rancher']['cluster']
 
     if target in {Target.PULL_REQUEST, Target.PULL_REQUEST_BASE}:
-        return ClusterConfig(cluster_configs['test'])
+        return ClusterConfig.from_config(cluster_configs['test'])
     if target == Target.ACCEPTANCE:
-        return ClusterConfig(cluster_configs['acceptance'])
+        return ClusterConfig.from_config(cluster_configs['acceptance'])
     if target == Target.PRODUCTION:
-        return ClusterConfig(cluster_configs['production'])
+        return ClusterConfig.from_config(cluster_configs['production'])
     return None
 
 
