@@ -1,5 +1,5 @@
 name: nginx
-description: "A proxy server that handles requests to Vandebron website ((main.)vandebron.nl) and forwards them to respective front-end and back-end services"
+description: "A proxy server that handles requests"
 stages:
   build: "Docker Build"
   deploy: Kubernetes Deploy
