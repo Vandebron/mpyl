@@ -5,6 +5,7 @@ import pytest
 from kubernetes.client import V1Probe, V1ObjectMeta
 from pyaml_env import parse_config
 
+from src.mpyl.steps.deploy.k8s import cluster_config
 from src.mpyl.project import Target, Project
 from src.mpyl.steps.deploy.k8s.chart import ChartBuilder, to_service_chart, to_job_chart, to_cron_job_chart, \
     to_spark_job_chart
@@ -71,10 +72,17 @@ class TestKubernetesChart:
             ChartBuilder._to_probe(probe, self.liveness_probe_defaults, target=Target.PULL_REQUEST)
         assert 'Invalid value for `port`, must not be `None`' in str(exc_info.value)
 
-    def test_load_config(self):
+    def test_load_docker_config(self):
         yaml_values = parse_config(self.resource_path / "mpyl_config.yml")
         docker_config = DockerConfig.from_dict(yaml_values)
         assert docker_config.host_name == 'docker_host'
+
+    def test_load_cluster_config(self):
+        step_input = Input(get_project(), test_data.RUN_PROPERTIES,
+                           required_artifact=test_data.get_output().produced_artifact,
+                           dry_run=True)
+        config = cluster_config(step_input)
+        assert config.cluster_env == 'test'
 
     def test_should_validate_against_crd_schema(self):
         project = test_data.get_project()
