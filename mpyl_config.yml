@@ -14,12 +14,12 @@ slack:
     success: 'thug-parrot'
     failure: 'sadparrot'
 jira:
-  site: 'https://vandebron.atlassian.net'
+  site: !ENV ${JIRA_URL}
   userName: !ENV ${JIRA_USER_PASSWORD_USR:jira_user}
   password: !ENV ${JIRA_USER_PASSWORD_PSW:jira_password}
 docker:
   registry:
-    hostName: 'bigdataregistry.azurecr.io'
+    hostName: !ENV ${DOCKER_HOST_NAME:docker_host}
     userName: !ENV ${DOCKER_REGISTRY_USR:docker_user}
     password: !ENV ${DOCKER_REGISTRY_PSW:docker_password}
   build:
@@ -31,7 +31,7 @@ docker:
     periodSeconds: 2
     failureThreshold: 20
 jenkins:
-  url: 'https://jenkins.k8s-serv-backend.vdbinfra.nl/'
+  url: !ENV ${JENKINS_URL}
   pipelines:
     mpl: 'MPL Pipeline - Test'
     mpyl-test: 'MPyL Pipeline - Test'

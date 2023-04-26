@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import pytest
@@ -73,7 +74,7 @@ class TestKubernetesChart:
     def test_load_config(self):
         yaml_values = parse_config(self.resource_path / "mpyl_config.yml")
         docker_config = DockerConfig.from_dict(yaml_values)
-        assert docker_config.host_name == 'bigdataregistry.azurecr.io'
+        assert docker_config.host_name == 'docker_host'
 
     def test_should_validate_against_crd_schema(self):
         project = test_data.get_project()
