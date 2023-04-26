@@ -31,7 +31,7 @@ spec:
         CASSANDRA_HOST: cassandra.cassandra.svc.cluster.local
         CASSANDRA_DC: dc1_k8s_test
         VAULT_ENABLED: 'true'
-        VAULT_ADDR: https://vs.vdbinfra.nl/
+        VAULT_ADDR: https://vs.nl/
         DEPLOY_MODE: cluster
         ELASTICSEARCH_HOST: elastic-es-http.elastic
     executor:
@@ -47,7 +47,7 @@ spec:
         CASSANDRA_HOST: cassandra.cassandra.svc.cluster.local
         CASSANDRA_DC: dc1_k8s_test
         VAULT_ENABLED: 'true'
-        VAULT_ADDR: https://vs.vdbinfra.nl/
+        VAULT_ADDR: https://vs.nl/
         DEPLOY_MODE: cluster
         ELASTICSEARCH_HOST: elastic-es-http.elastic
     deps:
@@ -58,5 +58,5 @@ spec:
       spark.executor.extraClassPath: mssql-jdbc-11.2.1.jre8.jar
       spark.sql.legacy.timeParserPolicy: LEGACY
       spark.sql.broadcastTimeout: '600'
-    mainClass: nl.vandebron.batterypack.enrichchargesessions.EnrichChargeSessionsJobMain
+    mainClass: enrichchargesessions.EnrichChargeSessionsJobMain
     mainApplicationFile: local:///app/enrichchargesessionsjob-assembly-1.0.jar
