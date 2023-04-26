@@ -1,6 +1,6 @@
 name: job
 description: "A job"
-maintainer: ["Marketplace"]
+maintainer: ["MPyL"]
 stages:
   build: "Docker Build"
   test: "Echo Test"
