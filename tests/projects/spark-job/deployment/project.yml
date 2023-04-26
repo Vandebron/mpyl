@@ -1,6 +1,6 @@
 name: 'enrichChargeSessionsJob'
 description: 'Job to enrich charge session with total amount earned'
-maintainer: [ 'Flex IoT' ]
+maintainer: [ 'MPyL' ]
 stages:
   build: Sbt Build
   test: Sbt Test
@@ -26,7 +26,7 @@ deployment:
       - key: VAULT_ENABLED
         all: "true"
       - key: VAULT_ADDR
-        all: "https://vs.vdbinfra.nl/"
+        all: "https://vs.nl/"
       - key: DEPLOY_MODE
         all: "cluster"
       - key: ELASTICSEARCH_HOST
@@ -38,7 +38,7 @@ deployment:
       cron:
         schedule: "0 7 * * *"
       spark:
-        mainClass: "nl.vandebron.batterypack.enrichchargesessions.EnrichChargeSessionsJobMain"
+        mainClass: "enrichchargesessions.EnrichChargeSessionsJobMain"
         mainApplicationFile: "local:///app/enrichchargesessionsjob-assembly-1.0.jar"
     resources:
       instances:
@@ -49,8 +49,7 @@ deployment:
         mem:
           all: 2048
     policies:
-      - 'ev-star-readonly'
-      - 'vdb-star-readonly'
+      - 'star-readonly'
     role:
       resources:
         - 'pods'
