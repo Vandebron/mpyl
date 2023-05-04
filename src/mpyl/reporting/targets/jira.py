@@ -81,17 +81,13 @@ class JiraConfig:
     token: Optional[str]
 
     @staticmethod
-    def from_config(config: dict):
+    def from_config(mpyl_config: dict):
+        config = mpyl_config.get('jira')
+        if not config:
+            raise KeyError('jira section needs to be defined in mpyl_config.yml')
         return JiraConfig(site=config['site'], user_name=config['userName'], password=config['password'],
                           token=config.get('token'))
 
-
-# jira_config = JiraConfig.from_config(config=config)
-# jira = Jira(url=jira_config.site, user=jira_config.user_name, password=jira_config.password, api_version='2',
-#             cloud=True)
-# ticket = extract_ticket_from_branch(run_properties.versioning.branch)
-# issue = jira.get_issue(ticket)
-# jira_ticket = JiraTicket.from_issue_response(issue)
 
 def create_jira_for_config(jira_config: JiraConfig):
     return Jira(
@@ -134,12 +130,8 @@ def to_markdown_summary(ticket: JiraTicket) -> str:
 class JiraReporter(Reporter):
 
     def __init__(self, config: dict, branch: str, logger: Logger):
-        jira_config = config.get('jira')
-        if not jira_config:
-            raise ValueError('jira section needs to be defined in mpyl_config.yml')
+        jira_config = JiraConfig.from_config(config)
         self._ticket = extract_ticket_from_branch(branch)
-
-        jira_config = JiraConfig.from_config(jira_config)
         self._config = jira_config
         self._jira = create_jira_for_config(jira_config)
         self._logger = logger
