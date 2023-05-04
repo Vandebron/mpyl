@@ -2,6 +2,8 @@ import argparse
 import logging
 import sys
 from logging import Logger
+logging.basicConfig(level=logging.NOTSET)
+
 
 
 def main(log: Logger, args: argparse.Namespace):
