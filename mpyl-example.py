@@ -42,7 +42,7 @@ def main(log: Logger, args: argparse.Namespace):
         from mpyl.reporting.targets.jira import JiraTicket, JiraConfig, extract_ticket_from_branch, \
             create_jira_for_config, to_github_markdown
 
-        jira_config = JiraConfig.from_config(config=config)
+        jira_config = JiraConfig.from_config(mpyl_config=config)
         jira = create_jira_for_config(jira_config)
         ticket = extract_ticket_from_branch(run_properties.versioning.branch)
         issue = jira.get_issue(ticket)

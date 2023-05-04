@@ -81,12 +81,12 @@ class JiraConfig:
     token: Optional[str]
 
     @staticmethod
-    def from_config(mpyl_config: dict):
-        config = mpyl_config.get('jira')
-        if not config:
+    def from_config(config: dict):
+        jira_config = config.get('jira')
+        if not jira_config:
             raise KeyError('jira section needs to be defined in mpyl_config.yml')
-        return JiraConfig(site=config['site'], user_name=config['userName'], password=config['password'],
-                          token=config.get('token'))
+        return JiraConfig(site=jira_config['site'], user_name=jira_config['userName'], password=jira_config['password'],
+                          token=jira_config.get('token'))
 
 
 def create_jira_for_config(jira_config: JiraConfig):
