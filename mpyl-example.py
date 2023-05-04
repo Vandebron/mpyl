@@ -90,7 +90,8 @@ if __name__ == "__main__":
     FORMAT = "%(name)s  %(message)s"
 
     parsed_args = parser.parse_args()
-    mpl_logger = logging.getLogger("mpl")
+    print("ASFDSDFSADSFA")
+    mpl_logger = logging.getLogger()
     mpl_logger.info("Starting run.....")
     try:
         main(mpl_logger, parsed_args)
