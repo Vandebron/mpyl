@@ -25,6 +25,7 @@ import re
 from dataclasses import dataclass
 from logging import Logger
 from typing import Optional
+from urllib.parse import urlsplit
 
 import requests
 from atlassian import Jira
@@ -35,7 +36,9 @@ from ...steps.run import RunResult
 
 @dataclass(frozen=True)
 class JiraTicket:
+    jira_url: str
     ticket_id: str
+    ticket_url: str
     issue_type: str
     summary: str
     description: str
@@ -46,16 +49,20 @@ class JiraTicket:
 
     @staticmethod
     def from_issue_response(response):
+        jira_url = "{uri.scheme}://{uri.netloc}".format(uri=urlsplit(response['self']))
         fields = response['fields']
+        ticket_id = response['key']
         assignee = fields.get('assignee')
         user = assignee or fields.get('reporter') or fields.get('creator')
         avatar = user['avatarUrls']['48x48'] if user else ''
         status_name = fields['status']['name']
         assignee_email = assignee['emailAddress'] if assignee else None
+        ticket_url = f"{jira_url}/browse/{ticket_id}"
 
-        return JiraTicket(ticket_id=response['key'], issue_type=fields['issuetype']['name'], summary=fields['summary'],
-                          status_name=status_name, description=fields['description'], user_avatar=avatar,
-                          user_email=user['emailAddress'], assignee_email=assignee_email)
+        return JiraTicket(jira_url=jira_url, ticket_id=ticket_id, ticket_url=ticket_url,
+                          issue_type=fields['issuetype']['name'], summary=fields['summary'], status_name=status_name,
+                          description=fields['description'], user_avatar=avatar, user_email=user['emailAddress'],
+                          assignee_email=assignee_email)
 
 
 def extract_ticket_from_branch(branch: str) -> Optional[str]:
@@ -75,25 +82,58 @@ class JiraConfig:
 
     @staticmethod
     def from_config(config: dict):
-        return JiraConfig(site=config['site'], user_name=config['userName'], password=config['password'],
-                          token=config.get('token'))
+        jira_config = config.get('jira')
+        if not jira_config:
+            raise KeyError('jira section needs to be defined in mpyl_config.yml')
+        return JiraConfig(site=jira_config['site'], user_name=jira_config['userName'], password=jira_config['password'],
+                          token=jira_config.get('token'))
+
+
+def create_jira_for_config(jira_config: JiraConfig):
+    return Jira(
+        url=jira_config.site,
+        token=jira_config.token,
+        api_version='2',
+        cloud=True
+    ) if jira_config.token else Jira(
+        url=jira_config.site,
+        username=jira_config.user_name,
+        password=jira_config.password,
+        api_version='2', cloud=True
+    )
+
+
+def to_github_markdown(jira_markdown: str, jira_url: str) -> str:
+    jira_markdown = re.sub(r'\[(.*)/(.*)\|(.*)\|smart-link\]', r'[\2](\3)', jira_markdown)
+    jira_markdown = re.sub(r'\[(.*)\|(.*)\]', r'[\1](\2)', jira_markdown)
+    jira_markdown = re.sub(r'\[~accountid:(.*)\]', rf'[👩‍💻]({jira_url}/jira/people/\1)', jira_markdown)
+    jira_markdown = re.sub(r'\{\{(.*)\}\}', r'`\1`', jira_markdown)
+    jira_markdown = re.sub(r'\{quote}(.*)\{quote}', r'> \1', jira_markdown)
+    jira_markdown = re.sub(r'\{noformat\}((.|\n)*)\{noformat\}', r'```\n\1\n```', jira_markdown)
+    jira_markdown = re.sub(r'\{noformat\}((.|\n)*)', r'```\n\1\n```', jira_markdown)
+    jira_markdown = re.sub(r'\*(.*)\*', r'**\1**', jira_markdown)
+    jira_markdown = re.sub(r'_(.*)_', r'*\1*', jira_markdown)
+    jira_markdown = jira_markdown.replace('h1. ', '### ')
+    jira_markdown = jira_markdown.replace('h2. ', '#### ')
+    jira_markdown = jira_markdown.replace('h3. ', '##### ')
+    jira_markdown = jira_markdown.replace('h4. ', '###### ')
+    jira_markdown = jira_markdown.replace('h5. ', '###### ')
+    jira_markdown = jira_markdown.replace('h6. ', '###### ')
+    return jira_markdown
+
+
+def to_markdown_summary(ticket: JiraTicket) -> str:
+    return f"#### 📕 [{ticket.ticket_id}]({ticket.ticket_url}) {ticket.summary} \n" \
+           f"{to_github_markdown(ticket.description, ticket.ticket_url)}"
 
 
 class JiraReporter(Reporter):
 
     def __init__(self, config: dict, branch: str, logger: Logger):
-        jira_config = config.get('jira')
-        if not jira_config:
-            raise ValueError('jira section needs to be defined in mpyl_config.yml')
+        jira_config = JiraConfig.from_config(config)
         self._ticket = extract_ticket_from_branch(branch)
-
-        jira_config = JiraConfig.from_config(jira_config)
         self._config = jira_config
-        self._jira = Jira(url=jira_config.site, token=jira_config.token, api_version='3',
-                          cloud=True) if jira_config.token else Jira(url=jira_config.site,
-                                                                     username=jira_config.user_name,
-                                                                     password=jira_config.password,
-                                                                     api_version='3', cloud=True)
+        self._jira = create_jira_for_config(jira_config)
         self._logger = logger
 
     def send_report(self, results: RunResult, text: Optional[str] = None) -> None:
