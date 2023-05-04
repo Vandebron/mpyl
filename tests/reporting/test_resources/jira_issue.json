@@ -71,7 +71,7 @@
         "value": "CI/CD"
       }
     ],
-    "description": "Similarly to mpl *modules*, we should update the PR details with card description, links to swagger (if they have), links to deployment in cluster, etc",
+    "description": "Similarly to mpl *modules*, we _should_ update the PR details with card description, links to swagger (if they have), links to deployment in cluster, etc.\n\nh4. Should support Jira markdown\n\n{quote}Quoted{quote}\n\n# first\n# second\n\n[~accountid:6151b89d72f6970069e87968] is tagged\n\n!Screenshot 2023-04-19 at 11.50.50.png|width=530,height=141,alt=\"And a image\"!",
     "duedate": null,
     "environment": null,
     "fixVersions": [],
