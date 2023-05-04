@@ -30,7 +30,6 @@ def main(log: Logger, args: argparse.Namespace):
             all=args.all
         )
     )
-    log.info(f"Running with {params}")
     check = None
     slack_channel = None
     slack_personal = None
@@ -50,7 +49,7 @@ def main(log: Logger, args: argparse.Namespace):
         ticket = extract_ticket_from_branch(run_properties.versioning.branch)
         issue = jira.get_issue(ticket)
         jira_ticket = JiraTicket.from_issue_response(issue)
-        ticket_markdown = to_github_markdown(jira_ticket, jira_config.site)
+        ticket_markdown = to_github_markdown(jira_ticket.description, jira_config.site)
         check = CommitCheck(config=config, logger=log)
 
         def compose_pr_comment() -> str:
