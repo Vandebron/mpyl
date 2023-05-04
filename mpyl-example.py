@@ -2,8 +2,8 @@ import argparse
 import logging
 import sys
 from logging import Logger
-logging.basicConfig(level=logging.NOTSET)
 
+logging.basicConfig(level=logging.INFO)
 
 
 def main(log: Logger, args: argparse.Namespace):
@@ -46,13 +46,11 @@ def main(log: Logger, args: argparse.Namespace):
             create_jira_for_config, to_github_markdown
 
         jira_config = JiraConfig.from_config(config=config)
-        log.info(f"ZZZZZZZZZZZ")
-        log.info(f"{jira_config}")
         jira = create_jira_for_config(jira_config)
         ticket = extract_ticket_from_branch(run_properties.versioning.branch)
         issue = jira.get_issue(ticket)
         jira_ticket = JiraTicket.from_issue_response(issue)
-        ticket_markdown = to_github_markdown(jira_ticket)
+        ticket_markdown = to_github_markdown(jira_ticket, jira_config.site)
         check = CommitCheck(config=config, logger=log)
 
         def compose_pr_comment() -> str:
@@ -92,7 +90,6 @@ if __name__ == "__main__":
     FORMAT = "%(name)s  %(message)s"
 
     parsed_args = parser.parse_args()
-    print("ASFDSDFSADSFA")
     mpl_logger = logging.getLogger()
     mpl_logger.info("Starting run.....")
     try:
