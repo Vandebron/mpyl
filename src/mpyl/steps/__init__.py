@@ -119,6 +119,12 @@ class Step(metaclass=IPluginRegistry):
         self.before = before
         self.after = after
 
+    @classmethod
+    def get_subclasses(cls):
+        for subclass in cls.__subclasses__():
+            yield from subclass.get_subclasses()
+            yield subclass
+
     def execute(self, step_input: Input) -> Output:
         """ Execute an individual step for a specific `project` at a specific `stage` of the pipeline.
         :param step_input: The input of the project along with its build properties and required artifact (if any).

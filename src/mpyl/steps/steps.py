@@ -62,31 +62,21 @@ class Steps:
             validate(properties.config, schema_dict.decode('utf-8'))
 
         self._logger = logger
+        self._step_executors: dict[Stage, set[Step]] = {}
 
-        self._step_executors: dict[Stage, set[Step]] = {
-            Stage.BUILD: {
-                BuildEcho(logger),
-                BuildSbt(logger),
-                BuildDocker(logger)
-            },
-            Stage.TEST: {
-                TestEcho(logger),
-                TestSbt(logger),
-                TestDocker(logger)
-            },
-            Stage.DEPLOY: {
-                DeployEcho(logger),
-                DeployKubernetes(logger),
-                DeployKubernetesJob(logger),
-                DeployKubernetesSparkJob(logger),
-                EphemeralDockerDeploy(logger)
-            }
-        }
+        for stage in Stage:
+            steps = set()
+            for step in Step.get_subclasses():
+                if str(stage.name.lower()) in str(step):
+                    steps.add(step)
+            self._step_executors[stage] = steps
+            print("STAGE", stage, steps)
 
         self._properties = properties
+
         for stage, steps in self._step_executors.items():
             self._logger.debug(f"Registered executors for stage {stage.name}: "  # pylint: disable=E1101
-                               f"{[step.meta.name for step in steps]}")
+                               f"with steps {steps}.")
 
     def _find_executor(self, stage: Stage, step_name: str) -> Optional[Step]:
         executors = filter(lambda e: e.meta.stage == stage and step_name == e.meta.name, self._step_executors[stage])
