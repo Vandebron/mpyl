@@ -28,6 +28,7 @@ def main(log: Logger, args: argparse.Namespace):
             all=args.all
         )
     )
+    log.info(f"Running with {params}")
     check = None
     slack_channel = None
     slack_personal = None
