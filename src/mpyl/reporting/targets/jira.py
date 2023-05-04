@@ -93,13 +93,13 @@ def create_jira_for_config(jira_config: JiraConfig):
     return Jira(
         url=jira_config.site,
         token=jira_config.token,
-        api_version='3',
+        api_version='2',
         cloud=True
     ) if jira_config.token else Jira(
         url=jira_config.site,
         username=jira_config.user_name,
         password=jira_config.password,
-        api_version='3', cloud=True
+        api_version='2', cloud=True
     )
 
 
