@@ -43,6 +43,7 @@ def main(log: Logger, args: argparse.Namespace):
             create_jira_for_config, to_github_markdown
 
         jira_config = JiraConfig.from_config(config=config)
+        log.info(f"{jira_config}")
         jira = create_jira_for_config(jira_config)
         ticket = extract_ticket_from_branch(run_properties.versioning.branch)
         issue = jira.get_issue(ticket)
