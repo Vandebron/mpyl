@@ -54,7 +54,7 @@ def main(log: Logger, args: argparse.Namespace):
         ticket_markdown = to_github_markdown(jira_ticket.description, jira_config.site)
         check = CommitCheck(config=config, logger=log)
 
-        def compose_pr_comment() -> str:
+        def compose_pr_comment(_result: RunResult, _config: dict) -> str:
             return ticket_markdown
 
         github_comment = PullRequestComment(config=config, compose_function=compose_pr_comment)
