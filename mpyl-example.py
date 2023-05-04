@@ -49,6 +49,8 @@ def main(log: Logger, args: argparse.Namespace):
         ticket = extract_ticket_from_branch(run_properties.versioning.branch)
         issue = jira.get_issue(ticket)
         jira_ticket = JiraTicket.from_issue_response(issue)
+        log.info(jira_ticket.summary)
+        log.info(jira_ticket.description)
         ticket_markdown = to_github_markdown(jira_ticket.description, jira_config.site)
         check = CommitCheck(config=config, logger=log)
 
