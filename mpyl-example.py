@@ -32,16 +32,28 @@ def main(log: Logger, args: argparse.Namespace):
     slack_channel = None
     slack_personal = None
     jira = None
-    github_comment= None
+    github_comment = None
 
     if not args.local:
         from mpyl.reporting.targets.github import CommitCheck
         from mpyl.reporting.targets.slack import SlackReporter
         from mpyl.steps.run import RunResult
-        from src.mpyl.reporting.targets.github import PullRequestComment
+        from mpyl.reporting.targets.github import PullRequestComment
+        from mpyl.reporting.targets.jira import JiraTicket, JiraConfig, extract_ticket_from_branch, \
+            create_jira_for_config, to_github_markdown
 
+        jira_config = JiraConfig.from_config(config=config)
+        jira = create_jira_for_config(jira_config)
+        ticket = extract_ticket_from_branch(run_properties.versioning.branch)
+        issue = jira.get_issue(ticket)
+        jira_ticket = JiraTicket.from_issue_response(issue)
+        ticket_markdown = to_github_markdown(jira_ticket)
         check = CommitCheck(config=config, logger=log)
-        github_comment = PullRequestComment(config=config)
+
+        def compose_pr_comment() -> str:
+            return ticket_markdown
+
+        github_comment = PullRequestComment(config=config, compose_function=compose_pr_comment)
         slack_channel = SlackReporter(
             config,
             '#project-mpyl-notifications',
