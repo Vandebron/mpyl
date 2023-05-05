@@ -8,7 +8,7 @@ from src.mpyl.utilities.junit import TEST_OUTPUT_PATH_KEY
 from tests import root_test_path
 from tests.test_resources import test_data
 
-test_resource_path = root_test_path / "reporting" / "test_resources"
+test_resource_path = root_test_path / "reporting" / "formatting" / "test_resources"
 
 
 def create_test_result() -> RunResult:

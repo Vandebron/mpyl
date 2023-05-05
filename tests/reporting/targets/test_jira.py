@@ -10,7 +10,7 @@ from tests.test_resources.test_data import assert_roundtrip
 
 
 class TestJiraReporter:
-    test_resource_path = root_test_path / "reporting" / "test_resources"
+    test_resource_path = root_test_path / "reporting" / "targets" / "test_resources"
 
     def test_should_print_results_as_string(self):
         ticket_json = json.loads(Path(self.test_resource_path / "jira_issue.json").read_text(encoding='utf-8'))
