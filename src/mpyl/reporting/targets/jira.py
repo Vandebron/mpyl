@@ -125,8 +125,14 @@ def to_github_markdown(jira_markdown: str, jira_url: str) -> str:
 
 
 def to_markdown_summary(ticket: JiraTicket) -> str:
+    description_markdown = to_github_markdown(ticket.description, ticket.ticket_url)
+    lines = description_markdown.splitlines()
+    max_message_length = 288
+    if len(lines) > max_message_length:
+        description_markdown = "\n".join(lines[:max_message_length]) + "\n..."
+
     return f"#### 📕 [{ticket.ticket_id}]({ticket.ticket_url}) {ticket.summary} \n" \
-           f"{to_github_markdown(ticket.description, ticket.ticket_url)}"
+           f"{description_markdown}"
 
 
 class JiraReporter(Reporter):
