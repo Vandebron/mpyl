@@ -57,7 +57,8 @@ def compose_message_body(results: RunResult, _unused_config: Optional[Dict] = No
 class PullRequestComment(Reporter):
     _config: GithubConfig
 
-    def __init__(self, config: Dict, compose_function: typing.Callable = compose_message_body):
+    def __init__(self, config: Dict,
+                 compose_function: typing.Callable[[RunResult, Optional[Dict]], str] = compose_message_body):
         self._raw_config = config
         self._config = GithubConfig(config)
         self.git_repository = Repository(RepoConfig(config))
