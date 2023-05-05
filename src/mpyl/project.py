@@ -275,7 +275,7 @@ class Deployment:
         pr_number = os.getenv('CHANGE_ID')
 
         if props:
-            for env_prop in props['env']:
+            for env_prop in props.get('env', []):
                 for key in env_prop.keys():
                     if '{namespace}' in env_prop[key]:
                         if namespace is None:
