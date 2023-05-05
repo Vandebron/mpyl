@@ -9,7 +9,8 @@ from tests.test_resources.test_data import assert_roundtrip
 
 
 class TestSlackReporter:
-    test_resource_path = root_test_path / "reporting" / "test_resources"
+    test_formatting_resource_path = root_test_path / "reporting" / "formatting" / "test_resources"
+    test_targets_resource_path = root_test_path / "reporting" / "targets" / "test_resources"
 
     @pytest.mark.skip(reason="for a quick local test roundtrip")
     def test_send_test_message(self):
@@ -25,6 +26,6 @@ class TestSlackReporter:
         slack.send_report(run_result)
 
     def test_convert_md_to_slack(self):
-        with open(self.test_resource_path / "markdown_run_with_plan.md", encoding='utf-8') as markdown:
+        with open(self.test_formatting_resource_path / "markdown_run_with_plan.md", encoding='utf-8') as markdown:
             markdown_report = to_slack_markdown(markdown.read())
-            assert_roundtrip(self.test_resource_path / "markdown_run_slack.md", markdown_report)
+            assert_roundtrip(self.test_targets_resource_path / "markdown_run_slack.md", markdown_report)

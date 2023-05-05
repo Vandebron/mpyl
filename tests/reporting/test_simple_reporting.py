@@ -7,7 +7,7 @@ from tests.test_resources.test_data import assert_roundtrip
 
 
 class TestReporting:
-    test_resource_path = root_test_path / "reporting" / "test_resources"
+    test_resource_path = root_test_path / "reporting" / "formatting" / "test_resources"
 
     def test_should_print_results_as_string(self):
         run_result = create_test_result()
