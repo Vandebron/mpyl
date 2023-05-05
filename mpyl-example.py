@@ -49,11 +49,10 @@ def main(log: Logger, args: argparse.Namespace):
         ticket = extract_ticket_from_branch(run_properties.versioning.branch)
         issue = jira_client.get_issue(ticket)
         jira_ticket = JiraTicket.from_issue_response(issue)
-        ticket_markdown = to_markdown_summary(jira_ticket)
         check = CommitCheck(config=config, logger=log)
 
-        def compose_pr_comment(_result: RunResult, _config: dict) -> str:
-            return ticket_markdown
+        def compose_pr_comment(result: RunResult, _config: dict) -> str:
+            return to_markdown_summary(jira_ticket, result)
 
         github_comment = PullRequestComment(config=config, compose_function=compose_pr_comment)
         slack_channel = SlackReporter(
