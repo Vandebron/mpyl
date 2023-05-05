@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 from src.mpyl.reporting.targets.jira import extract_ticket_from_branch, JiraTicket, to_markdown_summary, \
@@ -31,11 +32,12 @@ class TestJiraReporter:
         assert_roundtrip(self.test_resource_path / "markdown_jira_ticket_to_github.md", summary)
 
     def test_should_extract_ticket_from_branch(self):
-        assert extract_ticket_from_branch('feature/TICKET-281-slack-reporter') == 'TICKET-281'
-        assert extract_ticket_from_branch('feature/TECH-281-slack-reporter') == 'TECH-281'
-        assert extract_ticket_from_branch('feature/ARC-590-slack-reporter') == 'ARC-590'
-        assert extract_ticket_from_branch('feature/arc-590-slack-reporter') == 'ARC-590'
-        assert extract_ticket_from_branch('chore/arc-590-slack-reporter') == 'ARC-590'
-        assert extract_ticket_from_branch('chore:arc-590-slack-reporter') == 'ARC-590'
-        assert extract_ticket_from_branch('arc-590-slack-reporter') == 'ARC-590'
-        assert extract_ticket_from_branch('feature/some-fix') is None
+        pattern = re.compile('[A-Za-z]{3,}-\\d+')
+        assert extract_ticket_from_branch('feature/TICKET-281-slack-reporter', pattern) == 'TICKET-281'
+        assert extract_ticket_from_branch('feature/TECH-281-slack-reporter', pattern) == 'TECH-281'
+        assert extract_ticket_from_branch('feature/ARC-590-slack-reporter', pattern) == 'ARC-590'
+        assert extract_ticket_from_branch('feature/arc-590-slack-reporter', pattern) == 'ARC-590'
+        assert extract_ticket_from_branch('chore/arc-590-slack-reporter', pattern) == 'ARC-590'
+        assert extract_ticket_from_branch('chore:arc-590-slack-reporter', pattern) == 'ARC-590'
+        assert extract_ticket_from_branch('arc-590-slack-reporter', pattern) == 'ARC-590'
+        assert extract_ticket_from_branch('feature/some-fix', pattern) is None
