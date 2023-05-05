@@ -4,6 +4,7 @@ from pathlib import Path
 from src.mpyl.reporting.targets.jira import extract_ticket_from_branch, JiraTicket, to_markdown_summary, \
     to_github_markdown
 from tests import root_test_path
+from tests.reporting import create_test_result
 from tests.test_resources.test_data import assert_roundtrip
 
 
@@ -21,13 +22,13 @@ class TestJiraReporter:
     def test_convert_jira_to_github_markdown(self):
         jira_markdown = Path(self.test_resource_path / "markdown_jira.md").read_text(encoding='utf-8')
         github_markdown = to_github_markdown(jira_markdown, 'http://vandebron.atlassian.com')
-        assert_roundtrip(self.test_resource_path / "markdown_jira_github.md", github_markdown, overwrite=False)
+        assert_roundtrip(self.test_resource_path / "markdown_jira_github.md", github_markdown)
 
     def test_ticket_to_summary(self):
         ticket_json = json.loads(Path(self.test_resource_path / "jira_issue.json").read_text(encoding='utf-8'))
         ticket = JiraTicket.from_issue_response(ticket_json)
-        summary = to_markdown_summary(ticket)
-        assert_roundtrip(self.test_resource_path / "markdown_jira_ticket_to_github.md", summary, overwrite=False)
+        summary = to_markdown_summary(ticket, create_test_result())
+        assert_roundtrip(self.test_resource_path / "markdown_jira_ticket_to_github.md", summary)
 
     def test_should_extract_ticket_from_branch(self):
         assert extract_ticket_from_branch('feature/TICKET-281-slack-reporter') == 'TICKET-281'
