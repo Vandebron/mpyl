@@ -17,6 +17,7 @@ jira:
   site: 'https://vandebron.atlassian.net'
   userName: !ENV ${MPYL_JIRA_TOKEN_USR:jira_user}
   password: !ENV ${MPYL_JIRA_TOKEN_PSW:jira_password}
+  ticketPattern: '[A-Za-z]{3,}-\\d+'
 docker:
   registry:
     hostName: !ENV ${DOCKER_HOST_NAME:docker_host}
