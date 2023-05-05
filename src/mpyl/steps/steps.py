@@ -12,18 +12,7 @@ from unittest import TestSuite
 from ruamel.yaml import YAML  # type: ignore
 
 from . import Step
-from .build.dockerbuild import BuildDocker
-from .build.echo import BuildEcho
-from .build.sbt import BuildSbt
-from .deploy.echo import DeployEcho
-from .deploy.ephemeral_docker_deploy import EphemeralDockerDeploy
-from .deploy.kubernetes import DeployKubernetes
-from .deploy.kubernetes_job import DeployKubernetesJob
-from .deploy.kubernetes_spark_job import DeployKubernetesSparkJob
 from .models import Output, Input, RunProperties, ArtifactType, Artifact
-from .test.dockertest import TestDocker
-from .test.echo import TestEcho
-from .test.sbt import TestSbt
 from ..project import Project
 from ..project import Stage
 from ..utilities.junit import to_test_suites
@@ -68,9 +57,8 @@ class Steps:
             steps = set()
             for step in Step.get_subclasses():
                 if str(stage.name.lower()) in str(step):
-                    steps.add(step)
+                    steps.add(step(logger))
             self._step_executors[stage] = steps
-            print("STAGE", stage, steps)
 
         self._properties = properties
 

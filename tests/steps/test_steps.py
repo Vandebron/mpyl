@@ -98,7 +98,8 @@ class TestSteps:
         assert result.output.message == "Stage 'build' not defined on project 'test'"
 
     def test_find_all_steps(self):
-        subs = list(Step.get_subclasses())
-        print(subs[0].__name__)
-        print(subs[0].meta)
-
+        assert list(Step.get_subclasses()) != ""
+        for stage in Stage:
+            for step in Step.get_subclasses():
+                if str(stage.name.lower()) in str(step):
+                    assert isinstance(step(Logger))
