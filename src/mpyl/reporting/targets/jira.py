@@ -4,7 +4,7 @@ Jira result reporter.
 ### Usage
 
 To determine which `Jira` ticket a pipeline run relates to, the branch is parsed.
-The following pattern is assumed `[A-Za-z]{3,}-` to signify the Jira ticket key.
+The following pattern is assumed unless otherwise specified: `[A-Za-z]{3,}-` to signify the Jira ticket key.
 If a Jira ticket key cannot be extracted from the branch, this reporter will fail silently.
 
 ### Actions
@@ -24,6 +24,7 @@ Configure hostname and credentials under `jira` in the `config.yml`
 import re
 from dataclasses import dataclass
 from logging import Logger
+from re import Pattern
 from typing import Optional
 from urllib.parse import urlsplit
 
@@ -65,8 +66,7 @@ class JiraTicket:
                           assignee_email=assignee_email)
 
 
-def extract_ticket_from_branch(branch: str) -> Optional[str]:
-    pattern = r'[A-Za-z]{3,}-\d+'
+def extract_ticket_from_branch(branch: str, pattern: Pattern) -> Optional[str]:
     ticket: Optional[str] = next(iter(re.findall(pattern, branch)), None)
     if ticket:
         return ticket.upper()
@@ -78,6 +78,7 @@ class JiraConfig:
     site: str
     user_name: str
     password: str
+    ticket_pattern: Pattern
     token: Optional[str]
 
     @staticmethod
@@ -86,6 +87,7 @@ class JiraConfig:
         if not jira_config:
             raise KeyError('jira section needs to be defined in mpyl_config.yml')
         return JiraConfig(site=jira_config['site'], user_name=jira_config['userName'], password=jira_config['password'],
+                          ticket_pattern=re.compile(jira_config.get('ticketPattern', '[A-Za-z]{3,}-\\d+')),
                           token=jira_config.get('token'))
 
 
@@ -147,7 +149,7 @@ def compose_build_status(result: RunResult, config: dict) -> str:
     branch = result.run_properties.versioning.branch
     if not branch:
         return " # ⚠️ `versioning.branch` not set, cannot find corresponding ticket"
-    ticket_id = extract_ticket_from_branch(branch)
+    ticket_id = extract_ticket_from_branch(branch, jira_config.ticket_pattern)
     if not branch:
         return f" # ⚠️ Could not find ticket corresponding to `{branch}. " \
                f"Does your branch name follow the correct pattern?"
@@ -160,7 +162,7 @@ class JiraReporter(Reporter):
 
     def __init__(self, config: dict, branch: str, logger: Logger):
         jira_config = JiraConfig.from_config(config)
-        self._ticket = extract_ticket_from_branch(branch)
+        self._ticket = extract_ticket_from_branch(branch, jira_config.ticket_pattern)
         self._config = jira_config
         self._jira = create_jira_for_config(jira_config)
         self._logger = logger
