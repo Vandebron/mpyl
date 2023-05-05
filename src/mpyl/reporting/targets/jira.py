@@ -134,11 +134,23 @@ def to_markdown_summary(ticket: JiraTicket, run_result: RunResult) -> str:
     details = run_result.run_properties.details
 
     build_status = f"🏗️ Build [{details.build_id}]({details.run_url}) {run_result.status_line}, " \
-                   f"started by {details.user}"
+                   f"started by _{details.user}_"
     return f"## 📕 [{ticket.ticket_id}]({ticket.ticket_url}) {ticket.summary} " \
            f"![{ticket.user_email}]({ticket.user_avatar}) \n" \
            f"{description_markdown}\n" \
            f"{build_status}"
+
+
+def compose_build_status(result: RunResult, config: dict) -> str:
+    jira_config = JiraConfig.from_config(config=config)
+    jira_client = create_jira_for_config(jira_config)
+    branch = result.run_properties.versioning.branch
+    if not branch:
+        return " # ⚠️ `versioning.branch` not set, cannot find corresponding ticket"
+    ticket_id = extract_ticket_from_branch(branch)
+    issue = jira_client.get_issue(ticket_id)
+    jira_ticket = JiraTicket.from_issue_response(issue)
+    return to_markdown_summary(jira_ticket, result)
 
 
 class JiraReporter(Reporter):
