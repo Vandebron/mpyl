@@ -101,7 +101,8 @@ def create_jira_for_config(jira_config: JiraConfig):
         url=jira_config.site,
         username=jira_config.user_name,
         password=jira_config.password,
-        api_version='2', cloud=True
+        api_version='2',
+        cloud=True
     )
 
 
@@ -150,7 +151,7 @@ def compose_build_status(result: RunResult, config: dict) -> str:
     if not branch:
         return " # ⚠️ `versioning.branch` not set, cannot find corresponding ticket"
     ticket_id = extract_ticket_from_branch(branch, jira_config.ticket_pattern)
-    if not branch:
+    if not ticket_id:
         return f" # ⚠️ Could not find ticket corresponding to `{branch}. " \
                f"Does your branch name follow the correct pattern?"
     issue = jira_client.get_issue(ticket_id)
