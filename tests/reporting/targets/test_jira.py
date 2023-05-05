@@ -1,8 +1,6 @@
 import json
 from pathlib import Path
 
-from atlassian import Jira
-
 from src.mpyl.reporting.targets.jira import extract_ticket_from_branch, JiraTicket, to_markdown_summary, \
     to_github_markdown
 from tests import root_test_path
