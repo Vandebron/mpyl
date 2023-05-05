@@ -30,8 +30,6 @@ properties:
       type: string
       enum:
         - Energy Trading
-        - Big Data
-        - Flex IoT
         - VPP
         - Marketplace
         - EV Home
