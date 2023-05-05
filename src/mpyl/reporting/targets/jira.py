@@ -148,6 +148,9 @@ def compose_build_status(result: RunResult, config: dict) -> str:
     if not branch:
         return " # ⚠️ `versioning.branch` not set, cannot find corresponding ticket"
     ticket_id = extract_ticket_from_branch(branch)
+    if not branch:
+        return f" # ⚠️ Could not find ticket corresponding to `{branch}. " \
+               f"Does your branch name follow the correct pattern?"
     issue = jira_client.get_issue(ticket_id)
     jira_ticket = JiraTicket.from_issue_response(issue)
     return to_markdown_summary(jira_ticket, result)
