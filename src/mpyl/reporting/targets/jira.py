@@ -54,7 +54,7 @@ class JiraTicket:
         ticket_id = response['key']
         assignee = fields.get('assignee')
         user = assignee or fields.get('reporter') or fields.get('creator')
-        avatar = user['avatarUrls']['48x48'] if user else ''
+        avatar = user['avatarUrls']['24x24'] if user else ''
         status_name = fields['status']['name']
         assignee_email = assignee['emailAddress'] if assignee else None
         ticket_url = f"{jira_url}/browse/{ticket_id}"
@@ -124,15 +124,21 @@ def to_github_markdown(jira_markdown: str, jira_url: str) -> str:
     return jira_markdown
 
 
-def to_markdown_summary(ticket: JiraTicket) -> str:
+def to_markdown_summary(ticket: JiraTicket, run_result: RunResult) -> str:
     description_markdown = to_github_markdown(ticket.description, ticket.ticket_url)
     lines = description_markdown.splitlines()
     max_message_length = 288
     if len(lines) > max_message_length:
         description_markdown = "\n".join(lines[:max_message_length]) + "\n..."
 
-    return f"#### 📕 [{ticket.ticket_id}]({ticket.ticket_url}) {ticket.summary} \n" \
-           f"{description_markdown}"
+    details = run_result.run_properties.details
+
+    build_status = f"🏗️ Build [{details.build_id}]({details.run_url}) {run_result.status_line}, " \
+                   f"started by {details.user}"
+    return f"## 📕 [{ticket.ticket_id}]({ticket.ticket_url}) {ticket.summary} " \
+           f"![{ticket.user_email}]({ticket.user_avatar}) \n" \
+           f"{description_markdown}\n" \
+           f"{build_status}"
 
 
 class JiraReporter(Reporter):
