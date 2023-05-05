@@ -19,9 +19,6 @@ pipeline {
                 MPYL_GITHUB_APP_PRIVATE_KEY = credentials('mpyl_pipeline_github_app_private_key')
                 SLACK_TOKEN = credentials('JENKINS_MPYL_APP_OAUTH_TOKEN')
                 MPYL_JIRA_TOKEN = credentials('MPYL_JIRA_TOKEN')
-                JENKINS_URL = credentials('JENKINS_URL')
-                JIRA_URL = credentials('JIRA_URL')
-                DOCKER_HOST_NAME = credentials('DOCKER_HOST_NAME')
             }
             steps {
                 script {
