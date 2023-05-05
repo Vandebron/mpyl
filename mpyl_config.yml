@@ -20,7 +20,7 @@ jira:
   ticketPattern: '[A-Za-z]{3,}-\\d+'
 docker:
   registry:
-    hostName: !ENV ${DOCKER_HOST_NAME:docker_host}
+    hostName: 'bigdataregistry.azurecr.io'
     userName: !ENV ${DOCKER_REGISTRY_USR:docker_user}
     password: !ENV ${DOCKER_REGISTRY_PSW:docker_password}
   build:
@@ -32,7 +32,7 @@ docker:
     periodSeconds: 2
     failureThreshold: 20
 jenkins:
-  url: !ENV ${JENKINS_URL}
+  url: 'https://jenkins.k8s-serv-backend.vdbinfra.nl/'
   pipelines:
     mpl: 'MPL Pipeline - Test'
     mpyl-test: 'MPyL Pipeline - Test'
