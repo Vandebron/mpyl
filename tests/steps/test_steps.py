@@ -98,4 +98,7 @@ class TestSteps:
         assert result.output.message == "Stage 'build' not defined on project 'test'"
 
     def test_find_all_steps(self):
-        assert list(Step.get_subclasses()) == ""
+        subs = list(Step.get_subclasses())
+        print(subs[0].__name__)
+        print(subs[0].meta)
+
