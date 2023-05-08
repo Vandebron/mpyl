@@ -14,9 +14,7 @@ in the `deployment/project.yml`. It defines how the source code to which it rela
 """
 
 import logging
-import os
 import pkgutil
-import re
 import time
 import traceback
 from dataclasses import dataclass
@@ -221,7 +219,6 @@ class Kubernetes:
     resources: Resources
     job: Optional[Job]
 
-
     @staticmethod
     def from_config(values: dict):
         return Kubernetes(
@@ -270,27 +267,9 @@ class Deployment:
     def from_config(values: dict):
         props = values.get('properties')
         kubernetes = values.get('kubernetes')
-        namespace = values.get('namespace')
         traefik = values.get('traefik')
-        pr_number = os.getenv('CHANGE_ID')
 
-        if props:
-            for env_prop in props['env']:
-                for key in env_prop.keys():
-                    if '{namespace}' in env_prop[key]:
-                        if namespace is None:
-                            raise KeyError(
-                                'Found "{namespace}" placeholder but no deployment.namespace was set in project.yml'
-                            )
-
-                        env_prop[key] = re.sub('{namespace}', namespace, env_prop[key])
-
-        if traefik and pr_number:
-            for hosts in traefik['hosts']:
-                if 'pr' in hosts['host']:
-                    hosts['host']['pr'] = re.sub('{PR-NUMBER}', pr_number, hosts['host']['pr'])
-
-        return Deployment(namespace=namespace,
+        return Deployment(namespace=values.get('namespace'),
                           properties=Properties.from_config(props) if props else None,
                           kubernetes=Kubernetes.from_config(kubernetes) if kubernetes else None,
                           traefik=Traefik.from_config(traefik) if traefik else None)
