@@ -3,9 +3,6 @@ import logging
 import sys
 from logging import Logger
 
-logging.basicConfig(level=logging.INFO)
-
-
 def main(log: Logger, args: argparse.Namespace):
     if args.local:
         from src.mpyl.reporting.targets.jira import JiraReporter
@@ -79,7 +76,7 @@ if __name__ == "__main__":
     FORMAT = "%(name)s  %(message)s"
 
     parsed_args = parser.parse_args()
-    mpl_logger = logging.getLogger()
+    mpl_logger = logging.getLogger("mpyl")
     mpl_logger.info("Starting run.....")
     try:
         main(mpl_logger, parsed_args)
