@@ -29,6 +29,7 @@ pipeline {
                             sh "pipenv install -d --skip-lock"
                             sh "pipenv requirements"
                             sh "pipenv run mpyl projects lint"
+                            sh "pipenv run mpyl health"
                             sh "pipenv run run-ci ${params.BUILD_PARAMS}"
                         }
                     }
