@@ -1,6 +1,7 @@
 """
 Markdown run result formatters
 """
+import operator
 
 from junitparser import TestSuite
 
@@ -18,7 +19,8 @@ def summary_to_markdown(summary: TestRunSummary):
 def __to_oneliner(result: list[StepResult], plan: set[Project]) -> str:
     project_names: list[str] = []
     if plan:
-        for proj in plan:
+        sorted_plan = sorted(plan, key=operator.attrgetter('name'))
+        for proj in sorted_plan:
             found_result = next((r for r in result if r.project.name == proj.name), None)
             if found_result:
                 project_names.append(f'*{proj.name}*' if found_result.output.success else f'~~{proj.name}~~')
@@ -27,7 +29,7 @@ def __to_oneliner(result: list[StepResult], plan: set[Project]) -> str:
     else:
         project_names = list(map(lambda r: f'_{r.project.name}_', result))
 
-    return f'{", ".join(sorted(project_names))}'
+    return f'{", ".join(project_names)}'
 
 
 def stage_to_icon(stage: Stage):
