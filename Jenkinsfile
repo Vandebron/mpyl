@@ -22,6 +22,11 @@ pipeline {
             }
             steps {
                 script {
+                    def gitconfig = scm.userRemoteConfigs.getAt(0)
+                    git(branch: 'main',credentialsId: gitconfig.getCredentialsId(), url: 'https://github.com/Vandebron/mpyl_config.git')
+                    def config = readFile('mpyl_config.yml')
+                    git(branch: env.BRANCH_NAME,credentialsId: gitconfig.getCredentialsId(), url: gitconfig.getUrl())
+                    writeFile(file: 'mpyl_config.yml', text: config)
                     withKubeConfig([credentialsId: 'jenkins-rancher-service-account-kubeconfig-test']) {
                         wrap([$class: 'BuildUser']) {
                             sh "pipenv clean"
