@@ -4,9 +4,21 @@ from logging import Logger
 from kubernetes import config, client
 
 from ...deploy.k8s.resources import CustomResourceDefinition
+from ...models import RunProperties
+from ....project import Project, Target
 from ....steps import Input, Output
 from ....steps.deploy.k8s import helm
 from ....steps.deploy.k8s.rancher import cluster_config, rancher_namespace_metadata
+
+
+def get_namespace(run_properties: RunProperties, project: Project) -> str:
+    if run_properties.target == Target.PULL_REQUEST:
+        return run_properties.versioning.identifier
+
+    if project.deployment and project.deployment.namespace:
+        return project.deployment.namespace
+
+    return project.name
 
 
 def upsert_namespace(logger: Logger, step_input: Input, context: str):
@@ -16,7 +28,7 @@ def upsert_namespace(logger: Logger, step_input: Input, context: str):
     logger.info(f"Deploying target {properties.target} and k8s context {context}")
     api = client.CoreV1Api()
 
-    namespace = f'pr-{properties.versioning.pr_number}'
+    namespace = get_namespace(properties, step_input.project)
     meta_data = rancher_namespace_metadata(namespace, step_input)
     namespaces = api.list_namespace(field_selector=f'metadata.name={namespace}')
 
