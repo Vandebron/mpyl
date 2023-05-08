@@ -1,6 +1,7 @@
 """ Discovery of projects that are relevant to a specific `mpyl.stage.Stage` . Determine which of the
 discovered projects have been invalidated due to changes in the source code since the last build of the project's
 output artifact."""
+import operator
 
 from ..project import Project
 from ..project import Stage
@@ -49,7 +50,7 @@ def find_invalidated_projects_per_stage(all_projects: set[Project], change_histo
     for stage in Stage:
         projects = find_invalidated_projects_for_stage(all_projects, stage, change_history)
         if projects:
-            projects_for_stage[stage] = projects
+            projects_for_stage[stage] = set(sorted(projects, key=operator.attrgetter('name')))
     return projects_for_stage
 
 
