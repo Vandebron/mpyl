@@ -3,9 +3,11 @@
 import asyncio
 import os
 import pkgutil
+from pathlib import Path
 from subprocess import CalledProcessError
 
 import jsonschema
+from dotenv import load_dotenv
 from rich.console import Console
 from rich.markdown import Markdown
 
@@ -83,6 +85,10 @@ def __check_config(console, env_var, default, schema_path, name):
         env_var) else f"{name} at '/{path}'"
     if os.path.exists(path):
         console.log(f"  ✅ Found {location}")
+
+        if load_dotenv(Path(".env")):
+            console.log("  ✅ Set env variables via .env file")
+
         parsed = parse_config(path)
         schema_dict = pkgutil.get_data(__name__, schema_path)
         if schema_dict:
