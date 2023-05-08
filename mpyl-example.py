@@ -3,6 +3,8 @@ import logging
 import sys
 from logging import Logger
 
+logging.basicConfig(level=logging.INFO)
+
 
 def main(log: Logger, args: argparse.Namespace):
     if args.local:
@@ -32,13 +34,18 @@ def main(log: Logger, args: argparse.Namespace):
     slack_channel = None
     slack_personal = None
     jira = None
+    github_comment = None
 
     if not args.local:
         from mpyl.reporting.targets.github import CommitCheck
         from mpyl.reporting.targets.slack import SlackReporter
         from mpyl.steps.run import RunResult
+        from mpyl.reporting.targets.github import PullRequestComment
+        from mpyl.reporting.targets.jira import compose_build_status
 
         check = CommitCheck(config=config, logger=log)
+
+        github_comment = PullRequestComment(config=config, compose_function=compose_build_status)
         slack_channel = SlackReporter(
             config,
             '#project-mpyl-notifications',
@@ -57,6 +64,7 @@ def main(log: Logger, args: argparse.Namespace):
         check.send_report(run_result)
         slack_channel.send_report(run_result)
         jira.send_report(run_result)
+        github_comment.send_report(run_result)
 
     sys.exit(0 if run_result.is_success else 1)
 
@@ -71,7 +79,8 @@ if __name__ == "__main__":
     FORMAT = "%(name)s  %(message)s"
 
     parsed_args = parser.parse_args()
-    mpl_logger = logging.getLogger("mpl")
+    mpl_logger = logging.getLogger()
+    mpl_logger.info("Starting run.....")
     try:
         main(mpl_logger, parsed_args)
     except Exception as e:

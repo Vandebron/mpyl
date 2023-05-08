@@ -31,6 +31,7 @@ Checks can be referred to from branch protection rules, in order to prevent faul
 
 """
 import base64
+import typing
 from datetime import datetime
 from logging import Logger
 from pathlib import Path
@@ -49,12 +50,19 @@ from ...utilities.github import GithubConfig, get_pr_for_branch, GithubAppConfig
 from ...utilities.repo import Repository, RepoConfig
 
 
+def compose_message_body(results: RunResult, _unused_config: Optional[Dict] = None) -> str:
+    return run_result_to_markdown(results)
+
+
 class PullRequestComment(Reporter):
     _config: GithubConfig
 
-    def __init__(self, config: Dict):
+    def __init__(self, config: Dict,
+                 compose_function: typing.Callable[[RunResult, Optional[Dict]], str] = compose_message_body):
+        self._raw_config = config
         self._config = GithubConfig(config)
         self.git_repository = Repository(RepoConfig(config))
+        self.compose_function = compose_function
 
     def _get_pull_request(self, repo: GithubRepository, run_properties: RunProperties):
         if run_properties.versioning.pr_number:
@@ -74,9 +82,9 @@ class PullRequestComment(Reporter):
         comments_for_user = [c for c in comments if c.user.id == authenticated_user.id]
         if comments_for_user:
             comment_to_update: IssueComment = comments_for_user.pop()
-            comment_to_update.edit(run_result_to_markdown(results))
+            comment_to_update.edit(self.compose_function(results, self._raw_config))
         else:
-            pull_request.create_issue_comment(run_result_to_markdown(results))
+            pull_request.create_issue_comment(self.compose_function(results, self._raw_config))
 
 
 class CommitCheck(Reporter):

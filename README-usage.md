@@ -29,6 +29,8 @@ MPyL can be configured through a file that adheres to the `mpyl_config.yml`
 [schema](https://vandebron.github.io/mpyl/schema/mpyl_config.schema.yml).  
 Which configuration fields need to be set depends on your usecase. The error messages that you
 encounter while using the cli may guide you through the process.
+Note that the included `mpyl_config.yml` is just an example. Secrets can be injected
+through environment variables.
 <details>
   <summary>Example config</summary>
 ```yaml

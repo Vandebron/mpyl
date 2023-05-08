@@ -86,7 +86,7 @@ definitions:
       repository:
         type: string
       token:
-        type: [string, null]
+        type: [ string, null ]
       app:
         type: object
         properties:
@@ -95,7 +95,7 @@ definitions:
             type: string
           privateKeyBase64Encoded:
             description: Used to authenticate with github if the app is used (https://github.com/apps/mpyl-pipeline)
-            type: [string, null]
+            type: [ string, null ]
           appId:
             description: The id of the github app (https://github.com/apps/mpyl-pipeline) that has permission to update checks
             type: string
@@ -124,7 +124,7 @@ definitions:
             description: "Maximum number of times to poll before considering 'docker-compose up' failed"
             type: integer
             default: 20
-        required: ['periodSeconds', 'failureThreshold']
+        required: [ 'periodSeconds', 'failureThreshold' ]
     required:
       - registry
     title: Docker
@@ -148,7 +148,7 @@ definitions:
     additionalProperties: false
     properties:
       hostName:
-        type: [string, null]
+        type: [ string, null ]
       userName:
         type: string
       password:
@@ -197,13 +197,13 @@ definitions:
         additionalProperties: false
         properties:
           kubernetes:
-             "$ref": "project.schema.yml#/definitions/kubernetes"
+            "$ref": "project.schema.yml#/definitions/kubernetes"
   Slack:
     type: object
     additionalProperties: false
     properties:
       botToken:
-          type: [string, null]
+        type: [ string, null ]
       icons:
         type: object
         properties:
@@ -213,7 +213,7 @@ definitions:
             type: string
           failure:
             type: string
-        required: ['success', 'failure', 'building']
+        required: [ 'success', 'failure', 'building' ]
     required:
       - botToken
       - icons
@@ -222,11 +222,11 @@ definitions:
     additionalProperties: false
     properties:
       url:
-        type: [string, null]
+        type: [ string, null ]
         format: url
       pipelines:
         type: object
-        additionalProperties: {"type": "string"}
+        additionalProperties: { "type": "string" }
       defaultPipeline:
         type: string
   Jira:
@@ -235,7 +235,7 @@ definitions:
     properties:
       site:
         description: "Only works with the cloud version of Jira"
-        type: [string, null]
+        type: [ string, null ]
         format: uri
       userName:
         type: string
@@ -243,5 +243,9 @@ definitions:
         type: string
       token:
         type: string
+      ticketPattern:
+        type: [ string, null ]
+        default: '[A-Za-z]{3,}-\\d+'
+        description: 'A pattern that extracts a ticket number from the branch name'
     required:
       - site
