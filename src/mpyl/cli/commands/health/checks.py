@@ -39,6 +39,13 @@ def __check_jenkins(console):
         return
 
     parsed = parse_config(path)
+
+    try:
+        jenkins_conf = JenkinsConfig.from_config(parsed)
+        console.log(f'  ✅ Jenkins configured for pipeline `{jenkins_conf.default_pipeline}` at {jenkins_conf.url}')
+    except KeyError as exc:
+        console.log(f'  ❌ Jenkins config not valid: {exc}')
+
     try:
         get_token(GithubConfig(parsed))
         console.log('  ✅ Github token found')
