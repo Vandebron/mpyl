@@ -4,7 +4,7 @@ More info: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/c
 """
 
 from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, Optional
 
 from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1ObjectMeta, V1PodSpec, \
     V1RollingUpdateDeployment, V1LabelSelector, V1ContainerPort, V1EnvVar, V1Service, \
@@ -13,6 +13,7 @@ from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1Obj
     V1PodTemplateSpec, V1DeploymentStrategy, V1Job, V1JobSpec, V1CronJob, V1CronJobSpec, V1JobTemplateSpec, V1ConfigMap
 from ruamel.yaml import YAML
 
+from . import get_namespace
 from .resources import CustomResourceDefinition, to_dict  # pylint: disable = no-name-in-module
 from .resources.sealed_secret import V1SealedSecret
 from .resources.treaffik import V1AlphaIngressRoute  # pylint: disable = no-name-in-module
@@ -209,7 +210,8 @@ class ChartBuilder:
             raise AttributeError("deployment.traefik field should be set")
 
         return V1AlphaIngressRoute(metadata=self._to_object_meta(), hosts=self.deployment.traefik.hosts,
-                                   service_port=123, name=self.release_name, target=self.target)
+                                   service_port=123, name=self.release_name, target=self.target,
+                                   pr_number=self.step_input.run_properties.versioning.pr_number)
 
     def to_service_account(self) -> V1ServiceAccount:
         return V1ServiceAccount(api_version="v1", kind="ServiceAccount", metadata=self._to_object_meta(),
@@ -259,8 +261,19 @@ class ChartBuilder:
         return job
 
     def _get_env_vars(self):
+
+        def _interpolate_namespace(value: Optional[str]) -> Optional[str]:
+            if value and '{namespace}' in value:
+                namespace = get_namespace(self.step_input.run_properties, self.step_input.project)
+                return value.replace('{namespace}', namespace)
+
+            return value
+
         env_vars = list(
-            filter(lambda v: v.value, map(lambda e: V1EnvVar(name=e.key, value=e.get_value(self.target)), self.env)))
+            filter(lambda v: v.value,
+                   map(lambda e: V1EnvVar(name=e.key, value=_interpolate_namespace(e.get_value(self.target))),
+                       self.env)))
+
         sealed_for_target = list(
             filter(lambda v: v.get_value(self.target) is not None, self.sealed_secrets))
         sealed_secrets = list(map(lambda e: V1EnvVar(name=e.key, value_from=V1EnvVarSource(

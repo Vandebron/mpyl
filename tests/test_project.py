@@ -36,10 +36,10 @@ class TestMplSchema:
 
         host = project.deployment.traefik.hosts[0]
         assert host.host.get_value(Target.PULL_REQUEST_BASE) == 'Host(`payments.test.nl`)'
-        assert host.host.get_value(Target.PULL_REQUEST) == 'Host(`payments-123.test.nl`)'
+        assert host.host.get_value(Target.PULL_REQUEST) == 'Host(`payments-{PR-NUMBER}.test.nl`)'
         assert host.tls.get_value(Target.PULL_REQUEST_BASE) == 'le-custom-prod-wildcard-cert'
 
-        assert project.deployment.properties.env[2].all == 'prometheus-gateway.mpyl.svc.cluster.local'
+        assert project.deployment.properties.env[2].all == 'prometheus-gateway.{namespace}.svc.cluster.local'
 
     def test_schema_load_validation(self):
         with pytest.raises(ValidationError) as exc:
@@ -49,13 +49,3 @@ class TestMplSchema:
     def test_target_by_value(self):
         target = Target(Target.PULL_REQUEST)
         assert target == Target.PULL_REQUEST
-
-    def test_placeholder_replacement(self):
-        os.environ['CHANGE_ID'] = ''
-        project = load_project(Path(""), self.resource_path / "test_project.yml")
-        host = project.deployment.traefik.hosts[0]
-
-        assert host.host.get_value(Target.PULL_REQUEST) == 'Host(`payments-{PR-NUMBER}.test.nl`)'
-
-        with pytest.raises(KeyError, match='Found "{namespace}" placeholder but no deployment.namespace was set in project.yml'):
-            load_project(Path(""), self.resource_path / "test_invalid_namespace.yml")

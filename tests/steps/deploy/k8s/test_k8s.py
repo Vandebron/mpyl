@@ -87,7 +87,7 @@ class TestKubernetesChart:
     def test_should_validate_against_crd_schema(self):
         project = test_data.get_project()
         route = V1AlphaIngressRoute(metadata=V1ObjectMeta(), hosts=project.deployment.traefik.hosts, service_port=1234,
-                                    name='serviceName', target=Target.PRODUCTION)
+                                    name='serviceName', target=Target.PRODUCTION, pr_number=1234)
         route.spec['tls'] = {'secretName': 1234}
 
         with pytest.raises(ValueError) as exc_info:
