@@ -1,11 +1,15 @@
 """
 Wrapper around `pyaml_env`'s `parse_config`. Sets default values in config to `None`
 """
+from pathlib import Path
 
 from pyaml_env import parse_config as original_parse_config
+from dotenv import load_dotenv
 
 
 def parse_config(path: str) -> dict[str, str]:
+    load_dotenv(Path(".env"))
+
     def default_to_none(obj, default_value='N/A'):
         if isinstance(obj, (list, tuple, set)):
             return type(obj)(default_to_none(x) for x in obj if x is not default_value)
