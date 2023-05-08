@@ -85,7 +85,7 @@ class JenkinsRunner:
                 lines = line.rstrip().split('\n')
 
                 try:
-                    text = "".join(lines[-1:])
+                    text = "".join(lines)
                     progress.log(Text.from_ansi(text))
                 except MarkupError:
                     progress.log("Could not render log line")
