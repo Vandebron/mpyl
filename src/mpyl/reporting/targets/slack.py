@@ -166,6 +166,6 @@ class SlackReporter(Reporter):
     def compose_context(build_props: RunProperties, icon: str, user: Optional[str]) -> str:
         details = build_props.details
         user_name = user if user else details.user
-        return f":{icon}: Build <{details.run_url}|{details.build_id.upper()}> and changes in " \
+        return f":{icon}: Build <{details.run_url}|{details.build_id.upper()}> for " \
                f"<{details.change_url}|{build_props.versioning.identifier.upper()}> " \
                f"started by _{user_name}_"
