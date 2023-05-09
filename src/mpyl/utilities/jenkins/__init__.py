@@ -20,7 +20,7 @@ class JenkinsConfig:
 
     @property
     def default_pipeline(self) -> str:
-        return self.pipelines[self.default_pipeline]
+        return self.pipelines[self.default]
 
 
 @dataclass(frozen=True)
