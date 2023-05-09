@@ -9,7 +9,7 @@ from ruamel.yaml import YAML  # type: ignore
 
 from src.mpyl.project import Project, Stages, Stage, Target
 from src.mpyl.steps.models import Output, ArtifactType, RunProperties, VersioningProperties
-from src.mpyl.steps.steps import Steps
+from src.mpyl.steps.steps import Steps, Step
 from tests import root_test_path, test_resource_path
 from tests.test_resources import test_data
 from tests.test_resources.test_data import assert_roundtrip, get_output
@@ -96,3 +96,10 @@ class TestSteps:
         result = self.executor.execute(stage=Stage.BUILD, project=project)
         assert not result.output.success
         assert result.output.message == "Stage 'build' not defined on project 'test'"
+
+    def test_find_all_steps(self):
+        assert list(Step.get_subclasses()) != ""
+        for stage in Stage:
+            for step in Step.get_subclasses():
+                if str(stage.name.lower()) in str(step):
+                    assert isinstance(step(Logger))

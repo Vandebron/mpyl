@@ -12,18 +12,7 @@ from unittest import TestSuite
 from ruamel.yaml import YAML  # type: ignore
 
 from . import Step
-from .build.dockerbuild import BuildDocker
-from .build.echo import BuildEcho
-from .build.sbt import BuildSbt
-from .deploy.echo import DeployEcho
-from .deploy.ephemeral_docker_deploy import EphemeralDockerDeploy
-from .deploy.kubernetes import DeployKubernetes
-from .deploy.kubernetes_job import DeployKubernetesJob
-from .deploy.kubernetes_spark_job import DeployKubernetesSparkJob
 from .models import Output, Input, RunProperties, ArtifactType, Artifact
-from .test.dockertest import TestDocker
-from .test.echo import TestEcho
-from .test.sbt import TestSbt
 from ..project import Project
 from ..project import Stage
 from ..utilities.junit import to_test_suites
@@ -62,31 +51,20 @@ class Steps:
             validate(properties.config, schema_dict.decode('utf-8'))
 
         self._logger = logger
+        self._step_executors: dict[Stage, set[Step]] = {}
 
-        self._step_executors: dict[Stage, set[Step]] = {
-            Stage.BUILD: {
-                BuildEcho(logger),
-                BuildSbt(logger),
-                BuildDocker(logger)
-            },
-            Stage.TEST: {
-                TestEcho(logger),
-                TestSbt(logger),
-                TestDocker(logger)
-            },
-            Stage.DEPLOY: {
-                DeployEcho(logger),
-                DeployKubernetes(logger),
-                DeployKubernetesJob(logger),
-                DeployKubernetesSparkJob(logger),
-                EphemeralDockerDeploy(logger)
-            }
-        }
+        for stage in Stage:
+            steps = set()
+            for step in Step.get_subclasses():
+                if str(stage.name.lower()) in str(step):
+                    steps.add(step(logger))
+            self._step_executors[stage] = steps
 
         self._properties = properties
+
         for stage, steps in self._step_executors.items():
-            self._logger.debug(f"Registered executors for stage {stage.name}: "  # pylint: disable=E1101
-                               f"{[step.meta.name for step in steps]}")
+            print(f"Registered executors for stage {stage.name}: "  # pylint: disable=E1101
+                  f"{[step.meta.name for step in steps]}")  # pylint: disable=E1101
 
     def _find_executor(self, stage: Stage, step_name: str) -> Optional[Step]:
         executors = filter(lambda e: e.meta.stage == stage and step_name == e.meta.name, self._step_executors[stage])
