@@ -49,6 +49,11 @@ jobs:
         with:
           command: run test-ci
 
+      - name: Validate Config Example
+        uses: VaultVulp/action-pipenv@v2.0.1
+        with:
+          command: run validate-config-example
+
       - name: Publish Test Report
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always() # always run even if the previous step fails
