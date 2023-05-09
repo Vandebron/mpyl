@@ -148,3 +148,6 @@ node_modules/
 #Scala
 .jvmopts
 .bsp/
+
+#Customized locally
+mpyl_config.yml
