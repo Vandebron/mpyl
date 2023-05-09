@@ -29,12 +29,12 @@ MPyL can be configured through a file that adheres to the `mpyl_config.yml`
 [schema](https://vandebron.github.io/mpyl/schema/mpyl_config.schema.yml).  
 Which configuration fields need to be set depends on your usecase. The error messages that you
 encounter while using the cli may guide you through the process.
-Note that the included `mpyl_config.yml` is just an example. Secrets can be injected
+Note that the included `mpyl_config.example.yml` is just an example. Secrets can be injected
 through environment variables.
 <details>
   <summary>Example config</summary>
 ```yaml
-.. include:: mpyl_config.yml
+.. include:: mpyl_config.example.yml
 ```
 </details>
 
@@ -67,7 +67,7 @@ Go to: `Preferences | Languages & Frameworks | Schemas and DTDs | JSON Schema Ma
 - Add new schema
 - Add matching schema file from latest release:
   - */deployment/project.yml -> https://vandebron.github.io/mpyl/schema/project.schema.yml
-  - mpyl_config.yml -> https://vandebron.github.io/mpyl/schema/mpyl_config.schema.yml
+  - mpyl_config.example.yml -> https://vandebron.github.io/mpyl/schema/mpyl_config.schema.yml
   - run_properties.yml -> https://vandebron.github.io/mpyl/schema/run_properties.schema.yml
 - Select version: ``JSON Schema Version 7``
 - Add YAML files corresponding to the schema or add the file pattern. (For instance, adding the file pattern `project.yml` to the `project.schema.yml` will take care of autocompletion in any `project.yml`.)
