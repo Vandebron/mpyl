@@ -90,7 +90,7 @@ class RunResult:
         return self.is_success and not self.is_finished
 
     def _results_success(self):
-        return all(r.output.success for r in self._results)
+        return not self._results or all(r.output.success for r in self._results)
 
     @staticmethod
     def sort_chronologically(results: list[StepResult]) -> list[StepResult]:
