@@ -30,6 +30,8 @@ class RunResult:
             return '❗ Failed with exception'
         if self.is_in_progress:
             return '🏗️ Building'
+        if not self.has_results:
+            return '🦥 Nothing to do'
         if self._results_success():
             return '✅ Successful'
 
@@ -86,11 +88,15 @@ class RunResult:
         return self.progress_fraction == 1.0
 
     @property
+    def has_results(self):
+        return len(self._results) > 0
+
+    @property
     def is_in_progress(self):
         return self.is_success and not self.is_finished
 
     def _results_success(self):
-        return not self._results or all(r.output.success for r in self._results)
+        return not self.has_results or all(r.output.success for r in self._results)
 
     @staticmethod
     def sort_chronologically(results: list[StepResult]) -> list[StepResult]:
