@@ -28,6 +28,7 @@ class MpylRunConfig:
 @dataclass(frozen=True)
 class MpylCliParameters:
     local: bool
+    pull_main: bool = False
     verbose: bool = False
     all: bool = False
 
@@ -44,7 +45,7 @@ FORMAT = "%(name)s  %(message)s"
 def get_build_plan(logger: logging.Logger, repo: Repository, mpyl_run_parameters: MpylRunParameters) -> RunResult:
     params = mpyl_run_parameters.parameters
     logger.info(f"Running with {params}")
-    if not params.local:
+    if params.pull_main:
         pull_result = repo.pull_main_branch()
         logger.info(f'Pulled `{pull_result[0].remote_ref_path.strip()}` to local')
 
