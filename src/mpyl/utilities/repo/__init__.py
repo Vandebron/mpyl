@@ -55,6 +55,10 @@ class Repository:
     def get_branch(self):
         return self._repo.active_branch.name
 
+    @property
+    def get_remote_url(self):
+        return self._repo.remote().url
+
     def root_dir(self) -> Path:
         return Path(self._root_dir)
 
