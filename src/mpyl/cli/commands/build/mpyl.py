@@ -46,9 +46,12 @@ def get_build_plan(logger: logging.Logger, repo: Repository, mpyl_run_parameters
     params = mpyl_run_parameters.parameters
     logger.info(f"Running with {params}")
     if params.pull_main:
-        logger.info(f'Pulling {repo.main_branch} from {repo.get_remote_url}')
-        pull_result = repo.pull_main_branch()
-        logger.info(f'Pulled `{pull_result[0].remote_ref_path.strip()}` to local')
+        if repo.main_branch_pulled:
+            logger.info(f'Branch {repo.main_branch} already present locally. Skipping pull.')
+        else:
+            logger.info(f'Pulling {repo.main_branch} from {repo.get_remote_url}')
+            pull_result = repo.pull_main_branch()
+            logger.info(f'Pulled `{pull_result[0].remote_ref_path.strip()}` to local')
 
     changes_in_branch = repo.changes_in_branch_including_local() if params.local else repo.changes_in_branch()
     logger.debug(f'Changes: {changes_in_branch}')

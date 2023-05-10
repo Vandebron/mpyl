@@ -81,6 +81,11 @@ class Repository:
         in_branch.append(Revision(len(in_branch), self.get_sha, self.changes_in_commit()))
         return in_branch
 
+    @property
+    def main_branch_pulled(self) -> bool:
+        branch_names = list(map(lambda n: n.name, self._repo.references))
+        return f'origin/{self._config.main_branch}' in branch_names
+
     def pull_main_branch(self):
         remote = Remote(self._repo, 'origin')
         main = self._config.main_branch
