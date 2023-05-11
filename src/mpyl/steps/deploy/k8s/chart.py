@@ -19,7 +19,8 @@ from .resources.sealed_secret import V1SealedSecret
 from .resources.treaffik import V1AlphaIngressRoute  # pylint: disable = no-name-in-module
 from .resources.spark import to_spark_body, get_spark_config_map_data, V1SparkApplication
 from ...models import Input, ArtifactType
-from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target, Kubernetes, Job
+from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target, Kubernetes, \
+    Job, Traefik
 from ....utilities.ephemeral import get_env_variables
 
 yaml = YAML()
@@ -66,17 +67,23 @@ class ResourceDefaults:
 
 
 @dataclass(frozen=True)
-class KubernetesConfig:
+class DeploymentDefaults:
     resources_defaults: ResourceDefaults
     liveness_probe_defaults: dict
     startup_probe_defaults: dict
     job_defaults: dict
+    treafik_defaults: dict
 
     @staticmethod
-    def from_config(values: dict):
-        return KubernetesConfig(resources_defaults=ResourceDefaults.from_config(values['resources']),
-                                liveness_probe_defaults=values['livenessProbe'],
-                                startup_probe_defaults=values['startupProbe'], job_defaults=values.get('job', {}))
+    def from_config(deployment_values: dict):
+        kubernetes = deployment_values.get('kubernetes', {})
+        return DeploymentDefaults(
+            resources_defaults=ResourceDefaults.from_config(kubernetes['resources']),
+            liveness_probe_defaults=kubernetes['livenessProbe'],
+            startup_probe_defaults=kubernetes['startupProbe'],
+            job_defaults=kubernetes.get('job', {}),
+            treafik_defaults=deployment_values.get('traefik', {})
+        )
 
 
 class ChartBuilder:
@@ -88,7 +95,7 @@ class ChartBuilder:
     deployment: Deployment
     target: Target
     release_name: str
-    kubernetes_config: KubernetesConfig
+    config_defaults: DeploymentDefaults
 
     def __init__(self, step_input: Input):
         self.step_input = step_input
@@ -96,12 +103,12 @@ class ChartBuilder:
         self.project = project
         if project.deployment is None:
             raise AttributeError("deployment field should be set")
-        kubernetes_config_dict = step_input.run_properties.config.get('project', {}).get('deployment', {}).get(
-            'kubernetes', {})
-        if kubernetes_config_dict is None:
-            raise KeyError("Configuration should have project.deployment.kubernetes section")
+        deployment_config_dict = step_input.run_properties.config.get('project', {}).get('deployment', {})
 
-        self.kubernetes_config = KubernetesConfig.from_config(kubernetes_config_dict)
+        if deployment_config_dict is None:
+            raise KeyError("Configuration should have project.deployment section")
+
+        self.config_defaults = DeploymentDefaults.from_config(deployment_config_dict)
 
         self.deployment = project.deployment
         properties = self.deployment.properties
@@ -170,7 +177,7 @@ class ChartBuilder:
                            service_account_name=self.release_name),
         )
 
-        defaults = with_target(self.kubernetes_config.job_defaults, self.target)
+        defaults = with_target(self.config_defaults.job_defaults, self.target)
         specified = defaults | with_target(self.project.job.job, self.target)
 
         template_dict = to_dict(pod_template)
@@ -206,10 +213,10 @@ class ChartBuilder:
         )
 
     def to_ingress_routes(self) -> V1AlphaIngressRoute:
-        if self.deployment.traefik is None:
-            raise AttributeError("deployment.traefik field should be set")
+        default_hosts = Traefik.from_config(self.config_defaults.treafik_defaults).hosts
 
-        return V1AlphaIngressRoute(metadata=self._to_object_meta(), hosts=self.deployment.traefik.hosts,
+        hosts = self.deployment.traefik.hosts if self.deployment.traefik else []
+        return V1AlphaIngressRoute(metadata=self._to_object_meta(), hosts=hosts if hosts else default_hosts,
                                    service_port=123, name=self.release_name, target=self.target,
                                    pr_number=self.step_input.run_properties.versioning.pr_number)
 
@@ -245,7 +252,7 @@ class ChartBuilder:
 
     def _get_resources(self):
         resources = self.project.kubernetes.resources
-        defaults = self.kubernetes_config.resources_defaults
+        defaults = self.config_defaults.resources_defaults
         return ChartBuilder._to_resources(resources, defaults, self.target)
 
     def _get_kubernetes(self) -> Kubernetes:
@@ -295,7 +302,7 @@ class ChartBuilder:
         project = self.project
         resources = project.resources
         kubernetes = project.kubernetes
-        defaults = self.kubernetes_config.resources_defaults
+        defaults = self.config_defaults.resources_defaults
 
         container = V1Container(
             name=self.project.name,
@@ -306,12 +313,12 @@ class ChartBuilder:
             resources=ChartBuilder._to_resources(resources, defaults, self.target),
             liveness_probe=ChartBuilder._to_probe(
                 kubernetes.liveness_probe,
-                self.kubernetes_config.liveness_probe_defaults,
+                self.config_defaults.liveness_probe_defaults,
                 self.target
             ) if kubernetes.liveness_probe else None,
             startup_probe=ChartBuilder._to_probe(
                 kubernetes.startup_probe,
-                self.kubernetes_config.startup_probe_defaults,
+                self.config_defaults.startup_probe_defaults,
                 self.target)
             if kubernetes.startup_probe else None
         )

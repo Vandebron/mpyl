@@ -13,12 +13,13 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
 
     def __init__(self, metadata: V1ObjectMeta, hosts: list[Host], service_port: int, name: str, target: Target,
                  pr_number: Optional[int]):
-        def _interpolate_pr_number(hostie: str) -> str:
+        def _interpolate_names(host: str) -> str:
+            host = host.replace('{SERVICE-NAME}', name)
             if pr_number:
-                return hostie.replace('{PR-NUMBER}', str(pr_number))
-            return hostie
+                return host.replace('{PR-NUMBER}', str(pr_number))
+            return host
 
-        routes = [{'kind': 'Rule', 'match': _interpolate_pr_number(host.host.get_value(target)),
+        routes = [{'kind': 'Rule', 'match': _interpolate_names(host.host.get_value(target)),
                    'services': [{'name': name, 'kind': 'Service', 'port': service_port}],
                    'middlewares': [{'name': f'{name}-ingress-{idx}-whitelist'}]} for idx, host in enumerate(hosts)]
 
