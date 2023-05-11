@@ -120,7 +120,7 @@ class ChartBuilder:
 
     def _to_labels(self) -> Dict:
         run_properties = self.step_input.run_properties
-        app_labels = {'name': self.project.name, 'app.kubernetes.io/version': run_properties.versioning.identifier,
+        app_labels = {'name': self.release_name, 'app.kubernetes.io/version': run_properties.versioning.identifier,
                       'app.kubernetes.io/managed-by': 'Helm', 'app.kubernetes.io/name': self.release_name,
                       'app.kubernetes.io/instance': self.release_name}
 
@@ -139,7 +139,7 @@ class ChartBuilder:
         return {'description': self.project.description}
 
     def _to_object_meta(self):
-        return V1ObjectMeta(name=self.project.name, labels=self._to_labels())
+        return V1ObjectMeta(name=self.release_name, labels=self._to_labels())
 
     def _to_selector(self):
         return V1LabelSelector(match_labels={"app.kubernetes.io/instance": self.release_name,
@@ -168,7 +168,7 @@ class ChartBuilder:
 
     def to_job(self) -> V1Job:
         job_container = V1Container(
-            name=self.project.name, image=self._get_image(), env=self._get_env_vars(), image_pull_policy="Always",
+            name=self.release_name, image=self._get_image(), env=self._get_env_vars(), image_pull_policy="Always",
             resources=self._get_resources()
         )
         pod_template = V1PodTemplateSpec(
@@ -198,7 +198,7 @@ class ChartBuilder:
         return V1SparkApplication(
             schedule=self._get_job().cron['schedule'],
             body=to_spark_body(
-                project_name=self.project.name,
+                project_name=self.release_name,
                 env_vars=get_env_variables(self.project, self.target),
                 spark=self._get_job().spark
             ),
@@ -305,7 +305,7 @@ class ChartBuilder:
         defaults = self.config_defaults.resources_defaults
 
         container = V1Container(
-            name=self.project.name,
+            name=self.release_name,
             image=self._get_image(),
             env=self._get_env_vars(),
             ports=ports,
