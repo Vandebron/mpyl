@@ -39,5 +39,5 @@ class SbtConfig:
         cmd.extend([f'-D{opt}' for opt in self.sbt_opts.split(' ')])
 
         joined_commands = "; ".join(sbt_commands)
-        cmd.append(f"'{joined_commands}" if client_mode else joined_commands)
+        cmd.append(joined_commands)
         return cmd
