@@ -174,7 +174,7 @@ class ChartBuilder:
         pod_template = V1PodTemplateSpec(
             metadata=self._to_object_meta(),
             spec=V1PodSpec(containers=[job_container], service_account=self.release_name,
-                           service_account_name=self.release_name),
+                           service_account_name=self.release_name, restart_policy="Never")
         )
 
         defaults = with_target(self.config_defaults.job_defaults, self.target)
