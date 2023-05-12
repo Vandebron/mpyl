@@ -24,4 +24,4 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
                    'middlewares': [{'name': f'{name}-ingress-{idx}-whitelist'}]} for idx, host in enumerate(hosts)]
 
         super().__init__(api_version='traefik.containo.us/v1alpha1', kind="IngressRoute", metadata=metadata,
-                         spec={'routes': routes}, schema='traeffik.schema.yml')
+                         spec={'routes': routes, 'entryPoints': ['websecure']}, schema='traeffik.schema.yml')

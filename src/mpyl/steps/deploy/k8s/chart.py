@@ -212,12 +212,22 @@ class ChartBuilder:
             metadata=self._to_object_meta()
         )
 
+    def __find_default_port(self) -> int:
+        found = next(iter(self.mappings.keys()))
+        if found:
+            return int(found)
+        raise KeyError("No default port found. Did you define a port mapping?")
+
     def to_ingress_routes(self) -> V1AlphaIngressRoute:
         default_hosts = Traefik.from_config(self.config_defaults.treafik_defaults).hosts
 
         hosts = self.deployment.traefik.hosts if self.deployment.traefik else []
+
+        first_host = next(iter(hosts), None)
+        service_port = first_host.service_port if first_host and first_host.service_port else self.__find_default_port()
+
         return V1AlphaIngressRoute(metadata=self._to_object_meta(), hosts=hosts if hosts else default_hosts,
-                                   service_port=123, name=self.release_name, target=self.target,
+                                   service_port=service_port, name=self.release_name, target=self.target,
                                    pr_number=self.step_input.run_properties.versioning.pr_number)
 
     def to_service_account(self) -> V1ServiceAccount:

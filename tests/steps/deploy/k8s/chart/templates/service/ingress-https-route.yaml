@@ -19,7 +19,7 @@ spec:
     services:
     - name: dockertest
       kind: Service
-      port: 123
+      port: 8080
     middlewares:
     - name: dockertest-ingress-0-whitelist
   - kind: Rule
@@ -27,6 +27,8 @@ spec:
     services:
     - name: dockertest
       kind: Service
-      port: 123
+      port: 8080
     middlewares:
     - name: dockertest-ingress-1-whitelist
+  entryPoints:
+  - websecure

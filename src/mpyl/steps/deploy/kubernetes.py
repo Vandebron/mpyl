@@ -32,7 +32,7 @@ class DeployKubernetes(Step):
 
     def execute(self, step_input: Input) -> Output:
         builder = ChartBuilder(step_input)
-        chart: dict[str, CustomResourceDefinition] = to_service_chart(builder)
+        chart = to_service_chart(builder)
         endpoint = self.try_extract_endpoint(chart)
         if endpoint:
             self._logger.info(f"Service {step_input.project.name} reachable at: {endpoint}")
