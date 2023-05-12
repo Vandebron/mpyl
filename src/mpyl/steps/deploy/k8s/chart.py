@@ -16,7 +16,7 @@ from ruamel.yaml import YAML
 from . import get_namespace
 from .resources import CustomResourceDefinition, to_dict  # pylint: disable = no-name-in-module
 from .resources.sealed_secret import V1SealedSecret
-from .resources.treaffik import V1AlphaIngressRoute  # pylint: disable = no-name-in-module
+from .resources.treafik import V1AlphaIngressRoute  # pylint: disable = no-name-in-module
 from .resources.spark import to_spark_body, get_spark_config_map_data, V1SparkApplication
 from ...models import Input, ArtifactType
 from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target, Kubernetes, \
