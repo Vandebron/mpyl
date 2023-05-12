@@ -16,7 +16,7 @@ from ruamel.yaml import YAML
 from . import get_namespace
 from .resources import CustomResourceDefinition, to_dict  # pylint: disable = no-name-in-module
 from .resources.sealed_secret import V1SealedSecret
-from .resources.treafik import V1AlphaIngressRoute  # pylint: disable = no-name-in-module
+from .resources.treafik import V1AlphaIngressRoute, V1AlphaMiddleware  # pylint: disable = no-name-in-module
 from .resources.spark import to_spark_body, get_spark_config_map_data, V1SparkApplication
 from ...models import Input, ArtifactType
 from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target, Kubernetes, \
@@ -138,8 +138,8 @@ class ChartBuilder:
     def _to_annotations(self) -> Dict:
         return {'description': self.project.description}
 
-    def _to_object_meta(self):
-        return V1ObjectMeta(name=self.release_name, labels=self._to_labels())
+    def _to_object_meta(self, name: Optional[str] = None):
+        return V1ObjectMeta(name=name if name else self.release_name, labels=self._to_labels())
 
     def _to_selector(self):
         return V1LabelSelector(match_labels={"app.kubernetes.io/instance": self.release_name,
@@ -229,6 +229,12 @@ class ChartBuilder:
         return V1AlphaIngressRoute(metadata=self._to_object_meta(), hosts=hosts if hosts else default_hosts,
                                    service_port=service_port, name=self.release_name, target=self.target,
                                    pr_number=self.step_input.run_properties.versioning.pr_number)
+
+    def to_middlewares(self) -> dict[str, V1AlphaMiddleware]:
+        routes = self.to_ingress_routes()
+        middleware_names = routes.get_middle_wares()
+        return dict(map(lambda name: (name, V1AlphaMiddleware(metadata=self._to_object_meta(name=name), source_ranges=[])),
+                        middleware_names))
 
     def to_service_account(self) -> V1ServiceAccount:
         return V1ServiceAccount(api_version="v1", kind="ServiceAccount", metadata=self._to_object_meta(),
@@ -368,7 +374,7 @@ def to_service_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinitio
         'deployment': builder.to_deployment(),
         'service': builder.to_service(),
         'ingress-https-route': builder.to_ingress_routes()
-    }
+    } | builder.to_middlewares()
 
 
 def to_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:

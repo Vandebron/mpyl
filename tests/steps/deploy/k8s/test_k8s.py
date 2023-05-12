@@ -96,7 +96,8 @@ class TestKubernetesChart:
         assert "Schema validation failed with 1234 is not of type 'string'" in str(exc_info.value)
 
     @pytest.mark.parametrize('template',
-                             ['deployment', 'service', 'service-account', 'sealed-secrets', 'ingress-https-route'])
+                             ['deployment', 'service', 'service-account', 'sealed-secrets', 'ingress-https-route',
+                              'dockertest-ingress-0-whitelist'])
     def test_service_chart_roundtrip(self, template):
         builder = self._get_builder(get_project())
         chart = to_service_chart(builder)
