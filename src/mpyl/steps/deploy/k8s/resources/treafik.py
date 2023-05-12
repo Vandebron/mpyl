@@ -24,7 +24,7 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
                    'middlewares': [{'name': f'{name}-ingress-{idx}-whitelist'}]} for idx, host in enumerate(hosts)]
 
         super().__init__(api_version='traefik.containo.us/v1alpha1', kind="IngressRoute", metadata=metadata,
-                         spec={'routes': routes, 'entryPoints': ['websecure']}, schema='traeffik.schema.yml')
+                         spec={'routes': routes, 'entryPoints': ['websecure']}, schema='traeffik.ingress.schema.yml')
 
     def get_middle_wares(self) -> list[str]:
         return [middleware['name'] for route in self.spec['routes'] for middleware in route['middlewares']]
@@ -34,4 +34,4 @@ class V1AlphaMiddleware(CustomResourceDefinition):
 
     def __init__(self, metadata: V1ObjectMeta, source_ranges: list[str]):
         super().__init__(api_version='traefik.containo.us/v1alpha1', kind="Middleware", metadata=metadata,
-                         spec={'ipWhiteList': {'sourceRange': source_ranges}}, schema=None)
+                         spec={'ipWhiteList': {'sourceRange': source_ranges}}, schema='traeffik.middleware.schema.yml')

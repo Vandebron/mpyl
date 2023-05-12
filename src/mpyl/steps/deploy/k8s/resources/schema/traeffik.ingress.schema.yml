@@ -1,6 +1,6 @@
 # source: "https://raw.githubusercontent.com/sleighzy/k3s-traefik-v2-kubernetes-crd/master/001-crd.yaml"
 $schema: "http://json-schema.org/draft-07/schema#"
-$id: "http://vandebron.nl/treaffik.schema.yaml"
+$id: "http://vandebron.nl/traeffik.ingress.schema.yml"
 description: IngressRoute is the CRD implementation of a Traefik HTTP Router.
 properties:
   apiVersion:

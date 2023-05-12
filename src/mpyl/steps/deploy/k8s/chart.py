@@ -233,7 +233,9 @@ class ChartBuilder:
     def to_middlewares(self) -> dict[str, V1AlphaMiddleware]:
         routes = self.to_ingress_routes()
         middleware_names = routes.get_middle_wares()
-        return dict(map(lambda name: (name, V1AlphaMiddleware(metadata=self._to_object_meta(name=name), source_ranges=[])),
+        return dict(map(lambda name:
+                        (name,
+                         V1AlphaMiddleware(metadata=self._to_object_meta(name=name), source_ranges=[])),
                         middleware_names))
 
     def to_service_account(self) -> V1ServiceAccount:

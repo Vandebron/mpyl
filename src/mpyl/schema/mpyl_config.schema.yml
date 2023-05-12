@@ -9,6 +9,8 @@ definitions:
         "$ref": "#/definitions/CVS"
       docker:
         "$ref": "#/definitions/Docker"
+      whitelists:
+        "$ref": "#/definitions/Whitelists"
       kubernetes:
         "$ref": "#/definitions/Kubernetes"
       project:
@@ -25,6 +27,15 @@ definitions:
       - cvs
       - docker
     title: MPyL global configuration
+  Whitelists:
+    type: array
+    items:
+      "$ref": "#/definitions/Whitelist"
+  Whitelist:
+    type: array
+    items:
+      type: string
+      pattern:
   Kubernetes:
     type: object
     additionalProperties: false
