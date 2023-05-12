@@ -128,7 +128,7 @@ def to_github_markdown(jira_markdown: str, jira_url: str) -> str:
 
 
 def to_markdown_summary(ticket: JiraTicket, run_result: RunResult) -> str:
-    description_markdown = to_github_markdown(ticket.description, ticket.ticket_url)
+    description_markdown = to_github_markdown(ticket.description, ticket.ticket_url) if ticket.description else ""
     lines = description_markdown.splitlines()
     max_message_length = 288
     if len(lines) > max_message_length:
