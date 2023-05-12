@@ -6,8 +6,10 @@ from typing import Optional
 from .k8s import deploy_helm_chart, CustomResourceDefinition
 from .k8s.chart import ChartBuilder, to_service_chart
 from .. import Step, Meta
-from ..models import Input, Output, ArtifactType
+from ..models import Input, Output, ArtifactType, input_to_artifact
 from ...project import Stage
+
+DEPLOYED_SERVICE_KEY = 'url'
 
 
 class DeployKubernetes(Step):
@@ -33,8 +35,15 @@ class DeployKubernetes(Step):
     def execute(self, step_input: Input) -> Output:
         builder = ChartBuilder(step_input)
         chart = to_service_chart(builder)
-        endpoint = self.try_extract_endpoint(chart)
-        if endpoint:
-            self._logger.info(f"Service {step_input.project.name} reachable at: {endpoint}")
 
-        return deploy_helm_chart(self._logger, chart, step_input, builder.release_name)
+        deploy_result = deploy_helm_chart(self._logger, chart, step_input, builder.release_name)
+        if deploy_result.success:
+            endpoint = self.try_extract_endpoint(chart)
+            spec = {}
+            if endpoint:
+                self._logger.info(f"Service {step_input.project.name} reachable at: {endpoint}")
+                spec[DEPLOYED_SERVICE_KEY] = endpoint
+            artifact = input_to_artifact(ArtifactType.DEPLOYED_HELM_APP, step_input, spec=spec)
+            return Output(success=True, message=deploy_result.message, produced_artifact=artifact)
+
+        return deploy_result

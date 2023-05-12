@@ -36,6 +36,6 @@ class TestMarkdownReporting:
         result.append(StepResult(stage=Stage.BUILD, project=test_data.get_project(),
                                  output=Output(success=False, message='Build failed'),
                                  timestamp=datetime.fromisoformat('2019-01-04T16:41:24+02:00')))
-        assert round(result.progress_fraction * 100) == 33, 'Should be at one third'
+        assert round(result.progress_fraction * 100) == 25, 'Should be at one quarter'
         append_results(result)
         assert result.progress_fraction == 1.0, 'Should be 100% at end of run'

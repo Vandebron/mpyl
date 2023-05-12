@@ -32,6 +32,8 @@ import requests
 from atlassian import Jira
 
 from . import Reporter
+from ..formatting.markdown import markdown_for_stage
+from ...project import Stage
 from ...steps.run import RunResult
 
 
@@ -137,7 +139,7 @@ def to_markdown_summary(ticket: JiraTicket, run_result: RunResult) -> str:
     details = run_result.run_properties.details
 
     build_status = f"🏗️ Build [{details.build_id}]({details.run_url}) {run_result.status_line}, " \
-                   f"started by _{details.user}_"
+                   f"started by _{details.user}_  \n{markdown_for_stage(run_result, Stage.DEPLOY)}"
     return f"## 📕 [{ticket.ticket_id}]({ticket.ticket_url}) {ticket.summary} " \
            f"![{ticket.user_email}]({ticket.user_avatar}) \n" \
            f"{description_markdown}\n" \

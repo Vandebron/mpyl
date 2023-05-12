@@ -113,7 +113,9 @@ class ArtifactType(Enum):
     """A docker image"""
     JUNIT_TESTS = 2
     """A test suite in junit compatible `.xml` format"""
-    NONE = 3
+    DEPLOYED_HELM_APP = 3
+    """A helm chart deployed to kubernetes"""
+    NONE = 4
 
 
 @yaml_object(yaml)

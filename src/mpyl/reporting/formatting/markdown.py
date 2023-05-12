@@ -6,6 +6,8 @@ import operator
 from junitparser import TestSuite
 
 from ...project import Stage, Project
+from ...steps import Output, ArtifactType
+from ...steps.deploy.kubernetes import DEPLOYED_SERVICE_KEY
 from ...steps.run import RunResult
 from ...steps.steps import StepResult, collect_test_results
 from ...utilities.junit import TestRunSummary, sum_suites
@@ -16,6 +18,15 @@ def summary_to_markdown(summary: TestRunSummary):
            f"💔 {summary.errors} 🙈 {summary.skipped}"
 
 
+def __add_link(name: str, output: Output) -> str:
+    if output.produced_artifact and output.produced_artifact.artifact_type == ArtifactType.DEPLOYED_HELM_APP:
+        url = output.produced_artifact.spec.get(DEPLOYED_SERVICE_KEY)
+        if url:
+            return f'[{name}]({url}/swagger/index.html)'
+
+    return name
+
+
 def __to_oneliner(result: list[StepResult], plan: set[Project]) -> str:
     project_names: list[str] = []
     if plan:
@@ -23,7 +34,8 @@ def __to_oneliner(result: list[StepResult], plan: set[Project]) -> str:
         for proj in sorted_plan:
             found_result = next((r for r in result if r.project.name == proj.name), None)
             if found_result:
-                project_names.append(f'*{proj.name}*' if found_result.output.success else f'~~{proj.name}~~')
+                project_names.append(f'*{__add_link(proj.name, found_result.output)}*' if found_result.output.success
+                                     else f'~~{proj.name}~~')
             else:
                 project_names.append(f'_{proj.name}_')
     else:
@@ -42,20 +54,27 @@ def stage_to_icon(stage: Stage):
     return '➡️'
 
 
+def markdown_for_stage(run_result: RunResult, stage: Stage):
+    step_results: list[StepResult] = run_result.results_for_stage(stage)
+    plan: set[Project] = run_result.plan_for_stage(stage)
+    result = ""
+    if step_results or plan:
+        result += f"{stage_to_icon(stage)}  {__to_oneliner(step_results, plan)}  \n"
+        test_results = collect_test_results(step_results)
+        if test_results:
+            result += to_markdown_test_report(
+                test_results) + f' [link]({run_result.run_properties.details.tests_url}) \n'
+
+    return result
+
+
 def run_result_to_markdown(run_result: RunResult) -> str:
     result: str = f'{run_result.status_line}  \n'
     if run_result.exception:
         result += f"\n```\n{run_result.exception}\n```\n"
 
     for stage in Stage:
-        step_results: list[StepResult] = run_result.results_for_stage(stage)
-        plan: set[Project] = run_result.plan_for_stage(stage)
-        if step_results or plan:
-            result += f"{stage_to_icon(stage)}  {__to_oneliner(step_results, plan)}  \n"
-            test_results = collect_test_results(step_results)
-            if test_results:
-                result += to_markdown_test_report(
-                    test_results) + f' [link]({run_result.run_properties.details.tests_url}) \n'
+        result += markdown_for_stage(run_result, stage)
 
     return result
 
