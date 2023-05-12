@@ -24,3 +24,5 @@ spec:
     - name: dockertest-ingress-0-whitelist
   entryPoints:
   - websecure
+  tls:
+    secretName: le-prod-wildcard-cert

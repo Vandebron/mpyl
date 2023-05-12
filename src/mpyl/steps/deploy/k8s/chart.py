@@ -16,11 +16,12 @@ from ruamel.yaml import YAML
 from . import get_namespace
 from .resources import CustomResourceDefinition, to_dict  # pylint: disable = no-name-in-module
 from .resources.sealed_secret import V1SealedSecret
-from .resources.treafik import V1AlphaIngressRoute, V1AlphaMiddleware  # pylint: disable = no-name-in-module
 from .resources.spark import to_spark_body, get_spark_config_map_data, V1SparkApplication
+from .resources.treafik import V1AlphaIngressRoute, V1AlphaMiddleware, \
+    HostWrapper  # pylint: disable = no-name-in-module
 from ...models import Input, ArtifactType
 from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target, Kubernetes, \
-    Job, Traefik
+    Job, Traefik, Host
 from ....utilities.ephemeral import get_env_variables
 
 yaml = YAML()
@@ -73,16 +74,21 @@ class DeploymentDefaults:
     startup_probe_defaults: dict
     job_defaults: dict
     treafik_defaults: dict
+    white_lists: dict
 
     @staticmethod
-    def from_config(deployment_values: dict):
+    def from_config(config: dict):
+        deployment_values = config.get('project', {}).get('deployment', {})
+        if deployment_values is None:
+            raise KeyError("Configuration should have project.deployment section")
         kubernetes = deployment_values.get('kubernetes', {})
         return DeploymentDefaults(
             resources_defaults=ResourceDefaults.from_config(kubernetes['resources']),
             liveness_probe_defaults=kubernetes['livenessProbe'],
             startup_probe_defaults=kubernetes['startupProbe'],
             job_defaults=kubernetes.get('job', {}),
-            treafik_defaults=deployment_values.get('traefik', {})
+            treafik_defaults=deployment_values.get('traefik', {}),
+            white_lists=config.get('whiteLists', {})
         )
 
 
@@ -103,12 +109,8 @@ class ChartBuilder:
         self.project = project
         if project.deployment is None:
             raise AttributeError("deployment field should be set")
-        deployment_config_dict = step_input.run_properties.config.get('project', {}).get('deployment', {})
 
-        if deployment_config_dict is None:
-            raise KeyError("Configuration should have project.deployment section")
-
-        self.config_defaults = DeploymentDefaults.from_config(deployment_config_dict)
+        self.config_defaults = DeploymentDefaults.from_config(step_input.run_properties.config)
 
         self.deployment = project.deployment
         properties = self.deployment.properties
@@ -218,25 +220,42 @@ class ChartBuilder:
             return int(found)
         raise KeyError("No default port found. Did you define a port mapping?")
 
-    def to_ingress_routes(self) -> V1AlphaIngressRoute:
-        default_hosts = Traefik.from_config(self.config_defaults.treafik_defaults).hosts
+    def create_host_wrappers(self) -> list[HostWrapper]:
+        default_hosts: list[Host] = Traefik.from_config(self.config_defaults.treafik_defaults).hosts
 
-        hosts = self.deployment.traefik.hosts if self.deployment.traefik else []
+        hosts: list[Host] = self.deployment.traefik.hosts if self.deployment.traefik else []
 
         first_host = next(iter(hosts), None)
         service_port = first_host.service_port if first_host and first_host.service_port else self.__find_default_port()
 
-        return V1AlphaIngressRoute(metadata=self._to_object_meta(), hosts=hosts if hosts else default_hosts,
-                                   service_port=service_port, name=self.release_name, target=self.target,
+        def to_white_list(configured: Optional[TargetProperty[list[str]]]) -> list[str]:
+            white_lists = configured.get_value(self.target) if configured else self.config_defaults.white_lists[
+                'default']
+            addresses = []
+            add_dict = dict(
+                (address['name'], address['values']) for address in self.config_defaults.white_lists['addresses'])
+            for item in white_lists:
+                addresses.extend(add_dict[item])
+
+            return addresses
+
+        return [HostWrapper(host=host, name=self.release_name, index=idx, service_port=service_port,
+                            white_lists=to_white_list(host.whitelists)) for
+                idx, host in enumerate(hosts if hosts else default_hosts)]
+
+    def to_ingress_routes(self) -> V1AlphaIngressRoute:
+        hosts = self.create_host_wrappers()
+
+        return V1AlphaIngressRoute(metadata=self._to_object_meta(), hosts=hosts, target=self.target,
                                    pr_number=self.step_input.run_properties.versioning.pr_number)
 
     def to_middlewares(self) -> dict[str, V1AlphaMiddleware]:
-        routes = self.to_ingress_routes()
-        middleware_names = routes.get_middle_wares()
-        return dict(map(lambda name:
-                        (name,
-                         V1AlphaMiddleware(metadata=self._to_object_meta(name=name), source_ranges=[])),
-                        middleware_names))
+        hosts = self.create_host_wrappers()
+        return dict(map(lambda host:
+                        (host.full_name,
+                         V1AlphaMiddleware(metadata=self._to_object_meta(name=host.full_name),
+                                           source_ranges=host.white_lists)),
+                        hosts))
 
     def to_service_account(self) -> V1ServiceAccount:
         return V1ServiceAccount(api_version="v1", kind="ServiceAccount", metadata=self._to_object_meta(),

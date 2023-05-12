@@ -46,6 +46,11 @@ sbt:
   clientMode:
     build: false
     test: false
+whiteLists:
+  default: [ "VPN" ]
+  addresses:
+    - name: "VPN"
+      values: [ "10.0.0.1" ]
 kubernetes:
   rancher:
     cluster:
@@ -116,3 +121,5 @@ project: # default values
           tls:
             all: "le-custom-prod-wildcard-cert"
           insecure: false
+          whitelists:
+            all: [ "VPN" ]

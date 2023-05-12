@@ -9,7 +9,7 @@ definitions:
         "$ref": "#/definitions/CVS"
       docker:
         "$ref": "#/definitions/Docker"
-      whitelists:
+      whiteLists:
         "$ref": "#/definitions/Whitelists"
       kubernetes:
         "$ref": "#/definitions/Kubernetes"
@@ -28,14 +28,35 @@ definitions:
       - docker
     title: MPyL global configuration
   Whitelists:
-    type: array
-    items:
-      "$ref": "#/definitions/Whitelist"
-  Whitelist:
-    type: array
-    items:
-      type: string
-      pattern:
+    type: object
+    required:
+      - default
+      - addresses
+    properties:
+      default:
+        description: "Default whitelist for all environments"
+        type: array
+        items:
+          minItems: 1
+          type: string
+      addresses:
+        type: array
+        minItems: 1
+        items:
+          type: object
+          additionalProperties: false
+          required:
+            - name
+            - values
+          properties:
+            name:
+              type: string
+            values:
+              type: array
+              items:
+                minItems: 1
+                type: string
+
   Kubernetes:
     type: object
     additionalProperties: false

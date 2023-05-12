@@ -33,6 +33,11 @@ sbt:
   verbose: true
   javaOpts: '-Xmx4G -Xms4G -XX:+UseG1GC -XX:+CMSClassUnloadingEnabled -Xss2M'
   sbtOpts: 'user.timezone=GMT jline.terminal=jline.UnixTerminal'
+whiteLists:
+  default: [ "VPN" ]
+  addresses:
+    - name: "VPN"
+      values: [ "10.0.0.1" ]
 kubernetes:
   rancher:
     cluster:
@@ -63,6 +68,8 @@ project: # default values
             production: "Host(`{namespace}-{SERVICE-NAME}.prod-backend.nl`)"
           tls:
             all: "le-custom-prod-wildcard-cert"
+          whitelists:
+            all: [ "VPN" ]
           insecure: false
     kubernetes:
       job:
