@@ -1,0 +1,11 @@
+{
+  "name": "cypress",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "test": "cypress run --spec 'specs/*.js'"
+  },
+  "dependencies": {
+    "cypress": "^12.12.0"
+  }
+}

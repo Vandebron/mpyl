@@ -87,6 +87,7 @@ properties:
         type: string
         enum:
           - TriggerJenkinsJob PostDeploy
+          - Cypress Test
     minProperties: 1
   docker:
     description: Defines docker repository and it's credentials

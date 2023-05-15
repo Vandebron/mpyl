@@ -104,3 +104,8 @@ class TestSteps:
         result = self.executor.execute(stage=Stage.BUILD, project=project)
         assert not result.output.success
         assert result.output.message == "Stage 'build' not defined on project 'test'"
+
+    def test_should_run_post_deploy_cypress_step(self):
+        project = test_data.get_project_with_stages({'postdeploy': 'Cypress Test'})
+        result = self.executor.execute(stage=Stage.POST_DEPLOY, project=project)
+        assert result.output.success
