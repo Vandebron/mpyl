@@ -15,7 +15,7 @@ from ....reporting.targets import Reporter
 from ....stages.discovery import for_stage, find_invalidated_projects_per_stage
 from ....steps.models import RunProperties
 from ....steps.run import RunResult
-from ....steps.steps import Steps
+from ....steps.steps import Steps, ExecutionException
 from ....utilities.repo import Repository, RepoConfig
 
 
@@ -28,6 +28,7 @@ class MpylRunConfig:
 @dataclass(frozen=True)
 class MpylCliParameters:
     local: bool
+    pull_main: bool = False
     verbose: bool = False
     all: bool = False
 
@@ -44,9 +45,13 @@ FORMAT = "%(name)s  %(message)s"
 def get_build_plan(logger: logging.Logger, repo: Repository, mpyl_run_parameters: MpylRunParameters) -> RunResult:
     params = mpyl_run_parameters.parameters
     logger.info(f"Running with {params}")
-    if not params.local:
-        pull_result = repo.pull_main_branch()
-        logger.info(f'Pulled `{pull_result[0].remote_ref_path.strip()}` to local')
+    if params.pull_main:
+        if repo.main_branch_pulled:
+            logger.info(f'Branch {repo.main_branch} already present locally. Skipping pull.')
+        else:
+            logger.info(f'Pulling {repo.main_branch} from {repo.get_remote_url}')
+            pull_result = repo.pull_main_branch()
+            logger.info(f'Pulled `{pull_result[0].remote_ref_path.strip()}` to local')
 
     changes_in_branch = repo.changes_in_branch_including_local() if params.local else repo.changes_in_branch()
     logger.debug(f'Changes: {changes_in_branch}')
@@ -80,11 +85,11 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter
             run_result: RunResult = run_plan
             try:
                 steps = Steps(logger=logger, properties=mpyl_run_parameters.run_config.run_properties)
-                run_result = run_build(run_plan, steps, reporter)
-            except Exception as exc:  # pylint: disable=broad-except
+                run_result = run_build(run_plan, steps, reporter, mpyl_run_parameters.parameters.local)
+            except ExecutionException as exc:  # pylint: disable=broad-except
+                run_result.exception = exc
                 console.log(f'Exception during build execution: {exc}')
                 console.print_exception()
-                run_result.exception = exc
 
             console.print(Markdown(run_result_to_markdown(run_result)))
             return run_result
@@ -107,10 +112,10 @@ def find_build_set(repo: Repository, changes_in_branch, build_all: bool) -> dict
     return find_invalidated_projects_per_stage(all_projects, changes_in_branch)
 
 
-def run_build(accumulator: RunResult, executor: Steps, reporter: Optional[Reporter] = None):
+def run_build(accumulator: RunResult, executor: Steps, reporter: Optional[Reporter] = None, dry_run: bool = True):
     for stage, projects in accumulator.run_plan.items():
         for proj in projects:
-            result = executor.execute(stage, proj, True)
+            result = executor.execute(stage, proj, dry_run)
             accumulator.append(result)
             if reporter:
                 reporter.send_report(accumulator)

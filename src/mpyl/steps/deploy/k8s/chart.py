@@ -16,10 +16,12 @@ from ruamel.yaml import YAML
 from . import get_namespace
 from .resources import CustomResourceDefinition, to_dict  # pylint: disable = no-name-in-module
 from .resources.sealed_secret import V1SealedSecret
-from .resources.treaffik import V1AlphaIngressRoute  # pylint: disable = no-name-in-module
 from .resources.spark import to_spark_body, get_spark_config_map_data, V1SparkApplication
+from .resources.traefik import V1AlphaIngressRoute, V1AlphaMiddleware, \
+    HostWrapper  # pylint: disable = no-name-in-module
 from ...models import Input, ArtifactType
-from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target, Kubernetes, Job
+from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target, Kubernetes, \
+    Job, Traefik, Host
 from ....utilities.ephemeral import get_env_variables
 
 yaml = YAML()
@@ -66,17 +68,28 @@ class ResourceDefaults:
 
 
 @dataclass(frozen=True)
-class KubernetesConfig:
+class DeploymentDefaults:
     resources_defaults: ResourceDefaults
     liveness_probe_defaults: dict
     startup_probe_defaults: dict
     job_defaults: dict
+    treafik_defaults: dict
+    white_lists: dict
 
     @staticmethod
-    def from_config(values: dict):
-        return KubernetesConfig(resources_defaults=ResourceDefaults.from_config(values['resources']),
-                                liveness_probe_defaults=values['livenessProbe'],
-                                startup_probe_defaults=values['startupProbe'], job_defaults=values.get('job', {}))
+    def from_config(config: dict):
+        deployment_values = config.get('project', {}).get('deployment', {})
+        if deployment_values is None:
+            raise KeyError("Configuration should have project.deployment section")
+        kubernetes = deployment_values.get('kubernetes', {})
+        return DeploymentDefaults(
+            resources_defaults=ResourceDefaults.from_config(kubernetes['resources']),
+            liveness_probe_defaults=kubernetes['livenessProbe'],
+            startup_probe_defaults=kubernetes['startupProbe'],
+            job_defaults=kubernetes.get('job', {}),
+            treafik_defaults=deployment_values.get('traefik', {}),
+            white_lists=config.get('whiteLists', {})
+        )
 
 
 class ChartBuilder:
@@ -88,7 +101,7 @@ class ChartBuilder:
     deployment: Deployment
     target: Target
     release_name: str
-    kubernetes_config: KubernetesConfig
+    config_defaults: DeploymentDefaults
 
     def __init__(self, step_input: Input):
         self.step_input = step_input
@@ -96,12 +109,8 @@ class ChartBuilder:
         self.project = project
         if project.deployment is None:
             raise AttributeError("deployment field should be set")
-        kubernetes_config_dict = step_input.run_properties.config.get('project', {}).get('deployment', {}).get(
-            'kubernetes', {})
-        if kubernetes_config_dict is None:
-            raise KeyError("Configuration should have project.deployment.kubernetes section")
 
-        self.kubernetes_config = KubernetesConfig.from_config(kubernetes_config_dict)
+        self.config_defaults = DeploymentDefaults.from_config(step_input.run_properties.config)
 
         self.deployment = project.deployment
         properties = self.deployment.properties
@@ -113,7 +122,7 @@ class ChartBuilder:
 
     def _to_labels(self) -> Dict:
         run_properties = self.step_input.run_properties
-        app_labels = {'name': self.project.name, 'app.kubernetes.io/version': run_properties.versioning.identifier,
+        app_labels = {'name': self.release_name, 'app.kubernetes.io/version': run_properties.versioning.identifier,
                       'app.kubernetes.io/managed-by': 'Helm', 'app.kubernetes.io/name': self.release_name,
                       'app.kubernetes.io/instance': self.release_name}
 
@@ -131,8 +140,8 @@ class ChartBuilder:
     def _to_annotations(self) -> Dict:
         return {'description': self.project.description}
 
-    def _to_object_meta(self):
-        return V1ObjectMeta(name=self.project.name, labels=self._to_labels())
+    def _to_object_meta(self, name: Optional[str] = None):
+        return V1ObjectMeta(name=name if name else self.release_name, labels=self._to_labels())
 
     def _to_selector(self):
         return V1LabelSelector(match_labels={"app.kubernetes.io/instance": self.release_name,
@@ -161,16 +170,16 @@ class ChartBuilder:
 
     def to_job(self) -> V1Job:
         job_container = V1Container(
-            name=self.project.name, image=self._get_image(), env=self._get_env_vars(), image_pull_policy="Always",
+            name=self.release_name, image=self._get_image(), env=self._get_env_vars(), image_pull_policy="Always",
             resources=self._get_resources()
         )
         pod_template = V1PodTemplateSpec(
             metadata=self._to_object_meta(),
             spec=V1PodSpec(containers=[job_container], service_account=self.release_name,
-                           service_account_name=self.release_name),
+                           service_account_name=self.release_name, restart_policy="Never")
         )
 
-        defaults = with_target(self.kubernetes_config.job_defaults, self.target)
+        defaults = with_target(self.config_defaults.job_defaults, self.target)
         specified = defaults | with_target(self.project.job.job, self.target)
 
         template_dict = to_dict(pod_template)
@@ -191,7 +200,7 @@ class ChartBuilder:
         return V1SparkApplication(
             schedule=self._get_job().cron['schedule'],
             body=to_spark_body(
-                project_name=self.project.name,
+                project_name=self.release_name,
                 env_vars=get_env_variables(self.project, self.target),
                 spark=self._get_job().spark
             ),
@@ -205,13 +214,48 @@ class ChartBuilder:
             metadata=self._to_object_meta()
         )
 
-    def to_ingress_routes(self) -> V1AlphaIngressRoute:
-        if self.deployment.traefik is None:
-            raise AttributeError("deployment.traefik field should be set")
+    def __find_default_port(self) -> int:
+        found = next(iter(self.mappings.keys()))
+        if found:
+            return int(found)
+        raise KeyError("No default port found. Did you define a port mapping?")
 
-        return V1AlphaIngressRoute(metadata=self._to_object_meta(), hosts=self.deployment.traefik.hosts,
-                                   service_port=123, name=self.release_name, target=self.target,
+    def create_host_wrappers(self) -> list[HostWrapper]:
+        default_hosts: list[Host] = Traefik.from_config(self.config_defaults.treafik_defaults).hosts
+
+        hosts: list[Host] = self.deployment.traefik.hosts if self.deployment.traefik else []
+
+        first_host = next(iter(hosts), None)
+        service_port = first_host.service_port if first_host and first_host.service_port else self.__find_default_port()
+
+        def to_white_list(configured: Optional[TargetProperty[list[str]]]) -> list[str]:
+            white_lists = configured.get_value(self.target) if configured else self.config_defaults.white_lists[
+                'default']
+            addresses = []
+            add_dict = dict(
+                (address['name'], address['values']) for address in self.config_defaults.white_lists['addresses'])
+            for item in white_lists:
+                addresses.extend(add_dict[item])
+
+            return addresses
+
+        return [HostWrapper(host=host, name=self.release_name, index=idx, service_port=service_port,
+                            white_lists=to_white_list(host.whitelists)) for
+                idx, host in enumerate(hosts if hosts else default_hosts)]
+
+    def to_ingress_routes(self) -> V1AlphaIngressRoute:
+        hosts = self.create_host_wrappers()
+
+        return V1AlphaIngressRoute(metadata=self._to_object_meta(), hosts=hosts, target=self.target,
                                    pr_number=self.step_input.run_properties.versioning.pr_number)
+
+    def to_middlewares(self) -> dict[str, V1AlphaMiddleware]:
+        hosts = self.create_host_wrappers()
+        return dict(map(lambda host:
+                        (host.full_name,
+                         V1AlphaMiddleware(metadata=self._to_object_meta(name=host.full_name),
+                                           source_ranges=host.white_lists)),
+                        hosts))
 
     def to_service_account(self) -> V1ServiceAccount:
         return V1ServiceAccount(api_version="v1", kind="ServiceAccount", metadata=self._to_object_meta(),
@@ -245,7 +289,7 @@ class ChartBuilder:
 
     def _get_resources(self):
         resources = self.project.kubernetes.resources
-        defaults = self.kubernetes_config.resources_defaults
+        defaults = self.config_defaults.resources_defaults
         return ChartBuilder._to_resources(resources, defaults, self.target)
 
     def _get_kubernetes(self) -> Kubernetes:
@@ -295,10 +339,10 @@ class ChartBuilder:
         project = self.project
         resources = project.resources
         kubernetes = project.kubernetes
-        defaults = self.kubernetes_config.resources_defaults
+        defaults = self.config_defaults.resources_defaults
 
         container = V1Container(
-            name=self.project.name,
+            name=self.release_name,
             image=self._get_image(),
             env=self._get_env_vars(),
             ports=ports,
@@ -306,12 +350,12 @@ class ChartBuilder:
             resources=ChartBuilder._to_resources(resources, defaults, self.target),
             liveness_probe=ChartBuilder._to_probe(
                 kubernetes.liveness_probe,
-                self.kubernetes_config.liveness_probe_defaults,
+                self.config_defaults.liveness_probe_defaults,
                 self.target
             ) if kubernetes.liveness_probe else None,
             startup_probe=ChartBuilder._to_probe(
                 kubernetes.startup_probe,
-                self.kubernetes_config.startup_probe_defaults,
+                self.config_defaults.startup_probe_defaults,
                 self.target)
             if kubernetes.startup_probe else None
         )
@@ -351,7 +395,7 @@ def to_service_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinitio
         'deployment': builder.to_deployment(),
         'service': builder.to_service(),
         'ingress-https-route': builder.to_ingress_routes()
-    }
+    } | builder.to_middlewares()
 
 
 def to_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:

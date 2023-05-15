@@ -23,6 +23,7 @@ def main(log: Logger, args: argparse.Namespace):
         run_config=MpylRunConfig(config=config, run_properties=run_properties),
         parameters=MpylCliParameters(
             local=args.local,
+            pull_main=True,
             verbose=args.verbose,
             all=args.all
         )

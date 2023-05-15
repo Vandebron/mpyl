@@ -32,6 +32,17 @@ from ..validation import validate
 yaml = YAML()
 
 
+class ExecutionException(Exception):
+    """ Exception thrown when a step execution fails. """
+
+    def __init__(self, project_name: str, executor: str, stage: str, message: str):
+        self.project_name = project_name
+        self.executor = executor
+        self.stage = stage
+        self.message = message
+        super().__init__(self.message)
+
+
 @dataclass(frozen=True)
 class StepResult:
     stage: Stage
@@ -143,15 +154,23 @@ class Steps:
 
                 return result
             except Exception as exc:
+                message = str(exc)
                 self._logger.warning(
                     f"Execution of '{executor.meta.name}' for project '{project.name}' in stage {stage} "
-                    f"failed with exception: {str(exc)}", exc_info=True)
-                raise ValueError from exc
+                    f"failed with exception: {message}", exc_info=True)
+                raise ExecutionException(project.name, executor.meta.name, stage.name, message) from exc
         else:
             self._logger.warning(f"No executor found for {stage_name} in stage {stage}")
 
         return Output(success=False, message=f"Executor '{stage_name}' for '{stage.value}' not known or registered")
 
     def execute(self, stage: Stage, project: Project, dry_run: bool = False) -> StepResult:
+        """
+        :param stage: the stage to execute
+        :param project: the project metadata
+        :param dry_run: indicates whether artifacts should be submitted or deployed for real
+        :return: StepResult
+        :raise ExecutionException
+        """
         step_output = self._execute_stage(stage, project, dry_run)
         return StepResult(stage=stage, project=project, output=step_output)

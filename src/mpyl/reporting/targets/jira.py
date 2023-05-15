@@ -32,6 +32,8 @@ import requests
 from atlassian import Jira
 
 from . import Reporter
+from ..formatting.markdown import markdown_for_stage
+from ...project import Stage
 from ...steps.run import RunResult
 
 
@@ -128,7 +130,7 @@ def to_github_markdown(jira_markdown: str, jira_url: str) -> str:
 
 
 def to_markdown_summary(ticket: JiraTicket, run_result: RunResult) -> str:
-    description_markdown = to_github_markdown(ticket.description, ticket.ticket_url)
+    description_markdown = to_github_markdown(ticket.description, ticket.ticket_url) if ticket.description else ""
     lines = description_markdown.splitlines()
     max_message_length = 288
     if len(lines) > max_message_length:
@@ -137,7 +139,7 @@ def to_markdown_summary(ticket: JiraTicket, run_result: RunResult) -> str:
     details = run_result.run_properties.details
 
     build_status = f"🏗️ Build [{details.build_id}]({details.run_url}) {run_result.status_line}, " \
-                   f"started by _{details.user}_"
+                   f"started by _{details.user}_  \n{markdown_for_stage(run_result, Stage.DEPLOY)}"
     return f"## 📕 [{ticket.ticket_id}]({ticket.ticket_url}) {ticket.summary} " \
            f"![{ticket.user_email}]({ticket.user_avatar}) \n" \
            f"{description_markdown}\n" \

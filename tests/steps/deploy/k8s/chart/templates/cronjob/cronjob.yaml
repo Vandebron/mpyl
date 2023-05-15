@@ -50,6 +50,7 @@ spec:
               requests:
                 cpu: 100m
                 memory: 512Mi
+          restartPolicy: Never
           serviceAccount: job
           serviceAccountName: job
       ttlSecondsAfterFinished: 3600

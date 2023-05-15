@@ -29,3 +29,10 @@ class TestSlackReporter:
         with open(self.test_formatting_resource_path / "markdown_run_with_plan.md", encoding='utf-8') as markdown:
             markdown_report = to_slack_markdown(markdown.read())
             assert_roundtrip(self.test_targets_resource_path / "markdown_run_slack.md", markdown_report)
+
+    def test_should_lazy_match_links(self):
+        md_with_links = "*[nodeservice](https://nodeservice-96.test.nl/swagger/index.html)* " \
+                        "*[sbtservice](https://sbtservice-96.test.nl/swagger/index.html)*"
+
+        assert to_slack_markdown(md_with_links) == '*<https://nodeservice-96.test.nl/swagger/index.html|nodeservice>*' \
+                                                   ' *<https://sbtservice-96.test.nl/swagger/index.html|sbtservice>*'
