@@ -39,11 +39,11 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
 
         super().__init__(api_version='traefik.containo.us/v1alpha1', kind="IngressRoute", metadata=metadata,
                          spec={'routes': routes, 'entryPoints': ['websecure'],
-                               'tls': {'secretName': 'le-prod-wildcard-cert'}}, schema='traeffik.ingress.schema.yml')
+                               'tls': {'secretName': 'le-prod-wildcard-cert'}}, schema='traefik.ingress.schema.yml')
 
 
 class V1AlphaMiddleware(CustomResourceDefinition):
 
     def __init__(self, metadata: V1ObjectMeta, source_ranges: list[str]):
         super().__init__(api_version='traefik.containo.us/v1alpha1', kind="Middleware", metadata=metadata,
-                         spec={'ipWhiteList': {'sourceRange': source_ranges}}, schema='traeffik.middleware.schema.yml')
+                         spec={'ipWhiteList': {'sourceRange': source_ranges}}, schema='traefik.middleware.schema.yml')
