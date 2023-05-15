@@ -39,6 +39,7 @@ jenkins:
   defaultPipeline: 'mpyl-test'
 sbt:
   command: 'sbt'
+  clientCommand: 'sbtn'
   testWithCoverage: !ENV ${SBT_RUN_WITH_COVERAGE:false}
   verbose: false
   javaOpts: '-Xmx4G -Xms4G -XX:+UseG1GC -XX:+CMSClassUnloadingEnabled -Xss2M'

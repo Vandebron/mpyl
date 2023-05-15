@@ -196,6 +196,8 @@ definitions:
     properties:
       command:
         type: string
+      clientCommand:
+        type: string
       verbose:
         default: false
         type: boolean
@@ -217,6 +219,7 @@ definitions:
             default: true
     required:
       - command
+      - clientCommand
       - javaOpts
       - sbtOpts
     title: Sbt
