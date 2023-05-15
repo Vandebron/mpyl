@@ -11,7 +11,7 @@ from src.mpyl.project import Target, Project
 from src.mpyl.steps.deploy.k8s.chart import ChartBuilder, to_service_chart, to_job_chart, to_cron_job_chart, \
     to_spark_job_chart
 from src.mpyl.steps.deploy.k8s.resources import to_yaml, CustomResourceDefinition
-from src.mpyl.steps.deploy.k8s.resources.treafik import V1AlphaIngressRoute
+from src.mpyl.steps.deploy.k8s.resources.traefik import V1AlphaIngressRoute
 from src.mpyl.steps.models import Input, Artifact, ArtifactType
 from src.mpyl.utilities.docker import DockerConfig
 from tests import root_test_path
