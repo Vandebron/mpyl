@@ -7,14 +7,14 @@ from typing import Optional
 
 from .models import RunProperties
 from ..project import Stage, Project
-from .steps import StepResult
+from .steps import StepResult, ExecutionException
 
 
 class RunResult:
     _run_plan: dict[Stage, set[Project]]
     _results: list[StepResult]
     _run_properties: RunProperties
-    _exception: Optional[Exception]
+    _exception: Optional[ExecutionException]
 
     def __init__(self, run_properties: RunProperties, run_plan=None):
         if run_plan is None:
@@ -56,11 +56,11 @@ class RunResult:
         return 1.0 - (unfinished / total)
 
     @property
-    def exception(self) -> Optional[Exception]:
+    def exception(self) -> Optional[ExecutionException]:
         return self._exception
 
     @exception.setter
-    def exception(self, exception: Exception):
+    def exception(self, exception: ExecutionException):
         self._exception = exception
 
     @property

@@ -15,7 +15,7 @@ from ....reporting.targets import Reporter
 from ....stages.discovery import for_stage, find_invalidated_projects_per_stage
 from ....steps.models import RunProperties
 from ....steps.run import RunResult
-from ....steps.steps import Steps
+from ....steps.steps import Steps, ExecutionException
 from ....utilities.repo import Repository, RepoConfig
 
 
@@ -86,10 +86,10 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter
             try:
                 steps = Steps(logger=logger, properties=mpyl_run_parameters.run_config.run_properties)
                 run_result = run_build(run_plan, steps, reporter, mpyl_run_parameters.parameters.local)
-            except Exception as exc:  # pylint: disable=broad-except
+            except ExecutionException as exc:  # pylint: disable=broad-except
+                run_result.exception = exc
                 console.log(f'Exception during build execution: {exc}')
                 console.print_exception()
-                run_result.exception = exc
 
             console.print(Markdown(run_result_to_markdown(run_result)))
             return run_result

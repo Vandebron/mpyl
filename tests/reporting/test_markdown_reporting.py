@@ -3,7 +3,7 @@ from datetime import datetime
 from src.mpyl.project import Stage
 from src.mpyl.reporting.formatting.markdown import summary_to_markdown, run_result_to_markdown
 from src.mpyl.steps import Output
-from src.mpyl.steps.steps import StepResult
+from src.mpyl.steps.steps import StepResult, ExecutionException
 from src.mpyl.utilities.junit import TestRunSummary
 from tests import root_test_path
 from tests.reporting import create_test_result, create_test_result_with_plan, append_results
@@ -18,6 +18,12 @@ class TestMarkdownReporting:
         run_result = create_test_result()
         simple_report = run_result_to_markdown(run_result)
         assert_roundtrip(self.test_resource_path / "markdown_run.md", simple_report)
+
+    def test_should_print_exception(self):
+        run_result = create_test_result()
+        run_result.exception = ExecutionException('sbtProject', 'Build SBT', 'Build', 'Something went wrong')
+        simple_report = run_result_to_markdown(run_result)
+        assert_roundtrip(self.test_resource_path / "markdown_run_with_exception.md", simple_report)
 
     def test_should_print_results_with_plan_as_string(self):
         run_result = create_test_result_with_plan()

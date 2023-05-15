@@ -70,8 +70,10 @@ def markdown_for_stage(run_result: RunResult, stage: Stage):
 
 def run_result_to_markdown(run_result: RunResult) -> str:
     result: str = f'{run_result.status_line}  \n'
-    if run_result.exception:
-        result += f"\n```\n{run_result.exception}\n```\n"
+    exception = run_result.exception
+    if exception:
+        result += f"For _{exception.executor}_ on _{exception.project_name}_ at _{exception.stage}_ \n"
+        result += f"\n```\n{exception}\n```\n"
 
     for stage in Stage:
         result += markdown_for_stage(run_result, stage)
