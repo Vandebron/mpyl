@@ -38,8 +38,21 @@ def write_chart(chart: dict[str, CustomResourceDefinition], chart_path: Path, ch
             file.write(template)
 
 
+def __remove_existing_chart(logger: Logger, chart_name: str, name_space: str, kube_context: str) -> Output:
+    found_chart = custom_check_output(logger, f"helm list -f {chart_name} -n {name_space}", capture_stdout=True)
+    if chart_name in found_chart.message:
+        cmd = f"helm uninstall {chart_name} -n {name_space} --kube-context {kube_context}"
+        return custom_check_output(Logger("helm"), cmd)
+    return Output(success=True, message=f"No existing chart {chart_name} found to delete")
+
+
 def install(logger: Logger, chart: dict[str, CustomResourceDefinition], step_input: Input, chart_name: str,
-            name_space: str, kube_context: str) -> Output:
+            name_space: str, kube_context: str, delete_existing: bool = False) -> Output:
+    if delete_existing:
+        removed = __remove_existing_chart(logger, chart_name, name_space, kube_context)
+        if not removed.success:
+            return removed
+
     chart_path = Path(step_input.project.target_path) / "chart"
     write_chart(chart, chart_path, to_chart_metadata(chart_name, step_input.run_properties))
 

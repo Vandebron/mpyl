@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
+from jsonschema import ValidationError
 from rich.console import Console
 from rich.logging import RichHandler
 from rich.markdown import Markdown
@@ -86,6 +87,9 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter
             try:
                 steps = Steps(logger=logger, properties=mpyl_run_parameters.run_config.run_properties)
                 run_result = run_build(run_plan, steps, reporter, mpyl_run_parameters.parameters.local)
+            except ValidationError as exc:
+                console.log(f'Schema validation failed {exc.message} at `{".".join(map(str, exc.path))}`')
+                raise exc
             except ExecutionException as exc:  # pylint: disable=broad-except
                 run_result.exception = exc
                 console.log(f'Exception during build execution: {exc}')
