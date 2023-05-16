@@ -55,6 +55,10 @@ class Repository:
     def get_branch(self):
         return self._repo.active_branch.name
 
+    @property
+    def get_remote_url(self):
+        return self._repo.remote().url
+
     def root_dir(self) -> Path:
         return Path(self._root_dir)
 
@@ -76,6 +80,11 @@ class Repository:
         in_branch = self.changes_in_branch()
         in_branch.append(Revision(len(in_branch), self.get_sha, self.changes_in_commit()))
         return in_branch
+
+    @property
+    def main_branch_pulled(self) -> bool:
+        branch_names = list(map(lambda n: n.name, self._repo.references))
+        return f'origin/{self._config.main_branch}' in branch_names
 
     def pull_main_branch(self):
         remote = Remote(self._repo, 'origin')

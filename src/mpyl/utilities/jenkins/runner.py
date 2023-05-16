@@ -8,6 +8,7 @@ from dataclasses import dataclass
 
 import requests
 from jenkinsapi.build import Build
+from jenkinsapi.custom_exceptions import JenkinsAPIException
 from jenkinsapi.jenkins import Jenkins
 from jenkinsapi.job import Job
 from rich.errors import MarkupError
@@ -17,6 +18,36 @@ from rich.status import Status
 from rich.text import Text
 
 from . import Pipeline
+
+
+def stream_utf_8_logs(self, interval=0):
+    """
+    Return generator which streams parts of text console.
+    Workaround for https://github.com/pycontribs/jenkinsapi/pull/843
+    """
+    url = f"{self.baseurl}/logText/progressiveText"
+    size = 0
+    more_data = True
+    while more_data:
+        resp = self.job.jenkins.requester.get_url(
+            url, params={"start": size}
+        )
+        content = resp.content
+        if content:
+            if isinstance(content, str):
+                yield content
+            elif isinstance(content, bytes):
+                yield content.decode(resp.encoding)
+            else:
+                raise JenkinsAPIException(
+                    "Unknown content type for console"
+                )
+        size = resp.headers["X-Text-Size"]
+        more_data = resp.headers.get("X-More-Data")
+        time.sleep(interval)
+
+
+Build.stream_utf_8_logs = stream_utf_8_logs
 
 
 @dataclass
@@ -79,7 +110,7 @@ class JenkinsRunner:
                     build_to_follow.stop()
 
             signal.signal(signal.SIGINT, cancel_handler)
-            for line in build_to_follow.stream_logs():
+            for line in build_to_follow.stream_utf_8_logs():
                 current_time = time.time()
                 elapsed_time = current_time - start_time
                 lines = line.rstrip().split('\n')

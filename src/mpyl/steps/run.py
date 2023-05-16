@@ -7,14 +7,14 @@ from typing import Optional
 
 from .models import RunProperties
 from ..project import Stage, Project
-from .steps import StepResult
+from .steps import StepResult, ExecutionException
 
 
 class RunResult:
     _run_plan: dict[Stage, set[Project]]
     _results: list[StepResult]
     _run_properties: RunProperties
-    _exception: Optional[Exception]
+    _exception: Optional[ExecutionException]
 
     def __init__(self, run_properties: RunProperties, run_plan=None):
         if run_plan is None:
@@ -30,6 +30,8 @@ class RunResult:
             return '❗ Failed with exception'
         if self.is_in_progress:
             return '🏗️ Building'
+        if not self.has_results:
+            return '🦥 Nothing to do'
         if self._results_success():
             return '✅ Successful'
 
@@ -54,11 +56,11 @@ class RunResult:
         return 1.0 - (unfinished / total)
 
     @property
-    def exception(self) -> Optional[Exception]:
+    def exception(self) -> Optional[ExecutionException]:
         return self._exception
 
     @exception.setter
-    def exception(self, exception: Exception):
+    def exception(self, exception: ExecutionException):
         self._exception = exception
 
     @property
@@ -86,11 +88,15 @@ class RunResult:
         return self.progress_fraction == 1.0
 
     @property
+    def has_results(self):
+        return len(self._results) > 0
+
+    @property
     def is_in_progress(self):
         return self.is_success and not self.is_finished
 
     def _results_success(self):
-        return all(r.output.success for r in self._results)
+        return not self.has_results or all(r.output.success for r in self._results)
 
     @staticmethod
     def sort_chronologically(results: list[StepResult]) -> list[StepResult]:

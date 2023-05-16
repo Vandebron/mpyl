@@ -15,21 +15,13 @@ metadata:
 spec:
   routes:
   - kind: Rule
-    match: Host(`payments-1234.test.nl`)
+    match: Host(`dockertest-1234.test-backend.nl`)
     services:
     - name: dockertest
       kind: Service
       port: 8080
     middlewares:
     - name: dockertest-ingress-0-whitelist
-  - kind: Rule
-    match: Host(`some.other.host.com`)
-    services:
-    - name: dockertest
-      kind: Service
-      port: 8080
-    middlewares:
-    - name: dockertest-ingress-1-whitelist
   entryPoints:
   - websecure
   tls:

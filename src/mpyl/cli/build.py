@@ -53,7 +53,7 @@ def run(obj: CliContext, properties, ci, all_):  # pylint: disable=invalid-name
     run_properties = RunProperties.from_configuration(parse_config(properties), obj.config) if ci \
         else RunProperties.for_local_run(obj.config, obj.repo.get_sha, obj.repo.get_branch)
 
-    parameters = MpylCliParameters(local=not ci, all=all_, verbose=obj.verbose)
+    parameters = MpylCliParameters(local=not ci, pull_main=all_, all=all_, verbose=obj.verbose)
     obj.console.log(parameters)
     run_parameters = MpylRunParameters(
         run_config=MpylRunConfig(config=obj.config, run_properties=run_properties),

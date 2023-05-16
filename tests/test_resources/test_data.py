@@ -23,6 +23,10 @@ def get_project() -> Project:
     return load_project(resource_path, Path("test_project.yml"), True)
 
 
+def get_minimal_project() -> Project:
+    return load_project(resource_path, Path("test_minimal_project.yml"), True)
+
+
 def get_job_project() -> Project:
     return load_project(resource_path, Path("test_job_project.yml"), True)
 

@@ -234,6 +234,7 @@ class Kubernetes:
 @dataclass(frozen=True)
 class Host:
     host: TargetProperty[str]
+    service_port: Optional[int]
     tls: TargetProperty[str]
     whitelists: TargetProperty[list[str]]
 
@@ -241,6 +242,7 @@ class Host:
     def from_config(values: dict):
         return Host(
             host=TargetProperty.from_config(values.get('host', {})),
+            service_port=values.get('servicePort'),
             tls=TargetProperty.from_config(values.get('tls', {})),
             whitelists=TargetProperty.from_config(values.get('whitelists', {}))
         )

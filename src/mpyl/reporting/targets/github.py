@@ -120,9 +120,9 @@ class CommitCheck(Reporter):
             access_token = integration.get_access_token(install.id)
             github = Github(login_or_token=access_token.token)
             repo = github.get_repo(self._github_config.repository)
-            if self._check_run_id:
+            if self._check_run_id and results:
                 run = repo.get_check_run(self._check_run_id)
-                conclusion = 'success' if results.is_success else 'failure'
+                conclusion = 'success' if results is None or results.is_success else 'failure'
                 self._logger.info(f'Setting check to {conclusion}')
                 run.edit(completed_at=datetime.now(), conclusion=conclusion, output=self._to_output(results))
             else:

@@ -5,18 +5,19 @@ import pytest
 from kubernetes.client import V1Probe, V1ObjectMeta
 from pyaml_env import parse_config
 
+from mpyl.steps.deploy.kubernetes import DeployKubernetes
 from src.mpyl.steps.deploy.k8s import cluster_config
 from src.mpyl.project import Target, Project
 from src.mpyl.steps.deploy.k8s.chart import ChartBuilder, to_service_chart, to_job_chart, to_cron_job_chart, \
     to_spark_job_chart
 from src.mpyl.steps.deploy.k8s.resources import to_yaml, CustomResourceDefinition
-from src.mpyl.steps.deploy.k8s.resources.treaffik import V1AlphaIngressRoute
+from src.mpyl.steps.deploy.k8s.resources.traefik import V1AlphaIngressRoute
 from src.mpyl.steps.models import Input, Artifact, ArtifactType
 from src.mpyl.utilities.docker import DockerConfig
 from tests import root_test_path
 from tests.test_resources import test_data
 from tests.test_resources.test_data import assert_roundtrip, get_project, get_job_project, get_spark_project, \
-    get_cron_job_project
+    get_cron_job_project, get_minimal_project
 
 
 class TestKubernetesChart:
@@ -27,8 +28,7 @@ class TestKubernetesChart:
     liveness_probe_defaults = config['project']['deployment']['kubernetes']['livenessProbe']
 
     @staticmethod
-    def _roundtrip(file_name: Path, chart: str, resources: dict[str, CustomResourceDefinition],
-                   overwrite: bool = False):
+    def _roundtrip(file_name: Path, chart: str, resources: dict[str, CustomResourceDefinition], overwrite: bool = False):
         name_chart = file_name / f"{chart}.yaml"
         resource = resources[chart]
         assert_roundtrip(name_chart, to_yaml(resource), overwrite)
@@ -86,8 +86,9 @@ class TestKubernetesChart:
 
     def test_should_validate_against_crd_schema(self):
         project = test_data.get_project()
-        route = V1AlphaIngressRoute(metadata=V1ObjectMeta(), hosts=project.deployment.traefik.hosts, service_port=1234,
-                                    name='serviceName', target=Target.PRODUCTION, pr_number=1234)
+        builder = self._get_builder(project)
+        wrappers = builder.create_host_wrappers()
+        route = V1AlphaIngressRoute(metadata=V1ObjectMeta(), hosts=wrappers, target=Target.PRODUCTION, pr_number=1234)
         route.spec['tls'] = {'secretName': 1234}
 
         with pytest.raises(ValueError) as exc_info:
@@ -95,11 +96,25 @@ class TestKubernetesChart:
         assert "Schema validation failed with 1234 is not of type 'string'" in str(exc_info.value)
 
     @pytest.mark.parametrize('template',
-                             ['deployment', 'service', 'service-account', 'sealed-secrets', 'ingress-https-route'])
+                             ['deployment', 'service', 'service-account', 'sealed-secrets', 'ingress-https-route',
+                              'dockertest-ingress-0-whitelist'])
     def test_service_chart_roundtrip(self, template):
         builder = self._get_builder(get_project())
         chart = to_service_chart(builder)
         self._roundtrip(self.template_path / "service", template, chart)
+
+    def test_default_ingress(self):
+        project = get_minimal_project()
+        builder = self._get_builder(project)
+        chart = to_service_chart(builder)
+        self._roundtrip(self.template_path / "ingress", 'ingress-https-route', chart)
+
+    def test_ingress_to_urls(self):
+        project = get_minimal_project()
+        builder = self._get_builder(project)
+
+        route = to_service_chart(builder)
+        assert DeployKubernetes.try_extract_endpoint(route) == 'https://dockertest-1234.test-backend.nl'
 
     @pytest.mark.parametrize('template', ['job', 'service-account', 'sealed-secrets'])
     def test_job_chart_roundtrip(self, template):

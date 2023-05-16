@@ -29,10 +29,16 @@ docker:
     dockerFileName: 'Dockerfile-mpl'
 sbt:
   command: 'sbt'
+  clientCommand: 'sbtn'
   testWithCoverage: !ENV ${SBT_RUN_WITH_COVERAGE:true}
   verbose: true
   javaOpts: '-Xmx4G -Xms4G -XX:+UseG1GC -XX:+CMSClassUnloadingEnabled -Xss2M'
   sbtOpts: 'user.timezone=GMT jline.terminal=jline.UnixTerminal'
+whiteLists:
+  default: [ "VPN" ]
+  addresses:
+    - name: "VPN"
+      values: [ "10.0.0.1" ]
 kubernetes:
   rancher:
     cluster:
@@ -53,6 +59,19 @@ kubernetes:
         context: digital-k8s-prod
 project: # default values
   deployment:
+    traefik:
+      enabled: true
+      hosts:
+        - host:
+            pr: "Host(`{SERVICE-NAME}-{PR-NUMBER}.test-backend.nl`)"
+            test: "Host(`{namespace}-{SERVICE-NAME}.test-backend.nl`)"
+            acceptance: "Host(`{namespace}-{SERVICE-NAME}.acce-backend.nl`)"
+            production: "Host(`{namespace}-{SERVICE-NAME}.prod-backend.nl`)"
+          tls:
+            all: "le-custom-prod-wildcard-cert"
+          whitelists:
+            all: [ "VPN" ]
+          insecure: false
     kubernetes:
       job:
         ttlSecondsAfterFinished:

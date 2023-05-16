@@ -59,3 +59,5 @@ Case Invoice routes should refuse to serve invoices if user reference in path do
 Case Invoice routes should refuse request without filter 
 Case Invoice routes should use proper headers when returning a PDF invoice 
 Case Invoice routes should GET '/api/v1/organizations/{customerReference}/invoices/{invoiceId}' should return a 200 with invoice details 
+Stage DEPLOY
+2019-01-04 16:41:45+02:00 - test - Stage.DEPLOY - success: True 

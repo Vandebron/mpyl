@@ -11,7 +11,7 @@ spec:
     sparkVersion: 3.1.1
     restartPolicy:
       type: Never
-    sparkConfigMap: enrichChargeSessionsJob
+    sparkConfigMap: enrichchargesessionsjob
     image: bigdataregistry.azurecr.io/send-slack-notification:PR-1231
     arguments:
     - python
@@ -24,7 +24,7 @@ spec:
       memoryOverhead: '1024'
       labels:
         version: 3.1.1
-      serviceAccount: enrichChargeSessionsJob
+      serviceAccount: enrichchargesessionsjob
       envVars:
         DEPLOY_ENV: Test
         APP_NAME: enrichChargeSessionsJob

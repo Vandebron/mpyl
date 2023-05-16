@@ -33,7 +33,7 @@ data:
 kind: ConfigMap
 metadata:
   labels:
-    name: enrichChargeSessionsJob
+    name: enrichchargesessionsjob
     app.kubernetes.io/version: pr-1234
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: enrichchargesessionsjob
@@ -42,4 +42,4 @@ metadata:
     maintainer: MPyL
     version: pr-1234
     revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
-  name: enrichChargeSessionsJob
+  name: enrichchargesessionsjob
