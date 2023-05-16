@@ -16,7 +16,7 @@ properties:
     properties:
       local:
         description: Whether the run is local or not
-        type: boolean
+        type: string
       run:
         description: defines the run properties
         type: object

@@ -290,6 +290,12 @@ properties:
       deploy:
         type: array
         minItems: 1
+      postdeploy:
+        type: object
+        properties:
+          cypress:
+            type: array
+            minItems: 1
     additionalProperties: false
 definitions:
   traefik:

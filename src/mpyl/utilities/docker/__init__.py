@@ -2,9 +2,9 @@
 import logging
 from dataclasses import dataclass
 from logging import Logger
-from typing import Dict, Optional, Union, Iterator
+from typing import Dict, Optional, Union, Iterator, Iterable
 
-from python_on_whales import docker, Image
+from python_on_whales import docker
 
 from ...project import Project
 from ...steps.models import Input
@@ -56,12 +56,25 @@ class DockerConfig:
             raise KeyError(f'Docker config could not be loaded from {config}') from exc
 
 
+def decode_and_stream_execute_logs(logger: Logger, generator: Union[None, str, Iterable[tuple[str, bytes]]],
+                                   task_name: str, level=logging.INFO) -> None:
+    def decode():
+        for origin, value in generator:
+            yield value.decode(errors="replace")
+
+    if type(generator) is None:
+        return
+    elif type(generator) is str:
+        logger.log(level, generator)
+    else:
+        stream_docker_logging(logger, decode(), task_name, level)
+
+
 def stream_docker_logging(logger: Logger, generator: Iterator[str], task_name: str, level=logging.INFO) -> None:
     while True:
         try:
             output = next(generator)
             logger.log(level, str(output).strip('\n'))
-            print(str(output).strip('\n'))
         except StopIteration:
             logger.info(f'{task_name} complete.')
             break
@@ -88,9 +101,10 @@ def build(logger: Logger, root_path: str, file_path: str, image_tag: str, target
     """
     logger.info(f"Building docker image with {file_path} and target {target}")
 
-    logs: Iterator[str] = docker.buildx.build(context_path=root_path, file=file_path, tags=[image_tag], target=target,
+    logs = docker.buildx.build(context_path=root_path, file=file_path, tags=[image_tag], target=target,
                                stream_logs=True)
-    stream_docker_logging(logger=logger, generator=logs, task_name=f'Build {file_path}:{target}')
+    if type(logs) is Iterable[str]:
+        stream_docker_logging(logger=logger, generator=logs, task_name=f'Build {file_path}:{target}')
     logger.debug(logs)
     return True
 

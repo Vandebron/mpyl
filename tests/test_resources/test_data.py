@@ -20,7 +20,8 @@ RUN_PROPERTIES = RunProperties(
     VersioningProperties("2ad3293a7675d08bc037ef0846ef55897f38ec8f", "feature/ARC-123-branch", 1234, None),
     config_values,
     ConsoleProperties("INFO", 130),
-    True)
+    True
+)
 
 
 def get_config_values() -> dict:

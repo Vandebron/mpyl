@@ -1,12 +1,14 @@
 import os
 
 from logging import Logger
-from python_on_whales import docker
+from typing import cast
+
+from python_on_whales import docker, Container
 
 from .. import Step, Meta
 from ..models import ArtifactType, Input, Output
 from ...project import Stage
-from ...utilities.docker import stream_docker_logging
+from ...utilities.docker import decode_and_stream_execute_logs
 
 
 class CypressTest(Step):
@@ -22,13 +24,14 @@ class CypressTest(Step):
         self._logger.info(f"Running cypress tests for project {step_input.project.name}")
 
         # TODO: get volume location and spec files based on step_input?
-        docker_container = docker.run(image="cypress/browsers:latest", interactive=True, detach=True,
+        docker_container = cast(Container, docker.run(image="cypress/browsers:latest", interactive=True, detach=True,
                                       volumes=[(f"{os.getcwd()}/test_resources/cypress", "/cypress")],
-                                      workdir="/cypress")
+                                      workdir="/cypress"))
         install_stream = docker_container.execute(command=["yarn", "cypress", "install"], stream=True)
-        stream_docker_logging(self._logger, install_stream, "Installing cypress")
+        decode_and_stream_execute_logs(self._logger, install_stream, "Installing cypress")
+        decode_and_stream_execute_logs(self._logger, '########## this should be printed $$$$$$$$$$', "Testing")
         verify_stream = docker_container.execute(command=["yarn", "cypress", "verify"], stream=True)
-        stream_docker_logging(self._logger, verify_stream, "Verifying cypress")
+        decode_and_stream_execute_logs(self._logger, verify_stream, "Verifying cypress")
         output = Output(success=True, message=f"Cypress tests for {step_input.project.name} passed",
                         produced_artifact=None)
 
@@ -37,7 +40,7 @@ class CypressTest(Step):
             if not step_input.run_properties.local:
                 run_command.extend(["--record", "--key", step_input.run_properties.config['cypress']['recordKey']])
             test_result_stream = docker_container.execute(command=run_command, stream=True)
-            stream_docker_logging(logger=self._logger, generator=test_result_stream, task_name="Running cypress tests")
+            decode_and_stream_execute_logs(logger=self._logger, generator=test_result_stream, task_name="Running cypress tests")
         except Exception as exc:  # pylint: disable=broad-except
             output = Output(success=False,
                             message=f"Cypress tests for {step_input.project.name} failed with exception: \n{exc}",
