@@ -56,7 +56,7 @@ class DockerConfig:
             raise KeyError(f'Docker config could not be loaded from {config}') from exc
 
 
-def stream_docker_logging(logger: Logger, generator, task_name: str, level=logging.DEBUG) -> None:
+def stream_docker_logging(logger: Logger, generator, task_name: str, level=logging.INFO) -> None:
     while True:
         try:
             output = next(generator)
