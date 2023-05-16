@@ -3,11 +3,24 @@ pipeline {
     options {
         ansiColor('xterm')
     }
-    parameters {
-        string(name: 'BUILD_PARAMS', defaultValue: '--all', description: 'Build parameters passed along with the run. Example: --help or --all')
-    }
     stages {
-        stage('Initialise') {
+        stage('Initialize Parameters') {
+            when { expression { return params.BUILD_PARAMS == null || params.BUILD_PARAMS == ""  } }
+            steps {
+                script {
+                    properties([parameters([
+                        string(name: 'BUILD_PARAMS', defaultValue: '--all', description: 'Build parameters passed along with the run. Example: --help or --all')
+                    ])])
+                    currentBuild.result = 'NOT_BUILT'
+                    currentBuild.description = "Parameters can be set now"
+                    currentBuild.displayName = "#${BUILD_NUMBER}-(Parameter load)"
+                    echo("The build parameters have been created. Ready for real build.")
+                    currentBuild.getRawBuild().getExecutor().interrupt(Result.NOT_BUILT)
+                    sleep(1)
+                }
+            }
+        }
+        stage('Checkout') {
             steps {
                 checkout scm
             }
