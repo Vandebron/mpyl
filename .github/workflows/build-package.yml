@@ -122,3 +122,4 @@ jobs:
           message: |
             New release `${{ steps.findPr.outputs.pr }}.${{ github.run_number }}` deployed at [Test Pypi](https://test.pypi.org/project/mpyl/)
           reactions: rocket
+          comment_tag: execution
