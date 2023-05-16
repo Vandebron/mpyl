@@ -86,14 +86,3 @@ class TestSteps:
 
     def test_find_all_steps(self):
         assert list(Step.get_subclasses()) != ""
-        executors: dict[Stage, set[Step]] = {}
-
-        for stage in Stage:
-            print(stage)
-            steps = set()
-            for step in Step.get_subclasses():
-                print(step)
-                if str(stage.name.lower()) in str(step):
-                    steps.add(step(Logger))
-            executors[stage] = steps
-        print(executors)
