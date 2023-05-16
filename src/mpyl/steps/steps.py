@@ -14,6 +14,17 @@ from unittest import TestSuite
 from ruamel.yaml import YAML  # type: ignore
 
 from . import Step
+# from .build.dockerbuild import BuildDocker
+# from .build.echo import BuildEcho
+# from .build.sbt import BuildSbt
+# from .deploy.echo import DeployEcho
+# from .deploy.ephemeral_docker_deploy import EphemeralDockerDeploy
+# from .deploy.kubernetes import DeployKubernetes
+# from .deploy.kubernetes_job import DeployKubernetesJob
+# from .deploy.kubernetes_spark_job import DeployKubernetesSparkJob
+# from .test.dockertest import TestDocker
+# from .test.echo import TestEcho
+# from .test.sbt import TestSbt
 from .models import Output, Input, RunProperties, ArtifactType, Artifact
 from ..project import Project
 from ..project import Stage
@@ -63,8 +74,8 @@ class Steps:
                     if file != "__init__.py":
                         try:
                             importlib.import_module("."+drc+"."+file[:-3], package="src.mpyl.steps")
-                        except Exception as e:
-                            self._logger.debug(e)
+                        except ImportError as exc:
+                            raise ImportError(f'Could not import {file[:-3]} from {drc}') from exc
 
         for stage in Stage:
             steps = set()
