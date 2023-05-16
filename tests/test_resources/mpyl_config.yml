@@ -86,7 +86,7 @@ project: # default values
         periodSeconds: 2  # 10 - We want the service to become available as soon as possible
         timeoutSeconds: 3  # 1 - If the app is very busy during the startup stage, 1 second might be too fast
         successThreshold: 1  # 1 - We want the service to become available as soon as possible
-        failureThreshold: 60  # 3 - 4 + 60 * 2 = more than 2 minutes
+        failureThreshold: 90  # 3 - 4 + 90 * 2 = more than 3 minutes
       livenessProbe:
         path:
           all: '/health'
