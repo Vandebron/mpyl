@@ -1,8 +1,8 @@
 """ Entry point of MPyL. Loads all available Step implementations and triggers their execution based on the specified
 Project and Stage.
 """
-import os
-import importlib
+# import os
+# import importlib
 import itertools
 import pkgutil
 from dataclasses import dataclass
@@ -14,17 +14,17 @@ from unittest import TestSuite
 from ruamel.yaml import YAML  # type: ignore
 
 from . import Step
-# from .build.dockerbuild import BuildDocker
-# from .build.echo import BuildEcho
-# from .build.sbt import BuildSbt
-# from .deploy.echo import DeployEcho
-# from .deploy.ephemeral_docker_deploy import EphemeralDockerDeploy
-# from .deploy.kubernetes import DeployKubernetes
-# from .deploy.kubernetes_job import DeployKubernetesJob
-# from .deploy.kubernetes_spark_job import DeployKubernetesSparkJob
-# from .test.dockertest import TestDocker
-# from .test.echo import TestEcho
-# from .test.sbt import TestSbt
+from .build.dockerbuild import BuildDocker # pylint: disable=unused-import
+from .build.echo import BuildEcho # pylint: disable=unused-import
+from .build.sbt import BuildSbt # pylint: disable=unused-import
+from .deploy.echo import DeployEcho # pylint: disable=unused-import
+from .deploy.ephemeral_docker_deploy import EphemeralDockerDeploy # pylint: disable=unused-import
+from .deploy.kubernetes import DeployKubernetes # pylint: disable=unused-import
+from .deploy.kubernetes_job import DeployKubernetesJob # pylint: disable=unused-import
+from .deploy.kubernetes_spark_job import DeployKubernetesSparkJob # pylint: disable=unused-import
+from .test.dockertest import TestDocker # pylint: disable=unused-import
+from .test.echo import TestEcho # pylint: disable=unused-import
+from .test.sbt import TestSbt # pylint: disable=unused-import
 from .models import Output, Input, RunProperties, ArtifactType, Artifact
 from ..project import Project
 from ..project import Stage
@@ -66,16 +66,16 @@ class Steps:
         self._logger = logger
         self._step_executors: dict[Stage, set[Step]] = {}
 
-        root_dir =  "src/mpyl/steps/"
-        for drc in os.listdir(root_dir):
-            if os.path.isdir(os.path.join(root_dir, drc)) and drc != "__pycache__":
-                files = os.listdir(os.path.join(root_dir, drc))
-                for file in files:
-                    if file != "__init__.py":
-                        try:
-                            importlib.import_module("."+drc+"."+file[:-3], package="src.mpyl.steps")
-                        except ImportError as exc:
-                            raise ImportError(f'Could not import {file[:-3]} from {drc}') from exc
+        # root_dir =  "src/mpyl/steps/"
+        # for drc in os.listdir(root_dir):
+        #     if os.path.isdir(os.path.join(root_dir, drc)) and drc != "__pycache__":
+        #         files = os.listdir(os.path.join(root_dir, drc))
+        #         for file in files:
+        #             if file != "__init__.py":
+        #                 try:
+        #                     importlib.import_module("."+drc+"."+file[:-3], package="src.mpyl.steps")
+        #                 except ImportError as exc:
+        #                     raise ImportError(f'Could not import {file[:-3]} from {drc}') from exc
 
         for stage in Stage:
             steps = set()
