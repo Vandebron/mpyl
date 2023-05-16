@@ -16,6 +16,9 @@ build:
 dependencies:
   build:
     - 'test/docker/'
+  postdeploy:
+    cypress:
+      - specs: ''
 deployment:
   namespace: "mpyl"
   properties:

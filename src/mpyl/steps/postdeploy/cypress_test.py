@@ -16,16 +16,15 @@ class CypressTest(Step):
             description='Step to run cypress tests',
             version='0.0.1',
             stage=Stage.POST_DEPLOY
-        ), ArtifactType.NONE, ArtifactType.NONE)
+        ), produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.NONE)
 
     def execute(self, step_input: Input) -> Output:
         self._logger.info(f"Running cypress tests for project {step_input.project.name}")
 
-        # TODO: Get volume and spec files based on step_input?
+        # TODO: get volume location and spec files based on step_input?
         docker_container = docker.run(image="cypress/browsers:latest", interactive=True, detach=True,
-                                      volumes=[(f"{os.getcwd()}/../test_resources/cypress", "/cypress")],
-                                      workdir="/cypress", log_driver="json-file")
-
+                                      volumes=[(f"{os.getcwd()}/test_resources/cypress", "/cypress")],
+                                      workdir="/cypress")
         install_stream = docker_container.execute(command=["yarn", "cypress", "install"], stream=True)
         stream_docker_logging(self._logger, install_stream, "Installing cypress")
         verify_stream = docker_container.execute(command=["yarn", "cypress", "verify"], stream=True)
@@ -34,8 +33,10 @@ class CypressTest(Step):
                         produced_artifact=None)
 
         try:
-            # TODO: add record key (from config?) for non test runs with --record --key <key>
-            test_result_stream = docker_container.execute(command=["yarn", "test"], stream=True)
+            run_command = ["yarn", "test"]
+            if not step_input.run_properties.local:
+                run_command.extend(["--record", "--key", step_input.run_properties.config['cypress']['recordKey']])
+            test_result_stream = docker_container.execute(command=run_command, stream=True)
             stream_docker_logging(logger=self._logger, generator=test_result_stream, task_name="Running cypress tests")
         except Exception as exc:  # pylint: disable=broad-except
             output = Output(success=False,

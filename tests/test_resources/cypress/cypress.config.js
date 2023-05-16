@@ -4,6 +4,7 @@ module.exports = defineConfig({
   e2e: {
     specPattern: 'specs',
     supportFile: false,
-    projectId: '11wp34'
+    projectId: '11wp34',
+    video: false
   },
 });

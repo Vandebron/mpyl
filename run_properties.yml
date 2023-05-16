@@ -6,6 +6,7 @@ build:
     tests_url: !ENV ${RUN_TESTS_DISPLAY_URL:http://localhost:3000/}
     user: !ENV ${BUILD_USER:anonymous}
     user_email: !ENV ${BUILD_USER_EMAIL}
+  local: !ENV ${LOCAL:true}
   parameters:
     deploy_target: !ENV ${deployTarget:PullRequest}
   versioning:

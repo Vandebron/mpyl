@@ -14,6 +14,9 @@ properties:
       - versioning
       - console
     properties:
+      local:
+        description: Whether the run is local or not
+        type: boolean
       run:
         description: defines the run properties
         type: object
@@ -24,6 +27,7 @@ properties:
           - change_url
           - tests_url
           - user
+          - local
         properties:
           id:
             description: Uniquely identifies the run. Typically a monotonically increasing number.
