@@ -39,7 +39,7 @@ def write_chart(chart: dict[str, CustomResourceDefinition], chart_path: Path, ch
 
 
 def __remove_existing_chart(logger: Logger, chart_name: str, name_space: str, kube_context: str) -> Output:
-    found_chart = custom_check_output(logger, f"helm list -f '^{chart_name}$' -n {name_space}", capture_stdout=True)
+    found_chart = custom_check_output(logger, f"helm list -f {chart_name} -n {name_space}", capture_stdout=True)
     if chart_name in found_chart.message:
         cmd = f"helm uninstall {chart_name} -n {name_space} --kube-context {kube_context}"
         return custom_check_output(Logger("helm"), cmd)

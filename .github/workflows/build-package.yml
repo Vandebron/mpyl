@@ -104,7 +104,7 @@ jobs:
           command: run build
 
       - name: Publish package
-        uses: pypa/gh-action-pypi-publish@a3a3bafbb3e5a75a854ae1bc53ae128cf22c4af4
+        uses: pypa/gh-action-pypi-publish@a56da0b891b3dc519c7ee3284aff1fad93cc8598
         if: github.ref_name != 'main'
         id : publish
         with:
