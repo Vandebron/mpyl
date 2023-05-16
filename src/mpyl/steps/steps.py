@@ -91,7 +91,8 @@ class Steps:
                 DeployKubernetesJob(logger),
                 DeployKubernetesSparkJob(logger),
                 EphemeralDockerDeploy(logger)
-            }
+            },
+            Stage.POST_DEPLOY: set(),
         }
 
         self._properties = properties
