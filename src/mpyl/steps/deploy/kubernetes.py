@@ -23,13 +23,17 @@ class DeployKubernetes(Step):
         ), produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.DOCKER_IMAGE)
 
     @staticmethod
+    def match_to_url(match: str) -> str:
+        return 'https://' + next(iter(re.findall(r'`(.*)`', match.split(',')[-1])))
+
+    @staticmethod
     def try_extract_endpoint(chart: dict[str, CustomResourceDefinition]) -> Optional[str]:
         ingress = chart.get('ingress-https-route')
         if ingress:
             routes = ingress.spec.get('routes', {})
             if routes:
-                url = routes[0].get('match')
-                return 'https://' + next(iter(re.findall(r'`(.*)`', url)))
+                match = routes[0].get('match')
+                return DeployKubernetes.match_to_url(match)
         return None
 
     def execute(self, step_input: Input) -> Output:

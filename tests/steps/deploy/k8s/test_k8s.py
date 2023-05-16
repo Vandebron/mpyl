@@ -28,7 +28,8 @@ class TestKubernetesChart:
     liveness_probe_defaults = config['project']['deployment']['kubernetes']['livenessProbe']
 
     @staticmethod
-    def _roundtrip(file_name: Path, chart: str, resources: dict[str, CustomResourceDefinition], overwrite: bool = False):
+    def _roundtrip(file_name: Path, chart: str, resources: dict[str, CustomResourceDefinition],
+                   overwrite: bool = False):
         name_chart = file_name / f"{chart}.yaml"
         resource = resources[chart]
         assert_roundtrip(name_chart, to_yaml(resource), overwrite)
@@ -115,6 +116,12 @@ class TestKubernetesChart:
 
         route = to_service_chart(builder)
         assert DeployKubernetes.try_extract_endpoint(route) == 'https://dockertest-1234.test-backend.nl'
+
+    def test_route_parsing(self):
+        assert DeployKubernetes.match_to_url(
+            'Host(`dockertest-1234.test-backend.nl`)') == 'https://dockertest-1234.test-backend.nl'
+        assert DeployKubernetes.match_to_url(
+            'HostRegexp(`{subdomain:(www|blog){1}}.test.host.nl`, `test.host.nl`)') == 'https://test.host.nl'
 
     @pytest.mark.parametrize('template', ['job', 'service-account', 'sealed-secrets'])
     def test_job_chart_roundtrip(self, template):
