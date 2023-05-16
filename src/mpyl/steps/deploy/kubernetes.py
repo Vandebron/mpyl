@@ -27,7 +27,7 @@ class DeployKubernetes(Step):
         return 'https://' + next(iter(re.findall(r'`(.*)`', match.split(',')[-1])))
 
     @staticmethod
-    def try_extract_endpoint(chart: dict[str, CustomResourceDefinition]) -> Optional[str]:
+    def try_extract_hostname(chart: dict[str, CustomResourceDefinition]) -> Optional[str]:
         ingress = chart.get('ingress-https-route')
         if ingress:
             routes = ingress.spec.get('routes', {})
@@ -42,11 +42,13 @@ class DeployKubernetes(Step):
 
         deploy_result = deploy_helm_chart(self._logger, chart, step_input, builder.release_name)
         if deploy_result.success:
-            endpoint = self.try_extract_endpoint(chart)
+            hostname = self.try_extract_hostname(chart)
             spec = {}
-            if endpoint:
-                self._logger.info(f"Service {step_input.project.name} reachable at: {endpoint}")
-                spec[DEPLOYED_SERVICE_KEY] = endpoint
+            if hostname:
+                self._logger.info(f"Service {step_input.project.name} reachable at: {hostname}")
+                has_specific_routes_configured = builder.deployment.traefik
+                endpoint = '/' if has_specific_routes_configured else '/swagger/index.html'
+                spec[DEPLOYED_SERVICE_KEY] = f'{hostname}{endpoint}'
             artifact = input_to_artifact(ArtifactType.DEPLOYED_HELM_APP, step_input, spec=spec)
             return Output(success=True, message=deploy_result.message, produced_artifact=artifact)
 

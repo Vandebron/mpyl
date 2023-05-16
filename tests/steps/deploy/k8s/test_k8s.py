@@ -115,7 +115,7 @@ class TestKubernetesChart:
         builder = self._get_builder(project)
 
         route = to_service_chart(builder)
-        assert DeployKubernetes.try_extract_endpoint(route) == 'https://dockertest-1234.test-backend.nl'
+        assert DeployKubernetes.try_extract_hostname(route) == 'https://dockertest-1234.test-backend.nl'
 
     def test_route_parsing(self):
         assert DeployKubernetes.match_to_url(
