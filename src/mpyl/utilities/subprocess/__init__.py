@@ -20,7 +20,7 @@ def custom_check_output(logger: Logger, command: Union[str, list[str]], capture_
     command_argument = ' '.join(command)
     logger.info(f"Executing: '{command_argument}'")
     try:
-        if not capture_stdout:
+        if capture_stdout:
             out = subprocess.check_output(command, stderr=subprocess.STDOUT).decode("utf-8")
             return Output(success=True, message=out)
 
@@ -41,7 +41,8 @@ def custom_check_output(logger: Logger, command: Union[str, list[str]], capture_
 
 
     except subprocess.CalledProcessError as exc:
-        logger.warning(f"'{command_argument}': failed with return code: {exc.returncode} err: {exc.stderr.decode()}",
+        logger.warning(f"'{command_argument}': failed with return code: {exc.returncode} err: "
+                       f"{exc.stderr.decode() if exc.stderr else 'No stderr output'}",
                        exc_info=True)
 
     except FileNotFoundError:
