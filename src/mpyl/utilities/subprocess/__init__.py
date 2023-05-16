@@ -7,7 +7,7 @@ from typing import Union
 from ...steps.models import Output
 
 
-def custom_check_output(logger: Logger, command: Union[str, list[str]]) -> Output:
+def custom_check_output(logger: Logger, command: Union[str, list[str]], capture_stdout: bool = False) -> Output:
     """
     Wrapper around subprocess.Popen
     ⚠️ Using this function implies an implicit runtime OS dependency.
@@ -20,6 +20,10 @@ def custom_check_output(logger: Logger, command: Union[str, list[str]]) -> Outpu
     command_argument = ' '.join(command)
     logger.info(f"Executing: '{command_argument}'")
     try:
+        if not capture_stdout:
+            out = subprocess.check_output(command, stderr=subprocess.STDOUT).decode("utf-8")
+            return Output(success=True, message=out)
+
         with subprocess.Popen(command, stdout=subprocess.PIPE, text=True) as process:
             if not process.stdout:
                 raise RuntimeError(f'Process {command_argument} does not have an stdout')

@@ -41,8 +41,8 @@ def upsert_namespace(logger: Logger, step_input: Input, context: str):
 
 
 def deploy_helm_chart(logger: Logger, chart: dict[str, CustomResourceDefinition], step_input: Input,
-                      release_name: str) -> Output:
+                      release_name: str, delete_existing: bool = False) -> Output:
     context = cluster_config(step_input).context
     namespace = upsert_namespace(logger, step_input, context)
 
-    return helm.install(logger, chart, step_input, release_name, namespace, context)
+    return helm.install(logger, chart, step_input, release_name, namespace, context, delete_existing)
