@@ -24,7 +24,7 @@ def custom_check_output(logger: Logger, command: Union[str, list[str]], capture_
             out = subprocess.check_output(command, stderr=subprocess.STDOUT).decode("utf-8")
             return Output(success=True, message=out)
 
-        with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as process:
+        with subprocess.Popen(command, stdout=subprocess.PIPE, text=True) as process:
             if not process.stdout:
                 raise RuntimeError(f'Process {command_argument} does not have an stdout')
 
