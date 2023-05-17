@@ -8,7 +8,7 @@ from pyaml_env import parse_config
 from ruamel.yaml import YAML  # type: ignore
 
 from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME
-from src.mpyl.project import Project, Stages, Stage, Target
+from src.mpyl.project import Project, Stages, Stage, Target, Dependencies
 from src.mpyl.steps.models import Output, ArtifactType, RunProperties, VersioningProperties, ConsoleProperties
 from src.mpyl.steps.steps import Steps
 from tests import root_test_path, test_resource_path
@@ -106,6 +106,8 @@ class TestSteps:
         assert result.output.message == "Stage 'build' not defined on project 'test'"
 
     def test_should_run_post_deploy_cypress_step(self):
-        project = test_data.get_project_with_stages({'postdeploy': 'Cypress Test'})
+        stages = Stages.from_config({'postdeploy': 'Cypress Test'})
+        project = Project('test', 'Test project', '', stages, [], None, Dependencies.from_config(
+            {'postdeploy': ['specs/*.js']}))
         result = self.executor.execute(stage=Stage.POST_DEPLOY, project=project)
         assert result.output.success

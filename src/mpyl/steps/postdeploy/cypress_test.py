@@ -25,14 +25,16 @@ class CypressTest(Step):
 
     def execute(self, step_input: Input) -> Output:
         self._logger.info(f"Running cypress tests for project {step_input.project.name}")
-        # TODO: check the path when running from monorepo
         cypress_config = step_input.run_properties.config['cypress']
         volume_path = cypress_config['volumePath']
         absolute_volume_path = os.path.join(os.path.commonpath([Path(volume_path).absolute(), __file__]), volume_path)
-        # TODO: get spec files based on step_input?
+        specs_string = ''
+
+        if step_input.project.dependencies and step_input.project.dependencies.postdeploy:
+            specs_string = ', '.join(step_input.project.dependencies.postdeploy)
+
         docker_container = cast(Container, docker.run(image="cypress/browsers:latest", interactive=True, detach=True,
-                                      volumes=[(absolute_volume_path, "/cypress")],
-                                      workdir="/cypress"))
+                                                      volumes=[(absolute_volume_path, "/cypress")], workdir="/cypress"))
         install_stream = docker_container.execute(command=["yarn", "cypress", "install"], stream=True)
         decode_and_stream_execute_logs(self._logger, install_stream, "Installing cypress")
         verify_stream = docker_container.execute(command=["yarn", "cypress", "verify"], stream=True)
@@ -41,7 +43,7 @@ class CypressTest(Step):
                         produced_artifact=None)
 
         try:
-            run_command = ["yarn", "test"]
+            run_command = ["yarn", "cypress", "run", "--spec", f'{specs_string}']
             record_key = cypress_config['recordKey']
             if not step_input.run_properties.local and record_key:
                 run_command.extend(["--record", "--key", cypress_config['recordKey']])

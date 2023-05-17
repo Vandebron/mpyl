@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from logging import Logger
 from typing import Dict, Optional, Union, Iterator, Iterable
 
-from python_on_whales import docker
+from python_on_whales import docker, Image
 
 from ...project import Project
 from ...steps.models import Input
@@ -74,6 +74,7 @@ def stream_docker_logging(logger: Logger, generator: Iterator[str], task_name: s
     while True:
         try:
             output = next(generator)
+            print(str(output).strip('\n'))
             logger.log(level, str(output).strip('\n'))
         except StopIteration:
             logger.info(f'{task_name} complete.')
@@ -103,7 +104,8 @@ def build(logger: Logger, root_path: str, file_path: str, image_tag: str, target
 
     logs = docker.buildx.build(context_path=root_path, file=file_path, tags=[image_tag], target=target,
                                stream_logs=True)
-    stream_docker_logging(logger=logger, generator=logs, task_name=f'Build {file_path}:{target}')
+    if logs is not None and not isinstance(logs, Image):
+        stream_docker_logging(logger=logger, generator=logs, task_name=f'Build {file_path}:{target}')
     logger.debug(logs)
     return True
 
