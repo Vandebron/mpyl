@@ -9,7 +9,7 @@ from python_on_whales import docker
 from .. import Step, Meta
 from ..models import Input, Output, Artifact, ArtifactType
 from ...project import Stage
-from ...utilities.docker import DockerConfig
+from ...utilities.docker import DockerConfig, login
 
 
 class AfterBuildDocker(Step):
@@ -41,9 +41,7 @@ class AfterBuildDocker(Step):
             return Output(success=True, message=f"Dry run. Not pushing {image_name} to {docker_config.host_name}",
                           produced_artifact=artifact)
 
-        self._logger.info(f"Logging in with user '{docker_config.user_name}'")
-        docker.login(server=f'https://{docker_config.host_name}', username=docker_config.user_name,
-                     password=docker_config.password)
+        login(logger=self._logger, docker_config=docker_config)
         image = docker.image.inspect(image_name)
         self._logger.debug(f'Found image {image}')
         docker.image.tag(image, full_image_path)

@@ -92,3 +92,10 @@ def build(logger: Logger, root_path: str, file_path: str, image_tag: str, target
     stream_docker_logging(logger=logger, generator=logs, task_name=f'Build {file_path}:{target}')
     logger.debug(logs)
     return True
+
+
+def login(logger: Logger, docker_config: DockerConfig) -> None:
+    logger.info(f"Logging in with user '{docker_config.user_name}'")
+    docker.login(server=f'https://{docker_config.host_name}', username=docker_config.user_name,
+                 password=docker_config.password)
+    logger.debug(f"Logged in as '{docker_config.user_name}'")

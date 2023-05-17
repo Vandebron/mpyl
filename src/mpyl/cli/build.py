@@ -2,7 +2,6 @@
 import asyncio
 import shutil
 from pathlib import Path
-from typing import List
 
 import click
 from click import ParamType, BadParameter
