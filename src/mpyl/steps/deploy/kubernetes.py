@@ -45,8 +45,9 @@ class DeployKubernetes(Step):
             hostname = self.try_extract_hostname(chart)
             spec = {}
             if hostname:
+                has_specific_routes_configured: bool = bool(builder.deployment.traefik is not None)
                 self._logger.info(f"Service {step_input.project.name} reachable at: {hostname}")
-                has_specific_routes_configured = builder.deployment.traefik
+
                 endpoint = '/' if has_specific_routes_configured else '/swagger/index.html'
                 spec[DEPLOYED_SERVICE_KEY] = f'{hostname}{endpoint}'
             artifact = input_to_artifact(ArtifactType.DEPLOYED_HELM_APP, step_input, spec=spec)

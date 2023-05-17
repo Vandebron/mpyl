@@ -40,15 +40,7 @@ jobs:
 
       - name: Validate Config Example
         run: pipenv run validate-config-example
-#
-#      - name: Publish Test Report
-#        uses: EnricoMi/publish-unit-test-result-action@v2
-#        if: always() # always run even if the previous step fails
-#        with:
-#          job_summary: true
-#          report_individual_runs: true
-#          files: 'build/test-result/*.xml'
-#
+
       - name: Coverage to xml
         run: pipenv run test-ci-coverage
 
