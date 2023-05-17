@@ -7,65 +7,50 @@ on:
 jobs:
   Build_Package:
     runs-on: ubuntu-latest
-    env:
-      PIPENV_VENV_IN_PROJECT: true
     steps:
-      - name: Checkout Source
-        uses: actions/checkout@v3
-
-      - name: Cache Dependencies
-        uses: actions/cache@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         id: cache-dependencies
         with:
-          path: ./.venv
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/Pipfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pipenv
+          python-version: '3.9'
+          cache: 'pipenv'
+          cache-dependency-path: |
+            Pipfile.lock
+      - run: echo '${{ steps.cache-dependencies.outputs.cache-hit }}'
+
+      - name: Install pipenv
+        run: curl https://raw.githubusercontent.com/pypa/pipenv/master/get-pipenv.py | python
 
       - name: Install dependencies
         if: steps.cache-dependencies.outputs.cache-hit != 'true'
-        uses: VaultVulp/action-pipenv@v2.0.1
-        with:
-          command: install -d --deploy
+        run: pipenv install -d --deploy
 
       - name: Run lint
-        uses: VaultVulp/action-pipenv@v2.0.1
-        with:
-          command: run lint
+        run: pipenv run lint
 
       - name: Install Types
         if: steps.cache-dependencies.outputs.cache-hit != 'true'
-        uses: VaultVulp/action-pipenv@v2.0.1
-        with:
-          command: run install-types
+        run: pipenv run install-types
 
       - name: Validate Types
-        uses: VaultVulp/action-pipenv@v2.0.1
-        with:
-          command: run check-types
+        run: pipenv run check-types
 
       - name: Test
-        uses: VaultVulp/action-pipenv@v2.0.1
-        with:
-          command: run test-ci
+        run: pipenv run test-ci
 
       - name: Validate Config Example
-        uses: VaultVulp/action-pipenv@v2.0.1
-        with:
-          command: run validate-config-example
-
-      - name: Publish Test Report
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always() # always run even if the previous step fails
-        with:
-          job_summary: true
-          report_individual_runs: true
-          files: 'build/test-result/*.xml'
-
+        run: pipenv run validate-config-example
+#
+#      - name: Publish Test Report
+#        uses: EnricoMi/publish-unit-test-result-action@v2
+#        if: always() # always run even if the previous step fails
+#        with:
+#          job_summary: true
+#          report_individual_runs: true
+#          files: 'build/test-result/*.xml'
+#
       - name: Coverage to xml
-        uses: VaultVulp/action-pipenv@v2.0.1
-        with:
-          command: run test-ci-coverage
+        run: pipenv run test-ci-coverage
 
       - name: Code Coverage Report
         uses: irongut/CodeCoverageSummary@v1.3.0
@@ -95,13 +80,11 @@ jobs:
           path: code-coverage-results.md
 
       - name: Build
-        uses: VaultVulp/action-pipenv@v2.0.1
         if: github.ref_name != 'main'
         env:
           PIPENV_DONT_LOAD_ENV: true
           MPYL_VERSION: "${{ steps.findPr.outputs.pr }}.${{ github.run_number }}"
-        with:
-          command: run build
+        run: pipenv run build
 
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@a56da0b891b3dc519c7ee3284aff1fad93cc8598
