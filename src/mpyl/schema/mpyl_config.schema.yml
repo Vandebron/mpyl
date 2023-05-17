@@ -64,6 +64,8 @@ definitions:
     properties:
       recordKey:
         type: string
+      volumePath:
+        type: string
   Kubernetes:
     type: object
     additionalProperties: false

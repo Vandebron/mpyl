@@ -113,7 +113,7 @@ class RunProperties:
             versioning=versioning,
             config=config,
             console=console,
-            local=(str(build['local']).lower() == 'true')
+            local=str(build['local']).lower() == 'true'
         )
 
 

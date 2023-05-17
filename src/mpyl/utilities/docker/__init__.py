@@ -59,12 +59,12 @@ class DockerConfig:
 def decode_and_stream_execute_logs(logger: Logger, generator: Union[None, str, Iterable[tuple[str, bytes]]],
                                    task_name: str, level=logging.INFO) -> None:
     def decode():
-        for origin, value in generator:
+        for _origin, value in generator:
             yield value.decode(errors="replace")
 
-    if type(generator) is None:
+    if generator is None:
         return
-    elif type(generator) is str:
+    if isinstance(generator, str):
         logger.log(level, generator)
     else:
         stream_docker_logging(logger, decode(), task_name, level)
@@ -103,8 +103,7 @@ def build(logger: Logger, root_path: str, file_path: str, image_tag: str, target
 
     logs = docker.buildx.build(context_path=root_path, file=file_path, tags=[image_tag], target=target,
                                stream_logs=True)
-    if type(logs) is Iterable[str]:
-        stream_docker_logging(logger=logger, generator=logs, task_name=f'Build {file_path}:{target}')
+    stream_docker_logging(logger=logger, generator=logs, task_name=f'Build {file_path}:{target}')
     logger.debug(logs)
     return True
 
