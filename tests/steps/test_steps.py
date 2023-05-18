@@ -8,14 +8,13 @@ from pyaml_env import parse_config
 from ruamel.yaml import YAML  # type: ignore
 
 from src.mpyl.project import Project, Stages, Stage, Target
-from src.mpyl.steps.models import Output, ArtifactType, RunProperties, VersioningProperties
+from src.mpyl.steps.models import Output, ArtifactType, RunProperties, VersioningProperties, ConsoleProperties
 from src.mpyl.steps.steps import Steps
 from tests import root_test_path, test_resource_path
 from tests.test_resources import test_data
 from tests.test_resources.test_data import assert_roundtrip, get_output
 
 yaml = YAML()
-yaml.preserve_quotes = True
 
 
 class TestSteps:
@@ -65,15 +64,15 @@ class TestSteps:
         steps = Steps(logger=Logger.manager.getLogger('logger'), properties=test_data.RUN_PROPERTIES)
         stages = Stages(build=None, test=None, deploy=None, postdeploy=None)
         project = Project('test', 'Test project', '', stages, [], None, None)
-        output = steps.execute(stage=Stage.BUILD, project=project)
-        assert not output.success
-        assert output.message == "Stage 'build' not defined on project 'test'"
+        result = steps.execute(stage=Stage.BUILD, project=project)
+        assert not result.output.success
+        assert result.output.message == "Stage 'build' not defined on project 'test'"
 
-    def test_should_return_error_if_stage_not_defined(self):
+    def test_should_return_error_if_config_invalid(self):
         config_values = parse_config(self.resource_path / "mpyl_config.yml")
         config_values['kubernetes']['rancher']['cluster']['test']['invalid'] = 'somevalue'
         properties = RunProperties("id", Target.PULL_REQUEST, VersioningProperties("", "feature/ARC-123", 1, None),
-                                   config_values)
+                                   config_values, ConsoleProperties("INFO", 130))
         with pytest.raises(ValidationError) as excinfo:
             Steps(logger=Logger.manager.getLogger('logger'), properties=properties)
         assert "('invalid' was unexpected)" in excinfo.value.message

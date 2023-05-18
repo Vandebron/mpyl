@@ -63,10 +63,12 @@ def get_build_plan(logger: logging.Logger, repo: Repository, mpyl_run_parameters
 
 def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter]) -> RunResult:
     params = mpyl_run_parameters.parameters
-    console = Console(markup=True, width=None if params.local else 135, no_color=False, log_path=False,
-                      color_system='256')
+    console_properties = mpyl_run_parameters.run_config.run_properties.console
+    console = Console(markup=True, width=None if params.local else console_properties.width, no_color=False,
+                      log_path=False, color_system='256')
+    print(f"Logging properties: {console_properties}, console: {console}")
     logging.basicConfig(
-        level="DEBUG" if params.verbose else "INFO", format=FORMAT, datefmt="[%X]",
+        level="DEBUG" if params.verbose else console_properties.log_level, format=FORMAT, datefmt="[%X]",
         handlers=[RichHandler(markup=True,
                               console=console, show_path=params.local)]
     )

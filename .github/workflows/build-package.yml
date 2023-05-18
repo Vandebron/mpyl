@@ -16,7 +16,6 @@ jobs:
           cache: 'pipenv'
           cache-dependency-path: |
             Pipfile.lock
-      - run: echo '${{ steps.cache-dependencies.outputs.cache-hit }}'
 
       - name: Install pipenv
         run: curl https://raw.githubusercontent.com/pypa/pipenv/master/get-pipenv.py | python

@@ -260,7 +260,7 @@ definitions:
     required: [ 'url' ]
     properties:
       url:
-        type: [string]
+        type: [ string ]
         format: url
       pipelines:
         type: object
