@@ -1,13 +1,16 @@
 """ Step that deploys the docker image produced in the build stage to Kubernetes, using HELM. """
 import re
 from logging import Logger
+from pathlib import Path
 from typing import Optional
 
 from .k8s import deploy_helm_chart, CustomResourceDefinition
-from .k8s.chart import ChartBuilder, to_service_chart
+from .k8s.chart import ChartBuilder, to_service_chart, DeploySet
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType, input_to_artifact
-from ...project import Stage
+from ...utilities.repo import Repository, RepoConfig
+from ...project import Stage, load_project
+from ...stages.discovery import find_invalidated_projects_for_stage
 
 DEPLOYED_SERVICE_KEY = 'url'
 
@@ -37,20 +40,25 @@ class DeployKubernetes(Step):
         return None
 
     def execute(self, step_input: Input) -> Output:
-        builder = ChartBuilder(step_input)
-        chart = to_service_chart(builder)
+        with Repository(RepoConfig(step_input.run_properties.config)) as repo:
+            changes_in_branch = repo.changes_in_branch_including_local()
+            project_paths = repo.find_projects()
+            all_projects = set(map(lambda p: load_project(Path(""), Path(p), False), project_paths))
+            deploy_set = find_invalidated_projects_for_stage(all_projects, Stage.DEPLOY, changes_in_branch)
+            builder = ChartBuilder(step_input, DeploySet(all_projects, deploy_set))
+            chart = to_service_chart(builder)
 
-        deploy_result = deploy_helm_chart(self._logger, chart, step_input, builder.release_name)
-        if deploy_result.success:
-            hostname = self.try_extract_hostname(chart)
-            spec = {}
-            if hostname:
-                has_specific_routes_configured: bool = bool(builder.deployment.traefik is not None)
-                self._logger.info(f"Service {step_input.project.name} reachable at: {hostname}")
+            deploy_result = deploy_helm_chart(self._logger, chart, step_input, builder.release_name)
+            if deploy_result.success:
+                hostname = self.try_extract_hostname(chart)
+                spec = {}
+                if hostname:
+                    has_specific_routes_configured: bool = bool(builder.deployment.traefik is not None)
+                    self._logger.info(f"Service {step_input.project.name} reachable at: {hostname}")
 
-                endpoint = '/' if has_specific_routes_configured else '/swagger/index.html'
-                spec[DEPLOYED_SERVICE_KEY] = f'{hostname}{endpoint}'
-            artifact = input_to_artifact(ArtifactType.DEPLOYED_HELM_APP, step_input, spec=spec)
-            return Output(success=True, message=deploy_result.message, produced_artifact=artifact)
+                    endpoint = '/' if has_specific_routes_configured else '/swagger/index.html'
+                    spec[DEPLOYED_SERVICE_KEY] = f'{hostname}{endpoint}'
+                artifact = input_to_artifact(ArtifactType.DEPLOYED_HELM_APP, step_input, spec=spec)
+                return Output(success=True, message=deploy_result.message, produced_artifact=artifact)
 
-        return deploy_result
+            return deploy_result
