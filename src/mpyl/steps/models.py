@@ -55,12 +55,13 @@ class RunContext:
 @dataclass(frozen=True)
 class ConsoleProperties:
     log_level: str
-    width: int
+    width: Optional[int]
 
     @staticmethod
     def from_configuration(build_config: Dict):
         console_config = build_config['console']
-        return ConsoleProperties(console_config.get('logLevel', 'INFO'), console_config.get('width', 130))
+        width = console_config.get('width', 130)
+        return ConsoleProperties(console_config.get('logLevel', 'INFO'), None if width == 0 else width)
 
 
 @yaml_object(yaml)
