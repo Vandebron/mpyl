@@ -57,6 +57,11 @@ class ConsoleProperties:
     log_level: str
     width: int
 
+    @staticmethod
+    def from_configuration(build_config: Dict):
+        console_config = build_config['console']
+        return ConsoleProperties(console_config.get('logLevel', 'INFO'), console_config.get('width', 130))
+
 
 @yaml_object(yaml)
 @dataclass(frozen=True)
@@ -97,9 +102,7 @@ class RunProperties:
                                           branch=versioning_config['branch'],
                                           pr_number=int(pr_num) if pr_num else None,
                                           tag=tag)
-        console_config = build['console']
-
-        console = ConsoleProperties(console_config.get('log_level', 'INFO'), console_config.get('width', 130))
+        console = ConsoleProperties.from_configuration(build)
 
         return RunProperties(
             details=RunContext.from_configuration(build['run']),
