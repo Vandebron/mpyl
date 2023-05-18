@@ -1,4 +1,4 @@
-from mpyl.steps.deploy.k8s import substitute_namespaces, ProjectName
+from src.mpyl.steps.deploy.k8s import substitute_namespaces, ProjectName
 
 
 class TestDeploySetLinkup:
