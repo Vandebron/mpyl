@@ -1,5 +1,7 @@
 """Kubernetes deployment related helper methods"""
+from dataclasses import dataclass
 from logging import Logger
+from typing import Optional
 
 from kubernetes import config, client
 
@@ -46,3 +48,36 @@ def deploy_helm_chart(logger: Logger, chart: dict[str, CustomResourceDefinition]
     namespace = upsert_namespace(logger, step_input, context)
 
     return helm.install(logger, chart, step_input, release_name, namespace, context, delete_existing)
+
+
+@dataclass(frozen=True)
+class ProjectName:
+    name: str
+    namespace: Optional[str]
+
+
+def substitute_namespaces(env_vars: dict[str, str], all_projects: set[ProjectName],
+                          projects_to_deploy: set[ProjectName],
+                          pr_identifier: Optional[int]) -> dict[str, str]:
+    env = env_vars.copy()
+
+    def get_namespace_for_linked_project(project_name: ProjectName):
+        is_part_of_same_deploy_set = project_name in projects_to_deploy
+        if is_part_of_same_deploy_set and pr_identifier:
+            return f'pr-{pr_identifier}'
+        return project_name.namespace
+
+    def replace_namespace(env_value, project_name, namespace):
+        search_value = project_name + '.{namespace}'
+        replace_value = project_name + '.' + namespace
+        return env_value.replace(search_value, replace_value)
+
+    for project in all_projects:
+        if project.namespace:
+            linked_project_namespace = get_namespace_for_linked_project(project)
+            for key, value in env.items():
+                replaced_namespace = replace_namespace(value, project.name, linked_project_namespace)
+                updated_pr = replaced_namespace.replace('{PR-NUMBER}',
+                                                        str(pr_identifier)) if pr_identifier else replaced_namespace
+                env[key] = updated_pr
+    return env
