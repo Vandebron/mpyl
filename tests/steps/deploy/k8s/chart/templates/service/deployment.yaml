@@ -45,7 +45,7 @@ spec:
         - name: SOME_ENV
           value: PullRequest
         - name: WITH_NAMESPACE
-          value: minimalService.pr-1234.svc.cluster.local
+          value: minimalService.mpyl.svc.cluster.local
         - name: SOME_SECRET_ENV
           valueFrom:
             secretKeyRef:

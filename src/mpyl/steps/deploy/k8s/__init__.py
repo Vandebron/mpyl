@@ -17,6 +17,10 @@ def get_namespace(run_properties: RunProperties, project: Project) -> Optional[s
     if run_properties.target == Target.PULL_REQUEST:
         return run_properties.versioning.identifier
 
+    return get_namespace_from_project(project)
+
+
+def get_namespace_from_project(project: Project) -> Optional[str]:
     if project.deployment and project.deployment.namespace:
         return project.deployment.namespace
 

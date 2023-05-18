@@ -43,7 +43,8 @@ class TestKubernetesChart:
         other_project = get_minimal_project()
         return ChartBuilder(
             step_input=Input(project, run_properties=test_data.RUN_PROPERTIES,
-                             required_artifact=required_artifact), deploy_set=DeploySet({project, other_project}, {project})
+                             required_artifact=required_artifact),
+            deploy_set=DeploySet({project, other_project}, {project})
         )
 
     def test_probe_values_should_be_customizable(self):
@@ -97,7 +98,8 @@ class TestKubernetesChart:
         assert "Schema validation failed with 1234 is not of type 'string'" in str(exc_info.value)
 
     @pytest.mark.parametrize('template',
-                             ['deployment'])
+                             ['deployment', 'service', 'service-account', 'sealed-secrets', 'ingress-https-route',
+                              'dockertest-ingress-0-whitelist'])
     def test_service_chart_roundtrip(self, template):
         builder = self._get_builder(get_project())
         chart = to_service_chart(builder)
