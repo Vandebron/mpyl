@@ -90,7 +90,7 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter
             except ValidationError as exc:
                 console.log(f'Schema validation failed {exc.message} at `{".".join(map(str, exc.path))}`')
                 raise exc
-            except ExecutionException as exc:  # pylint: disable=broad-except
+            except ExecutionException as exc:
                 run_result.exception = exc
                 console.log(f'Exception during build execution: {exc}')
                 console.print_exception()

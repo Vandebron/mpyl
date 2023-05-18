@@ -134,12 +134,18 @@ def jenkins(ctx, user, password, pipeline):
 @click.option('--filter', '-f', 'filter_', required=False, type=click.STRING, help='Filter based on filepath ')
 @click.pass_obj
 def clean(obj: CliContext, filter_):
-    found_projects = obj.repo.find_projects(filter_ if filter_ else '')
-    for project in found_projects:
-        target_path = Path(load_project(obj.repo.root_dir(), Path(project), strict=False).target_path)
-        if target_path.exists():
+    found_projects: list[Path] = [
+        Path(load_project(obj.repo.root_dir(), Path(project_path), strict=False).target_path)
+        for project_path in obj.repo.find_projects(filter_ if filter_ else '')
+    ]
+
+    paths_to_clean = [path for path in found_projects if path.exists()]
+    if paths_to_clean:
+        for target_path in paths_to_clean:
             shutil.rmtree(target_path)
             obj.console.print(f"🧹 Cleaned up {target_path}")
+    else:
+        obj.console.print("Nothing to clean")
 
 
 if __name__ == '__main__':

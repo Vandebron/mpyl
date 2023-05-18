@@ -23,13 +23,17 @@ class DeployKubernetes(Step):
         ), produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.DOCKER_IMAGE)
 
     @staticmethod
-    def try_extract_endpoint(chart: dict[str, CustomResourceDefinition]) -> Optional[str]:
+    def match_to_url(match: str) -> str:
+        return 'https://' + next(iter(re.findall(r'`(.*)`', match.split(',')[-1])))
+
+    @staticmethod
+    def try_extract_hostname(chart: dict[str, CustomResourceDefinition]) -> Optional[str]:
         ingress = chart.get('ingress-https-route')
         if ingress:
             routes = ingress.spec.get('routes', {})
             if routes:
-                url = routes[0].get('match')
-                return 'https://' + next(iter(re.findall(r'`(.*)`', url)))
+                match = routes[0].get('match')
+                return DeployKubernetes.match_to_url(match)
         return None
 
     def execute(self, step_input: Input) -> Output:
@@ -38,11 +42,14 @@ class DeployKubernetes(Step):
 
         deploy_result = deploy_helm_chart(self._logger, chart, step_input, builder.release_name)
         if deploy_result.success:
-            endpoint = self.try_extract_endpoint(chart)
+            hostname = self.try_extract_hostname(chart)
             spec = {}
-            if endpoint:
-                self._logger.info(f"Service {step_input.project.name} reachable at: {endpoint}")
-                spec[DEPLOYED_SERVICE_KEY] = endpoint
+            if hostname:
+                has_specific_routes_configured: bool = bool(builder.deployment.traefik is not None)
+                self._logger.info(f"Service {step_input.project.name} reachable at: {hostname}")
+
+                endpoint = '/' if has_specific_routes_configured else '/swagger/index.html'
+                spec[DEPLOYED_SERVICE_KEY] = f'{hostname}{endpoint}'
             artifact = input_to_artifact(ArtifactType.DEPLOYED_HELM_APP, step_input, spec=spec)
             return Output(success=True, message=deploy_result.message, produced_artifact=artifact)
 

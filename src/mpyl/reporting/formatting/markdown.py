@@ -22,7 +22,7 @@ def __add_link_if_service(name: str, output: Output) -> str:
     if output.produced_artifact and output.produced_artifact.artifact_type == ArtifactType.DEPLOYED_HELM_APP:
         url = output.produced_artifact.spec.get(DEPLOYED_SERVICE_KEY)
         if url:
-            return f'[{name}]({url}/swagger/index.html)'
+            return f'[{name}]({url})'
 
     return name
 
