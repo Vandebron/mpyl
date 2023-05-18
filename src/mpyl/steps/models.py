@@ -52,6 +52,12 @@ class RunContext:
                           user=run_details['user'], user_email=run_details['user_email'])
 
 
+@dataclass(frozen=True)
+class ConsoleProperties:
+    log_level: str
+    width: int
+
+
 @yaml_object(yaml)
 @dataclass(frozen=True)
 class RunProperties:
@@ -65,11 +71,14 @@ class RunProperties:
     """Globally specified configuration, to be used by specific steps. Complies with the schema as
     specified in `mpyl_config.schema.yml`
      """
+    console: ConsoleProperties
+    """Settings for the console output"""
 
     @staticmethod
     def for_local_run(config: Dict, revision: str, branch: Optional[str]):
         return RunProperties(details=RunContext("", "", "", "", "", None), target=Target.PULL_REQUEST,
-                             versioning=VersioningProperties(revision, branch, 123, None), config=config)
+                             versioning=VersioningProperties(revision, branch, 123, None), config=config,
+                             console=ConsoleProperties("INFO", 130))
 
     @staticmethod
     def from_configuration(run_properties: Dict, config: Dict):
@@ -79,7 +88,6 @@ class RunProperties:
             validate(run_properties, build_dict.decode('utf-8'))
 
         build = run_properties['build']
-
         versioning_config = build['versioning']
 
         pr_num: str = versioning_config.get('pr_number')
@@ -89,9 +97,17 @@ class RunProperties:
                                           branch=versioning_config['branch'],
                                           pr_number=int(pr_num) if pr_num else None,
                                           tag=tag)
+        console_config = build['console']
 
-        return RunProperties(details=RunContext.from_configuration(build['run']),
-                             target=Target(build['parameters']['deploy_target']), versioning=versioning, config=config)
+        console = ConsoleProperties(console_config.get('log_level', 'INFO'), console_config.get('width', 130))
+
+        return RunProperties(
+            details=RunContext.from_configuration(build['run']),
+            target=Target(build['parameters']['deploy_target']),
+            versioning=versioning,
+            config=config,
+            console=console
+        )
 
 
 @yaml_object(yaml)

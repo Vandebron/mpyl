@@ -8,7 +8,7 @@ from pyaml_env import parse_config
 from ruamel.yaml import YAML  # type: ignore
 
 from src.mpyl.project import Project, Stages, Stage, Target
-from src.mpyl.steps.models import Output, ArtifactType, RunProperties, VersioningProperties
+from src.mpyl.steps.models import Output, ArtifactType, RunProperties, VersioningProperties, ConsoleProperties
 from src.mpyl.steps.steps import Steps
 from tests import root_test_path, test_resource_path
 from tests.test_resources import test_data
@@ -73,7 +73,7 @@ class TestSteps:
         config_values = parse_config(self.resource_path / "mpyl_config.yml")
         config_values['kubernetes']['rancher']['cluster']['test']['invalid'] = 'somevalue'
         properties = RunProperties("id", Target.PULL_REQUEST, VersioningProperties("", "feature/ARC-123", 1, None),
-                                   config_values)
+                                   config_values, ConsoleProperties("INFO", 130))
         with pytest.raises(ValidationError) as excinfo:
             Steps(logger=Logger.manager.getLogger('logger'), properties=properties)
         assert "('invalid' was unexpected)" in excinfo.value.message
