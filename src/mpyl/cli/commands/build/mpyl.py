@@ -17,7 +17,7 @@ from ....stages.discovery import for_stage, find_invalidated_projects_per_stage
 from ....steps.models import RunProperties
 from ....steps.run import RunResult
 from ....steps.steps import Steps, ExecutionException
-from ....utilities.repo import Repository, RepoConfig
+from ....utilities.repo import Repository, RepoConfig, Revision
 
 
 @dataclass(frozen=True)
@@ -106,7 +106,7 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter
         raise exc
 
 
-def find_build_set(repo: Repository, changes_in_branch, build_all: bool) -> dict[Stage, set[Project]]:
+def find_build_set(repo: Repository, changes_in_branch: list[Revision], build_all: bool) -> dict[Stage, set[Project]]:
     project_paths = repo.find_projects()
     all_projects = set(map(lambda p: load_project(Path(""), Path(p), False), project_paths))
 
