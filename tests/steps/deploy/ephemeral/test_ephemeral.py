@@ -1,8 +1,7 @@
 from pathlib import Path
 
-from src.mpyl.project import load_project
+from src.mpyl.project import load_project, get_env_variables
 from src.mpyl.steps.models import Input
-from src.mpyl.utilities.ephemeral import get_env_variables
 from tests import root_test_path
 from tests.test_resources import test_data
 

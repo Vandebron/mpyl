@@ -21,8 +21,7 @@ from .resources.traefik import V1AlphaIngressRoute, V1AlphaMiddleware, \
     HostWrapper  # pylint: disable = no-name-in-module
 from ...models import Input, ArtifactType
 from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target, Kubernetes, \
-    Job, Traefik, Host
-from ....utilities.ephemeral import get_env_variables
+    Job, Traefik, Host, get_env_variables
 
 yaml = YAML()
 
