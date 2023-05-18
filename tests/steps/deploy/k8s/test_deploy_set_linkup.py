@@ -12,11 +12,13 @@ class TestDeploySetLinkup:
     def test_should_link_up_deploy_set(self):
         envs = {'KEY_1': 'http://energy-dashboard.{namespace}.svc.cluster.local:4082',
                 'KEY_2': 'http://main-website.{namespace}.svc.cluster.local:4050',
-                'KEY_3': 'test-{PR-NUMBER}.play-backend.zonnecollectief.nl', 'KEY_4': 'abcd'}
+                'KEY_3': 'test-{PR-NUMBER}.play-backend.zonnecollectief.nl',
+                'KEY_4': 'abcd'}
 
         expected_envs = {'KEY_1': 'http://energy-dashboard.pr-1234.svc.cluster.local:4082',
                          'KEY_2': 'http://main-website.webapps.svc.cluster.local:4050',
-                         'KEY_3': 'test-1234.play-backend.zonnecollectief.nl', 'KEY_4': 'abcd'}
+                         'KEY_3': 'test-1234.play-backend.zonnecollectief.nl',
+                         'KEY_4': 'abcd'}
 
         replaced_envs = substitute_namespaces(envs, self.all_projects, self.projects_to_deploy, 1234)
 
