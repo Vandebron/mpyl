@@ -13,14 +13,14 @@ from ....steps.deploy.k8s import helm
 from ....steps.deploy.k8s.rancher import cluster_config, rancher_namespace_metadata
 
 
-def get_namespace(run_properties: RunProperties, project: Project) -> str:
+def get_namespace(run_properties: RunProperties, project: Project) -> Optional[str]:
     if run_properties.target == Target.PULL_REQUEST:
         return run_properties.versioning.identifier
 
     if project.deployment and project.deployment.namespace:
         return project.deployment.namespace
 
-    return project.name
+    return None
 
 
 def upsert_namespace(logger: Logger, step_input: Input, context: str):
@@ -31,7 +31,7 @@ def upsert_namespace(logger: Logger, step_input: Input, context: str):
     api = client.CoreV1Api()
 
     namespace = get_namespace(properties, step_input.project)
-    meta_data = rancher_namespace_metadata(namespace, step_input)
+    meta_data = rancher_namespace_metadata(namespace or step_input.project.name, step_input)
     namespaces = api.list_namespace(field_selector=f'metadata.name={namespace}')
 
     if len(namespaces.items) == 0 and not step_input.dry_run:

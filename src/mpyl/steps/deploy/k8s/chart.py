@@ -308,7 +308,7 @@ class ChartBuilder:
         def _interpolate_namespace(value: Optional[str]) -> Optional[str]:
             if value and '{namespace}' in value:
                 namespace = get_namespace(self.step_input.run_properties, self.step_input.project)
-                return value.replace('{namespace}', namespace)
+                return value.replace('{namespace}', namespace or self.step_input.project.name)
 
             return value
 
