@@ -86,6 +86,8 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter
             console.print(Markdown(f"\n\n{run_result_to_markdown(run_plan)}"))
 
             run_result: RunResult = run_plan
+            if reporter:
+                reporter.send_report(run_plan)
             try:
                 steps = Steps(logger=logger, properties=mpyl_run_parameters.run_config.run_properties)
                 run_result = run_build(run_plan, steps, reporter, mpyl_run_parameters.parameters.local)
