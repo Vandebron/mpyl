@@ -1,5 +1,4 @@
 """Kubernetes deployment related helper methods"""
-from dataclasses import dataclass
 from logging import Logger
 from typing import Optional
 
@@ -7,7 +6,7 @@ from kubernetes import config, client
 
 from ...deploy.k8s.resources import CustomResourceDefinition
 from ...models import RunProperties
-from ....project import Project, Target
+from ....project import Project, Target, ProjectName
 from ....steps import Input, Output
 from ....steps.deploy.k8s import helm
 from ....steps.deploy.k8s.rancher import cluster_config, rancher_namespace_metadata
@@ -52,12 +51,6 @@ def deploy_helm_chart(logger: Logger, chart: dict[str, CustomResourceDefinition]
     namespace = upsert_namespace(logger, step_input, context)
 
     return helm.install(logger, chart, step_input, release_name, namespace, context, delete_existing)
-
-
-@dataclass(frozen=True)
-class ProjectName:
-    name: str
-    namespace: Optional[str]
 
 
 def substitute_namespaces(env_vars: dict[str, str], all_projects: set[ProjectName],

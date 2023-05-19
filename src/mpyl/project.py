@@ -278,6 +278,12 @@ class Deployment:
 
 
 @dataclass(frozen=True)
+class ProjectName:
+    name: str
+    namespace: Optional[str]
+
+
+@dataclass(frozen=True)
 class Project:
     name: str
     description: str
@@ -295,6 +301,13 @@ class Project:
 
     def __hash__(self):
         return hash(self.path)
+
+    @property
+    def to_name(self) -> ProjectName:
+        return ProjectName(
+            name=self.name,
+            namespace=self.deployment.namespace if self.deployment and self.deployment.namespace else None
+        )
 
     @property
     def kubernetes(self) -> Kubernetes:

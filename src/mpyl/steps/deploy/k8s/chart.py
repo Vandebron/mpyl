@@ -13,7 +13,7 @@ from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1Obj
     V1PodTemplateSpec, V1DeploymentStrategy, V1Job, V1JobSpec, V1CronJob, V1CronJobSpec, V1JobTemplateSpec, V1ConfigMap
 from ruamel.yaml import YAML
 
-from . import ProjectName, substitute_namespaces, get_namespace_from_project
+from . import substitute_namespaces
 from .resources import CustomResourceDefinition, to_dict  # pylint: disable = no-name-in-module
 from .resources.sealed_secret import V1SealedSecret
 from .resources.spark import to_spark_body, get_spark_config_map_data, V1SparkApplication
@@ -311,16 +311,11 @@ class ChartBuilder:
             raise AttributeError("deployment.kubernetes.job field should be set")
         return job
 
-    @staticmethod
-    def _to_project_summary(project: Project) -> ProjectName:
-        namespace = get_namespace_from_project(project)
-        return ProjectName(name=project.name, namespace=namespace)
-
     def _get_env_vars(self):
         raw_env_vars = {e.key: e.get_value(self.target) for e in self.env if e.get_value(self.target) is not None}
         substituted = substitute_namespaces(raw_env_vars,
-                                            set(map(self._to_project_summary, self.deploy_set.all_projects)),
-                                            set(map(self._to_project_summary, self.deploy_set.projects_to_deploy)),
+                                            {p.to_name for p in self.deploy_set.all_projects},
+                                            {p.to_name for p in self.deploy_set.projects_to_deploy},
                                             self.step_input.run_properties.versioning.pr_number)
 
         env_vars = [V1EnvVar(name=key, value=value) for key, value in substituted.items()]
