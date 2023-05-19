@@ -30,7 +30,7 @@ class TestMplSchema:
         assert project.dependencies.build == {'test/docker/'}
         assert project.dependencies.test == set()
 
-        assert project.deployment.kubernetes.port_mappings == {8080: 8080}
+        assert project.deployment.kubernetes.port_mappings == {8080: 80}
         assert project.deployment.kubernetes.liveness_probe.path.get_value(Target.ACCEPTANCE) == '/health'
         assert not project.deployment.kubernetes.metrics.enabled, "metrics should be disabled"
 

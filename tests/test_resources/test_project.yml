@@ -44,7 +44,7 @@ deployment:
         port: 123
         service: 'grpcService'
     portMappings:
-      8080: 8080
+      8080: 80
     metrics:
       enabled: false
     resources:

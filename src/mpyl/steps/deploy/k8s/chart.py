@@ -339,7 +339,7 @@ class ChartBuilder:
     def to_deployment(self) -> V1Deployment:
 
         ports = [
-            V1ContainerPort(container_port=key, host_port=self.mappings[key], protocol="TCP", name=f'port-{idx}')
+            V1ContainerPort(container_port=self.mappings[key], host_port=key, protocol="TCP", name=f'port-{idx}')
             for idx, key in enumerate(self.mappings.keys())
         ]
 
