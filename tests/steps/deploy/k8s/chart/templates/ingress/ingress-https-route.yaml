@@ -22,6 +22,7 @@ spec:
       port: 8080
     middlewares:
     - name: minimalservice-ingress-0-whitelist
+    - name: traefik-https-redirect@kubernetescrd
   entryPoints:
   - websecure
   tls:
