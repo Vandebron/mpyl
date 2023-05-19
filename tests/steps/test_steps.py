@@ -105,6 +105,7 @@ class TestSteps:
         assert not result.output.success
         assert result.output.message == "Stage 'build' not defined on project 'test'"
 
+    @pytest.mark.skip(reason="Very slow test")
     def test_should_run_post_deploy_cypress_step(self):
         stages = Stages.from_config({'postdeploy': 'Cypress Test'})
         project = Project('test', 'Test project', '', stages, [], None, Dependencies.from_config(

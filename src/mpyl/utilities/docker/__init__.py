@@ -2,9 +2,9 @@
 import logging
 from dataclasses import dataclass
 from logging import Logger
-from typing import Dict, Optional, Union, Iterator, Iterable
+from typing import Dict, Optional, Union, Iterator, Iterable, cast
 
-from python_on_whales import docker, Image
+from python_on_whales import docker, Image, Container
 
 from ...project import Project
 from ...steps.models import Input
@@ -56,25 +56,23 @@ class DockerConfig:
             raise KeyError(f'Docker config could not be loaded from {config}') from exc
 
 
-def decode_and_stream_execute_logs(logger: Logger, generator: Union[None, str, Iterable[tuple[str, bytes]]],
-                                   task_name: str, level=logging.INFO) -> None:
+def execute_with_stream(container: Container, command: list[str]) -> Iterable[tuple[str, bytes]]:
+    return cast(Iterable[tuple[str, bytes]], container.execute(command=command, stream=True))
+
+
+def stream_encoded_logging(logger: Logger, generator: Iterable[tuple[str, bytes]], task_name: str,
+                           level=logging.INFO) -> None:
     def decode():
         for _origin, value in generator:
             yield value.decode(errors="replace")
 
-    if generator is None:
-        return
-    if isinstance(generator, str):
-        logger.log(level, generator)
-    else:
-        stream_docker_logging(logger, decode(), task_name, level)
+    stream_docker_logging(logger, decode(), task_name, level)
 
 
 def stream_docker_logging(logger: Logger, generator: Iterator[str], task_name: str, level=logging.INFO) -> None:
     while True:
         try:
             output = next(generator)
-            print(str(output).strip('\n'))
             logger.log(level, str(output).strip('\n'))
         except StopIteration:
             logger.info(f'{task_name} complete.')
