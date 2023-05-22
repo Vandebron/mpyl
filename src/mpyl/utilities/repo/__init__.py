@@ -84,7 +84,7 @@ class Repository:
     @property
     def main_branch_pulled(self) -> bool:
         branch_names = list(map(lambda n: n.name, self._repo.references))
-        return f'origin/{self._config.main_branch}' in branch_names
+        return f'{self._config.main_branch}' in branch_names
 
     def pull_main_branch(self):
         remote = Remote(self._repo, 'origin')
