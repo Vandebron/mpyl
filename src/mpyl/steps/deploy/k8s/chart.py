@@ -2,7 +2,7 @@
 Data classes for the composition of Custom Resource Definitions.
 More info: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/
 """
-
+import itertools
 from dataclasses import dataclass
 from typing import Dict, Optional
 
@@ -237,16 +237,13 @@ class ChartBuilder:
         first_host = next(iter(hosts), None)
         service_port = first_host.service_port if first_host and first_host.service_port else self.__find_default_port()
 
-        def to_white_list(configured: Optional[TargetProperty[list[str]]]) -> list[str]:
+        dikkie_dik = {address['name']: address['values'] for address in self.config_defaults.white_lists['addresses']}
+
+        def to_white_list(configured: Optional[TargetProperty[list[str]]]) -> dict[str, list[str]]:
             white_lists = configured.get_value(self.target) if configured else self.config_defaults.white_lists[
                 'default']
-            addresses = []
-            add_dict = dict(
-                (address['name'], address['values']) for address in self.config_defaults.white_lists['addresses'])
-            for item in white_lists:
-                addresses.extend(add_dict[item])
 
-            return addresses
+            return dict(filter(lambda x: x[0] in white_lists, dikkie_dik.items()))
 
         return [HostWrapper(host=host, name=self.release_name, index=idx, service_port=service_port,
                             white_lists=to_white_list(host.whitelists)) for
@@ -260,8 +257,16 @@ class ChartBuilder:
 
     def to_middlewares(self) -> dict[str, V1AlphaMiddleware]:
         hosts: list[HostWrapper] = self.create_host_wrappers()
-        return {host.full_name: V1AlphaMiddleware(metadata=self._to_object_meta(name=host.full_name),
-                                                  source_ranges=host.white_lists) for host in hosts}
+
+        def to_metadata(host: HostWrapper) -> V1ObjectMeta:
+            metadata = self._to_object_meta(name=host.full_name)
+            # metadata.annotations = host.white_lists
+            metadata.annotations = {k: ", ".join(v) for k, v in host.white_lists.items()}
+            return metadata
+
+        return {host.full_name: V1AlphaMiddleware(
+            metadata=to_metadata(host),
+            source_ranges=list(itertools.chain(*host.white_lists.values()))) for host in hosts}
 
     def to_service_account(self) -> V1ServiceAccount:
         return V1ServiceAccount(api_version="v1", kind="ServiceAccount", metadata=self._to_object_meta(),

@@ -16,7 +16,7 @@ class HostWrapper:
     name: str
     index: int
     service_port: int
-    white_lists: list[str]
+    white_lists: dict[str, list[str]]
 
     @property
     def full_name(self) -> str:

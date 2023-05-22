@@ -99,11 +99,13 @@ class TestKubernetesChart:
 
     @pytest.mark.parametrize('template',
                              ['deployment', 'service', 'service-account', 'sealed-secrets', 'ingress-https-route',
-                              'dockertest-ingress-0-whitelist'])
+                              'dockertest-ingress-0-whitelist', 'dockertest-ingress-1-whitelist'])
     def test_service_chart_roundtrip(self, template):
         builder = self._get_builder(get_project())
         chart = to_service_chart(builder)
         self._roundtrip(self.template_path / "service", template, chart)
+        assert chart.keys() == {'service-account', 'sealed-secrets', 'deployment', 'service', 'ingress-https-route',
+                                'dockertest-ingress-0-whitelist', 'dockertest-ingress-1-whitelist'}
 
     def test_default_ingress(self):
         project = get_minimal_project()
