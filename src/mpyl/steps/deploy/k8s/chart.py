@@ -237,13 +237,15 @@ class ChartBuilder:
         first_host = next(iter(hosts), None)
         service_port = first_host.service_port if first_host and first_host.service_port else self.__find_default_port()
 
-        dikkie_dik = {address['name']: address['values'] for address in self.config_defaults.white_lists['addresses']}
+        configured_addresses = self.config_defaults.white_lists['addresses']
+        address_dictionary = {address['name']: address['values'] for address in configured_addresses}
 
         def to_white_list(configured: Optional[TargetProperty[list[str]]]) -> dict[str, list[str]]:
-            white_lists = configured.get_value(self.target) if configured else self.config_defaults.white_lists[
-                'default']
+            white_lists = self.config_defaults.white_lists['default'].copy()
+            if configured:
+                white_lists.extend(configured.get_value(self.target))
 
-            return dict(filter(lambda x: x[0] in white_lists, dikkie_dik.items()))
+            return dict(filter(lambda x: x[0] in white_lists, address_dictionary.items()))
 
         return [HostWrapper(host=host, name=self.release_name, index=idx, service_port=service_port,
                             white_lists=to_white_list(host.whitelists)) for
