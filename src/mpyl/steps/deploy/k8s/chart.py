@@ -171,7 +171,9 @@ class ChartBuilder:
         service_ports = list(map(lambda key: V1ServicePort(port=key, target_port=self.mappings[key], protocol="TCP",
                                                            name=f"{key}-webservice-port"), self.mappings.keys()))
 
-        return V1Service(api_version='v1', kind='Service', metadata=self._to_object_meta(),
+        return V1Service(api_version='v1', kind='Service',
+                         metadata=V1ObjectMeta(annotations=self._to_annotations(), name=self.release_name,
+                                               labels=self._to_labels()),
                          spec=V1ServiceSpec(type="ClusterIP", ports=service_ports,
                                             selector=self._to_selector().match_labels))
 
