@@ -98,13 +98,20 @@ class Repository:
     def changes_in_branch(self) -> list[Revision]:
         revisions = reversed(list(self._repo.iter_commits(f"{self._config.main_branch}..HEAD")))
         return [Revision(count, str(rev),
-                         self._repo.git.diff_tree(no_commit_id=True, name_only=True, r=str(rev)).splitlines()) for
-                count, rev in enumerate(revisions)]
+                         self._repo.git.diff_tree(no_commit_id=True, name_only=True, r=str(rev)).splitlines())
+                for count, rev in enumerate(revisions)]
 
     def changes_in_branch_including_local(self) -> list[Revision]:
         in_branch = self.changes_in_branch()
         in_branch.append(Revision(len(in_branch), self.get_sha, self.changes_in_commit()))
         return in_branch
+
+    def changes_in_merge_commit(self) -> list[Revision]:
+        curr_rev = self._repo.rev_parse('HEAD')
+        parent_revs = reversed(list(curr_rev.iter_parents(n=1)))
+        return [Revision(count, str(rev),
+                         self._repo.git.diff_tree(no_commit_id=True, name_only=True, r=str(rev)).splitlines())
+                for count, rev in enumerate(parent_revs)]
 
     @property
     def main_branch_pulled(self) -> bool:
