@@ -9,7 +9,7 @@ from python_on_whales.components.compose.models import ComposeProject
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
 from ...project import Stage
-from ...utilities.docker import stream_docker_logging, DockerComposeConfig
+from ...utilities.docker import stream_encoded_logging, DockerComposeConfig
 
 
 class IntegrationTestBefore(Step):
@@ -36,7 +36,7 @@ class IntegrationTestBefore(Step):
 
         goal_reached = False
         logs = docker_client.compose.logs(stream=True)
-        stream_docker_logging(logger=self._logger, generator=logs, task_name=f'Start {compose_file}')
+        stream_encoded_logging(logger=self._logger, generator=logs, task_name=f'Start {compose_file}')
 
         poll = 0
         while not goal_reached:
