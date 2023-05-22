@@ -1,15 +1,14 @@
-import os
 from pathlib import Path
 
 import pytest
 from kubernetes.client import V1Probe, V1ObjectMeta
 from pyaml_env import parse_config
 
-from mpyl.steps.deploy.kubernetes import DeployKubernetes
-from src.mpyl.steps.deploy.k8s import cluster_config
+from src.mpyl.steps.deploy.kubernetes import DeployKubernetes
 from src.mpyl.project import Target, Project
+from src.mpyl.steps.deploy.k8s import cluster_config
 from src.mpyl.steps.deploy.k8s.chart import ChartBuilder, to_service_chart, to_job_chart, to_cron_job_chart, \
-    to_spark_job_chart
+    to_spark_job_chart, DeploySet
 from src.mpyl.steps.deploy.k8s.resources import to_yaml, CustomResourceDefinition
 from src.mpyl.steps.deploy.k8s.resources.traefik import V1AlphaIngressRoute
 from src.mpyl.steps.models import Input, Artifact, ArtifactType
@@ -41,9 +40,11 @@ class TestKubernetesChart:
             producing_step="build_docker_Step",
             spec={'image': 'registry/image:123'}
         )
+        other_project = get_minimal_project()
         return ChartBuilder(
             step_input=Input(project, run_properties=test_data.RUN_PROPERTIES,
-                             required_artifact=required_artifact)
+                             required_artifact=required_artifact),
+            deploy_set=DeploySet({project, other_project}, {project})
         )
 
     def test_probe_values_should_be_customizable(self):
@@ -98,11 +99,13 @@ class TestKubernetesChart:
 
     @pytest.mark.parametrize('template',
                              ['deployment', 'service', 'service-account', 'sealed-secrets', 'ingress-https-route',
-                              'dockertest-ingress-0-whitelist'])
+                              'dockertest-ingress-0-whitelist', 'dockertest-ingress-1-whitelist'])
     def test_service_chart_roundtrip(self, template):
         builder = self._get_builder(get_project())
         chart = to_service_chart(builder)
         self._roundtrip(self.template_path / "service", template, chart)
+        assert chart.keys() == {'service-account', 'sealed-secrets', 'deployment', 'service', 'ingress-https-route',
+                                'dockertest-ingress-0-whitelist', 'dockertest-ingress-1-whitelist'}
 
     def test_default_ingress(self):
         project = get_minimal_project()
@@ -115,7 +118,7 @@ class TestKubernetesChart:
         builder = self._get_builder(project)
 
         route = to_service_chart(builder)
-        assert DeployKubernetes.try_extract_hostname(route) == 'https://dockertest-1234.test-backend.nl'
+        assert DeployKubernetes.try_extract_hostname(route) == 'https://minimalservice-1234.test-backend.nl'
 
     def test_route_parsing(self):
         assert DeployKubernetes.match_to_url(

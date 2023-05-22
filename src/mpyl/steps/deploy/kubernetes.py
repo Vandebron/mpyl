@@ -8,6 +8,8 @@ from .k8s.chart import ChartBuilder, to_service_chart
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType, input_to_artifact
 from ...project import Stage
+from ...stages.discovery import find_deploy_set
+from ...utilities.repo import RepoConfig
 
 DEPLOYED_SERVICE_KEY = 'url'
 
@@ -37,7 +39,7 @@ class DeployKubernetes(Step):
         return None
 
     def execute(self, step_input: Input) -> Output:
-        builder = ChartBuilder(step_input)
+        builder = ChartBuilder(step_input, find_deploy_set(RepoConfig(step_input.run_properties.config)))
         chart = to_service_chart(builder)
 
         deploy_result = deploy_helm_chart(self._logger, chart, step_input, builder.release_name)

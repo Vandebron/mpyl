@@ -39,6 +39,10 @@ whiteLists:
   addresses:
     - name: "VPN"
       values: [ "10.0.0.1" ]
+    - name: 'Outside-World'
+      values: [ '0.0.0.0/0' ]
+    - name: 'K8s-Test'
+      values: [ '1.2.3.0', '1.2.3.1' ]
 kubernetes:
   rancher:
     cluster:

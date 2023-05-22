@@ -16,7 +16,7 @@ class HostWrapper:
     name: str
     index: int
     service_port: int
-    white_lists: list[str]
+    white_lists: dict[str, list[str]]
 
     @property
     def full_name(self) -> str:
@@ -35,7 +35,8 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
 
         routes = [{'kind': 'Rule', 'match': _interpolate_names(host.host.host.get_value(target), host.name),
                    'services': [{'name': host.name, 'kind': 'Service', 'port': host.service_port}],
-                   'middlewares': [{'name': host.full_name}]} for host in hosts]
+                   'middlewares':
+                       [{'name': host.full_name}, {'name': 'traefik-https-redirect@kubernetescrd'}]} for host in hosts]
 
         super().__init__(api_version='traefik.containo.us/v1alpha1', kind="IngressRoute", metadata=metadata,
                          spec={'routes': routes, 'entryPoints': ['websecure'],

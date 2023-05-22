@@ -54,6 +54,7 @@ def install(logger: Logger, chart: dict[str, CustomResourceDefinition], step_inp
             return removed
 
     chart_path = Path(step_input.project.target_path) / "chart"
+    logger.info(f"Writing HELM chart to {chart_path}")
     write_chart(chart, chart_path, to_chart_metadata(chart_name, step_input.run_properties))
 
     cmd = f"helm upgrade -i {chart_name} -n {name_space} --kube-context {kube_context} {chart_path}"

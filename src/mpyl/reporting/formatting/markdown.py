@@ -7,7 +7,6 @@ from junitparser import TestSuite
 
 from ...project import Stage, Project
 from ...steps import Output, ArtifactType
-from ...steps.deploy.kubernetes import DEPLOYED_SERVICE_KEY
 from ...steps.run import RunResult
 from ...steps.steps import StepResult, collect_test_results
 from ...utilities.junit import TestRunSummary, sum_suites
@@ -20,7 +19,7 @@ def summary_to_markdown(summary: TestRunSummary):
 
 def __add_link_if_service(name: str, output: Output) -> str:
     if output.produced_artifact and output.produced_artifact.artifact_type == ArtifactType.DEPLOYED_HELM_APP:
-        url = output.produced_artifact.spec.get(DEPLOYED_SERVICE_KEY)
+        url = output.produced_artifact.spec.get('url')
         if url:
             return f'[{name}]({url})'
 

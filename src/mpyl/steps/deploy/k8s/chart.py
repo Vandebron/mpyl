@@ -2,7 +2,7 @@
 Data classes for the composition of Custom Resource Definitions.
 More info: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/
 """
-
+import itertools
 from dataclasses import dataclass
 from typing import Dict, Optional
 
@@ -13,7 +13,7 @@ from kubernetes.client import V1Deployment, V1Container, V1DeploymentSpec, V1Obj
     V1PodTemplateSpec, V1DeploymentStrategy, V1Job, V1JobSpec, V1CronJob, V1CronJobSpec, V1JobTemplateSpec, V1ConfigMap
 from ruamel.yaml import YAML
 
-from . import get_namespace
+from . import substitute_namespaces
 from .resources import CustomResourceDefinition, to_dict  # pylint: disable = no-name-in-module
 from .resources.sealed_secret import V1SealedSecret
 from .resources.spark import to_spark_body, get_spark_config_map_data, V1SparkApplication
@@ -21,8 +21,8 @@ from .resources.traefik import V1AlphaIngressRoute, V1AlphaMiddleware, \
     HostWrapper  # pylint: disable = no-name-in-module
 from ...models import Input, ArtifactType
 from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target, Kubernetes, \
-    Job, Traefik, Host
-from ....utilities.ephemeral import get_env_variables
+    Job, Traefik, Host, get_env_variables
+from ....stages.discovery import DeploySet
 
 yaml = YAML()
 
@@ -102,8 +102,9 @@ class ChartBuilder:
     target: Target
     release_name: str
     config_defaults: DeploymentDefaults
+    deploy_set: Optional[DeploySet]
 
-    def __init__(self, step_input: Input):
+    def __init__(self, step_input: Input, deploy_set: Optional[DeploySet] = None):
         self.step_input = step_input
         project = self.step_input.project
         self.project = project
@@ -119,6 +120,7 @@ class ChartBuilder:
         self.mappings = self.project.kubernetes.port_mappings
         self.target = step_input.run_properties.target
         self.release_name = self.project.name.lower()
+        self.deploy_set = deploy_set
 
     def _to_labels(self) -> Dict:
         run_properties = self.step_input.run_properties
@@ -164,7 +166,9 @@ class ChartBuilder:
         service_ports = list(map(lambda key: V1ServicePort(port=key, target_port=self.mappings[key], protocol="TCP",
                                                            name=f"{key}-webservice-port"), self.mappings.keys()))
 
-        return V1Service(api_version='v1', kind='Service', metadata=self._to_object_meta(),
+        return V1Service(api_version='v1', kind='Service',
+                         metadata=V1ObjectMeta(annotations=self._to_annotations(), name=self.release_name,
+                                               labels=self._to_labels()),
                          spec=V1ServiceSpec(type="ClusterIP", ports=service_ports,
                                             selector=self._to_selector().match_labels))
 
@@ -228,16 +232,15 @@ class ChartBuilder:
         first_host = next(iter(hosts), None)
         service_port = first_host.service_port if first_host and first_host.service_port else self.__find_default_port()
 
-        def to_white_list(configured: Optional[TargetProperty[list[str]]]) -> list[str]:
-            white_lists = configured.get_value(self.target) if configured else self.config_defaults.white_lists[
-                'default']
-            addresses = []
-            add_dict = dict(
-                (address['name'], address['values']) for address in self.config_defaults.white_lists['addresses'])
-            for item in white_lists:
-                addresses.extend(add_dict[item])
+        configured_addresses = self.config_defaults.white_lists['addresses']
+        address_dictionary = {address['name']: address['values'] for address in configured_addresses}
 
-            return addresses
+        def to_white_list(configured: Optional[TargetProperty[list[str]]]) -> dict[str, list[str]]:
+            white_lists = self.config_defaults.white_lists['default'].copy()
+            if configured:
+                white_lists.extend(configured.get_value(self.target))
+
+            return dict(filter(lambda x: x[0] in white_lists, address_dictionary.items()))
 
         return [HostWrapper(host=host, name=self.release_name, index=idx, service_port=service_port,
                             white_lists=to_white_list(host.whitelists)) for
@@ -250,12 +253,17 @@ class ChartBuilder:
                                    pr_number=self.step_input.run_properties.versioning.pr_number)
 
     def to_middlewares(self) -> dict[str, V1AlphaMiddleware]:
-        hosts = self.create_host_wrappers()
-        return dict(map(lambda host:
-                        (host.full_name,
-                         V1AlphaMiddleware(metadata=self._to_object_meta(name=host.full_name),
-                                           source_ranges=host.white_lists)),
-                        hosts))
+        hosts: list[HostWrapper] = self.create_host_wrappers()
+
+        def to_metadata(host: HostWrapper) -> V1ObjectMeta:
+            metadata = self._to_object_meta(name=host.full_name)
+            # metadata.annotations = host.white_lists
+            metadata.annotations = {k: ", ".join(v) for k, v in host.white_lists.items()}
+            return metadata
+
+        return {host.full_name: V1AlphaMiddleware(
+            metadata=to_metadata(host),
+            source_ranges=list(itertools.chain(*host.white_lists.values()))) for host in hosts}
 
     def to_service_account(self) -> V1ServiceAccount:
         return V1ServiceAccount(api_version="v1", kind="ServiceAccount", metadata=self._to_object_meta(),
@@ -305,18 +313,13 @@ class ChartBuilder:
         return job
 
     def _get_env_vars(self):
+        raw_env_vars = {e.key: e.get_value(self.target) for e in self.env if e.get_value(self.target) is not None}
+        substituted = substitute_namespaces(raw_env_vars,
+                                            {p.to_name for p in self.deploy_set.all_projects},
+                                            {p.to_name for p in self.deploy_set.projects_to_deploy},
+                                            self.step_input.run_properties.versioning.pr_number)
 
-        def _interpolate_namespace(value: Optional[str]) -> Optional[str]:
-            if value and '{namespace}' in value:
-                namespace = get_namespace(self.step_input.run_properties, self.step_input.project)
-                return value.replace('{namespace}', namespace)
-
-            return value
-
-        env_vars = list(
-            filter(lambda v: v.value,
-                   map(lambda e: V1EnvVar(name=e.key, value=_interpolate_namespace(e.get_value(self.target))),
-                       self.env)))
+        env_vars = [V1EnvVar(name=key, value=value) for key, value in substituted.items()]
 
         sealed_for_target = list(
             filter(lambda v: v.get_value(self.target) is not None, self.sealed_secrets))
@@ -332,7 +335,7 @@ class ChartBuilder:
     def to_deployment(self) -> V1Deployment:
 
         ports = [
-            V1ContainerPort(container_port=key, host_port=self.mappings[key], protocol="TCP", name=f'port-{idx}')
+            V1ContainerPort(container_port=self.mappings[key], host_port=key, protocol="TCP", name=f'port-{idx}')
             for idx, key in enumerate(self.mappings.keys())
         ]
 

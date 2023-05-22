@@ -45,7 +45,7 @@ spec:
         - name: SOME_ENV
           value: PullRequest
         - name: WITH_NAMESPACE
-          value: prometheus-gateway.pr-1234.svc.cluster.local
+          value: minimalService.mpyl.svc.cluster.local
         - name: SOME_SECRET_ENV
           valueFrom:
             secretKeyRef:
@@ -67,7 +67,7 @@ spec:
           timeoutSeconds: 20
         name: dockertest
         ports:
-        - containerPort: 8080
+        - containerPort: 80
           hostPort: 8080
           name: port-0
           protocol: TCP

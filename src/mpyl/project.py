@@ -278,6 +278,12 @@ class Deployment:
 
 
 @dataclass(frozen=True)
+class ProjectName:
+    name: str
+    namespace: Optional[str]
+
+
+@dataclass(frozen=True)
 class Project:
     name: str
     description: str
@@ -295,6 +301,13 @@ class Project:
 
     def __hash__(self):
         return hash(self.path)
+
+    @property
+    def to_name(self) -> ProjectName:
+        return ProjectName(
+            name=self.name,
+            namespace=self.deployment.namespace if self.deployment and self.deployment.namespace else None
+        )
 
     @property
     def kubernetes(self) -> Kubernetes:
@@ -386,3 +399,17 @@ def load_project(root_dir: Path, project_path: Path, strict: bool = True) -> Pro
         except Exception:
             logging.warning(f'Failed to load {project_path}', exc_info=True)
             raise
+
+
+def get_env_variables(project: Project, target: Target) -> dict[str, str]:
+    if project.deployment is None:
+        raise KeyError(f'No deployment information was found for project: {project.name}')
+    if len(project.deployment.properties.env) == 0:
+        raise KeyError(f'No properties.env is defined for project: {project.name}')
+
+    env_variables: dict[str, str] = {
+        env_variable.key: env_variable.get_value(target) for env_variable in
+        project.deployment.properties.env
+    }
+
+    return env_variables

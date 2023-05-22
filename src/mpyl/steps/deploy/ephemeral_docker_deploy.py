@@ -6,9 +6,8 @@ from python_on_whales import docker
 
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
-from ...project import Stage
+from ...project import Stage, get_env_variables
 from ...utilities.docker import docker_image_tag
-from ...utilities.ephemeral import get_env_variables
 
 
 class EphemeralDockerDeploy(Step):
