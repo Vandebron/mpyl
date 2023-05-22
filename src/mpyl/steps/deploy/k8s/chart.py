@@ -257,12 +257,9 @@ class ChartBuilder:
                                    pr_number=self.step_input.run_properties.versioning.pr_number)
 
     def to_middlewares(self) -> dict[str, V1AlphaMiddleware]:
-        hosts = self.create_host_wrappers()
-        return dict(map(lambda host:
-                        (host.full_name,
-                         V1AlphaMiddleware(metadata=self._to_object_meta(name=host.full_name),
-                                           source_ranges=host.white_lists)),
-                        hosts))
+        hosts: list[HostWrapper] = self.create_host_wrappers()
+        return {host.full_name: V1AlphaMiddleware(metadata=self._to_object_meta(name=host.full_name),
+                                                  source_ranges=host.white_lists) for host in hosts}
 
     def to_service_account(self) -> V1ServiceAccount:
         return V1ServiceAccount(api_version="v1", kind="ServiceAccount", metadata=self._to_object_meta(),
