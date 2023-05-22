@@ -22,6 +22,7 @@ from .resources.traefik import V1AlphaIngressRoute, V1AlphaMiddleware, \
 from ...models import Input, ArtifactType
 from ....project import Project, KeyValueProperty, Probe, Deployment, TargetProperty, Resources, Target, Kubernetes, \
     Job, Traefik, Host, get_env_variables
+from ....stages.discovery import DeploySet
 
 yaml = YAML()
 
@@ -89,12 +90,6 @@ class DeploymentDefaults:
             treafik_defaults=deployment_values.get('traefik', {}),
             white_lists=config.get('whiteLists', {})
         )
-
-
-@dataclass(frozen=True)
-class DeploySet:
-    all_projects: set[Project]
-    projects_to_deploy: set[Project]
 
 
 class ChartBuilder:

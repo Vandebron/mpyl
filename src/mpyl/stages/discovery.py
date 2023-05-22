@@ -2,11 +2,19 @@
 discovered projects have been invalidated due to changes in the source code since the last build of the project's
 output artifact."""
 import operator
+from dataclasses import dataclass
+from pathlib import Path
 
-from ..project import Project
+from ..project import Project, load_project
 from ..project import Stage
 from ..steps.models import Output
-from ..utilities.repo import Revision
+from ..utilities.repo import Revision, RepoConfig, Repository
+
+
+@dataclass(frozen=True)
+class DeploySet:
+    all_projects: set[Project]
+    projects_to_deploy: set[Project]
 
 
 def is_invalidated(project: Project, stage: Stage, path: str) -> bool:
@@ -42,6 +50,15 @@ def are_invalidated(project: Project, stage: Stage, change_history: list[Revisio
 def find_invalidated_projects_for_stage(all_projects: set[Project], stage: Stage,
                                         change_history: list[Revision]) -> set[Project]:
     return set(filter(lambda p: are_invalidated(p, stage, change_history), all_projects))
+
+
+def find_deploy_set(repo_config: RepoConfig) -> DeploySet:
+    with Repository(repo_config) as repo:
+        changes_in_branch = repo.changes_in_branch_including_local()
+        project_paths = repo.find_projects()
+        all_projects = set(map(lambda p: load_project(Path(""), Path(p), False), project_paths))
+        return DeploySet(all_projects,
+                         find_invalidated_projects_for_stage(all_projects, Stage.DEPLOY, changes_in_branch))
 
 
 def find_invalidated_projects_per_stage(all_projects: set[Project], change_history: list[Revision]) \
