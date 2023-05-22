@@ -26,16 +26,20 @@ class CypressTest(Step):
         self._logger.info(f"Running cypress tests for project {step_input.project.name}")
 
         cypress_config = step_input.run_properties.config['cypress']
+        if not cypress_config:
+            raise ValueError("Cypress config is required when cypress test step is used")
+
         volume_path = os.path.join('.', cypress_config['volumePath'])
         if os.getcwd().endswith('tests'):
             volume_path = './test_resources/cypress'
 
-        specs_string = ''
         if step_input.project.dependencies and step_input.project.dependencies.postdeploy:
             specs_string = ', '.join(step_input.project.dependencies.postdeploy)
+        else:
+            raise ValueError("No cypress specs are defined in the project dependencies")
 
         docker_container = cast(Container, docker.run(image="cypress/browsers:latest", interactive=True, detach=True,
-                                                          volumes=[(volume_path, "/cypress")], workdir="/cypress"))
+                                                      volumes=[(volume_path, "/cypress")], workdir="/cypress"))
         try:
             install_stream = execute_with_stream(container=docker_container, command=["yarn", "cypress", "install"])
             stream_encoded_logging(self._logger, install_stream, "Installing cypress")
@@ -48,10 +52,10 @@ class CypressTest(Step):
                 run_command.extend(["--record", "--key", cypress_config['recordKey']])
             test_result_stream = execute_with_stream(container=docker_container, command=run_command)
             stream_encoded_logging(logger=self._logger, generator=test_result_stream,
-                                           task_name="Running cypress tests")
+                                   task_name="Running cypress tests")
         finally:
             docker_container.stop()
             docker_container.remove()
 
         return Output(success=True, message=f"Cypress tests for {step_input.project.name} passed",
-                        produced_artifact=None)
+                      produced_artifact=None)

@@ -66,6 +66,8 @@ definitions:
         type: string
       volumePath:
         type: string
+    required:
+      - volumePath
   Kubernetes:
     type: object
     additionalProperties: false
