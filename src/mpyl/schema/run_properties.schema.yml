@@ -13,6 +13,7 @@ properties:
       - parameters
       - versioning
       - console
+      - local
     properties:
       local:
         description: Whether the run is local or not
@@ -27,7 +28,6 @@ properties:
           - change_url
           - tests_url
           - user
-          - local
         properties:
           id:
             description: Uniquely identifies the run. Typically a monotonically increasing number.
