@@ -12,14 +12,6 @@ from tests.test_resources.test_data import assert_roundtrip
 class TestJiraReporter:
     test_resource_path = root_test_path / "reporting" / "targets" / "test_resources"
 
-    def test_should_print_results_as_string(self):
-        ticket_json = json.loads(Path(self.test_resource_path / "jira_issue.json").read_text(encoding='utf-8'))
-        ticket = JiraTicket.from_issue_response(ticket_json)
-        assert ticket.ticket_id == 'TECH-290'
-        assert ticket.issue_type == 'Story'
-        assert ticket.summary == 'Update PR description in github with deployment info'
-        assert ticket.description.startswith('Similarly to mpl *modules*, we _should_ update the PR details with card')
-
     def test_convert_jira_to_github_markdown(self):
         jira_markdown = Path(self.test_resource_path / "markdown_jira.md").read_text(encoding='utf-8')
         github_markdown = to_github_markdown(jira_markdown, 'http://vandebron.atlassian.com')

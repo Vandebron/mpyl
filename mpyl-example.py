@@ -3,6 +3,8 @@ import logging
 import sys
 from logging import Logger
 
+
+
 def main(log: Logger, args: argparse.Namespace):
     if args.local:
         from src.mpyl.reporting.targets.jira import JiraReporter
@@ -40,8 +42,10 @@ def main(log: Logger, args: argparse.Namespace):
         from mpyl.steps.run import RunResult
         from mpyl.reporting.targets.github import PullRequestComment
         from mpyl.reporting.targets.jira import compose_build_status
+        from mpyl.reporting.targets import ReportAccumulator
 
         check = CommitCheck(config=config, logger=log)
+        accumulator = ReportAccumulator()
 
         github_comment = PullRequestComment(config=config, compose_function=compose_build_status)
         slack_channel = SlackReporter(
@@ -54,15 +58,19 @@ def main(log: Logger, args: argparse.Namespace):
             slack_personal = SlackReporter(config, None, f'MPyL test {run_properties.versioning.identifier}')
 
         jira = JiraReporter(config=config, branch=run_properties.versioning.branch, logger=log)
-        check.send_report(RunResult(run_properties=run_properties, run_plan={}))
+        accumulator.add(check.send_report(RunResult(run_properties=run_properties, run_plan={})))
 
     run_result = run_mpyl(params, slack_personal)
 
     if not args.local:
-        check.send_report(run_result)
-        slack_channel.send_report(run_result)
-        jira.send_report(run_result)
-        github_comment.send_report(run_result)
+        accumulator.add(check.send_report(run_result))
+        accumulator.add(slack_channel.send_report(run_result))
+        accumulator.add(jira.send_report(run_result))
+        accumulator.add(github_comment.send_report(run_result))
+        if accumulator.failures:
+            log.warning(f'Failed to send the following report(s): {", ".join(accumulator.failures)}')
+            sys.exit(1)
+
 
     sys.exit(0 if run_result.is_success else 1)
 

@@ -31,7 +31,7 @@ from urllib.parse import urlsplit
 import requests
 from atlassian import Jira
 
-from . import Reporter
+from . import Reporter, ReportOutcome
 from ..formatting.markdown import markdown_for_stage
 from ...project import Stage
 from ...steps.run import RunResult
@@ -161,6 +161,10 @@ def compose_build_status(result: RunResult, config: dict) -> str:
     return to_markdown_summary(jira_ticket, result)
 
 
+class JiraOutcome(ReportOutcome):
+    pass
+
+
 class JiraReporter(Reporter):
 
     def __init__(self, config: dict, branch: str, logger: Logger):
@@ -170,24 +174,25 @@ class JiraReporter(Reporter):
         self._jira = create_jira_for_config(jira_config)
         self._logger = logger
 
-    def send_report(self, results: RunResult, text: Optional[str] = None) -> None:
+    def send_report(self, results: RunResult, text: Optional[str] = None) -> JiraOutcome:
         if not self._ticket:
-            return None
+            return JiraOutcome(success=True)
 
         try:
             issue_response = self._jira.get_issue(self._ticket)
+
+            ticket = JiraTicket.from_issue_response(issue_response)
+
+            self.__move_ticket_forward(ticket)
+
+            user_email = results.run_properties.details.user_email
+            if user_email:
+                self.__assign_ticket(user_email, ticket)
+            return JiraOutcome(success=True)
+
         except requests.exceptions.HTTPError as exc:
-            self._logger.warning(f'Could not find JIRA ticket {self._ticket}: {exc}')
-            raise exc
-
-        ticket = JiraTicket.from_issue_response(issue_response)
-
-        self.__move_ticket_forward(ticket)
-
-        user_email = results.run_properties.details.user_email
-        if user_email:
-            self.__assign_ticket(user_email, ticket)
-        return None
+            self._logger.warning(f'Could not handle Jira ticket {self._ticket}: {exc}')
+            return JiraOutcome(success=False, exception=exc)
 
     def __assign_ticket(self, run_user_email: str, ticket: JiraTicket):
         if ticket.assignee_email is None or ticket.assignee_email != run_user_email:

@@ -35,9 +35,10 @@ from dataclasses import dataclass
 from typing import Dict, Optional
 
 from slack_sdk import WebClient
+from slack_sdk.errors import SlackClientError
 from slack_sdk.models.blocks import HeaderBlock, SectionBlock, MarkdownTextObject, ContextBlock, ImageElement, Block
 
-from . import Reporter
+from . import Reporter, ReportOutcome
 from ..formatting.markdown import run_result_to_markdown
 from ...steps.models import RunProperties
 from ...steps.run import RunResult
@@ -79,6 +80,10 @@ class UserInfo:
     initiator: Optional[str]
 
 
+class SlackOutcome(ReportOutcome):
+    pass
+
+
 class SlackReporter(Reporter):
     _icons: SlackIcons
     _message_identifier: Optional[MessageIdentifier]
@@ -95,27 +100,31 @@ class SlackReporter(Reporter):
         self._icons = SlackIcons(success=icons['success'], failure=icons['failure'], building=icons['building'])
         self._message_identifier = message_identifier
 
-    def send_report(self, results: RunResult, text: Optional[str] = None) -> None:
-        user_info = self.__get_user_info(results.run_properties.details.user_email)
+    def send_report(self, results: RunResult, text: Optional[str] = None) -> ReportOutcome:
+        try:
+            user_info = self.__get_user_info(results.run_properties.details.user_email)
 
-        if not self._channel and user_info.initiator:
-            self._channel = self.__open_conversation_with_user(user_info.initiator)
+            if not self._channel and user_info.initiator:
+                self._channel = self.__open_conversation_with_user(user_info.initiator)
 
-        if not self._channel:
-            raise ValueError('Channel not explicitly set and initiator could not be determined')
+            if not self._channel:
+                raise ValueError('Channel not explicitly set and initiator could not be determined')
 
-        body = to_slack_markdown(text if text else run_result_to_markdown(results))
-        blocks = self.__compose_blocks(results, body, user_info)
+            body = to_slack_markdown(text if text else run_result_to_markdown(results))
+            blocks = self.__compose_blocks(results, body, user_info)
 
-        if self._message_identifier:
-            self._client.chat_update(channel=self._message_identifier.channel_id,
-                                     ts=self._message_identifier.time_stamp,
-                                     icon_emoji=':robot_face:', mrkdwn=True, blocks=blocks, text=body)
-            return
+            if self._message_identifier:
+                self._client.chat_update(channel=self._message_identifier.channel_id,
+                                         ts=self._message_identifier.time_stamp,
+                                         icon_emoji=':robot_face:', mrkdwn=True, blocks=blocks, text=body)
+                return SlackOutcome(success=True)
 
-        response = self._client.chat_postMessage(channel=self._channel, icon_emoji=':robot_face:', mrkdwn=True,
-                                                 blocks=blocks, text=body)
-        self._message_identifier = MessageIdentifier(channel_id=response['channel'], time_stamp=response['ts'])
+            response = self._client.chat_postMessage(channel=self._channel, icon_emoji=':robot_face:', mrkdwn=True,
+                                                     blocks=blocks, text=body)
+            self._message_identifier = MessageIdentifier(channel_id=response['channel'], time_stamp=response['ts'])
+            return SlackOutcome(success=True)
+        except SlackClientError as slack_exception:
+            return SlackOutcome(success=False, exception=slack_exception)
 
     def send_progress_update(self, results: RunResult, text: Optional[str]):
         if not self._message_identifier:
