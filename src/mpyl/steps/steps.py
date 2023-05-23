@@ -127,31 +127,43 @@ class Steps:
 
         raise ValueError(f"Artifact {required_artifact} required for {project.name} not found")
 
+    def _execute_after_(self, main_result: Output, step: Step, project: Project, stage: Stage,
+                        dry_run: bool = False) -> Output:
+        main_step_artifact = main_result.produced_artifact
+        after_result = self._execute(step, project, self._properties, main_step_artifact, dry_run)
+        if after_result.produced_artifact and after_result.produced_artifact.artifact_type != ArtifactType.NONE:
+            after_result.write(project.target_path, stage)
+        else:
+            after_result.produced_artifact = main_step_artifact
+
+        if not main_result.success:
+            after_result.success = False
+
+        return after_result
+
     def _execute_stage(self, stage: Stage, project: Project, dry_run: bool = False) -> Output:
         stage_name = project.stages.for_stage(stage)
         if stage_name is None:
             return Output(success=False, message=f"Stage '{stage.value}' not defined on project '{project.name}'")
 
-        executor = self._find_executor(stage, stage_name)
+        executor: Optional[Step] = self._find_executor(stage, stage_name)
         if executor:
             try:
                 self._logger.info(f'Executing {stage} for {project.name}')
                 artifact: Optional[Artifact] = self._find_required_artifact(project, executor.required_artifact)
-                result = Output(success=True, message='')
                 if executor.before:
-                    result = self._execute(executor.before, project, self._properties,
-                                           self._find_required_artifact(project, executor.before.required_artifact),
-                                           dry_run)
-                if result.success:
-                    result = self._execute(executor, project, self._properties, artifact, dry_run)
-                    result.write(project.target_path, stage)
+                    before_result = self._execute(executor.before, project, self._properties,
+                                                  self._find_required_artifact(project,
+                                                                               executor.before.required_artifact),
+                                                  dry_run)
+                    if not before_result.success:
+                        return before_result
+
+                result = self._execute(executor, project, self._properties, artifact, dry_run)
+                result.write(project.target_path, stage)
+
                 if executor.after:
-                    main_step_artifact = result.produced_artifact
-                    result = self._execute(executor.after, project, self._properties, result.produced_artifact, dry_run)
-                    if result.produced_artifact and result.produced_artifact.artifact_type != ArtifactType.NONE:
-                        result.write(project.target_path, stage)
-                    else:
-                        result.produced_artifact = main_step_artifact
+                    return self._execute_after_(result, executor.after, project, stage, dry_run)
 
                 return result
             except Exception as exc:
