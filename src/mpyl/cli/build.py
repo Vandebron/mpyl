@@ -135,8 +135,9 @@ class Pipeline(ParamType):
     help='A series of arguments to pass to the pipeline. Note that will run within the pipenv in jenkins. '
          'To execute `mpyl build status`, pass `-a run -a mpyl -a build -a status`',
 )
+@click.option('--follow', '-f', is_flag=True, default=False)
 @click.pass_context
-def jenkins(ctx, user, password, pipeline, test, arguments):
+def jenkins(ctx, user, password, pipeline, test, arguments, follow):
     asyncio.run(warn_if_update(ctx.obj.console))
     selected_pipeline = pipeline if pipeline else ctx.obj.config['jenkins']['defaultPipeline']
     pipeline_parameters = {'TEST': 'true', 'VERSION': test} if test else {}
@@ -144,7 +145,8 @@ def jenkins(ctx, user, password, pipeline, test, arguments):
         pipeline_parameters['PIPENV_PARAMS'] = " ".join(arguments)
     run_argument = JenkinsRunParameters(jenkins_user=user, jenkins_password=password, config=ctx.obj.config,
                                         pipeline=selected_pipeline, pipeline_parameters=pipeline_parameters,
-                                        verbose=ctx.obj.verbose)
+                                        verbose=ctx.obj.verbose,
+                                        follow=follow)
     run_jenkins(run_argument)
 
 

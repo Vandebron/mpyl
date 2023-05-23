@@ -23,6 +23,7 @@ class JenkinsRunParameters:
     pipeline: str
     pipeline_parameters: dict
     verbose: bool
+    follow: bool
 
 
 def get_token(github_config: GithubConfig):
@@ -57,8 +58,11 @@ def run_jenkins(run_config: JenkinsRunParameters):
                 status.update(f'Fetching Jenkins info for {pipeline_info.human_readable()} ...')
 
                 runner = JenkinsRunner(pipeline=pipeline_info,
-                                       jenkins=Jenkins(jenkins_config.url, username=run_config.jenkins_user,
-                                                       password=run_config.jenkins_password), status=status)
+                                       jenkins=Jenkins(baseurl=jenkins_config.url,
+                                                       username=run_config.jenkins_user,
+                                                       password=run_config.jenkins_password),
+                                       status=status,
+                                       follow=run_config.follow)
                 runner.run(run_config.pipeline_parameters)
             except requests.ConnectionError:
                 status.console.bell()
