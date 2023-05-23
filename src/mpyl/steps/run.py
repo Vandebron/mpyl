@@ -93,7 +93,7 @@ class RunResult:
 
     @property
     def is_in_progress(self):
-        return self.is_success and not self.is_finished
+        return self.run_plan is not None and self.is_success and not self.is_finished
 
     def _results_success(self):
         return not self.has_results or all(r.output.success for r in self._results)
