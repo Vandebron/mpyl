@@ -130,8 +130,7 @@ class Steps:
     def _execute_after_(self, main_result: Output, step: Step, project: Project, stage: Stage,
                         dry_run: bool = False) -> Output:
         main_step_artifact = main_result.produced_artifact
-        after_result = self._execute(step, project, self._properties, main_result.produced_artifact,
-                                     dry_run)
+        after_result = self._execute(step, project, self._properties, main_step_artifact, dry_run)
         if after_result.produced_artifact and after_result.produced_artifact.artifact_type != ArtifactType.NONE:
             after_result.write(project.target_path, stage)
         else:
