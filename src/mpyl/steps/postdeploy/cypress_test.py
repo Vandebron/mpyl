@@ -3,14 +3,14 @@
 import os
 
 from logging import Logger
-from typing import cast
 
 from python_on_whales import docker, Container
 
 from .. import Step, Meta
 from ..models import ArtifactType, Input, Output
 from ...project import Stage
-from ...utilities.docker import execute_with_stream, stream_encoded_logging
+from ...utilities.cypress import CypressConfig
+from ...utilities.docker import execute_with_stream
 
 
 class CypressTest(Step):
@@ -25,11 +25,8 @@ class CypressTest(Step):
     def execute(self, step_input: Input) -> Output:
         self._logger.info(f"Running cypress tests for project {step_input.project.name}")
 
-        cypress_config = step_input.run_properties.config['cypress']
-        if not cypress_config:
-            raise ValueError("Cypress config is required when cypress test step is used")
-
-        volume_path = os.path.join('.', cypress_config['volumePath'])
+        cypress_config = CypressConfig.from_config(step_input.run_properties.config)
+        volume_path = os.path.join('.', cypress_config.volumePath)
         if os.getcwd().endswith('tests'):
             volume_path = './test_resources/cypress'
 
@@ -38,21 +35,23 @@ class CypressTest(Step):
         else:
             raise ValueError("No cypress specs are defined in the project dependencies")
 
-        docker_container = cast(Container, docker.run(image="cypress/browsers:latest", interactive=True, detach=True,
-                                                      volumes=[(volume_path, "/cypress")], workdir="/cypress"))
-        try:
-            install_stream = execute_with_stream(container=docker_container, command=["yarn", "cypress", "install"])
-            stream_encoded_logging(self._logger, install_stream, "Installing cypress")
-            verify_stream = execute_with_stream(container=docker_container, command=["yarn", "cypress", "verify"])
-            stream_encoded_logging(self._logger, verify_stream, "Verifying cypress")
+        docker_container = docker.run(image="cypress/browsers:latest", interactive=True, detach=True,
+                                      volumes=[(volume_path, "/cypress")], workdir="/cypress")
+        if not isinstance(docker_container, Container):
+            raise TypeError("Docker run command should return a container")
 
-            run_command = ["yarn", "cypress", "run", "--spec", f'{specs_string}']
-            record_key = cypress_config['recordKey']
+        try:
+            execute_with_stream(logger=self._logger, container=docker_container, command="yarn cypress install",
+                                task_name="Installing cypress")
+            execute_with_stream(logger=self._logger, container=docker_container, command="yarn cypress verify",
+                                task_name="Verifying cypress")
+
+            run_command = f"yarn cypress run --spec {specs_string}"
+            record_key = cypress_config.record_key
             if not step_input.run_properties.local and record_key:
-                run_command.extend(["--record", "--key", cypress_config['recordKey']])
-            test_result_stream = execute_with_stream(container=docker_container, command=run_command)
-            stream_encoded_logging(logger=self._logger, generator=test_result_stream,
-                                   task_name="Running cypress tests")
+                run_command += f" --record --key {record_key}"
+            execute_with_stream(logger=self._logger, container=docker_container, command=run_command,
+                                task_name="Running cypress tests")
         finally:
             docker_container.stop()
             docker_container.remove()

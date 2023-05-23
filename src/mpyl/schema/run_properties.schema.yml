@@ -16,7 +16,7 @@ properties:
       - local
     properties:
       local:
-        description: Whether the run is local or not
+        description: Whether the run is on a local machine or not
         type: string
       run:
         description: defines the run properties

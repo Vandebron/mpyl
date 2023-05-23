@@ -57,8 +57,9 @@ class DockerConfig:
             raise KeyError(f'Docker config could not be loaded from {config}') from exc
 
 
-def execute_with_stream(container: Container, command: list[str]) -> Iterable[tuple[str, bytes]]:
-    return cast(Iterable[tuple[str, bytes]], container.execute(command=command, stream=True))
+def execute_with_stream(logger: Logger, container: Container, command: str, task_name: str) -> None:
+    result = cast(Iterable[tuple[str, bytes]], container.execute(command=command.split(' '), stream=True))
+    stream_encoded_logging(logger, result, task_name)
 
 
 def stream_encoded_logging(logger: Logger, generator: Iterable[tuple[str, bytes]], task_name: str,
