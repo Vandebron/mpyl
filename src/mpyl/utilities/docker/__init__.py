@@ -2,9 +2,10 @@
 import logging
 from dataclasses import dataclass
 from logging import Logger
-from typing import Dict, Optional, Union, Iterator, Iterable, cast
+from typing import Dict, Optional, Iterator, Iterable, cast
 
 from python_on_whales import docker, Image, Container
+from rich.text import Text
 
 from ...project import Project
 from ...steps.models import Input
@@ -73,7 +74,7 @@ def stream_docker_logging(logger: Logger, generator: Iterator[str], task_name: s
     while True:
         try:
             output = next(generator)
-            logger.log(level, str(output).strip('\n'))
+            logger.log(level, Text.from_ansi(output))
         except StopIteration:
             logger.info(f'{task_name} complete.')
             break
