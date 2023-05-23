@@ -29,6 +29,7 @@ class MpylRunConfig:
 @dataclass(frozen=True)
 class MpylCliParameters:
     local: bool
+    tag: bool = False
     pull_main: bool = False
     verbose: bool = False
     all: bool = False
@@ -54,7 +55,10 @@ def get_build_plan(logger: logging.Logger, repo: Repository, mpyl_run_parameters
             pull_result = repo.pull_main_branch()
             logger.info(f'Pulled `{pull_result[0].remote_ref_path.strip()}` to local')
 
-    changes_in_branch = repo.changes_in_branch_including_local() if params.local else repo.changes_in_branch()
+    if params.tag:
+        changes_in_branch = repo.changes_in_merge_commit()
+    else:
+        changes_in_branch = repo.changes_in_branch_including_local() if params.local else repo.changes_in_branch()
     logger.debug(f'Changes: {changes_in_branch}')
 
     projects_per_stage: dict[Stage, set[Project]] = find_build_set(repo, changes_in_branch, params.all)
