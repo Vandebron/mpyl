@@ -2,15 +2,26 @@ import json
 import re
 from pathlib import Path
 
+import pytest
+
 from src.mpyl.reporting.targets.jira import extract_ticket_from_branch, JiraTicket, to_markdown_summary, \
-    to_github_markdown
+    to_github_markdown, JiraConfig
 from tests import root_test_path
 from tests.reporting import create_test_result
-from tests.test_resources.test_data import assert_roundtrip
+from tests.test_resources.test_data import assert_roundtrip, get_config_values
 
 
 class TestJiraReporter:
     test_resource_path = root_test_path / "reporting" / "targets" / "test_resources"
+
+    def test_load_config(self):
+        config = JiraConfig.from_config(get_config_values())
+        assert config.site == 'https://atlassian.net'
+
+    def test_load_config_should_fail_if_not_present(self):
+        with pytest.raises(KeyError) as exc_info:
+            JiraConfig.from_config({})
+        assert 'jira section needs to be defined' in str(exc_info.value)
 
     def test_convert_jira_to_github_markdown(self):
         jira_markdown = Path(self.test_resource_path / "markdown_jira.md").read_text(encoding='utf-8')

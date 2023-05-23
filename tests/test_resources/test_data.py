@@ -20,6 +20,8 @@ RUN_PROPERTIES = RunProperties(
     config_values,
     ConsoleProperties("INFO", 130))
 
+def get_config_values() -> dict:
+    return config_values
 
 def get_project() -> Project:
     return load_project(resource_path, Path("test_project.yml"), True)
