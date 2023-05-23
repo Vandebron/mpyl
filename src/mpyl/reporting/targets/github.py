@@ -37,11 +37,11 @@ from logging import Logger
 from pathlib import Path
 from typing import Dict, Optional
 
-from github import Github, GithubIntegration
+from github import Github, GithubIntegration, GithubException
 from github.IssueComment import IssueComment
 from github.Repository import Repository as GithubRepository
 
-from . import Reporter
+from . import Reporter, ReportOutcome
 from ...reporting.formatting.markdown import run_result_to_markdown
 from ...reporting.formatting.text import to_string
 from ...steps.models import RunProperties
@@ -52,6 +52,10 @@ from ...utilities.repo import Repository, RepoConfig
 
 def compose_message_body(results: RunResult, _unused_config: Optional[Dict] = None) -> str:
     return run_result_to_markdown(results)
+
+
+class GithubOutcome(ReportOutcome):
+    pass
 
 
 class PullRequestComment(Reporter):
@@ -71,20 +75,24 @@ class PullRequestComment(Reporter):
         current_branch = self.git_repository.get_branch
         return get_pr_for_branch(repo, current_branch)
 
-    def send_report(self, results: RunResult, text: Optional[str] = None) -> None:
-        github = Github(self._config.token)
-        repo = github.get_repo(self._config.repository)
+    def send_report(self, results: RunResult, text: Optional[str] = None) -> GithubOutcome:
+        try:
+            github = Github(self._config.token)
+            repo = github.get_repo(self._config.repository)
 
-        pull_request = self._get_pull_request(repo, results.run_properties)
+            pull_request = self._get_pull_request(repo, results.run_properties)
 
-        comments = pull_request.get_issue_comments()
-        authenticated_user = github.get_user()
-        comments_for_user = [c for c in comments if c.user.id == authenticated_user.id]
-        if comments_for_user:
-            comment_to_update: IssueComment = comments_for_user.pop()
-            comment_to_update.edit(self.compose_function(results, self._raw_config))
-        else:
-            pull_request.create_issue_comment(self.compose_function(results, self._raw_config))
+            comments = pull_request.get_issue_comments()
+            authenticated_user = github.get_user()
+            comments_for_user = [c for c in comments if c.user.id == authenticated_user.id]
+            if comments_for_user:
+                comment_to_update: IssueComment = comments_for_user.pop()
+                comment_to_update.edit(self.compose_function(results, self._raw_config))
+            else:
+                pull_request.create_issue_comment(self.compose_function(results, self._raw_config))
+            return GithubOutcome(success=True)
+        except GithubException as exc:
+            return GithubOutcome(success=False, exception=exc)
 
 
 class CommitCheck(Reporter):
@@ -104,7 +112,7 @@ class CommitCheck(Reporter):
         return {'title': f'Build {build_id}', 'summary': summary + '\n' + run_result_to_markdown(results),
                 'text': to_string(results)}
 
-    def send_report(self, results: RunResult, text: Optional[str] = None) -> None:
+    def send_report(self, results: RunResult, text: Optional[str] = None) -> GithubOutcome:
         try:
             config: GithubAppConfig = self._github_config.get_app_config
             if not config:
@@ -129,6 +137,7 @@ class CommitCheck(Reporter):
                 with Repository(RepoConfig(self._config)) as git_repository:
                     self._check_run_id = repo.create_check_run(name='Pipeline build', head_sha=git_repository.get_sha,
                                                                status='in_progress').id
-        except Exception as exc:
+            return GithubOutcome(success=True)
+        except GithubException as exc:
             self._logger.warning(f'Unexpected exception: {exc}', exc_info=True)
-            raise exc
+            return GithubOutcome(success=False, exception=exc)
