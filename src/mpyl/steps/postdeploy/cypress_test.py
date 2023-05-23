@@ -26,7 +26,7 @@ class CypressTest(Step):
         self._logger.info(f"Running cypress tests for project {step_input.project.name}")
 
         cypress_config = CypressConfig.from_config(step_input.run_properties.config)
-        volume_path = os.path.join('.', cypress_config.volumePath)
+        volume_path = os.path.join('.', cypress_config.volume_path)
         if os.getcwd().endswith('tests'):
             volume_path = './test_resources/cypress'
 
