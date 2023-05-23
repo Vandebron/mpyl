@@ -1,4 +1,5 @@
 from mpyl.reporting.targets import ReportAccumulator
+from mpyl.reporting.targets.github import GithubOutcome
 from mpyl.reporting.targets.slack import SlackOutcome
 
 
@@ -8,4 +9,6 @@ class TestReporters:
         outcomes = ReportAccumulator()
         outcomes.add(SlackOutcome(True))
         outcomes.add(SlackOutcome(False, Exception('test')))
-        assert outcomes.failures == ['SlackOutcome failed with exception test']
+        outcomes.add(GithubOutcome(False, Exception('github error')))
+        assert outcomes.failures == ['SlackOutcome failed with exception test',
+                                     'GithubOutcome failed with exception github error']
