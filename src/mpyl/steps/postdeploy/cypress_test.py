@@ -27,8 +27,6 @@ class CypressTest(Step):
 
         cypress_config = CypressConfig.from_config(step_input.run_properties.config)
         volume_path = os.path.join('.', cypress_config.volume_path)
-        if os.getcwd().endswith('tests'):
-            volume_path = './test_resources/cypress'
 
         if step_input.project.dependencies and step_input.project.dependencies.postdeploy:
             specs_string = ', '.join(step_input.project.dependencies.postdeploy)
