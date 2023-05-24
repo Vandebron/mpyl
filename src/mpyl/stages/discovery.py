@@ -4,6 +4,7 @@ output artifact."""
 import operator
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 from ..project import Project, load_project
 from ..project import Stage
@@ -26,12 +27,25 @@ def is_invalidated(project: Project, stage: Stage, path: str) -> bool:
     return startswith or touched_dependency is not None
 
 
+def output_invalidated(output: Optional[Output], revision_hash: str) -> bool:
+    if output is None:
+        return True
+    if not output.success:
+        return True
+    if output.produced_artifact is None:
+        return True
+    artifact = output.produced_artifact
+    if artifact.revision != revision_hash:
+        return True
+
+    return False
+
+
 def _to_relevant_changes(project: Project, stage: Stage, change_history: list[Revision]) -> set[str]:
     output: Output = Output.try_read(project.target_path, stage)
     relevant = set()
     for history in reversed(sorted(change_history, key=lambda c: c.ord)):
-        if stage == Stage.DEPLOY or output is None or output.produced_artifact is None \
-                or output.produced_artifact.revision != history.hash:
+        if stage == Stage.DEPLOY or output_invalidated(output, history.hash):
             relevant.update(history.files_touched)
         else:
             return relevant

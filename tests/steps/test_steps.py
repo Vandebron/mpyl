@@ -55,8 +55,8 @@ class TestSteps:
 
     def test_find_not_required_output(self):
         with pytest.raises(ValueError) as exc_info:
-            Steps._find_required_artifact(self.build_project, ArtifactType.JUNIT_TESTS)
-        assert str(exc_info.value) == 'Artifact ArtifactType.JUNIT_TESTS required for test not found'
+            Steps._find_required_artifact(self.build_project, ArtifactType.DEPLOYED_HELM_APP)
+        assert str(exc_info.value) == 'Artifact ArtifactType.DEPLOYED_HELM_APP required for test not found'
 
     def test_find_required_output_should_handle_none(self):
         assert Steps._find_required_artifact(self.build_project, None) is None
