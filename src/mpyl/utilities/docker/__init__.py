@@ -58,11 +58,11 @@ class DockerConfig:
 
 
 def execute_with_stream(logger: Logger, container: Container, command: str, task_name: str) -> None:
-    result = cast(Iterable[tuple[str, bytes]], container.execute(command=command.split(' '), stream=True))
+    result = cast(Iterator[tuple[str, bytes]], container.execute(command=command.split(' '), stream=True))
     stream_docker_logging(logger, result, task_name)
 
 
-def stream_docker_logging(logger: Logger, generator: Union[Iterator[str], Iterable[tuple[str, bytes]]], task_name: str,
+def stream_docker_logging(logger: Logger, generator: Union[Iterator[str], Iterator[tuple[str, bytes]]], task_name: str,
                           level=logging.INFO) -> None:
     while True:
         try:
