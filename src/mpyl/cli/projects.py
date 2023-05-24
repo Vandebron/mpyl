@@ -74,16 +74,24 @@ def show_project(obj, name):
 @projects.command(help='Validate the yaml of found projects against their schema')
 @click.pass_obj
 def lint(obj: ProjectsContext):
-    for project in obj.cli.repo.find_projects(obj.filter):
+    found_projects = obj.cli.repo.find_projects(obj.filter)
+    invalid = 0
+    valid = 0
+    for project in found_projects:
         try:
             project_path = Path(obj.cli.repo.root_dir()) / Path(project)
             with open(project_path, encoding='utf-8') as file:
                 validate_project(file)
         except jsonschema.exceptions.ValidationError as exc:
             obj.cli.console.print(f'❌ {project}: {exc.message}')
+            invalid += 1
         else:
-            obj.cli.console.print(f'✅ {project}')
-
+            valid += 1
+            if obj.cli.verbose:
+                obj.cli.console.print(f'✅ {project}')
+    obj.cli.console.print(f'Validated {valid + invalid} projects. {valid} valid, {invalid} invalid')
+    if invalid > 0:
+        click.get_current_context().exit(1)
 
 if __name__ == '__main__':
     projects()  # pylint: disable=no-value-for-parameter

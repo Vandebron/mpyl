@@ -82,11 +82,8 @@ def __check_version(console):
 
 def __check_config(console, env_var, default, schema_path, name):
     path = os.environ.get(env_var, default=default)
-    var = os.environ.get(env_var)
-    pad = os.environ.get('MPYL_CONFIG_PATH', default='mpyl_config.yml')
-    pad2 = os.environ.get('MPYL_CONFIG_PATH', default='kak')
-    print(f"VAR {env_var} {var} {pad}, {pad2}")
-    location = f"{name} at '/{path}' via environment variable '{env_var}'" if var is not None else f"{name} at '/{path}'"
+    location = f"{name} at '/{path}' via environment variable '{env_var}'" if os.environ.get(
+        env_var) else f"{name} at '/{path}'"
     if os.path.exists(path):
         console.log(f"  ✅ Found {location}")
 
