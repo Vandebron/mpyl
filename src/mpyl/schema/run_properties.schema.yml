@@ -18,6 +18,9 @@ properties:
       local:
         description: Whether the run is on a local machine or not
         type: string
+        enum:
+          - 'true'
+          - 'false'
       run:
         description: defines the run properties
         type: object
