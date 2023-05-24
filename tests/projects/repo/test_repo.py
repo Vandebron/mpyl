@@ -3,6 +3,7 @@ import os
 import pytest
 from pyaml_env import parse_config
 
+from src.mpyl import DEFAULT_CONFIG_FILE_NAME
 from src.mpyl.utilities.repo import RepoConfig
 from tests import root_test_path
 from tests.test_resources import test_data
@@ -20,6 +21,6 @@ class TestRepo:
         assert changes_in_branch[-1].files_touched == changes_in_commit
 
     def test_load_config(self):
-        yaml_values = parse_config(self.resource_path / "mpyl_config.yml")
+        yaml_values = parse_config(self.resource_path / DEFAULT_CONFIG_FILE_NAME)
         config = RepoConfig(yaml_values)
         assert config.main_branch == 'main'

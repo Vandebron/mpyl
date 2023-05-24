@@ -7,6 +7,7 @@ from jsonschema import ValidationError
 from pyaml_env import parse_config
 from ruamel.yaml import YAML  # type: ignore
 
+from src.mpyl import DEFAULT_CONFIG_FILE_NAME
 from src.mpyl.project import Project, Stages, Stage, Target
 from src.mpyl.steps.models import Output, ArtifactType, RunProperties, VersioningProperties, ConsoleProperties
 from src.mpyl.steps.steps import Steps
@@ -69,7 +70,7 @@ class TestSteps:
         assert result.output.message == "Stage 'build' not defined on project 'test'"
 
     def test_should_return_error_if_config_invalid(self):
-        config_values = parse_config(self.resource_path / "mpyl_config.yml")
+        config_values = parse_config(self.resource_path / DEFAULT_CONFIG_FILE_NAME)
         config_values['kubernetes']['rancher']['cluster']['test']['invalid'] = 'somevalue'
         properties = RunProperties("id", Target.PULL_REQUEST, VersioningProperties("", "feature/ARC-123", 1, None),
                                    config_values, ConsoleProperties("INFO", 130))

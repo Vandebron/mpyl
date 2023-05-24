@@ -12,6 +12,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 from ..build.jenkins import get_token
+from .... import DEFAULT_CONFIG_FILE_NAME
 from ....utilities.github import GithubConfig
 from ....utilities.jenkins import JenkinsConfig
 from ....utilities.pyaml_env import parse_config
@@ -36,7 +37,7 @@ def perform_health_checks(console: Console):
 
 
 def __check_jenkins(console):
-    path = os.environ.get('MPYL_CONFIG_PATH', default='mpyl_config.yml')
+    path = os.environ.get('MPYL_CONFIG_PATH', default=DEFAULT_CONFIG_FILE_NAME)
     if not os.path.exists(path):
         return
 

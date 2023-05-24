@@ -9,6 +9,7 @@ from click.shell_completion import CompletionItem
 from rich.console import Console
 from rich.markdown import Markdown
 
+from .. import DEFAULT_CONFIG_FILE_NAME
 from . import CliContext, CONFIG_PATH_HELP, check_updates, get_meta_version
 from . import create_console_logger
 from .commands.build.jenkins import JenkinsRunParameters, run_jenkins
@@ -30,7 +31,7 @@ async def warn_if_update(console: Console):
 
 @click.group('build')
 @click.option('--config', '-c', required=True, type=click.Path(exists=True), help=CONFIG_PATH_HELP,
-              envvar="MPYL_CONFIG_PATH", default='mpyl_config.yml')
+              envvar="MPYL_CONFIG_PATH", default=DEFAULT_CONFIG_FILE_NAME)
 @click.option('--verbose', '-v', is_flag=True, default=False)
 @click.pass_context
 def build(ctx, config, verbose):
