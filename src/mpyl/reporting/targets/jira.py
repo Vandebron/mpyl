@@ -90,7 +90,7 @@ class JiraConfig:
         if not jira_config:
             raise KeyError(f'jira section needs to be defined in {DEFAULT_CONFIG_FILE_NAME}')
         return JiraConfig(site=jira_config['site'], user_name=jira_config['userName'], password=jira_config['password'],
-                          ticket_pattern=re.compile(jira_config.get('ticketPattern', '[A-Za-z]{3,}-\\d+')),
+                          ticket_pattern=re.compile(jira_config.get('ticketPattern', '[A-Za-z]{2,}-\\d+')),
                           token=jira_config.get('token'))
 
 
