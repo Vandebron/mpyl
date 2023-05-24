@@ -12,19 +12,26 @@
     ```
 
 ## ..run tests and checks
+
 To run linting (`pylint`), type checking (`mypy`) and testing (`pytest`) in one go, run:
+
 ```shell
 pipenv run validate
 ```
+
 ## ..create a pull request build
+
 After every push, if all validation passes, a test release is pushed to https://test.pypi.org/project/mpyl/.
 The naming of the version follows a `<pr_number>.<build_number>` pattern.
 
 A pull request build can be used in `Pipfile` via
+
 ```shell
 pipenv install --index https://test.pypi.org/simple/ mpyl==<PR_NUMBER>.*
 ```
+
 Resulting in:
+
 ```toml
 [[source]]
 url = "https://test.pypi.org/simple"
@@ -34,11 +41,21 @@ name = "test"
 [packages]
 mpyl = { version = "==28.403", index = "test" }
 ```
+
+## ..code style
+
+We use the [black formatter](https://black.readthedocs.io/en/stable/getting_started.html) in our codebase.
+Check the instructions on how to set it up for your
+IDE [here](https://black.readthedocs.io/en/stable/integrations/editors.html).
+
 ## ..create a new release
+
 Using the [Github cli](https://cli.github.com/), run:
+
 ```shell
 gh release create 0.0.2 --generate-notes
 ```
+
 which will trigger a build and release to https://pypi.org/project/mpyl/
 
 ## ..troubleshoot Python setup
