@@ -21,6 +21,7 @@ class JenkinsRunParameters:
     jenkins_password: str
     config: dict
     pipeline: str
+    pipeline_parameters: dict
     verbose: bool
 
 
@@ -58,7 +59,7 @@ def run_jenkins(run_config: JenkinsRunParameters):
                 runner = JenkinsRunner(pipeline=pipeline_info,
                                        jenkins=Jenkins(jenkins_config.url, username=run_config.jenkins_user,
                                                        password=run_config.jenkins_password), status=status)
-                runner.run()
+                runner.run(run_config.pipeline_parameters)
             except requests.ConnectionError:
                 status.console.bell()
                 status.console.log('⚠️ Could not connect. Are you on VPN?')
