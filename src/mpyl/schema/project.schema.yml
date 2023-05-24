@@ -28,18 +28,6 @@ properties:
     type: array
     items:
       type: string
-      enum:
-        - Energy Trading
-        - VPP
-        - Marketplace
-        - EV Home
-        - Data Analytics
-        - Salesforce
-        - Commercial Analytics
-        - Energy Services And Flex Analytics
-        - Finance
-        - Portfolio Management
-        - MPyL
     uniqueItems: true
     minItems: 1
   stages:
