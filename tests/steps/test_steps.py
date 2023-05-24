@@ -26,7 +26,7 @@ class TestSteps:
     build_project = test_data.get_project_with_stages({'build': 'Echo Build'}, path=str(resource_path))
 
     @staticmethod
-    def _roundtrip(output):
+    def _roundtrip(output) -> Output:
         stream = StringIO()
         yaml.dump(output, stream)
         output_string = stream.getvalue()
@@ -85,14 +85,22 @@ class TestSteps:
         assert result.output.message == 'Built test'
         assert result.output.produced_artifact is None
 
-    def test_should_succeed_if_executor_is_not_known(self):
+    def test_should_fail_if_executor_is_not_known(self):
         project = test_data.get_project_with_stages({'build': 'Unknown Build'})
         result = self.executor.execute(stage=Stage.BUILD, project=project)
         assert not result.output.success
         assert result.output.message == "Executor 'Unknown Build' for 'build' not known or registered"
 
+    def test_should_fail_if_maintainer_is_not_known(self):
+        project = test_data.get_project_with_stages(stage_config={'build': 'Echo Build'}, path='',
+                                                    maintainers=['Unknown Team'])
+
+        result = self.executor.execute(stage=Stage.BUILD, project=project)
+        assert not result.output.success
+        assert result.output.message == "Maintainer(s) 'Unknown Team' not defined in config"
+
     def test_should_succeed_if_stage_is_not_known(self):
-        project = test_data.get_project_with_stages({'test': 'Some Test'})
+        project = test_data.get_project_with_stages(stage_config={'test': 'Some Test'})
         result = self.executor.execute(stage=Stage.BUILD, project=project)
         assert not result.output.success
         assert result.output.message == "Stage 'build' not defined on project 'test'"

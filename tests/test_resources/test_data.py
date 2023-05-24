@@ -52,9 +52,11 @@ def get_output() -> Output:
                                              producing_step="Producing Step", spec={'image': 'image:latest'}))
 
 
-def get_project_with_stages(stage_config: dict, path: str = ''):
+def get_project_with_stages(stage_config: dict, path: str = '', maintainers=None):
+    if maintainers is None:
+        maintainers = ['Team1', 'Team2']
     stages = Stages.from_config(stage_config)
-    return Project('test', 'Test project', path, stages, [], None, None)
+    return Project('test', 'Test project', path, stages, maintainers, None, None)
 
 
 class MockRepository(Repository):

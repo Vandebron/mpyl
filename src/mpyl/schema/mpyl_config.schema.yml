@@ -226,7 +226,14 @@ definitions:
   Project:
     type: object
     additionalProperties: false
+    required:
+      - allowedMaintainers
+      - deployment
     properties:
+      allowedMaintainers:
+        type: array
+        items:
+          type: string
       deployment:
         type: object
         additionalProperties: false
