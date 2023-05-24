@@ -62,6 +62,7 @@ kubernetes:
         clusterEnv: prd
         context: digital-k8s-prod
 project: # default values
+  allowedMaintainers: [ 'Team1', 'Team2' ]
   deployment:
     traefik:
       enabled: true

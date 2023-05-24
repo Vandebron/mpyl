@@ -75,6 +75,7 @@ kubernetes:
         clusterEnv: prd
         context: acme-k8s-prod
 project: # default values
+  allowedMaintainers: [ 'Team1', 'Team2' ]
   deployment:
     kubernetes:
       job:
