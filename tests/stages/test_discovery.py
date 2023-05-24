@@ -1,13 +1,16 @@
-import os
+from pathlib import Path
 
-import pytest
+from ruamel.yaml import YAML
 
+from mpyl.steps import Output
 from src.mpyl.project import Stage
 from src.mpyl.projects.find import load_projects
-from src.mpyl.stages.discovery import find_invalidated_projects_for_stage
+from src.mpyl.stages.discovery import find_invalidated_projects_for_stage, output_invalidated
 from src.mpyl.utilities.repo import Revision
-from tests import root_test_path
+from tests import root_test_path, test_resource_path
 from tests.test_resources import test_data
+
+yaml = YAML()
 
 
 class TestDiscovery:
@@ -31,3 +34,17 @@ class TestDiscovery:
                                                           [Revision(0, "hash", {'projects/job/file.py',
                                                                                 'some_file.txt'})])
         assert 1 == len(invalidated)
+
+    def test_invalidation_logic(self):
+        test_output = Path(test_resource_path / "deployment" / ".mpl" / "TEST.yml").read_text(encoding="utf-8")
+        output = yaml.load(test_output)
+        assert not output.success, "output should not be successful"
+        assert output_invalidated(None, "hash"), "should be invalidated if no output"
+        assert output_invalidated(output, "hash"), "should be invalidated if output is not successful"
+        assert output_invalidated(Output(success=True, message="No artifact produced"),
+                                  "hash"), "should be invalidated if no artifact produced"
+
+        output.success = True
+        assert output_invalidated(output, "hash"), "should be invalidated if hash doesn't match"
+        assert not output_invalidated(output,
+                                      "a2fcde18082e14a260195b26f7f5bfed9dc8fbb4"), "should be valid if hash matches"

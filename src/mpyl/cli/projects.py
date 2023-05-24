@@ -8,6 +8,7 @@ from click import ParamType, BadParameter
 from click.shell_completion import CompletionItem
 from rich.markdown import Markdown
 
+from ..constants import DEFAULT_CONFIG_FILE_NAME
 from . import CliContext, CONFIG_PATH_HELP, create_console_logger
 from .commands.projects.formatting import print_project
 from ..project import validate_project, load_project, Project
@@ -23,7 +24,7 @@ class ProjectsContext:
 
 @click.group('projects')
 @click.option('--config', '-c', required=True, type=click.Path(exists=True), help=CONFIG_PATH_HELP,
-              envvar="MPYL_CONFIG_PATH", default='mpyl_config.yml')
+              envvar="MPYL_CONFIG_PATH", default=DEFAULT_CONFIG_FILE_NAME)
 @click.option('--verbose', '-v', is_flag=True, default=False)
 @click.option('--filter', '-f', 'filter_', required=False, type=click.STRING, help='Filter based on filepath ')
 @click.pass_context

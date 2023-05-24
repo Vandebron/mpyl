@@ -33,6 +33,7 @@ from atlassian import Jira
 
 from . import Reporter, ReportOutcome
 from ..formatting.markdown import markdown_for_stage
+from ...constants import DEFAULT_CONFIG_FILE_NAME
 from ...project import Stage
 from ...steps.run import RunResult
 
@@ -87,7 +88,7 @@ class JiraConfig:
     def from_config(config: dict):
         jira_config = config.get('jira')
         if not jira_config:
-            raise KeyError('jira section needs to be defined in mpyl_config.yml')
+            raise KeyError(f'jira section needs to be defined in {DEFAULT_CONFIG_FILE_NAME}')
         return JiraConfig(site=jira_config['site'], user_name=jira_config['userName'], password=jira_config['password'],
                           ticket_pattern=re.compile(jira_config.get('ticketPattern', '[A-Za-z]{3,}-\\d+')),
                           token=jira_config.get('token'))

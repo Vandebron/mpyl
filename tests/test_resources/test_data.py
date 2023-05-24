@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME
 from src.mpyl.utilities.pyaml_env import parse_config
 
 from src.mpyl.project import load_project, Target, Project, Stages
@@ -10,7 +11,7 @@ from src.mpyl.utilities.repo import Repository, RepoConfig
 from tests import root_test_path
 
 resource_path = root_test_path / "test_resources"
-config_values = parse_config(resource_path / "mpyl_config.yml")
+config_values = parse_config(resource_path / DEFAULT_CONFIG_FILE_NAME)
 
 RUN_PROPERTIES = RunProperties(
     RunContext("id", "http://localhost/run", "http://localhost/changes", "http://localhost/tests", "somebody",
@@ -20,8 +21,10 @@ RUN_PROPERTIES = RunProperties(
     config_values,
     ConsoleProperties("INFO", 130))
 
+
 def get_config_values() -> dict:
     return config_values
+
 
 def get_project() -> Project:
     return load_project(resource_path, Path("test_project.yml"), True)

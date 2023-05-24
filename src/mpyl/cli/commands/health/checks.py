@@ -12,6 +12,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 from ..build.jenkins import get_token
+from ....constants import DEFAULT_CONFIG_FILE_NAME, DEFAULT_RUN_PROPERTIES_FILE_NAME
 from ....utilities.github import GithubConfig
 from ....utilities.jenkins import JenkinsConfig
 from ....utilities.pyaml_env import parse_config
@@ -28,7 +29,7 @@ def perform_health_checks(console: Console):
                    schema_path='../../../schema/mpyl_config.schema.yml', name='config')
 
     console.print(Markdown('*Run configuration*'))
-    __check_config(console, env_var='MPYL_RUN_PROPERTIES_PATH', default='run_properties.yml',
+    __check_config(console, env_var='MPYL_RUN_PROPERTIES_PATH', default=DEFAULT_RUN_PROPERTIES_FILE_NAME,
                    schema_path='../../../schema/run_properties.schema.yml', name='run properties')
 
     console.print(Markdown('*Jenkins*'))
@@ -36,7 +37,7 @@ def perform_health_checks(console: Console):
 
 
 def __check_jenkins(console):
-    path = os.environ.get('MPYL_CONFIG_PATH', default='mpyl_config.yml')
+    path = os.environ.get('MPYL_CONFIG_PATH', default=DEFAULT_CONFIG_FILE_NAME)
     if not os.path.exists(path):
         return
 
