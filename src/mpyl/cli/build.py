@@ -125,15 +125,23 @@ class Pipeline(ParamType):
 )
 @click.option(
     '--test', '-t',
-    help='A specific test version on https://test.pypi.org/project/mpyl/ to run',
+    help='A specific test version on https://test.pypi.org/project/mpyl/ to use for the build.',
     type=click.STRING,
     required=False
 )
+@click.option(
+    '--arguments', '-a',
+    multiple=True,
+    help='A series of arguments to pass to the pipeline. Note that will run within the pipenv in jenkins. '
+         'To execute `mpyl build status`, pass `-a run -a mpyl -a build -a status`',
+)
 @click.pass_context
-def jenkins(ctx, user, password, pipeline, test):
+def jenkins(ctx, user, password, pipeline, test, arguments):
     asyncio.run(warn_if_update(ctx.obj.console))
     selected_pipeline = pipeline if pipeline else ctx.obj.config['jenkins']['defaultPipeline']
     pipeline_parameters = {'TEST': 'true', 'VERSION': test} if test else {}
+    if arguments:
+        pipeline_parameters['PIPENV_PARAMS'] = " ".join(arguments)
     run_argument = JenkinsRunParameters(jenkins_user=user, jenkins_password=password, config=ctx.obj.config,
                                         pipeline=selected_pipeline, pipeline_parameters=pipeline_parameters,
                                         verbose=ctx.obj.verbose)
