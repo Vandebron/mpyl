@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from src.mpyl import DEFAULT_CONFIG_FILE_NAME
+from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME
 from src.mpyl.utilities.pyaml_env import parse_config
 
 from src.mpyl.project import load_project, Target, Project, Stages
@@ -21,8 +21,10 @@ RUN_PROPERTIES = RunProperties(
     config_values,
     ConsoleProperties("INFO", 130))
 
+
 def get_config_values() -> dict:
     return config_values
+
 
 def get_project() -> Project:
     return load_project(resource_path, Path("test_project.yml"), True)

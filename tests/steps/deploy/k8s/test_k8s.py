@@ -4,7 +4,7 @@ import pytest
 from kubernetes.client import V1Probe, V1ObjectMeta
 from pyaml_env import parse_config
 
-from src.mpyl import DEFAULT_CONFIG_FILE_NAME
+from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME
 from src.mpyl.steps.deploy.kubernetes import DeployKubernetes
 from src.mpyl.project import Target, Project
 from src.mpyl.steps.deploy.k8s import cluster_config

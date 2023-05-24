@@ -9,7 +9,7 @@ from click.shell_completion import CompletionItem
 from rich.console import Console
 from rich.markdown import Markdown
 
-from .. import DEFAULT_CONFIG_FILE_NAME
+from ..constants import DEFAULT_CONFIG_FILE_NAME, DEFAULT_RUN_PROPERTIES_FILE_NAME
 from . import CliContext, CONFIG_PATH_HELP, check_updates, get_meta_version
 from . import create_console_logger
 from .commands.build.jenkins import JenkinsRunParameters, run_jenkins
@@ -44,7 +44,7 @@ def build(ctx, config, verbose):
 
 @build.command(help='Run an MPyL build')
 @click.option('--properties', '-p', required=False, type=click.Path(exists=False), help='Path to run properties',
-              envvar="MPYL_RUN_PROPERTIES_PATH", default='run_properties.yml')
+              envvar="MPYL_RUN_PROPERTIES_PATH", default=DEFAULT_RUN_PROPERTIES_FILE_NAME)
 @click.option('--ci', is_flag=True,
               help='Run as CI build instead of local. Ignores unversioned changes.')
 @click.option('--all', 'all_', is_flag=True, help='Build all projects, regardless of changes on branch')

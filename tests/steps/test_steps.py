@@ -7,7 +7,7 @@ from jsonschema import ValidationError
 from pyaml_env import parse_config
 from ruamel.yaml import YAML  # type: ignore
 
-from src.mpyl import DEFAULT_CONFIG_FILE_NAME
+from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME
 from src.mpyl.project import Project, Stages, Stage, Target
 from src.mpyl.steps.models import Output, ArtifactType, RunProperties, VersioningProperties, ConsoleProperties
 from src.mpyl.steps.steps import Steps

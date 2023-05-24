@@ -33,7 +33,7 @@ from atlassian import Jira
 
 from . import Reporter, ReportOutcome
 from ..formatting.markdown import markdown_for_stage
-from ... import DEFAULT_CONFIG_FILE_NAME
+from ...constants import DEFAULT_CONFIG_FILE_NAME
 from ...project import Stage
 from ...steps.run import RunResult
 

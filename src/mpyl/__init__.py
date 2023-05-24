@@ -53,8 +53,6 @@ from .cli.projects import projects
 from .utilities.pyaml_env import parse_config
 from .utilities.repo import RepoConfig, Repository
 
-DEFAULT_CONFIG_FILE_NAME = 'mpyl_config.yml'
-
 
 @click.group(name='mpyl')
 def main_group():

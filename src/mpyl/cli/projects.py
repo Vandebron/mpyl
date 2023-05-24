@@ -8,7 +8,7 @@ from click import ParamType, BadParameter
 from click.shell_completion import CompletionItem
 from rich.markdown import Markdown
 
-from .. import DEFAULT_CONFIG_FILE_NAME
+from ..constants import DEFAULT_CONFIG_FILE_NAME
 from . import CliContext, CONFIG_PATH_HELP, create_console_logger
 from .commands.projects.formatting import print_project
 from ..project import validate_project, load_project, Project
