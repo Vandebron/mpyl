@@ -40,6 +40,7 @@ def __check_jenkins(console):
     path = os.environ.get('MPYL_CONFIG_PATH', default=DEFAULT_CONFIG_FILE_NAME)
     if not os.path.exists(path):
         console.log(f'  ❌ Configuration not found at: {path}')
+        return
 
     parsed = parse_config(path)
 
