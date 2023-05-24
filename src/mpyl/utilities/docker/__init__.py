@@ -2,7 +2,7 @@
 import logging
 from dataclasses import dataclass
 from logging import Logger
-from typing import Dict, Optional, Iterator, Iterable, cast
+from typing import Dict, Optional, Iterator, Iterable, cast, Union
 
 from python_on_whales import docker, Image, Container
 from rich.text import Text
@@ -59,23 +59,16 @@ class DockerConfig:
 
 def execute_with_stream(logger: Logger, container: Container, command: str, task_name: str) -> None:
     result = cast(Iterable[tuple[str, bytes]], container.execute(command=command.split(' '), stream=True))
-    stream_encoded_logging(logger, result, task_name)
+    stream_docker_logging(logger, result, task_name)
 
 
-def stream_encoded_logging(logger: Logger, generator: Iterable[tuple[str, bytes]], task_name: str,
-                           level=logging.INFO) -> None:
-    def decode():
-        for _origin, value in generator:
-            yield value.decode(errors="replace")
-
-    stream_docker_logging(logger, decode(), task_name, level)
-
-
-def stream_docker_logging(logger: Logger, generator: Iterator[str], task_name: str, level=logging.INFO) -> None:
+def stream_docker_logging(logger: Logger, generator: Union[Iterator[str], Iterable[tuple[str, bytes]]], task_name: str,
+                          level=logging.INFO) -> None:
     while True:
         try:
-            output = next(generator)
-            logger.log(level, Text.from_ansi(output))
+            next_item = next(generator)
+            log_line = next_item[1].decode(errors="replace") if isinstance(next_item, tuple) else next_item
+            logger.log(level, Text.from_ansi(log_line))
         except StopIteration:
             logger.info(f'{task_name} complete.')
             break

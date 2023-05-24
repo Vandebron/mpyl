@@ -7,7 +7,7 @@ from python_on_whales import DockerClient
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
 from ...project import Stage
-from ...utilities.docker import stream_encoded_logging
+from ...utilities.docker import stream_docker_logging
 
 
 class IntegrationTestAfter(Step):
@@ -24,7 +24,7 @@ class IntegrationTestAfter(Step):
         self._logger.debug(f"Stopping containers in {compose_file}")
         docker_client = DockerClient(compose_files=[compose_file])
         logs = docker_client.compose.logs(stream=True)
-        stream_encoded_logging(logger=self._logger, generator=logs, task_name=f'Stop {compose_file}')
+        stream_docker_logging(logger=self._logger, generator=logs, task_name=f'Stop {compose_file}')
 
         docker_client.compose.down(remove_orphans=True)
         container_names = list(map(lambda l: l.name, docker_client.compose.ps(all=True)))
