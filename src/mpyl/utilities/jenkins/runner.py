@@ -133,7 +133,7 @@ class JenkinsRunner:
         os.system('afplay /System/Library/Sounds/' + ('Glass.aiff' if finished_build.is_good() else 'Sosumi.aiff'))
         sys.exit()
 
-    def run(self):
+    def run(self, pipeline_parameters: dict):
         job: Job = self.get_job(self.pipeline.job_name())
         if not list(job.get_build_ids()):
             self.await_parameter_build(job)
@@ -150,7 +150,7 @@ class JenkinsRunner:
 
         last_build = 0
 
-        self.jenkins.build_job(self.pipeline.job_name(), params={})
+        self.jenkins.build_job(self.pipeline.job_name(), params=pipeline_parameters)
 
         if last_build_number > 1:
             last_build = build.get_duration().seconds
