@@ -137,6 +137,7 @@ class Steps:
             after_result.produced_artifact = main_step_artifact
 
         if not main_result.success:
+            after_result.message = main_result.message
             after_result.success = False
 
         return after_result
