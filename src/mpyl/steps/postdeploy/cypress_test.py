@@ -39,6 +39,8 @@ class CypressTest(Step):
             raise TypeError("Docker run command should return a container")
 
         try:
+            execute_with_stream(logger=self._logger, container=docker_container, command="yarn install",
+                                task_name="Installing cypress")
             execute_with_stream(logger=self._logger, container=docker_container, command="yarn cypress install",
                                 task_name="Installing cypress")
             execute_with_stream(logger=self._logger, container=docker_container, command="yarn cypress verify",
