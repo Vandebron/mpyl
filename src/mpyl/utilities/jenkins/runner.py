@@ -109,6 +109,8 @@ class JenkinsRunner:
                 stop_build = Confirm.ask("Stop build?")
                 if stop_build:
                     build_to_follow.stop()
+                else:
+                    sys.exit()
 
             signal.signal(signal.SIGINT, cancel_handler)
             for line in build_to_follow.stream_utf_8_logs():
