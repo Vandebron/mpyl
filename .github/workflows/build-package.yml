@@ -18,7 +18,6 @@ jobs:
             Pipfile.lock
 
       - name: Install pipenv
-        if: steps.cache-dependencies.outputs.cache-hit != 'true'
         run: curl https://raw.githubusercontent.com/pypa/pipenv/master/get-pipenv.py | python
 
       - name: Install dependencies
@@ -81,6 +80,7 @@ jobs:
       - name: Publish package
         id : publish
         env:
+          TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
           TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
         run: pipenv run publish
