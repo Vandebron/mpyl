@@ -98,6 +98,13 @@ class TestKubernetesChart:
             to_yaml(route)
         assert "Schema validation failed with 1234 is not of type 'string'" in str(exc_info.value)
 
+    def test_should_not_extend_whitelists_if_none_defined_for_target(self):
+        project = test_data.get_project()
+        builder = self._get_builder(project)
+        wrappers = builder.create_host_wrappers()
+        assert test_data.RUN_PROPERTIES.target == Target.PULL_REQUEST
+        assert "Test" not in wrappers[0].white_lists
+
     @pytest.mark.parametrize('template',
                              ['deployment', 'service', 'service-account', 'sealed-secrets', 'ingress-https-route',
                               'dockertest-ingress-0-whitelist', 'dockertest-ingress-1-whitelist'])
