@@ -290,7 +290,7 @@ definitions:
         type: string
       ticketPattern:
         type: [ string, null ]
-        default: '[A-Za-z]{3,}-\\d+'
+        default: '[A-Za-z]{2,}-\d+'
         description: 'A pattern that extracts a ticket number from the branch name'
     required:
       - site
