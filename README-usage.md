@@ -1,4 +1,4 @@
-# Usage
+# 🖐️ Usage
 
 ## ..MPyL CLI
 
