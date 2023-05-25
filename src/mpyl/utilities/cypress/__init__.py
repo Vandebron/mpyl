@@ -14,5 +14,5 @@ class CypressConfig:
         if not cypress_config:
             raise KeyError('Cypress section needs to be defined in mpyl_config.yml')
 
-        return CypressConfig(cypress_source_code_path=cypress_config['cypressSourceCodePath'],
-                             record_key=cypress_config['recordKey'])
+        return CypressConfig(cypress_source_code_path=cypress_config.get('cypressSourceCodePath'),
+                             record_key=cypress_config.get('recordKey'))
