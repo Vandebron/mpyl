@@ -11,6 +11,8 @@ definitions:
         "$ref": "#/definitions/Docker"
       whiteLists:
         "$ref": "#/definitions/Whitelists"
+      cypress:
+        "$ref": "#/definitions/Cypress"
       kubernetes:
         "$ref": "#/definitions/Kubernetes"
       project:
@@ -56,7 +58,18 @@ definitions:
               items:
                 minItems: 1
                 type: string
-
+  Cypress:
+    type: object
+    additionalProperties: false
+    properties:
+      recordKey:
+        type: string
+        description: 'Key for recording runs to cypress dashboard'
+      cypressSourceCodePath:
+        type: string
+        description: 'Path to cypress source code'
+    required:
+      - cypressSourceCodePath
   Kubernetes:
     type: object
     additionalProperties: false

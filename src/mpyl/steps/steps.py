@@ -21,6 +21,7 @@ from .deploy.kubernetes import DeployKubernetes
 from .deploy.kubernetes_job import DeployKubernetesJob
 from .deploy.kubernetes_spark_job import DeployKubernetesSparkJob
 from .models import Output, Input, RunProperties, ArtifactType, Artifact
+from .postdeploy.cypress_test import CypressTest
 from .test.dockertest import TestDocker
 from .test.echo import TestEcho
 from .test.sbt import TestSbt
@@ -92,7 +93,9 @@ class Steps:
                 DeployKubernetesSparkJob(logger),
                 EphemeralDockerDeploy(logger)
             },
-            Stage.POST_DEPLOY: set(),
+            Stage.POST_DEPLOY: {
+                CypressTest(logger)
+            }
         }
 
         self._properties = properties

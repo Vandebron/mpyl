@@ -2,9 +2,10 @@
 import logging
 from dataclasses import dataclass
 from logging import Logger
-from typing import Dict, Optional
+from typing import Dict, Optional, Iterator, Iterable, cast, Union
 
-from python_on_whales import docker
+from python_on_whales import docker, Image, Container
+from rich.text import Text
 
 from ...project import Project
 from ...steps.models import Input
@@ -56,11 +57,18 @@ class DockerConfig:
             raise KeyError(f'Docker config could not be loaded from {config}') from exc
 
 
-def stream_docker_logging(logger: Logger, generator, task_name: str, level=logging.INFO) -> None:
+def execute_with_stream(logger: Logger, container: Container, command: str, task_name: str) -> None:
+    result = cast(Iterator[tuple[str, bytes]], container.execute(command=command.split(' '), stream=True))
+    stream_docker_logging(logger, result, task_name)
+
+
+def stream_docker_logging(logger: Logger, generator: Union[Iterator[str], Iterator[tuple[str, bytes]]], task_name: str,
+                          level=logging.INFO) -> None:
     while True:
         try:
-            output = next(generator)
-            logger.log(level, str(output).strip('\n'))
+            next_item = next(generator)
+            log_line = next_item[1].decode(errors="replace") if isinstance(next_item, tuple) else next_item
+            logger.log(level, Text.from_ansi(log_line))
         except StopIteration:
             logger.info(f'{task_name} complete.')
             break
@@ -89,7 +97,8 @@ def build(logger: Logger, root_path: str, file_path: str, image_tag: str, target
 
     logs = docker.buildx.build(context_path=root_path, file=file_path, tags=[image_tag], target=target,
                                stream_logs=True)
-    stream_docker_logging(logger=logger, generator=logs, task_name=f'Build {file_path}:{target}')
+    if logs is not None and not isinstance(logs, Image):
+        stream_docker_logging(logger=logger, generator=logs, task_name=f'Build {file_path}:{target}')
     logger.debug(logs)
     return True
 
