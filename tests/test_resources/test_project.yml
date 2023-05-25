@@ -68,6 +68,9 @@ deployment:
         tls:
           all: "le-custom-prod-wildcard-cert"
         insecure: true
+        whitelists:
+          test:
+            - "Test"
       - host:
           all: "Host(`some.other.host.com`)"
         servicePort: 4091
