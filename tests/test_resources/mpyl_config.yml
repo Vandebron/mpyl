@@ -45,7 +45,7 @@ whiteLists:
     - name: 'K8s-Test'
       values: [ '1.2.3.0', '1.2.3.1' ]
 cypress:
-  cypressSourceCodePath: './test_resources/cypress'
+  cypressSourceCodePath: 'test_resources/cypress'
 kubernetes:
   rancher:
     cluster:
