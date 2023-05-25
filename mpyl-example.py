@@ -4,7 +4,6 @@ import sys
 from logging import Logger
 
 
-
 def main(log: Logger, args: argparse.Namespace):
     if args.local:
         from src.mpyl.reporting.targets.jira import JiraReporter
@@ -65,12 +64,13 @@ def main(log: Logger, args: argparse.Namespace):
     if not args.local:
         accumulator.add(check.send_report(run_result))
         accumulator.add(slack_channel.send_report(run_result))
+        if slack_personal:
+            accumulator.add(slack_personal.send_report(run_result))
         accumulator.add(jira.send_report(run_result))
         accumulator.add(github_comment.send_report(run_result))
         if accumulator.failures:
             log.warning(f'Failed to send the following report(s): {", ".join(accumulator.failures)}')
             sys.exit(1)
-
 
     sys.exit(0 if run_result.is_success else 1)
 

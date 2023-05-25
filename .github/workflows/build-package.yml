@@ -18,7 +18,7 @@ jobs:
             Pipfile.lock
 
       - name: Install pipenv
-        run: curl https://raw.githubusercontent.com/pypa/pipenv/master/get-pipenv.py | python
+        run: pip install pipenv
 
       - name: Install dependencies
         if: steps.cache-dependencies.outputs.cache-hit != 'true'
@@ -78,15 +78,12 @@ jobs:
         run: pipenv run build
 
       - name: Publish package
-        uses: pypa/gh-action-pypi-publish@a56da0b891b3dc519c7ee3284aff1fad93cc8598
-        if: github.ref_name != 'main'
         id : publish
-        with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          repository-url: https://test.pypi.org/legacy/
-          verbose: true
-          print-hash: true
-          skip-existing: true
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+          TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
+        run: pipenv run publish
 
       - name: Comment Published package
         uses: thollander/actions-comment-pull-request@v2
