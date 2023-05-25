@@ -237,7 +237,7 @@ class ChartBuilder:
 
         def to_white_list(configured: Optional[TargetProperty[list[str]]]) -> dict[str, list[str]]:
             white_lists = self.config_defaults.white_lists['default'].copy()
-            if configured:
+            if configured and configured.get_value(self.target):
                 white_lists.extend(configured.get_value(self.target))
 
             return dict(filter(lambda x: x[0] in white_lists, address_dictionary.items()))
