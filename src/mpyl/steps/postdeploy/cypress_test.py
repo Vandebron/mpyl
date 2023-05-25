@@ -26,7 +26,7 @@ class CypressTest(Step):
         self._logger.info(f"Running cypress tests for project {step_input.project.name}")
 
         cypress_config = CypressConfig.from_config(step_input.run_properties.config)
-        volume_path = os.path.join('.', cypress_config.volume_path)
+        volume_path = os.path.join('.', cypress_config.cypress_source_code_path)
 
         if step_input.project.dependencies and step_input.project.dependencies.postdeploy:
             specs_string = ', '.join(step_input.project.dependencies.postdeploy)

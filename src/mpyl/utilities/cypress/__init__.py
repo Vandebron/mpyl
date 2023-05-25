@@ -5,7 +5,7 @@ from typing import Optional
 
 @dataclass(frozen=True)
 class CypressConfig:
-    volume_path: str
+    cypress_source_code_path: str
     record_key: Optional[str]
 
     @staticmethod
@@ -14,4 +14,5 @@ class CypressConfig:
         if not cypress_config:
             raise KeyError('Cypress section needs to be defined in mpyl_config.yml')
 
-        return CypressConfig(volume_path=cypress_config['volumePath'], record_key=cypress_config['recordKey'])
+        return CypressConfig(cypress_source_code_path=cypress_config['cypressSourceCodePath'],
+                             record_key=cypress_config['recordKey'])
