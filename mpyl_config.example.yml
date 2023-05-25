@@ -17,7 +17,7 @@ jira:
   site: 'https://acme.atlassian.net'
   userName: !ENV ${MPYL_JIRA_TOKEN_USR:jira_user}
   password: !ENV ${MPYL_JIRA_TOKEN_PSW:jira_password}
-  ticketPattern: '[A-Za-z]{3,}-\d+'
+  ticketPattern: '[A-Za-z]{2,}-\d+'
 docker:
   registry:
     hostName: 'acme.docker.com'
