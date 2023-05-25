@@ -46,7 +46,7 @@ whiteLists:
       values: [ '1.2.3.0', '1.2.3.1' ]
 cypress:
   recordKey: 'b6a2aab1-0b80-4ca0-a56c-1c8d98a8189c'
-  volumePath: './test_resources/cypress'
+  cypressSourceCodePath: './test_resources/cypress'
 kubernetes:
   rancher:
     cluster:

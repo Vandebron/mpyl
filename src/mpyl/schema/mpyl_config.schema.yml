@@ -64,10 +64,12 @@ definitions:
     properties:
       recordKey:
         type: string
-      volumePath:
+        description: 'Key for recording runs to cypress dashboard'
+      cypressSourceCodePath:
         type: string
+        description: 'Path to cypress source code'
     required:
-      - volumePath
+      - cypressSourceCodePath
   Kubernetes:
     type: object
     additionalProperties: false
