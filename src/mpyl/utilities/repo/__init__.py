@@ -22,11 +22,13 @@ class Revision:
     """Paths to files that were altered in this hash"""
 
 
+@dataclass(frozen=True)
 class RepoConfig:
     main_branch: str
 
-    def __init__(self, config: Dict):
-        self.main_branch = config['cvs']['git']['mainBranch']
+    @staticmethod
+    def from_config(config: Dict):
+        return RepoConfig(main_branch=config['cvs']['git']['mainBranch'])
 
 
 class Repository:

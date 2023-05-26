@@ -74,7 +74,7 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter
     )
     logger = logging.getLogger('mpyl')
     try:
-        with Repository(RepoConfig(mpyl_run_parameters.run_config.config)) as repo:
+        with Repository(RepoConfig.from_config(mpyl_run_parameters.run_config.config)) as repo:
 
             run_plan = get_build_plan(logger, repo, mpyl_run_parameters)
 

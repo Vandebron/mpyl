@@ -22,5 +22,5 @@ class TestRepo:
 
     def test_load_config(self):
         yaml_values = parse_config(self.resource_path / DEFAULT_CONFIG_FILE_NAME)
-        config = RepoConfig(yaml_values)
+        config = RepoConfig.from_config(yaml_values)
         assert config.main_branch == 'main'

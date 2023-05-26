@@ -33,7 +33,8 @@ def projects(ctx, config, verbose, filter_):
     console = create_console_logger(local=False, verbose=verbose)
     parsed_config = parse_config(config)
     ctx.obj = ProjectsContext(
-        cli=CliContext(config=parsed_config, repo=ctx.with_resource(Repository(config=RepoConfig(parsed_config))),
+        cli=CliContext(config=parsed_config,
+                       repo=ctx.with_resource(Repository(config=RepoConfig.from_config(parsed_config))),
                        console=console, verbose=verbose), filter=filter_ if filter_ else '')
 
 
@@ -56,7 +57,7 @@ class ProjectPath(ParamType):
                                param=param)
 
         parsed_config = parse_config(ctx.parent.params['config'])
-        repo = ctx.with_resource(Repository(config=RepoConfig(parsed_config)))
+        repo = ctx.with_resource(Repository(config=RepoConfig.from_config(parsed_config)))
         found_projects = repo.find_projects(incomplete)
         return [
             CompletionItem(value=proj.replace(f'/{Project.project_yaml_path()}', ''))
@@ -92,6 +93,7 @@ def lint(obj: ProjectsContext):
     obj.cli.console.print(f'Validated {valid + invalid} projects. {valid} valid, {invalid} invalid')
     if invalid > 0:
         click.get_current_context().exit(1)
+
 
 if __name__ == '__main__':
     projects()  # pylint: disable=no-value-for-parameter
