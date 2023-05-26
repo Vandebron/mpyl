@@ -150,3 +150,22 @@ them and for instructions on how to create your own reporter.
 ## ..create a custom step
 
 See `mpyl.steps`.
+
+## ..create a custom CI-CD flow
+
+MPyL is not a task or even a tool to define and run CI-CD flows. It does however provide a building blocks that can
+easily be plugged into your own CI-CD flow.
+Here's an example using [Dagster](https://dagster.io/) as a runner
+
+<details>
+  <summary>Dagster flow runner</summary>
+```python
+.. include:: mpyl-dagster-example.py
+```
+</details>
+
+It can be started from the command line with `dagit --workspace workspace.yml`.
+
+![Dagster flow](documentation_images/dagster-flow-min.png)
+![Dagster run](documentation_images/dagster-run-min.png)
+
