@@ -4,6 +4,12 @@ Similarly to mpl **modules**, we *should* update the PR details with card descri
 
 > Quoted
 
+```python
+ import a from b
+print(a + b)
+
+```
+
 # first
 # second
 
