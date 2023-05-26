@@ -5,7 +5,7 @@ At this moment Git is the only supported VCS.
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 from git import Git, Repo, Remote
 
@@ -23,12 +23,29 @@ class Revision:
 
 
 @dataclass(frozen=True)
-class RepoConfig:
-    main_branch: str
+class RepoCredentials:
+    url: str
+    user_name: str
+    password: str
 
     @staticmethod
     def from_config(config: Dict):
-        return RepoConfig(main_branch=config['cvs']['git']['mainBranch'])
+        return RepoCredentials(url=config['url'], user_name=config['userName'], password=config['password'])
+
+
+@dataclass(frozen=True)
+class RepoConfig:
+    main_branch: str
+    repo_credentials: Optional[RepoCredentials]
+
+    @staticmethod
+    def from_config(config: Dict):
+        git_config = config['cvs']['git']
+        maybe_remote_config = git_config.get('remote', None)
+        return RepoConfig(
+            main_branch=git_config['mainBranch'],
+            repo_credentials=RepoCredentials.from_config(maybe_remote_config) if maybe_remote_config else None
+        )
 
 
 class Repository:

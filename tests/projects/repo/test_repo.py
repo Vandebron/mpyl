@@ -24,3 +24,4 @@ class TestRepo:
         yaml_values = parse_config(self.resource_path / DEFAULT_CONFIG_FILE_NAME)
         config = RepoConfig.from_config(yaml_values)
         assert config.main_branch == 'main'
+        assert config.repo_credentials.url == 'https://github.com/acme/repo.git'
