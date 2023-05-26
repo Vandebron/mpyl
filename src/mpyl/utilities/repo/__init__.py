@@ -114,7 +114,7 @@ class Repository:
         if curr_rev_tag != curr_tag:
             logging.error(f"Current revision's tag and build.versioning.tag={curr_tag} "
                           f"in run_properties.yaml do not match.")
-            logging.error(f"HEAD is not at merge commit, cannot determine changed files.")
+            logging.error("HEAD is not at merge commit, cannot determine changed files.")
             return []
 
         parent_revs = curr_rev.parents
