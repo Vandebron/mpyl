@@ -1,0 +1,4 @@
+ops:
+  deploy_projects:
+    config:
+      simulate_deploy: false
