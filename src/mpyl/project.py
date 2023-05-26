@@ -258,6 +258,13 @@ class Traefik:
         hosts = values.get('hosts')
         return Traefik(hosts=(list(map(Host.from_config, hosts) if hosts else [])))
 
+@dataclass(frozen=True)
+class S3Bucket:
+    bucket: TargetProperty[str]
+
+    @staticmethod
+    def from_config(values: dict):
+        return S3Bucket(bucket=TargetProperty.from_config(values.get('bucket', {})))
 
 @dataclass(frozen=True)
 class Deployment:
@@ -265,17 +272,20 @@ class Deployment:
     properties: Properties
     kubernetes: Optional[Kubernetes]
     traefik: Optional[Traefik]
+    s3_bucket: Optional[S3Bucket]
 
     @staticmethod
     def from_config(values: dict):
         props = values.get('properties')
         kubernetes = values.get('kubernetes')
         traefik = values.get('traefik')
+        s3_bucket = values.get('s3')
 
         return Deployment(namespace=values.get('namespace'),
                           properties=Properties.from_config(props) if props else None,
                           kubernetes=Kubernetes.from_config(kubernetes) if kubernetes else None,
-                          traefik=Traefik.from_config(traefik) if traefik else None)
+                          traefik=Traefik.from_config(traefik) if traefik else None,
+                          s3_bucket=S3Bucket.from_config(s3_bucket) if s3_bucket else None)
 
 
 @dataclass(frozen=True)
@@ -315,6 +325,12 @@ class Project:
         if self.deployment is None or self.deployment.kubernetes is None:
             raise KeyError(f"Project '{self.name}' does not have kubernetes configuration")
         return self.deployment.kubernetes
+
+    @property
+    def s3_bucket(self) -> S3Bucket:
+        if self.deployment is None or self.deployment.s3_bucket is None:
+            raise KeyError(f"Project '{self.name}' does not have s3 configuration")
+        return self.deployment.s3_bucket
 
     @property
     def resources(self) -> Resources:

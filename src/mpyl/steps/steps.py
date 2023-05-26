@@ -15,6 +15,7 @@ from . import Step
 from .build.dockerbuild import BuildDocker
 from .build.echo import BuildEcho
 from .build.sbt import BuildSbt
+from .deploy.cloudfront_kubernetes_deploy import CloudFrontKubernetesDeploy
 from .deploy.echo import DeployEcho
 from .deploy.ephemeral_docker_deploy import EphemeralDockerDeploy
 from .deploy.kubernetes import DeployKubernetes
@@ -90,11 +91,12 @@ class Steps:
                 TestDocker(logger)
             },
             Stage.DEPLOY: {
+                CloudFrontKubernetesDeploy(logger),
                 DeployEcho(logger),
                 DeployKubernetes(logger),
                 DeployKubernetesJob(logger),
                 DeployKubernetesSparkJob(logger),
-                EphemeralDockerDeploy(logger)
+                EphemeralDockerDeploy(logger),
             },
             Stage.POST_DEPLOY: {
                 CypressTest(logger)
