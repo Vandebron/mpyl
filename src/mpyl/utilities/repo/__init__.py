@@ -3,13 +3,13 @@
 At this moment Git is the only supported VCS.
 """
 
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Optional
 from urllib.parse import urlparse
 
 from git import Git, Repo, Remote
-import logging
 from ...project import Project
 
 
@@ -110,7 +110,7 @@ class Repository:
         curr_rev = self._repo.rev_parse('HEAD')
         curr_rev_tag = self._repo.git.describe(curr_rev, tags=True)
         logging.debug(f"Current revision: {curr_rev} tag: {curr_rev_tag}")
-        
+
         if curr_rev_tag != curr_tag:
             logging.error(f"Current revision's tag and build.versioning.tag={curr_tag} "
                           f"in run_properties.yaml do not match.")
