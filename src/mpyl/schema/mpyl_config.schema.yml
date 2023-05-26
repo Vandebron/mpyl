@@ -119,6 +119,16 @@ definitions:
     type: object
     additionalProperties: false
     properties:
+      remote:
+        type: object
+        additionalProperties: false
+        properties:
+          url:
+            type: string
+          userName:
+            type: string
+          password:
+            type: string
       mainBranch:
         type: string
     required:

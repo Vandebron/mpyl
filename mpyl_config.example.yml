@@ -1,6 +1,10 @@
 cvs:
   git:
     mainBranch: 'main'
+    remote:
+      url: 'https://github.com/acme/repo.git'
+      userName: !ENV ${GIT_CREDENTIALS_USR}
+      password: !ENV ${GIT_CREDENTIALS_PSW}
   github:
     repository: 'acme/repo'
     token: !ENV ${GITHUB_TOKEN}
