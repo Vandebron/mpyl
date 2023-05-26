@@ -79,7 +79,7 @@ def main(log: Logger, args: argparse.Namespace):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Simple MPL pipeline')
     parser.add_argument('--local', '-l', help='a local developer run', default=False, action='store_true')
-    parser.add_argument('--tag', '-t', help='A tag run to deploy to test/acce/prod', default=False, action='store_true')
+    parser.add_argument('--tag', '-t', help='The name of the tag to build', type=str)
     parser.add_argument('--all', '-a', help='build and test everything, regardless of the changes that were made',
                         default=False, action='store_true')
     parser.add_argument('--dryrun', '-d', help="don't push or deploy images", default=False, action='store_true')
