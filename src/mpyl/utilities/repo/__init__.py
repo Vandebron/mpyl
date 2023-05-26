@@ -112,8 +112,6 @@ class Repository:
         logging.debug(f"Current revision: {curr_rev} tag: {curr_rev_tag}")
 
         if curr_rev_tag != curr_tag:
-            logging.error(f"Current revision's tag and build.versioning.tag={curr_tag} "
-                          f"in run_properties.yaml do not match.")
             logging.error("HEAD is not at merge commit, cannot determine changed files.")
             return []
 
