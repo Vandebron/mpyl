@@ -48,7 +48,12 @@ def build(ctx, config, verbose):
 @click.option('--ci', is_flag=True,
               help='Run as CI build instead of local. Ignores unversioned changes.')
 @click.option('--all', 'all_', is_flag=True, help='Build all projects, regardless of changes on branch')
-@click.option('--tag', is_flag=True, help='Trigger a tag build')
+@click.option(
+    '--tag', '-t',
+    help='Tag to build',
+    type=click.STRING,
+    required=False
+)
 @click.pass_obj
 def run(obj: CliContext, properties, ci, all_, tag):  # pylint: disable=invalid-name
     asyncio.run(warn_if_update(obj.console))

@@ -110,10 +110,13 @@ class Repository:
         curr_rev = self._repo.rev_parse('HEAD')
         curr_rev_tag = self._repo.git.describe(curr_rev, tags=True)
         logging.debug(f"Current revision: {curr_rev} tag: {curr_rev_tag}")
+        
         if curr_rev_tag != curr_tag:
             logging.error(f"Current revision's tag and build.versioning.tag={curr_tag} "
-                          f"in run_properties.yaml do not match. Cannot determine changed files.")
+                          f"in run_properties.yaml do not match.")
+            logging.error(f"HEAD is not at merge commit, cannot determine changed files.")
             return []
+
         parent_revs = curr_rev.parents
         logging.debug(f"Parent revisions: {parent_revs}")
         files_changed = self._repo.git.diff(f"{str(parent_revs[0])}..{str(parent_revs[1])}",
