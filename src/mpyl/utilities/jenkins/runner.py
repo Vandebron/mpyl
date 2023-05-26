@@ -55,6 +55,7 @@ class JenkinsRunner:
     pipeline: Pipeline
     jenkins: Jenkins
     status: Status
+    follow: bool
 
     def get_job(self, name: str) -> Job:
         try:
@@ -108,6 +109,8 @@ class JenkinsRunner:
                 stop_build = Confirm.ask("Stop build?")
                 if stop_build:
                     build_to_follow.stop()
+                else:
+                    sys.exit()
 
             signal.signal(signal.SIGINT, cancel_handler)
             for line in build_to_follow.stream_utf_8_logs():
@@ -159,4 +162,5 @@ class JenkinsRunner:
 
         new_build_number = last_build_number + 1
 
-        self.follow_logs(job, new_build_number, last_build)
+        if self.follow:
+            self.follow_logs(job, new_build_number, last_build)
