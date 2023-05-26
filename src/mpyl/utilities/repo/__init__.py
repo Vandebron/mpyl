@@ -108,7 +108,10 @@ class Repository:
 
     def changes_in_merge_commit(self) -> list[Revision]:
         curr_rev = self._repo.rev_parse('HEAD')
+        print(f"curr_rev: {curr_rev}")
         parent_revs = reversed(list(curr_rev.iter_parents(n=1)))
+        parent_revs_2 = reversed(list(curr_rev.iter_parents(n=1)))
+        print(f"parent_revs: {list(parent_revs_2)}")
         return [Revision(count, str(rev),
                          self._repo.git.diff_tree(no_commit_id=True, name_only=True, r=str(rev)).splitlines())
                 for count, rev in enumerate(parent_revs)]
