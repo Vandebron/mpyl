@@ -121,7 +121,6 @@ class Repository:
         logging.debug(f"Parent revisions: {parent_revs}")
         files_changed = self._repo.git.diff(f"{str(parent_revs[0])}..{str(parent_revs[1])}",
                                             name_only=True).splitlines()
-        logging.debug(f"Files changed: {files_changed}")
         return [
             Revision(
                 ord=0,
