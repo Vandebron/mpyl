@@ -6,23 +6,23 @@ jobs:
   pypi:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        id: install-python
         with:
-          fetch-depth: 0
+          python-version: '3.9'
+
+      - name: Install pipenv
+        run: pip install pipenv
 
       - name: Install dependencies
-        uses: VaultVulp/action-pipenv@v2.0.1
-        with:
-          command: install -d
+        run: pipenv install -d --deploy
 
       - name: Build
-        uses: VaultVulp/action-pipenv@v2.0.1
         env:
           PIPENV_DONT_LOAD_ENV: true
           MPYL_VERSION: "${{ github.event.release.name }}"
-        with:
-          command: run build
+        run: pipenv run build
 
       - name: Publish package
         env:
