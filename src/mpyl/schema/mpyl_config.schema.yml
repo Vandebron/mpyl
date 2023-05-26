@@ -124,11 +124,11 @@ definitions:
         additionalProperties: false
         properties:
           url:
-            type: string
+            type: [ string, null ]
           userName:
-            type: string
+            type: [ string, null ]
           password:
-            type: string
+            type: [ string, null ]
       mainBranch:
         type: string
     required:
