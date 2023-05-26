@@ -34,7 +34,9 @@ class CypressTest(Step):
             raise ValueError("No cypress specs are defined in the project dependencies")
 
         docker_container = docker.run(image="cypress/browsers:latest", interactive=True, detach=True,
-                                      volumes=[(volume_path, "/cypress")], workdir="/cypress")
+                                      volumes=[(volume_path, "/cypress"),
+                                               (os.path.expanduser("~/.kube/config"), "/root/.kube/config")],
+                                      workdir="/cypress")
         if not isinstance(docker_container, Container):
             raise TypeError("Docker run command should return a container")
 
@@ -46,7 +48,7 @@ class CypressTest(Step):
             latest_kubectl_version = docker_container.execute(command=['curl', '-L', '-s',
                                                                        'https://dl.k8s.io/release/stable.txt'])
             execute_with_stream(logger=self._logger, container=docker_container,
-                                command=f'curl -LO -m 10 https://dl.k8s.io/release/{latest_kubectl_version}'
+                                command=f'curl -LO -m 8 https://dl.k8s.io/release/{latest_kubectl_version}'
                                         '/bin/linux/amd64/kubectl',
                                 task_name="Installing kubectl")
             execute_with_stream(logger=self._logger, container=docker_container, command="chmod +x ./kubectl",
@@ -54,7 +56,7 @@ class CypressTest(Step):
             execute_with_stream(logger=self._logger, container=docker_container, command="mv ./kubectl /usr/local/bin",
                                 task_name="Moving kubectl to /usr/local/bin")
             execute_with_stream(logger=self._logger, container=docker_container, command="yarn install",
-                                task_name="Installing cypress")
+                                task_name="Running yarn install")
             execute_with_stream(logger=self._logger, container=docker_container, command="yarn cypress install",
                                 task_name="Installing cypress")
             execute_with_stream(logger=self._logger, container=docker_container, command="yarn cypress verify",
