@@ -9,7 +9,7 @@ from typing import Dict, Optional
 from urllib.parse import urlparse
 
 from git import Git, Repo, Remote
-
+import logging
 from ...project import Project
 
 
@@ -106,15 +106,26 @@ class Repository:
         in_branch.append(Revision(len(in_branch), self.get_sha, self.changes_in_commit()))
         return in_branch
 
-    def changes_in_merge_commit(self) -> list[Revision]:
+    def changes_in_merge_commit(self, curr_tag: str) -> list[Revision]:
         curr_rev = self._repo.rev_parse('HEAD')
-        print(f"curr_rev: {curr_rev}")
-        parent_revs = reversed(list(curr_rev.iter_parents(n=1)))
-        parent_revs_2 = reversed(list(curr_rev.iter_parents(n=1)))
-        print(f"parent_revs: {list(parent_revs_2)}")
-        return [Revision(count, str(rev),
-                         self._repo.git.diff_tree(no_commit_id=True, name_only=True, r=str(rev)).splitlines())
-                for count, rev in enumerate(parent_revs)]
+        curr_rev_tag = self._repo.git.describe(curr_rev, tags=True)
+        logging.debug(f"Current revision: {curr_rev} tag: {curr_rev_tag}")
+        if curr_rev_tag != curr_tag:
+            logging.error(f"Current revision's tag and build.versioning.tag={curr_tag} "
+                          f"in run_properties.yaml do not match. Cannot determine changed files.")
+            return []
+        parent_revs = curr_rev.parents
+        logging.debug(f"Parent revisions: {parent_revs}")
+        files_changed = self._repo.git.diff(f"{str(parent_revs[0])}..{str(parent_revs[1])}",
+                                            name_only=True).splitlines()
+        logging.debug(f"Files changed: {files_changed}")
+        return [
+            Revision(
+                ord=0,
+                hash=str(curr_rev),
+                files_touched=files_changed
+            )
+        ]
 
     @property
     def main_branch_pulled(self) -> bool:
