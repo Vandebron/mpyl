@@ -1,0 +1,62 @@
+name: 'nodeservice'
+description: 'This is a test container. For testing the MPL pipelines, not to be deployed anywhere.'
+stages:
+  build: Docker Build
+  test: Docker Test
+  deploy: CloudFront Kubernetes Deploy
+maintainer: [ 'MPyL' ]
+build:
+  args:
+    plain:
+      - key: SOME_ENV
+        test: "Test"
+        acceptance: "Acceptance"
+        production: "Production"
+dependencies:
+  build:
+    - 'test/docker/'
+deployment:
+  properties:
+    env:
+      - key: SOME_ENV
+        test: "Test"
+        acceptance: "Acceptance"
+        production: "Production"
+  kubernetes:
+    livenessProbe:
+      path:
+        all: /health
+      successThreshold: 0
+      failureThreshold: 99
+    portMappings:
+      8081: 8081
+    metrics:
+      enabled: false
+    resources:
+      instances:
+        all: 1
+      limit:
+        cpus:
+          all: 0.5
+        mem:
+          all: 1024
+  traefik:
+    hosts:
+      - host:
+          pr: "Host(`nodeservice-{PR-NUMBER}.test.nl`)"
+          test: "Host(`nodeservice.test.nl`)"
+          acceptance: "Host(`nodeservice.acceptance1.nl`)"
+          production: "Host(`nodeservice.nl`)"
+        tls:
+          all: "le-custom-prod-wildcard-cert"
+        insecure: true
+      - host:
+          all: "Host(`some.other.host.com`)"
+        servicePort: 4091
+        priority: 1000
+  s3:
+    bucket:
+      pr: test-website-assets
+      test: test-website-assets
+      acceptance: acceptance-website-assets
+      production: production-website-assets

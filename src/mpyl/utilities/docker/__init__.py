@@ -10,6 +10,7 @@ from typing import Dict, Optional, Iterator, cast, Union
 from python_on_whales import docker, Image, Container
 from rich.text import Text
 
+from ..filesystem import create_directory
 from ...project import Project
 from ...steps.models import Input
 
@@ -83,13 +84,32 @@ def stream_docker_logging(logger: Logger, generator: Union[Iterator[str], Iterat
 
 
 def docker_image_tag(step_input: Input):
-    git = step_input.run_properties.versioning
-    tag = f"pr-{git.pr_number}" if git.pr_number else git.tag
+    tag = git_tag(step_input)
     return f"{step_input.project.name.lower()}:{tag}".replace('/', '_')
+
+
+def git_tag(step_input: Input):
+    git = step_input.run_properties.versioning
+    return f"pr-{git.pr_number}" if git.pr_number else git.tag
 
 
 def docker_file_path(project: Project, docker_config: DockerConfig):
     return f'{project.deployment_path}/{docker_config.docker_file_name}'
+
+
+def docker_copy(logger: Logger, container_path: str, dst_path: str, image_name: str):
+    """
+    Copies the contents of the specified path within the container to a locally created destination
+
+    :param logger: the logger
+    :param container_path: the path of the directory in the container to copy
+    :param dst_path: the path to copy the container content to
+    :param image_name: the name of the docker image which a container is created from
+    """
+    create_directory(logger=logger, dir_name=dst_path)
+    container = docker.create(image_name, name='container')
+    docker.copy((container.name, container_path), dst_path)
+    docker.remove(container)
 
 
 def build(logger: Logger, root_path: str, file_path: str, image_tag: str, target: str) -> bool:
