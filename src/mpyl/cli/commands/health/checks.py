@@ -3,6 +3,7 @@
 import asyncio
 import os
 import pkgutil
+import shutil
 from pathlib import Path
 from subprocess import CalledProcessError
 
@@ -50,11 +51,18 @@ def __check_jenkins(console):
     except KeyError as exc:
         console.log(f'  ❌ Jenkins config not valid: {exc}')
 
-    try:
-        get_token(GithubConfig(parsed))
-        console.log('  ✅ Github token found')
-    except CalledProcessError:
-        console.log('  ❌ Github token not found. Install Github CLI `brew install gh`')
+    gh_is_installed = shutil.which('gh')
+    if gh_is_installed:
+        console.log('  ✅ Github cli client `gh` installed')
+    else:
+        console.log('  ❌ Github cli client `gh` not found. Install https://cli.github.com/')
+
+    if gh_is_installed:
+        try:
+            get_token(GithubConfig(parsed))
+            console.log('  ✅ Github token found')
+        except CalledProcessError:
+            console.log('  ❌ Github token not found. Log in with `gh auth login`')
 
     if os.environ.get('JENKINS_USER'):
         console.log('  ✅ Jenkins user set')
