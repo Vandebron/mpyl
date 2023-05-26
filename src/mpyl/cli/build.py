@@ -48,13 +48,14 @@ def build(ctx, config, verbose):
 @click.option('--ci', is_flag=True,
               help='Run as CI build instead of local. Ignores unversioned changes.')
 @click.option('--all', 'all_', is_flag=True, help='Build all projects, regardless of changes on branch')
+@click.option('--tag', is_flag=True, help='Trigger a tag build')
 @click.pass_obj
-def run(obj: CliContext, properties, ci, all_):  # pylint: disable=invalid-name
+def run(obj: CliContext, properties, ci, all_, tag):  # pylint: disable=invalid-name
     asyncio.run(warn_if_update(obj.console))
     run_properties = RunProperties.from_configuration(parse_config(properties), obj.config) if ci \
         else RunProperties.for_local_run(obj.config, obj.repo.get_sha, obj.repo.get_branch)
 
-    parameters = MpylCliParameters(local=not ci, pull_main=all_, all=all_, verbose=obj.verbose)
+    parameters = MpylCliParameters(local=not ci, pull_main=all_, all=all_, verbose=obj.verbose, tag=tag)
     obj.console.log(parameters)
     run_parameters = MpylRunParameters(
         run_config=MpylRunConfig(config=obj.config, run_properties=run_properties),
