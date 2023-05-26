@@ -9,19 +9,19 @@ pip install mpyl
 mpyl --help
 ```
 
-##### Command structure
-
-Top level commands options are passed on to sub commands and need to be specified *before* the sub command.
-In ```mpyl projects --filter <name> list ```, the `--filter` option applies to all `project` commands, like `list`
-or `lint`.
-
 #### Health check
 
+⭐Recommended to run this before running any other commands.
 ```shell
 mpyl health
 ```
 Will validate the configuration and check if all required tools are installed.
 
+##### Command structure
+
+Top level commands options are passed on to sub commands and need to be specified *before* the sub command.
+In ```mpyl projects --filter <name> list ```, the `--filter` option applies to all `project` commands, like `list`
+or `lint`.
 
 ##### MPyL configuration
 
