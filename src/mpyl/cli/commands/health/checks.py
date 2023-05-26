@@ -61,7 +61,7 @@ def __check_jenkins(console: HealthConsole):
     try:
         jenkins_conf = JenkinsConfig.from_config(parsed)
         console.check(f'Jenkins configured for pipeline `{jenkins_conf.default_pipeline}` '
-                    f'at [{jenkins_conf.url}]({jenkins_conf.url})', success=True)
+                      f'at [{jenkins_conf.url}]({jenkins_conf.url})', success=True)
     except KeyError as exc:
         console.check(f'Jenkins config not valid: {exc}', success=False)
 
@@ -69,8 +69,9 @@ def __check_jenkins(console: HealthConsole):
     if gh_is_installed:
         console.check('Github cli client `gh` installed', success=True)
     else:
-        console.check('Github cli client `gh` not found. Install [https://cli.github.com/](https://cli.github.com/)',
-                      success=False)
+        console.check(
+            'Github cli client `gh` not found. Install via [https://cli.github.com/](https://cli.github.com/) '
+            'and run `gh auth login`', success=False)
 
     if gh_is_installed:
         try:

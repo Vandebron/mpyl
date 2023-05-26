@@ -67,7 +67,6 @@ class TestJiraReporter:
         config = JiraConfig(site='https://vandebron.atlassian.net', user_name=os.environ.get('JIRA_USER_PASSWORD_USR'),
                             password=os.environ.get('JIRA_USER_PASSWORD_PSW'), ticket_pattern=re.compile(''),
                             token=None)
-        print(config)
         jira = create_jira_for_config(config)
         issue_response = jira.get_issue('TECH-290')
         ticket = JiraTicket.from_issue_response(issue_response)
