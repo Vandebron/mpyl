@@ -1,11 +1,14 @@
 import json
+import os
 import re
+import sys
 from pathlib import Path
 
 import pytest
+from dotenv import load_dotenv
 
 from src.mpyl.reporting.targets.jira import extract_ticket_from_branch, JiraTicket, to_markdown_summary, \
-    to_github_markdown, JiraConfig
+    to_github_markdown, JiraConfig, create_jira_for_config
 from tests import root_test_path
 from tests.reporting import create_test_result
 from tests.test_resources.test_data import assert_roundtrip, get_config_values
@@ -57,3 +60,14 @@ class TestJiraReporter:
         assert extract_ticket_from_branch('MG-255-slack-reporter', pattern) == 'MG-255'
         assert extract_ticket_from_branch('mg-255-slack-reporter', pattern) == 'MG-255'
         assert extract_ticket_from_branch('feature/some-fix', pattern) is None
+
+    @pytest.mark.skip(reason="meant for local testing only")
+    def test_find_ticket(self):
+        load_dotenv()
+        config = JiraConfig(site='https://vandebron.atlassian.net', user_name=os.environ.get('JIRA_USER_PASSWORD_USR'),
+                            password=os.environ.get('JIRA_USER_PASSWORD_PSW'), ticket_pattern=re.compile(''),
+                            token=None)
+        jira = create_jira_for_config(config)
+        issue_response = jira.get_issue('TECH-290')
+        ticket = JiraTicket.from_issue_response(issue_response)
+        assert ticket.ticket_id == 'TECH-290'

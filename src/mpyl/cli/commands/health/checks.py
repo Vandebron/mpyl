@@ -3,6 +3,7 @@
 import asyncio
 import os
 import pkgutil
+import shutil
 from pathlib import Path
 from subprocess import CalledProcessError
 
@@ -20,53 +21,77 @@ from ....cli import fetch_latest_version, get_meta_version
 from ....validation import validate
 
 
-def perform_health_checks(console: Console):
-    console.print(Markdown('*Version*'))
+class HealthConsole:
+    def __init__(self, console: Console):
+        self.console = console
+
+    def title(self, title: str):
+        self.console.print(Markdown(f'*{title}*'))
+
+    def check(self, check: str, success: bool):
+        icon = '✅' if success else '❌'
+        self.console.print(Markdown(f'&nbsp;&nbsp;{icon} {check}'))
+
+
+def perform_health_checks(bare_console: Console):
+    console = HealthConsole(bare_console)
+    console.title('Version')
     __check_version(console)
 
-    console.print(Markdown('*MPyL configuration*'))
-    __check_config(console, env_var='MPYL_CONFIG_PATH', default='mpyl_config.yml',
+    console.title('MPyL configuration')
+    __check_config(console, env_var='MPYL_CONFIG_PATH', default=DEFAULT_CONFIG_FILE_NAME,
                    schema_path='../../../schema/mpyl_config.schema.yml', name='config')
 
-    console.print(Markdown('*Run configuration*'))
+    console.title('Run configuration')
     __check_config(console, env_var='MPYL_RUN_PROPERTIES_PATH', default=DEFAULT_RUN_PROPERTIES_FILE_NAME,
                    schema_path='../../../schema/run_properties.schema.yml', name='run properties')
 
-    console.print(Markdown('*Jenkins*'))
+    console.title('Jenkins')
     __check_jenkins(console)
 
 
-def __check_jenkins(console):
+def __check_jenkins(console: HealthConsole):
     path = os.environ.get('MPYL_CONFIG_PATH', default=DEFAULT_CONFIG_FILE_NAME)
     if not os.path.exists(path):
-        console.log(f'  ❌ Configuration not found at: {path}')
+        console.check(f'Configuration not found at: `{path}`', success=False)
         return
 
-    parsed = parse_config(path)
+    parsed = parse_config(Path(path))
 
     try:
         jenkins_conf = JenkinsConfig.from_config(parsed)
-        console.log(f'  ✅ Jenkins configured for pipeline `{jenkins_conf.default_pipeline}` at {jenkins_conf.url}')
+        console.check(f'Jenkins configured for pipeline `{jenkins_conf.default_pipeline}` '
+                      f'at [{jenkins_conf.url}]({jenkins_conf.url})', success=True)
     except KeyError as exc:
-        console.log(f'  ❌ Jenkins config not valid: {exc}')
+        console.check(f'Jenkins config not valid: {exc}', success=False)
 
-    try:
-        get_token(GithubConfig(parsed))
-        console.log('  ✅ Github token found')
-    except CalledProcessError:
-        console.log('  ❌ Github token not found. Install Github CLI `brew install gh`')
+    gh_is_installed = shutil.which('gh')
+    if gh_is_installed:
+        console.check('Github cli client `gh` installed', success=True)
+    else:
+        console.check(
+            'Github cli client `gh` not found. Install via [https://cli.github.com/](https://cli.github.com/) '
+            'and run `gh auth login`', success=False)
+
+    if gh_is_installed:
+        try:
+            get_token(GithubConfig(parsed))
+            console.check('Github token found', success=True)
+        except CalledProcessError:
+            console.check('Github token not found. Log in with `gh auth login`', success=False)
 
     if os.environ.get('JENKINS_USER'):
-        console.log('  ✅ Jenkins user set')
+        console.check('Jenkins user set', success=True)
     else:
-        console.log("  ❌ Jenkins user not set via JENKINS_USER env var")
         jenkins_url = f'{JenkinsConfig.from_config(parsed).url}user/me@vandebron.nl/configure'
-        console.log(f"     Create a user API token in Jenkins (user:password) API token: {jenkins_url}")
+        message = f'Jenkins user not set via JENKINS_USER env var. Create a user API token in Jenkins' \
+                  f' (user:password) API token: {jenkins_url}'
+        console.check(message, success=False)
 
     if os.environ.get('JENKINS_PASSWORD'):
-        console.log('  ✅ Jenkins password set')
+        console.check('Jenkins password set', success=True)
     else:
-        console.log("  ❌ Jenkins password not set via JENKINS_PASSWORD env var")
+        console.check('Jenkins password not set via JENKINS_PASSWORD env var', success=False)
 
 
 def __check_version(console):
@@ -74,30 +99,31 @@ def __check_version(console):
     meta_version = get_meta_version()
     if update and meta_version:
         if meta_version == update:
-            console.log(f'  ✅ At latest version: {update}')
+            console.check(f'At latest version: {update}', success=True)
         else:
-            console.log(f'  ❌ Outdated version: {meta_version} (latest: {update})')
+            console.check(f'Outdated version: {meta_version} (latest: {update})', success=False)
     else:
-        console.log('  ❌ Could not determine latest version')
+        console.check('Could not determine latest version', success=False)
 
 
 def __check_config(console, env_var, default, schema_path, name):
     path = os.environ.get(env_var, default=default)
-    location = f"{name} at '/{path}' via environment variable '{env_var}'" if os.environ.get(
-        env_var) else f"{name} at '/{path}'"
+    location = f"{name} at `/{path}` via environment variable `{env_var}`" if os.environ.get(
+        env_var) else f"{name} at `/{path}`"
     if os.path.exists(path):
-        console.log(f"  ✅ Found {location}")
+        console.check(f"Found {location}", success=True)
 
         if load_dotenv(Path(".env")):
-            console.log("  ✅ Set env variables via .env file")
+            console.check("Set env variables via .env file", success=True)
 
         parsed = parse_config(path)
         schema_dict = pkgutil.get_data(__name__, schema_path)
         if schema_dict:
             try:
                 validate(parsed, schema_dict.decode('utf-8'))
-                console.log(f'  ✅ {name.capitalize()} is valid')
+                console.check(f'{name.capitalize()} is valid', success=True)
             except jsonschema.exceptions.ValidationError as exc:
-                console.log(f"  ❌ {name.capitalize()} is invalid: {exc.message} at '{'.'.join(exc.path)}'")
+                console.check(f"{name.capitalize()} is invalid: {exc.message} at '{'.'.join(exc.path)}'",
+                              success=False)
     else:
-        console.log(f"  ❌ Could not find {location}. Location can be specified with env var '{env_var}'")
+        console.check(f"Could not find {location}. Location can be specified with env var '{env_var}'", success=False)
