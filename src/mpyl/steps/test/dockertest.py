@@ -59,6 +59,9 @@ class TestDocker(Step):
 
         container_id = docker.create(tag).id
 
+        if not docker.container.exists(container_id):
+            raise ValueError(f'Container {container_id} with test results does not exist')
+
         logger.info(
             f"Copying test results from container {container_id} at "
             f"path /{project.test_report_path}/ to host at {test_result_path}"
