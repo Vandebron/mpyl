@@ -80,7 +80,8 @@ def run_jenkins(run_config: JenkinsRunParameters):
                                                        username=run_config.jenkins_user,
                                                        password=run_config.jenkins_password),
                                        status=status,
-                                       follow=run_config.follow)
+                                       follow=run_config.follow,
+                                       verbose=run_config.verbose)
                 runner.run(run_config.pipeline_parameters)
             except requests.ConnectionError:
                 status.console.bell()
