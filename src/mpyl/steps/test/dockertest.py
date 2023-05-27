@@ -4,6 +4,7 @@ from logging import Logger
 from pathlib import Path
 
 from python_on_whales import docker
+from python_on_whales.exceptions import NoSuchContainer
 
 from .after_test import IntegrationTestAfter
 from .before_test import IntegrationTestBefore
@@ -52,7 +53,7 @@ class TestDocker(Step):
                       produced_artifact=None)
 
     @staticmethod
-    def extract_test_results(logger: Logger, project: Project, tag, step_input: Input) -> Artifact:
+    def extract_test_results(logger: Logger, project: Project, tag: str, step_input: Input) -> Artifact:
         test_result_path = Path(project.target_path, "test_results")
         shutil.rmtree(test_result_path, ignore_errors=True)
         Path(test_result_path).mkdir(parents=True, exist_ok=True)
@@ -62,11 +63,16 @@ class TestDocker(Step):
         if not docker.container.exists(container_id):
             raise ValueError(f'Container {container_id} with test results does not exist')
 
+        path_in_container = f'/{project.test_report_path}/'
         logger.info(
             f"Copying test results from container {container_id} at "
-            f"path /{project.test_report_path}/ to host at {test_result_path}"
+            f"path {path_in_container} to host at {test_result_path}"
         )
-        docker.copy(f'{container_id}:/{project.test_report_path}/.', test_result_path)
+        try:
+            docker.copy(f'{container_id}:{path_in_container}.', test_result_path)
+        except NoSuchContainer as exc:
+            logger.warning(f'Could not find test results in container {tag} at expected location {path_in_container}')
+            raise exc
 
         return input_to_artifact(artifact_type=ArtifactType.JUNIT_TESTS, step_input=step_input,
                                  spec={TEST_OUTPUT_PATH_KEY: f'{test_result_path}'})

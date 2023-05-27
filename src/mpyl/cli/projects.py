@@ -8,9 +8,9 @@ from click import ParamType, BadParameter
 from click.shell_completion import CompletionItem
 from rich.markdown import Markdown
 
-from ..constants import DEFAULT_CONFIG_FILE_NAME
 from . import CliContext, CONFIG_PATH_HELP, create_console_logger
 from .commands.projects.formatting import print_project
+from ..constants import DEFAULT_CONFIG_FILE_NAME
 from ..project import validate_project, load_project, Project
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
