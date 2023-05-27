@@ -92,10 +92,6 @@ class JenkinsRunner:
         return '✅ ' if build_result.is_good() else '❌ '
 
     def follow_logs(self, job: Job, build_number: int, duration_estimation: int):
-        self.status.update("Waiting for logs....")
-        while job.get_last_buildnumber() != build_number:
-            time.sleep(1)
-        self.status.stop()
 
         build_to_follow: Build = job.get_build(build_number)
         self.status.console.log(f'{build_to_follow} {self.pipeline.build_location()}')
@@ -162,5 +158,15 @@ class JenkinsRunner:
 
         new_build_number = last_build_number + 1
 
+        self.status.update("Waiting for build to start....")
+        while job.get_last_buildnumber() != new_build_number:
+            time.sleep(1)
+        self.status.stop()
+
         if self.follow:
             self.follow_logs(job, new_build_number, last_build)
+        else:
+            self.status.console.log(f'Build {new_build_number} started '
+                                    f'for {self.pipeline.human_readable()} at '
+                                    f'{job.get_build(new_build_number).get_build_url()}')
+            self.status.stop()
