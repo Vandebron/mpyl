@@ -39,7 +39,7 @@ class TestDocker(Step):
                         file_path=dockerfile, image_tag=tag, target=test_target)
 
         if success:
-            artifact = self.extract_test_results(project, tag, step_input)
+            artifact = self.extract_test_results(self._logger, project, tag, step_input)
 
             suite = to_test_suites(artifact)
             summary = sum_suites(suite)
@@ -52,12 +52,17 @@ class TestDocker(Step):
                       produced_artifact=None)
 
     @staticmethod
-    def extract_test_results(project: Project, tag, step_input: Input) -> Artifact:
+    def extract_test_results(logger: Logger, project: Project, tag, step_input: Input) -> Artifact:
         test_result_path = Path(project.target_path, "test_results")
         shutil.rmtree(test_result_path, ignore_errors=True)
         Path(test_result_path).mkdir(parents=True, exist_ok=True)
 
         container_id = docker.create(tag).id
+
+        logger.info(
+            f"Copying test results from container {container_id} at "
+            f"path /{project.test_report_path}/ to host at {test_result_path}"
+        )
         docker.copy(f'{container_id}:/{project.test_report_path}/.', test_result_path)
 
         return input_to_artifact(artifact_type=ArtifactType.JUNIT_TESTS, step_input=step_input,
