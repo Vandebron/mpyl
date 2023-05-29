@@ -2,22 +2,28 @@
 import asyncio
 import shutil
 from pathlib import Path
+from typing import Optional
 
 import click
+import questionary
 from click import ParamType, BadParameter
 from click.shell_completion import CompletionItem
+from github import Github
+from github.GitRelease import GitRelease
+from questionary import Choice
 from rich.console import Console
 from rich.markdown import Markdown
 
-from ..constants import DEFAULT_CONFIG_FILE_NAME, DEFAULT_RUN_PROPERTIES_FILE_NAME
 from . import CliContext, CONFIG_PATH_HELP, check_updates, get_meta_version
 from . import create_console_logger
-from .commands.build.jenkins import JenkinsRunParameters, run_jenkins
+from .commands.build.jenkins import JenkinsRunParameters, run_jenkins, get_token
 from .commands.build.mpyl import MpylRunParameters, run_mpyl, MpylCliParameters, MpylRunConfig, find_build_set
+from ..constants import DEFAULT_CONFIG_FILE_NAME, DEFAULT_RUN_PROPERTIES_FILE_NAME
 from ..project import load_project
 from ..reporting.formatting.markdown import run_result_to_markdown
 from ..steps.models import RunProperties
 from ..steps.run import RunResult
+from ..utilities.github import GithubConfig
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
 
@@ -32,7 +38,7 @@ async def warn_if_update(console: Console):
 @click.group('build')
 @click.option('--config', '-c', required=True, type=click.Path(exists=True), help=CONFIG_PATH_HELP,
               envvar="MPYL_CONFIG_PATH", default=DEFAULT_CONFIG_FILE_NAME)
-@click.option('--verbose', '-v', is_flag=True, default=False)
+@click.option('--verbose', '-v', is_flag=True, default=False, show_default=True, help='Verbose output')
 @click.pass_context
 def build(ctx, config, verbose):
     """Pipeline build commands"""
@@ -44,7 +50,7 @@ def build(ctx, config, verbose):
 
 @build.command(help='Run an MPyL build')
 @click.option('--properties', '-p', required=False, type=click.Path(exists=False), help='Path to run properties',
-              envvar="MPYL_RUN_PROPERTIES_PATH", default=DEFAULT_RUN_PROPERTIES_FILE_NAME)
+              envvar="MPYL_RUN_PROPERTIES_PATH", default=DEFAULT_RUN_PROPERTIES_FILE_NAME, show_default=True)
 @click.option('--ci', is_flag=True,
               help='Run as CI build instead of local. Ignores unversioned changes.')
 @click.option('--all', 'all_', is_flag=True, help='Build all projects, regardless of changes on branch')
@@ -118,6 +124,44 @@ class Pipeline(ParamType):
         ]
 
 
+def select_tag(ctx) -> str:
+    console = Console()
+    with console.status("Fetching tags...") as spinner:
+        github_config = GithubConfig.from_config(ctx.obj.config)
+        github = Github(login_or_token=get_token(github_config))
+
+        repo = github.get_repo(github_config.repository)
+
+        def to_choice(git_release: GitRelease):
+            title = git_release.title + " " + git_release.body.split('* ')[-1].splitlines()[0]
+            return Choice(title=title, value=git_release.title)
+
+        choices = map(to_choice, repo.get_releases())
+        user_name = github.get_user().login
+
+        def by_choice(choice: Choice):
+            # prioritize own tags
+            if user_name in str(choice.title):
+                return f"9{choice.value}"
+            return choice.value
+
+        sorted_choices = sorted(choices, key=by_choice, reverse=True)
+
+        spinner.stop()
+        release_id = questionary.select("Which tag do you want to release?", show_selected=True,
+                                        choices=sorted_choices).ask()
+        release = repo.get_release(release_id)
+        return release.tag_name
+
+
+def ask_for_input(ctx, _param, value) -> Optional[str]:
+    if value == "not_set":
+        return None
+    if value == "prompt":
+        return select_tag(ctx)
+    return value
+
+
 @build.command(help='Run a multi branch pipeline build on Jenkins')
 @click.option(
     '--user', '-u',
@@ -168,18 +212,24 @@ class Pipeline(ParamType):
     is_flag=True,
     default=False
 )
+@click.option('--tag', '-tg', is_flag=False, flag_value="prompt", default="not_set", callback=ask_for_input)
 @click.pass_context
-def jenkins(ctx, user, password, pipeline, test, arguments, background, silent):
+def jenkins(ctx, user, password, pipeline, test, arguments, background, silent,  # pylint: disable=too-many-arguments
+            tag):
     try:
         upgrade_check = asyncio.wait_for(warn_if_update(ctx.obj.console), timeout=5)
         selected_pipeline = pipeline if pipeline else ctx.obj.config['jenkins']['defaultPipeline']
         pipeline_parameters = {'TEST': 'true', 'VERSION': test} if test else {}
         if arguments:
             pipeline_parameters['PIPENV_PARAMS'] = " ".join(arguments)
-        run_argument = JenkinsRunParameters(jenkins_user=user, jenkins_password=password, config=ctx.obj.config,
-                                            pipeline=selected_pipeline, pipeline_parameters=pipeline_parameters,
-                                            verbose=not silent or ctx.obj.verbose,
-                                            follow=not background)
+
+        run_argument = JenkinsRunParameters(
+            jenkins_user=user, jenkins_password=password, config=ctx.obj.config,
+            pipeline=selected_pipeline, pipeline_parameters=pipeline_parameters,
+            verbose=not silent or ctx.obj.verbose,
+            follow=not background, tag=tag
+        )
+
         run_jenkins(run_argument)
         asyncio.get_event_loop().run_until_complete(upgrade_check)
     except asyncio.exceptions.TimeoutError:

@@ -2,4 +2,5 @@
 omit =
     tests/*
     src/mpyl/reporting/targets/*
+    src/mpyl/cli/commands/*
 
