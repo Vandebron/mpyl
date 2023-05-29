@@ -1,4 +1,22 @@
-""" Step that builds a docker image from its specification in Dockerfile-mpl. """
+"""
+### Docker build step
+This is a step that builds a docker image from its specification in Dockerfile-mpl.
+
+### Dockerfile-mpl
+
+This is a [multi-stage](https://docs.docker.com/build/building/multi-stage/) docker file, that has at
+least a `builder` and in most cases also a `tester` stage.
+`WORKDIR` needs to be identical to root path of the sourcecode.
+
+The `tester` stage needs to run the unittests and write the results (
+in [Junit XML format](https://llg.cubic.org/docs/junit/))
+to a folder named `$WORKDIR/target/test-reports/`.
+
+#### Example Dockerfile-mpl
+```docker
+.. include:: ../../../../tests/projects/service/deployment/Dockerfile-mpl
+```
+"""
 
 from logging import Logger
 

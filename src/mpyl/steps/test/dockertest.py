@@ -1,4 +1,17 @@
-""" Step that tests the docker image from the target `tester` in Dockerfile-mpl. """
+""" Step that tests the docker image from the target `tester` in Dockerfile-mpl.
+
+
+## 🧪 Testing inside a container
+
+When unit tests are run within a docker container the test results need to be written to a folder inside it.
+This means that the test step _within the docker container_ should not return a system error.
+Otherwise, building of the container would stop and the test results would not be committed to a layer.
+
+The test results need to be writted  written to a folder named `$WORKDIR/target/test-reports/` for
+`TestDocker.extract_test_results` to find and extract them.
+
+
+"""
 import shutil
 from logging import Logger
 from pathlib import Path

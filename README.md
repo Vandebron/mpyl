@@ -23,12 +23,12 @@ Detailed, *complete*, searchable documentation can be found at [https://vandebro
 
 MPyL is built with the following principles in mind.
 - **Not a platform** It is not tied to any CI/CD platform. MPyL is a library, not a framework. It is not a runner,
-  not a scheduler, and it doesn't have a GUI. It can be plugged into any CI/CD platform. Examples of CI/CD flows in
-  Jenkins or Dagster are included.
+  not a scheduler, and it doesn't have a GUI. It can be plugged into any CI/CD platform. Execution flows for
+  Jenkins or Dagster are included as an example.
 - **Minimal footprint**: It is self-contained and has very few external dependencies (e.g. Git, Docker or HELM).
   It can be run anywhere, also on your local machine.
 - **Accessible and maintainable**
-    - Written in Python, probably the most widely adopted scripting language.
+    - Written in Python, the most widely adopted scripting language with an extensive amount of client libraries relevant to CI/CD.
     - Strongly typed: `MyPy` type hints and schemas for all `YAML` files. Clearly defined interfaces for inputs
       and outputs of steps.
     - Focus on short feedback loop. Unit testable and everything can be run locally.
