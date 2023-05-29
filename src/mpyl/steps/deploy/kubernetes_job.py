@@ -22,6 +22,6 @@ class DeployKubernetesJob(Step):
         ), produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.DOCKER_IMAGE)
 
     def execute(self, step_input: Input) -> Output:
-        builder = ChartBuilder(step_input, find_deploy_set(RepoConfig(step_input.run_properties.config)))
+        builder = ChartBuilder(step_input, find_deploy_set(RepoConfig.from_config(step_input.run_properties.config)))
         chart = to_cron_job_chart(builder) if builder.is_cron_job else to_job_chart(builder)
         return deploy_helm_chart(self._logger, chart, step_input, builder.release_name, delete_existing=True)

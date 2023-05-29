@@ -1,6 +1,7 @@
 import os
 
 import pytest
+from git import Git, Repo
 from pyaml_env import parse_config
 
 from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME
@@ -22,5 +23,8 @@ class TestRepo:
 
     def test_load_config(self):
         yaml_values = parse_config(self.resource_path / DEFAULT_CONFIG_FILE_NAME)
-        config = RepoConfig(yaml_values)
+        config = RepoConfig.from_config(yaml_values)
         assert config.main_branch == 'main'
+        repo_credentials = config.repo_credentials
+        assert repo_credentials.url == 'https://github.com/acme/repo.git'
+        assert repo_credentials.to_url_with_credentials == 'https://git-user:git-password@github.com/acme/repo.git'

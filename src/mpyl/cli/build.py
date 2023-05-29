@@ -38,7 +38,7 @@ def build(ctx, config, verbose):
     """Pipeline build commands"""
     console = create_console_logger(local=False, verbose=verbose)
     parsed_config = parse_config(config)
-    repo = ctx.with_resource(Repository(config=RepoConfig(parsed_config)))
+    repo = ctx.with_resource(Repository(config=RepoConfig.from_config(parsed_config)))
     ctx.obj = CliContext(parsed_config, repo, console, verbose)
 
 

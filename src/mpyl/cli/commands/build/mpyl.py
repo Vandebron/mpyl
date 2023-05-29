@@ -74,7 +74,7 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter
     )
     logger = logging.getLogger('mpyl')
     try:
-        with Repository(RepoConfig(mpyl_run_parameters.run_config.config)) as repo:
+        with Repository(RepoConfig.from_config(mpyl_run_parameters.run_config.config)) as repo:
 
             run_plan = get_build_plan(logger, repo, mpyl_run_parameters)
 
@@ -82,7 +82,7 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter
                 logger.info("Nothing to do. Exiting..")
                 return run_plan
 
-            logger.info("Building plan:")
+            logger.info("Build plan:")
             console.print(Markdown(f"\n\n{run_result_to_markdown(run_plan)}"))
 
             run_result: RunResult = run_plan

@@ -79,7 +79,7 @@ class MockRepository(Repository):
 
 
 def get_repo() -> Repository:
-    config = RepoConfig({'cvs': {'git': {'mainBranch': 'main'}}})
+    config = RepoConfig.from_config({'cvs': {'git': {'mainBranch': 'main'}}})
 
     if 'GITHUB_JOB' in os.environ:
         print("Running in github, falling back onto mock repository bypassing Git")

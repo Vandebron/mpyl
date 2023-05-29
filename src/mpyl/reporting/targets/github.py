@@ -65,7 +65,7 @@ class PullRequestComment(Reporter):
                  compose_function: typing.Callable[[RunResult, Optional[Dict]], str] = compose_message_body):
         self._raw_config = config
         self._config = GithubConfig(config)
-        self.git_repository = Repository(RepoConfig(config))
+        self.git_repository = Repository(RepoConfig.from_config(config))
         self.compose_function = compose_function
 
     def _get_pull_request(self, repo: GithubRepository, run_properties: RunProperties):
@@ -134,7 +134,7 @@ class CommitCheck(Reporter):
                 self._logger.info(f'Setting check to {conclusion}')
                 run.edit(completed_at=datetime.now(), conclusion=conclusion, output=self._to_output(results))
             else:
-                with Repository(RepoConfig(self._config)) as git_repository:
+                with Repository(RepoConfig.from_config(self._config)) as git_repository:
                     self._check_run_id = repo.create_check_run(name='Pipeline build', head_sha=git_repository.get_sha,
                                                                status='in_progress').id
             return GithubOutcome(success=True)

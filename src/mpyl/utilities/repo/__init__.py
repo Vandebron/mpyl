@@ -5,7 +5,8 @@ At this moment Git is the only supported VCS.
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
+from urllib.parse import urlparse
 
 from git import Git, Repo, Remote
 
@@ -22,11 +23,35 @@ class Revision:
     """Paths to files that were altered in this hash"""
 
 
+@dataclass(frozen=True)
+class RepoCredentials:
+    url: str
+    user_name: str
+    password: str
+
+    @property
+    def to_url_with_credentials(self):
+        parsed = urlparse(self.url)
+        return f"{parsed.scheme}://{self.user_name}:{self.password}@{parsed.netloc}{parsed.path}"
+
+    @staticmethod
+    def from_config(config: Dict):
+        return RepoCredentials(url=config['url'], user_name=config['userName'], password=config['password'])
+
+
+@dataclass(frozen=True)
 class RepoConfig:
     main_branch: str
+    repo_credentials: Optional[RepoCredentials]
 
-    def __init__(self, config: Dict):
-        self.main_branch = config['cvs']['git']['mainBranch']
+    @staticmethod
+    def from_config(config: Dict):
+        git_config = config['cvs']['git']
+        maybe_remote_config = git_config.get('remote', None)
+        return RepoConfig(
+            main_branch=git_config['mainBranch'],
+            repo_credentials=RepoCredentials.from_config(maybe_remote_config) if maybe_remote_config else None
+        )
 
 
 class Repository:
@@ -85,6 +110,13 @@ class Repository:
     def main_branch_pulled(self) -> bool:
         branch_names = list(map(lambda n: n.name, self._repo.references))
         return f'{self._config.main_branch}' in branch_names
+
+    def _init_remote(self):
+        default_remote = self._repo.remote('origin')
+        if 'https:' not in default_remote.url:
+            return default_remote
+
+        return default_remote.set_url(self._config.repo_credentials.to_url_with_credentials)
 
     def pull_main_branch(self):
         remote = Remote(self._repo, 'origin')

@@ -116,6 +116,7 @@ def to_github_markdown(jira_markdown: str, jira_url: str) -> str:
     jira_markdown = re.sub(r'\{\{(.*)\}\}', r'`\1`', jira_markdown)
     jira_markdown = re.sub(r'\{quote}(.*)\{quote}', r'> \1', jira_markdown)
     jira_markdown = re.sub(r'\{noformat\}((.|\n)*)\{noformat\}', r'```\n\1\n```', jira_markdown)
+    jira_markdown = re.sub(r'\{code:+(.*)\}((.|\n)*)\{code\}', r'```\1\n\2\n```', jira_markdown)
     jira_markdown = re.sub(r'\{noformat\}((.|\n)*)', r'```\n\1\n```', jira_markdown)
     jira_markdown = re.sub(r'\*(.*)\*', r'**\1**', jira_markdown)
     jira_markdown = re.sub(r'_(.*)_', r'*\1*', jira_markdown)

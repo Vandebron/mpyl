@@ -4,6 +4,10 @@ h4. Should support Jira markdown
 
 {quote}Quoted{quote}
 
+{code:python} import a from b
+print(a + b)
+{code}
+
 # first
 # second
 
