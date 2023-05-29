@@ -29,7 +29,7 @@ class MpylRunConfig:
 @dataclass(frozen=True)
 class MpylCliParameters:
     local: bool
-    tag: Optional[str]
+    tag: Optional[str] = None
     pull_main: bool = False
     verbose: bool = False
     all: bool = False
@@ -49,9 +49,9 @@ def get_build_plan(logger: logging.Logger, repo: Repository, mpyl_run_parameters
     logger.info(f"Running with {params}")
     if params.pull_main:
         if repo.main_branch_pulled:
-            logger.info(f'Branch {repo.main_branch} already present locally. Skipping pull.')
+            logger.info(f'Branch `{repo.main_branch}` already present locally. Skipping pull.')
         else:
-            logger.info(f'Pulling {repo.main_branch} from {repo.get_remote_url}')
+            logger.info(f'Pulling `{repo.main_branch}` from {repo.get_remote_url}')
             pull_result = repo.pull_main_branch()
             logger.info(f'Pulled `{pull_result[0].remote_ref_path.strip()}` to local')
 
