@@ -72,15 +72,26 @@ def run(obj: CliContext, properties, ci, all_, tag):  # pylint: disable=invalid-
 @build.command(help="The status of the current local branch from MPyL's perspective")
 @click.pass_obj
 def status(obj: CliContext):
-    asyncio.run(warn_if_update(obj.console))
+    try:
+        upgrade_check = asyncio.wait_for(warn_if_update(obj.console), timeout=3)
+        __print_status(obj)
+        asyncio.get_event_loop().run_until_complete(upgrade_check)
+    except asyncio.exceptions.TimeoutError:
+        pass
+
+
+def __print_status(obj: CliContext):
     branch = obj.repo.get_branch
+    if not branch:
+        obj.console.log(f'No branch detected, cannot determine build status on revision {obj.repo.get_sha}')
+        return
     if obj.repo.main_branch == obj.repo.get_branch:
         obj.console.log(f'On main branch ({branch}), cannot determine build status')
         return
 
     changes_in_branch = obj.repo.changes_in_branch_including_local()
     build_set = find_build_set(obj.repo, changes_in_branch, False)
-    run_properties = RunProperties.for_local_run(obj.config, obj.repo.get_sha, obj.repo.get_branch)
+    run_properties = RunProperties.for_local_run(obj.config, obj.repo.get_sha, branch)
     result = RunResult(run_properties=run_properties, run_plan=build_set)
     version = run_properties.versioning
     header: str = f"**Revision:** `{version.branch}` at `{version.revision}`  \n"
@@ -141,19 +152,38 @@ class Pipeline(ParamType):
     help='A series of arguments to pass to the pipeline. Note that will run within the pipenv in jenkins. '
          'To execute `mpyl build status`, pass `-a run -a mpyl -a build -a status`',
 )
-@click.option('--follow', '-f', is_flag=True, default=False)
+@click.option(
+    '--background', '-bg',
+    help="Starts Jenkins build in a 'fire and forget' fashion. "
+         "Can be set via env var MPYL_JENKINS_BACKGROUND",
+    envvar="MPYL_JENKINS_BACKGROUND",
+    is_flag=True,
+    default=False
+)
+@click.option(
+    '--silent', '-s',
+    help="Indicates whether to show Jenkins' logging or not. "
+         "Can be set via env var MPYL_JENKINS_SILENT",
+    envvar="MPYL_JENKINS_SILENT",
+    is_flag=True,
+    default=False
+)
 @click.pass_context
-def jenkins(ctx, user, password, pipeline, test, arguments, follow):
-    asyncio.run(warn_if_update(ctx.obj.console))
-    selected_pipeline = pipeline if pipeline else ctx.obj.config['jenkins']['defaultPipeline']
-    pipeline_parameters = {'TEST': 'true', 'VERSION': test} if test else {}
-    if arguments:
-        pipeline_parameters['PIPENV_PARAMS'] = " ".join(arguments)
-    run_argument = JenkinsRunParameters(jenkins_user=user, jenkins_password=password, config=ctx.obj.config,
-                                        pipeline=selected_pipeline, pipeline_parameters=pipeline_parameters,
-                                        verbose=ctx.obj.verbose,
-                                        follow=follow)
-    run_jenkins(run_argument)
+def jenkins(ctx, user, password, pipeline, test, arguments, background, silent):
+    try:
+        upgrade_check = asyncio.wait_for(warn_if_update(ctx.obj.console), timeout=5)
+        selected_pipeline = pipeline if pipeline else ctx.obj.config['jenkins']['defaultPipeline']
+        pipeline_parameters = {'TEST': 'true', 'VERSION': test} if test else {}
+        if arguments:
+            pipeline_parameters['PIPENV_PARAMS'] = " ".join(arguments)
+        run_argument = JenkinsRunParameters(jenkins_user=user, jenkins_password=password, config=ctx.obj.config,
+                                            pipeline=selected_pipeline, pipeline_parameters=pipeline_parameters,
+                                            verbose=not silent or ctx.obj.verbose,
+                                            follow=not background)
+        run_jenkins(run_argument)
+        asyncio.get_event_loop().run_until_complete(upgrade_check)
+    except asyncio.exceptions.TimeoutError:
+        pass
 
 
 @build.command(help='Clean MPyL metadata in `.mpl` folders')
