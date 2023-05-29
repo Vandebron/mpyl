@@ -111,15 +111,15 @@ class Repository:
         branch_names = list(map(lambda n: n.name, self._repo.references))
         return f'{self._config.main_branch}' in branch_names
 
-    def __get_remote(self) -> Remote:
+    def _init_remote(self):
         default_remote = self._repo.remote('origin')
-        if 'https:' not in default_remote.url or self._config.repo_credentials is None:
+        if 'https:' not in default_remote.url:
             return default_remote
 
         return default_remote.set_url(self._config.repo_credentials.to_url_with_credentials)
 
     def pull_main_branch(self):
-        remote = self.__get_remote()
+        remote = Remote(self._repo, 'origin')
         main = self._config.main_branch
         return remote.fetch(f"+refs/heads/{main}:refs/heads/{main}")
 
