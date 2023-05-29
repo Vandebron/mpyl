@@ -130,7 +130,14 @@ definitions:
           password:
             type: [ string, null ]
       mainBranch:
+        description: "The main branch of the repository, against which changes are compared"
         type: string
+      ignorePatterns:
+        description: "Patterns to ignore when checking for changes"
+        type: array
+        default: [ ".md", "*.svg" ]
+        items:
+          type: string
     required:
       - mainBranch
     title: Git
