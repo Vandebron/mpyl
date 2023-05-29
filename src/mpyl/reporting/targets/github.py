@@ -65,7 +65,7 @@ class PullRequestComment(Reporter):
     def __init__(self, config: Dict,
                  compose_function: typing.Callable[[RunResult, Optional[Dict]], str] = compose_message_body):
         self._raw_config = config
-        self._config = GithubConfig(config)
+        self._config = GithubConfig.from_config(config)
         self.git_repository = Repository(RepoConfig.from_config(config))
         self.compose_function = compose_function
 
@@ -106,7 +106,7 @@ class CommitCheck(Reporter):
 
     def __init__(self, config: Dict, logger: Logger):
         self._config = config
-        self._github_config = GithubConfig(config)
+        self._github_config = GithubConfig.from_config(config)
         self._check_run_id = None
         self._logger = logger
 

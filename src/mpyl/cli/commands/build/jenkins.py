@@ -37,7 +37,7 @@ def run_jenkins(run_config: JenkinsRunParameters):
     log_console = Console(log_path=False, log_time=False)
     with log_console.status('Fetching Github info.. [blue]>gh pr view[/blue]') as status:
         config = run_config.config
-        github_config = GithubConfig(config)
+        github_config = GithubConfig.from_config(config)
         with Repository(RepoConfig.from_config(config)) as git_repo:
             try:
                 github = Github(login_or_token=get_token(github_config))

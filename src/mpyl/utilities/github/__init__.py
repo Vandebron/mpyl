@@ -22,7 +22,7 @@ class GithubAppConfig:
         self.app_key = config['appId']
 
 
-@dataclass
+@dataclass(frozen=True)
 class GithubConfig:
     repository: str
     owner: str
@@ -30,14 +30,17 @@ class GithubConfig:
     token: str
     app_config: dict
 
-    def __init__(self, config: Dict):
+    @staticmethod
+    def from_config(config: Dict):
         github = config['cvs']['github']
-        self.repository = github['repository']
-        parts = self.repository.split('/')
-        self.owner = parts[0]
-        self.repo_name = parts[1]
-        self.token = github['token']
-        self.app_config = github.get('app', {})
+        repo_parts = github['repository'].split('/')
+        return GithubConfig(
+            repository=(github['repository']),
+            owner=repo_parts[0],
+            repo_name=repo_parts[1],
+            token=github['token'],
+            app_config=github.get('app', {})
+        )
 
     @property
     def get_app_config(self) -> GithubAppConfig:
