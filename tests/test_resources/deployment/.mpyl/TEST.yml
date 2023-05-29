@@ -7,4 +7,4 @@ produced_artifact: !Artifact
   revision: a2fcde18082e14a260195b26f7f5bfed9dc8fbb4
   producing_step: mobile-thuis
   spec:
-    test_output_path: mobile/thuis/deployment/.mpl/test_results
+    test_output_path: mobile/thuis/deployment/.mpyl/test_results

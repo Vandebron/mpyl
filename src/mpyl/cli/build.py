@@ -18,7 +18,7 @@ from . import CliContext, CONFIG_PATH_HELP, check_updates, get_meta_version
 from . import create_console_logger
 from .commands.build.jenkins import JenkinsRunParameters, run_jenkins, get_token
 from .commands.build.mpyl import MpylRunParameters, run_mpyl, MpylCliParameters, MpylRunConfig, find_build_set
-from ..constants import DEFAULT_CONFIG_FILE_NAME, DEFAULT_RUN_PROPERTIES_FILE_NAME
+from ..constants import DEFAULT_CONFIG_FILE_NAME, DEFAULT_RUN_PROPERTIES_FILE_NAME, BUILD_ARTIFACTS_FOLDER
 from ..project import load_project
 from ..reporting.formatting.markdown import run_result_to_markdown
 from ..steps.models import RunProperties
@@ -236,7 +236,7 @@ def jenkins(ctx, user, password, pipeline, test, arguments, background, silent, 
         pass
 
 
-@build.command(help='Clean MPyL metadata in `.mpl` folders')
+@build.command(help=f'Clean MPyL metadata in `{BUILD_ARTIFACTS_FOLDER}` folders')
 @click.option('--filter', '-f', 'filter_', required=False, type=click.STRING, help='Filter based on filepath ')
 @click.pass_obj
 def clean(obj: CliContext, filter_):
