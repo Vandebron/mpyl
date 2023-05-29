@@ -48,6 +48,6 @@ def get_pr_for_branch(repo: Repository, branch: str) -> PullRequest:
     pulls = repo.get_pulls(head=f'{repo.full_name}:{branch}').get_page(0)
 
     if len(pulls) == 0:
-        raise ValueError(f'No PR related to {branch} was found. Did create it yet? `gh pr create --draft`')
+        raise ValueError(f'No PR related to {branch} was found. Did you create it yet? `gh pr create --draft`')
 
     return pulls.pop()
