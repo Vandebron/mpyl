@@ -1,14 +1,33 @@
-""" Step that builds a docker image from its specification in Dockerfile-mpl. """
+"""
+### Docker build step
+This is a step that builds a docker image from its specification in Dockerfile-mpl.
+
+### Dockerfile-mpl
+
+This is a [multi-stage](https://docs.docker.com/build/building/multi-stage/) docker file, that has at
+least a `builder` and in most cases also a `tester` stage.
+`WORKDIR` needs to be identical to root path of the sourcecode.
+
+The `tester` stage needs to run the unittests and write the results (
+in [Junit XML format](https://llg.cubic.org/docs/junit/))
+to a folder named `$WORKDIR/target/test-reports/`.
+
+#### Example Dockerfile-mpl
+```docker
+.. include:: ../../../../tests/projects/service/deployment/Dockerfile-mpl
+```
+"""
 
 from logging import Logger
 
 from .docker_after_build import AfterBuildDocker
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType, input_to_artifact
+from ...constants import BUILD_ARTIFACTS_FOLDER
 from ...project import Stage
 from ...utilities.docker import DockerConfig, build, docker_image_tag, docker_file_path, login
 
-DOCKER_IGNORE_DEFAULT = ['**/target/*', '**/.mpl/*']
+DOCKER_IGNORE_DEFAULT = ['**/target/*', f'**/{BUILD_ARTIFACTS_FOLDER}/*']
 
 
 class BuildDocker(Step):

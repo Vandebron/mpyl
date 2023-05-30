@@ -11,7 +11,7 @@ mpyl --help
 
 #### Health check
 
-⭐Recommended to run this before running any other commands.
+⭐ It is recommended to run this before running any other commands.
 ```shell
 mpyl health
 ```
@@ -29,14 +29,21 @@ MPyL can be configured through a file that adheres to the `mpyl_config.yml`
 [schema](https://vandebron.github.io/mpyl/schema/mpyl_config.schema.yml).  
 Which configuration fields need to be set depends on your usecase. The error messages that you
 encounter while using the cli may guide you through the process.
-Note that the included `mpyl_config.example.yml` is just an example. Secrets can be injected
-through environment variables.
+Note that the included `mpyl_config.example.yml` is just an example. 
+
+Secrets can be injected
+through environment variable substitution via the
+[pyaml-env](https://github.com/mkaranasou/pyaml_env) library. 
+Note that values for which the ENV variable is not set, 
+will be absent in the resulting configuration dictionary.
 <details>
   <summary>Example config</summary>
 ```yaml
 .. include:: mpyl_config.example.yml
 ```
 </details>
+
+
 
 Check the [schema](https://vandebron.github.io/mpyl/schema/run_properties.schema.yml) for `run_properties.yml`, which contains detailed
 documentation and can be used to enable on-the-fly validation and auto-completion in your IDE.
@@ -108,27 +115,32 @@ The [schema](https://vandebron.github.io/mpyl/schema/project.schema.yml) for `pr
 documentation and
 can be used to enable on-the-fly validation and auto-completion in your IDE.
 
-### Dockerfile-mpl
+## ..report the outcome of a pipeline run
 
-This is a multi-stage docker file, that has at least a `builder` and in most cases also
-a `tester` stage.
-`WORKDIR` needs to be identical to root path of the sourcecode.
-The `tester` stage needs run the unittests and write the results (
-in [Junit XML format](https://llg.cubic.org/docs/junit/))
-to a folder named `$WORKDIR/target/test-reports/`.
-<details>
-  <summary>Example `Dockerfile-mpl`</summary>
-```docker
-.. include:: tests/projects/service/deployment/Dockerfile-mpl
-```
-</details>
+MPyL comes with built-in reporters for *Github*, *Jira* and *Slack*. See `mpyl.reporting.targets` how to configure
+them and for instructions on how to create your own reporter.
 
-Values can be set dynamically through environment variable substitution via the 
-[pyaml-env](https://github.com/mkaranasou/pyaml_env) library. Note that keys for which the ENV variable is not
-will be absent in the resulting configuration dictionary.
+## ..create a custom step
 
+See `mpyl.steps`.
 
-### docker-compose-test.yml
+## ..create a build step
+
+### Building a docker image
+
+If the output of your build step is a docker image, you can use the `mpyl.steps.build.docker_after_build` step to
+make sure the resulting image is tagged, pushed to the registry and made available as an artifact for 
+later (deploy) steps.
+
+## ..create a test step
+
+### Junit test results
+
+MPyL can parse Junit test results for reporting purposes. Your test step needs to produce a 
+`mpyl.steps.models.ArtifactType.JUNIT_TESTS` artifact.
+See `mpyl.steps.test.echo` for an example of how such an artifact can be created.
+
+### Integration tests 
 If your project includes "integration tests" that require a docker container to run during the test stage,
 you can define these containers in a file named `docker-compose-test.yml`. For example, to test your database schema
 upgrades, with a real postgres database:
@@ -139,17 +151,8 @@ upgrades, with a real postgres database:
 ```
 </details>
 
-Note: make sure to define a reliable `healthcheck` to prevent your tests from being run before the database is 
+Note: make sure to define a reliable `healthcheck` to prevent your tests from being run before the database is
 fully up and running.
-
-## ..report the outcome of a pipeline run
-
-MPyL comes with built-in reporters for *Github*, *Jira* and *Slack*. See `mpyl.reporting.targets` how to configure
-them and for instructions on how to create your own reporter.
-
-## ..create a custom step
-
-See `mpyl.steps`.
 
 ## ..create a custom CI-CD flow
 

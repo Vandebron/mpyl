@@ -1,13 +1,11 @@
 import os
 
 import pytest
-from git import Git, Repo
-from pyaml_env import parse_config
 
-from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME
 from src.mpyl.utilities.repo import RepoConfig
 from tests import root_test_path
 from tests.test_resources import test_data
+from tests.test_resources.test_data import get_config_values
 
 
 class TestRepo:
@@ -22,8 +20,7 @@ class TestRepo:
         assert changes_in_branch[-1].files_touched == changes_in_commit
 
     def test_load_config(self):
-        yaml_values = parse_config(self.resource_path / DEFAULT_CONFIG_FILE_NAME)
-        config = RepoConfig.from_config(yaml_values)
+        config = RepoConfig.from_config(get_config_values())
         assert config.main_branch == 'main'
         repo_credentials = config.repo_credentials
         assert repo_credentials.url == 'https://github.com/acme/repo.git'

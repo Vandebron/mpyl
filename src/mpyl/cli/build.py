@@ -18,7 +18,7 @@ from . import CliContext, CONFIG_PATH_HELP, check_updates, get_meta_version
 from . import create_console_logger
 from .commands.build.jenkins import JenkinsRunParameters, run_jenkins, get_token
 from .commands.build.mpyl import MpylRunParameters, run_mpyl, MpylCliParameters, MpylRunConfig, find_build_set
-from ..constants import DEFAULT_CONFIG_FILE_NAME, DEFAULT_RUN_PROPERTIES_FILE_NAME
+from ..constants import DEFAULT_CONFIG_FILE_NAME, DEFAULT_RUN_PROPERTIES_FILE_NAME, BUILD_ARTIFACTS_FOLDER
 from ..project import load_project
 from ..reporting.formatting.markdown import run_result_to_markdown
 from ..steps.models import RunProperties
@@ -38,19 +38,21 @@ async def warn_if_update(console: Console):
 @click.group('build')
 @click.option('--config', '-c', required=True, type=click.Path(exists=True), help=CONFIG_PATH_HELP,
               envvar="MPYL_CONFIG_PATH", default=DEFAULT_CONFIG_FILE_NAME)
+@click.option('--properties', '-p', required=False, type=click.Path(exists=False), help='Path to run properties',
+              envvar="MPYL_RUN_PROPERTIES_PATH", default=DEFAULT_RUN_PROPERTIES_FILE_NAME, show_default=True)
 @click.option('--verbose', '-v', is_flag=True, default=False, show_default=True, help='Verbose output')
 @click.pass_context
-def build(ctx, config, verbose):
+def build(ctx, config, properties, verbose):
     """Pipeline build commands"""
     console = create_console_logger(local=False, verbose=verbose)
     parsed_config = parse_config(config)
+    parsed_properties = parse_config(properties)
+
     repo = ctx.with_resource(Repository(config=RepoConfig.from_config(parsed_config)))
-    ctx.obj = CliContext(parsed_config, repo, console, verbose)
+    ctx.obj = CliContext(parsed_config, repo, console, verbose, parsed_properties)
 
 
 @build.command(help='Run an MPyL build')
-@click.option('--properties', '-p', required=False, type=click.Path(exists=False), help='Path to run properties',
-              envvar="MPYL_RUN_PROPERTIES_PATH", default=DEFAULT_RUN_PROPERTIES_FILE_NAME, show_default=True)
 @click.option('--ci', is_flag=True,
               help='Run as CI build instead of local. Ignores unversioned changes.')
 @click.option('--all', 'all_', is_flag=True, help='Build all projects, regardless of changes on branch')
@@ -61,9 +63,9 @@ def build(ctx, config, verbose):
     required=False
 )
 @click.pass_obj
-def run(obj: CliContext, properties, ci, all_, tag):  # pylint: disable=invalid-name
+def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
     asyncio.run(warn_if_update(obj.console))
-    run_properties = RunProperties.from_configuration(parse_config(properties), obj.config) if ci \
+    run_properties = RunProperties.from_configuration(obj.run_properties, obj.config) if ci \
         else RunProperties.for_local_run(obj.config, obj.repo.get_sha, obj.repo.get_branch, tag)
 
     parameters = MpylCliParameters(local=not ci, pull_main=all_, all=all_, verbose=obj.verbose, tag=tag)
@@ -87,24 +89,29 @@ def status(obj: CliContext):
 
 
 def __print_status(obj: CliContext):
-    branch = obj.repo.get_branch
+    run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
+    branch = run_properties.versioning.branch
+    if not branch:
+        branch = obj.repo.get_branch
+        obj.console.log(
+            f'Branch not specified in `{DEFAULT_RUN_PROPERTIES_FILE_NAME}`. Branch determined via git: {branch}')
+
     if branch and obj.repo.main_branch == obj.repo.get_branch:
         obj.console.log(f'On main branch ({branch}), cannot determine build status')
         return
-
     tag = obj.repo.get_tag if not branch else None
-
-    changes = obj.repo.changes_in_branch_including_local() if branch else obj.repo.changes_in_merge_commit()
-
-    build_set = find_build_set(obj.repo, changes, False)
-    run_properties = RunProperties.for_local_run(obj.config, obj.repo.get_sha, branch, tag)
-    result = RunResult(run_properties=run_properties, run_plan=build_set)
     version = run_properties.versioning
-    header: str = f"**Revision:** `{version.branch or version.tag}` at `{version.revision}`  \n"
-    if result.run_plan:
-        obj.console.print(Markdown(markup=header + "**Execution plan:**  \n" + run_result_to_markdown(result)))
-    else:
-        obj.console.print("No changes detected, nothing to do.")
+    revision = "Tag" if tag else "Branch"
+    obj.console.print(Markdown(f"**{revision}:** `{version.branch or version.tag}` at `{version.revision}`"))
+
+    if obj.repo.main_branch_pulled:
+        changes = obj.repo.changes_in_branch_including_local() if branch else obj.repo.changes_in_merge_commit()
+        build_set = find_build_set(obj.repo, changes, False)
+        result = RunResult(run_properties=run_properties, run_plan=build_set)
+        if result.run_plan:
+            obj.console.print(Markdown("**Execution plan:**  \n" + run_result_to_markdown(result)))
+        else:
+            obj.console.print("No changes detected, nothing to do.")
 
 
 class Pipeline(ParamType):
@@ -236,7 +243,7 @@ def jenkins(ctx, user, password, pipeline, test, arguments, background, silent, 
         pass
 
 
-@build.command(help='Clean MPyL metadata in `.mpl` folders')
+@build.command(help=f'Clean MPyL metadata in `{BUILD_ARTIFACTS_FOLDER}` folders')
 @click.option('--filter', '-f', 'filter_', required=False, type=click.STRING, help='Filter based on filepath ')
 @click.pass_obj
 def clean(obj: CliContext, filter_):

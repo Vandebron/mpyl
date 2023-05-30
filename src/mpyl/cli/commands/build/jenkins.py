@@ -59,7 +59,7 @@ def __get_pr_pipeline(config: dict, git_repo: Repository, pipeline: str, status:
 
 def run_jenkins(run_config: JenkinsRunParameters):
     log_console = Console(log_path=False, log_time=False)
-    with log_console.status('Fetching Github info.. [blue]>gh pr view[/blue]') as status:
+    with log_console.status('Fetching Github info.. [bright_blue]>gh pr view[/bright_blue]') as status:
         config = run_config.config
 
         with Repository(RepoConfig.from_config(config)) as git_repo:
@@ -80,7 +80,8 @@ def run_jenkins(run_config: JenkinsRunParameters):
                                                        username=run_config.jenkins_user,
                                                        password=run_config.jenkins_password),
                                        status=status,
-                                       follow=run_config.follow)
+                                       follow=run_config.follow,
+                                       verbose=run_config.verbose)
                 runner.run(run_config.pipeline_parameters)
             except requests.ConnectionError:
                 status.console.bell()

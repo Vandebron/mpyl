@@ -43,6 +43,7 @@ class RepoCredentials:
 @dataclass(frozen=True)
 class RepoConfig:
     main_branch: str
+    ignore_patterns: list[str]
     repo_credentials: Optional[RepoCredentials]
 
     @staticmethod
@@ -51,6 +52,7 @@ class RepoConfig:
         maybe_remote_config = git_config.get('remote', None)
         return RepoConfig(
             main_branch=git_config['mainBranch'],
+            ignore_patterns=git_config.get('ignorePatterns', []),
             repo_credentials=RepoCredentials.from_config(maybe_remote_config) if maybe_remote_config else None
         )
 
@@ -79,10 +81,9 @@ class Repository:
 
     @property
     def get_branch(self) -> Optional[str]:
-        try:
-            return self._repo.active_branch.name
-        except TypeError:
+        if self._repo.head.is_detached:
             return None
+        return self._repo.active_branch.name
 
     @property
     def get_tag(self) -> Optional[str]:
@@ -102,6 +103,9 @@ class Repository:
     def main_branch(self) -> str:
         return self._config.main_branch
 
+    def __get_filter_patterns(self):
+        return ["--"] + [f":!{pattern}" for pattern in self._config.ignore_patterns]
+
     @property
     def latest_tag(self) -> str:
         return str(sorted(self._repo.tags, key=lambda t: t.commit.committed_datetime)[-1])
@@ -109,8 +113,13 @@ class Repository:
     def changes_in_branch(self) -> list[Revision]:
         revisions = reversed(list(self._repo.iter_commits(f"{self._config.main_branch}..HEAD")))
         return [Revision(count, str(rev),
-                         self._repo.git.diff_tree(no_commit_id=True, name_only=True, r=str(rev)).splitlines())
-                for count, rev in enumerate(revisions)]
+                         self._repo.git.diff_tree(self.__get_filter_patterns(), no_commit_id=True, name_only=True,
+                                                  r=str(rev), ).splitlines()) for
+                count, rev in enumerate(revisions)]
+
+    def changes_in_commit(self) -> set[str]:
+        changed: set[str] = set(self._repo.git.diff(self.__get_filter_patterns(), None, name_only=True).splitlines())
+        return changed.union(self._repo.untracked_files)
 
     def changes_in_branch_including_local(self) -> list[Revision]:
         in_branch = self.changes_in_branch()
@@ -152,10 +161,6 @@ class Repository:
         remote = self.__get_remote()
         main = self._config.main_branch
         return remote.fetch(f"+refs/heads/{main}:refs/heads/{main}")
-
-    def changes_in_commit(self) -> set[str]:
-        changed: set[str] = set(self._repo.git.diff(None, name_only=True).splitlines())
-        return changed.union(self._repo.untracked_files)
 
     def find_projects(self, folder_pattern: str = '') -> list[str]:
         """ returns a set of all project.yml files

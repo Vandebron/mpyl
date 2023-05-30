@@ -197,7 +197,7 @@ class JiraReporter(Reporter):
             return JiraOutcome(success=False, exception=exc)
 
     def __assign_ticket(self, run_user_email: str, ticket: JiraTicket):
-        if ticket.assignee_email is None or ticket.assignee_email != run_user_email:
+        if ticket.assignee_email is None:
             jira_user = self._jira.user_find_by_user_string(query=run_user_email)
             if jira_user:
                 account_id = jira_user.pop().get('accountId')

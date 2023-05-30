@@ -1,9 +1,23 @@
-""" Step that tests the docker image from the target `tester` in Dockerfile-mpl. """
+""" Step that tests the docker image from the target `tester` in Dockerfile-mpl.
+
+
+## 🧪 Testing inside a container
+
+When unit tests are run within a docker container the test results need to be written to a folder inside it.
+This means that the test step _within the docker container_ should not return a system error.
+Otherwise, building of the container would stop and the test results would not be committed to a layer.
+
+The test results need to be writted  written to a folder named `$WORKDIR/target/test-reports/` for
+`TestDocker.extract_test_results` to find and extract them.
+
+
+"""
 import shutil
 from logging import Logger
 from pathlib import Path
 
 from python_on_whales import docker
+from python_on_whales.exceptions import NoSuchContainer
 
 from .after_test import IntegrationTestAfter
 from .before_test import IntegrationTestBefore
@@ -39,7 +53,7 @@ class TestDocker(Step):
                         file_path=dockerfile, image_tag=tag, target=test_target)
 
         if success:
-            artifact = self.extract_test_results(project, tag, step_input)
+            artifact = self.extract_test_results(self._logger, project, tag, step_input)
 
             suite = to_test_suites(artifact)
             summary = sum_suites(suite)
@@ -52,13 +66,26 @@ class TestDocker(Step):
                       produced_artifact=None)
 
     @staticmethod
-    def extract_test_results(project: Project, tag, step_input: Input) -> Artifact:
+    def extract_test_results(logger: Logger, project: Project, tag: str, step_input: Input) -> Artifact:
         test_result_path = Path(project.target_path, "test_results")
         shutil.rmtree(test_result_path, ignore_errors=True)
         Path(test_result_path).mkdir(parents=True, exist_ok=True)
 
         container_id = docker.create(tag).id
-        docker.copy(f'{container_id}:/{project.test_report_path}/.', test_result_path)
+
+        if not docker.container.exists(container_id):
+            raise ValueError(f'Container {container_id} with test results does not exist')
+
+        path_in_container = f'/{project.test_report_path}/'
+        logger.info(
+            f"Copying test results from container {container_id} at "
+            f"path {path_in_container} to host at {test_result_path}"
+        )
+        try:
+            docker.copy(f'{container_id}:{path_in_container}.', test_result_path)
+        except NoSuchContainer as exc:
+            logger.warning(f'Could not find test results in container {tag} at expected location {path_in_container}')
+            raise exc
 
         return input_to_artifact(artifact_type=ArtifactType.JUNIT_TESTS, step_input=step_input,
                                  spec={TEST_OUTPUT_PATH_KEY: f'{test_result_path}'})

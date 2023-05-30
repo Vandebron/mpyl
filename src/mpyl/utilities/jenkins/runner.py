@@ -8,13 +8,18 @@ from dataclasses import dataclass
 
 import requests
 from jenkinsapi.build import Build
+from jenkinsapi.constants import STATUS_SUCCESS, STATUS_ABORTED
 from jenkinsapi.custom_exceptions import JenkinsAPIException
 from jenkinsapi.jenkins import Jenkins
 from jenkinsapi.job import Job
+from rich.console import Group
 from rich.errors import MarkupError
-from rich.progress import Progress
+from rich.live import Live
+from rich.progress import Progress, TimeElapsedColumn, TextColumn, BarColumn, TaskProgressColumn, \
+    TimeRemainingColumn
 from rich.prompt import Confirm
 from rich.status import Status
+from rich.table import Column
 from rich.text import Text
 
 from . import Pipeline
@@ -56,6 +61,7 @@ class JenkinsRunner:
     jenkins: Jenkins
     status: Status
     follow: bool
+    verbose: bool
 
     def get_job(self, name: str) -> Job:
         try:
@@ -89,42 +95,19 @@ class JenkinsRunner:
 
     @staticmethod
     def to_icon(build_result: Build) -> str:
-        return '✅ ' if build_result.is_good() else '❌ '
+        status = build_result.get_status()
+        if status == STATUS_SUCCESS:
+            return '✅ '
+        if status == STATUS_ABORTED:
+            return '🚫 '
+        return '❌ '
 
-    def follow_logs(self, job: Job, build_number: int, duration_estimation: int):
-        self.status.update("Waiting for logs....")
-        while job.get_last_buildnumber() != build_number:
-            time.sleep(1)
-        self.status.stop()
+    def follow_logs(self, job: Job, build_number: int, duration_estimation: int, verbose: bool = False):
 
         build_to_follow: Build = job.get_build(build_number)
         self.status.console.log(f'{build_to_follow} {self.pipeline.build_location()}')
 
-        with Progress(console=self.status.console) as progress:
-            build_task = progress.add_task("", total=duration_estimation, visible=duration_estimation > 0)
-            start_time = time.time()
-
-            def cancel_handler(_sig, _frame):
-                progress.stop()
-                stop_build = Confirm.ask("Stop build?")
-                if stop_build:
-                    build_to_follow.stop()
-                else:
-                    sys.exit()
-
-            signal.signal(signal.SIGINT, cancel_handler)
-            for line in build_to_follow.stream_utf_8_logs():
-                current_time = time.time()
-                elapsed_time = current_time - start_time
-                lines = line.rstrip().split('\n')
-
-                try:
-                    text = "".join(lines)
-                    progress.log(Text.from_ansi(text))
-                except MarkupError:
-                    progress.log("Could not render log line")
-                progress.update(build_task, completed=elapsed_time)
-            progress.update(build_task, completed=duration_estimation)
+        self._stream_logs(build_to_follow, duration_estimation, verbose)
 
         build_to_follow.block_until_complete()
         finished_build = job.get_last_build()
@@ -135,6 +118,45 @@ class JenkinsRunner:
 
         os.system('afplay /System/Library/Sounds/' + ('Glass.aiff' if finished_build.is_good() else 'Sosumi.aiff'))
         sys.exit()
+
+    def _stream_logs(self, build_to_follow, duration_estimation, verbose):
+        progress = Progress(
+            TimeElapsedColumn(),
+            BarColumn(bar_width=None),
+            TaskProgressColumn(),
+            TimeRemainingColumn(),
+        )
+        log_line = Progress(TextColumn('{task.description}', table_column=Column(overflow='crop', no_wrap=True)))
+        live = Live(Group(log_line, progress) if not verbose else progress)
+        with live:
+            build_task_id = progress.add_task("", total=duration_estimation, visible=duration_estimation > 0)
+            start_time = time.time()
+            label_task_id = log_line.add_task("status")
+
+            def cancel_handler(_sig, _frame):
+                live.stop()
+                stop_build = Confirm.ask("Stop build?")
+                if stop_build:
+                    build_to_follow.stop()
+                    live.start()
+                else:
+                    sys.exit()
+
+            signal.signal(signal.SIGINT, cancel_handler)
+            for line in build_to_follow.stream_utf_8_logs():
+                elapsed_time = time.time() - start_time
+                lines = line.rstrip().split('\n')
+
+                try:
+                    text = "".join(lines)
+                    if verbose:
+                        progress.log(Text.from_ansi(text))
+                    else:
+                        log_line.update(label_task_id, description=text)
+                except MarkupError:
+                    progress.log("Could not render log line")
+                progress.update(build_task_id, completed=elapsed_time)
+            progress.update(build_task_id, completed=duration_estimation)
 
     def run(self, pipeline_parameters: dict):
         job: Job = self.get_job(self.pipeline.job_name())
@@ -162,5 +184,15 @@ class JenkinsRunner:
 
         new_build_number = last_build_number + 1
 
+        self.status.update("Waiting for build to start....")
+        while job.get_last_buildnumber() != new_build_number:
+            time.sleep(1)
+        self.status.stop()
+
         if self.follow:
-            self.follow_logs(job, new_build_number, last_build)
+            self.follow_logs(job, new_build_number, last_build, self.verbose)
+        else:
+            self.status.console.log(f'Build {new_build_number} started '
+                                    f'for {self.pipeline.human_readable()} at '
+                                    f'{job.get_build(new_build_number).get_build_url()}')
+            self.status.stop()

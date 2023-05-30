@@ -2,6 +2,7 @@ from pathlib import Path
 
 from ruamel.yaml import YAML
 
+from mpyl.constants import BUILD_ARTIFACTS_FOLDER
 from mpyl.steps import Output
 from src.mpyl.project import Stage
 from src.mpyl.projects.find import load_projects
@@ -36,7 +37,7 @@ class TestDiscovery:
         assert 1 == len(invalidated)
 
     def test_invalidation_logic(self):
-        test_output = Path(test_resource_path / "deployment" / ".mpl" / "TEST.yml").read_text(encoding="utf-8")
+        test_output = Path(test_resource_path / "deployment" / BUILD_ARTIFACTS_FOLDER / "TEST.yml").read_text(encoding="utf-8")
         output = yaml.load(test_output)
         assert not output.success, "output should not be successful"
         assert output_invalidated(None, "hash"), "should be invalidated if no output"

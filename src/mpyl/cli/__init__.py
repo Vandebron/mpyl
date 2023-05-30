@@ -26,6 +26,7 @@ class CliContext:
     repo: Repository
     console: Console
     verbose: bool
+    run_properties: dict
 
 
 async def fetch_latest_version() -> Optional[str]:

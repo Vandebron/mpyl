@@ -8,9 +8,9 @@ from click import ParamType, BadParameter
 from click.shell_completion import CompletionItem
 from rich.markdown import Markdown
 
-from ..constants import DEFAULT_CONFIG_FILE_NAME
 from . import CliContext, CONFIG_PATH_HELP, create_console_logger
 from .commands.projects.formatting import print_project
+from ..constants import DEFAULT_CONFIG_FILE_NAME
 from ..project import validate_project, load_project, Project
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
@@ -35,7 +35,7 @@ def projects(ctx, config, verbose, filter_):
     ctx.obj = ProjectsContext(
         cli=CliContext(config=parsed_config,
                        repo=ctx.with_resource(Repository(config=RepoConfig.from_config(parsed_config))),
-                       console=console, verbose=verbose), filter=filter_ if filter_ else '')
+                       console=console, verbose=verbose, run_properties={}), filter=filter_ if filter_ else '')
 
 
 @projects.command(name='list', help='List found projects')
