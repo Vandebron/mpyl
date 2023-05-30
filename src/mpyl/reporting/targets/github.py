@@ -91,7 +91,7 @@ class PullRequestReporter(Reporter):
         return self._change_pr_body
 
     def _change_pr_body(self, pull_request: PullRequest, results: RunResult):
-        current_body = (pull_request.body.split("----")[0] if pull_request.body else "") + "----"
+        current_body = (pull_request.body.split("----")[0] if pull_request.body else "") + "----\n"
         pull_request.edit(body=current_body + self.compose_function(results, self._raw_config))
 
     def _change_pr_comment(self, pull_request: PullRequest, results: RunResult):
