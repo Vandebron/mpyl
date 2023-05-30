@@ -100,6 +100,42 @@ class PullRequestComment(Reporter):
             return GithubOutcome(success=False, exception=exc)
 
 
+class PullRequestBody(Reporter):
+    _config: GithubConfig
+
+    def __init__(self, config: Dict,
+                 compose_function: typing.Callable[[RunResult, Optional[Dict]], str] = compose_message_body):
+        self._raw_config = config
+        self._config = GithubConfig.from_config(config)
+        self.git_repository = Repository(RepoConfig.from_config(config))
+        self.compose_function = compose_function
+
+    def _get_pull_request(self, repo: GithubRepository, run_properties: RunProperties) -> Optional[PullRequest]:
+        if run_properties.versioning.pr_number:
+            return repo.get_pull(run_properties.versioning.pr_number)
+
+        current_branch = self.git_repository.get_branch
+        if current_branch:
+            return get_pr_for_branch(repo, current_branch)
+        return None
+
+    def send_report(self, results: RunResult, text: Optional[str] = None) -> GithubOutcome:
+        try:
+            github = Github(self._config.token)
+            repo = github.get_repo(self._config.repository)
+
+            pull_request = self._get_pull_request(repo, results.run_properties)
+            if not pull_request:
+                return GithubOutcome(success=False, exception=Exception('No pull request found'))
+
+            pull_request.edit(
+                body=pull_request.body.split("----")[0] + "----" + self.compose_function(results, self._raw_config)
+            )
+            return GithubOutcome(success=True)
+        except GithubException as exc:
+            return GithubOutcome(success=False, exception=exc)
+
+
 class CommitCheck(Reporter):
     _github_config: GithubConfig
     _check_run_id: Optional[int]
