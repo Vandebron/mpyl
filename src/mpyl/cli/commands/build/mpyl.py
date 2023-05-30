@@ -46,7 +46,7 @@ FORMAT = "%(name)s  %(message)s"
 
 def get_build_plan(logger: logging.Logger, repo: Repository, mpyl_run_parameters: MpylRunParameters) -> RunResult:
     params = mpyl_run_parameters.parameters
-    branch = repo.get_branch
+    branch = repo.get_branch or mpyl_run_parameters.run_config.run_properties.versioning.branch
     logger.info(f"Running with {params} on {branch}")
     if branch:
         if repo.main_branch_pulled:
