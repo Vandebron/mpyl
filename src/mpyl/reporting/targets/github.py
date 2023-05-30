@@ -61,7 +61,7 @@ class GithubOutcome(ReportOutcome):
 
 
 class GithubUpdateStategy(Enum):
-    BODY = 'body',
+    BODY = 'body'
     COMMENT = 'comment'
 
 
@@ -69,12 +69,13 @@ class PullRequestReporter(Reporter):
     _config: GithubConfig
 
     def __init__(self, config: Dict,
-                 compose_function: Callable[[RunResult, Optional[Dict]], str] = compose_message_body):
+                 compose_function: Callable[[RunResult, Optional[Dict]], str] = compose_message_body,
+                 update_stategy: GithubUpdateStategy = GithubUpdateStategy.BODY):
         self._raw_config = config
         self._config = GithubConfig.from_config(config)
         self.git_repository = Repository(RepoConfig.from_config(config))
         self.compose_function = compose_function
-        self.update_strategy: GithubUpdateStategy = GithubUpdateStategy.BODY
+        self.update_strategy: GithubUpdateStategy = update_stategy
 
     def _get_pull_request(self, repo: GithubRepository, run_properties: RunProperties) -> Optional[PullRequest]:
         if run_properties.versioning.pr_number:
