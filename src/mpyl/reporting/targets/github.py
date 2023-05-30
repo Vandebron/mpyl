@@ -33,9 +33,10 @@ Checks can be referred to from branch protection rules, in order to prevent faul
 import base64
 import typing
 from datetime import datetime
+from enum import Enum
 from logging import Logger
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Callable
 
 from github import Github, GithubIntegration, GithubException
 from github.IssueComment import IssueComment
@@ -59,15 +60,21 @@ class GithubOutcome(ReportOutcome):
     pass
 
 
-class PullRequestComment(Reporter):
+class GithubUpdateStategy(Enum):
+    BODY = 'body',
+    COMMENT = 'comment'
+
+
+class PullRequestReporter(Reporter):
     _config: GithubConfig
 
     def __init__(self, config: Dict,
-                 compose_function: typing.Callable[[RunResult, Optional[Dict]], str] = compose_message_body):
+                 compose_function: Callable[[RunResult, Optional[Dict]], str] = compose_message_body):
         self._raw_config = config
         self._config = GithubConfig.from_config(config)
         self.git_repository = Repository(RepoConfig.from_config(config))
         self.compose_function = compose_function
+        self.update_strategy: GithubUpdateStategy = GithubUpdateStategy.BODY
 
     def _get_pull_request(self, repo: GithubRepository, run_properties: RunProperties) -> Optional[PullRequest]:
         if run_properties.versioning.pr_number:
@@ -78,46 +85,26 @@ class PullRequestComment(Reporter):
             return get_pr_for_branch(repo, current_branch)
         return None
 
-    def send_report(self, results: RunResult, text: Optional[str] = None) -> GithubOutcome:
-        try:
-            github = Github(self._config.token)
-            repo = github.get_repo(self._config.repository)
+    def _update_pr(self) -> Callable[[PullRequest, RunResult], None]:
+        if self.update_strategy == GithubUpdateStategy.COMMENT:
+            return self._change_pr_comment
+        else:
+            return self._change_pr_body
 
-            pull_request = self._get_pull_request(repo, results.run_properties)
-            if not pull_request:
-                return GithubOutcome(success=False, exception=Exception('No pull request found'))
+    def _change_pr_body(self, pull_request: PullRequest, results: RunResult):
+        current_body = (pull_request.body.split("----")[0] if pull_request.body else "") + "----"
+        pull_request.edit(body=current_body + self.compose_function(results, self._raw_config))
 
-            comments = pull_request.get_issue_comments()
-            authenticated_user = github.get_user()
-            comments_for_user = [c for c in comments if c.user.id == authenticated_user.id]
-            if comments_for_user:
-                comment_to_update: IssueComment = comments_for_user.pop()
-                comment_to_update.edit(self.compose_function(results, self._raw_config))
-            else:
-                pull_request.create_issue_comment(self.compose_function(results, self._raw_config))
-            return GithubOutcome(success=True)
-        except GithubException as exc:
-            return GithubOutcome(success=False, exception=exc)
-
-
-class PullRequestBody(Reporter):
-    _config: GithubConfig
-
-    def __init__(self, config: Dict,
-                 compose_function: typing.Callable[[RunResult, Optional[Dict]], str] = compose_message_body):
-        self._raw_config = config
-        self._config = GithubConfig.from_config(config)
-        self.git_repository = Repository(RepoConfig.from_config(config))
-        self.compose_function = compose_function
-
-    def _get_pull_request(self, repo: GithubRepository, run_properties: RunProperties) -> Optional[PullRequest]:
-        if run_properties.versioning.pr_number:
-            return repo.get_pull(run_properties.versioning.pr_number)
-
-        current_branch = self.git_repository.get_branch
-        if current_branch:
-            return get_pr_for_branch(repo, current_branch)
-        return None
+    def _change_pr_comment(self, pull_request: PullRequest, results: RunResult):
+        github = Github(self._config.token)
+        comments = pull_request.get_issue_comments()
+        authenticated_user = github.get_user()
+        comments_for_user = [c for c in comments if c.user.id == authenticated_user.id]
+        if comments_for_user:
+            comment_to_update: IssueComment = comments_for_user.pop()
+            comment_to_update.edit(self.compose_function(results, self._raw_config))
+        else:
+            pull_request.create_issue_comment(self.compose_function(results, self._raw_config))
 
     def send_report(self, results: RunResult, text: Optional[str] = None) -> GithubOutcome:
         try:
@@ -128,9 +115,7 @@ class PullRequestBody(Reporter):
             if not pull_request:
                 return GithubOutcome(success=False, exception=Exception('No pull request found'))
 
-            pull_request.edit(
-                body=pull_request.body.split("----")[0] + "----" + self.compose_function(results, self._raw_config)
-            )
+            self._update_pr()(pull_request, results)
             return GithubOutcome(success=True)
         except GithubException as exc:
             return GithubOutcome(success=False, exception=exc)
