@@ -90,25 +90,28 @@ def status(obj: CliContext):
 
 def __print_status(obj: CliContext):
     run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
-    branch = obj.repo.get_branch or run_properties.versioning.branch
+    branch = run_properties.versioning.branch
+    if not branch:
+        branch = obj.repo.get_branch
+        obj.console.log(
+            f'Branch not specified in `{DEFAULT_RUN_PROPERTIES_FILE_NAME}`. Branch determined via git: {branch}')
 
     if branch and obj.repo.main_branch == obj.repo.get_branch:
         obj.console.log(f'On main branch ({branch}), cannot determine build status')
         return
-
     tag = obj.repo.get_tag if not branch else None
-
-    changes = obj.repo.changes_in_branch_including_local() if branch else obj.repo.changes_in_merge_commit()
-
-    build_set = find_build_set(obj.repo, changes, False)
-    run_properties = RunProperties.for_local_run(obj.config, obj.repo.get_sha, branch, tag)
-    result = RunResult(run_properties=run_properties, run_plan=build_set)
     version = run_properties.versioning
-    header: str = f"**Revision:** `{version.branch or version.tag}` at `{version.revision}`  \n"
-    if result.run_plan:
-        obj.console.print(Markdown(markup=header + "**Execution plan:**  \n" + run_result_to_markdown(result)))
-    else:
-        obj.console.print("No changes detected, nothing to do.")
+    revision = "Tag" if tag else "Branch"
+    obj.console.print(Markdown(f"**{revision}:** `{version.branch or version.tag}` at `{version.revision}`"))
+
+    if obj.repo.main_branch_pulled:
+        changes = obj.repo.changes_in_branch_including_local() if branch else obj.repo.changes_in_merge_commit()
+        build_set = find_build_set(obj.repo, changes, False)
+        result = RunResult(run_properties=run_properties, run_plan=build_set)
+        if result.run_plan:
+            obj.console.print(Markdown("**Execution plan:**  \n" + run_result_to_markdown(result)))
+        else:
+            obj.console.print("No changes detected, nothing to do.")
 
 
 class Pipeline(ParamType):
