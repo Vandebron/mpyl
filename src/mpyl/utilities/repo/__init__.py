@@ -10,6 +10,7 @@ from typing import Dict, Optional
 from urllib.parse import urlparse
 
 from git import Git, Repo, Remote
+
 from ...project import Project
 
 
@@ -84,6 +85,13 @@ class Repository:
             return None
 
     @property
+    def get_tag(self) -> Optional[str]:
+        curr_rev = self._repo.head.commit
+        curr_rev_tag = self._repo.git.describe(curr_rev, tags=True)
+        logging.debug(f"Current revision: {curr_rev} tag: {curr_rev_tag}")
+        return curr_rexv_tag
+
+    @property
     def get_remote_url(self):
         return self._repo.remote().url
 
@@ -109,26 +117,24 @@ class Repository:
         in_branch.append(Revision(len(in_branch), self.get_sha, self.changes_in_commit()))
         return in_branch
 
-    def changes_in_merge_commit(self, curr_tag: str) -> list[Revision]:
-        curr_rev = self._repo.rev_parse('HEAD')
-        curr_rev_tag = self._repo.git.describe(curr_rev, tags=True)
-        logging.debug(f"Current revision: {curr_rev} tag: {curr_rev_tag}")
+    def changes_in_tagged_commit(self, current_tag: str) -> list[Revision]:
+        curr_rev_tag = self.get_tag
 
-        if curr_rev_tag != curr_tag:
-            logging.error("HEAD is not at merge commit, cannot determine changed files.")
+        if curr_rev_tag != current_tag:
+            logging.error(f"HEAD is not at {curr_rev_tag} not at expected {current_tag}")
             return []
 
-        parent_revs = curr_rev.parents
+        return self.changes_in_merge_commit()
+
+    def changes_in_merge_commit(self):
+        parent_revs = self._repo.head.commit.parents
+        if not parent_revs:
+            logging.error("HEAD is not at merge commit, cannot determine changed files.")
+            return []
         logging.debug(f"Parent revisions: {parent_revs}")
         files_changed = self._repo.git.diff(f"{str(parent_revs[0])}..{str(parent_revs[1])}",
                                             name_only=True).splitlines()
-        return [
-            Revision(
-                ord=0,
-                hash=str(curr_rev),
-                files_touched=files_changed
-            )
-        ]
+        return [Revision(ord=0, hash=str(self.get_sha), files_touched=files_changed)]
 
     @property
     def main_branch_pulled(self) -> bool:

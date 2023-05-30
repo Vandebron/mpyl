@@ -56,7 +56,7 @@ def get_build_plan(logger: logging.Logger, repo: Repository, mpyl_run_parameters
             logger.info(f'Pulled `{pull_result[0].remote_ref_path.strip()}` to local')
 
     if params.tag:
-        changes_in_branch = repo.changes_in_merge_commit(params.tag)
+        changes_in_branch = repo.changes_in_tagged_commit(params.tag)
     else:
         changes_in_branch = repo.changes_in_branch_including_local() if params.local else repo.changes_in_branch()
     logger.debug(f'Changes: {changes_in_branch}')

@@ -88,19 +88,19 @@ def status(obj: CliContext):
 
 def __print_status(obj: CliContext):
     branch = obj.repo.get_branch
-    if not branch:
-        obj.console.log(f'No branch detected, cannot determine build status on revision {obj.repo.get_sha}')
-        return
-    if obj.repo.main_branch == obj.repo.get_branch:
+    if branch and obj.repo.main_branch == obj.repo.get_branch:
         obj.console.log(f'On main branch ({branch}), cannot determine build status')
         return
 
-    changes_in_branch = obj.repo.changes_in_branch_including_local()
-    build_set = find_build_set(obj.repo, changes_in_branch, False)
-    run_properties = RunProperties.for_local_run(obj.config, obj.repo.get_sha, branch)
+    tag = obj.repo.get_tag if not branch else None
+
+    changes = obj.repo.changes_in_branch_including_local() if branch else obj.repo.changes_in_merge_commit()
+
+    build_set = find_build_set(obj.repo, changes, False)
+    run_properties = RunProperties.for_local_run(obj.config, obj.repo.get_sha, branch, tag)
     result = RunResult(run_properties=run_properties, run_plan=build_set)
     version = run_properties.versioning
-    header: str = f"**Revision:** `{version.branch}` at `{version.revision}`  \n"
+    header: str = f"**Revision:** `{version.branch or version.tag}` at `{version.revision}`  \n"
     if result.run_plan:
         obj.console.print(Markdown(markup=header + "**Execution plan:**  \n" + run_result_to_markdown(result)))
     else:
