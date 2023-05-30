@@ -123,7 +123,9 @@ def __check_config(console, env_var, default, schema_path, name):
                 validate(parsed, schema_dict.decode('utf-8'))
                 console.check(f'{name.capitalize()} is valid', success=True)
             except jsonschema.exceptions.ValidationError as exc:
-                console.check(f"{name.capitalize()} is invalid: {exc.message} at '{'.'.join(exc.path)}'",
-                              success=False)
+                console.check(
+                    f"{name.capitalize()} is invalid: {exc.message} at '{'.'.join(exc.path)}'. 🤔Did you rebase"
+                    f" your branch onto {parsed['cvs']['git']['mainBranch']}?",
+                    success=False)
     else:
         console.check(f"Could not find {location}. Location can be specified with env var '{env_var}'", success=False)
