@@ -1,0 +1,5 @@
+FROM bitnami/kubectl:latest as kubectl
+
+FROM cypress/browsers:latest
+
+COPY --from=kubectl /opt/bitnami/kubectl/bin/kubectl /usr/local/bin/

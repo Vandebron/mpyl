@@ -33,7 +33,9 @@ class CypressTest(Step):
         else:
             raise ValueError("No cypress specs are defined in the project dependencies")
 
-        docker_container = docker.run(image="cypress/browsers:latest", interactive=True, detach=True,
+        custom_image_tag = "mpyl/cypress"
+        docker.build(context_path=volume_path, tags=[custom_image_tag], file=f"{volume_path}/Dockerfile-mpyl")
+        docker_container = docker.run(image=custom_image_tag, interactive=True, detach=True,
                                       volumes=[(volume_path, "/cypress"),
                                                (os.path.expanduser("~/.kube/config"), "/root/.kube/config")],
                                       workdir="/cypress")
@@ -41,20 +43,6 @@ class CypressTest(Step):
             raise TypeError("Docker run command should return a container")
 
         try:
-            execute_with_stream(logger=self._logger, container=docker_container,
-                                command="apt-get -y update", task_name="Updating apt-get")
-            execute_with_stream(logger=self._logger, container=docker_container,
-                                command="apt-get -y install curl", task_name="Installing curl")
-            latest_kubectl_version = docker_container.execute(command=['curl', '-L', '-s',
-                                                                       'https://dl.k8s.io/release/stable.txt'])
-            execute_with_stream(logger=self._logger, container=docker_container,
-                                command=f'curl -LO -m 8 https://dl.k8s.io/release/{latest_kubectl_version}'
-                                        '/bin/linux/amd64/kubectl',
-                                task_name="Installing kubectl")
-            execute_with_stream(logger=self._logger, container=docker_container, command="chmod +x ./kubectl",
-                                task_name="Changing kubectl permissions")
-            execute_with_stream(logger=self._logger, container=docker_container, command="mv ./kubectl /usr/local/bin",
-                                task_name="Moving kubectl to /usr/local/bin")
             execute_with_stream(logger=self._logger, container=docker_container, command="yarn install",
                                 task_name="Running yarn install")
             execute_with_stream(logger=self._logger, container=docker_container, command="yarn cypress install",
