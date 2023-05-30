@@ -3,7 +3,8 @@
 
 ## PR comment
 Pipeline results can be reported in the form of an update to the PR body or user comment on the pull request,
-using the `PullRequestReporter` class. The mode of update is determined by the `update_stategy` parameter in the constructor.
+using the `PullRequestReporter` class.
+The mode of update is determined by the `update_stategy` parameter in the constructor.
 You are recommended to use a bot account as the authenticated user.
 
 ### Installation instructions
@@ -76,7 +77,7 @@ class PullRequestReporter(Reporter):
         self.compose_function = compose_function
         self.update_strategy: GithubUpdateStategy = update_stategy
 
-        self.BODY_SEPARATOR = "----"
+        self.body_separator = "----"
 
     def _get_pull_request(self, repo: GithubRepository, run_properties: RunProperties) -> Optional[PullRequest]:
         if run_properties.versioning.pr_number:
@@ -92,10 +93,14 @@ class PullRequestReporter(Reporter):
             return self._change_pr_comment
         return self._change_pr_body
 
+    def _extract_pr_header(self, current_body: Optional[str]) -> str:
+        body_header = current_body.split(self.body_separator)[0] if current_body else ""
+        return body_header.rstrip("\n") + f"\n{self.body_separator}\n"
+
     def _change_pr_body(self, pull_request: PullRequest, results: RunResult):
-        current_body = (pull_request.body.split(self.BODY_SEPARATOR)[0] if pull_request.body else "") + \
-                       f"\n{self.BODY_SEPARATOR}\n"
-        pull_request.edit(body=current_body + self.compose_function(results, self._raw_config))
+        pull_request.edit(
+            body=self._extract_pr_header(pull_request.body) + self.compose_function(results, self._raw_config)
+        )
 
     def _change_pr_comment(self, pull_request: PullRequest, results: RunResult):
         github = Github(self._config.token)
