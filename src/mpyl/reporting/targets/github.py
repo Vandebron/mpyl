@@ -31,7 +31,6 @@ Checks can be referred to from branch protection rules, in order to prevent faul
 
 """
 import base64
-import typing
 from datetime import datetime
 from enum import Enum
 from logging import Logger
@@ -89,8 +88,7 @@ class PullRequestReporter(Reporter):
     def _update_pr(self) -> Callable[[PullRequest, RunResult], None]:
         if self.update_strategy == GithubUpdateStategy.COMMENT:
             return self._change_pr_comment
-        else:
-            return self._change_pr_body
+        return self._change_pr_body
 
     def _change_pr_body(self, pull_request: PullRequest, results: RunResult):
         current_body = (pull_request.body.split("----")[0] if pull_request.body else "") + "----"
