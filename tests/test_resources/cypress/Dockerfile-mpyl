@@ -1,5 +1,12 @@
-FROM bitnami/kubectl:latest as kubectl
+FROM bitnami/kubectl:1.24.10 as kubectl
 
-FROM cypress/browsers:latest
+FROM cypress/browsers:node16.14.2-slim-chrome100-ff99-edge
 
 COPY --from=kubectl /opt/bitnami/kubectl/bin/kubectl /usr/local/bin/
+
+RUN apt update && \
+    apt upgrade -y && \
+    apt install --no-install-recommends -y ca-certificates && \
+    apt clean && \
+    apt autoremove && \
+    rm -rf /var/lib/apt/lists/*
