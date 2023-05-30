@@ -75,7 +75,7 @@ def __check_jenkins(console: HealthConsole):
 
     if gh_is_installed:
         try:
-            get_token(GithubConfig(parsed))
+            get_token(GithubConfig.from_config(parsed))
             console.check('Github token found', success=True)
         except CalledProcessError:
             console.check('Github token not found. Log in with `gh auth login`', success=False)

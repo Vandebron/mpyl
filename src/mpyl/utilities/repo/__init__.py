@@ -3,6 +3,7 @@
 At this moment Git is the only supported VCS.
 """
 
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Optional
@@ -77,8 +78,18 @@ class Repository:
         return self._repo.git.rev_parse(self._repo.head, short=True)
 
     @property
-    def get_branch(self):
-        return self._repo.active_branch.name
+    def get_branch(self) -> Optional[str]:
+        try:
+            return self._repo.active_branch.name
+        except TypeError:
+            return None
+
+    @property
+    def get_tag(self) -> Optional[str]:
+        current_revision = self._repo.head.commit
+        current_tag = self._repo.git.describe(current_revision, tags=True)
+        logging.debug(f"Current revision: {current_revision} tag: {current_tag}")
+        return current_tag
 
     @property
     def get_remote_url(self):
@@ -98,28 +109,47 @@ class Repository:
     def changes_in_branch(self) -> list[Revision]:
         revisions = reversed(list(self._repo.iter_commits(f"{self._config.main_branch}..HEAD")))
         return [Revision(count, str(rev),
-                         self._repo.git.diff_tree(no_commit_id=True, name_only=True, r=str(rev)).splitlines()) for
-                count, rev in enumerate(revisions)]
+                         self._repo.git.diff_tree(no_commit_id=True, name_only=True, r=str(rev)).splitlines())
+                for count, rev in enumerate(revisions)]
 
     def changes_in_branch_including_local(self) -> list[Revision]:
         in_branch = self.changes_in_branch()
         in_branch.append(Revision(len(in_branch), self.get_sha, self.changes_in_commit()))
         return in_branch
 
+    def changes_in_tagged_commit(self, current_tag: str) -> list[Revision]:
+        curr_rev_tag = self.get_tag
+
+        if curr_rev_tag != current_tag:
+            logging.error(f"HEAD is not at {curr_rev_tag} not at expected {current_tag}")
+            return []
+
+        return self.changes_in_merge_commit()
+
+    def changes_in_merge_commit(self):
+        parent_revs = self._repo.head.commit.parents
+        if not parent_revs:
+            logging.error("HEAD is not at merge commit, cannot determine changed files.")
+            return []
+        logging.debug(f"Parent revisions: {parent_revs}")
+        files_changed = self._repo.git.diff(f"{str(parent_revs[0])}..{str(parent_revs[1])}",
+                                            name_only=True).splitlines()
+        return [Revision(ord=0, hash=str(self.get_sha), files_touched=files_changed)]
+
     @property
     def main_branch_pulled(self) -> bool:
         branch_names = list(map(lambda n: n.name, self._repo.references))
         return f'{self._config.main_branch}' in branch_names
 
-    def _init_remote(self):
+    def __get_remote(self) -> Remote:
         default_remote = self._repo.remote('origin')
-        if 'https:' not in default_remote.url:
+        if 'https:' not in default_remote.url or self._config.repo_credentials is None:
             return default_remote
 
         return default_remote.set_url(self._config.repo_credentials.to_url_with_credentials)
 
     def pull_main_branch(self):
-        remote = Remote(self._repo, 'origin')
+        remote = self.__get_remote()
         main = self._config.main_branch
         return remote.fetch(f"+refs/heads/{main}:refs/heads/{main}")
 

@@ -171,7 +171,7 @@ class JiraReporter(Reporter):
 
     def __init__(self, config: dict, branch: str, logger: Logger):
         jira_config = JiraConfig.from_config(config)
-        self._ticket = extract_ticket_from_branch(branch, jira_config.ticket_pattern)
+        self._ticket = extract_ticket_from_branch(branch, jira_config.ticket_pattern) if branch else None
         self._config = jira_config
         self._jira = create_jira_for_config(jira_config)
         self._logger = logger

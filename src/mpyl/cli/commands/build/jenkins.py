@@ -1,12 +1,14 @@
 """Jenkins multibranch pipeline build tool"""
 import subprocess
 from dataclasses import dataclass
+from typing import Optional
 
 import requests
 from github import Github
 from jenkinsapi.jenkins import Jenkins
 from rich.console import Console
 from rich.markdown import Markdown
+from rich.status import Status
 
 from ....project import Target
 from ....utilities.github import GithubConfig, get_pr_for_branch
@@ -24,6 +26,7 @@ class JenkinsRunParameters:
     pipeline_parameters: dict
     verbose: bool
     follow: bool
+    tag: Optional[str] = None
 
 
 def get_token(github_config: GithubConfig):
@@ -33,32 +36,47 @@ def get_token(github_config: GithubConfig):
                           check=True).stdout.decode('utf-8').strip()
 
 
+def __get_pr_pipeline(config: dict, git_repo: Repository, pipeline: str, status: Status) -> Optional[Pipeline]:
+    github_config = GithubConfig.from_config(config)
+    github = Github(login_or_token=get_token(github_config))
+
+    repo = github.get_repo(github_config.repository)
+
+    branch = git_repo.get_branch
+    if not branch:
+        status.console.log('Could not determine current branch')
+        return None
+
+    if git_repo.main_branch == branch:
+        status.console.log(f'On main branch ({branch}), cannot determine which PR to build')
+        return None
+
+    pull = get_pr_for_branch(repo, branch)
+
+    return Pipeline(target=Target.PULL_REQUEST, tag=f'{pull.number}', url=pull.html_url, pipeline=pipeline,
+                    body=pull.body, jenkins_config=JenkinsConfig.from_config(config))
+
+
 def run_jenkins(run_config: JenkinsRunParameters):
     log_console = Console(log_path=False, log_time=False)
     with log_console.status('Fetching Github info.. [blue]>gh pr view[/blue]') as status:
         config = run_config.config
-        github_config = GithubConfig(config)
+
         with Repository(RepoConfig.from_config(config)) as git_repo:
             try:
-                github = Github(login_or_token=get_token(github_config))
-
-                repo = github.get_repo(github_config.repository)
-
-                if git_repo.main_branch == git_repo.get_branch:
-                    status.console.log(f'On main branch ({git_repo.get_branch}), cannot determine which PR to build')
+                pipeline_info = Pipeline(
+                    target=Target.ACCEPTANCE, tag=run_config.tag, url="https://tag-url",
+                    pipeline=run_config.pipeline, body="",
+                    jenkins_config=JenkinsConfig.from_config(config)) if run_config.tag \
+                    else __get_pr_pipeline(config, git_repo, run_config.pipeline, status)
+                if not pipeline_info:
                     return
-
-                pull = get_pr_for_branch(repo, git_repo.get_branch)
-
-                jenkins_config = JenkinsConfig.from_config(config)
-                pipeline_info = Pipeline(target=Target.PULL_REQUEST, tag=f'{pull.number}', url=pull.url,
-                                         pipeline=run_config.pipeline, body=pull.body, jenkins_config=jenkins_config)
 
                 status.start()
                 status.update(f'Fetching Jenkins info for {pipeline_info.human_readable()} ...')
 
                 runner = JenkinsRunner(pipeline=pipeline_info,
-                                       jenkins=Jenkins(baseurl=jenkins_config.url,
+                                       jenkins=Jenkins(baseurl=JenkinsConfig.from_config(config).url,
                                                        username=run_config.jenkins_user,
                                                        password=run_config.jenkins_password),
                                        status=status,

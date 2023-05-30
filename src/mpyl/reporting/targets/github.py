@@ -39,6 +39,7 @@ from typing import Dict, Optional
 
 from github import Github, GithubIntegration, GithubException
 from github.IssueComment import IssueComment
+from github.PullRequest import PullRequest
 from github.Repository import Repository as GithubRepository
 
 from . import Reporter, ReportOutcome
@@ -64,16 +65,18 @@ class PullRequestComment(Reporter):
     def __init__(self, config: Dict,
                  compose_function: typing.Callable[[RunResult, Optional[Dict]], str] = compose_message_body):
         self._raw_config = config
-        self._config = GithubConfig(config)
+        self._config = GithubConfig.from_config(config)
         self.git_repository = Repository(RepoConfig.from_config(config))
         self.compose_function = compose_function
 
-    def _get_pull_request(self, repo: GithubRepository, run_properties: RunProperties):
+    def _get_pull_request(self, repo: GithubRepository, run_properties: RunProperties) -> Optional[PullRequest]:
         if run_properties.versioning.pr_number:
             return repo.get_pull(run_properties.versioning.pr_number)
 
         current_branch = self.git_repository.get_branch
-        return get_pr_for_branch(repo, current_branch)
+        if current_branch:
+            return get_pr_for_branch(repo, current_branch)
+        return None
 
     def send_report(self, results: RunResult, text: Optional[str] = None) -> GithubOutcome:
         try:
@@ -81,6 +84,8 @@ class PullRequestComment(Reporter):
             repo = github.get_repo(self._config.repository)
 
             pull_request = self._get_pull_request(repo, results.run_properties)
+            if not pull_request:
+                return GithubOutcome(success=False, exception=Exception('No pull request found'))
 
             comments = pull_request.get_issue_comments()
             authenticated_user = github.get_user()
@@ -101,7 +106,7 @@ class CommitCheck(Reporter):
 
     def __init__(self, config: Dict, logger: Logger):
         self._config = config
-        self._github_config = GithubConfig(config)
+        self._github_config = GithubConfig.from_config(config)
         self._check_run_id = None
         self._logger = logger
 

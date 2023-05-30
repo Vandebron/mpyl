@@ -30,6 +30,7 @@ class VersioningProperties:
         return f'pr-{self.pr_number}' if self.pr_number else self.tag
 
 
+
 @dataclass(frozen=True)
 class RunContext:
     build_id: str
@@ -83,9 +84,9 @@ class RunProperties:
     """Whether the run is local or not"""
 
     @staticmethod
-    def for_local_run(config: Dict, revision: str, branch: Optional[str]):
+    def for_local_run(config: Dict, revision: str, branch: Optional[str], tag: Optional[str]):
         return RunProperties(details=RunContext("", "", "", "", "", None), target=Target.PULL_REQUEST,
-                             versioning=VersioningProperties(revision, branch, 123, None), config=config,
+                             versioning=VersioningProperties(revision, branch, 123, tag), config=config,
                              console=ConsoleProperties("INFO", 130), local=True)
 
     @staticmethod
