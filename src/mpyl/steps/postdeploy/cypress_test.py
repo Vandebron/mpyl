@@ -52,7 +52,7 @@ class CypressTest(Step):
 
             run_command = f"yarn cypress run --spec {specs_string}"
             record_key = cypress_config.record_key
-            if not step_input.run_properties.local and record_key:
+            if "test_resources/cypress" not in volume_path and record_key:
                 run_command += f" --record --key {record_key}"
             execute_with_stream(logger=self._logger, container=docker_container, command=run_command,
                                 task_name="Running cypress tests")

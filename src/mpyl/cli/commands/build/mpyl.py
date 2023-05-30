@@ -116,7 +116,9 @@ def find_build_set(repo: Repository, changes_in_branch: list[Revision], build_al
     all_projects = set(map(lambda p: load_project(Path(""), Path(p), False), project_paths))
 
     if build_all:
-        return {
+        return {Stage.BUILD: for_stage(all_projects, Stage.BUILD),
+                Stage.TEST: for_stage(all_projects, Stage.TEST),
+                Stage.DEPLOY: for_stage(all_projects, Stage.DEPLOY),
                 Stage.POST_DEPLOY: for_stage(all_projects, Stage.POST_DEPLOY)}
 
     return find_invalidated_projects_per_stage(all_projects, changes_in_branch)
