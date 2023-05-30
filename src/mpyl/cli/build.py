@@ -64,7 +64,7 @@ def build(ctx, config, verbose):
 def run(obj: CliContext, properties, ci, all_, tag):  # pylint: disable=invalid-name
     asyncio.run(warn_if_update(obj.console))
     run_properties = RunProperties.from_configuration(parse_config(properties), obj.config) if ci \
-        else RunProperties.for_local_run(obj.config, obj.repo.get_sha, obj.repo.get_branch)
+        else RunProperties.for_local_run(obj.config, obj.repo.get_sha, obj.repo.get_branch, tag)
 
     parameters = MpylCliParameters(local=not ci, pull_main=all_, all=all_, verbose=obj.verbose, tag=tag)
     obj.console.log(parameters)

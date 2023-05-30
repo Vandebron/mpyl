@@ -86,10 +86,10 @@ class Repository:
 
     @property
     def get_tag(self) -> Optional[str]:
-        curr_rev = self._repo.head.commit
-        curr_rev_tag = self._repo.git.describe(curr_rev, tags=True)
-        logging.debug(f"Current revision: {curr_rev} tag: {curr_rev_tag}")
-        return curr_rexv_tag
+        current_revision = self._repo.head.commit
+        current_tag = self._repo.git.describe(current_revision, tags=True)
+        logging.debug(f"Current revision: {current_revision} tag: {current_tag}")
+        return current_tag
 
     @property
     def get_remote_url(self):
