@@ -2,3 +2,9 @@ ops:
   deploy_projects:
     config:
       simulate_deploy: false
+execution:
+  config:
+    multiprocess:
+      max_concurrent: 4
+      start_method:
+        forkserver: {}
