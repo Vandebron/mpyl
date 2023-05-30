@@ -47,21 +47,20 @@ FORMAT = "%(name)s  %(message)s"
 def get_build_plan(logger: logging.Logger, repo: Repository, mpyl_run_parameters: MpylRunParameters) -> RunResult:
     params = mpyl_run_parameters.parameters
     logger.info(f"Running with {params}")
-    if params.pull_main:
+    branch = repo.get_branch
+    if branch:
         if repo.main_branch_pulled:
             logger.info(f'Branch `{repo.main_branch}` already present locally. Skipping pull.')
         else:
             logger.info(f'Pulling `{repo.main_branch}` from {repo.get_remote_url}')
             pull_result = repo.pull_main_branch()
             logger.info(f'Pulled `{pull_result[0].remote_ref_path.strip()}` to local')
-
-    if params.tag:
-        changes_in_branch = repo.changes_in_tagged_commit(params.tag)
+        changes = repo.changes_in_branch_including_local() if params.local else repo.changes_in_branch()
     else:
-        changes_in_branch = repo.changes_in_branch_including_local() if params.local else repo.changes_in_branch()
-    logger.debug(f'Changes: {changes_in_branch}')
+        changes = repo.changes_in_tagged_commit(params.tag) if params.tag else repo.changes_in_merge_commit()
+    logger.debug(f'Changes: {changes}')
 
-    projects_per_stage: dict[Stage, set[Project]] = find_build_set(repo, changes_in_branch, params.all)
+    projects_per_stage: dict[Stage, set[Project]] = find_build_set(repo, changes, params.all)
     return RunResult(run_properties=mpyl_run_parameters.run_config.run_properties, run_plan=projects_per_stage)
 
 
