@@ -81,10 +81,9 @@ class Repository:
 
     @property
     def get_branch(self) -> Optional[str]:
-        try:
-            return self._repo.active_branch.name
-        except TypeError:
+        if self._repo.head.is_detached:
             return None
+        return self._repo.active_branch.name
 
     @property
     def get_tag(self) -> Optional[str]:

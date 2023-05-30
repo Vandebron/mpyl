@@ -38,19 +38,21 @@ async def warn_if_update(console: Console):
 @click.group('build')
 @click.option('--config', '-c', required=True, type=click.Path(exists=True), help=CONFIG_PATH_HELP,
               envvar="MPYL_CONFIG_PATH", default=DEFAULT_CONFIG_FILE_NAME)
+@click.option('--properties', '-p', required=False, type=click.Path(exists=False), help='Path to run properties',
+              envvar="MPYL_RUN_PROPERTIES_PATH", default=DEFAULT_RUN_PROPERTIES_FILE_NAME, show_default=True)
 @click.option('--verbose', '-v', is_flag=True, default=False, show_default=True, help='Verbose output')
 @click.pass_context
-def build(ctx, config, verbose):
+def build(ctx, config, properties, verbose):
     """Pipeline build commands"""
     console = create_console_logger(local=False, verbose=verbose)
     parsed_config = parse_config(config)
+    parsed_properties = parse_config(properties)
+
     repo = ctx.with_resource(Repository(config=RepoConfig.from_config(parsed_config)))
-    ctx.obj = CliContext(parsed_config, repo, console, verbose)
+    ctx.obj = CliContext(parsed_config, repo, console, verbose, parsed_properties)
 
 
 @build.command(help='Run an MPyL build')
-@click.option('--properties', '-p', required=False, type=click.Path(exists=False), help='Path to run properties',
-              envvar="MPYL_RUN_PROPERTIES_PATH", default=DEFAULT_RUN_PROPERTIES_FILE_NAME, show_default=True)
 @click.option('--ci', is_flag=True,
               help='Run as CI build instead of local. Ignores unversioned changes.')
 @click.option('--all', 'all_', is_flag=True, help='Build all projects, regardless of changes on branch')
@@ -61,9 +63,9 @@ def build(ctx, config, verbose):
     required=False
 )
 @click.pass_obj
-def run(obj: CliContext, properties, ci, all_, tag):  # pylint: disable=invalid-name
+def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
     asyncio.run(warn_if_update(obj.console))
-    run_properties = RunProperties.from_configuration(parse_config(properties), obj.config) if ci \
+    run_properties = RunProperties.from_configuration(obj.run_properties, obj.config) if ci \
         else RunProperties.for_local_run(obj.config, obj.repo.get_sha, obj.repo.get_branch, tag)
 
     parameters = MpylCliParameters(local=not ci, pull_main=all_, all=all_, verbose=obj.verbose, tag=tag)
@@ -87,7 +89,9 @@ def status(obj: CliContext):
 
 
 def __print_status(obj: CliContext):
-    branch = obj.repo.get_branch
+    run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
+    branch = obj.repo.get_branch or run_properties.versioning.branch
+
     if branch and obj.repo.main_branch == obj.repo.get_branch:
         obj.console.log(f'On main branch ({branch}), cannot determine build status')
         return

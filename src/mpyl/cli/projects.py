@@ -35,7 +35,7 @@ def projects(ctx, config, verbose, filter_):
     ctx.obj = ProjectsContext(
         cli=CliContext(config=parsed_config,
                        repo=ctx.with_resource(Repository(config=RepoConfig.from_config(parsed_config))),
-                       console=console, verbose=verbose), filter=filter_ if filter_ else '')
+                       console=console, verbose=verbose, run_properties={}), filter=filter_ if filter_ else '')
 
 
 @projects.command(name='list', help='List found projects')
