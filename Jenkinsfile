@@ -42,16 +42,14 @@ pipeline {
                     writeFile(file: 'mpyl_config.yml', text: config)
                     withKubeConfig([credentialsId: 'jenkins-rancher-service-account-kubeconfig-test']) {
                         wrap([$class: 'BuildUser']) {
+                            sh "cp /usr/share/zoneinfo/UTC /etc/localtime && echo UTC > /etc/timezone"
                             sh "pipenv clean"
                             sh "pipenv install --ignore-pipfile --skip-lock --site-packages --index https://test.pypi.org/simple/ 'mpyl==$CHANGE_ID.*'"
                             sh "pipenv install -d --skip-lock"
-                            withEnv(['JENKINS_NODE_COOKIE=dontkill']) {
-                                sh "pipenv run dagster dev -f mpyl-dagster-example.py &"
-                                sh "pipenv run mpyl projects lint"
-                                sh "pipenv run mpyl health"
-                                sh "pipenv run mpyl build status"
-                                sh "pipenv run run-dagster-client"
-                            }
+                            sh "pipenv run mpyl projects lint"
+                            sh "pipenv run mpyl health"
+                            sh "pipenv run mpyl build status"
+                            sh "pipenv run run-dagster-client"
                         }
                     }
                 }
