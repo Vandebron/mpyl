@@ -2,7 +2,7 @@ from pathlib import Path
 
 from dagster import config_from_files, op, DynamicOut, DynamicOutput, get_dagster_logger, Output, Failure, job
 from mpyl.project import load_project, Project, Stage
-from mpyl.stages.discovery import find_invalidated_projects_for_stage
+from mpyl.stages.discovery import find_invalidated_projects_for_stage, for_stage
 from mpyl.steps.models import RunProperties
 from mpyl.steps.steps import Steps, StepResult
 from mpyl.utilities.repo import Repository, RepoConfig
@@ -51,32 +51,37 @@ def deploy_projects(context, projects: list[Project], outputs: list[StepResult])
     return Output(res)
 
 
-def find_projects(stage: Stage) -> list[DynamicOutput[Project]]:
+def find_projects(stage: Stage, find_all: bool) -> list[DynamicOutput[Project]]:
     yaml_values = parse_config(Path(f"{ROOT_PATH}mpyl_config.yml"))
     with Repository(RepoConfig(yaml_values)) as repo:
         changes_in_branch = repo.changes_in_branch_including_local()
         project_paths = repo.find_projects()
     all_projects = set(map(lambda p: load_project(Path("."), Path(p), strict=False), project_paths))
-    invalidated = find_invalidated_projects_for_stage(all_projects, stage, changes_in_branch)
+    invalidated = for_stage(all_projects, stage) if find_all else find_invalidated_projects_for_stage(all_projects,
+                                                                                                      stage,
+                                                                                                      changes_in_branch)
     return list(map(lambda project: DynamicOutput(project, mapping_key=project.name.replace('-', '_')), invalidated))
 
 
-@op(out=DynamicOut(), description="Find artifacts that need to be built")
-def find_build_projects() -> list[DynamicOutput[Project]]:
-    return find_projects(Stage.BUILD)
+@op(out=DynamicOut(), description="Find artifacts that need to be built", config_schema={"find_all": bool})
+def find_build_projects(context) -> list[DynamicOutput[Project]]:
+    find_all: bool = context.op_config["find_all"]
+    return find_projects(Stage.BUILD, find_all)
 
 
-@op(out=DynamicOut(), description="Find artifacts that need to be tested")
-def find_test_projects(_projects) -> list[DynamicOutput[Project]]:
-    return find_projects(Stage.TEST)
+@op(out=DynamicOut(), description="Find artifacts that need to be tested", config_schema={"find_all": bool})
+def find_test_projects(context, _projects) -> list[DynamicOutput[Project]]:
+    find_all: bool = context.op_config["find_all"]
+    return find_projects(Stage.TEST, find_all)
 
 
-@op(out=DynamicOut(), description="Find artifacts that need to be deployed")
-def find_deploy_projects(_projects) -> list[DynamicOutput[Project]]:
-    return find_projects(Stage.DEPLOY)
+@op(out=DynamicOut(), description="Find artifacts that need to be deployed", config_schema={"find_all": bool})
+def find_deploy_projects(context, _projects) -> list[DynamicOutput[Project]]:
+    find_all: bool = context.op_config["find_all"]
+    return find_projects(Stage.DEPLOY, find_all)
 
 
-@job(config=config_from_files(["mpyl-dagster-example.yml"]))
+@job(name="ci_cd_flow", config=config_from_files(["mpyl-dagster-example.yml"]))
 def run_build():
     build_projects = find_build_projects()
     build_results = build_projects.map(build_project)
@@ -87,3 +92,12 @@ def run_build():
     projects_to_deploy = find_deploy_projects(test_projects.collect())
 
     deploy_projects(projects=projects_to_deploy.collect(), outputs=test_results.collect())
+
+
+if __name__ == "__main__":
+    result = run_build.execute_in_process(run_config={
+        "execution": {
+            "config": {
+                "multiprocess": {},
+            }
+        }})

@@ -1,4 +1,20 @@
 ops:
   deploy_projects:
     config:
-      simulate_deploy: false
+      simulate_deploy: true
+  find_build_projects:
+    config:
+      find_all: false
+  find_deploy_projects:
+    config:
+      find_all: false
+  find_test_projects:
+    config:
+      find_all: false
+
+execution:
+  config:
+    multiprocess:
+      max_concurrent: 4
+      start_method:
+        forkserver: {}
