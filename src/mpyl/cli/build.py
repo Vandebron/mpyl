@@ -19,7 +19,7 @@ from . import create_console_logger
 from .commands.build.jenkins import JenkinsRunParameters, run_jenkins, get_token
 from .commands.build.mpyl import MpylRunParameters, run_mpyl, MpylCliParameters, MpylRunConfig, find_build_set
 from ..constants import DEFAULT_CONFIG_FILE_NAME, DEFAULT_RUN_PROPERTIES_FILE_NAME, BUILD_ARTIFACTS_FOLDER
-from ..project import load_project
+from ..project import load_project, Target
 from ..reporting.formatting.markdown import run_result_to_markdown
 from ..steps.models import RunProperties
 from ..steps.run import RunResult
@@ -204,6 +204,12 @@ def ask_for_input(ctx, _param, value) -> Optional[str]:
     required=False
 )
 @click.option(
+    '--target', '-tg',
+    help='The deploy target for a --tag build',
+    type=click.Choice([Target.ACCEPTANCE.value, Target.PRODUCTION.value]),
+    required=True
+)
+@click.option(
     '--arguments', '-a',
     multiple=True,
     help='A series of arguments to pass to the pipeline. Note that will run within the pipenv in jenkins. '
@@ -227,13 +233,15 @@ def ask_for_input(ctx, _param, value) -> Optional[str]:
 )
 @click.option('--tag', '-tg', is_flag=False, flag_value="prompt", default="not_set", callback=ask_for_input)
 @click.pass_context
-def jenkins(ctx, user, password, pipeline, test, version, arguments, background, silent,  # pylint: disable=too-many-arguments
+def jenkins(ctx, user, password, pipeline, test, version, target, arguments, background, silent,  # pylint: disable=too-many-arguments
             tag):
     try:
         if test and version:
             raise click.BadArgumentUsage('Cannot specify both --test and --version')
         if not version and not tag:
             version = get_meta_version()
+        if tag and not target:
+            raise click.BadArgumentUsage('--target must be specified when using --tag')
 
         upgrade_check = asyncio.wait_for(warn_if_update(ctx.obj.console), timeout=5)
         selected_pipeline = pipeline if pipeline else ctx.obj.config['jenkins']['defaultPipeline']
@@ -241,6 +249,8 @@ def jenkins(ctx, user, password, pipeline, test, version, arguments, background,
         pipeline_parameters = {}
         if arguments:
             pipeline_parameters['PIPENV_PARAMS'] = " ".join(arguments)
+        if target:
+            pipeline_parameters['DEPLOY_TARGET'] = target
         if test:
             pipeline_parameters['TEST_VERSION'] = test
             pipeline_parameters['TEST'] = 'true'
