@@ -10,6 +10,7 @@ from typing import Dict, Optional
 from urllib.parse import urlparse
 
 from git import Git, Repo, Remote
+from git.objects import Commit
 
 from ...project import Project
 
@@ -110,12 +111,18 @@ class Repository:
     def latest_tag(self) -> str:
         return str(sorted(self._repo.tags, key=lambda t: t.commit.committed_datetime)[-1])
 
+    def __to_revision(self, count: int, revision: Commit, files_touched_in_branch: set[str]) -> Revision:
+        files_in_revision = set(
+            self._repo.git.diff_tree(self.__get_filter_patterns(), no_commit_id=True, name_only=True,
+                                     r=str(revision)).splitlines())
+        intersection = files_in_revision.intersection(files_touched_in_branch)
+        return Revision(count, str(revision), intersection)
+
     def changes_in_branch(self) -> list[Revision]:
-        revisions = reversed(list(self._repo.iter_commits(f"{self._config.main_branch}..HEAD")))
-        return [Revision(count, str(rev),
-                         self._repo.git.diff_tree(self.__get_filter_patterns(), no_commit_id=True, name_only=True,
-                                                  r=str(rev), ).splitlines()) for
-                count, rev in enumerate(revisions)]
+        main_branch = self._config.main_branch
+        files_touched_in_branch = set(self._repo.git.diff(f'{main_branch}...', name_only=True).splitlines())
+        revisions = reversed(list(self._repo.iter_commits(f"{main_branch}..HEAD")))
+        return [self.__to_revision(count, rev, files_touched_in_branch) for count, rev in enumerate(revisions)]
 
     def changes_in_commit(self) -> set[str]:
         changed: set[str] = set(self._repo.git.diff(self.__get_filter_patterns(), None, name_only=True).splitlines())
