@@ -8,7 +8,7 @@ from logging import Logger
 from typing import Dict, Optional, Iterator, cast, Union
 import shutil
 from pathlib import Path
-from python_on_whales import docker, Image, Container
+from python_on_whales import docker, Image, Container, DockerException
 from python_on_whales.exceptions import NoSuchContainer
 from rich.text import Text
 
@@ -131,12 +131,18 @@ def build(logger: Logger, root_path: str, file_path: str, image_tag: str, target
     """
     logger.info(f"Building docker image with {file_path} and target {target}")
 
-    logs = docker.buildx.build(context_path=root_path, file=file_path, tags=[image_tag], target=target,
-                               stream_logs=True)
-    if logs is not None and not isinstance(logs, Image):
-        stream_docker_logging(logger=logger, generator=logs, task_name=f'Build {file_path}:{target}')
-    logger.debug(logs)
-    return True
+    try:
+        logs = docker.buildx.build(context_path=root_path, file=file_path, tags=[image_tag], target=target,
+                                   stream_logs=True)
+        if logs is not None and not isinstance(logs, Image):
+            stream_docker_logging(logger=logger, generator=logs, task_name=f'Build {file_path}:{target}')
+        logger.debug(logs)
+        return True
+    except DockerException as exc:
+        command = " ".join(exc.docker_command)
+        error = "" if exc.stderr is None else f'\n{exc.stderr}'
+        logger.warning(f"Docker build failed with command {command} and exit code {exc.return_code} {error}")
+        return False
 
 
 def login(logger: Logger, docker_config: DockerConfig) -> None:
