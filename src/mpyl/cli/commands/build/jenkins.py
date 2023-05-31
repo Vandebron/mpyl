@@ -51,11 +51,15 @@ def __get_pr_pipeline(config: dict, git_repo: Repository, pipeline: str, status:
     if git_repo.main_branch == branch:
         status.console.log(f'On main branch ({branch}), cannot determine which PR to build')
         return None
+    try:
+        pull = get_pr_for_branch(repo, branch)
+        return Pipeline(target=Target.PULL_REQUEST, tag=f'{pull.number}', url=pull.html_url, pipeline=pipeline,
+                        body=pull.body, jenkins_config=JenkinsConfig.from_config(config))
+    except ValueError as exc:
+        status.console.log(exc)
+        return None
 
-    pull = get_pr_for_branch(repo, branch)
 
-    return Pipeline(target=Target.PULL_REQUEST, tag=f'{pull.number}', url=pull.html_url, pipeline=pipeline,
-                    body=pull.body, jenkins_config=JenkinsConfig.from_config(config))
 
 
 def run_jenkins(run_config: JenkinsRunParameters):
