@@ -5,6 +5,7 @@ import shlex
 from dataclasses import dataclass
 from itertools import tee
 from logging import Logger
+from traceback import print_exc
 from typing import Dict, Optional, Iterator, cast, Union
 import shutil
 from pathlib import Path
@@ -138,10 +139,14 @@ def build(logger: Logger, root_path: str, file_path: str, image_tag: str, target
             stream_docker_logging(logger=logger, generator=logs, task_name=f'Build {file_path}:{target}')
         logger.debug(logs)
         return True
+
     except DockerException as exc:
         command = " ".join(exc.docker_command)
-        error = "" if exc.stderr is None else f'\n{exc.stderr}'
-        logger.warning(f"Docker build failed with command {command} and exit code {exc.return_code} {error}")
+        logger.warning(f"Docker build failed with command {command} and exit code {exc.return_code}")
+        return False
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        print(f"Docker build failed with {exc.__class__.__name__}")
+        print_exc()
         return False
 
 
