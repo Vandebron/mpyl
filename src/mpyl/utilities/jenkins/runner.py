@@ -19,10 +19,10 @@ from rich.progress import Progress, TimeElapsedColumn, TextColumn, BarColumn, Ta
 from rich.prompt import Confirm
 from rich.status import Status
 from rich.table import Column
-from rich.text import Text
 
 from . import Pipeline
 from ...cli.commands.build import play_sound, Sound
+from ..logging import try_parse_ansi
 
 
 def stream_utf_8_logs(self, interval=0):
@@ -150,7 +150,7 @@ class JenkinsRunner:
                 try:
                     text = "".join(lines)
                     if verbose:
-                        progress.log(Text.from_ansi(text))
+                        progress.log(try_parse_ansi(text))
                     else:
                         log_line.update(label_task_id, description=text)
                 except MarkupError:

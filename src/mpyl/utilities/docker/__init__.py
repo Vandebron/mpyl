@@ -13,6 +13,7 @@ from python_on_whales import docker, Image, Container, DockerException
 from python_on_whales.exceptions import NoSuchContainer
 from rich.text import Text
 
+from ..logging import try_parse_ansi
 from ...project import Project
 from ...steps.models import Input
 
@@ -79,7 +80,7 @@ def stream_docker_logging(logger: Logger, generator: Union[Iterator[str], Iterat
             next_item = next(generator)
             log_line = next_item[1].decode(errors="replace") if isinstance(next_item, tuple) else next_item
             copied_logs.append(log_line)
-            logger.log(level, Text.from_ansi(log_line))
+            logger.log(level, try_parse_ansi(log_line))
         except StopIteration:
             logger.info(f'{task_name} complete.')
             return copied_logs
