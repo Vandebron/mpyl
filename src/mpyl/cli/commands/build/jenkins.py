@@ -10,6 +10,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 from rich.status import Status
 
+from . import play_sound, Sound
 from ....project import Target
 from ....utilities.github import GithubConfig, get_pr_for_branch
 from ....utilities.jenkins import JenkinsConfig, Pipeline
@@ -84,7 +85,7 @@ def run_jenkins(run_config: JenkinsRunParameters):
                                        verbose=run_config.verbose)
                 runner.run(run_config.pipeline_parameters)
             except requests.ConnectionError:
-                status.console.bell()
+                play_sound(Sound.FAILURE)
                 status.console.log('⚠️ Could not connect. Are you on VPN?')
             except Exception as exc:
                 status.console.print(Markdown(f'Unexpected exception: {exc}'))

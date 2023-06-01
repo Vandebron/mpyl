@@ -1,6 +1,5 @@
 """Jenkins multi-branch pipeline runner"""
 import datetime
-import os
 import signal
 import sys
 import time
@@ -23,6 +22,7 @@ from rich.table import Column
 from rich.text import Text
 
 from . import Pipeline
+from ...cli.commands.build import play_sound, Sound
 
 
 def stream_utf_8_logs(self, interval=0):
@@ -116,7 +116,7 @@ class JenkinsRunner:
             f'ended with outcome {self.to_icon(finished_build)}', markup=True)
         self.status.console.log()
 
-        os.system('afplay /System/Library/Sounds/' + ('Glass.aiff' if finished_build.is_good() else 'Sosumi.aiff'))
+        play_sound(Sound.SUCCESS if finished_build.is_good() else Sound.FAILURE)
         sys.exit()
 
     def _stream_logs(self, build_to_follow, duration_estimation, verbose):
