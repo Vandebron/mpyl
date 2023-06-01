@@ -8,7 +8,7 @@ build:
     user_email: !ENV ${BUILD_USER_EMAIL}
   local: !ENV ${LOCAL:true}
   parameters:
-    deploy_target: !ENV ${deployTarget:PullRequest}
+    deploy_target: !ENV ${DEPLOY_TARGET:PullRequest}
   versioning:
     revision: !ENV ${GIT_COMMIT}
     branch: !ENV ${CHANGE_BRANCH}

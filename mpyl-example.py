@@ -40,14 +40,17 @@ def main(log: Logger, args: argparse.Namespace):
         from mpyl.reporting.targets.github import CommitCheck
         from mpyl.reporting.targets.slack import SlackReporter
         from mpyl.steps.run import RunResult
-        from mpyl.reporting.targets.github import PullRequestComment
+        from mpyl.reporting.targets.github import PullRequestReporter
         from mpyl.reporting.targets.jira import compose_build_status
         from mpyl.reporting.targets import ReportAccumulator
 
         check = CommitCheck(config=config, logger=log)
         accumulator = ReportAccumulator()
 
-        github_comment = PullRequestComment(config=config, compose_function=compose_build_status)
+        github_comment = PullRequestReporter(
+            config=config,
+            compose_function=compose_build_status,
+        )
         slack_channel = SlackReporter(
             config,
             '#project-mpyl-notifications',

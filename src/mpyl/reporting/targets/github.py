@@ -2,8 +2,9 @@
 # Github reporter
 
 ## PR comment
-Pipeline results can be reported in the form of a user comment on the pull request, using the `PullRequestComment`
- reporter.
+Pipeline results can be reported in the form of an update to the PR body or user comment on the pull request,
+using the `PullRequestReporter` class.
+The mode of update is determined by the `update_stategy` parameter in the constructor.
 You are recommended to use a bot account as the authenticated user.
 
 ### Installation instructions
@@ -31,11 +32,11 @@ Checks can be referred to from branch protection rules, in order to prevent faul
 
 """
 import base64
-import typing
 from datetime import datetime
+from enum import Enum
 from logging import Logger
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Callable
 
 from github import Github, GithubIntegration, GithubException
 from github.IssueComment import IssueComment
@@ -59,15 +60,24 @@ class GithubOutcome(ReportOutcome):
     pass
 
 
-class PullRequestComment(Reporter):
+class GithubUpdateStategy(Enum):
+    BODY = 'body'
+    COMMENT = 'comment'
+
+
+class PullRequestReporter(Reporter):
     _config: GithubConfig
 
     def __init__(self, config: Dict,
-                 compose_function: typing.Callable[[RunResult, Optional[Dict]], str] = compose_message_body):
+                 compose_function: Callable[[RunResult, Optional[Dict]], str] = compose_message_body,
+                 update_stategy: GithubUpdateStategy = GithubUpdateStategy.BODY):
         self._raw_config = config
         self._config = GithubConfig.from_config(config)
         self.git_repository = Repository(RepoConfig.from_config(config))
         self.compose_function = compose_function
+        self.update_strategy: GithubUpdateStategy = update_stategy
+
+        self.body_separator = "----"
 
     def _get_pull_request(self, repo: GithubRepository, run_properties: RunProperties) -> Optional[PullRequest]:
         if run_properties.versioning.pr_number:
@@ -78,6 +88,31 @@ class PullRequestComment(Reporter):
             return get_pr_for_branch(repo, current_branch)
         return None
 
+    def _update_pr(self) -> Callable[[PullRequest, RunResult], None]:
+        if self.update_strategy == GithubUpdateStategy.COMMENT:
+            return self._change_pr_comment
+        return self._change_pr_body
+
+    def _extract_pr_header(self, current_body: Optional[str]) -> str:
+        body_header = current_body.split(self.body_separator)[0] if current_body else ""
+        return body_header.rstrip("\n") + f"\n{self.body_separator}\n"
+
+    def _change_pr_body(self, pull_request: PullRequest, results: RunResult):
+        pull_request.edit(
+            body=self._extract_pr_header(pull_request.body) + self.compose_function(results, self._raw_config)
+        )
+
+    def _change_pr_comment(self, pull_request: PullRequest, results: RunResult):
+        github = Github(self._config.token)
+        comments = pull_request.get_issue_comments()
+        authenticated_user = github.get_user()
+        comments_for_user = [c for c in comments if c.user.id == authenticated_user.id]
+        if comments_for_user:
+            comment_to_update: IssueComment = comments_for_user.pop()
+            comment_to_update.edit(self.compose_function(results, self._raw_config))
+        else:
+            pull_request.create_issue_comment(self.compose_function(results, self._raw_config))
+
     def send_report(self, results: RunResult, text: Optional[str] = None) -> GithubOutcome:
         try:
             github = Github(self._config.token)
@@ -87,14 +122,7 @@ class PullRequestComment(Reporter):
             if not pull_request:
                 return GithubOutcome(success=False, exception=Exception('No pull request found'))
 
-            comments = pull_request.get_issue_comments()
-            authenticated_user = github.get_user()
-            comments_for_user = [c for c in comments if c.user.id == authenticated_user.id]
-            if comments_for_user:
-                comment_to_update: IssueComment = comments_for_user.pop()
-                comment_to_update.edit(self.compose_function(results, self._raw_config))
-            else:
-                pull_request.create_issue_comment(self.compose_function(results, self._raw_config))
+            self._update_pr()(pull_request, results)
             return GithubOutcome(success=True)
         except GithubException as exc:
             return GithubOutcome(success=False, exception=exc)
