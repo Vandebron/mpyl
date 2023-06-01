@@ -68,7 +68,6 @@ spec:
         name: dockertest
         ports:
         - containerPort: 80
-          hostPort: 8080
           name: port-0
           protocol: TCP
         resources:
