@@ -7,4 +7,5 @@ module.exports = defineConfig({
     projectId: '11wp34',
     video: false
   },
+  reporter: 'junit'
 });

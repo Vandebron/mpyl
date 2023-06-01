@@ -7,10 +7,11 @@ from logging import Logger
 from python_on_whales import docker, Container
 
 from .. import Step, Meta
-from ..models import ArtifactType, Input, Output
+from ..models import ArtifactType, Input, Output, input_to_artifact
 from ...project import Stage
 from ...utilities.cypress import CypressConfig
 from ...utilities.docker import execute_with_stream
+from ...utilities.junit import TEST_OUTPUT_PATH_KEY
 
 
 class CypressTest(Step):
@@ -20,7 +21,7 @@ class CypressTest(Step):
             description='Step to run cypress tests',
             version='0.0.1',
             stage=Stage.POST_DEPLOY
-        ), produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.NONE)
+        ), produced_artifact=ArtifactType.JUNIT_TESTS, required_artifact=ArtifactType.NONE)
 
     def execute(self, step_input: Input) -> Output:
         self._logger.info(f"Running cypress tests for project {step_input.project.name}")
@@ -61,4 +62,5 @@ class CypressTest(Step):
             docker_container.remove()
 
         return Output(success=True, message=f"Cypress tests for {step_input.project.name} passed",
-                      produced_artifact=None)
+                      produced_artifact=input_to_artifact(artifact_type=ArtifactType.JUNIT_TESTS, step_input=step_input,
+                                                          spec={TEST_OUTPUT_PATH_KEY: volume_path}))

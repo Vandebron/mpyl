@@ -1,1 +1,3 @@
 !deployment/.mpyl/
+
+cypress/test-results.xml
