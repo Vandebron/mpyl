@@ -5,7 +5,8 @@ module.exports = defineConfig({
     specPattern: 'specs',
     supportFile: false,
     projectId: '11wp34',
-    video: false
+    video: false,
+    screenshotOnRunFailure: false
   },
   reporter: 'junit'
 });
