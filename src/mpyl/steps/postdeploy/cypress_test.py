@@ -4,7 +4,7 @@ import os
 
 from logging import Logger
 
-from python_on_whales import docker, Container
+from python_on_whales import docker, Container, DockerException
 
 from .. import Step, Meta
 from ..models import ArtifactType, Input, Output, input_to_artifact
@@ -57,6 +57,12 @@ class CypressTest(Step):
                 run_command += f" --record --key {record_key}"
             execute_with_stream(logger=self._logger, container=docker_container, command=run_command,
                                 task_name="Running cypress tests")
+        except DockerException:
+            return Output(success=False,
+                          message=f"Cypress tests for project {step_input.project.name} have one or more failures",
+                          produced_artifact=input_to_artifact(artifact_type=ArtifactType.JUNIT_TESTS,
+                                                              step_input=step_input,
+                                                              spec={TEST_OUTPUT_PATH_KEY: volume_path}))
         finally:
             docker_container.stop()
             docker_container.remove()
