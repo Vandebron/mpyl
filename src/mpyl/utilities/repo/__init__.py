@@ -154,6 +154,8 @@ class Repository:
 
     @property
     def main_branch_pulled(self) -> bool:
+        if self._repo.head.is_detached:
+            return False
         branch_names = list(map(lambda n: n.name, self._repo.references))
         return f'{self._config.main_branch}' in branch_names
 
