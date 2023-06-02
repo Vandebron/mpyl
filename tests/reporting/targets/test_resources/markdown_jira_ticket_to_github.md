@@ -5,8 +5,8 @@ Similarly to mpl **modules**, we *should* update the PR details with card descri
 
 > Quoted
 
-# first
-# second
+- first
+- second
 
 [👩‍💻](https://vandebron.atlassian.net/browse/TECH-290/jira/people/6151b89d72f6970069e87968) is tagged
 

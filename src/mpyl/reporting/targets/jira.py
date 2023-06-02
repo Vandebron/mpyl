@@ -122,6 +122,7 @@ def to_github_markdown(jira_markdown: str, jira_url: str) -> str:
     jira_markdown = re.sub(r'_(.*)_', r'*\1*', jira_markdown)
     jira_markdown = re.sub(r'!.*\|.*!', r'', jira_markdown)
 
+    jira_markdown = jira_markdown.replace('# ', '- ')
     jira_markdown = jira_markdown.replace('h1. ', '### ')
     jira_markdown = jira_markdown.replace('h2. ', '#### ')
     jira_markdown = jira_markdown.replace('h3. ', '##### ')

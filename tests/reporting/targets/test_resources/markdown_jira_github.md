@@ -10,8 +10,8 @@ print(a + b)
 
 ```
 
-# first
-# second
+- first
+- second
 
 [👩‍💻](http://vandebron.atlassian.com/jira/people/6151b89d72f6970069e87968) is tagged
 
