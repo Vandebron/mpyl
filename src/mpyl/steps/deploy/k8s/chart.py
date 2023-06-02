@@ -142,8 +142,12 @@ class ChartBuilder:
     def _to_annotations(self) -> Dict:
         return {'description': self.project.description}
 
-    def _to_object_meta(self, name: Optional[str] = None):
-        return V1ObjectMeta(name=name if name else self.release_name, labels=self._to_labels())
+    def _to_image_annotation(self) -> Dict:
+        return {'image': self._get_image()}
+
+    def _to_object_meta(self, name: Optional[str] = None, annotations: Optional[Dict] = None):
+        return V1ObjectMeta(name=name if name else self.release_name, labels=self._to_labels(),
+                            annotations=annotations)
 
     def _to_selector(self):
         return V1LabelSelector(match_labels={"app.kubernetes.io/instance": self.release_name,
@@ -177,8 +181,9 @@ class ChartBuilder:
             name=self.release_name, image=self._get_image(), env=self._get_env_vars(), image_pull_policy="Always",
             resources=self._get_resources()
         )
+
         pod_template = V1PodTemplateSpec(
-            metadata=self._to_object_meta(),
+            metadata=self._to_object_meta(annotations=self._to_image_annotation()),
             spec=V1PodSpec(containers=[job_container], service_account=self.release_name,
                            service_account_name=self.release_name, restart_policy="Never")
         )

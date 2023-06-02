@@ -16,6 +16,8 @@ spec:
   activeDeadlineSeconds: 20
   template:
     metadata:
+      annotations:
+        image: registry/image:123
       labels:
         name: job
         app.kubernetes.io/version: pr-1234
