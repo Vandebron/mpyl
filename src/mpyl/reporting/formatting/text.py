@@ -34,6 +34,6 @@ def to_test_report(artifact: Artifact) -> str:
         for case in suite:
             test_result.append(f"Case {case.name} \n")
             if len(test_result) > 200:
-                test_result.append(f"\n... output truncated\n")
+                test_result.append("\n... output truncated\n")
                 break
     return "".join(test_result)
