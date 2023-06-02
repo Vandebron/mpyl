@@ -119,9 +119,9 @@ class Repository:
         return Revision(count, str(revision), intersection)
 
     def changes_in_branch(self) -> list[Revision]:
-        main_branch = self._config.main_branch
-        files_touched_in_branch = set(self._repo.git.diff(f'{main_branch}...', name_only=True).splitlines())
-        revisions = reversed(list(self._repo.iter_commits(f"{main_branch}..HEAD")))
+        revisions = list(reversed(list(self._repo.iter_commits(f"{self._config.main_branch}..HEAD"))))
+        files_touched_in_branch = set(
+            self._repo.git.diff(f'{revisions[0].hexsha}..{revisions[-1].hexsha}', name_only=True).splitlines())
         return [self.__to_revision(count, rev, files_touched_in_branch) for count, rev in enumerate(revisions)]
 
     def changes_in_commit(self) -> set[str]:
