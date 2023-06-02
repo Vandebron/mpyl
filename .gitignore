@@ -128,7 +128,6 @@ dmypy.json
 .pyre/
 
 #intellij
-.idea/workspace.xml
 .mpyl/
 
 #documentation
