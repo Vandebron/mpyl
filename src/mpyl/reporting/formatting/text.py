@@ -23,14 +23,17 @@ def to_string(run_result: RunResult) -> str:
     return result
 
 
-def to_test_report(artifact: Artifact):
-    test_result = ""
+def to_test_report(artifact: Artifact) -> str:
+    """ Gather the first test suites and test cases. Output is truncated to 200 lines to not overwhelm Github """
+    test_result = []
     suites = to_test_suites(artifact)
     total_tests = sum_suites(suites)
-    test_result += f"{total_tests} \n\n"
+    test_result.append(f"{total_tests} \n\n")
     for suite in suites:
-        test_result += f"Suite {suite.name}\n"
+        test_result.append(f"Suite {suite.name}\n")
         for case in suite:
-            test_result += f"Case {case.name} \n"
-
-    return test_result
+            test_result.append(f"Case {case.name} \n")
+            if len(test_result) > 200:
+                test_result.append(f"\n... output truncated\n")
+                break
+    return "".join(test_result)
