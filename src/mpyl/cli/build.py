@@ -228,7 +228,7 @@ def jenkins(ctx, user, password, pipeline, test, arguments, background, silent, 
         selected_pipeline = pipeline if pipeline else ctx.obj.config['jenkins']['defaultPipeline']
         pipeline_parameters = {'TEST': 'true', 'VERSION': test} if test else {}
         if arguments:
-            pipeline_parameters['PIPENV_PARAMS'] = " ".join(arguments)
+            pipeline_parameters['BUILD_PARAMS'] = " ".join(arguments)
 
         run_argument = JenkinsRunParameters(
             jenkins_user=user, jenkins_password=password, config=ctx.obj.config,
