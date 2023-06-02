@@ -31,9 +31,9 @@ def to_test_report(artifact: Artifact) -> str:
     test_result.append(f"{total_tests} \n\n")
     for suite in suites:
         test_result.append(f"Suite {suite.name}\n")
+        if len(test_result) > 200:
+            test_result.append("  ... output truncated\n")
+            break
         for case in suite:
-            if len(test_result) > 200:
-                test_result.append("  ... output truncated\n")
-                break
             test_result.append(f"  Case {case.name} \n")
     return "".join(test_result)
