@@ -35,7 +35,7 @@ from dataclasses import dataclass
 from typing import Dict, Optional
 
 from slack_sdk import WebClient
-from slack_sdk.errors import SlackClientError
+from slack_sdk.errors import SlackClientError, SlackApiError
 from slack_sdk.models.blocks import HeaderBlock, SectionBlock, MarkdownTextObject, ContextBlock, ImageElement, Block
 
 from . import Reporter, ReportOutcome
@@ -144,10 +144,13 @@ class SlackReporter(Reporter):
         profile_data: dict[str, str] = {}
         user_id = None
         if user_email:
-            user = self._client.users_lookupByEmail(email=user_email)
-            user_id = user['user']['id']
-            resp = self._client.users_profile_get(user=user_id)
-            profile_data = resp.get('profile', {})
+            try:
+                user = self._client.users_lookupByEmail(email=user_email)
+                user_id = user['user']['id']
+                resp = self._client.users_profile_get(user=user_id)
+                profile_data = resp.get('profile', {})
+            except SlackApiError:
+                profile_data = {}
 
         return UserInfo(user_name=profile_data.get('real_name_normalized', 'Anonymous'),
                         profile_image=profile_data.get('image_24',
