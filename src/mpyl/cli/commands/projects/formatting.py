@@ -23,5 +23,7 @@ def print_project(repo: Repository, console: Console, project_path: str):
     table.add_row("Maintainer", f"{project.maintainer}")
     table.add_row("Stages", f"{project.stages}")
     if with_dependencies.dependent_projects:
-        table.add_row("Dependent projects", f"{set(with_dependencies.dependent_projects.keys())}")
+        table.add_row(
+            "Dependent projects", f"{set(with_dependencies.dependent_projects.keys())}"
+        )
     console.print(table)

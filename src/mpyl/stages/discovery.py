@@ -22,7 +22,9 @@ def is_invalidated(project: Project, stage: Stage, path: str) -> bool:
     deps = project.dependencies
     deps_for_stage = deps.set_for_stage(stage) if deps else {}
 
-    touched_dependency = next(filter(path.startswith, deps_for_stage), None) if deps else None
+    touched_dependency = (
+        next(filter(path.startswith, deps_for_stage), None) if deps else None
+    )
     startswith: bool = path.startswith(project.root_path)
     return startswith or touched_dependency is not None
 
@@ -41,7 +43,9 @@ def output_invalidated(output: Optional[Output], revision_hash: str) -> bool:
     return False
 
 
-def _to_relevant_changes(project: Project, stage: Stage, change_history: list[Revision]) -> set[str]:
+def _to_relevant_changes(
+    project: Project, stage: Stage, change_history: list[Revision]
+) -> set[str]:
     output: Output = Output.try_read(project.target_path, stage)
     relevant = set()
     for history in reversed(sorted(change_history, key=lambda c: c.ord)):
@@ -53,35 +57,54 @@ def _to_relevant_changes(project: Project, stage: Stage, change_history: list[Re
     return relevant
 
 
-def are_invalidated(project: Project, stage: Stage, change_history: list[Revision]) -> bool:
+def are_invalidated(
+    project: Project, stage: Stage, change_history: list[Revision]
+) -> bool:
     if project.stages.for_stage(stage) is None:
         return False
 
     relevant_changes = _to_relevant_changes(project, stage, change_history)
-    return len(set(filter(lambda c: is_invalidated(project, stage, c), relevant_changes))) > 0
+    return (
+        len(set(filter(lambda c: is_invalidated(project, stage, c), relevant_changes)))
+        > 0
+    )
 
 
-def find_invalidated_projects_for_stage(all_projects: set[Project], stage: Stage,
-                                        change_history: list[Revision]) -> set[Project]:
-    return set(filter(lambda p: are_invalidated(p, stage, change_history), all_projects))
+def find_invalidated_projects_for_stage(
+    all_projects: set[Project], stage: Stage, change_history: list[Revision]
+) -> set[Project]:
+    return set(
+        filter(lambda p: are_invalidated(p, stage, change_history), all_projects)
+    )
 
 
 def find_deploy_set(repo_config: RepoConfig) -> DeploySet:
     with Repository(repo_config) as repo:
         changes_in_branch = repo.changes_in_branch_including_local()
         project_paths = repo.find_projects()
-        all_projects = set(map(lambda p: load_project(Path(""), Path(p), False), project_paths))
-        return DeploySet(all_projects,
-                         find_invalidated_projects_for_stage(all_projects, Stage.DEPLOY, changes_in_branch))
+        all_projects = set(
+            map(lambda p: load_project(Path(""), Path(p), False), project_paths)
+        )
+        return DeploySet(
+            all_projects,
+            find_invalidated_projects_for_stage(
+                all_projects, Stage.DEPLOY, changes_in_branch
+            ),
+        )
 
 
-def find_invalidated_projects_per_stage(all_projects: set[Project], change_history: list[Revision]) \
-        -> dict[Stage, set[Project]]:
+def find_invalidated_projects_per_stage(
+    all_projects: set[Project], change_history: list[Revision]
+) -> dict[Stage, set[Project]]:
     projects_for_stage = {}
     for stage in Stage:
-        projects = find_invalidated_projects_for_stage(all_projects, stage, change_history)
+        projects = find_invalidated_projects_for_stage(
+            all_projects, stage, change_history
+        )
         if projects:
-            projects_for_stage[stage] = set(sorted(projects, key=operator.attrgetter('name')))
+            projects_for_stage[stage] = set(
+                sorted(projects, key=operator.attrgetter("name"))
+            )
     return projects_for_stage
 
 

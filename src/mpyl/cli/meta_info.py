@@ -42,13 +42,13 @@ def simple_version():
 
 
 def about():
-    dist = distribution('mpyl')
+    dist = distribution("mpyl")
     details = os.linesep.join(str(dist.metadata).split(os.linesep)[1:16])
-    return f'{details}{VDB_LOGO}'
+    return f"{details}{VDB_LOGO}"
 
 
 @click.command()
-@click.option('--verbose', '-v', is_flag=True, default=False, help="Print more output.")
+@click.option("--verbose", "-v", is_flag=True, default=False, help="Print more output.")
 def version(verbose):
     """Version information"""
     if verbose:

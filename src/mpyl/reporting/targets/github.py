@@ -52,7 +52,9 @@ from ...utilities.github import GithubConfig, get_pr_for_branch, GithubAppConfig
 from ...utilities.repo import Repository, RepoConfig
 
 
-def compose_message_body(results: RunResult, _unused_config: Optional[Dict] = None) -> str:
+def compose_message_body(
+    results: RunResult, _unused_config: Optional[Dict] = None
+) -> str:
     return run_result_to_markdown(results)
 
 
@@ -61,16 +63,21 @@ class GithubOutcome(ReportOutcome):
 
 
 class GithubUpdateStategy(Enum):
-    BODY = 'body'
-    COMMENT = 'comment'
+    BODY = "body"
+    COMMENT = "comment"
 
 
 class PullRequestReporter(Reporter):
     _config: GithubConfig
 
-    def __init__(self, config: Dict,
-                 compose_function: Callable[[RunResult, Optional[Dict]], str] = compose_message_body,
-                 update_stategy: GithubUpdateStategy = GithubUpdateStategy.BODY):
+    def __init__(
+        self,
+        config: Dict,
+        compose_function: Callable[
+            [RunResult, Optional[Dict]], str
+        ] = compose_message_body,
+        update_stategy: GithubUpdateStategy = GithubUpdateStategy.BODY,
+    ):
         self._raw_config = config
         self._config = GithubConfig.from_config(config)
         self.git_repository = Repository(RepoConfig.from_config(config))
@@ -79,7 +86,9 @@ class PullRequestReporter(Reporter):
 
         self.body_separator = "----"
 
-    def _get_pull_request(self, repo: GithubRepository, run_properties: RunProperties) -> Optional[PullRequest]:
+    def _get_pull_request(
+        self, repo: GithubRepository, run_properties: RunProperties
+    ) -> Optional[PullRequest]:
         if run_properties.versioning.pr_number:
             return repo.get_pull(run_properties.versioning.pr_number)
 
@@ -99,7 +108,8 @@ class PullRequestReporter(Reporter):
 
     def _change_pr_body(self, pull_request: PullRequest, results: RunResult):
         pull_request.edit(
-            body=self._extract_pr_header(pull_request.body) + self.compose_function(results, self._raw_config)
+            body=self._extract_pr_header(pull_request.body)
+            + self.compose_function(results, self._raw_config)
         )
 
     def _change_pr_comment(self, pull_request: PullRequest, results: RunResult):
@@ -111,16 +121,22 @@ class PullRequestReporter(Reporter):
             comment_to_update: IssueComment = comments_for_user.pop()
             comment_to_update.edit(self.compose_function(results, self._raw_config))
         else:
-            pull_request.create_issue_comment(self.compose_function(results, self._raw_config))
+            pull_request.create_issue_comment(
+                self.compose_function(results, self._raw_config)
+            )
 
-    def send_report(self, results: RunResult, text: Optional[str] = None) -> GithubOutcome:
+    def send_report(
+        self, results: RunResult, text: Optional[str] = None
+    ) -> GithubOutcome:
         try:
             github = Github(self._config.token)
             repo = github.get_repo(self._config.repository)
 
             pull_request = self._get_pull_request(repo, results.run_properties)
             if not pull_request:
-                return GithubOutcome(success=False, exception=Exception('No pull request found'))
+                return GithubOutcome(
+                    success=False, exception=Exception("No pull request found")
+                )
 
             self._update_pr()(pull_request, results)
             return GithubOutcome(success=True)
@@ -141,36 +157,62 @@ class CommitCheck(Reporter):
     @staticmethod
     def _to_output(results: RunResult) -> dict:
         build_id = results.run_properties.details.build_id
-        summary = ':white_check_mark: Build successful' if results.is_success else ':x: Build failed'
-        return {'title': f'Build {build_id}', 'summary': summary + '\n' + run_result_to_markdown(results),
-                'text': to_string(results)}
+        summary = (
+            ":white_check_mark: Build successful"
+            if results.is_success
+            else ":x: Build failed"
+        )
+        return {
+            "title": f"Build {build_id}",
+            "summary": summary + "\n" + run_result_to_markdown(results),
+            "text": to_string(results),
+        }
 
-    def send_report(self, results: RunResult, text: Optional[str] = None) -> GithubOutcome:
+    def send_report(
+        self, results: RunResult, text: Optional[str] = None
+    ) -> GithubOutcome:
         try:
             config: GithubAppConfig = self._github_config.get_app_config
             if not config:
                 raise KeyError("github.app config needs to be defined")
 
-            private_key = Path(config.private_app_key_path or '').read_text(
-                encoding='utf-8') if config.private_app_key_path else base64.b64decode(
-                config.private_key_base_64_encoded or '').decode('utf-8')
+            private_key = (
+                Path(config.private_app_key_path or "").read_text(encoding="utf-8")
+                if config.private_app_key_path
+                else base64.b64decode(config.private_key_base_64_encoded or "").decode(
+                    "utf-8"
+                )
+            )
 
-            integration = GithubIntegration(integration_id=config.app_key, private_key=private_key)
+            integration = GithubIntegration(
+                integration_id=config.app_key, private_key=private_key
+            )
 
-            install = integration.get_installation(self._github_config.owner, self._github_config.repo_name)
+            install = integration.get_installation(
+                self._github_config.owner, self._github_config.repo_name
+            )
             access_token = integration.get_access_token(install.id)
             github = Github(login_or_token=access_token.token)
             repo = github.get_repo(self._github_config.repository)
             if self._check_run_id and results:
                 run = repo.get_check_run(self._check_run_id)
-                conclusion = 'success' if results is None or results.is_success else 'failure'
-                self._logger.info(f'Setting check to {conclusion}')
-                run.edit(completed_at=datetime.now(), conclusion=conclusion, output=self._to_output(results))
+                conclusion = (
+                    "success" if results is None or results.is_success else "failure"
+                )
+                self._logger.info(f"Setting check to {conclusion}")
+                run.edit(
+                    completed_at=datetime.now(),
+                    conclusion=conclusion,
+                    output=self._to_output(results),
+                )
             else:
                 with Repository(RepoConfig.from_config(self._config)) as git_repository:
-                    self._check_run_id = repo.create_check_run(name='Pipeline build', head_sha=git_repository.get_sha,
-                                                               status='in_progress').id
+                    self._check_run_id = repo.create_check_run(
+                        name="Pipeline build",
+                        head_sha=git_repository.get_sha,
+                        status="in_progress",
+                    ).id
             return GithubOutcome(success=True)
         except GithubException as exc:
-            self._logger.warning(f'Unexpected exception: {exc}', exc_info=True)
+            self._logger.warning(f"Unexpected exception: {exc}", exc_info=True)
             return GithubOutcome(success=False, exception=exc)

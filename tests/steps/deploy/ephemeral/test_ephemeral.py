@@ -7,11 +7,17 @@ from tests.test_resources import test_data
 
 
 class TestEphemeral:
-    resource_path = root_test_path / 'projects' / 'ephemeral' / 'deployment'
+    resource_path = root_test_path / "projects" / "ephemeral" / "deployment"
 
     def test_get_env_variables_for_target(self):
-        step_input = Input(load_project(self.resource_path, Path('project.yml'), True), test_data.RUN_PROPERTIES, None)
+        step_input = Input(
+            load_project(self.resource_path, Path("project.yml"), True),
+            test_data.RUN_PROPERTIES,
+            None,
+        )
         assert len(step_input.project.deployment.properties.env) == 4
 
-        env_variables = get_env_variables(step_input.project, test_data.RUN_PROPERTIES.target)
+        env_variables = get_env_variables(
+            step_input.project, test_data.RUN_PROPERTIES.target
+        )
         assert len(env_variables) == 4

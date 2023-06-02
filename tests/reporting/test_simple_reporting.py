@@ -15,8 +15,13 @@ class TestReporting:
         assert_roundtrip(self.test_resource_path / "simple_run.txt", simple_report)
 
     def test_should_convert_test_report_to_string(self):
-        test_artifact = Artifact(artifact_type=ArtifactType.JUNIT_TESTS, revision='hash',
-                                 producing_step='Docker Test',
-                                 spec={TEST_OUTPUT_PATH_KEY: self.test_resource_path})
+        test_artifact = Artifact(
+            artifact_type=ArtifactType.JUNIT_TESTS,
+            revision="hash",
+            producing_step="Docker Test",
+            spec={TEST_OUTPUT_PATH_KEY: self.test_resource_path},
+        )
         test_report = to_test_report(test_artifact)
-        assert_roundtrip(self.test_resource_path / "simple_test.txt", test_report, overwrite=False)
+        assert_roundtrip(
+            self.test_resource_path / "simple_test.txt", test_report, overwrite=False
+        )

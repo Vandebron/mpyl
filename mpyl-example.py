@@ -9,17 +9,29 @@ def main(log: Logger, args: argparse.Namespace):
         from src.mpyl.reporting.targets.jira import JiraReporter
         from src.mpyl.steps.models import RunProperties
         from src.mpyl.utilities.pyaml_env import parse_config
-        from src.mpyl.cli.commands.build.mpyl import run_mpyl, MpylRunParameters, MpylRunConfig, MpylCliParameters
+        from src.mpyl.cli.commands.build.mpyl import (
+            run_mpyl,
+            MpylRunParameters,
+            MpylRunConfig,
+            MpylCliParameters,
+        )
 
     else:
         from mpyl.reporting.targets.jira import JiraReporter
         from mpyl.steps.models import RunProperties
         from mpyl.utilities.pyaml_env import parse_config
-        from mpyl.cli.commands.build.mpyl import run_mpyl, MpylRunParameters, MpylRunConfig, MpylCliParameters
+        from mpyl.cli.commands.build.mpyl import (
+            run_mpyl,
+            MpylRunParameters,
+            MpylRunConfig,
+            MpylCliParameters,
+        )
 
     config = parse_config("mpyl_config.yml")
     properties = parse_config("run_properties.yml")
-    run_properties = RunProperties.from_configuration(run_properties=properties, config=config)
+    run_properties = RunProperties.from_configuration(
+        run_properties=properties, config=config
+    )
     params = MpylRunParameters(
         run_config=MpylRunConfig(config=config, run_properties=run_properties),
         parameters=MpylCliParameters(
@@ -27,8 +39,8 @@ def main(log: Logger, args: argparse.Namespace):
             tag=args.tag,
             pull_main=True,
             verbose=args.verbose,
-            all=args.all
-        )
+            all=args.all,
+        ),
     )
     check = None
     slack_channel = None
@@ -53,15 +65,21 @@ def main(log: Logger, args: argparse.Namespace):
         )
         slack_channel = SlackReporter(
             config,
-            '#project-mpyl-notifications',
-            f'MPyL test {run_properties.versioning.identifier}'
+            "#project-mpyl-notifications",
+            f"MPyL test {run_properties.versioning.identifier}",
         )
 
         if run_properties.details.user_email:
-            slack_personal = SlackReporter(config, None, f'MPyL test {run_properties.versioning.identifier}')
+            slack_personal = SlackReporter(
+                config, None, f"MPyL test {run_properties.versioning.identifier}"
+            )
 
-        jira = JiraReporter(config=config, branch=run_properties.versioning.branch, logger=log)
-        accumulator.add(check.send_report(RunResult(run_properties=run_properties, run_plan={})))
+        jira = JiraReporter(
+            config=config, branch=run_properties.versioning.branch, logger=log
+        )
+        accumulator.add(
+            check.send_report(RunResult(run_properties=run_properties, run_plan={}))
+        )
 
     run_result = run_mpyl(params, slack_personal)
 
@@ -73,20 +91,45 @@ def main(log: Logger, args: argparse.Namespace):
         accumulator.add(jira.send_report(run_result))
         accumulator.add(github_comment.send_report(run_result))
         if accumulator.failures:
-            log.warning(f'Failed to send the following report(s): {", ".join(accumulator.failures)}')
+            log.warning(
+                f'Failed to send the following report(s): {", ".join(accumulator.failures)}'
+            )
             sys.exit(1)
 
     sys.exit(0 if run_result.is_success else 1)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Simple MPL pipeline')
-    parser.add_argument('--local', '-l', help='a local developer run', default=False, action='store_true')
-    parser.add_argument('--tag', '-t', help='The name of the tag to build', type=str)
-    parser.add_argument('--all', '-a', help='build and test everything, regardless of the changes that were made',
-                        default=False, action='store_true')
-    parser.add_argument('--dryrun', '-d', help="don't push or deploy images", default=False, action='store_true')
-    parser.add_argument('--verbose', '-v', help="switch to DEBUG level logging", default=False, action='store_true')
+    parser = argparse.ArgumentParser(description="Simple MPL pipeline")
+    parser.add_argument(
+        "--local",
+        "-l",
+        help="a local developer run",
+        default=False,
+        action="store_true",
+    )
+    parser.add_argument("--tag", "-t", help="The name of the tag to build", type=str)
+    parser.add_argument(
+        "--all",
+        "-a",
+        help="build and test everything, regardless of the changes that were made",
+        default=False,
+        action="store_true",
+    )
+    parser.add_argument(
+        "--dryrun",
+        "-d",
+        help="don't push or deploy images",
+        default=False,
+        action="store_true",
+    )
+    parser.add_argument(
+        "--verbose",
+        "-v",
+        help="switch to DEBUG level logging",
+        default=False,
+        action="store_true",
+    )
     FORMAT = "%(name)s  %(message)s"
 
     parsed_args = parser.parse_args()
@@ -95,5 +138,5 @@ if __name__ == "__main__":
     try:
         main(mpl_logger, parsed_args)
     except Exception as e:
-        mpl_logger.warning(f'Unexpected exception: {e}', exc_info=True)
+        mpl_logger.warning(f"Unexpected exception: {e}", exc_info=True)
         sys.exit(1)

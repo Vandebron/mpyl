@@ -7,7 +7,9 @@ from typing import Union
 from ...steps.models import Output
 
 
-def custom_check_output(logger: Logger, command: Union[str, list[str]], capture_stdout: bool = False) -> Output:
+def custom_check_output(
+    logger: Logger, command: Union[str, list[str]], capture_stdout: bool = False
+) -> Output:
     """
     Wrapper around subprocess.Popen
     ⚠️ Using this function implies an implicit runtime OS dependency.
@@ -15,19 +17,23 @@ def custom_check_output(logger: Logger, command: Union[str, list[str]], capture_
     which makes the dependency on docker explicit and adds a lot of convenience methods.
     """
     if isinstance(command, str):
-        command = command.split(' ')
+        command = command.split(" ")
 
-    command_argument = ' '.join(command)
+    command_argument = " ".join(command)
     logger.info(f"Executing: '{command_argument}'")
     try:
         if capture_stdout:
-            out = subprocess.check_output(command, stderr=subprocess.STDOUT).decode("utf-8")
+            out = subprocess.check_output(command, stderr=subprocess.STDOUT).decode(
+                "utf-8"
+            )
             print(out)
             return Output(success=True, message=out)
 
         with subprocess.Popen(command, stdout=subprocess.PIPE, text=True) as process:
             if not process.stdout:
-                raise RuntimeError(f'Process {command_argument} does not have an stdout')
+                raise RuntimeError(
+                    f"Process {command_argument} does not have an stdout"
+                )
 
             for line in iter(process.stdout.readline, ""):
                 if line:
@@ -36,17 +42,20 @@ def custom_check_output(logger: Logger, command: Union[str, list[str]], capture_
                     break
             success = process.wait() == 0
             if not success:
-                logger.warning(f"Subprocess failed: {process.stderr.read() if process.stderr else 'No stderr output'}")
+                logger.warning(
+                    f"Subprocess failed: {process.stderr.read() if process.stderr else 'No stderr output'}"
+                )
 
-            return Output(success=success, message='Subprocess executed successfully')
-
+            return Output(success=success, message="Subprocess executed successfully")
 
     except subprocess.CalledProcessError as exc:
-        logger.warning(f"'{command_argument}': failed with return code: {exc.returncode} err: "
-                       f"{exc.stderr.decode() if exc.stderr else 'No stderr output'}",
-                       exc_info=True)
+        logger.warning(
+            f"'{command_argument}': failed with return code: {exc.returncode} err: "
+            f"{exc.stderr.decode() if exc.stderr else 'No stderr output'}",
+            exc_info=True,
+        )
 
     except FileNotFoundError:
         logger.warning(f"'{command_argument}: file not found", exc_info=True)
 
-    return Output(success=False, message='Subprocess failed')
+    return Output(success=False, message="Subprocess failed")

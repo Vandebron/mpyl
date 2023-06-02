@@ -23,12 +23,11 @@ class VersioningProperties:
 
     def __post_init__(self):
         if not self.pr_number and not self.tag:
-            raise ValueError('Either pr_number or tag need to be set')
+            raise ValueError("Either pr_number or tag need to be set")
 
     @property
     def identifier(self):
-        return f'pr-{self.pr_number}' if self.pr_number else self.tag
-
+        return f"pr-{self.pr_number}" if self.pr_number else self.tag
 
 
 @dataclass(frozen=True)
@@ -48,9 +47,14 @@ class RunContext:
 
     @staticmethod
     def from_configuration(run_details: Dict):
-        return RunContext(build_id=run_details['id'], run_url=run_details['run_url'],
-                          change_url=run_details['change_url'], tests_url=run_details['tests_url'],
-                          user=run_details['user'], user_email=run_details['user_email'])
+        return RunContext(
+            build_id=run_details["id"],
+            run_url=run_details["run_url"],
+            change_url=run_details["change_url"],
+            tests_url=run_details["tests_url"],
+            user=run_details["user"],
+            user_email=run_details["user_email"],
+        )
 
 
 @dataclass(frozen=True)
@@ -60,15 +64,18 @@ class ConsoleProperties:
 
     @staticmethod
     def from_configuration(build_config: Dict):
-        console_config = build_config['console']
-        width = console_config.get('width', 130)
-        return ConsoleProperties(console_config.get('logLevel', 'INFO'), None if width == 0 else width)
+        console_config = build_config["console"]
+        width = console_config.get("width", 130)
+        return ConsoleProperties(
+            console_config.get("logLevel", "INFO"), None if width == 0 else width
+        )
 
 
 @yaml_object(yaml)
 @dataclass(frozen=True)
 class RunProperties:
-    """ Contains information that is specific to a particular run of the pipeline"""
+    """Contains information that is specific to a particular run of the pipeline"""
+
     details: RunContext
     """Run specific details"""
     target: Target
@@ -84,37 +91,46 @@ class RunProperties:
     """Whether the run is local or not"""
 
     @staticmethod
-    def for_local_run(config: Dict, revision: str, branch: Optional[str], tag: Optional[str]):
-        return RunProperties(details=RunContext("", "", "", "", "", None), target=Target.PULL_REQUEST,
-                             versioning=VersioningProperties(revision, branch, 123, tag), config=config,
-                             console=ConsoleProperties("INFO", 130), local=True)
+    def for_local_run(
+        config: Dict, revision: str, branch: Optional[str], tag: Optional[str]
+    ):
+        return RunProperties(
+            details=RunContext("", "", "", "", "", None),
+            target=Target.PULL_REQUEST,
+            versioning=VersioningProperties(revision, branch, 123, tag),
+            config=config,
+            console=ConsoleProperties("INFO", 130),
+            local=True,
+        )
 
     @staticmethod
     def from_configuration(run_properties: Dict, config: Dict):
         build_dict = pkgutil.get_data(__name__, "../schema/run_properties.schema.yml")
 
         if build_dict:
-            validate(run_properties, build_dict.decode('utf-8'))
+            validate(run_properties, build_dict.decode("utf-8"))
 
-        build = run_properties['build']
-        versioning_config = build['versioning']
+        build = run_properties["build"]
+        versioning_config = build["versioning"]
 
-        pr_num: str = versioning_config.get('pr_number')
-        tag: str = versioning_config.get('tag')
+        pr_num: str = versioning_config.get("pr_number")
+        tag: str = versioning_config.get("tag")
 
-        versioning = VersioningProperties(revision=versioning_config['revision'],
-                                          branch=versioning_config['branch'],
-                                          pr_number=int(pr_num) if pr_num else None,
-                                          tag=tag)
+        versioning = VersioningProperties(
+            revision=versioning_config["revision"],
+            branch=versioning_config["branch"],
+            pr_number=int(pr_num) if pr_num else None,
+            tag=tag,
+        )
         console = ConsoleProperties.from_configuration(build)
 
         return RunProperties(
-            details=RunContext.from_configuration(build['run']),
-            target=Target(build['parameters']['deploy_target']),
+            details=RunContext.from_configuration(build["run"]),
+            target=Target(build["parameters"]["deploy_target"]),
             versioning=versioning,
             config=config,
             console=console,
-            local=str(build['local']).lower() == 'true'
+            local=str(build["local"]).lower() == "true",
         )
 
 
@@ -126,12 +142,13 @@ class ArtifactType(Enum):
 
     @classmethod
     def from_yaml(cls, _, node):
-        return ArtifactType(int(node.value.split('-')[1]))
+        return ArtifactType(int(node.value.split("-")[1]))
 
     @classmethod
     def to_yaml(cls, representer, node):
-        return representer.represent_scalar('!ArtifactType',
-                                            f'{node._name_}-{node._value_}')  # pylint: disable=protected-access
+        return representer.represent_scalar(
+            "!ArtifactType", f"{node._name_}-{node._value_}"
+        )  # pylint: disable=protected-access
 
     DOCKER_IMAGE = 1
     """A docker image"""
@@ -174,18 +191,22 @@ class Output:
 
     def write(self, target_path: str, stage: Stage):
         Path(target_path).mkdir(parents=True, exist_ok=True)
-        with Output.path(target_path, stage).open(mode='w+', encoding='utf-8') as file:
+        with Output.path(target_path, stage).open(mode="w+", encoding="utf-8") as file:
             yaml.dump(self, file)
 
     @staticmethod
     def try_read(target_path: str, stage: Stage):
         path = Output.path(target_path, stage)
         if path.exists():
-            with open(path, encoding='utf-8') as file:
+            with open(path, encoding="utf-8") as file:
                 return yaml.load(file)
         return None
 
 
 def input_to_artifact(artifact_type: ArtifactType, step_input: Input, spec: dict):
-    return Artifact(artifact_type=artifact_type, revision=step_input.run_properties.versioning.revision,
-                    producing_step=step_input.project.name, spec=spec)
+    return Artifact(
+        artifact_type=artifact_type,
+        revision=step_input.run_properties.versioning.revision,
+        producing_step=step_input.project.name,
+        spec=spec,
+    )

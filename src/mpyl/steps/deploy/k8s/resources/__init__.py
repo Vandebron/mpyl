@@ -17,21 +17,28 @@ yaml = YAML()
 
 class CustomResourceDefinition:
     openapi_types = {
-        'api_version': 'str',
-        'kind': 'str',
-        'metadata': 'V1ObjectMeta',
-        'spec': 'dict'
+        "api_version": "str",
+        "kind": "str",
+        "metadata": "V1ObjectMeta",
+        "spec": "dict",
     }
 
     attribute_map = {
-        'api_version': 'apiVersion',
-        'kind': 'kind',
-        'metadata': 'metadata',
-        'spec': 'spec'
+        "api_version": "apiVersion",
+        "kind": "kind",
+        "metadata": "metadata",
+        "spec": "spec",
     }
 
-    def __init__(self, api_version: str, kind: str, metadata: V1ObjectMeta, spec: dict,
-                 local_vars_configuration=None, schema: Optional[str] = None):  # noqa: E501
+    def __init__(
+        self,
+        api_version: str,
+        kind: str,
+        metadata: V1ObjectMeta,
+        spec: dict,
+        local_vars_configuration=None,
+        schema: Optional[str] = None,
+    ):  # noqa: E501
         """V1CSIDriver - a model defined in OpenAPI"""  # noqa: E501
         if local_vars_configuration is None:
             local_vars_configuration = Configuration()
@@ -85,8 +92,12 @@ class CustomResourceDefinition:
 
     @spec.setter
     def spec(self, spec):
-        if self.local_vars_configuration.client_side_validation and spec is None:  # noqa: E501
-            raise ValueError("Invalid value for `spec`, must not be `None`")  # noqa: E501
+        if (
+            self.local_vars_configuration.client_side_validation and spec is None
+        ):  # noqa: E501
+            raise ValueError(
+                "Invalid value for `spec`, must not be `None`"
+            )  # noqa: E501
         self._spec = spec
 
 
@@ -97,18 +108,20 @@ def to_dict(obj):
         value = getattr(obj, attr)
         key = obj.attribute_map.get(attr)
         if isinstance(value, list):
-            result[key] = list(map(
-                lambda x: to_dict(x) if hasattr(x, "to_dict") else x,
-                value
-            ))
+            result[key] = list(
+                map(lambda x: to_dict(x) if hasattr(x, "to_dict") else x, value)
+            )
         elif hasattr(value, "to_dict"):
             result[key] = to_dict(value)
         elif isinstance(value, dict):
-            result[key] = dict(map(
-                lambda item: (item[0], to_dict(item[1]))
-                if hasattr(item[1], "to_dict") else item,
-                value.items()
-            ))
+            result[key] = dict(
+                map(
+                    lambda item: (item[0], to_dict(item[1]))
+                    if hasattr(item[1], "to_dict")
+                    else item,
+                    value.items(),
+                )
+            )
         else:
             result[key] = value
 
@@ -120,25 +133,34 @@ def to_yaml(resource: object) -> str:
         if isinstance(obj, (list, tuple, set)):
             return type(obj)(remove_none(x) for x in obj if x is not None)
         if isinstance(obj, dict):
-            return type(obj)((remove_none(k), remove_none(v))
-                             for k, v in obj.items() if k is not None and v is not None)
+            return type(obj)(
+                (remove_none(k), remove_none(v))
+                for k, v in obj.items()
+                if k is not None and v is not None
+            )
         return obj
 
-    resource_dict = to_dict(resource) if (
-            hasattr(resource, "openapi_types") and hasattr(resource, "attribute_map")) else {}
+    resource_dict = (
+        to_dict(resource)
+        if (hasattr(resource, "openapi_types") and hasattr(resource, "attribute_map"))
+        else {}
+    )
     yaml_values = remove_none(resource_dict)
 
-    if hasattr(resource, 'schema') and resource.schema:
-        template = pkgutil.get_data(__name__, f'schema/{resource.schema}')
+    if hasattr(resource, "schema") and resource.schema:
+        template = pkgutil.get_data(__name__, f"schema/{resource.schema}")
         if template:
-            schema = yaml.load(template.decode('utf-8'))
+            schema = yaml.load(template.decode("utf-8"))
             try:
                 jsonschema.validate(yaml_values, schema)
             except ValidationError as err:
                 raise ValueError(
-                    f'Schema validation failed with {err.message} at {".".join(map(str, err.schema_path))}') from err
+                    f'Schema validation failed with {err.message} at {".".join(map(str, err.schema_path))}'
+                ) from err
         else:
-            raise ValueError(f'Schema {resource.schema} defined but not found in package')
+            raise ValueError(
+                f"Schema {resource.schema} defined but not found in package"
+            )
 
     stream = StringIO()
     yaml.dump(yaml_values, stream)

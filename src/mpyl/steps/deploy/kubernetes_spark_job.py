@@ -12,17 +12,32 @@ from ...utilities.repo import RepoConfig
 
 
 class DeployKubernetesSparkJob(Step):
-
     def __init__(self, logger: Logger) -> None:
-        super().__init__(logger, Meta(
-            name='Kubernetes Spark Job Deploy',
-            description='Deploy a Spark Job to the Spark Operator',
-            version='0.0.1',
-            stage=Stage.DEPLOY
-        ), produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.DOCKER_IMAGE)
+        super().__init__(
+            logger,
+            Meta(
+                name="Kubernetes Spark Job Deploy",
+                description="Deploy a Spark Job to the Spark Operator",
+                version="0.0.1",
+                stage=Stage.DEPLOY,
+            ),
+            produced_artifact=ArtifactType.NONE,
+            required_artifact=ArtifactType.DOCKER_IMAGE,
+        )
 
     def execute(self, step_input: Input) -> Output:
         chart = to_spark_job_chart(
-            ChartBuilder(step_input, find_deploy_set(RepoConfig.from_config(step_input.run_properties.config))))
-        return deploy_helm_chart(self._logger, chart, step_input, ChartBuilder(step_input).release_name,
-                                 delete_existing=True)
+            ChartBuilder(
+                step_input,
+                find_deploy_set(
+                    RepoConfig.from_config(step_input.run_properties.config)
+                ),
+            )
+        )
+        return deploy_helm_chart(
+            self._logger,
+            chart,
+            step_input,
+            ChartBuilder(step_input).release_name,
+            delete_existing=True,
+        )

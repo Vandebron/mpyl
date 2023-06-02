@@ -7,7 +7,7 @@ from . import create_console_logger
 from .commands.health.checks import perform_health_checks
 
 
-@click.command('health')
+@click.command("health")
 def health():
     """Health check"""
     console: Console = create_console_logger(local=False, verbose=False)

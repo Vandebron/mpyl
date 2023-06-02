@@ -29,7 +29,7 @@ from ruamel.yaml import YAML
 from .constants import BUILD_ARTIFACTS_FOLDER
 from .validation import validate
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def without_keys(dictionary: dict, keys: set[str]):
@@ -41,10 +41,10 @@ class Target(Enum):
     def __eq__(self, other):
         return self.value == other.value
 
-    PULL_REQUEST = 'PullRequest'
-    PULL_REQUEST_BASE = 'PullRequestBase'
-    ACCEPTANCE = 'Acceptance'
-    PRODUCTION = 'Production'
+    PULL_REQUEST = "PullRequest"
+    PULL_REQUEST_BASE = "PullRequestBase"
+    ACCEPTANCE = "Acceptance"
+    PRODUCTION = "Production"
 
 
 @dataclass(frozen=True)
@@ -52,10 +52,10 @@ class Stage(Enum):
     def __eq__(self, other):
         return self.value == other.value
 
-    BUILD = 'build'
-    TEST = 'test'
-    DEPLOY = 'deploy'
-    POST_DEPLOY = 'postdeploy'
+    BUILD = "build"
+    TEST = "test"
+    DEPLOY = "deploy"
+    POST_DEPLOY = "postdeploy"
 
 
 @dataclass(frozen=True)
@@ -83,8 +83,13 @@ class TargetProperty(Generic[T]):
     def from_config(values: dict):
         if not values:
             return None
-        return TargetProperty(pr=values.get('pr'), test=values.get('test'), acceptance=values.get('acceptance'),
-                              production=values.get('production'), all=values.get('all'))
+        return TargetProperty(
+            pr=values.get("pr"),
+            test=values.get("test"),
+            acceptance=values.get("acceptance"),
+            production=values.get("production"),
+            all=values.get("all"),
+        )
 
 
 @dataclass(frozen=True)
@@ -93,9 +98,14 @@ class KeyValueProperty(TargetProperty[str]):
 
     @staticmethod
     def from_config(values: dict):
-        return KeyValueProperty(key=values['key'], pr=values.get('pr'), test=values.get('test'),
-                                acceptance=values.get('acceptance'), production=values.get('production'),
-                                all=values.get('all'))
+        return KeyValueProperty(
+            key=values["key"],
+            pr=values.get("pr"),
+            test=values.get("test"),
+            acceptance=values.get("acceptance"),
+            production=values.get("production"),
+            all=values.get("all"),
+        )
 
 
 @dataclass(frozen=True)
@@ -117,24 +127,30 @@ class StageSpecificProperty(Generic[T]):
 
 @dataclass(frozen=True)
 class Stages(StageSpecificProperty[str]):
-
     @staticmethod
     def from_config(values: dict):
-        return Stages(build=values.get('build'), test=values.get('test'), deploy=values.get('deploy'),
-                      postdeploy=values.get('postdeploy'))
+        return Stages(
+            build=values.get("build"),
+            test=values.get("test"),
+            deploy=values.get("deploy"),
+            postdeploy=values.get("postdeploy"),
+        )
 
 
 @dataclass(frozen=True)
 class Dependencies(StageSpecificProperty[set[str]]):
-
     def set_for_stage(self, stage: Stage) -> set[str]:
         deps_for_stage = self.for_stage(stage)
         return deps_for_stage if deps_for_stage else set()
 
     @staticmethod
     def from_config(values: dict):
-        return Dependencies(build=set(values.get('build', [])), test=set(values.get('test', [])),
-                            deploy=set(values.get('deploy', [])), postdeploy=set(values.get('postdeploy', [])))
+        return Dependencies(
+            build=set(values.get("build", [])),
+            test=set(values.get("test", [])),
+            deploy=set(values.get("deploy", [])),
+            postdeploy=set(values.get("postdeploy", [])),
+        )
 
 
 @dataclass(frozen=True)
@@ -151,9 +167,12 @@ class Properties:
 
     @staticmethod
     def from_config(values: Dict[Any, Any]):
-        return Properties(env=list(map(KeyValueProperty.from_config, values.get('env', []))),
-                          sealed_secret=list(
-                              map(KeyValueProperty.from_config, values.get('sealedSecret', []))))
+        return Properties(
+            env=list(map(KeyValueProperty.from_config, values.get("env", []))),
+            sealed_secret=list(
+                map(KeyValueProperty.from_config, values.get("sealedSecret", []))
+            ),
+        )
 
 
 @dataclass(frozen=True)
@@ -165,7 +184,7 @@ class Probe:
     def from_config(values: dict):
         if not values:
             return None
-        return Probe(path=TargetProperty.from_config(values['path']), values=values)
+        return Probe(path=TargetProperty.from_config(values["path"]), values=values)
 
 
 @dataclass(frozen=True)
@@ -177,7 +196,9 @@ class Metrics:
     def from_config(values: dict):
         if not values:
             return None
-        return Metrics(path=values.get('path', '/metrics'), enabled=values.get('enabled', False))
+        return Metrics(
+            path=values.get("path", "/metrics"), enabled=values.get("enabled", False)
+        )
 
 
 @dataclass(frozen=True)
@@ -189,12 +210,12 @@ class Resources:
 
     @staticmethod
     def from_config(values: dict):
-        limits = values.get('limit', {})
+        limits = values.get("limit", {})
         return Resources(
-            instances=TargetProperty.from_config(limits.get('instances', {})),
-            cpus=TargetProperty.from_config(limits.get('cpus', {})),
-            mem=TargetProperty.from_config(limits.get('mem', {})),
-            disk=TargetProperty.from_config(limits.get('disk', {}))
+            instances=TargetProperty.from_config(limits.get("instances", {})),
+            cpus=TargetProperty.from_config(limits.get("cpus", {})),
+            mem=TargetProperty.from_config(limits.get("mem", {})),
+            disk=TargetProperty.from_config(limits.get("disk", {})),
         )
 
 
@@ -208,7 +229,11 @@ class Job:
     def from_config(values: dict):
         if not values:
             return None
-        return Job(cron=values.get('cron', {}), job=without_keys(values, {'cron'}), spark=values.get('spark', {}))
+        return Job(
+            cron=values.get("cron", {}),
+            job=without_keys(values, {"cron"}),
+            spark=values.get("spark", {}),
+        )
 
 
 @dataclass(frozen=True)
@@ -223,12 +248,12 @@ class Kubernetes:
     @staticmethod
     def from_config(values: dict):
         return Kubernetes(
-            port_mappings=values.get('portMappings', {}),
-            liveness_probe=Probe.from_config(values.get('livenessProbe', {})),
-            startup_probe=Probe.from_config(values.get('startupProbe', {})),
-            metrics=Metrics.from_config(values.get('metrics', {})),
-            resources=Resources.from_config(values.get('resources', {})),
-            job=Job.from_config(values.get('job', {}))
+            port_mappings=values.get("portMappings", {}),
+            liveness_probe=Probe.from_config(values.get("livenessProbe", {})),
+            startup_probe=Probe.from_config(values.get("startupProbe", {})),
+            metrics=Metrics.from_config(values.get("metrics", {})),
+            resources=Resources.from_config(values.get("resources", {})),
+            job=Job.from_config(values.get("job", {})),
         )
 
 
@@ -242,10 +267,10 @@ class Host:
     @staticmethod
     def from_config(values: dict):
         return Host(
-            host=TargetProperty.from_config(values.get('host', {})),
-            service_port=values.get('servicePort'),
-            tls=TargetProperty.from_config(values.get('tls', {})),
-            whitelists=TargetProperty.from_config(values.get('whitelists', {}))
+            host=TargetProperty.from_config(values.get("host", {})),
+            service_port=values.get("servicePort"),
+            tls=TargetProperty.from_config(values.get("tls", {})),
+            whitelists=TargetProperty.from_config(values.get("whitelists", {})),
         )
 
 
@@ -255,7 +280,7 @@ class Traefik:
 
     @staticmethod
     def from_config(values: dict):
-        hosts = values.get('hosts')
+        hosts = values.get("hosts")
         return Traefik(hosts=(list(map(Host.from_config, hosts) if hosts else [])))
 
 
@@ -268,14 +293,16 @@ class Deployment:
 
     @staticmethod
     def from_config(values: dict):
-        props = values.get('properties')
-        kubernetes = values.get('kubernetes')
-        traefik = values.get('traefik')
+        props = values.get("properties")
+        kubernetes = values.get("kubernetes")
+        traefik = values.get("traefik")
 
-        return Deployment(namespace=values.get('namespace'),
-                          properties=Properties.from_config(props) if props else None,
-                          kubernetes=Kubernetes.from_config(kubernetes) if kubernetes else None,
-                          traefik=Traefik.from_config(traefik) if traefik else None)
+        return Deployment(
+            namespace=values.get("namespace"),
+            properties=Properties.from_config(props) if props else None,
+            kubernetes=Kubernetes.from_config(kubernetes) if kubernetes else None,
+            traefik=Traefik.from_config(traefik) if traefik else None,
+        )
 
 
 @dataclass(frozen=True)
@@ -307,13 +334,17 @@ class Project:
     def to_name(self) -> ProjectName:
         return ProjectName(
             name=self.name,
-            namespace=self.deployment.namespace if self.deployment and self.deployment.namespace else None
+            namespace=self.deployment.namespace
+            if self.deployment and self.deployment.namespace
+            else None,
         )
 
     @property
     def kubernetes(self) -> Kubernetes:
         if self.deployment is None or self.deployment.kubernetes is None:
-            raise KeyError(f"Project '{self.name}' does not have kubernetes configuration")
+            raise KeyError(
+                f"Project '{self.name}' does not have kubernetes configuration"
+            )
         return self.deployment.kubernetes
 
     @property
@@ -323,20 +354,22 @@ class Project:
     @property
     def job(self) -> Job:
         if self.kubernetes.job is None:
-            raise KeyError(f"Project '{self.name}' does not have kubernetes.job configuration")
+            raise KeyError(
+                f"Project '{self.name}' does not have kubernetes.job configuration"
+            )
         return self.kubernetes.job
 
     @staticmethod
     def project_yaml_path() -> str:
-        return 'deployment/project.yml'
+        return "deployment/project.yml"
 
     @property
     def root_path(self) -> str:
-        return self.path.replace(Project.project_yaml_path(), '')
+        return self.path.replace(Project.project_yaml_path(), "")
 
     @property
     def deployment_path(self) -> str:
-        return str(Path(self.root_path, 'deployment'))
+        return str(Path(self.root_path, "deployment"))
 
     @property
     def target_path(self) -> str:
@@ -344,20 +377,27 @@ class Project:
 
     @property
     def test_containers_path(self) -> str:
-        return str(Path(self.deployment_path, 'docker-compose-test.yml'))
+        return str(Path(self.deployment_path, "docker-compose-test.yml"))
 
     @property
     def test_report_path(self) -> str:
-        return str(Path(self.root_path, 'target/test-reports'))
+        return str(Path(self.root_path, "target/test-reports"))
 
     @staticmethod
     def from_config(values: dict, project_path: Path):
-        deployment = values.get('deployment')
-        dependencies = values.get('dependencies')
-        return Project(name=values['name'], description=values['description'], path=str(project_path),
-                       stages=Stages.from_config(values.get('stages', {})), maintainer=values.get('maintainer', []),
-                       deployment=Deployment.from_config(deployment) if deployment else None,
-                       dependencies=Dependencies.from_config(dependencies) if dependencies else None)
+        deployment = values.get("deployment")
+        dependencies = values.get("dependencies")
+        return Project(
+            name=values["name"],
+            description=values["description"],
+            path=str(project_path),
+            stages=Stages.from_config(values.get("stages", {})),
+            maintainer=values.get("maintainer", []),
+            deployment=Deployment.from_config(deployment) if deployment else None,
+            dependencies=Dependencies.from_config(dependencies)
+            if dependencies
+            else None,
+        )
 
 
 def validate_project(file: TextIO) -> dict:
@@ -366,11 +406,11 @@ def validate_project(file: TextIO) -> dict:
     :return: the validated schema
     :raises `jsonschema.exceptions.ValidationError` when validation fails
     """
-    yaml_values = YAML(typ='unsafe').load(file)
+    yaml_values = YAML(typ="unsafe").load(file)
     template = pkgutil.get_data(__name__, "schema/project.schema.yml")
     if not template:
-        raise ValueError('Schema project.schema.yml not found in package')
-    validate(yaml_values, template.decode('utf-8'))
+        raise ValueError("Schema project.schema.yml not found in package")
+    validate(yaml_values, template.decode("utf-8"))
 
     return yaml_values
 
@@ -383,34 +423,42 @@ def load_project(root_dir: Path, project_path: Path, strict: bool = True) -> Pro
     :param strict: indicates whether the schema should be validated
     :return: `Project` data class
     """
-    with open(root_dir / project_path, encoding='utf-8') as file:
+    with open(root_dir / project_path, encoding="utf-8") as file:
         try:
             start = time.time()
-            yaml_values = validate_project(file) if strict else YAML(typ='unsafe').load(file)
+            yaml_values = (
+                validate_project(file) if strict else YAML(typ="unsafe").load(file)
+            )
             project = Project.from_config(yaml_values, project_path)
-            logging.debug(f'Loaded project {project.path} in {(time.time() - start) * 1000} ms')
+            logging.debug(
+                f"Loaded project {project.path} in {(time.time() - start) * 1000} ms"
+            )
             return project
         except jsonschema.exceptions.ValidationError as exc:
-            logging.warning(f'{project_path} does not comply with schema: {exc.message}')
+            logging.warning(
+                f"{project_path} does not comply with schema: {exc.message}"
+            )
             raise
         except TypeError:
             traceback.print_exc()
-            logging.warning('Type error', exc_info=True)
+            logging.warning("Type error", exc_info=True)
             raise
         except Exception:
-            logging.warning(f'Failed to load {project_path}', exc_info=True)
+            logging.warning(f"Failed to load {project_path}", exc_info=True)
             raise
 
 
 def get_env_variables(project: Project, target: Target) -> dict[str, str]:
     if project.deployment is None:
-        raise KeyError(f'No deployment information was found for project: {project.name}')
+        raise KeyError(
+            f"No deployment information was found for project: {project.name}"
+        )
     if len(project.deployment.properties.env) == 0:
-        raise KeyError(f'No properties.env is defined for project: {project.name}')
+        raise KeyError(f"No properties.env is defined for project: {project.name}")
 
     env_variables: dict[str, str] = {
-        env_variable.key: env_variable.get_value(target) for env_variable in
-        project.deployment.properties.env
+        env_variable.key: env_variable.get_value(target)
+        for env_variable in project.deployment.properties.env
     }
 
     return env_variables
