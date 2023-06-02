@@ -1,21 +1,21 @@
 """CLI support for Jenkins multibranch pipeline"""
-import pkgutil
-import tempfile
+import os
+import shutil
 from dataclasses import dataclass
 from enum import Enum
 
-import simpleaudio as sa
+from rich.console import Console
 
 
 @dataclass(frozen=True)
 class Sound(Enum):
-    SUCCESS = 'success'
-    FAILURE = 'failure'
+    SUCCESS = 'Glass.aiff'
+    FAILURE = 'Sosumi.aiff'
 
 
 def play_sound(sound: Sound):
-    sound_bytes = pkgutil.get_data(__name__, f"./sounds/{sound.value}.wav")
-    if sound_bytes:
-        with tempfile.NamedTemporaryFile() as sound_file:
-            sound_file.write(sound_bytes)
-            sa.WaveObject.from_wave_file(sound_file.name).play().wait_done()
+    if shutil.which('afplay') is None:
+        Console().bell()
+        return
+
+    os.system(f'afplay /System/Library/Sounds/{sound.value}')
