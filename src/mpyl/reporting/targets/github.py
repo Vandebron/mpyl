@@ -142,8 +142,7 @@ class CommitCheck(Reporter):
     def _to_output(results: RunResult) -> dict:
         build_id = results.run_properties.details.build_id
         summary = ':white_check_mark: Build successful' if results.is_success else ':x: Build failed'
-        return {'title': f'Build {build_id}', 'summary': summary + '\n' + run_result_to_markdown(results),
-                'text': to_string(results)}
+        return {'title': f'Build {build_id}', 'summary': summary + '\n' + run_result_to_markdown(results)}
 
     def send_report(self, results: RunResult, text: Optional[str] = None) -> GithubOutcome:
         try:
