@@ -52,12 +52,15 @@ class StepResult:
     timestamp: datetime = datetime.now()
 
 
-def collect_test_results(step_results: list[StepResult]) -> list[TestSuite]:
-    test_artifacts = [res.output.produced_artifact for res in step_results if
-                      (res.output.produced_artifact and
-                       res.output.produced_artifact.artifact_type == ArtifactType.JUNIT_TESTS)]
+def collect_test_artifacts(step_results: list[StepResult]) -> list[Artifact]:
+    return [res.output.produced_artifact for res in step_results if
+            (res.output.produced_artifact and
+             res.output.produced_artifact.artifact_type == ArtifactType.JUNIT_TESTS)]
 
+
+def collect_test_results(test_artifacts: list[Artifact]) -> list[TestSuite]:
     suites: list[list[TestSuite]] = list(map(to_test_suites, test_artifacts))
+
     return list(itertools.chain(*suites))
 
 

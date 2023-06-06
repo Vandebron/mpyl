@@ -8,7 +8,7 @@ from junitparser import TestSuite
 from ...project import Stage, Project
 from ...steps import Output, ArtifactType
 from ...steps.run import RunResult
-from ...steps.steps import StepResult, collect_test_results
+from ...steps.steps import StepResult, collect_test_results, collect_test_artifacts
 from ...utilities.junit import TestRunSummary, sum_suites
 
 
@@ -51,11 +51,13 @@ def __to_oneliner(result: list[StepResult], plan: set[Project]) -> str:
 
 def stage_to_icon(stage: Stage):
     if stage == Stage.BUILD:
-        return '🏗️ '
+        return '🏗️'
     if stage == Stage.TEST:
         return '🧪'
     if stage == Stage.DEPLOY:
         return '🚀'
+    if stage == Stage.POST_DEPLOY:
+        return '🦺'
     return '➡️'
 
 
@@ -66,10 +68,15 @@ def markdown_for_stage(run_result: RunResult, stage: Stage):
         return ''
 
     result = f"{stage_to_icon(stage)}  {__to_oneliner(step_results, plan)}  \n"
-    test_results = collect_test_results(step_results)
+    test_artifacts = collect_test_artifacts(step_results)
+    test_results = collect_test_results(test_artifacts)
+
     if test_results:
-        result += to_markdown_test_report(
-            test_results) + f' [link]({run_result.run_properties.details.tests_url}) \n'
+        test_results_url = run_result.run_properties.details.tests_url
+        if stage == Stage.POST_DEPLOY:
+            test_results_url = next(artifact.spec['cypress_results_url'] for artifact in test_artifacts
+                                    if artifact.spec['cypress_results_url'] is not None)
+        result += to_markdown_test_report(test_results) + f' [link]({test_results_url}) \n'
 
     return result
 
