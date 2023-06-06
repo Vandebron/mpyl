@@ -16,3 +16,13 @@ build:
   console:
     logLevel: INFO
     width: 160
+stages:
+  - name: 'build'
+    icon: '🏗️'
+  - name: 'test'
+    icon: '🧪'
+  - name : 'deploy'
+    icon: '🚀'
+  - name: 'postdeploy'
+    icon: '➡️'
+

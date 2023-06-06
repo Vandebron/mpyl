@@ -93,3 +93,14 @@ properties:
           tag:
             description: reference that points to the MPyL version
             type: ["string", "null"]
+  stages:
+    description: defines stages in a run
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+        icon:
+          type: string
