@@ -37,7 +37,8 @@ class TestDiscovery:
         assert 1 == len(invalidated)
 
     def test_invalidation_logic(self):
-        test_output = Path(test_resource_path / "deployment" / BUILD_ARTIFACTS_FOLDER / "TEST.yml").read_text(encoding="utf-8")
+        test_output = Path(test_resource_path / "deployment" / BUILD_ARTIFACTS_FOLDER / "test.yml").read_text(
+            encoding="utf-8")
         output = yaml.load(test_output)
         assert not output.success, "output should not be successful"
         assert output_invalidated(None, "hash"), "should be invalidated if no output"

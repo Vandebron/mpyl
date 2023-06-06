@@ -30,7 +30,7 @@ def build_project(context, project: Project) -> Output:
 
 @op(description="Test stage. Test steps produce junit compatible test results")
 def test_project(context, project) -> Output:
-    return Output(execute_step(project, Stage.TEST()()))
+    return Output(execute_step(project, Stage.TEST()))
 
 
 @op(description="Deploy a project to the target specified in the step", config_schema={"dry_run": bool})

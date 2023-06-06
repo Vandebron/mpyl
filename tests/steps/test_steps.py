@@ -47,7 +47,7 @@ class TestSteps:
         stream = StringIO()
         yaml.dump(self.docker_image, stream)
         value = stream.getvalue()
-        assert_roundtrip(test_resource_path / "deployment" / BUILD_ARTIFACTS_FOLDER / "BUILD.yml", value)
+        assert_roundtrip(test_resource_path / "deployment" / BUILD_ARTIFACTS_FOLDER / "build.yml", value)
 
     def test_find_required_output(self):
         found_artifact = Steps._find_required_artifact(self.build_project, ArtifactType.DOCKER_IMAGE,
