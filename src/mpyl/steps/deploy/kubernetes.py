@@ -21,7 +21,7 @@ class DeployKubernetes(Step):
             name='Kubernetes Deploy',
             description='Deploy to k8s',
             version='0.0.1',
-            stage=Stage.DEPLOY
+            stage=Stage.DEPLOY()
         ), produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.DOCKER_IMAGE)
 
     @staticmethod

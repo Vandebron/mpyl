@@ -23,7 +23,7 @@ class BuildSbt(Step):
                 name='Sbt Build',
                 description='Build sbt project',
                 version='0.0.1',
-                stage=Stage.BUILD
+                stage=Stage.BUILD()
             ),
             produced_artifact=ArtifactType.DOCKER_IMAGE,
             required_artifact=ArtifactType.NONE,

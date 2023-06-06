@@ -30,7 +30,7 @@ from ...utilities.junit import to_test_suites, sum_suites, TEST_OUTPUT_PATH_KEY
 
 class TestDocker(Step):
     def __init__(self, logger: Logger) -> None:
-        meta = Meta(name='Docker Test', description='Test docker image', version='0.0.1', stage=Stage.TEST)
+        meta = Meta(name='Docker Test', description='Test docker image', version='0.0.1', stage=Stage.TEST())
         super().__init__(
             logger=logger, meta=meta,
             produced_artifact=ArtifactType.JUNIT_TESTS,

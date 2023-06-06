@@ -26,7 +26,7 @@ class TestEcho(Step):
             name='Echo Test',
             description='Dummy test step to test the framework',
             version='0.0.1',
-            stage=Stage.TEST
+            stage=Stage.TEST()
         ), produced_artifact=ArtifactType.JUNIT_TESTS, required_artifact=ArtifactType.NONE)
 
     def execute(self, step_input: Input) -> Output:

@@ -25,18 +25,18 @@ def execute_step(proj: Project, stage: Stage, dry_run: bool = True) -> StepResul
 
 @op(description="Build stage. Build steps produce a docker image")
 def build_project(context, project: Project) -> Output:
-    return Output(execute_step(project, Stage.BUILD))
+    return Output(execute_step(project, Stage.BUILD()))
 
 
 @op(description="Test stage. Test steps produce junit compatible test results")
 def test_project(context, project) -> Output:
-    return Output(execute_step(project, Stage.TEST))
+    return Output(execute_step(project, Stage.TEST()()))
 
 
 @op(description="Deploy a project to the target specified in the step", config_schema={"dry_run": bool})
 def deploy_project(context, project: Project) -> Output:
     dry_run: bool = context.op_config["dry_run"]
-    return Output(execute_step(project, Stage.DEPLOY, dry_run))
+    return Output(execute_step(project, Stage.DEPLOY(), dry_run))
 
 
 @op(description="Deploy all artifacts produced over all runs of the pipeline", config_schema={"simulate_deploy": bool})
@@ -45,7 +45,7 @@ def deploy_projects(context, projects: list[Project], outputs: list[StepResult])
     res = []
     if simulate_deploy:
         for proj in projects:
-            res.append(execute_step(proj, Stage.DEPLOY))
+            res.append(execute_step(proj, Stage.DEPLOY()))
     else:
         get_dagster_logger().info(f"Not deploying {projects}")
     return Output(res)
@@ -63,17 +63,17 @@ def find_projects(stage: Stage) -> list[DynamicOutput[Project]]:
 
 @op(out=DynamicOut(), description="Find artifacts that need to be built")
 def find_build_projects() -> list[DynamicOutput[Project]]:
-    return find_projects(Stage.BUILD)
+    return find_projects(Stage.BUILD())
 
 
 @op(out=DynamicOut(), description="Find artifacts that need to be tested")
 def find_test_projects(_projects) -> list[DynamicOutput[Project]]:
-    return find_projects(Stage.TEST)
+    return find_projects(Stage.TEST())
 
 
 @op(out=DynamicOut(), description="Find artifacts that need to be deployed")
 def find_deploy_projects(_projects) -> list[DynamicOutput[Project]]:
-    return find_projects(Stage.DEPLOY)
+    return find_projects(Stage.DEPLOY())
 
 
 @job(config=config_from_files(["mpyl-dagster-example.yml"]))

@@ -5,7 +5,7 @@ import operator
 
 from junitparser import TestSuite
 
-from ...project import Stage, Project
+from ...project import Stage, Project, stages
 from ...steps import Output, ArtifactType
 from ...steps.run import RunResult
 from ...steps.steps import StepResult, collect_test_results, collect_test_artifacts
@@ -50,15 +50,7 @@ def __to_oneliner(result: list[StepResult], plan: set[Project]) -> str:
 
 
 def stage_to_icon(stage: Stage):
-    if stage == Stage.BUILD:
-        return '🏗️'
-    if stage == Stage.TEST:
-        return '📋'
-    if stage == Stage.DEPLOY:
-        return '🚀'
-    if stage == Stage.POST_DEPLOY:
-        return '🦺'
-    return '➡️'
+    return stage.icon
 
 
 def markdown_for_stage(run_result: RunResult, stage: Stage):
@@ -94,10 +86,10 @@ def run_result_to_markdown(run_result: RunResult) -> str:
         result += f"\n```\n{exception}\n```\n"
     elif run_result.failed_result:
         failed = run_result.failed_result
-        result += f"For _{failed.project.name}_ at _{failed.stage}_ \n"
+        result += f"For _{failed.project.name}_ at _{failed.stage.name}_ \n"
         result += f"\n```\n{run_result.failed_result.output.message}\n```\n"
 
-    for stage in Stage:
+    for stage in stages():
         result += markdown_for_stage(run_result, stage)
 
     return result

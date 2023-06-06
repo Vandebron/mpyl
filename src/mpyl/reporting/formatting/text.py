@@ -2,7 +2,7 @@
 Simple run result formatters
 """
 
-from ...project import Stage
+from ...project import stages
 from ...steps.models import Artifact, ArtifactType
 from ...steps.run import RunResult
 from ...utilities.junit import to_test_suites, sum_suites
@@ -10,7 +10,7 @@ from ...utilities.junit import to_test_suites, sum_suites
 
 def to_string(run_result: RunResult) -> str:
     result: str = ""
-    for stage in Stage:
+    for stage in stages():
         run_results = run_result.results_for_stage(stage)
         if run_results:
             result += f"Stage {stage.name}\n"

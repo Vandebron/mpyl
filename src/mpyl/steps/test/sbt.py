@@ -15,7 +15,7 @@ from ...utilities.subprocess import custom_check_output
 
 class TestSbt(Step):
     def __init__(self, logger: Logger) -> None:
-        meta = Meta(name='Sbt Test', description='Run sbt tests', version='0.0.1', stage=Stage.TEST)
+        meta = Meta(name='Sbt Test', description='Run sbt tests', version='0.0.1', stage=Stage.TEST())
         super().__init__(
             logger=logger,
             meta=meta,

@@ -14,7 +14,7 @@ class BuildEcho(Step):
             name='Echo Build',
             description='Dummy build step to test the framework',
             version='0.0.1',
-            stage=Stage.BUILD
+            stage=Stage.BUILD()
         ), produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.NONE)
 
     def execute(self, step_input: Input) -> Output:

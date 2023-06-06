@@ -18,7 +18,7 @@ class DeployKubernetesJob(Step):
             name='Kubernetes Job Deploy',
             description='Deploy a job to k8s',
             version='0.0.1',
-            stage=Stage.DEPLOY
+            stage=Stage.DEPLOY()
         ), produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.DOCKER_IMAGE)
 
     def execute(self, step_input: Input) -> Output:

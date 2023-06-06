@@ -13,7 +13,8 @@ from ...utilities.docker import stream_docker_logging
 class IntegrationTestAfter(Step):
     def __init__(self, logger: Logger) -> None:
         super().__init__(logger=logger,
-                         meta=Meta(name='After Test', description='After test step', version='0.0.1', stage=Stage.TEST),
+                         meta=Meta(name='After Test', description='After test step', version='0.0.1',
+                                   stage=Stage.TEST()),
                          produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.NONE)
 
     def execute(self, step_input: Input) -> Output:

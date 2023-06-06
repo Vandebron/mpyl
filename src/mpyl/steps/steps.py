@@ -25,7 +25,7 @@ from .postdeploy.cypress_test import CypressTest
 from .test.dockertest import TestDocker
 from .test.echo import TestEcho
 from .test.sbt import TestSbt
-from ..project import Project
+from ..project import Project, stages
 from ..project import Stage
 from ..utilities.junit import to_test_suites
 from ..validation import validate
@@ -79,24 +79,24 @@ class Steps:
         self._logger = logger
 
         self._step_executors: dict[Stage, set[Step]] = {
-            Stage.BUILD: {
+            Stage.BUILD(): {
                 BuildEcho(logger),
                 BuildSbt(logger),
                 BuildDocker(logger)
             },
-            Stage.TEST: {
+            Stage.TEST(): {
                 TestEcho(logger),
                 TestSbt(logger),
                 TestDocker(logger)
             },
-            Stage.DEPLOY: {
+            Stage.DEPLOY(): {
                 DeployEcho(logger),
                 DeployKubernetes(logger),
                 DeployKubernetesJob(logger),
                 DeployKubernetesSparkJob(logger),
                 EphemeralDockerDeploy(logger)
             },
-            Stage.POST_DEPLOY: {
+            Stage.POST_DEPLOY(): {
                 CypressTest(logger)
             }
         }
@@ -126,7 +126,7 @@ class Steps:
         if not required_artifact or required_artifact == ArtifactType.NONE:
             return None
 
-        for stage in Stage:
+        for stage in stages():
             output: Optional[Output] = Output.try_read(project.target_path, stage)
             if output and output.produced_artifact and output.produced_artifact.artifact_type == required_artifact:
                 return output.produced_artifact
@@ -158,7 +158,7 @@ class Steps:
     def _execute_stage(self, stage: Stage, project: Project, dry_run: bool = False) -> Output:
         stage_name = project.stages.for_stage(stage)
         if stage_name is None:
-            return Output(success=False, message=f"Stage '{stage.value}' not defined on project '{project.name}'")
+            return Output(success=False, message=f"Stage '{stage.name}' not defined on project '{project.name}'")
 
         invalid_maintainers = self._validate_project_against_config(project)
         if invalid_maintainers:
@@ -193,7 +193,7 @@ class Steps:
         else:
             self._logger.warning(f"No executor found for {stage_name} in stage {stage}")
 
-        return Output(success=False, message=f"Executor '{stage_name}' for '{stage.value}' not known or registered")
+        return Output(success=False, message=f"Executor '{stage_name}' for '{stage.name}' not known or registered")
 
     def execute(self, stage: Stage, project: Project, dry_run: bool = False) -> StepResult:
         """
