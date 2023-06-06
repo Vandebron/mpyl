@@ -5,7 +5,7 @@ import operator
 
 from junitparser import TestSuite
 
-from ...project import Stage, Project, stages
+from ...project import Stage, Project
 from ...steps import Output, ArtifactType
 from ...steps.run import RunResult
 from ...steps.steps import StepResult, collect_test_results, collect_test_artifacts
@@ -89,7 +89,7 @@ def run_result_to_markdown(run_result: RunResult) -> str:
         result += f"For _{failed.project.name}_ at _{failed.stage.name}_ \n"
         result += f"\n```\n{run_result.failed_result.output.message}\n```\n"
 
-    for stage in stages():
+    for stage in run_result.run_properties.stages:
         result += markdown_for_stage(run_result, stage)
 
     return result

@@ -46,7 +46,8 @@ FORMAT = "%(name)s  %(message)s"
 
 def get_build_plan(logger: logging.Logger, repo: Repository, mpyl_run_parameters: MpylRunParameters) -> RunResult:
     params = mpyl_run_parameters.parameters
-    branch = repo.get_branch or mpyl_run_parameters.run_config.run_properties.versioning.branch
+    properties = mpyl_run_parameters.run_config.run_properties
+    branch = repo.get_branch or properties.versioning.branch
     logger.info(f"Running with {params} on {branch}")
     if branch:
         if repo.main_branch_pulled:
@@ -60,8 +61,8 @@ def get_build_plan(logger: logging.Logger, repo: Repository, mpyl_run_parameters
         changes = repo.changes_in_tagged_commit(params.tag) if params.tag else repo.changes_in_merge_commit()
     logger.debug(f'Changes: {changes}')
 
-    projects_per_stage: dict[Stage, set[Project]] = find_build_set(repo, changes, params.all)
-    return RunResult(run_properties=mpyl_run_parameters.run_config.run_properties, run_plan=projects_per_stage)
+    projects_per_stage: dict[Stage, set[Project]] = find_build_set(repo, changes, properties.stages, params.all)
+    return RunResult(run_properties=properties, run_plan=projects_per_stage)
 
 
 def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter]) -> RunResult:
@@ -111,17 +112,15 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter
         raise exc
 
 
-def find_build_set(repo: Repository, changes_in_branch: list[Revision], build_all: bool) -> dict[Stage, set[Project]]:
+def find_build_set(repo: Repository, changes_in_branch: list[Revision], stages: list[Stage], build_all: bool) -> dict[
+    Stage, set[Project]]:
     project_paths = repo.find_projects()
     all_projects = set(map(lambda p: load_project(Path(""), Path(p), False), project_paths))
 
     if build_all:
-        return {Stage.BUILD(): for_stage(all_projects, Stage.BUILD()),
-                Stage.TEST(): for_stage(all_projects, Stage.TEST()),
-                Stage.DEPLOY(): for_stage(all_projects, Stage.DEPLOY()),
-                Stage.POST_DEPLOY(): for_stage(all_projects, Stage.POST_DEPLOY())}
+        return {stage: for_stage(all_projects, stage) for stage in stages}
 
-    return find_invalidated_projects_per_stage(all_projects, changes_in_branch)
+    return find_invalidated_projects_per_stage(all_projects, changes_in_branch, stages)
 
 
 def run_build(accumulator: RunResult, executor: Steps, reporter: Optional[Reporter] = None, dry_run: bool = True):

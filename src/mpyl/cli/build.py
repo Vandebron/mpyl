@@ -106,7 +106,7 @@ def __print_status(obj: CliContext):
 
     if obj.repo.main_branch_pulled:
         changes = obj.repo.changes_in_branch_including_local() if branch else obj.repo.changes_in_merge_commit()
-        build_set = find_build_set(obj.repo, changes, False)
+        build_set = find_build_set(obj.repo, changes, run_properties.stages, False)
         result = RunResult(run_properties=run_properties, run_plan=build_set)
         if result.run_plan:
             obj.console.print(Markdown("**Execution plan:**  \n" + run_result_to_markdown(result)))

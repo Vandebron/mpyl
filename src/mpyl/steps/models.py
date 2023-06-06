@@ -30,7 +30,6 @@ class VersioningProperties:
         return f'pr-{self.pr_number}' if self.pr_number else self.tag
 
 
-
 @dataclass(frozen=True)
 class RunContext:
     build_id: str
@@ -80,6 +79,10 @@ class RunProperties:
      """
     console: ConsoleProperties
     """Settings for the console output"""
+
+    @property
+    def stages(self) -> list[Stage]:
+        return [Stage.BUILD(), Stage.TEST(), Stage.DEPLOY(), Stage.POST_DEPLOY()]
 
     @staticmethod
     def for_local_run(config: Dict, revision: str, branch: Optional[str], tag: Optional[str]):

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-from ..project import Project, load_project, stages
+from ..project import Project, load_project
 from ..project import Stage
 from ..steps.models import Output
 from ..utilities.repo import Revision, RepoConfig, Repository
@@ -75,10 +75,10 @@ def find_deploy_set(repo_config: RepoConfig) -> DeploySet:
                          find_invalidated_projects_for_stage(all_projects, Stage.DEPLOY(), changes_in_branch))
 
 
-def find_invalidated_projects_per_stage(all_projects: set[Project], change_history: list[Revision]) \
-        -> dict[Stage, set[Project]]:
+def find_invalidated_projects_per_stage(all_projects: set[Project], change_history: list[Revision],
+                                        stages: list[Stage]) -> dict[Stage, set[Project]]:
     projects_for_stage = {}
-    for stage in stages():
+    for stage in stages:
         projects = find_invalidated_projects_for_stage(all_projects, stage, change_history)
         if projects:
             projects_for_stage[stage] = set(sorted(projects, key=operator.attrgetter('name')))

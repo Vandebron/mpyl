@@ -13,7 +13,7 @@ from src.mpyl.steps.models import Output, ArtifactType, RunProperties, Versionin
 from src.mpyl.steps.steps import Steps
 from tests import root_test_path, test_resource_path
 from tests.test_resources import test_data
-from tests.test_resources.test_data import assert_roundtrip, get_output
+from tests.test_resources.test_data import assert_roundtrip, get_output, RUN_PROPERTIES
 
 yaml = YAML()
 
@@ -50,16 +50,17 @@ class TestSteps:
         assert_roundtrip(test_resource_path / "deployment" / BUILD_ARTIFACTS_FOLDER / "BUILD.yml", value)
 
     def test_find_required_output(self):
-        found_artifact = Steps._find_required_artifact(self.build_project, ArtifactType.DOCKER_IMAGE)
+        found_artifact = Steps._find_required_artifact(self.build_project, ArtifactType.DOCKER_IMAGE,
+                                                       RUN_PROPERTIES.stages)
         assert found_artifact == self.docker_image.produced_artifact
 
     def test_find_not_required_output(self):
         with pytest.raises(ValueError) as exc_info:
-            Steps._find_required_artifact(self.build_project, ArtifactType.DEPLOYED_HELM_APP)
+            Steps._find_required_artifact(self.build_project, ArtifactType.DEPLOYED_HELM_APP, RUN_PROPERTIES.stages)
         assert str(exc_info.value) == 'Artifact ArtifactType.DEPLOYED_HELM_APP required for test not found'
 
     def test_find_required_output_should_handle_none(self):
-        assert Steps._find_required_artifact(self.build_project, None) is None
+        assert Steps._find_required_artifact(self.build_project, None, RUN_PROPERTIES.stages) is None
 
     def test_should_return_error_if_stage_not_defined(self):
         steps = Steps(logger=Logger.manager.getLogger('logger'), properties=test_data.RUN_PROPERTIES)

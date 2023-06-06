@@ -25,7 +25,7 @@ from .postdeploy.cypress_test import CypressTest
 from .test.dockertest import TestDocker
 from .test.echo import TestEcho
 from .test.sbt import TestSbt
-from ..project import Project, stages
+from ..project import Project
 from ..project import Stage
 from ..utilities.junit import to_test_suites
 from ..validation import validate
@@ -122,11 +122,12 @@ class Steps:
         return result
 
     @staticmethod
-    def _find_required_artifact(project: Project, required_artifact: Optional[ArtifactType]) -> Optional[Artifact]:
+    def _find_required_artifact(project: Project, required_artifact: Optional[ArtifactType], stages: list[Stage]) -> \
+            Optional[Artifact]:
         if not required_artifact or required_artifact == ArtifactType.NONE:
             return None
 
-        for stage in stages():
+        for stage in stages:
             output: Optional[Output] = Output.try_read(project.target_path, stage)
             if output and output.produced_artifact and output.produced_artifact.artifact_type == required_artifact:
                 return output.produced_artifact
@@ -168,11 +169,13 @@ class Steps:
         if executor:
             try:
                 self._logger.info(f'Executing {stage} for {project.name}')
-                artifact: Optional[Artifact] = self._find_required_artifact(project, executor.required_artifact)
+                artifact: Optional[Artifact] = self._find_required_artifact(
+                    project, executor.required_artifact,
+                    self._properties.stages)
                 if executor.before:
-                    before_result = self._execute(executor.before, project, self._properties,
-                                                  self._find_required_artifact(project,
-                                                                               executor.before.required_artifact),
+                    required_artifact = self._find_required_artifact(project, executor.before.required_artifact,
+                                                                     self._properties.stages)
+                    before_result = self._execute(executor.before, project, self._properties, required_artifact,
                                                   dry_run)
                     if not before_result.success:
                         return before_result

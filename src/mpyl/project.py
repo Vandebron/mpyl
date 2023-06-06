@@ -69,10 +69,6 @@ class Stage:
         return Stage(name='postdeploy', icon='➡️')
 
 
-def stages() -> list[Stage]:
-    return [Stage.BUILD(), Stage.TEST(), Stage.DEPLOY(), Stage.POST_DEPLOY()]
-
-
 @dataclass(frozen=True)
 class TargetProperty(Generic[T]):
     pr: Optional[T]  # pylint: disable=invalid-name
