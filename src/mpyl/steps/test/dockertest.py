@@ -12,19 +12,14 @@ The test results need to be writted  written to a folder named `$WORKDIR/target/
 
 
 """
-import shutil
 from logging import Logger
-from pathlib import Path
-
-from python_on_whales import docker
-from python_on_whales.exceptions import NoSuchContainer
 
 from .after_test import IntegrationTestAfter
 from .before_test import IntegrationTestBefore
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType, input_to_artifact, Artifact
 from ...project import Stage, Project
-from ...utilities.docker import DockerConfig, build, docker_image_tag, docker_file_path
+from ...utilities.docker import DockerConfig, build, docker_image_tag, docker_file_path, docker_copy
 from ...utilities.junit import to_test_suites, sum_suites, TEST_OUTPUT_PATH_KEY
 
 
@@ -67,25 +62,9 @@ class TestDocker(Step):
 
     @staticmethod
     def extract_test_results(logger: Logger, project: Project, tag: str, step_input: Input) -> Artifact:
-        test_result_path = Path(project.target_path, "test_results")
-        shutil.rmtree(test_result_path, ignore_errors=True)
-        Path(test_result_path).mkdir(parents=True, exist_ok=True)
-
-        container_id = docker.create(tag).id
-
-        if not docker.container.exists(container_id):
-            raise ValueError(f'Container {container_id} with test results does not exist')
-
+        test_result_path = f'{project.target_path}/test_results'
         path_in_container = f'/{project.test_report_path}/'
-        logger.info(
-            f"Copying test results from container {container_id} at "
-            f"path {path_in_container} to host at {test_result_path}"
-        )
-        try:
-            docker.copy(f'{container_id}:{path_in_container}.', test_result_path)
-        except NoSuchContainer as exc:
-            logger.warning(f'Could not find test results in container {tag} at expected location {path_in_container}')
-            raise exc
+        docker_copy(logger=logger, container_path=path_in_container, dst_path=test_result_path, image_name=tag)
 
         return input_to_artifact(artifact_type=ArtifactType.JUNIT_TESTS, step_input=step_input,
                                  spec={TEST_OUTPUT_PATH_KEY: f'{test_result_path}'})

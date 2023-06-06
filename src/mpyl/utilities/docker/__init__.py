@@ -6,11 +6,12 @@ from dataclasses import dataclass
 from itertools import tee
 from logging import Logger
 from typing import Dict, Optional, Iterator, cast, Union
-
+import shutil
+from pathlib import Path
 from python_on_whales import docker, Image, Container
+from python_on_whales.exceptions import NoSuchContainer
 from rich.text import Text
 
-from ..filesystem import create_directory
 from ...project import Project
 from ...steps.models import Input
 
@@ -84,13 +85,9 @@ def stream_docker_logging(logger: Logger, generator: Union[Iterator[str], Iterat
 
 
 def docker_image_tag(step_input: Input):
-    tag = git_tag(step_input)
-    return f"{step_input.project.name.lower()}:{tag}".replace('/', '_')
-
-
-def git_tag(step_input: Input):
     git = step_input.run_properties.versioning
-    return f"pr-{git.pr_number}" if git.pr_number else git.tag
+    tag = f"pr-{git.pr_number}" if git.pr_number else git.tag
+    return f"{step_input.project.name.lower()}:{tag}".replace('/', '_')
 
 
 def docker_file_path(project: Project, docker_config: DockerConfig):
@@ -106,10 +103,23 @@ def docker_copy(logger: Logger, container_path: str, dst_path: str, image_name: 
     :param dst_path: the path to copy the container content to
     :param image_name: the name of the docker image which a container is created from
     """
-    create_directory(logger=logger, dir_name=dst_path)
-    container = docker.create(image_name, name='container')
-    docker.copy((container.name, container_path), dst_path)
-    docker.remove(container)
+    shutil.rmtree(dst_path, ignore_errors=True)
+    Path(dst_path).mkdir(parents=True, exist_ok=True)
+
+    container = docker.create(image_name)
+
+    if not docker.container.exists(container.id):
+        raise ValueError(f'Container {container.id} does not exist')
+
+    logger.info(
+        f"Copying contents from container {container.id} at "
+        f"path {container_path} to host at {dst_path}"
+    )
+    try:
+        docker.copy(f'{container.id}:{container_path}', dst_path)
+    except NoSuchContainer as exc:
+        logger.warning(f'Could not find data in container {image_name} at expected location {container_path}')
+        raise exc
 
 
 def build(logger: Logger, root_path: str, file_path: str, image_tag: str, target: str) -> bool:

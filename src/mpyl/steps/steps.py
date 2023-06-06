@@ -96,7 +96,7 @@ class Steps:
                 DeployKubernetes(logger),
                 DeployKubernetesJob(logger),
                 DeployKubernetesSparkJob(logger),
-                EphemeralDockerDeploy(logger),
+                EphemeralDockerDeploy(logger)
             },
             Stage.POST_DEPLOY: {
                 CypressTest(logger)
