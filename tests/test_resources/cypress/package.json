@@ -6,6 +6,7 @@
     "test": "cypress run --spec 'specs/*.js'"
   },
   "dependencies": {
-    "cypress": "^12.12.0"
+    "cypress": "^12.12.0",
+    "typescript": "5.1.3"
   }
 }

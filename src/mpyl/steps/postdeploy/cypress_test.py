@@ -51,6 +51,8 @@ class CypressTest(Step):
                                 task_name="Installing cypress")
             execute_with_stream(logger=self._logger, container=docker_container, command="yarn cypress verify",
                                 task_name="Verifying cypress")
+            execute_with_stream(logger=self._logger, container=docker_container, command="yarn tsc",
+                                task_name="Compiling typescript")
 
             run_command = f'bash -c "yarn cypress run --spec {specs_string} || true"'
             record_key = cypress_config.record_key
