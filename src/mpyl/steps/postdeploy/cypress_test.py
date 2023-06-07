@@ -45,6 +45,12 @@ class CypressTest(Step):
             raise TypeError("Docker run command should return a container")
 
         try:
+            execute_with_stream(logger=self._logger, container=docker_container,
+                                command='bash -c "cp cypress.env.json.example cypress.env.json && '
+                                        "sed -i 's/acceptance/pr/' cypress.env.json && "
+                                        f"sed -i 's/{{PR_NUMBER}}/{step_input.run_properties.versioning.pr_number}/' "
+                                        'cypress.env.json"',
+                                task_name="Prepare env file")
             execute_with_stream(logger=self._logger, container=docker_container, command="yarn install",
                                 task_name="Running yarn install")
             execute_with_stream(logger=self._logger, container=docker_container, command="yarn cypress install",
