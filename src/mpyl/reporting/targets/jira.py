@@ -58,7 +58,7 @@ class JiraTicket:
         ticket_id = response['key']
         assignee = fields.get('assignee')
         user = assignee or fields.get('reporter') or fields.get('creator')
-        avatar = user['avatarUrls']['24x24'] if user else ''
+        avatar = user['avatarUrls']['24x24'] if user and user['avatarUrls']['24x24'].endswith('24') else ''
         status_name = fields['status']['name']
         assignee_email = assignee['emailAddress'] if assignee else None
         ticket_url = f"{jira_url}/browse/{ticket_id}"

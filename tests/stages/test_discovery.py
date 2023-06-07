@@ -28,16 +28,17 @@ class TestDiscovery:
                                                            [Revision(0, "revision", touched_files)])) == 1
 
     def test_should_find_invalidated_dependencies(self):
-        projs = {'projects/job/deployment/project.yml', 'projects/service/deployment/project.yml',
-                 'projects/sbt-service/deployment/project.yml'}
-        projects = set(load_projects(root_test_path, projs))
+        project_paths = ['projects/job/deployment/project.yml', 'projects/service/deployment/project.yml',
+                         'projects/sbt-service/deployment/project.yml']
+        projects = set(load_projects(root_test_path, project_paths))
         invalidated = find_invalidated_projects_for_stage(projects, Stage.BUILD,
                                                           [Revision(0, "hash", {'projects/job/file.py',
                                                                                 'some_file.txt'})])
         assert 1 == len(invalidated)
 
     def test_invalidation_logic(self):
-        test_output = Path(test_resource_path / "deployment" / BUILD_ARTIFACTS_FOLDER / "TEST.yml").read_text(encoding="utf-8")
+        test_output = Path(test_resource_path / "deployment" / BUILD_ARTIFACTS_FOLDER / "TEST.yml").read_text(
+            encoding="utf-8")
         output = yaml.load(test_output)
         assert not output.success, "output should not be successful"
         assert output_invalidated(None, "hash"), "should be invalidated if no output"
