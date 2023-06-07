@@ -72,11 +72,16 @@ def markdown_for_stage(run_result: RunResult, stage: Stage):
     test_results = collect_test_results(test_artifacts)
 
     if test_results:
-        test_results_url = run_result.run_properties.details.tests_url
+        result += to_markdown_test_report(test_results)
+
         if stage == Stage.POST_DEPLOY:
-            test_results_url = next(artifact.spec['cypress_results_url'] for artifact in test_artifacts
-                                    if artifact.spec['cypress_results_url'] is not None)
-        result += to_markdown_test_report(test_results) + f' [link]({test_results_url}) \n'
+            test_results_url = next((artifact.spec['cypress_results_url'] for artifact in test_artifacts
+                                    if artifact.spec['cypress_results_url']), '')
+        else:
+            test_results_url = run_result.run_properties.details.tests_url
+
+        if test_results_url:
+            result += f' [link]({test_results_url}) \n'
 
     return result
 
