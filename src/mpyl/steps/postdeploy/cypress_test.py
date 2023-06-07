@@ -38,8 +38,10 @@ class CypressTest(Step):
         custom_image_tag = "mpyl/cypress"
         docker.build(context_path=volume_path, tags=[custom_image_tag], file=f"{volume_path}/Dockerfile-mpyl")
         docker_container = docker.run(image=custom_image_tag, interactive=True, detach=True,
-                                      volumes=[(volume_path, "/cypress"),
-                                               (os.path.expanduser("~/.kube/config"), "/root/.kube/config")],
+                                      volumes=[
+                                          (volume_path, "/cypress"),
+                                          (os.path.expanduser(cypress_config.kubectl_config_path), "/root/.kube/config")
+                                      ],
                                       workdir="/cypress")
         if not isinstance(docker_container, Container):
             raise TypeError("Docker run command should return a container")

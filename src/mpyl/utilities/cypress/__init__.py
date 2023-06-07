@@ -6,6 +6,7 @@ from typing import Optional
 @dataclass(frozen=True)
 class CypressConfig:
     cypress_source_code_path: str
+    kubectl_config_path: str
     record_key: Optional[str]
 
     @staticmethod
@@ -15,4 +16,5 @@ class CypressConfig:
             raise KeyError('Cypress section needs to be defined in mpyl_config.yml')
 
         return CypressConfig(cypress_source_code_path=cypress_config.get('cypressSourceCodePath'),
-                             record_key=cypress_config.get('recordKey'))
+                             record_key=cypress_config.get('recordKey'),
+                             kubectl_config_path=cypress_config.get('kubectlConfigPath', '~/.kube/config'))
