@@ -1,0 +1,9 @@
+!Output
+success: true
+message: Dry run. Not pushing kong-sync:TEST to bigdataregistry.azurecr.io
+produced_artifact: !Artifact
+  artifact_type: !ArtifactType DOCKER_IMAGE-1
+  revision:
+  producing_step: After Docker Build
+  spec:
+    image: bigdataregistry.azurecr.io/kong-sync:TEST

@@ -10,6 +10,9 @@ deployment:
     job:
       cron:
         schedule: "0 22 * * *"
+      backoffLimit: 2
+      lookslikeverythingisallowed: true
+
 dependencies:
   test:
     - tests/projects/service/file.py
