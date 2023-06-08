@@ -8,8 +8,8 @@ h4. Should support Jira markdown
 print(a + b)
 {code}
 
-# first
-# second
+- first
+- second
 
 [~accountid:6151b89d72f6970069e87968] is tagged
 
