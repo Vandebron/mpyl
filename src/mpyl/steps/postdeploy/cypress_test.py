@@ -8,7 +8,7 @@ from python_on_whales import docker, Container, DockerException
 
 from .. import Step, Meta
 from ..models import ArtifactType, Input, Output, input_to_artifact
-from ...project import Stage
+from ...project import Stage, Target
 from ...utilities.cypress import CypressConfig
 from ...utilities.docker import execute_with_stream
 from ...utilities.junit import TEST_OUTPUT_PATH_KEY
@@ -24,8 +24,10 @@ class CypressTest(Step):
         ), produced_artifact=ArtifactType.JUNIT_TESTS, required_artifact=ArtifactType.NONE)
 
     def execute(self, step_input: Input) -> Output:
-        self._logger.info(f"Running cypress tests for project {step_input.project.name}")
+        if step_input.run_properties.target == Target.PRODUCTION:
+            return Output(success=True, message="Cypress tests are not run on production")
 
+        self._logger.info(f"Running cypress tests for project {step_input.project.name}")
         cypress_config = CypressConfig.from_config(step_input.run_properties.config)
         volume_path = os.path.join(os.getcwd(), cypress_config.cypress_source_code_path)
 
@@ -49,10 +51,12 @@ class CypressTest(Step):
         try:
             execute_with_stream(logger=self._logger, container=docker_container,
                                 command='bash -c "cp cypress.env.json.example cypress.env.json && '
-                                        "sed -i 's/acceptance/pr/' cypress.env.json && "
+                                        f"sed -i 's/acceptance/"
+                                        f"{CypressTest._target_to_test_target(step_input.run_properties.target)}"
+                                        f"/' cypress.env.json && "
                                         f"sed -i 's/{{PR_NUMBER}}/{step_input.run_properties.versioning.pr_number}/' "
                                         'cypress.env.json"',
-                                task_name="Prepare env file")
+                                task_name="Preparing env file")
             execute_with_stream(logger=self._logger, container=docker_container, command="yarn install",
                                 task_name="Running yarn install")
             execute_with_stream(logger=self._logger, container=docker_container, command="yarn cypress install",
@@ -90,3 +94,12 @@ class CypressTest(Step):
                       produced_artifact=input_to_artifact(artifact_type=ArtifactType.JUNIT_TESTS, step_input=step_input,
                                                           spec={TEST_OUTPUT_PATH_KEY: volume_path,
                                                                 "cypress_results_url": cypress_results_url}))
+
+    @staticmethod
+    def _target_to_test_target(target: Target) -> str:
+        if target == Target.PULL_REQUEST_BASE:
+            return 'test'
+        if target == Target.ACCEPTANCE:
+            return 'acceptance'
+
+        return 'pr'
