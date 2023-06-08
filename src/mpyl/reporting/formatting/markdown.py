@@ -53,7 +53,7 @@ def stage_to_icon(stage: Stage):
     if stage == Stage.BUILD:
         return '🏗️'
     if stage == Stage.TEST:
-        return '🧪'
+        return '📋'
     if stage == Stage.DEPLOY:
         return '🚀'
     if stage == Stage.POST_DEPLOY:
