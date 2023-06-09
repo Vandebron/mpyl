@@ -159,37 +159,36 @@ class Steps:
             return invalid_maintainers
 
         executor: Optional[Step] = self._find_executor(stage, stage_name)
-        if executor:
-            try:
-                self._logger.info(f'Executing {stage} for {project.name}')
-                artifact: Optional[Artifact] = self._find_required_artifact(
-                    project, executor.required_artifact,
-                    self._properties.stages)
-                if executor.before:
-                    required_artifact = self._find_required_artifact(project, executor.before.required_artifact,
-                                                                     self._properties.stages)
-                    before_result = self._execute(executor.before, project, self._properties, required_artifact,
-                                                  dry_run)
-                    if not before_result.success:
-                        return before_result
-
-                result = self._execute(executor, project, self._properties, artifact, dry_run)
-                result.write(project.target_path, stage)
-
-                if executor.after:
-                    return self._execute_after_(result, executor.after, project, stage, dry_run)
-
-                return result
-            except Exception as exc:
-                message = str(exc)
-                self._logger.warning(
-                    f"Execution of '{executor.meta.name}' for project '{project.name}' in stage {stage} "
-                    f"failed with exception: {message}", exc_info=True)
-                raise ExecutionException(project.name, executor.meta.name, stage.name, message) from exc
-        else:
+        if executor is None:
             self._logger.warning(f"No executor found for {stage_name} in stage {stage}")
+            return Output(success=False, message=f"Executor '{stage_name}' for '{stage.name}' not known or registered")
 
-        return Output(success=False, message=f"Executor '{stage_name}' for '{stage.name}' not known or registered")
+        try:
+            self._logger.info(f'Executing {stage} for {project.name}')
+            artifact: Optional[Artifact] = self._find_required_artifact(
+                project, executor.required_artifact,
+                self._properties.stages)
+            if executor.before:
+                required_artifact = self._find_required_artifact(project, executor.before.required_artifact,
+                                                                 self._properties.stages)
+                before_result = self._execute(executor.before, project, self._properties, required_artifact,
+                                              dry_run)
+                if not before_result.success:
+                    return before_result
+
+            result = self._execute(executor, project, self._properties, artifact, dry_run)
+            result.write(project.target_path, stage)
+
+            if executor.after:
+                return self._execute_after_(result, executor.after, project, stage, dry_run)
+
+            return result
+        except Exception as exc:
+            message = str(exc)
+            self._logger.warning(
+                f"Execution of '{executor.meta.name}' for project '{project.name}' in stage {stage} "
+                f"failed with exception: {message}", exc_info=True)
+            raise ExecutionException(project.name, executor.meta.name, stage.name, message) from exc
 
     def execute(self, stage: Stage, project: Project, dry_run: bool = False) -> StepResult:
         """
