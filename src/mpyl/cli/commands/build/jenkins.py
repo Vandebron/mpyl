@@ -60,8 +60,6 @@ def __get_pr_pipeline(config: dict, git_repo: Repository, pipeline: str, status:
         return None
 
 
-
-
 def run_jenkins(run_config: JenkinsRunParameters):
     log_console = Console(log_path=False, log_time=False)
     with log_console.status('Fetching Github info.. [bright_blue]>gh pr view[/bright_blue]') as status:

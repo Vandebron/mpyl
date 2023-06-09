@@ -58,7 +58,7 @@ class JiraTicket:
         ticket_id = response['key']
         assignee = fields.get('assignee')
         user = assignee or fields.get('reporter') or fields.get('creator')
-        avatar = user['avatarUrls']['24x24'] if user and user['avatarUrls']['24x24'].endswith('24') else ''
+        avatar = user['avatarUrls']['24x24'] if user else ''
         status_name = fields['status']['name']
         assignee_email = assignee['emailAddress'] if assignee else None
         ticket_url = f"{jira_url}/browse/{ticket_id}"
@@ -143,8 +143,8 @@ def to_markdown_summary(ticket: JiraTicket, run_result: RunResult) -> str:
 
     build_status = f"🏗️ Build [{details.build_id}]({details.run_url}) {run_result.status_line}, " \
                    f"started by _{details.user}_  \n{markdown_for_stage(run_result, Stage.DEPLOY)}"
-    return f"📕 [{ticket.ticket_id}]({ticket.ticket_url}) {ticket.summary} " \
-           f"![{ticket.user_email}]({ticket.user_avatar}) \n" \
+    return f"## 📕 [{ticket.ticket_id}]({ticket.ticket_url}) {ticket.summary} " \
+           f'<img src="{ticket.user_avatar}" width="24" height="24" alt="{ticket.user_email}" /> \n' \
            f"{description_markdown}\n\n" \
            f"{build_status}"
 
