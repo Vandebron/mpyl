@@ -66,7 +66,7 @@ def collect_test_results(test_artifacts: list[Artifact]) -> list[TestSuite]:
 
 class Steps:
     """ Executor of individual steps within a pipeline. """
-    _step_executors: dict[Stage, set[Step]]
+    _step_executors: set[Step]
     _logger: Logger
     _properties: RunProperties
 
@@ -78,37 +78,29 @@ class Steps:
 
         self._logger = logger
 
-        self._step_executors: dict[Stage, set[Step]] = {
-            Stage.BUILD(): {
-                BuildEcho(logger),
-                BuildSbt(logger),
-                BuildDocker(logger)
-            },
-            Stage.TEST(): {
-                TestEcho(logger),
-                TestSbt(logger),
-                TestDocker(logger)
-            },
-            Stage.DEPLOY(): {
-                DeployEcho(logger),
-                DeployKubernetes(logger),
-                DeployKubernetesJob(logger),
-                DeployKubernetesSparkJob(logger),
-                EphemeralDockerDeploy(logger)
-            },
-            Stage.POST_DEPLOY(): {
-                CypressTest(logger)
-            }
+        self._step_executors = {
+            BuildEcho(logger),
+            BuildSbt(logger),
+            BuildDocker(logger),
+            TestEcho(logger),
+            TestSbt(logger),
+            TestDocker(logger),
+            DeployEcho(logger),
+            DeployKubernetes(logger),
+            DeployKubernetesJob(logger),
+            DeployKubernetesSparkJob(logger),
+            EphemeralDockerDeploy(logger),
+            CypressTest(logger)
         }
 
         self._properties = properties
-        for stage, steps in self._step_executors.items():
-            self._logger.debug(f"Registered executors for stage {stage.name}: "  # pylint: disable=E1101
-                               f"{[step.meta.name for step in steps]}")
 
+    def add_executor(self, step: Step):
+        self._step_executors.add(step)
 
     def _find_executor(self, stage: Stage, step_name: str) -> Optional[Step]:
-        executors = filter(lambda e: e.meta.stage == stage and step_name == e.meta.name, self._step_executors[stage])
+        executors = filter(lambda e: e.meta.stage == stage and step_name == e.meta.name and e.meta.stage == stage,
+                           self._step_executors)
         return next(executors, None)
 
     def _execute(self, executor: Step, project: Project, properties: RunProperties,
