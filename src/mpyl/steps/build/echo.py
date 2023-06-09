@@ -3,8 +3,9 @@
 from logging import Logger
 
 from .. import Step, Meta
-from ..models import Input, Output, ArtifactType
+from ..models import Input, Output, ArtifactType, input_to_artifact
 from ...project import Stage
+from ...utilities.docker import docker_image_tag
 
 
 class BuildEcho(Step):
@@ -19,4 +20,6 @@ class BuildEcho(Step):
 
     def execute(self, step_input: Input) -> Output:
         self._logger.info(f"Building project {step_input.project.name}")
-        return Output(success=True, message=f"Built {step_input.project.name}", produced_artifact=None)
+        artifact = input_to_artifact(ArtifactType.DOCKER_IMAGE, step_input,
+                                     spec={'image': docker_image_tag(step_input)})
+        return Output(success=True, message=f"Built {step_input.project.name}", produced_artifact=artifact)

@@ -47,7 +47,6 @@ class BuildDocker(Step):
         if not build_target:
             raise ValueError('docker.buildTarget must be specified')
 
-        image_tag = docker_image_tag(step_input)
         dockerfile = docker_file_path(project=step_input.project, docker_config=docker_config)
 
         if not step_input.dry_run:
@@ -55,9 +54,10 @@ class BuildDocker(Step):
             login(logger=self._logger, docker_config=docker_config)
 
         success = build(logger=self._logger, root_path=docker_config.root_folder,
-                        file_path=dockerfile, image_tag=image_tag,
+                        file_path=dockerfile, image_tag=(docker_image_tag(step_input)),
                         target=build_target)
-        artifact = input_to_artifact(ArtifactType.DOCKER_IMAGE, step_input, spec={'image': image_tag})
+        artifact = input_to_artifact(ArtifactType.DOCKER_IMAGE, step_input, spec={'image': (
+            docker_image_tag(step_input))})
 
         with open('.dockerignore', 'w+', encoding='utf-8') as ignore_file:
             contents = '\n'.join(DOCKER_IGNORE_DEFAULT)
