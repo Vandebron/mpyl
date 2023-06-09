@@ -9,6 +9,7 @@ from jsonschema import ValidationError
 from rich.console import Console
 from rich.logging import RichHandler
 from rich.markdown import Markdown
+from rich.traceback import Traceback
 
 from ....project import load_project, Stage, Project
 from ....reporting.formatting.markdown import run_result_to_markdown
@@ -77,39 +78,34 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter
                               console=console, show_path=params.local)]
     )
     logger = logging.getLogger('mpyl')
-    try:
-        with Repository(RepoConfig.from_config(mpyl_run_parameters.run_config.config)) as repo:
+    with Repository(RepoConfig.from_config(mpyl_run_parameters.run_config.config)) as repo:
 
-            run_plan = get_build_plan(logger, repo, mpyl_run_parameters)
+        run_plan = get_build_plan(logger, repo, mpyl_run_parameters)
 
-            if not run_plan.run_plan.items():
-                logger.info("Nothing to do. Exiting..")
-                return run_plan
+        if not run_plan.run_plan.items():
+            logger.info("Nothing to do. Exiting..")
+            return run_plan
 
-            logger.info("Build plan:")
-            console.print(Markdown(f"\n\n{run_result_to_markdown(run_plan)}"))
+        logger.info("Build plan:")
+        console.print(Markdown(f"\n\n{run_result_to_markdown(run_plan)}"))
 
-            run_result: RunResult = run_plan
-            if reporter:
-                reporter.send_report(run_plan)
-            try:
-                steps = Steps(logger=logger, properties=mpyl_run_parameters.run_config.run_properties)
-                run_result = run_build(run_plan, steps, reporter, mpyl_run_parameters.parameters.local)
-            except ValidationError as exc:
-                console.log(f'Schema validation failed {exc.message} at `{".".join(map(str, exc.path))}`')
-                raise exc
-            except ExecutionException as exc:
-                run_result.exception = exc
-                console.log(f'Exception during build execution: {exc}')
-                console.print_exception()
+        if reporter:
+            reporter.send_report(run_plan)
+        try:
+            steps = Steps(logger=logger, properties=mpyl_run_parameters.run_config.run_properties)
+            run_result = run_build(run_plan, steps, reporter, mpyl_run_parameters.parameters.local)
+        except ValidationError as exc:
+            console.log(f'Schema validation failed {exc.message} at `{".".join(map(str, exc.path))}`')
+            raise exc
 
-            console.print(Markdown(run_result_to_markdown(run_result)))
-            return run_result
+        console.print(Markdown(run_result_to_markdown(run_result)))
+        exception = run_result.exception
+        if exception:
+            console.log(f'Unexpected exception: {exception}')
+            traceback = Traceback.from_exception(type(exception), exception, exception.__traceback__)
+            console.print(traceback)
 
-    except Exception as exc:
-        console.log(f'Unexpected exception: {exc}')
-        console.print_exception()
-        raise exc
+        return run_result
 
 
 def find_build_set(repo: Repository, changes_in_branch: list[Revision], stages: list[Stage], build_all: bool) -> dict[
@@ -124,14 +120,18 @@ def find_build_set(repo: Repository, changes_in_branch: list[Revision], stages: 
 
 
 def run_build(accumulator: RunResult, executor: Steps, reporter: Optional[Reporter] = None, dry_run: bool = True):
-    for stage, projects in accumulator.run_plan.items():
-        for proj in projects:
-            result = executor.execute(stage, proj, dry_run)
-            accumulator.append(result)
-            if reporter:
-                reporter.send_report(accumulator)
+    try:
+        for stage, projects in accumulator.run_plan.items():
+            for proj in projects:
+                result = executor.execute(stage, proj, dry_run)
+                accumulator.append(result)
+                if reporter:
+                    reporter.send_report(accumulator)
 
-            if not result.output.success:
-                logging.warning(f'Build failed at {stage} for {proj.name}')
-                return accumulator
-    return accumulator
+                if not result.output.success:
+                    logging.warning(f'Build failed at {stage} for {proj.name}')
+                    return accumulator
+        return accumulator
+    except ExecutionException as exc:
+        accumulator.exception = exc
+        return accumulator

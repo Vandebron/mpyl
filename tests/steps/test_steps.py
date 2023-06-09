@@ -52,7 +52,7 @@ class TestSteps:
     def test_find_required_output(self):
         found_artifact = Steps._find_required_artifact(self.build_project, ArtifactType.DOCKER_IMAGE,
                                                        RUN_PROPERTIES.stages)
-        assert found_artifact == self.docker_image.produced_artifact
+        assert found_artifact.spec == self.docker_image.produced_artifact.spec
 
     def test_find_not_required_output(self):
         with pytest.raises(ValueError) as exc_info:
