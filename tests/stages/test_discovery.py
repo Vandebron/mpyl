@@ -2,11 +2,10 @@ from pathlib import Path
 
 from ruamel.yaml import YAML
 
-from mpyl.constants import BUILD_ARTIFACTS_FOLDER
-from mpyl.steps import Output
-from src.mpyl.project import Stage
+from src.mpyl.constants import BUILD_ARTIFACTS_FOLDER
 from src.mpyl.projects.find import load_projects
 from src.mpyl.stages.discovery import find_invalidated_projects_for_stage, output_invalidated
+from src.mpyl.steps import Output, build, deploy, test
 from src.mpyl.utilities.repo import Revision
 from tests import root_test_path, test_resource_path
 from tests.test_resources import test_data
@@ -16,25 +15,26 @@ yaml = YAML()
 
 class TestDiscovery:
 
+    def test_should_find_invalidated_dependencies(self):
+        projs = ['projects/job/deployment/project.yml', 'projects/service/deployment/project.yml',
+                 'projects/sbt-service/deployment/project.yml']
+
+        projects = set(load_projects(root_test_path, projs))
+        invalidated = find_invalidated_projects_for_stage(projects, build.STAGE_NAME,
+                                                          [Revision(0, "hash", {'projects/job/file.py',
+                                                                                'some_file.txt'})])
+        assert 1 == len(invalidated)
+
     def test_should_find_invalidated_test_dependencies(self):
         with test_data.get_repo() as repo:
             touched_files = {'tests/projects/service/file.py', 'tests/some_file.txt'}
             projects = set(load_projects(repo.root_dir(), repo.find_projects()))
-            assert len(find_invalidated_projects_for_stage(projects, Stage.BUILD(),
+            assert len(find_invalidated_projects_for_stage(projects, build.STAGE_NAME,
                                                            [Revision(0, "revision", touched_files)])) == 1
-            assert len(find_invalidated_projects_for_stage(projects, Stage.TEST(),
+            assert len(find_invalidated_projects_for_stage(projects, test.STAGE_NAME,
                                                            [Revision(0, "revision", touched_files)])) == 2
-            assert len(find_invalidated_projects_for_stage(projects, Stage.DEPLOY(),
+            assert len(find_invalidated_projects_for_stage(projects, deploy.STAGE_NAME,
                                                            [Revision(0, "revision", touched_files)])) == 1
-
-    def test_should_find_invalidated_dependencies(self):
-        projs = {'projects/job/deployment/project.yml', 'projects/service/deployment/project.yml',
-                 'projects/sbt-service/deployment/project.yml'}
-        projects = set(load_projects(root_test_path, projs))
-        invalidated = find_invalidated_projects_for_stage(projects, Stage.BUILD(),
-                                                          [Revision(0, "hash", {'projects/job/file.py',
-                                                                                'some_file.txt'})])
-        assert 1 == len(invalidated)
 
     def test_invalidation_logic(self):
         test_output = Path(test_resource_path / "deployment" / BUILD_ARTIFACTS_FOLDER / "test.yml").read_text(

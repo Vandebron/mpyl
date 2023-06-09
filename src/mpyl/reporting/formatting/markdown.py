@@ -49,20 +49,15 @@ def __to_oneliner(result: list[StepResult], plan: set[Project]) -> str:
     return f'{", ".join(project_names)}'
 
 
-def stage_to_icon(stage: Stage):
-    return stage.icon
-
-
 def markdown_for_stage(run_result: RunResult, stage: Stage):
     step_results: list[StepResult] = run_result.results_for_stage(stage.name)
     plan: set[Project] = run_result.plan_for_stage(stage.name)
     if not step_results and not plan:
         return ''
 
-    result = f"{stage_to_icon(stage)}  {__to_oneliner(step_results, plan)}  \n"
+    result = f"{stage.icon}  {__to_oneliner(step_results, plan)}  \n"
     test_artifacts = collect_test_artifacts(step_results)
-    test_results = collect_test_results(test_artifacts)
-
+    test_results = collect_test_results(step_results)
     if test_results:
         result += to_markdown_test_report(test_results)
 

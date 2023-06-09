@@ -1,8 +1,8 @@
 import logging
 
 from mpyl.cli.commands.build.mpyl import run_build
-from mpyl.project import Stage
 from mpyl.steps import Step, Meta, ArtifactType, Input, Output
+from mpyl.steps import build, test, deploy
 from mpyl.steps.run import RunResult
 from mpyl.steps.steps import Steps
 from tests.test_resources.test_data import get_minimal_project, RUN_PROPERTIES, get_project_with_stages
@@ -14,7 +14,7 @@ class ThrowingStep(Step):
             name='Throwing Build',
             description='Throwing build step to validate error handling',
             version='0.0.1',
-            stage=Stage.BUILD()
+            stage=build.STAGE_NAME
         ), produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.NONE)
 
     def execute(self, step_input: Input) -> Output:
@@ -37,9 +37,9 @@ class TestBuildCommand:
 
         projects = [get_minimal_project()]
         run_plan = {
-            Stage.BUILD(): projects,
-            Stage.TEST(): projects,
-            Stage.DEPLOY(): projects
+            build.STAGE_NAME: projects,
+            test.STAGE_NAME: projects,
+            deploy.STAGE_NAME: projects
         }
         accumulator = RunResult(run_properties=run_properties, run_plan=run_plan)
         executor = Steps(logging.getLogger(), run_properties)
@@ -54,7 +54,7 @@ class TestBuildCommand:
         run_properties = RUN_PROPERTIES
 
         projects = [get_project_with_stages({'build': 'Throwing Build'})]
-        run_plan = {Stage.BUILD(): projects}
+        run_plan = {build.STAGE_NAME: projects}
         accumulator = RunResult(run_properties=run_properties, run_plan=run_plan)
         executor = Steps(logging.getLogger(), run_properties)
 

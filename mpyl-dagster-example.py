@@ -3,6 +3,7 @@ from pathlib import Path
 from dagster import config_from_files, op, DynamicOut, DynamicOutput, get_dagster_logger, Output, Failure, job
 from mpyl.project import load_project, Project, Stage
 from mpyl.stages.discovery import find_invalidated_projects_for_stage
+from mpyl.steps import build, test, deploy
 from mpyl.steps.models import RunProperties
 from mpyl.steps.steps import Steps, StepResult
 from mpyl.utilities.repo import Repository, RepoConfig
@@ -11,7 +12,7 @@ from mpyl.utilities.pyaml_env import parse_config
 ROOT_PATH = './'
 
 
-def execute_step(proj: Project, stage: Stage, dry_run: bool = True) -> StepResult:
+def execute_step(proj: Project, stage: str, dry_run: bool = True) -> StepResult:
     config = parse_config(Path(f"{ROOT_PATH}mpyl_config.yml"))
     with Repository(RepoConfig(config)) as repo:
         run_properties = RunProperties.for_local_run(config=config, revision=repo.get_sha, branch=repo.get_branch)
@@ -25,18 +26,18 @@ def execute_step(proj: Project, stage: Stage, dry_run: bool = True) -> StepResul
 
 @op(description="Build stage. Build steps produce a docker image")
 def build_project(context, project: Project) -> Output:
-    return Output(execute_step(project, Stage.BUILD()))
+    return Output(execute_step(project, build.STAGE_NAME))
 
 
 @op(description="Test stage. Test steps produce junit compatible test results")
 def test_project(context, project) -> Output:
-    return Output(execute_step(project, Stage.TEST()))
+    return Output(execute_step(project, test.STAGE_NAME))
 
 
 @op(description="Deploy a project to the target specified in the step", config_schema={"dry_run": bool})
 def deploy_project(context, project: Project) -> Output:
     dry_run: bool = context.op_config["dry_run"]
-    return Output(execute_step(project, Stage.DEPLOY(), dry_run))
+    return Output(execute_step(project, deploy.STAGE_NAME, dry_run))
 
 
 @op(description="Deploy all artifacts produced over all runs of the pipeline", config_schema={"simulate_deploy": bool})
@@ -45,13 +46,13 @@ def deploy_projects(context, projects: list[Project], outputs: list[StepResult])
     res = []
     if simulate_deploy:
         for proj in projects:
-            res.append(execute_step(proj, Stage.DEPLOY()))
+            res.append(execute_step(proj, deploy.STAGE_NAME))
     else:
         get_dagster_logger().info(f"Not deploying {projects}")
     return Output(res)
 
 
-def find_projects(stage: Stage) -> list[DynamicOutput[Project]]:
+def find_projects(stage: str) -> list[DynamicOutput[Project]]:
     yaml_values = parse_config(Path(f"{ROOT_PATH}mpyl_config.yml"))
     with Repository(RepoConfig(yaml_values)) as repo:
         changes_in_branch = repo.changes_in_branch_including_local()
@@ -63,17 +64,17 @@ def find_projects(stage: Stage) -> list[DynamicOutput[Project]]:
 
 @op(out=DynamicOut(), description="Find artifacts that need to be built")
 def find_build_projects() -> list[DynamicOutput[Project]]:
-    return find_projects(Stage.BUILD())
+    return find_projects(build.STAGE_NAME)
 
 
 @op(out=DynamicOut(), description="Find artifacts that need to be tested")
 def find_test_projects(_projects) -> list[DynamicOutput[Project]]:
-    return find_projects(Stage.TEST())
+    return find_projects(test.STAGE_NAME)
 
 
 @op(out=DynamicOut(), description="Find artifacts that need to be deployed")
 def find_deploy_projects(_projects) -> list[DynamicOutput[Project]]:
-    return find_projects(Stage.DEPLOY())
+    return find_projects(deploy.STAGE_NAME)
 
 
 @job(config=config_from_files(["mpyl-dagster-example.yml"]))

@@ -52,22 +52,6 @@ class Stage:
     name: str
     icon: str
 
-    @staticmethod
-    def BUILD():  # pylint: disable=invalid-name
-        return 'build'
-
-    @staticmethod
-    def TEST():  # pylint: disable=invalid-name
-        return 'test'
-
-    @staticmethod
-    def DEPLOY():  # pylint: disable=invalid-name
-        return 'deploy'
-
-    @staticmethod
-    def POST_DEPLOY():  # pylint: disable=invalid-name
-        return 'postdeploy'
-
 
 @dataclass(frozen=True)
 class TargetProperty(Generic[T]):

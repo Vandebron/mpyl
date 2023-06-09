@@ -19,18 +19,19 @@ from pathlib import Path
 from python_on_whales import docker
 from python_on_whales.exceptions import NoSuchContainer
 
+from . import STAGE_NAME
 from .after_test import IntegrationTestAfter
 from .before_test import IntegrationTestBefore
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType, input_to_artifact, Artifact
-from ...project import Stage, Project
+from ...project import Project
 from ...utilities.docker import DockerConfig, build, docker_image_tag, docker_file_path
 from ...utilities.junit import to_test_suites, sum_suites, TEST_OUTPUT_PATH_KEY
 
 
 class TestDocker(Step):
     def __init__(self, logger: Logger) -> None:
-        meta = Meta(name='Docker Test', description='Test docker image', version='0.0.1', stage=Stage.TEST())
+        meta = Meta(name='Docker Test', description='Test docker image', version='0.0.1', stage=STAGE_NAME)
         super().__init__(
             logger=logger, meta=meta,
             produced_artifact=ArtifactType.JUNIT_TESTS,

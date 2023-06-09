@@ -6,9 +6,9 @@ from logging import Logger
 
 from python_on_whales import docker
 
+from . import STAGE_NAME
 from .. import Step, Meta
 from ..models import Input, Output, Artifact, ArtifactType
-from ...project import Stage
 from ...utilities.docker import DockerConfig, login
 
 
@@ -19,7 +19,7 @@ class AfterBuildDocker(Step):
             name='After Docker Build',
             description='Push docker image to registry',
             version='0.0.1',
-            stage=Stage.BUILD()
+            stage=STAGE_NAME
         ), ArtifactType.DOCKER_IMAGE, ArtifactType.DOCKER_IMAGE)
 
     def execute(self, step_input: Input) -> Output:

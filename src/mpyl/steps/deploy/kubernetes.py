@@ -3,11 +3,11 @@ import re
 from logging import Logger
 from typing import Optional
 
+from . import STAGE_NAME
 from .k8s import deploy_helm_chart, CustomResourceDefinition
 from .k8s.chart import ChartBuilder, to_service_chart
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType, input_to_artifact
-from ...project import Stage
 from ...stages.discovery import find_deploy_set
 from ...utilities.repo import RepoConfig
 
@@ -21,7 +21,7 @@ class DeployKubernetes(Step):
             name='Kubernetes Deploy',
             description='Deploy to k8s',
             version='0.0.1',
-            stage=Stage.DEPLOY()
+            stage=STAGE_NAME
         ), produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.DOCKER_IMAGE)
 
     @staticmethod

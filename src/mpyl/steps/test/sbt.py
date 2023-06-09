@@ -2,11 +2,12 @@
 from logging import Logger
 from typing import Callable
 
+from . import STAGE_NAME
 from .after_test import IntegrationTestAfter
 from .before_test import IntegrationTestBefore
 from .. import Input, Output, Step
 from ..models import Artifact, input_to_artifact
-from ...project import Stage, Project
+from ...project import Project
 from ...steps import Meta, ArtifactType
 from ...utilities.junit import TEST_OUTPUT_PATH_KEY, to_test_suites, sum_suites
 from ...utilities.sbt import SbtConfig
@@ -15,7 +16,7 @@ from ...utilities.subprocess import custom_check_output
 
 class TestSbt(Step):
     def __init__(self, logger: Logger) -> None:
-        meta = Meta(name='Sbt Test', description='Run sbt tests', version='0.0.1', stage=Stage.TEST())
+        meta = Meta(name='Sbt Test', description='Run sbt tests', version='0.0.1', stage=STAGE_NAME)
         super().__init__(
             logger=logger,
             meta=meta,

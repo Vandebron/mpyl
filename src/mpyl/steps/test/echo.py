@@ -3,9 +3,9 @@
 from logging import Logger
 from pathlib import Path
 
+from . import STAGE_NAME
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType, input_to_artifact
-from ...project import Stage
 from ...utilities.junit import TEST_OUTPUT_PATH_KEY
 
 SAMPLE_JUNIT_RESULT = """
@@ -26,7 +26,7 @@ class TestEcho(Step):
             name='Echo Test',
             description='Dummy test step to test the framework',
             version='0.0.1',
-            stage=Stage.TEST()
+            stage=STAGE_NAME
         ), produced_artifact=ArtifactType.JUNIT_TESTS, required_artifact=ArtifactType.NONE)
 
     def execute(self, step_input: Input) -> Output:

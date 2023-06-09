@@ -8,7 +8,8 @@ from pyaml_env import parse_config
 from ruamel.yaml import YAML  # type: ignore
 
 from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME, BUILD_ARTIFACTS_FOLDER
-from src.mpyl.project import Project, Stages, Stage, Target, Dependencies
+from src.mpyl.project import Project, Stages, Target, Dependencies
+from src.mpyl.steps import build, postdeploy
 from src.mpyl.steps.models import Output, ArtifactType, RunProperties, VersioningProperties, ConsoleProperties
 from src.mpyl.steps.steps import Steps
 from tests import root_test_path, test_resource_path
@@ -66,7 +67,7 @@ class TestSteps:
         steps = Steps(logger=Logger.manager.getLogger('logger'), properties=test_data.RUN_PROPERTIES)
         stages = Stages(build=None, test=None, deploy=None, postdeploy=None)
         project = Project('test', 'Test project', '', stages, [], None, None)
-        output = steps.execute(stage=Stage.BUILD(), project=project).output
+        output = steps.execute(stage=build.STAGE_NAME, project=project).output
         assert not output.success
         assert output.message == "Stage 'build' not defined on project 'test'"
 
@@ -81,14 +82,14 @@ class TestSteps:
 
     def test_should_succeed_if_executor_is_known(self):
         project = test_data.get_project_with_stages({'build': 'Echo Build'})
-        result = self.executor.execute(stage=Stage.BUILD(), project=project)
+        result = self.executor.execute(stage=build.STAGE_NAME, project=project)
         assert result.output.success
         assert result.output.message == 'Built test'
         assert result.output.produced_artifact.artifact_type == ArtifactType.DOCKER_IMAGE
 
     def test_should_fail_if_executor_is_not_known(self):
         project = test_data.get_project_with_stages({'build': 'Unknown Build'})
-        result = self.executor.execute(stage=Stage.BUILD(), project=project)
+        result = self.executor.execute(stage=build.STAGE_NAME, project=project)
         assert not result.output.success
         assert result.output.message == "Executor 'Unknown Build' for 'build' not known or registered"
 
@@ -96,13 +97,13 @@ class TestSteps:
         project = test_data.get_project_with_stages(stage_config={'build': 'Echo Build'}, path='',
                                                     maintainers=['Unknown Team'])
 
-        result = self.executor.execute(stage=Stage.BUILD(), project=project)
+        result = self.executor.execute(stage=build.STAGE_NAME, project=project)
         assert not result.output.success
         assert result.output.message == "Maintainer(s) 'Unknown Team' not defined in config"
 
     def test_should_succeed_if_stage_is_not_known(self):
         project = test_data.get_project_with_stages(stage_config={'test': 'Some Test'})
-        result = self.executor.execute(stage=Stage.BUILD(), project=project)
+        result = self.executor.execute(stage=build.STAGE_NAME, project=project)
         assert not result.output.success
         assert result.output.message == "Stage 'build' not defined on project 'test'"
 
@@ -111,5 +112,5 @@ class TestSteps:
         stages = Stages.from_config({'postdeploy': 'Cypress Test'})
         project = Project('test', 'Test project', '', stages, [], None, Dependencies.from_config(
             {'postdeploy': ['specs/*.js']}))
-        result = self.executor.execute(stage=Stage.POST_DEPLOY(), project=project)
+        result = self.executor.execute(stage=postdeploy.STAGE_NAME, project=project)
         assert result.output.success

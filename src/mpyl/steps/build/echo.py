@@ -2,9 +2,9 @@
 
 from logging import Logger
 
+from . import STAGE_NAME
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType, input_to_artifact
-from ...project import Stage
 from ...utilities.docker import docker_image_tag
 
 
@@ -15,7 +15,7 @@ class BuildEcho(Step):
             name='Echo Build',
             description='Dummy build step to test the framework',
             version='0.0.1',
-            stage=Stage.BUILD()
+            stage=STAGE_NAME
         ), produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.NONE)
 
     def execute(self, step_input: Input) -> Output:

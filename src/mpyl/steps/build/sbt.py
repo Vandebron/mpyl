@@ -5,9 +5,10 @@
 from logging import Logger
 from typing import Optional
 
+from . import STAGE_NAME
 from .docker_after_build import AfterBuildDocker
 from .. import Step, Meta
-from ...project import Stage, Target
+from ...project import Target
 from ...steps.models import ArtifactType, Input, Output, input_to_artifact
 from ...utilities.docker import docker_image_tag
 from ...utilities.sbt import SbtConfig
@@ -23,7 +24,7 @@ class BuildSbt(Step):
                 name='Sbt Build',
                 description='Build sbt project',
                 version='0.0.1',
-                stage=Stage.BUILD()
+                stage=STAGE_NAME
             ),
             produced_artifact=ArtifactType.DOCKER_IMAGE,
             required_artifact=ArtifactType.NONE,
