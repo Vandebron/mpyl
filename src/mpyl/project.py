@@ -54,19 +54,19 @@ class Stage:
 
     @staticmethod
     def BUILD():  # pylint: disable=invalid-name
-        return Stage(name='build', icon='🏗️')
+        return 'build'
 
     @staticmethod
     def TEST():  # pylint: disable=invalid-name
-        return Stage(name='test', icon='🧪')
+        return 'test'
 
     @staticmethod
     def DEPLOY():  # pylint: disable=invalid-name
-        return Stage(name='deploy', icon='🚀')
+        return 'deploy'
 
     @staticmethod
     def POST_DEPLOY():  # pylint: disable=invalid-name
-        return Stage(name='postdeploy', icon='➡️')
+        return 'postdeploy'
 
 
 @dataclass(frozen=True)
@@ -116,12 +116,12 @@ class StageSpecificProperty(Generic[T]):
     deploy: Optional[T]
     postdeploy: Optional[T]
 
-    def for_stage(self, stage: Stage) -> Optional[T]:
-        if stage.name == 'build':
+    def for_stage(self, stage: str) -> Optional[T]:
+        if stage == 'build':
             return self.build
-        if stage.name == 'test':
+        if stage == 'test':
             return self.test
-        if stage.name == 'deploy':
+        if stage == 'deploy':
             return self.deploy
         return self.postdeploy
 
@@ -138,7 +138,7 @@ class Stages(StageSpecificProperty[str]):
 @dataclass(frozen=True)
 class Dependencies(StageSpecificProperty[set[str]]):
 
-    def set_for_stage(self, stage: Stage) -> set[str]:
+    def set_for_stage(self, stage: str) -> set[str]:
         deps_for_stage = self.for_stage(stage)
         return deps_for_stage if deps_for_stage else set()
 

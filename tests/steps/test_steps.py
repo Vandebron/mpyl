@@ -74,7 +74,7 @@ class TestSteps:
         config_values = parse_config(self.resource_path / DEFAULT_CONFIG_FILE_NAME)
         config_values['kubernetes']['rancher']['cluster']['test']['invalid'] = 'somevalue'
         properties = RunProperties("id", Target.PULL_REQUEST, VersioningProperties("", "feature/ARC-123", 1, None),
-                                   config_values, ConsoleProperties("INFO", 130))
+                                   config_values, ConsoleProperties("INFO", 130), True, [])
         with pytest.raises(ValidationError) as excinfo:
             Steps(logger=Logger.manager.getLogger('logger'), properties=properties)
         assert "('invalid' was unexpected)" in excinfo.value.message

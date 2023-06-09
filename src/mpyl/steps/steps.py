@@ -99,8 +99,7 @@ class Steps:
         self._step_executors.add(step)
 
     def _find_executor(self, stage: Stage, step_name: str) -> Optional[Step]:
-        executors = filter(lambda e: e.meta.stage == stage and step_name == e.meta.name and e.meta.stage == stage,
-                           self._step_executors)
+        executors = filter(lambda e: step_name == e.meta.name and e.meta.stage == stage.name, self._step_executors)
         return next(executors, None)
 
     def _execute(self, executor: Step, project: Project, properties: RunProperties,
@@ -121,7 +120,7 @@ class Steps:
             return None
 
         for stage in stages:
-            output: Optional[Output] = Output.try_read(project.target_path, stage)
+            output: Optional[Output] = Output.try_read(project.target_path, stage.name)
             if output and output.produced_artifact and output.produced_artifact.artifact_type == required_artifact:
                 return output.produced_artifact
 
@@ -132,7 +131,7 @@ class Steps:
         main_step_artifact = main_result.produced_artifact
         after_result = self._execute(step, project, self._properties, main_step_artifact, dry_run)
         if after_result.produced_artifact and after_result.produced_artifact.artifact_type != ArtifactType.NONE:
-            after_result.write(project.target_path, stage)
+            after_result.write(project.target_path, stage.name)
         else:
             after_result.produced_artifact = main_step_artifact
 
@@ -150,7 +149,7 @@ class Steps:
         return None
 
     def _execute_stage(self, stage: Stage, project: Project, dry_run: bool = False) -> Output:
-        stage_name = project.stages.for_stage(stage)
+        stage_name = project.stages.for_stage(stage.name)
         if stage_name is None:
             return Output(success=False, message=f"Stage '{stage.name}' not defined on project '{project.name}'")
 
@@ -177,7 +176,7 @@ class Steps:
                     return before_result
 
             result = self._execute(executor, project, self._properties, artifact, dry_run)
-            result.write(project.target_path, stage)
+            result.write(project.target_path, stage.name)
 
             if executor.after:
                 return self._execute_after_(result, executor.after, project, stage, dry_run)
@@ -186,17 +185,18 @@ class Steps:
         except Exception as exc:
             message = str(exc)
             self._logger.warning(
-                f"Execution of '{executor.meta.name}' for project '{project.name}' in stage {stage} "
+                f"Execution of '{executor.meta.name}' for project '{project.name}' in stage {stage.name} "
                 f"failed with exception: {message}", exc_info=True)
             raise ExecutionException(project.name, executor.meta.name, stage.name, message) from exc
 
-    def execute(self, stage: Stage, project: Project, dry_run: bool = False) -> StepResult:
+    def execute(self, stage: str, project: Project, dry_run: bool = False) -> StepResult:
         """
-        :param stage: the stage to execute
+        :param stage: the name of the stage to execute
         :param project: the project metadata
         :param dry_run: indicates whether artifacts should be submitted or deployed for real
         :return: StepResult
         :raise ExecutionException
         """
-        step_output = self._execute_stage(stage, project, dry_run)
-        return StepResult(stage=stage, project=project, output=step_output)
+        steeds = self._properties.stage(stage)
+        step_output = self._execute_stage(steeds, project, dry_run)
+        return StepResult(stage=steeds, project=project, output=step_output)

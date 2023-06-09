@@ -10,7 +10,7 @@ from ...utilities.junit import to_test_suites, sum_suites
 def to_string(run_result: RunResult) -> str:
     result: str = ""
     for stage in run_result.run_properties.stages:
-        run_results = run_result.results_for_stage(stage)
+        run_results = run_result.results_for_stage(stage.name)
         if run_results:
             result += f"Stage {stage.name}\n"
             for res in run_results:

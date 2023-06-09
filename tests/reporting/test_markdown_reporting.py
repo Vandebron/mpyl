@@ -39,7 +39,7 @@ class TestMarkdownReporting:
     def test_should_measure_progress(self):
         result = create_test_result_with_plan()
         assert result.progress_fraction == 0.0, 'Should start at zero progress'
-        result.append(StepResult(stage=Stage.BUILD(), project=test_data.get_project(),
+        result.append(StepResult(stage=result.run_properties.stage(Stage.BUILD()), project=test_data.get_project(),
                                  output=Output(success=False, message='Build failed'),
                                  timestamp=datetime.fromisoformat('2019-01-04T16:41:24+02:00')))
         assert round(result.progress_fraction * 100) == 25, 'Should be at one quarter'

@@ -31,20 +31,21 @@ def create_test_result_with_plan() -> RunResult:
 
 def append_results(result: RunResult) -> None:
     other_project = __get_other_project()
-    result.append(StepResult(stage=Stage.BUILD(), project=test_data.get_project(),
+    props = result.run_properties
+    result.append(StepResult(stage=props.stage(Stage.BUILD()), project=test_data.get_project(),
                              output=Output(success=False, message='Build failed'),
                              timestamp=datetime.fromisoformat('2019-01-04T16:41:24+02:00')))
-    result.append(StepResult(stage=Stage.BUILD(), project=other_project,
+    result.append(StepResult(stage=props.stage(Stage.BUILD()), project=other_project,
                              output=Output(success=True, message='Build successful'),
                              timestamp=datetime.fromisoformat('2019-01-04T16:41:26+02:00')))
-    result.append(StepResult(stage=Stage.TEST(), project=other_project,
+    result.append(StepResult(stage=props.stage(Stage.TEST()), project=other_project,
                              output=Output(success=True, message='Tests successful',
                                            produced_artifact=
                                            Artifact(artifact_type=ArtifactType.JUNIT_TESTS, revision='revision',
                                                     producing_step='Docker Test',
                                                     spec={TEST_OUTPUT_PATH_KEY: test_resource_path})),
                              timestamp=datetime.fromisoformat('2019-01-04T16:41:45+02:00')))
-    result.append(StepResult(stage=Stage.DEPLOY(), project=other_project,
+    result.append(StepResult(stage=props.stage(Stage.DEPLOY()), project=other_project,
                              output=Output(success=True, message='Deploy successful',
                                            produced_artifact=
                                            Artifact(artifact_type=ArtifactType.DEPLOYED_HELM_APP, revision='revision',

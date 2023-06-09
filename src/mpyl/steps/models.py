@@ -79,16 +79,23 @@ class RunProperties:
      """
     console: ConsoleProperties
     """Settings for the console output"""
-
-    @property
-    def stages(self) -> list[Stage]:
-        return [Stage.BUILD(), Stage.TEST(), Stage.DEPLOY(), Stage.POST_DEPLOY()]
+    local: bool
+    """Whether the run is local or not"""
+    stages: list[Stage]
+    """The types of stages allowed for this run"""
 
     @staticmethod
     def for_local_run(config: Dict, revision: str, branch: Optional[str], tag: Optional[str]):
         return RunProperties(details=RunContext("", "", "", "", "", None), target=Target.PULL_REQUEST,
                              versioning=VersioningProperties(revision, branch, 123, tag), config=config,
-                             console=ConsoleProperties("INFO", 130))
+                             console=ConsoleProperties("INFO", 130), local=True, stages=[])
+
+    def stage(self, stage_name: str) -> Stage:
+        return [stage for stage in self.stages if stage.name == stage_name][0]
+
+    @staticmethod
+    def to_stages(stage_config: list[dict]) -> list[Stage]:
+        return [Stage(name=stage['name'], icon=stage['icon']) for stage in stage_config]
 
     @staticmethod
     def from_configuration(run_properties: Dict, config: Dict):
@@ -109,12 +116,16 @@ class RunProperties:
                                           tag=tag)
         console = ConsoleProperties.from_configuration(build)
 
+        stages = RunProperties.to_stages(run_properties['stages'])
+
         return RunProperties(
             details=RunContext.from_configuration(build['run']),
             target=Target(build['parameters']['deploy_target']),
             versioning=versioning,
             config=config,
             console=console,
+            local=str(build['local']).lower() == 'true',
+            stages=stages
         )
 
 
@@ -169,16 +180,16 @@ class Output:
     produced_artifact: Optional[Artifact] = None
 
     @staticmethod
-    def path(target_path: str, stage: Stage):
-        return Path(target_path, f"{stage.name}.yml")
+    def path(target_path: str, stage: str):
+        return Path(target_path, f"{stage}.yml")
 
-    def write(self, target_path: str, stage: Stage):
+    def write(self, target_path: str, stage: str):
         Path(target_path).mkdir(parents=True, exist_ok=True)
         with Output.path(target_path, stage).open(mode='w+', encoding='utf-8') as file:
             yaml.dump(self, file)
 
     @staticmethod
-    def try_read(target_path: str, stage: Stage):
+    def try_read(target_path: str, stage: str):
         path = Output.path(target_path, stage)
         if path.exists():
             with open(path, encoding='utf-8') as file:

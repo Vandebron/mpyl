@@ -6,12 +6,12 @@ import operator
 from typing import Optional
 
 from .models import RunProperties
-from ..project import Stage, Project
 from .steps import StepResult, ExecutionException
+from ..project import Project
 
 
 class RunResult:
-    _run_plan: dict[Stage, set[Project]]
+    _run_plan: dict[str, set[Project]]
     _results: list[StepResult]
     _run_properties: RunProperties
     _exception: Optional[ExecutionException]
@@ -72,7 +72,7 @@ class RunResult:
         return self._run_properties
 
     @property
-    def run_plan(self) -> dict[Stage, set[Project]]:
+    def run_plan(self) -> dict[str, set[Project]]:
         return self._run_plan
 
     def append(self, result: StepResult):
@@ -106,10 +106,10 @@ class RunResult:
     def sort_chronologically(results: list[StepResult]) -> list[StepResult]:
         return sorted(results, key=operator.attrgetter('timestamp'))
 
-    def results_for_stage(self, stage: Stage) -> list[StepResult]:
-        return RunResult.sort_chronologically([res for res in self._results if res.stage == stage])
+    def results_for_stage(self, stage: str) -> list[StepResult]:
+        return RunResult.sort_chronologically([res for res in self._results if res.stage.name == stage])
 
-    def plan_for_stage(self, stage: Stage) -> set[Project]:
+    def plan_for_stage(self, stage: str) -> set[Project]:
         plan: Optional[set[Project]] = self.run_plan.get(stage)
         if plan:
             return plan

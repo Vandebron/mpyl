@@ -54,8 +54,8 @@ def stage_to_icon(stage: Stage):
 
 
 def markdown_for_stage(run_result: RunResult, stage: Stage):
-    step_results: list[StepResult] = run_result.results_for_stage(stage)
-    plan: set[Project] = run_result.plan_for_stage(stage)
+    step_results: list[StepResult] = run_result.results_for_stage(stage.name)
+    plan: set[Project] = run_result.plan_for_stage(stage.name)
     if not step_results and not plan:
         return ''
 

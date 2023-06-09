@@ -11,7 +11,7 @@ from rich.logging import RichHandler
 from rich.markdown import Markdown
 from rich.traceback import Traceback
 
-from ....project import load_project, Stage, Project
+from ....project import load_project, Project
 from ....reporting.formatting.markdown import run_result_to_markdown
 from ....reporting.targets import Reporter
 from ....stages.discovery import for_stage, find_invalidated_projects_per_stage
@@ -62,7 +62,9 @@ def get_build_plan(logger: logging.Logger, repo: Repository, mpyl_run_parameters
         changes = repo.changes_in_tagged_commit(params.tag) if params.tag else repo.changes_in_merge_commit()
     logger.debug(f'Changes: {changes}')
 
-    projects_per_stage: dict[Stage, set[Project]] = find_build_set(repo, changes, properties.stages, params.all)
+    projects_per_stage: dict[str, set[Project]] = find_build_set(repo, changes,
+                                                                   [stage.name for stage in properties.stages],
+                                                                   params.all)
     return RunResult(run_properties=properties, run_plan=projects_per_stage)
 
 
@@ -108,8 +110,8 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter
         return run_result
 
 
-def find_build_set(repo: Repository, changes_in_branch: list[Revision], stages: list[Stage], build_all: bool) -> dict[
-    Stage, set[Project]]:
+def find_build_set(repo: Repository, changes_in_branch: list[Revision], stages: list[str], build_all: bool) \
+        -> dict[str, set[Project]]:
     project_paths = repo.find_projects()
     all_projects = set(map(lambda p: load_project(Path(""), Path(p), False), project_paths))
 
