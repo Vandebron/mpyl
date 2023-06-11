@@ -1,4 +1,4 @@
-from mpyl.reporting.targets.github import PullRequestReporter, GithubUpdateStategy
+from src.mpyl.reporting.targets.github import PullRequestReporter, GithubUpdateStategy
 from tests.test_resources.test_data import get_config_values
 
 

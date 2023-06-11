@@ -1,6 +1,6 @@
-from mpyl.reporting.targets import ReportAccumulator
-from mpyl.reporting.targets.github import GithubOutcome
-from mpyl.reporting.targets.slack import SlackOutcome
+from src.mpyl.reporting.targets import ReportAccumulator
+from src.mpyl.reporting.targets.github import GithubOutcome
+from src.mpyl.reporting.targets.slack import SlackOutcome
 
 
 class TestReporters:
