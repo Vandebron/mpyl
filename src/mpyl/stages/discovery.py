@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Optional
 
 from ..project import Project, load_project
-from ..project import Stage
 from ..steps import deploy
 from ..steps.models import Output
 from ..utilities.repo import Revision, RepoConfig, Repository

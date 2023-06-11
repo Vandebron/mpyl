@@ -1,8 +1,7 @@
 from datetime import datetime
 
-from mpyl.steps import build, deploy
 from src.mpyl.project import Stages, Project
-from src.mpyl.steps import test
+from src.mpyl.steps import test, build, deploy
 from src.mpyl.steps.deploy.kubernetes import DEPLOYED_SERVICE_KEY
 from src.mpyl.steps.models import Output, Artifact, ArtifactType
 from src.mpyl.steps.run import RunResult

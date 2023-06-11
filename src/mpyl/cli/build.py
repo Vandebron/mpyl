@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional
 
 import click
+import jsonschema
 import questionary
 from click import ParamType, BadParameter
 from click.shell_completion import CompletionItem
@@ -86,6 +87,8 @@ def status(obj: CliContext):
         asyncio.get_event_loop().run_until_complete(upgrade_check)
     except asyncio.exceptions.TimeoutError:
         pass
+    except jsonschema.exceptions.ValidationError as exc:
+        obj.console.print(f"Configuration is invalid: {exc.message} according to '{exc.schema.get('$id', None)}'")
 
 
 def __print_status(obj: CliContext):
@@ -102,7 +105,8 @@ def __print_status(obj: CliContext):
     tag = obj.repo.get_tag if not branch else None
     version = run_properties.versioning
     revision = "Tag" if tag else "Branch"
-    obj.console.print(Markdown(f"**{revision}:** `{version.branch or version.tag}` at `{version.revision}`"))
+    obj.console.print(Markdown(f"**{revision}:** `{version.branch or version.tag}` "
+                               f"at `{version.revision or obj.repo.get_sha}`"))
 
     if obj.repo.main_branch_pulled:
         changes = obj.repo.changes_in_branch_including_local() if branch else obj.repo.changes_in_merge_commit()

@@ -14,7 +14,7 @@ def to_string(run_result: RunResult) -> str:
         if run_results:
             result += f"Stage {stage.name}\n"
             for res in run_results:
-                result += f"{res.timestamp} - {res.project.name} - {res.stage} - success: {res.output.success} \n"
+                result += f"{res.timestamp} - {res.project.name} - {res.stage.name} - success: {res.output.success} \n"
                 artifact = res.output.produced_artifact
                 if artifact and artifact.artifact_type == ArtifactType.JUNIT_TESTS:
                     result += to_test_report(artifact)

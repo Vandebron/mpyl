@@ -1,10 +1,10 @@
 import logging
 
-from mpyl.cli.commands.build.mpyl import run_build
-from mpyl.steps import Step, Meta, ArtifactType, Input, Output
-from mpyl.steps import build, test, deploy
-from mpyl.steps.run import RunResult
-from mpyl.steps.steps import Steps
+from src.mpyl.cli.commands.build.mpyl import run_build
+from src.mpyl.steps import Step, Meta, ArtifactType, Input, Output
+from src.mpyl.steps import build, test, deploy
+from src.mpyl.steps.run import RunResult
+from src.mpyl.steps.steps import Steps
 from tests.test_resources.test_data import get_minimal_project, RUN_PROPERTIES, get_project_with_stages
 
 

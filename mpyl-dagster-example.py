@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from dagster import config_from_files, op, DynamicOut, DynamicOutput, get_dagster_logger, Output, Failure, job
-from mpyl.project import load_project, Project, Stage
+from mpyl.project import load_project, Project
 from mpyl.stages.discovery import find_invalidated_projects_for_stage
 from mpyl.steps import build, test, deploy
 from mpyl.steps.models import RunProperties
