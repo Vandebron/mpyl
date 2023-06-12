@@ -53,7 +53,7 @@ def _to_relevant_changes(project: Project, stage: str, change_history: list[Revi
     return relevant
 
 
-def are_invalidated(project: Project, stage: str, change_history: list[Revision]) -> bool:
+def _are_invalidated(project: Project, stage: str, change_history: list[Revision]) -> bool:
     if project.stages.for_stage(stage) is None:
         return False
 
@@ -63,7 +63,7 @@ def are_invalidated(project: Project, stage: str, change_history: list[Revision]
 
 def find_invalidated_projects_for_stage(all_projects: set[Project], stage: str,
                                         change_history: list[Revision]) -> set[Project]:
-    return set(filter(lambda p: are_invalidated(p, stage, change_history), all_projects))
+    return set(filter(lambda p: _are_invalidated(p, stage, change_history), all_projects))
 
 
 def find_deploy_set(repo_config: RepoConfig) -> DeploySet:
