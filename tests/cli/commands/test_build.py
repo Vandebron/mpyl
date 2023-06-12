@@ -4,7 +4,7 @@ from src.mpyl.cli.commands.build.mpyl import run_build
 from src.mpyl.steps import Step, Meta, ArtifactType, Input, Output
 from src.mpyl.steps import build, test, deploy
 from src.mpyl.steps.run import RunResult
-from src.mpyl.steps.steps import Steps
+from src.mpyl.steps.steps import Steps, StepsCollection
 from tests.test_resources.test_data import get_minimal_project, RUN_PROPERTIES, get_project_with_stages
 
 
@@ -56,9 +56,11 @@ class TestBuildCommand:
         projects = [get_project_with_stages({'build': 'Throwing Build'})]
         run_plan = {build.STAGE_NAME: projects}
         accumulator = RunResult(run_properties=run_properties, run_plan=run_plan)
-        executor = Steps(logging.getLogger(), run_properties)
+        logger = logging.getLogger()
+        collection = StepsCollection(logger)
+        collection.add_executor(ThrowingStep(logger))
+        executor = Steps(logger, run_properties, collection)
 
-        executor.add_executor(ThrowingStep(logging.getLogger()))
         result = run_build(accumulator, executor, None)
         assert not result.has_results
         assert result.status_line == '❗ Failed with exception'

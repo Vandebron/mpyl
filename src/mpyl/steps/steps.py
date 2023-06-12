@@ -64,20 +64,10 @@ def collect_test_results(test_artifacts: list[Artifact]) -> list[TestSuite]:
     return list(itertools.chain(*suites))
 
 
-class Steps:
-    """ Executor of individual steps within a pipeline. """
+class StepsCollection:
     _step_executors: set[Step]
-    _logger: Logger
-    _properties: RunProperties
 
-    def __init__(self, logger: Logger, properties: RunProperties) -> None:
-        schema_dict = pkgutil.get_data(__name__, "../schema/mpyl_config.schema.yml")
-
-        if schema_dict:
-            validate(properties.config, schema_dict.decode('utf-8'))
-
-        self._logger = logger
-
+    def __init__(self, logger: Logger) -> None:
         self._step_executors = {
             BuildEcho(logger),
             BuildSbt(logger),
@@ -93,14 +83,29 @@ class Steps:
             CypressTest(logger)
         }
 
-        self._properties = properties
-
     def add_executor(self, step: Step):
         self._step_executors.add(step)
 
-    def _find_executor(self, stage: Stage, step_name: str) -> Optional[Step]:
+    def get_executor(self, stage: Stage, step_name: str) -> Optional[Step]:
         executors = filter(lambda e: step_name == e.meta.name and e.meta.stage == stage.name, self._step_executors)
         return next(executors, None)
+
+
+class Steps:
+    """ Executor of individual steps within a pipeline. """
+    _logger: Logger
+    _properties: RunProperties
+    _steps_collection: StepsCollection
+
+    def __init__(self, logger: Logger, properties: RunProperties,
+                 steps_collection: Optional[StepsCollection] = None) -> None:
+        self._logger = logger
+        self._properties = properties
+        self._steps_collection = steps_collection or StepsCollection(logger)
+
+        schema_dict = pkgutil.get_data(__name__, "../schema/mpyl_config.schema.yml")
+        if schema_dict:
+            validate(properties.config, schema_dict.decode('utf-8'))
 
     def _execute(self, executor: Step, project: Project, properties: RunProperties,
                  artifact: Optional[Artifact], dry_run: bool = False) -> Output:
@@ -157,7 +162,7 @@ class Steps:
         if invalid_maintainers:
             return invalid_maintainers
 
-        executor: Optional[Step] = self._find_executor(stage, stage_name)
+        executor: Optional[Step] = self._steps_collection.get_executor(stage, stage_name)
         if executor is None:
             self._logger.warning(f"No executor found for {stage_name} in stage {stage}")
             return Output(success=False, message=f"Executor '{stage_name}' for '{stage.name}' not known or registered")
