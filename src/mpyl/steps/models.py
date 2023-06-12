@@ -85,10 +85,11 @@ class RunProperties:
     """The types of stages allowed for this run"""
 
     @staticmethod
-    def for_local_run(config: Dict, revision: str, branch: Optional[str], tag: Optional[str]):
+    def for_local_run(run_properties: Dict, config: Dict, revision: str, branch: Optional[str], tag: Optional[str]):
         return RunProperties(details=RunContext("", "", "", "", "", None), target=Target.PULL_REQUEST,
                              versioning=VersioningProperties(revision, branch, 123, tag), config=config,
-                             console=ConsoleProperties("INFO", 130), local=True, stages=[])
+                             console=ConsoleProperties("INFO", 130), local=True,
+                             stages=RunProperties.to_stages(run_properties['stages']))
 
     def stage(self, stage_name: str) -> Stage:
         return [stage for stage in self.stages if stage.name == stage_name][0]

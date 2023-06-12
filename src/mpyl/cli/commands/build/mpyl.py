@@ -62,9 +62,8 @@ def get_build_plan(logger: logging.Logger, repo: Repository, mpyl_run_parameters
         changes = repo.changes_in_tagged_commit(params.tag) if params.tag else repo.changes_in_merge_commit()
     logger.debug(f'Changes: {changes}')
 
-    projects_per_stage: dict[str, set[Project]] = find_build_set(repo, changes,
-                                                                   [stage.name for stage in properties.stages],
-                                                                   params.all)
+    stage_names = [stage.name for stage in properties.stages]
+    projects_per_stage: dict[str, set[Project]] = find_build_set(repo, changes, stage_names, params.all)
     return RunResult(run_properties=properties, run_plan=projects_per_stage)
 
 
