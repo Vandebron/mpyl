@@ -62,12 +62,15 @@ definitions:
     type: object
     additionalProperties: false
     properties:
-      recordKey:
-        type: string
-        description: 'Key for recording runs to cypress dashboard'
       cypressSourceCodePath:
         type: string
         description: 'Path to cypress source code'
+      recordKey:
+        type: string
+        description: 'Key for recording runs to cypress dashboard'
+      kubectlConfigPath:
+        type: string
+        description: 'Path to kubectl config file'
     required:
       - cypressSourceCodePath
   Kubernetes:

@@ -1,8 +1,11 @@
 """Docker related utility methods"""
 import logging
+import shlex
+
 from dataclasses import dataclass
+from itertools import tee
 from logging import Logger
-from typing import Dict, Optional, Iterator, Iterable, cast, Union
+from typing import Dict, Optional, Iterator, cast, Union
 
 from python_on_whales import docker, Image, Container
 from rich.text import Text
@@ -57,21 +60,26 @@ class DockerConfig:
             raise KeyError(f'Docker config could not be loaded from {config}') from exc
 
 
-def execute_with_stream(logger: Logger, container: Container, command: str, task_name: str) -> None:
-    result = cast(Iterator[tuple[str, bytes]], container.execute(command=command.split(' '), stream=True))
-    stream_docker_logging(logger, result, task_name)
+def execute_with_stream(logger: Logger, container: Container, command: str, task_name: str):
+    result = cast(Iterator[tuple[str, bytes]], container.execute(command=shlex.split(command), stream=True))
+    result_list = stream_docker_logging(logger, result, task_name)
+
+    return result_list
 
 
 def stream_docker_logging(logger: Logger, generator: Union[Iterator[str], Iterator[tuple[str, bytes]]], task_name: str,
-                          level=logging.INFO) -> None:
+                          level=logging.INFO) -> list[str]:
+    copied_logs = []
+
     while True:
         try:
             next_item = next(generator)
             log_line = next_item[1].decode(errors="replace") if isinstance(next_item, tuple) else next_item
+            copied_logs.append(log_line)
             logger.log(level, Text.from_ansi(log_line))
         except StopIteration:
             logger.info(f'{task_name} complete.')
-            break
+            return copied_logs
 
 
 def docker_image_tag(step_input: Input):

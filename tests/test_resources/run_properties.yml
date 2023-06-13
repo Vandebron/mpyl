@@ -5,7 +5,6 @@ build:
     change_url: !ENV ${GIT_URL:http://localhost:3000/}
     tests_url: !ENV ${RUN_TESTS_DISPLAY_URL:http://localhost:3000/}
     user_email: !ENV ${BUILD_USER_EMAIL}
-  local: !ENV ${LOCAL:true}
   parameters:
     deploy_target: !ENV ${DEPLOY_TARGET:PullRequest}
   versioning:

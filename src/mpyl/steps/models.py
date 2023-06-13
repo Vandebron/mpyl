@@ -80,14 +80,12 @@ class RunProperties:
      """
     console: ConsoleProperties
     """Settings for the console output"""
-    local: bool
-    """Whether the run is local or not"""
 
     @staticmethod
     def for_local_run(config: Dict, revision: str, branch: Optional[str], tag: Optional[str]):
         return RunProperties(details=RunContext("", "", "", "", "", None), target=Target.PULL_REQUEST,
                              versioning=VersioningProperties(revision, branch, 123, tag), config=config,
-                             console=ConsoleProperties("INFO", 130), local=True)
+                             console=ConsoleProperties("INFO", 130))
 
     @staticmethod
     def from_configuration(run_properties: Dict, config: Dict):
@@ -114,7 +112,6 @@ class RunProperties:
             versioning=versioning,
             config=config,
             console=console,
-            local=str(build['local']).lower() == 'true'
         )
 
 
