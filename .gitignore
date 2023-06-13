@@ -128,6 +128,7 @@ dmypy.json
 .pyre/
 
 #intellij
+*.iml
 .mpyl/
 
 #documentation
