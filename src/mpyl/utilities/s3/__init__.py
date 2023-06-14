@@ -55,12 +55,13 @@ class S3Client:
         self._bucket_root_path = config.bucket_root_path
         self._logger = logger
 
-    def upload_directory(self, directory: str):
+    def upload_directory(self, directory: str, dry_run: bool = False):
         """
         Uploads all files in a directory and its subdirectories to the S3 bucket
 
         Note: boto3 does not provide a sync method, so we have to walk the directory and upload each file individually
 
+        :param dry_run: if true, the upload will be skipped
         :param directory: the name of the root directory containing the content to upload
         """
         walks = walk(directory)
@@ -68,7 +69,8 @@ class S3Client:
             for filename in filenames:
                 src_path = f'{path}/{filename}'
                 dst_path = self.create_file_dst(root_path=self._bucket_root_path, file_path=path, filename=filename)
-                self.upload_file(src_path=src_path, dst_path=dst_path)
+                if not dry_run:
+                    self.upload_file(src_path=src_path, dst_path=dst_path)
 
     @staticmethod
     def create_file_dst(root_path: str, file_path: str, filename: str):
