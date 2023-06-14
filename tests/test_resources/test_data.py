@@ -47,10 +47,6 @@ def get_spark_project() -> Project:
     return load_project(resource_path, Path("test_spark_project.yml"), True)
 
 
-def get_cloudfront_project() -> Project:
-    return load_project(resource_path, Path("test_cloudfront_project.yml"), True)
-
-
 def get_output() -> Output:
     return Output(success=True, message="build success",
                   produced_artifact=Artifact(artifact_type=ArtifactType.DOCKER_IMAGE, revision="123",

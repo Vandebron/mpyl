@@ -26,7 +26,9 @@ class CloudFrontKubernetesDeploy(Step):
     def execute(self, step_input: Input) -> Output:
         with tempfile.TemporaryDirectory() as tmp_folder:
             self.copy_docker_assets(logger=self._logger, step_input=step_input, tmp_folder=tmp_folder)
-            self.upload_to_s3(logger=self._logger, step_input=step_input, tmp_folder=tmp_folder)
+
+            if not step_input.dry_run:
+                self.upload_to_s3(logger=self._logger, step_input=step_input, tmp_folder=tmp_folder)
 
         return DeployKubernetes(self._logger).execute(step_input)
 
@@ -46,9 +48,10 @@ class CloudFrontKubernetesDeploy(Step):
         """
         Creates an S3 client and uploads the static assets stored in the temp folder
         """
+        logger.info("Creating S3 client")
         s3_config = S3ClientConfig(run_properties=step_input.run_properties, project=step_input.project)
         s3_client = S3Client(logger, s3_config)
 
         logger.info(f"Uploading assets to '{s3_config.bucket_root_path}' in bucket '{s3_config.bucket_name}'")
-        s3_client.upload_directory(tmp_folder)
+        s3_client.upload_directory(directory=tmp_folder)
         logger.info('Upload complete')

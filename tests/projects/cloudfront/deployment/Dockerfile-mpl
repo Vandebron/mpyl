@@ -1,0 +1,10 @@
+# syntax=docker/dockerfile:1.4
+FROM node:12.18.2 AS installer
+COPY --link tests/projects/cloudfront/ /tests/projects/cloudfront/
+WORKDIR /tests/projects/cloudfront
+
+COPY /tests/projects/cloudfront/src/sum.js /cloudfront-service/static/js/
+RUN yarn install
+
+FROM installer as builder
+ENTRYPOINT [ "yarn", "start" ]

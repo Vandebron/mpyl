@@ -1,8 +1,7 @@
-name: 'nodeservice'
-description: 'This is a test container. For testing the MPL pipelines, not to be deployed anywhere.'
+name: 'cloudfront-service'
+description: 'This is a test container. For testing the MPyL pipelines, not to be deployed anywhere.'
 stages:
   build: Docker Build
-  test: Docker Test
   deploy: CloudFront Kubernetes Deploy
 maintainer: [ 'MPyL' ]
 build:
@@ -43,10 +42,10 @@ deployment:
   traefik:
     hosts:
       - host:
-          pr: "Host(`nodeservice-{PR-NUMBER}.test.nl`)"
-          test: "Host(`nodeservice.test.nl`)"
-          acceptance: "Host(`nodeservice.acceptance1.nl`)"
-          production: "Host(`nodeservice.nl`)"
+          pr: "Host(`cloudfront-service-{PR-NUMBER}.test.nl`)"
+          test: "Host(`cloudfront-service.test.nl`)"
+          acceptance: "Host(`cloudfront-service.acceptance1.nl`)"
+          production: "Host(`cloudfront-service.nl`)"
         tls:
           all: "le-custom-prod-wildcard-cert"
         insecure: true
@@ -56,7 +55,7 @@ deployment:
         priority: 1000
   s3:
     bucket:
-      pr: test-website-assets
+      pr: vdb-core-digital-test-main-website-assets
       test: test-website-assets
       acceptance: acceptance-website-assets
       production: production-website-assets

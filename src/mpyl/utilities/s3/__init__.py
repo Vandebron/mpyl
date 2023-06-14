@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Optional
 from logging import Logger
 from os import walk
+from http import HTTPStatus
 import boto3
 from botocore.exceptions import ClientError
 
@@ -25,18 +26,8 @@ class S3ClientConfig:
         s3_connection_info = run_properties.config.get('s3', None)
         self.access_key_id = s3_connection_info.get('accessKeyId')
         self.secret_access_key = s3_connection_info.get('secretAccessKey')
-        self.bucket_name = self.__get_bucket_name(run_properties, project)
+        self.bucket_name = project.s3_bucket.bucket.get_value(run_properties.target)
         self.bucket_root_path = run_properties.versioning.identifier
-
-    @staticmethod
-    def __get_bucket_name(run_properties: RunProperties, project: Project) -> str:
-        """
-        Retrieves the S3 bucket name from the step input
-        """
-        s3_config = project.s3_bucket
-        if s3_config is None or s3_config.bucket is None:
-            raise AttributeError("deployment.s3.bucket property should be set")
-        return s3_config.bucket.get_value(run_properties.target)
 
 
 class S3Client:
@@ -54,6 +45,22 @@ class S3Client:
         self._buck_name = config.bucket_name
         self._bucket_root_path = config.bucket_root_path
         self._logger = logger
+        self.validate_bucket()
+
+    def validate_bucket(self):
+        """
+        Validates that the bucket exists and that the user has access to it
+        """
+        try:
+            self._client.head_bucket(Bucket=self._buck_name)
+            self._logger.info(f"{self._buck_name} is a valid bucket")
+        except ClientError as exc:
+            error_code = int(exc.response['Error']['Code'])
+            if error_code == HTTPStatus.FORBIDDEN:
+                self._logger.warning(f"Unable to access bucket {self._buck_name}: Forbidden")
+            elif error_code == HTTPStatus.NOT_FOUND:
+                self._logger.warning(f"Unable to access bucket {self._buck_name}: Not found")
+            raise exc
 
     def upload_directory(self, directory: str):
         """
@@ -95,8 +102,6 @@ class S3Client:
 
         :param src_path: the local relative path of the file
         :param dst_path: the destination path within the bucket
-        :return: whether the upload was successful
-
         """
         self._logger.debug(f"Uploading to bucket: {self._buck_name}")
         self._logger.debug(f"Uploading file at '{src_path}' to '{dst_path}'")
