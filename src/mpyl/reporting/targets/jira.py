@@ -143,7 +143,7 @@ def to_markdown_summary(ticket: JiraTicket, run_result: RunResult) -> str:
 
     build_status = f"🏗️ Build [{details.build_id}]({details.run_url}) {run_result.status_line}, " \
                    f"started by _{details.user}_  \n{markdown_for_stage(run_result, Stage.DEPLOY)}"
-    return f"## 📕 [{ticket.ticket_id}]({ticket.ticket_url}) {ticket.summary} " \
+    return f"📕 [{ticket.ticket_id}]({ticket.ticket_url}) {ticket.summary} " \
            f'<img src="{ticket.user_avatar}" width="24" height="24" alt="{ticket.user_email}" /> \n' \
            f"{description_markdown}\n\n" \
            f"{build_status}"
