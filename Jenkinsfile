@@ -44,7 +44,7 @@ pipeline {
                         wrap([$class: 'BuildUser']) {
                             sh "pipenv clean"
                             if (params.TEST) {
-                                sh "pipenv install --ignore-pipfile --skip-lock --index https://test.pypi.org/simple/ 'mpyl==$CHANGE_ID.*'":
+                                sh "pipenv install --ignore-pipfile --skip-lock --index https://test.pypi.org/simple/ 'mpyl==$CHANGE_ID.*'"
                             } else {
                                 sh "pipenv install --ignore-pipfile --skip-lock --site-packages ${mpyl}"
                             }
