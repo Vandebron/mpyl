@@ -53,9 +53,6 @@ def collect_test_results(test_artifacts: list[Artifact]) -> list[TestSuite]:
     return list(itertools.chain(*suites))
 
 
-
-
-
 class Steps:
     """ Executor of individual steps within a pipeline. """
     _logger: Logger

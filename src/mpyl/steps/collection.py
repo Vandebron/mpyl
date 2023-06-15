@@ -1,42 +1,34 @@
+"""Discover and load implementations of `mpyl.steps.Step`s"""
+import importlib
+import pkgutil
 from logging import Logger
 from typing import Optional
 
+from . import IPluginRegistry
 from . import Step
-from .build.dockerbuild import BuildDocker
-from .build.echo import BuildEcho
-from .build.sbt import BuildSbt
-from .deploy.echo import DeployEcho
-from .deploy.ephemeral_docker_deploy import EphemeralDockerDeploy
-from .deploy.kubernetes import DeployKubernetes
-from .deploy.kubernetes_job import DeployKubernetesJob
-from .deploy.kubernetes_spark_job import DeployKubernetesSparkJob
-from .postdeploy.cypress_test import CypressTest
-from .test.dockertest import TestDocker
-from .test.echo import TestEcho
-from .test.sbt import TestSbt
 
 
 class StepsCollection:
     _step_executors: set[Step]
+    _base_path: Optional[str]
 
-    def __init__(self, logger: Logger) -> None:
-        self._step_executors = {
-            BuildEcho(logger),
-            BuildSbt(logger),
-            BuildDocker(logger),
-            TestEcho(logger),
-            TestSbt(logger),
-            TestDocker(logger),
-            DeployEcho(logger),
-            DeployKubernetes(logger),
-            DeployKubernetesJob(logger),
-            DeployKubernetesSparkJob(logger),
-            EphemeralDockerDeploy(logger),
-            CypressTest(logger)
-        }
+    def __init__(self, logger: Logger, base_path: Optional[str] = None) -> None:
+        self._step_executors = set()
+        self._base_path = base_path
 
-    def add_executor(self, step: Step):
-        self._step_executors.add(step)
+        self.load_steps_in_module('.')
+
+        for plugin in IPluginRegistry.plugins:
+            step_instance: Step = plugin(logger)
+            meta = step_instance.meta
+            logger.debug(f"{meta.name} for stage {meta.stage} registered. Description: {meta.description}")
+            self._step_executors.add(step_instance)
+
+    def load_steps_in_module(self, module_root: str):
+        module = importlib.import_module(module_root, f'{self._base_path + "." if self._base_path else ""}mpyl.steps')
+        for _, modname, _ in pkgutil.walk_packages(path=module.__path__, prefix=module.__name__ + '.',
+                                                   onerror=lambda x: None):
+            importlib.import_module(modname)
 
     def get_executor(self, stage: str, step_name: str) -> Optional[Step]:
         executors = filter(lambda e: step_name == e.meta.name and e.meta.stage == stage, self._step_executors)

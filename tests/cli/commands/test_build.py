@@ -42,11 +42,11 @@ class TestBuildCommand:
             deploy.STAGE_NAME: projects
         }
         accumulator = RunResult(run_properties=run_properties, run_plan=run_plan)
-        executor = Steps(logging.getLogger(), run_properties)
+        executor = Steps(logging.getLogger(), run_properties, StepsCollection(logging.getLogger(), "src"))
         result = run_build(accumulator, executor, None)
-        assert result.has_results
-        assert result.is_success
+        assert result.exception is None
         assert result.status_line == '✅ Successful'
+        assert result.is_success
 
         assert result.exception is None
 
@@ -58,7 +58,6 @@ class TestBuildCommand:
         accumulator = RunResult(run_properties=run_properties, run_plan=run_plan)
         logger = logging.getLogger()
         collection = StepsCollection(logger)
-        collection.add_executor(ThrowingStep(logger))
         executor = Steps(logger, run_properties, collection)
 
         result = run_build(accumulator, executor, None)
