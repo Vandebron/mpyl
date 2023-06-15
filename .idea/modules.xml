@@ -2,7 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/mpyl.iml" filepath="$PROJECT_DIR$/mpyl.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/enrichChargeSessionsJob.iml" filepath="$PROJECT_DIR$/.idea/modules/enrichChargeSessionsJob.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sbt-multi-project-example.iml" filepath="$PROJECT_DIR$/.idea/modules/sbt-multi-project-example.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sbt-multi-project-example-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sbt-multi-project-example-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sbtservice.iml" filepath="$PROJECT_DIR$/.idea/modules/sbtservice.iml" />
     </modules>
   </component>
 </project>

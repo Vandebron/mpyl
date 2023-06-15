@@ -26,7 +26,7 @@ class TestBuildCommand:
     def test_run_build_without_plan_should_be_successful(self):
         run_properties = RUN_PROPERTIES
         accumulator = RunResult(run_properties=run_properties)
-        executor = Steps(logging.getLogger(), run_properties)
+        executor = Steps(logging.getLogger(), run_properties, StepsCollection(logging.getLogger(), "src"))
         result = run_build(accumulator, executor, None)
         assert not result.has_results
         assert result.is_success
@@ -57,7 +57,7 @@ class TestBuildCommand:
         run_plan = {build.STAGE_NAME: projects}
         accumulator = RunResult(run_properties=run_properties, run_plan=run_plan)
         logger = logging.getLogger()
-        collection = StepsCollection(logger)
+        collection = StepsCollection(logger, "src")
         executor = Steps(logger, run_properties, collection)
 
         result = run_build(accumulator, executor, None)

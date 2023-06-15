@@ -16,7 +16,7 @@ class StepsCollection:
         self._step_executors = set()
         self._base_path = base_path
 
-        self.load_steps_in_module('.')
+        self.__load_steps_in_module('.')
 
         for plugin in IPluginRegistry.plugins:
             step_instance: Step = plugin(logger)
@@ -24,7 +24,7 @@ class StepsCollection:
             logger.debug(f"{meta.name} for stage {meta.stage} registered. Description: {meta.description}")
             self._step_executors.add(step_instance)
 
-    def load_steps_in_module(self, module_root: str):
+    def __load_steps_in_module(self, module_root: str):
         module = importlib.import_module(module_root, f'{self._base_path + "." if self._base_path else ""}mpyl.steps')
         for _, modname, _ in pkgutil.walk_packages(path=module.__path__, prefix=module.__name__ + '.',
                                                    onerror=lambda x: None):

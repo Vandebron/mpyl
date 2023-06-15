@@ -66,7 +66,8 @@ class TestSteps:
         assert Steps._find_required_artifact(self.build_project, None, RUN_PROPERTIES.stages) is None
 
     def test_should_return_error_if_stage_not_defined(self):
-        steps = Steps(logger=Logger.manager.getLogger('logger'), properties=test_data.RUN_PROPERTIES)
+        steps = Steps(logger=Logger.manager.getLogger('logger'), properties=test_data.RUN_PROPERTIES,
+                      steps_collection=StepsCollection(logging.getLogger(), "src"))
         stages = Stages(build=None, test=None, deploy=None, postdeploy=None)
         project = Project('test', 'Test project', '', stages, [], None, None)
         output = steps.execute(stage=build.STAGE_NAME, project=project).output
@@ -77,14 +78,15 @@ class TestSteps:
         config_values = parse_config(self.resource_path / DEFAULT_CONFIG_FILE_NAME)
         config_values['kubernetes']['rancher']['cluster']['test']['invalid'] = 'somevalue'
         properties = RunProperties("id", Target.PULL_REQUEST, VersioningProperties("", "feature/ARC-123", 1, None),
-                                   config_values, ConsoleProperties("INFO", 130), True, [])
+                                   config_values, ConsoleProperties("INFO", 130), [])
         with pytest.raises(ValidationError) as excinfo:
-            Steps(logger=Logger.manager.getLogger('logger'), properties=properties)
+            Steps(logger=Logger.manager.getLogger('logger'), properties=properties,
+                  steps_collection=StepsCollection(logging.getLogger(), "src"))
         assert "('invalid' was unexpected)" in excinfo.value.message
 
     def test_should_succeed_if_executor_is_known(self):
         project = test_data.get_project_with_stages({'build': 'Echo Build'})
-        result = self.executor.execute(stage=build.STAGE_NAME, project =project)
+        result = self.executor.execute(stage=build.STAGE_NAME, project=project)
         assert result.output.success
         assert result.output.message == 'Built test'
         assert result.output.produced_artifact.artifact_type == ArtifactType.DOCKER_IMAGE

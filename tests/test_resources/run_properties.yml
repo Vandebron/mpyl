@@ -20,7 +20,7 @@ stages:
   - name: 'build'
     icon: '🏗️'
   - name: 'test'
-    icon: '🧪'
+    icon: '📋'
   - name: 'deploy'
     icon: '🚀'
   - name: 'postdeploy'

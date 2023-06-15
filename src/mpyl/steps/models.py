@@ -79,8 +79,6 @@ class RunProperties:
      """
     console: ConsoleProperties
     """Settings for the console output"""
-    local: bool
-    """Whether the run is local or not"""
     stages: list[Stage]
     """The types of stages allowed for this run"""
 
@@ -88,7 +86,7 @@ class RunProperties:
     def for_local_run(run_properties: Dict, config: Dict, revision: str, branch: Optional[str], tag: Optional[str]):
         return RunProperties(details=RunContext("", "", "", "", "", None), target=Target.PULL_REQUEST,
                              versioning=VersioningProperties(revision, branch, 123, tag), config=config,
-                             console=ConsoleProperties("INFO", 130), local=True,
+                             console=ConsoleProperties("INFO", 130),
                              stages=RunProperties.to_stages(run_properties['stages']))
 
     def stage(self, stage_name: str) -> Stage:
@@ -125,7 +123,6 @@ class RunProperties:
             versioning=versioning,
             config=config,
             console=console,
-            local=str(build['local']).lower() == 'true',
             stages=stages
         )
 

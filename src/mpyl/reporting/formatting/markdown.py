@@ -6,7 +6,7 @@ import operator
 from junitparser import TestSuite
 
 from ...project import Stage, Project
-from ...steps import Output, ArtifactType
+from ...steps import Output, ArtifactType, postdeploy
 from ...steps.run import RunResult
 from ...steps.steps import StepResult, collect_test_results, collect_test_artifacts
 from ...utilities.junit import TestRunSummary, sum_suites
@@ -57,11 +57,11 @@ def markdown_for_stage(run_result: RunResult, stage: Stage):
 
     result = f"{stage.icon}  {__to_oneliner(step_results, plan)}  \n"
     test_artifacts = collect_test_artifacts(step_results)
-    test_results = collect_test_results(step_results)
+    test_results = collect_test_results(test_artifacts)
     if test_results:
         result += to_markdown_test_report(test_results)
 
-        if stage == Stage.POST_DEPLOY:
+        if stage == postdeploy.STAGE_NAME:
             test_results_url = next((artifact.spec['cypress_results_url'] for artifact in test_artifacts
                                     if artifact.spec['cypress_results_url']), '')
         else:
