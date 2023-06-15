@@ -11,7 +11,7 @@ from ..models import ArtifactType, Input, Output, input_to_artifact
 from ...project import Stage, Target
 from ...utilities.cypress import CypressConfig
 from ...utilities.docker import execute_with_stream
-from ...utilities.junit import TEST_OUTPUT_PATH_KEY
+from ...utilities.junit import TEST_OUTPUT_PATH_KEY, TEST_RESULTS_URL_KEY
 
 
 class CypressTest(Step):
@@ -85,7 +85,7 @@ class CypressTest(Step):
                           produced_artifact=input_to_artifact(artifact_type=ArtifactType.JUNIT_TESTS,
                                                               step_input=step_input,
                                                               spec={TEST_OUTPUT_PATH_KEY: volume_path,
-                                                                    "cypress_results_url": cypress_results_url}))
+                                                                    TEST_RESULTS_URL_KEY: cypress_results_url}))
         finally:
             docker_container.stop()
             docker_container.remove()
@@ -93,7 +93,7 @@ class CypressTest(Step):
         return Output(success=True, message=f"Cypress tests for project {step_input.project.name} passed",
                       produced_artifact=input_to_artifact(artifact_type=ArtifactType.JUNIT_TESTS, step_input=step_input,
                                                           spec={TEST_OUTPUT_PATH_KEY: volume_path,
-                                                                "cypress_results_url": cypress_results_url}))
+                                                                TEST_RESULTS_URL_KEY: cypress_results_url}))
 
     @staticmethod
     def _target_to_test_target(target: Target) -> str:

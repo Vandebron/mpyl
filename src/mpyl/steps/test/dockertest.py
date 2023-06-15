@@ -20,7 +20,7 @@ from .. import Step, Meta
 from ..models import Input, Output, ArtifactType, input_to_artifact, Artifact
 from ...project import Stage, Project
 from ...utilities.docker import DockerConfig, build, docker_image_tag, docker_file_path, docker_copy
-from ...utilities.junit import to_test_suites, sum_suites, TEST_OUTPUT_PATH_KEY
+from ...utilities.junit import to_test_suites, sum_suites, TEST_OUTPUT_PATH_KEY, TEST_RESULTS_URL_KEY
 
 
 class TestDocker(Step):
@@ -67,4 +67,5 @@ class TestDocker(Step):
         docker_copy(logger=logger, container_path=path_in_container, dst_path=test_result_path, image_name=tag)
 
         return input_to_artifact(artifact_type=ArtifactType.JUNIT_TESTS, step_input=step_input,
-                                 spec={TEST_OUTPUT_PATH_KEY: f'{test_result_path}'})
+                                 spec={TEST_OUTPUT_PATH_KEY: f'{test_result_path}',
+                                       TEST_RESULTS_URL_KEY: step_input.run_properties.details.tests_url})

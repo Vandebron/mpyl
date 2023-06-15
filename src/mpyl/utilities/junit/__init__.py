@@ -8,6 +8,7 @@ from junitparser import JUnitXml, TestSuite
 from ...steps.models import Artifact, ArtifactType
 
 TEST_OUTPUT_PATH_KEY = 'test_output_path'
+TEST_RESULTS_URL_KEY = 'test_results_url'
 
 
 @dataclass(frozen=True)

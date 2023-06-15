@@ -8,7 +8,7 @@ from .. import Input, Output, Step
 from ..models import Artifact, input_to_artifact
 from ...project import Stage, Project
 from ...steps import Meta, ArtifactType
-from ...utilities.junit import TEST_OUTPUT_PATH_KEY, to_test_suites, sum_suites
+from ...utilities.junit import TEST_OUTPUT_PATH_KEY, to_test_suites, sum_suites, TEST_RESULTS_URL_KEY
 from ...utilities.sbt import SbtConfig
 from ...utilities.subprocess import custom_check_output
 
@@ -98,4 +98,5 @@ class TestSbt(Step):
     @staticmethod
     def _extract_test_report(project: Project, step_input: Input) -> Artifact:
         return input_to_artifact(artifact_type=ArtifactType.JUNIT_TESTS, step_input=step_input,
-                                 spec={TEST_OUTPUT_PATH_KEY: f'{project.test_report_path}'})
+                                 spec={TEST_OUTPUT_PATH_KEY: f'{project.test_report_path}',
+                                       TEST_RESULTS_URL_KEY: step_input.run_properties.details.tests_url})

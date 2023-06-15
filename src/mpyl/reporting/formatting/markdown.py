@@ -9,7 +9,7 @@ from ...project import Stage, Project
 from ...steps import Output, ArtifactType
 from ...steps.run import RunResult
 from ...steps.steps import StepResult, collect_test_results, collect_test_artifacts
-from ...utilities.junit import TestRunSummary, sum_suites
+from ...utilities.junit import TestRunSummary, sum_suites, TEST_RESULTS_URL_KEY
 
 
 def summary_to_markdown(summary: TestRunSummary):
@@ -74,17 +74,12 @@ def markdown_for_stage(run_result: RunResult, stage: Stage):
     if test_results:
         result += to_markdown_test_report(test_results)
 
-        if stage == Stage.POST_DEPLOY:
-            cypress_result_urls = (artifact.spec['cypress_results_url']
-                                   for artifact in test_artifacts if artifact.spec['cypress_results_url'])
+        artifacts_with_url = (artifact for artifact in test_artifacts if artifact.spec[f'{TEST_RESULTS_URL_KEY}'])
 
-            for cypress_result_url in cypress_result_urls:
-                result += f' [link]({cypress_result_url})'
+        for artifact_with_url in artifacts_with_url:
+            result += f' [{artifact_with_url.producing_step}]({artifact_with_url.spec[TEST_RESULTS_URL_KEY]})'
 
-        elif run_result.run_properties.details.tests_url:
-            result += f' [link]({run_result.run_properties.details.tests_url})'
-
-        result += ' \n'
+        result += '  \n'
 
     return result
 
