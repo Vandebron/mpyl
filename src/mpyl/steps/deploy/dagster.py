@@ -42,6 +42,4 @@ class DagsterDeploy(Step):
         # run this 👇 for dagit and daemon (if newserver)
         # (kubectl rollout restart deployment ${deployment} --namespace ${namespace}
 
-
-
         pass
