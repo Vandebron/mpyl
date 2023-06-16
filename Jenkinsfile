@@ -9,7 +9,8 @@ pipeline {
             steps {
                 script {
                     properties([parameters([
-                        string(name: 'BUILD_PARAMS', defaultValue: '--all', description: 'Build parameters passed along with the run. Example: --help or --all')
+                        string(name: 'BUILD_PARAMS', defaultValue: '--all', description: 'Build parameters passed along with the run. Example: --help or --all'),
+                        string(name: 'MPYL_CONFIG_BRANCH', defaultValue: 'main', description: 'Branch to use for mpyl_config repository')
                     ])])
                     currentBuild.result = 'NOT_BUILT'
                     currentBuild.description = "Parameters can be set now"
@@ -36,7 +37,7 @@ pipeline {
             steps {
                 script {
                     def gitconfig = scm.userRemoteConfigs.getAt(0)
-                    git(branch: 'main',credentialsId: gitconfig.getCredentialsId(), url: 'https://github.com/Vandebron/mpyl_config.git')
+                    git(branch: params.MPYL_CONFIG_BRANCH, credentialsId: gitconfig.getCredentialsId(), url: 'https://github.com/Vandebron/mpyl_config.git')
                     def config = readFile('mpyl_config.yml')
                     git(branch: env.BRANCH_NAME, credentialsId: gitconfig.getCredentialsId(), url: gitconfig.getUrl())
                     writeFile(file: 'mpyl_config.yml', text: config)
