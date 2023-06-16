@@ -1,13 +1,11 @@
 """ Entry point of MPyL. Loads all available Step implementations and triggers their execution based on the specified
 Project and Stage.
 """
-import itertools
 import pkgutil
 from dataclasses import dataclass
 from datetime import datetime
 from logging import Logger
 from typing import Optional
-from unittest import TestSuite
 
 from ruamel.yaml import YAML  # type: ignore
 
@@ -28,7 +26,6 @@ from .test.echo import TestEcho
 from .test.sbt import TestSbt
 from ..project import Project
 from ..project import Stage
-from ..utilities.junit import to_test_suites
 from ..validation import validate
 
 yaml = YAML()
@@ -51,18 +48,6 @@ class StepResult:
     project: Project
     output: Output
     timestamp: datetime = datetime.now()
-
-
-def collect_test_artifacts(step_results: list[StepResult]) -> list[Artifact]:
-    return [res.output.produced_artifact for res in step_results if
-            (res.output.produced_artifact and
-             res.output.produced_artifact.artifact_type == ArtifactType.JUNIT_TESTS)]
-
-
-def collect_test_results(test_artifacts: list[Artifact]) -> list[TestSuite]:
-    suites: list[list[TestSuite]] = list(map(to_test_suites, test_artifacts))
-
-    return list(itertools.chain(*suites))
 
 
 class Steps:

@@ -9,6 +9,7 @@ from ...steps.models import Artifact, ArtifactType
 
 TEST_OUTPUT_PATH_KEY = 'test_output_path'
 TEST_RESULTS_URL_KEY = 'test_results_url'
+TEST_RESULTS_URL_NAME_KEY = 'test_results_url_name'
 
 
 @dataclass(frozen=True)
