@@ -31,8 +31,11 @@ class StepsCollection:
             importlib.import_module(modname)
 
     def get_executor(self, stage: str, step_name: str) -> Step:
-        executors = filter(lambda e: step_name == e.meta.name and e.meta.stage == stage, self._step_executors)
-        executor = next(executors, None)
+        executor = self.find_executor(stage, step_name)
         if executor is None:
             raise KeyError(f"No executor found for {step_name} in stage {stage}")
         return executor
+
+    def find_executor(self, stage: str, step_name: str) -> Optional[Step]:
+        executors = filter(lambda e: step_name == e.meta.name and e.meta.stage == stage, self._step_executors)
+        return next(executors, None)
