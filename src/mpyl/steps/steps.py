@@ -124,9 +124,9 @@ class Steps:
         if invalid_maintainers:
             return invalid_maintainers
 
-        executor: Optional[Step] = self._steps_collection.get_executor(stage.name, step_name)
-        if executor is None:
-            self._logger.warning(f"No executor found for {step_name} in stage {stage}")
+        try:
+            executor: Step = self._steps_collection.get_executor(stage.name, step_name)
+        except KeyError:
             return Output(success=False, message=f"Executor '{step_name}' for '{stage.name}' not known or registered")
 
         try:
@@ -137,8 +137,7 @@ class Steps:
             if executor.before:
                 required_artifact = self._find_required_artifact(project, executor.before.required_artifact,
                                                                  self._properties.stages)
-                before_result = self._execute(executor.before, project, self._properties, required_artifact,
-                                              dry_run)
+                before_result = self._execute(executor.before, project, self._properties, required_artifact, dry_run)
                 if not before_result.success:
                     return before_result
 
