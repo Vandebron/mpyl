@@ -133,7 +133,7 @@ def run_build(accumulator: RunResult, executor: Steps, reporter: Optional[Report
                 reporter.send_report(accumulator)
 
             if not result.output.success and stage == Stage.DEPLOY:
-                logging.warning(f'Build failed at {stage} for {proj.name}')
+                logging.warning(f'Deployment failed for {proj.name}')
                 return accumulator
 
         if accumulator.failed_result:
