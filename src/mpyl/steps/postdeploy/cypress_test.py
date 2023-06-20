@@ -36,7 +36,6 @@ class CypressTest(Step):
         else:
             raise ValueError("No cypress specs are defined in the project dependencies")
 
-        cypress_results_url = ''
         custom_image_tag = "mpyl/cypress"
         docker.build(context_path=volume_path, tags=[custom_image_tag], file=f"{volume_path}/Dockerfile-mpyl")
         docker_container = docker.run(image=custom_image_tag, interactive=True, detach=True,
@@ -47,6 +46,10 @@ class CypressTest(Step):
                                       workdir="/cypress")
         if not isinstance(docker_container, Container):
             raise TypeError("Docker run command should return a container")
+
+        artifact = input_to_artifact(artifact_type=ArtifactType.JUNIT_TESTS, step_input=step_input,
+                                     spec={TEST_OUTPUT_PATH_KEY: volume_path,
+                                           TEST_RESULTS_URL_KEY: ''})
 
         try:
             execute_with_stream(logger=self._logger, container=docker_container,
@@ -76,24 +79,19 @@ class CypressTest(Step):
 
             for stdout in result:
                 if record_key and "Recorded Run" in stdout:
-                    cypress_results_url = stdout.rstrip().rsplit('Recorded Run: ', 1)[1]
+                    artifact.spec[TEST_RESULTS_URL_KEY] = stdout.rstrip().rsplit('Recorded Run: ', 1)[1]
                 if "error Command failed with exit code" in stdout:
                     raise DockerException(command_launched=[run_command], return_code=1)
         except DockerException:
             return Output(success=False,
                           message=f"Cypress tests for project {step_input.project.name} have one or more failures",
-                          produced_artifact=input_to_artifact(artifact_type=ArtifactType.JUNIT_TESTS,
-                                                              step_input=step_input,
-                                                              spec={TEST_OUTPUT_PATH_KEY: volume_path,
-                                                                    TEST_RESULTS_URL_KEY: cypress_results_url}))
+                          produced_artifact=artifact)
         finally:
             docker_container.stop()
             docker_container.remove()
 
         return Output(success=True, message=f"Cypress tests for project {step_input.project.name} passed",
-                      produced_artifact=input_to_artifact(artifact_type=ArtifactType.JUNIT_TESTS, step_input=step_input,
-                                                          spec={TEST_OUTPUT_PATH_KEY: volume_path,
-                                                                TEST_RESULTS_URL_KEY: cypress_results_url}))
+                      produced_artifact=artifact)
 
     @staticmethod
     def _target_to_test_target(target: Target) -> str:
