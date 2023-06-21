@@ -2,14 +2,17 @@
 Markdown run result formatters
 """
 import operator
+import itertools
 
 from junitparser import TestSuite
 
 from ...project import Stage, Project
 from ...steps import Output, ArtifactType
+from ...steps.models import Artifact
 from ...steps.run import RunResult
-from ...steps.steps import StepResult, collect_test_results, collect_test_artifacts
-from ...utilities.junit import TestRunSummary, sum_suites
+from ...steps.steps import StepResult
+from ...utilities.junit import TestRunSummary, sum_suites, TEST_RESULTS_URL_KEY, TEST_RESULTS_URL_NAME_KEY, \
+    to_test_suites
 
 
 def summary_to_markdown(summary: TestRunSummary):
@@ -68,20 +71,18 @@ def markdown_for_stage(run_result: RunResult, stage: Stage):
         return ''
 
     result = f"{stage_to_icon(stage)}  {__to_oneliner(step_results, plan)}  \n"
-    test_artifacts = collect_test_artifacts(step_results)
-    test_results = collect_test_results(test_artifacts)
+    test_artifacts = _collect_test_artifacts(step_results)
+    test_results = _collect_test_results(test_artifacts)
 
     if test_results:
         result += to_markdown_test_report(test_results)
+        unique_artifacts = _collection_unique_test_artifacts(test_artifacts)
 
-        if stage == Stage.POST_DEPLOY:
-            test_results_url = next((artifact.spec['cypress_results_url'] for artifact in test_artifacts
-                                    if artifact.spec['cypress_results_url']), '')
-        else:
-            test_results_url = run_result.run_properties.details.tests_url
+        for unique_artifact in unique_artifacts:
+            result += f' [{unique_artifact.spec[TEST_RESULTS_URL_NAME_KEY]}]' \
+                      f'({unique_artifact.spec[TEST_RESULTS_URL_KEY]})'
 
-        if test_results_url:
-            result += f' [link]({test_results_url}) \n'
+        result += '  \n'
 
     return result
 
@@ -106,3 +107,30 @@ def run_result_to_markdown(run_result: RunResult) -> str:
 def to_markdown_test_report(suites: list[TestSuite]):
     total_tests = sum_suites(suites)
     return f"{summary_to_markdown(total_tests)}"
+
+
+def _collect_test_artifacts(step_results: list[StepResult]) -> list[Artifact]:
+    return [res.output.produced_artifact for res in step_results if
+            (res.output.produced_artifact and
+             res.output.produced_artifact.artifact_type == ArtifactType.JUNIT_TESTS)]
+
+
+def _collect_test_results(test_artifacts: list[Artifact]) -> list[TestSuite]:
+    suites: list[list[TestSuite]] = list(map(to_test_suites, test_artifacts))
+
+    return list(itertools.chain(*suites))
+
+
+def _collection_unique_test_artifacts(test_artifacts: list[Artifact]) -> list[Artifact]:
+    unique_artifacts: list[Artifact] = []
+    for test_artifact in test_artifacts:
+        duplicate_artifact = next((x for x in unique_artifacts if
+                                   x.spec.get(TEST_RESULTS_URL_KEY, '') == test_artifact.spec.get(TEST_RESULTS_URL_KEY,
+                                                                                                  '')), None)
+        if not duplicate_artifact:
+            test_artifact.spec[TEST_RESULTS_URL_NAME_KEY] = test_artifact.producing_step
+            unique_artifacts.append(test_artifact)
+        elif TEST_RESULTS_URL_NAME_KEY in duplicate_artifact.spec:
+            duplicate_artifact.spec[TEST_RESULTS_URL_NAME_KEY] = 'link'
+
+    return unique_artifacts

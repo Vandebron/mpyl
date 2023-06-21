@@ -6,7 +6,7 @@ from pathlib import Path
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType, input_to_artifact
 from ...project import Stage
-from ...utilities.junit import TEST_OUTPUT_PATH_KEY
+from ...utilities.junit import TEST_OUTPUT_PATH_KEY, TEST_RESULTS_URL_KEY
 
 SAMPLE_JUNIT_RESULT = """
 <?xml version="1.0" encoding="UTF-8"?>
@@ -36,5 +36,6 @@ class TestEcho(Step):
         Path(path, "test.xml").write_text(SAMPLE_JUNIT_RESULT, encoding='utf-8')
 
         artifact = input_to_artifact(artifact_type=ArtifactType.JUNIT_TESTS, step_input=step_input,
-                                     spec={TEST_OUTPUT_PATH_KEY: str(path)})
+                                     spec={TEST_OUTPUT_PATH_KEY: str(path),
+                                           TEST_RESULTS_URL_KEY: step_input.run_properties.details.tests_url})
         return Output(success=True, message=f"Tested {step_input.project.name}", produced_artifact=artifact)

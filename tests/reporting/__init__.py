@@ -5,7 +5,7 @@ from src.mpyl.project import Stages, Project, Stage
 from src.mpyl.steps.models import Output, Artifact, ArtifactType
 from src.mpyl.steps.run import RunResult
 from src.mpyl.steps.steps import StepResult
-from src.mpyl.utilities.junit import TEST_OUTPUT_PATH_KEY
+from src.mpyl.utilities.junit import TEST_OUTPUT_PATH_KEY, TEST_RESULTS_URL_KEY
 from tests import root_test_path
 from tests.test_resources import test_data
 
@@ -42,7 +42,8 @@ def append_results(result: RunResult) -> None:
                                            produced_artifact=
                                            Artifact(artifact_type=ArtifactType.JUNIT_TESTS, revision='revision',
                                                     producing_step='Docker Test',
-                                                    spec={TEST_OUTPUT_PATH_KEY: test_resource_path})),
+                                                    spec={TEST_OUTPUT_PATH_KEY: test_resource_path,
+                                                          TEST_RESULTS_URL_KEY: 'http://localhost/tests'})),
                              timestamp=datetime.fromisoformat('2019-01-04T16:41:45+02:00')))
     result.append(StepResult(stage=Stage.DEPLOY, project=other_project,
                              output=Output(success=True, message='Deploy successful',
