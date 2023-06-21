@@ -70,7 +70,7 @@ def markdown_for_stage(run_result: RunResult, stage: Stage):
     if not step_results and not plan:
         return ''
 
-    result = f"{stage_to_icon(stage)}  {__to_oneliner(step_results, plan)}  \n"
+    result = f"{stage_to_icon(stage)} {__to_oneliner(step_results, plan)}  \n"
     test_artifacts = _collect_test_artifacts(step_results)
     test_results = _collect_test_results(test_artifacts)
 
