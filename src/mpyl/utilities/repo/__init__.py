@@ -148,7 +148,7 @@ class Repository:
             logging.error("HEAD is not at merge commit, cannot determine changed files.")
             return []
         logging.debug(f"Parent revisions: {parent_revs}")
-        files_changed = self._repo.git.diff(f"{str(parent_revs[0])}..{str(parent_revs[1])}",
+        files_changed = self._repo.git.diff(f"{str(self._repo.head.commit)}..{str(parent_revs[0])}",
                                             name_only=True).splitlines()
         return [Revision(ord=0, hash=str(self.get_sha), files_touched=files_changed)]
 
