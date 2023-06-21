@@ -8,5 +8,8 @@ module.exports = defineConfig({
     video: false,
     screenshotOnRunFailure: false
   },
-  reporter: 'junit'
+  reporter: 'junit',
+  reporterOptions: {
+    mochaFile: 'reports/[hash].xml'
+  }
 });

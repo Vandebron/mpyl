@@ -48,7 +48,7 @@ class CypressTest(Step):
             raise TypeError("Docker run command should return a container")
 
         artifact = input_to_artifact(artifact_type=ArtifactType.JUNIT_TESTS, step_input=step_input,
-                                     spec={TEST_OUTPUT_PATH_KEY: volume_path,
+                                     spec={TEST_OUTPUT_PATH_KEY: f"{volume_path}/reports",
                                            TEST_RESULTS_URL_KEY: ''})
 
         try:
