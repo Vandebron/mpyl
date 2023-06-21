@@ -1,4 +1,4 @@
 !deployment/.mpyl/
 
-cypress/reports
+cypress/test-results.xml
 cypress/cypress.env.json

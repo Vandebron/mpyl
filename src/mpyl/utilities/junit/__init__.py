@@ -24,17 +24,14 @@ class TestRunSummary:
         return self.errors == 0 and self.failures == 0
 
 
-def to_test_suites(artifact: Artifact, clean_up=False) -> list[TestSuite]:
+def to_test_suites(artifact: Artifact) -> list[TestSuite]:
     if artifact.artifact_type != ArtifactType.JUNIT_TESTS:
         raise ValueError(f'Artifact {artifact} should be of type {ArtifactType.JUNIT_TESTS}')
     junit_result_path = artifact.spec[TEST_OUTPUT_PATH_KEY]
 
     xml = JUnitXml()
     for file_name in [fn for fn in os.listdir(junit_result_path) if fn.endswith('.xml')]:
-        path = Path(junit_result_path, file_name).as_posix()
-        xml += JUnitXml.fromfile(path)
-        if clean_up:
-            os.remove(path)
+        xml += JUnitXml.fromfile(Path(junit_result_path, file_name).as_posix())
 
     suites = [TestSuite.fromelem(s) for s in xml]
     return sorted(suites, key=lambda s: s.time)

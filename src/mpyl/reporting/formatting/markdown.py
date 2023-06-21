@@ -116,9 +116,7 @@ def _collect_test_artifacts(step_results: list[StepResult]) -> list[Artifact]:
 
 
 def _collect_test_results(test_artifacts: list[Artifact]) -> list[TestSuite]:
-    suites: list[list[TestSuite]] = []
-    for test_artifact in test_artifacts:
-        suites.append(to_test_suites(test_artifact, True))
+    suites: list[list[TestSuite]] = list(map(to_test_suites, test_artifacts))
 
     return list(itertools.chain(*suites))
 
