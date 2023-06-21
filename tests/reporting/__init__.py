@@ -1,8 +1,4 @@
-import glob
-import os
-import shutil
 from datetime import datetime
-from pathlib import Path
 
 from src.mpyl.steps.deploy.kubernetes import DEPLOYED_SERVICE_KEY
 from src.mpyl.project import Stages, Project, Stage
@@ -14,7 +10,6 @@ from tests import root_test_path
 from tests.test_resources import test_data
 
 test_resource_path = root_test_path / "reporting" / "formatting" / "test_resources"
-tmp_test_resource_path = root_test_path / "reporting" / "formatting" / "tmp_test_resources"
 
 
 def create_test_result() -> RunResult:
@@ -35,7 +30,6 @@ def create_test_result_with_plan() -> RunResult:
 
 
 def append_results(result: RunResult) -> None:
-    __copy_xmls()
     other_project = __get_other_project()
     result.append(StepResult(stage=Stage.BUILD, project=test_data.get_project(),
                              output=Output(success=False, message='Build failed'),
@@ -48,7 +42,7 @@ def append_results(result: RunResult) -> None:
                                            produced_artifact=
                                            Artifact(artifact_type=ArtifactType.JUNIT_TESTS, revision='revision',
                                                     producing_step='Docker Test',
-                                                    spec={TEST_OUTPUT_PATH_KEY: tmp_test_resource_path,
+                                                    spec={TEST_OUTPUT_PATH_KEY: test_resource_path,
                                                           TEST_RESULTS_URL_KEY: 'http://localhost/tests'})),
                              timestamp=datetime.fromisoformat('2019-01-04T16:41:45+02:00')))
     result.append(StepResult(stage=Stage.DEPLOY, project=other_project,
@@ -63,11 +57,3 @@ def append_results(result: RunResult) -> None:
 def __get_other_project():
     stages = Stages(build=None, test=None, deploy=None, postdeploy=None)
     return Project('test', 'Test project', '', stages, [], None, None)
-
-
-def __copy_xmls():
-    Path(tmp_test_resource_path).mkdir(exist_ok=True)
-    files = glob.iglob(os.path.join(test_resource_path, "*.xml"))
-    for file in files:
-        if os.path.isfile(file):
-            shutil.copy2(file, tmp_test_resource_path)
