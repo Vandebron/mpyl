@@ -62,10 +62,9 @@ class TestDocker(Step):
 
     @staticmethod
     def extract_test_results(logger: Logger, project: Project, tag: str, step_input: Input) -> Artifact:
-        test_result_path = f'{project.target_path}/test_results'
         path_in_container = f'/{project.test_report_path}/'
-        docker_copy(logger=logger, container_path=path_in_container, dst_path=test_result_path, image_name=tag)
+        docker_copy(logger=logger, container_path=path_in_container, dst_path=project.test_report_path, image_name=tag)
 
         return input_to_artifact(artifact_type=ArtifactType.JUNIT_TESTS, step_input=step_input,
-                                 spec={TEST_OUTPUT_PATH_KEY: f'{test_result_path}',
+                                 spec={TEST_OUTPUT_PATH_KEY: project.test_report_path,
                                        TEST_RESULTS_URL_KEY: step_input.run_properties.details.tests_url})

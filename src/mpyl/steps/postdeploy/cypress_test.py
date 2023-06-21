@@ -48,7 +48,7 @@ class CypressTest(Step):
             raise TypeError("Docker run command should return a container")
 
         artifact = input_to_artifact(artifact_type=ArtifactType.JUNIT_TESTS, step_input=step_input,
-                                     spec={TEST_OUTPUT_PATH_KEY: volume_path,
+                                     spec={TEST_OUTPUT_PATH_KEY: f"{volume_path}/reports/{step_input.project.name}",
                                            TEST_RESULTS_URL_KEY: ''})
 
         try:
@@ -69,10 +69,12 @@ class CypressTest(Step):
             execute_with_stream(logger=self._logger, container=docker_container, command="yarn tsc",
                                 task_name="Compiling typescript")
 
-            run_command = f'bash -c "yarn cypress run --spec {specs_string} || true"'
+            run_command = f'bash -c "yarn cypress run --spec {specs_string} --reporter-options mochaFile=' \
+                          f'reports/{step_input.project.name}/result.xml || true"'
             record_key = cypress_config.record_key
             if record_key:
-                run_command = f'bash -c "yarn cypress run --spec {specs_string} --record --key ' \
+                run_command = f'bash -c "yarn cypress run --spec {specs_string} --reporter-options ' \
+                              f'mochaFile=reports/{step_input.project.name}/result.xml --record --key ' \
                               f'b6a2aab1-0b80-4ca0-a56c-1c8d98a8189c || true "'
             result = execute_with_stream(logger=self._logger, container=docker_container, command=run_command,
                                          task_name="Running cypress tests")
