@@ -47,8 +47,8 @@ FORMAT = "%(name)s  %(message)s"
 def get_build_plan(logger: logging.Logger, repo: Repository, mpyl_run_parameters: MpylRunParameters) -> RunResult:
     params = mpyl_run_parameters.parameters
     branch = repo.get_branch or mpyl_run_parameters.run_config.run_properties.versioning.branch
-    logger.info(f"Running with {params} on {branch}")
     if branch:
+        logger.info(f"Running with {params} on {branch}")
         if repo.main_branch_pulled:
             logger.info(f'Branch `{repo.main_branch}` already present locally. Skipping pull.')
         else:
@@ -57,6 +57,7 @@ def get_build_plan(logger: logging.Logger, repo: Repository, mpyl_run_parameters
             logger.info(f'Pulled `{pull_result[0].remote_ref_path.strip()}` to local')
         changes = repo.changes_in_branch_including_local() if params.local else repo.changes_in_branch()
     else:
+        logger.info(f"Running with {params} on {params.tag} to {mpyl_run_parameters.run_config.run_properties.target}")
         changes = repo.changes_in_tagged_commit(params.tag) if params.tag else repo.changes_in_merge_commit()
     logger.debug(f'Changes: {changes}')
 
