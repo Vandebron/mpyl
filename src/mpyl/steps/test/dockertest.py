@@ -46,10 +46,9 @@ class TestDocker(Step):
         tag = docker_image_tag(step_input) + '-test'
         project = step_input.project
         dockerfile = docker_file_path(project=project, docker_config=docker_config)
-        container = create_container(self._logger, tag)
-
         success = build(logger=self._logger, root_path=docker_config.root_folder,
                         file_path=dockerfile, image_tag=tag, target=test_target)
+        container = create_container(self._logger, tag)
 
         if success:
             artifact = self.extract_test_results(self._logger, project, container, step_input)
