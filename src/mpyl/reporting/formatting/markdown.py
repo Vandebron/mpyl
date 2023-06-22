@@ -92,11 +92,11 @@ def run_result_to_markdown(run_result: RunResult) -> str:
     exception = run_result.exception
     if exception:
         result += f"For _{exception.executor}_ on _{exception.project_name}_ at _{exception.stage}_ \n"
-        result += f"\n```\n{exception}\n```\n"
+        result += f"\n\n{exception}\n\n"
     elif run_result.failed_result:
         failed = run_result.failed_result
         result += f"For _{failed.project.name}_ at _{failed.stage}_ \n"
-        result += f"\n```\n{run_result.failed_result.output.message}\n```\n"
+        result += f"\n\n{run_result.failed_result.output.message}\n\n"
 
     for stage in Stage:
         result += markdown_for_stage(run_result, stage)
