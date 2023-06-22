@@ -74,11 +74,11 @@ class CypressTest(Step):
                                 task_name="Remove old report files")
 
             run_command = f'bash -c "yarn cypress run --spec {specs_string} --reporter-options mochaFile=' \
-                          f'reports/{step_input.project.name}/result.xml || true"'
+                          f'"{reports_folder}/[hash].xml" || true"'
             record_key = cypress_config.record_key
             if record_key:
                 run_command = f'bash -c "yarn cypress run --spec {specs_string} --reporter-options ' \
-                              f'mochaFile={reports_folder}/result.xml --record --key ' \
+                              f'"mochaFile={reports_folder}/[hash].xml" --record --key ' \
                               f'b6a2aab1-0b80-4ca0-a56c-1c8d98a8189c || true "'
             result = execute_with_stream(logger=self._logger, container=docker_container, command=run_command,
                                          task_name="Running cypress tests")
