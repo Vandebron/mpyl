@@ -258,6 +258,7 @@ class Traefik:
         hosts = values.get('hosts')
         return Traefik(hosts=(list(map(Host.from_config, hosts) if hosts else [])))
 
+
 @dataclass(frozen=True)
 class S3Bucket:
     bucket: TargetProperty[str]
@@ -265,6 +266,7 @@ class S3Bucket:
     @staticmethod
     def from_config(values: dict):
         return S3Bucket(bucket=TargetProperty.from_config(values.get('bucket', {})))
+
 
 @dataclass(frozen=True)
 class Deployment:

@@ -27,7 +27,8 @@ def main(log: Logger, args: argparse.Namespace):
             tag=args.tag,
             pull_main=True,
             verbose=args.verbose,
-            all=args.all
+            all=args.all,
+            target=run_properties.target
         )
     )
     check = None
