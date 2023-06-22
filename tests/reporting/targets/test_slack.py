@@ -16,15 +16,19 @@ class TestSlackReporter:
     def test_send_test_message(self):
         run_result = create_test_result_with_plan()
 
-        slack = SlackReporter({'slack':
-                                   {'botToken': os.environ.get('SLACK_TOKEN'),
-                                    'icons': {
-                                        'success': 'thug-parrot',
-                                        'failure': 'sadparrot',
-                                        'building': 'parrot'},
-                                    },
-                               },
-                              None, 'MPyL test build')
+        slack = SlackReporter(
+            {
+                'slack': {
+                    'botToken': os.environ.get('SLACK_TOKEN'),
+                    'icons': {
+                        'success': 'thug-parrot',
+                        'failure': 'sadparrot',
+                        'building': 'parrot'},
+                },
+            },
+            None,
+            'MPyL test build'
+        )
         slack.send_report(run_result)
         append_results(run_result)
         slack.send_report(run_result)

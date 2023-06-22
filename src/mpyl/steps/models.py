@@ -26,9 +26,8 @@ class VersioningProperties:
             raise ValueError('Either pr_number or tag need to be set')
 
     @property
-    def identifier(self):
-        return f'pr-{self.pr_number}' if self.pr_number else self.tag
-
+    def identifier(self) -> str:
+        return self.tag if self.tag else f'pr-{self.pr_number}'
 
 
 @dataclass(frozen=True)

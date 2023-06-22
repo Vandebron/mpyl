@@ -88,14 +88,19 @@ class SlackReporter(Reporter):
     _icons: SlackIcons
     _message_identifier: Optional[MessageIdentifier]
 
-    def __init__(self, config: Dict, channel: Optional[str], title: str,
+    def __init__(self,
+                 config: Dict,
+                 channel: Optional[str],
+                 versioning_identifier: str,
+                 target: str,
                  message_identifier: Optional[MessageIdentifier] = None):
+
         slack_config = config.get('slack')
         if not slack_config:
             raise ValueError('slack config not set')
         self._client = WebClient(token=slack_config['botToken'])
         self._channel = channel
-        self._title = title
+        self._title = f'MPyL run for {versioning_identifier} on {target}'
         icons = slack_config['icons']
         self._icons = SlackIcons(success=icons['success'], failure=icons['failure'], building=icons['building'])
         self._message_identifier = message_identifier
