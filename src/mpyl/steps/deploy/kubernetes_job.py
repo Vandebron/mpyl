@@ -23,7 +23,8 @@ class DeployKubernetesJob(Step):
 
     def execute(self, step_input: Input) -> Output:
         run_properties = step_input.run_properties
-        builder = ChartBuilder(step_input, find_deploy_set(RepoConfig.from_config(run_properties.config)))
+        builder = ChartBuilder(step_input, find_deploy_set(repo_config=RepoConfig.from_config(run_properties.config),
+                                                           tag=step_input.run_properties.versioning.tag))
         chart = to_cron_job_chart(builder) if builder.is_cron_job else to_job_chart(builder)
         target_cluster = cluster_config(run_properties.target, run_properties)
         return deploy_helm_chart(self._logger, chart, step_input, target_cluster, builder.release_name,

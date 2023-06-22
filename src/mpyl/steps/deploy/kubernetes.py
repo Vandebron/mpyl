@@ -40,7 +40,8 @@ class DeployKubernetes(Step):
 
     def execute(self, step_input: Input) -> Output:
         properties = step_input.run_properties
-        builder = ChartBuilder(step_input, find_deploy_set(RepoConfig.from_config(properties.config)))
+        builder = ChartBuilder(step_input, find_deploy_set(repo_config=RepoConfig.from_config(properties.config),
+                                                           tag=step_input.run_properties.versioning.tag))
         chart = to_service_chart(builder)
 
         target_cluster = cluster_config(properties.target, properties)
