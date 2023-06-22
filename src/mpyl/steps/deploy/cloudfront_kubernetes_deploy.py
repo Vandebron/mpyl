@@ -7,7 +7,7 @@ from .kubernetes import DeployKubernetes
 from .. import Step, Meta
 from ...project import Stage
 from ..models import Input, Output, ArtifactType
-from ...utilities.docker import docker_image_tag, docker_copy
+from ...utilities.docker import docker_image_tag, docker_copy, create_container
 from ...utilities.s3 import S3Client, S3ClientConfig
 
 STATIC_FOLDER = 'static'
@@ -39,9 +39,8 @@ class CloudFrontKubernetesDeploy(Step):
         """
         image_name = docker_image_tag(step_input)
         container_path = f'{step_input.project.name}/{STATIC_FOLDER}'
-
-        docker_copy(logger=logger, container_path=container_path, dst_path=tmp_folder,
-                    image_name=image_name)
+        container = create_container(logger, image_name)
+        docker_copy(logger=logger, container_path=container_path, dst_path=tmp_folder, container=container)
 
     @staticmethod
     def __upload_to_s3(logger: Logger, step_input: Input, tmp_folder: str):
