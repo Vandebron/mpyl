@@ -4,7 +4,7 @@ name: docs
 on:
   push:
     branches:
-      - main
+    - main
 
 # security: restrict permissions for CI jobs.
 permissions:
@@ -15,25 +15,26 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Install dependencies
-        uses: VaultVulp/action-pipenv@v2.0.1
-        with:
-          command: install -d
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+    - name: Install dependencies
+      uses: VaultVulp/action-pipenv@v2.0.1
+      with:
+        command: install -d
 
-      - name: Build
-        uses: VaultVulp/action-pipenv@v2.0.1
-        with:
-          command: run doc
+    - name: Build
+      uses: VaultVulp/action-pipenv@v2.0.1
+      with:
+        command: run doc
 
-      - name: Copy schemas
-        run: |
-          chmod -R 0755 docs/schema
-          cp src/mpyl/schema/* docs/schema
+    - name: Copy schemas
+      run: |
+        chmod -R 0755 docs/schema
+        cp src/mpyl/schema/* docs/schema
 
-      - uses: actions/upload-pages-artifact@v1
-        with:
-          path: docs/
+    - uses: actions/upload-pages-artifact@v1
+      with:
+        path: docs/
 
   # Deploy the artifact to GitHub pages.
   # This is a separate job so that only actions/deploy-pages has the necessary permissions.
@@ -47,5 +48,5 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - id: deployment
-        uses: actions/deploy-pages@v1
+    - id: deployment
+      uses: actions/deploy-pages@v1
