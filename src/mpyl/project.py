@@ -41,6 +41,9 @@ class Target(Enum):
     def __eq__(self, other):
         return self.value == other.value
 
+    def __str__(self):
+        return str(self.value)
+
     PULL_REQUEST = 'PullRequest'
     PULL_REQUEST_BASE = 'PullRequestBase'
     ACCEPTANCE = 'Acceptance'
@@ -258,6 +261,7 @@ class Traefik:
         hosts = values.get('hosts')
         return Traefik(hosts=(list(map(Host.from_config, hosts) if hosts else [])))
 
+
 @dataclass(frozen=True)
 class S3Bucket:
     bucket: TargetProperty[str]
@@ -265,6 +269,7 @@ class S3Bucket:
     @staticmethod
     def from_config(values: dict):
         return S3Bucket(bucket=TargetProperty.from_config(values.get('bucket', {})))
+
 
 @dataclass(frozen=True)
 class Deployment:

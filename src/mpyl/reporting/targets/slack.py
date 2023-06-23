@@ -35,7 +35,7 @@ from dataclasses import dataclass
 from typing import Dict, Optional
 
 from slack_sdk import WebClient
-from slack_sdk.errors import SlackClientError
+from slack_sdk.errors import SlackClientError, SlackApiError
 from slack_sdk.models.blocks import HeaderBlock, SectionBlock, MarkdownTextObject, ContextBlock, ImageElement, Block
 
 from . import Reporter, ReportOutcome
@@ -88,14 +88,19 @@ class SlackReporter(Reporter):
     _icons: SlackIcons
     _message_identifier: Optional[MessageIdentifier]
 
-    def __init__(self, config: Dict, channel: Optional[str], title: str,
+    def __init__(self,
+                 config: Dict,
+                 channel: Optional[str],
+                 versioning_identifier: str,
+                 target: str,
                  message_identifier: Optional[MessageIdentifier] = None):
+
         slack_config = config.get('slack')
         if not slack_config:
             raise ValueError('slack config not set')
         self._client = WebClient(token=slack_config['botToken'])
         self._channel = channel
-        self._title = title
+        self._title = f'MPyL run for {versioning_identifier} on {target}'
         icons = slack_config['icons']
         self._icons = SlackIcons(success=icons['success'], failure=icons['failure'], building=icons['building'])
         self._message_identifier = message_identifier
@@ -144,10 +149,13 @@ class SlackReporter(Reporter):
         profile_data: dict[str, str] = {}
         user_id = None
         if user_email:
-            user = self._client.users_lookupByEmail(email=user_email)
-            user_id = user['user']['id']
-            resp = self._client.users_profile_get(user=user_id)
-            profile_data = resp.get('profile', {})
+            try:
+                user = self._client.users_lookupByEmail(email=user_email)
+                user_id = user['user']['id']
+                resp = self._client.users_profile_get(user=user_id)
+                profile_data = resp.get('profile', {})
+            except SlackApiError:
+                profile_data = {}
 
         return UserInfo(user_name=profile_data.get('real_name_normalized', 'Anonymous'),
                         profile_image=profile_data.get('image_24',

@@ -10,6 +10,7 @@ from typing import Dict, Optional
 from urllib.parse import urlparse
 
 from git import Git, Repo, Remote
+from git.objects import Commit
 
 from ...project import Project
 
@@ -110,12 +111,18 @@ class Repository:
     def latest_tag(self) -> str:
         return str(sorted(self._repo.tags, key=lambda t: t.commit.committed_datetime)[-1])
 
+    def __to_revision(self, count: int, revision: Commit, files_touched_in_branch: set[str]) -> Revision:
+        files_in_revision = set(
+            self._repo.git.diff_tree(self.__get_filter_patterns(), no_commit_id=True, name_only=True,
+                                     r=str(revision)).splitlines())
+        intersection = files_in_revision.intersection(files_touched_in_branch)
+        return Revision(count, str(revision), intersection)
+
     def changes_in_branch(self) -> list[Revision]:
-        revisions = reversed(list(self._repo.iter_commits(f"{self._config.main_branch}..HEAD")))
-        return [Revision(count, str(rev),
-                         self._repo.git.diff_tree(self.__get_filter_patterns(), no_commit_id=True, name_only=True,
-                                                  r=str(rev), ).splitlines()) for
-                count, rev in enumerate(revisions)]
+        revisions = list(reversed(list(self._repo.iter_commits(f"{self._config.main_branch}..HEAD"))))
+        files_touched_in_branch = set(
+            self._repo.git.diff(f'{revisions[0].hexsha}..{revisions[-1].hexsha}', name_only=True).splitlines())
+        return [self.__to_revision(count, rev, files_touched_in_branch) for count, rev in enumerate(revisions)]
 
     def changes_in_commit(self) -> set[str]:
         changed: set[str] = set(self._repo.git.diff(self.__get_filter_patterns(), None, name_only=True).splitlines())
@@ -141,12 +148,14 @@ class Repository:
             logging.error("HEAD is not at merge commit, cannot determine changed files.")
             return []
         logging.debug(f"Parent revisions: {parent_revs}")
-        files_changed = self._repo.git.diff(f"{str(parent_revs[0])}..{str(parent_revs[1])}",
+        files_changed = self._repo.git.diff(f"{str(self._repo.head.commit)}..{str(parent_revs[0])}",
                                             name_only=True).splitlines()
         return [Revision(ord=0, hash=str(self.get_sha), files_touched=files_changed)]
 
     @property
     def main_branch_pulled(self) -> bool:
+        if self._repo.head.is_detached:
+            return False
         branch_names = list(map(lambda n: n.name, self._repo.references))
         return f'{self._config.main_branch}' in branch_names
 

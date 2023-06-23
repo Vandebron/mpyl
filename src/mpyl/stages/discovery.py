@@ -66,9 +66,9 @@ def find_invalidated_projects_for_stage(all_projects: set[Project], stage: Stage
     return set(filter(lambda p: are_invalidated(p, stage, change_history), all_projects))
 
 
-def find_deploy_set(repo_config: RepoConfig) -> DeploySet:
+def find_deploy_set(repo_config: RepoConfig, tag: Optional[str]) -> DeploySet:
     with Repository(repo_config) as repo:
-        changes_in_branch = repo.changes_in_branch_including_local()
+        changes_in_branch = repo.changes_in_tagged_commit(tag) if tag else repo.changes_in_branch_including_local()
         project_paths = repo.find_projects()
         all_projects = set(map(lambda p: load_project(Path(""), Path(p), False), project_paths))
         return DeploySet(all_projects,

@@ -2,8 +2,9 @@
 
 from dataclasses import dataclass
 
-from ....steps import Input
+from ...models import RunProperties
 from ....project import Target
+from ....steps import Input
 
 
 @dataclass(frozen=True)
@@ -19,9 +20,8 @@ class ClusterConfig:
                              cluster_env=config['clusterEnv'], context=config['context'])
 
 
-def cluster_config(step_input: Input):
-    target = step_input.run_properties.target
-    cluster_configs = step_input.run_properties.config['kubernetes']['rancher']['cluster']
+def cluster_config(target: Target, run_properties: RunProperties) -> ClusterConfig:
+    cluster_configs = run_properties.config['kubernetes']['rancher']['cluster']
 
     if target in {Target.PULL_REQUEST, Target.PULL_REQUEST_BASE}:
         return ClusterConfig.from_config(cluster_configs['test'])
@@ -29,11 +29,11 @@ def cluster_config(step_input: Input):
         return ClusterConfig.from_config(cluster_configs['acceptance'])
     if target == Target.PRODUCTION:
         return ClusterConfig.from_config(cluster_configs['production'])
-    return None
+    raise ValueError(f"Unknown target {target}")
 
 
 def rancher_namespace_metadata(namespace: str, step_input: Input):
-    rancher_config = cluster_config(step_input)
+    rancher_config = cluster_config(step_input.run_properties.target, step_input.run_properties)
 
     return {
         'annotations': {

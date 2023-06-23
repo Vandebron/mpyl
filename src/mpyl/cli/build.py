@@ -68,7 +68,8 @@ def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
     run_properties = RunProperties.from_configuration(obj.run_properties, obj.config) if ci \
         else RunProperties.for_local_run(obj.config, obj.repo.get_sha, obj.repo.get_branch, tag)
 
-    parameters = MpylCliParameters(local=not ci, pull_main=all_, all=all_, verbose=obj.verbose, tag=tag)
+    parameters = MpylCliParameters(local=not ci, pull_main=all_, all=all_, verbose=obj.verbose, tag=tag,
+                                   target=run_properties.target)
     obj.console.log(parameters)
     run_parameters = MpylRunParameters(
         run_config=MpylRunConfig(config=obj.config, run_properties=run_properties),
@@ -228,7 +229,7 @@ def jenkins(ctx, user, password, pipeline, test, arguments, background, silent, 
         selected_pipeline = pipeline if pipeline else ctx.obj.config['jenkins']['defaultPipeline']
         pipeline_parameters = {'TEST': 'true', 'VERSION': test} if test else {}
         if arguments:
-            pipeline_parameters['PIPENV_PARAMS'] = " ".join(arguments)
+            pipeline_parameters['BUILD_PARAMS'] = " ".join(arguments)
 
         run_argument = JenkinsRunParameters(
             jenkins_user=user, jenkins_password=password, config=ctx.obj.config,

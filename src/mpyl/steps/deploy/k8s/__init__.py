@@ -9,7 +9,7 @@ from ...models import RunProperties
 from ....project import Project, Target, ProjectName
 from ....steps import Input, Output
 from ....steps.deploy.k8s import helm
-from ....steps.deploy.k8s.rancher import cluster_config, rancher_namespace_metadata
+from ....steps.deploy.k8s.rancher import cluster_config, rancher_namespace_metadata, ClusterConfig
 
 
 def get_namespace(run_properties: RunProperties, project: Project) -> Optional[str]:
@@ -46,11 +46,11 @@ def upsert_namespace(logger: Logger, step_input: Input, context: str):
 
 
 def deploy_helm_chart(logger: Logger, chart: dict[str, CustomResourceDefinition], step_input: Input,
+                      target_cluster: ClusterConfig,
                       release_name: str, delete_existing: bool = False) -> Output:
-    context = cluster_config(step_input).context
-    namespace = upsert_namespace(logger, step_input, context)
+    namespace = upsert_namespace(logger, step_input, target_cluster.context)
 
-    return helm.install(logger, chart, step_input, release_name, namespace, context, delete_existing)
+    return helm.install(logger, chart, step_input, release_name, namespace, target_cluster.context, delete_existing)
 
 
 def substitute_namespaces(env_vars: dict[str, str], all_projects: set[ProjectName],

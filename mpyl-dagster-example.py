@@ -13,8 +13,9 @@ ROOT_PATH = './'
 
 def execute_step(proj: Project, stage: Stage, dry_run: bool = True) -> StepResult:
     config = parse_config(Path(f"{ROOT_PATH}mpyl_config.yml"))
-    with Repository(RepoConfig(config)) as repo:
-        run_properties = RunProperties.for_local_run(config=config, revision=repo.get_sha, branch=repo.get_branch)
+    with Repository(RepoConfig.from_config(config)) as repo:
+        run_properties = RunProperties.for_local_run(config=config, revision=repo.get_sha, branch=repo.get_branch,
+                                                     tag=None)
     dagster_logger = get_dagster_logger()
     executor = Steps(dagster_logger, run_properties)
     step_result = executor.execute(stage, proj, dry_run)
@@ -53,7 +54,7 @@ def deploy_projects(context, projects: list[Project], outputs: list[StepResult])
 
 def find_projects(stage: Stage) -> list[DynamicOutput[Project]]:
     yaml_values = parse_config(Path(f"{ROOT_PATH}mpyl_config.yml"))
-    with Repository(RepoConfig(yaml_values)) as repo:
+    with Repository(RepoConfig.from_config(yaml_values)) as repo:
         changes_in_branch = repo.changes_in_branch_including_local()
         project_paths = repo.find_projects()
     all_projects = set(map(lambda p: load_project(Path("."), Path(p), strict=False), project_paths))

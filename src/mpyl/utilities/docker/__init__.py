@@ -5,13 +5,15 @@ import shlex
 from dataclasses import dataclass
 from itertools import tee
 from logging import Logger
+from traceback import print_exc
 from typing import Dict, Optional, Iterator, cast, Union
 import shutil
 from pathlib import Path
-from python_on_whales import docker, Image, Container
+from python_on_whales import docker, Image, Container, DockerException
 from python_on_whales.exceptions import NoSuchContainer
 from rich.text import Text
 
+from ..logging import try_parse_ansi
 from ...project import Project
 from ...steps.models import Input
 
@@ -78,7 +80,7 @@ def stream_docker_logging(logger: Logger, generator: Union[Iterator[str], Iterat
             next_item = next(generator)
             log_line = next_item[1].decode(errors="replace") if isinstance(next_item, tuple) else next_item
             copied_logs.append(log_line)
-            logger.log(level, Text.from_ansi(log_line))
+            logger.log(level, try_parse_ansi(log_line))
         except StopIteration:
             logger.info(f'{task_name} complete.')
             return copied_logs
@@ -86,7 +88,7 @@ def stream_docker_logging(logger: Logger, generator: Union[Iterator[str], Iterat
 
 def docker_image_tag(step_input: Input):
     git = step_input.run_properties.versioning
-    tag = f"pr-{git.pr_number}" if git.pr_number else git.tag
+    tag = git.tag if git.tag else f"pr-{git.pr_number}"
     return f"{step_input.project.name.lower()}:{tag}".replace('/', '_')
 
 
@@ -131,12 +133,22 @@ def build(logger: Logger, root_path: str, file_path: str, image_tag: str, target
     """
     logger.info(f"Building docker image with {file_path} and target {target}")
 
-    logs = docker.buildx.build(context_path=root_path, file=file_path, tags=[image_tag], target=target,
-                               stream_logs=True)
-    if logs is not None and not isinstance(logs, Image):
-        stream_docker_logging(logger=logger, generator=logs, task_name=f'Build {file_path}:{target}')
-    logger.debug(logs)
-    return True
+    try:
+        logs = docker.buildx.build(context_path=root_path, file=file_path, tags=[image_tag], target=target,
+                                   stream_logs=True)
+        if logs is not None and not isinstance(logs, Image):
+            stream_docker_logging(logger=logger, generator=logs, task_name=f'Build {file_path}:{target}')
+        logger.debug(logs)
+        return True
+
+    except DockerException as exc:
+        command = " ".join(exc.docker_command)
+        logger.warning(f"Docker build failed with command {command} and exit code {exc.return_code}")
+        return False
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        print(f"Docker build failed with {exc.__class__.__name__}")
+        print_exc()
+        return False
 
 
 def login(logger: Logger, docker_config: DockerConfig) -> None:

@@ -27,7 +27,8 @@ def main(log: Logger, args: argparse.Namespace):
             tag=args.tag,
             pull_main=True,
             verbose=args.verbose,
-            all=args.all
+            all=args.all,
+            target=run_properties.target.value
         )
     )
     check = None
@@ -52,13 +53,19 @@ def main(log: Logger, args: argparse.Namespace):
             compose_function=compose_build_status,
         )
         slack_channel = SlackReporter(
-            config,
-            '#project-mpyl-notifications',
-            f'MPyL test {run_properties.versioning.identifier}'
+            config=config,
+            channel='#project-mpyl-notifications',
+            versioning_identifier=run_properties.versioning.identifier,
+            target=run_properties.target
         )
 
         if run_properties.details.user_email:
-            slack_personal = SlackReporter(config, None, f'MPyL test {run_properties.versioning.identifier}')
+            slack_personal = SlackReporter(
+                config=config,
+                channel=None,
+                versioning_identifier=run_properties.versioning.identifier,
+                target=run_properties.target
+            )
 
         jira = JiraReporter(config=config, branch=run_properties.versioning.branch, logger=log)
         accumulator.add(check.send_report(RunResult(run_properties=run_properties, run_plan={})))

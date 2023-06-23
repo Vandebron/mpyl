@@ -3,11 +3,11 @@ import re
 from logging import Logger
 from typing import Optional
 
-from .k8s import deploy_helm_chart, CustomResourceDefinition
+from .k8s import deploy_helm_chart, CustomResourceDefinition, cluster_config
 from .k8s.chart import ChartBuilder, to_service_chart
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType, input_to_artifact
-from ...project import Stage
+from ...project import Stage, Target
 from ...stages.discovery import find_deploy_set
 from ...utilities.repo import RepoConfig
 
@@ -39,10 +39,13 @@ class DeployKubernetes(Step):
         return None
 
     def execute(self, step_input: Input) -> Output:
-        builder = ChartBuilder(step_input, find_deploy_set(RepoConfig.from_config(step_input.run_properties.config)))
+        properties = step_input.run_properties
+        builder = ChartBuilder(step_input, find_deploy_set(repo_config=RepoConfig.from_config(properties.config),
+                                                           tag=step_input.run_properties.versioning.tag))
         chart = to_service_chart(builder)
 
-        deploy_result = deploy_helm_chart(self._logger, chart, step_input, builder.release_name)
+        target_cluster = cluster_config(properties.target, properties)
+        deploy_result = deploy_helm_chart(self._logger, chart, step_input, target_cluster, builder.release_name)
         if deploy_result.success:
             hostname = self.try_extract_hostname(chart)
             spec = {}
@@ -53,6 +56,16 @@ class DeployKubernetes(Step):
                 endpoint = '/' if has_specific_routes_configured else '/swagger/index.html'
                 spec[DEPLOYED_SERVICE_KEY] = f'{hostname}{endpoint}'
             artifact = input_to_artifact(ArtifactType.DEPLOYED_HELM_APP, step_input, spec=spec)
+            if properties.target == Target.PRODUCTION:
+                self._logger.info(
+                    f"Release to production successful, updating base images in {Target.PULL_REQUEST_BASE} "
+                    f"to make sure the Test environment is in sync with production")
+                target_cluster = cluster_config(Target.PRODUCTION, properties)
+                deploy_to_prod_result = deploy_helm_chart(self._logger, chart, step_input, target_cluster,
+                                                          builder.release_name)
+                return Output(success=True, message=deploy_result.message + '\n' + deploy_to_prod_result.message,
+                              produced_artifact=artifact)
+
             return Output(success=True, message=deploy_result.message, produced_artifact=artifact)
 
         return deploy_result
