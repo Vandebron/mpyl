@@ -703,6 +703,36 @@ def _to_service_components_chart(builder):
     return common_chart | prometheus_chart
 
 
+
+def to_dagster_user_code_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
+    # TODO do usercode charts need the common chart attributes?
+    # builder.to_common_chart() | {} | | builder.to_middlewares()
+    return builder.to_common_chart() | {
+        'deployments': __to_user_code_deployment()
+    }
+
+
+def __to_user_code_deployment():
+    return {
+        'dagsterApiGrpcArgs': [],
+        'envSecrets': [],
+        'image': {
+            'pullPolicy': 'Always',
+            'imagePullSecrets': [],
+            'tag': ''
+        },
+        'name': '',
+        'port': 3030
+    }
+
+def to_dagster_workspace_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
+    return builder.to_common_chart() | {
+        'deployment': builder.to_deployment(),
+        'service': builder.to_service(),
+        'ingress-https-route': builder.to_ingress_routes()
+    } | builder.to_middlewares()
+
+
 def to_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
     return builder.to_common_chart() | {"job": builder.to_job()}
 

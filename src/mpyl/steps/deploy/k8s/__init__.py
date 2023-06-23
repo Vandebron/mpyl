@@ -34,13 +34,13 @@ def rollout_restart_deployment(namespace: str, deployment: str):
     v1_apps = client.AppsV1Api()
 
     now = datetime.datetime.utcnow()
-    now = str(now.isoformat("T") + "Z")
+    now_str = now.isoformat("T") + "Z"
     body = {
         'spec': {
             'template': {
                 'metadata': {
                     'annotations': {
-                        'kubectl.kubernetes.io/restartedAt': now
+                        'kubectl.kubernetes.io/restartedAt': now_str
                     }
                 }
             }
