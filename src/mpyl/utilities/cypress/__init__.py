@@ -8,17 +8,15 @@ class CypressConfig:
     cypress_source_code_path: str
     kubectl_config_path: str
     record_key: Optional[str]
+    ci_build_id: str
 
     @staticmethod
     def from_config(config: dict):
-        cypress_config = config.get("cypress")
+        cypress_config = config.get('cypress')
         if not cypress_config:
-            raise KeyError("Cypress section needs to be defined in mpyl_config.yml")
+            raise KeyError('Cypress section needs to be defined in mpyl_config.yml')
 
-        return CypressConfig(
-            cypress_source_code_path=cypress_config.get("cypressSourceCodePath"),
-            record_key=cypress_config.get("recordKey"),
-            kubectl_config_path=cypress_config.get(
-                "kubectlConfigPath", "~/.kube/config"
-            ),
-        )
+        return CypressConfig(cypress_source_code_path=cypress_config.get('cypressSourceCodePath'),
+                             record_key=cypress_config.get('recordKey'),
+                             kubectl_config_path=cypress_config.get('kubectlConfigPath', '~/.kube/config'),
+                             ci_build_id=cypress_config.get('ciBuildId', 'local-1'))
