@@ -4,7 +4,7 @@ For _dockertest_ at _Stage.BUILD_
 ```
 Build failed
 ```
-🏗️  ~dockertest~, *test*  
-📋  *test*  
+🏗️ ~dockertest~, *test*  
+📋 *test*  
 🧪 51 ❌ 1 💔 0 🙈 0 <http://localhost/tests|Docker Test>  
-🚀  *<https://some.location.com|test>*  
+🚀 *<https://some.location.com|test>*  

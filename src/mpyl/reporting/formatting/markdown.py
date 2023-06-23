@@ -70,13 +70,13 @@ def markdown_for_stage(run_result: RunResult, stage: Stage):
     if not step_results and not plan:
         return ''
 
-    result = f"{stage_to_icon(stage)}  {__to_oneliner(step_results, plan)}  \n"
+    result = f"{stage_to_icon(stage)} {__to_oneliner(step_results, plan)}  \n"
     test_artifacts = _collect_test_artifacts(step_results)
     test_results = _collect_test_results(test_artifacts)
 
     if test_results:
         result += to_markdown_test_report(test_results)
-        unique_artifacts = _collection_unique_test_artifacts(test_artifacts)
+        unique_artifacts = _collect_unique_test_artifacts_with_url(test_artifacts)
 
         for unique_artifact in unique_artifacts:
             result += f' [{unique_artifact.spec[TEST_RESULTS_URL_NAME_KEY]}]' \
@@ -121,16 +121,16 @@ def _collect_test_results(test_artifacts: list[Artifact]) -> list[TestSuite]:
     return list(itertools.chain(*suites))
 
 
-def _collection_unique_test_artifacts(test_artifacts: list[Artifact]) -> list[Artifact]:
+def _collect_unique_test_artifacts_with_url(test_artifacts: list[Artifact]) -> list[Artifact]:
     unique_artifacts: list[Artifact] = []
     for test_artifact in test_artifacts:
-        duplicate_artifact = next((x for x in unique_artifacts if
-                                   x.spec.get(TEST_RESULTS_URL_KEY, '') == test_artifact.spec.get(TEST_RESULTS_URL_KEY,
-                                                                                                  '')), None)
-        if not duplicate_artifact:
-            test_artifact.spec[TEST_RESULTS_URL_NAME_KEY] = test_artifact.producing_step
-            unique_artifacts.append(test_artifact)
-        elif TEST_RESULTS_URL_NAME_KEY in duplicate_artifact.spec:
-            duplicate_artifact.spec[TEST_RESULTS_URL_NAME_KEY] = 'link'
+        if TEST_RESULTS_URL_KEY in test_artifact.spec and test_artifact.spec[TEST_RESULTS_URL_KEY] != '':
+            duplicate_artifact = next((x for x in unique_artifacts if
+                                       x.spec[TEST_RESULTS_URL_KEY] == test_artifact.spec[TEST_RESULTS_URL_KEY]), None)
+            if not duplicate_artifact:
+                test_artifact.spec[TEST_RESULTS_URL_NAME_KEY] = test_artifact.producing_step
+                unique_artifacts.append(test_artifact)
+            else:
+                duplicate_artifact.spec[TEST_RESULTS_URL_NAME_KEY] = 'link'
 
     return unique_artifacts

@@ -94,19 +94,17 @@ def docker_file_path(project: Project, docker_config: DockerConfig):
     return f'{project.deployment_path}/{docker_config.docker_file_name}'
 
 
-def docker_copy(logger: Logger, container_path: str, dst_path: str, image_name: str):
+def docker_copy(logger: Logger, container_path: str, dst_path: str, container: Container):
     """
     Copies the contents of the specified path within the container to a locally created destination
 
     :param logger: the logger
     :param container_path: the path of the directory in the container to copy
     :param dst_path: the path to copy the container content to
-    :param image_name: the name of the docker image which a container is created from
+    :param container: the container to copy from
     """
     shutil.rmtree(dst_path, ignore_errors=True)
     Path(dst_path).mkdir(parents=True, exist_ok=True)
-
-    container = docker.create(image_name)
 
     if not docker.container.exists(container.id):
         raise ValueError(f'Container {container.id} does not exist')
@@ -118,7 +116,7 @@ def docker_copy(logger: Logger, container_path: str, dst_path: str, image_name: 
     try:
         docker.copy(f'{container.id}:{container_path}', dst_path)
     except NoSuchContainer as exc:
-        logger.warning(f'Could not find data in container {image_name} at expected location {container_path}')
+        logger.warning(f'Could not find data in container {container.name} at expected location {container_path}')
         raise exc
 
 
@@ -146,3 +144,17 @@ def login(logger: Logger, docker_config: DockerConfig) -> None:
     docker.login(server=f'https://{docker_config.host_name}', username=docker_config.user_name,
                  password=docker_config.password)
     logger.debug(f"Logged in as '{docker_config.user_name}'")
+
+
+def create_container(logger: Logger, image_name: str) -> Container:
+    logger.info(f"Creating container from image {image_name}")
+    container = docker.create(image_name)
+    logger.info(f"Created container {container.id}")
+
+    return container
+
+
+def remove_container(logger: Logger, container: Container) -> None:
+    logger.info(f"Removing container {container.id}")
+    docker.remove(container.id)
+    logger.info(f"Removed container {container.id}")
