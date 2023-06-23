@@ -48,8 +48,8 @@ def rollout_restart_deployment(namespace: str, deployment: str):
     }
     try:
         v1_apps.patch_namespaced_deployment(deployment, namespace, body, pretty='true')
-    except ApiException as e:
-        print("Exception when calling AppsV1Api->read_namespaced_deployment_status: %s\n" % e)
+    except ApiException as api_exception:
+        print(f'Exception when calling AppsV1Api->read_namespaced_deployment_status: {api_exception}\n')
 
 
 def get_namespace_from_project(project: Project) -> Optional[str]:

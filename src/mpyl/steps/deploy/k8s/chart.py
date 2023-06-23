@@ -705,7 +705,7 @@ def _to_service_components_chart(builder):
 
 
 def to_dagster_user_code_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
-    # TODO do usercode charts need the common chart attributes?
+    # do usercode charts need the common chart attributes?
     # builder.to_common_chart() | {} | | builder.to_middlewares()
     return builder.to_common_chart() | {
         'deployments': __to_user_code_deployment()
