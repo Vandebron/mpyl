@@ -4,9 +4,8 @@ Step to deploy a dagster user code repository to k8s
 from logging import Logger
 
 from .k8s import helm, get_key_of_config_map, rollout_restart_deployment, cluster_config
-from .k8s.chart import ChartBuilder, to_dagster_user_code_chart
 from .. import Step, Meta, ArtifactType, Input, Output
-from ...project import Stage
+from ...project import Stage, Project
 from ...stages.discovery import find_deploy_set
 from ...utilities.repo import RepoConfig
 
@@ -20,6 +19,22 @@ class DeployDagster(Step):
             version='0.0.1',
             stage=Stage.DEPLOY
         ), produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.DOCKER_IMAGE)
+
+    def __to_user_code_deployment(self, project: Project):
+        return {
+            'dagsterApiGrpcArgs': [
+                "--python-file",
+                project.name
+            ],
+            'envSecrets': [],
+            'image': {
+                'pullPolicy': 'Always',
+                'imagePullSecrets': [],
+                'tag': ''
+            },
+            'name': project.name,  # make PR distinction
+            'port': 3030
+        }
 
     # Deploys the docker image produced in the build stage as a Dagster user-code-deployment
     def execute(self, step_input: Input) -> Output:
@@ -35,10 +50,13 @@ class DeployDagster(Step):
 
         helm.add_repo(self._logger, namespace, 'https://dagster-io.github.io/helm')
 
+        deploy_set = find_deploy_set(RepoConfig.from_config(step_input.run_properties.config))
+        print(deploy_set)
+        new_user_code_deployments = []
+        for project in deploy_set.projects_to_deploy:
+            new_user_code_deployments.append(self.__to_user_code_deployment(project))
+        new_user_code_deployment = new_user_code_deployments[0]
         # conversion of project.yml to user-code chart
-        builder = ChartBuilder(step_input, find_deploy_set(RepoConfig.from_config(step_input.run_properties.config)))
-        new_deployment = to_dagster_user_code_chart(builder)
-        print(new_deployment)
 
         # DagsterDeploy we Apply it and retrieve it again to make sure it has the last-applied-configuration annotation
         user_deployments = get_key_of_config_map(context, namespace, 'dagster-user-code', 'user-deployments.yaml')
@@ -49,26 +67,27 @@ class DeployDagster(Step):
 
         # merge usercode, maybe do a copy?
         if is_new_deployment:
-            user_code_deployments.append(new_deployment)
+            user_code_deployments.append(new_user_code_deployment)
         else:
-            for i, deployment in user_code_deployments:
-                if deployment['name'] == new_deployment['name']:
-                    user_code_deployments[i] = new_deployment
+            for i, deployment in enumerate(user_code_deployments):
+                if deployment['name'] == new_user_code_deployment['name']:
+                    user_code_deployments[i] = new_user_code_deployment
 
         # deploy_result = deploy_helm_chart(self._logger, chart, step_input, builder.release_name)
 
         if is_new_deployment:
-            rollout_restart_deployment(namespace, f"user-code-dagster-user-deployments-${new_deployment['name']}")
+            rollout_restart_deployment(namespace,
+                                       f"user-code-dagster-user-deployments-${new_user_code_deployment['name']}")
 
         # DagsterDeploy we Apply it and retrieve it again to make sure it has the last-applied-configuration annotation
         workspace = get_key_of_config_map(context, namespace, 'dagster-workspace-yaml', 'workspace.yaml')
         # workspace_names = [w['grpc_server'] for w in workspace['load_from']]
-        is_new_server = False  #
+        is_new_server = False  # new_user_code_deployment['name'] not in workspace_names
 
         if is_new_server:
             self._logger.info('Adding new server')
             new_workspace_servers_list = workspace['load_from']
-            new_workspace_servers_list.append(new_deployment)
+            new_workspace_servers_list.append(new_user_code_deployment)
 
             rollout_restart_deployment(namespace, "dagster-dagit")
             rollout_restart_deployment(namespace, "dagster-daemon")
