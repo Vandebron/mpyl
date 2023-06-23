@@ -23,7 +23,7 @@ class CypressTest(Step):
             stage=Stage.POST_DEPLOY
         ), produced_artifact=ArtifactType.JUNIT_TESTS, required_artifact=ArtifactType.NONE)
 
-    def execute(self, step_input: Input) -> Output:
+    def execute(self, step_input: Input) -> Output:  # pylint: disable=too-many-locals
         if step_input.run_properties.target == Target.PRODUCTION:
             return Output(success=True, message="Cypress tests are not run on production")
 
