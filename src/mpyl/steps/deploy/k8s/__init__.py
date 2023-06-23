@@ -1,9 +1,12 @@
 """Kubernetes deployment related helper methods"""
+import datetime
 from logging import Logger
 from pathlib import Path
 from typing import Optional
 
+import yaml
 from kubernetes import config, client
+from kubernetes.client import V1ConfigMap, ApiException
 
 from .helm import write_helm_chart
 from ...deploy.k8s.resources import CustomResourceDefinition
@@ -24,6 +27,29 @@ def get_namespace(run_properties: RunProperties, project: Project) -> str:
         return run_properties.versioning.identifier
 
     return get_namespace_from_project(project) or project.name
+
+
+def rollout_restart_deployment(namespace: str, deployment: str):
+    # from https://stackoverflow.com/a/67491253
+    v1_apps = client.AppsV1Api()
+
+    now = datetime.datetime.utcnow()
+    now = str(now.isoformat("T") + "Z")
+    body = {
+        'spec': {
+            'template': {
+                'metadata': {
+                    'annotations': {
+                        'kubectl.kubernetes.io/restartedAt': now
+                    }
+                }
+            }
+        }
+    }
+    try:
+        v1_apps.patch_namespaced_deployment(deployment, namespace, body, pretty='true')
+    except ApiException as e:
+        print("Exception when calling AppsV1Api->read_namespaced_deployment_status: %s\n" % e)
 
 
 def get_namespace_from_project(project: Project) -> Optional[str]:
@@ -55,6 +81,13 @@ def upsert_namespace(
         )
     else:
         logger.info(f"Found namespace {namespace}")
+
+
+def get_key_of_config_map(namespace: str, config_map_name: str, key: str):
+    api = client.CoreV1Api()
+    user_code_config_map: V1ConfigMap = api.read_namespaced_config_map(config_map_name, namespace)
+
+    return yaml.safe_load(user_code_config_map.data[key])
 
 
 def deploy_helm_chart(
