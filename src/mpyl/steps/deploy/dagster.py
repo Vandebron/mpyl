@@ -37,9 +37,8 @@ class DeployDagster(Step):
 
         # conversion of project.yml to user-code chart
         builder = ChartBuilder(step_input, find_deploy_set(RepoConfig.from_config(step_input.run_properties.config)))
-        chart = to_dagster_user_code_chart(builder)
-        print(chart)
-        new_deployment: dict = {}
+        new_deployment = to_dagster_user_code_chart(builder)
+        print(new_deployment)
 
         # DagsterDeploy we Apply it and retrieve it again to make sure it has the last-applied-configuration annotation
         user_deployments = get_key_of_config_map(context, namespace, 'dagster-user-code', 'user-deployments.yaml')
@@ -64,7 +63,7 @@ class DeployDagster(Step):
         # DagsterDeploy we Apply it and retrieve it again to make sure it has the last-applied-configuration annotation
         workspace = get_key_of_config_map(context, namespace, 'dagster-workspace-yaml', 'workspace.yaml')
         # workspace_names = [w['grpc_server'] for w in workspace['load_from']]
-        is_new_server = False  # new_deployment['name'] not in workspace_names
+        is_new_server = False  #
 
         if is_new_server:
             self._logger.info('Adding new server')
