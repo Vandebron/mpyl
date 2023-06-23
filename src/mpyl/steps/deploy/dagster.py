@@ -51,7 +51,7 @@ class DeployDagster(Step):
         helm.add_repo(self._logger, namespace, 'https://dagster-io.github.io/helm')
 
         deploy_set = find_deploy_set(RepoConfig.from_config(step_input.run_properties.config))
-        print(deploy_set)
+        print(deploy_set.projects_to_deploy)
         new_user_code_deployments = []
         for project in deploy_set.projects_to_deploy:
             new_user_code_deployments.append(self.__to_user_code_deployment(project))
