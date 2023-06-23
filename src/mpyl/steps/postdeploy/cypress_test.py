@@ -72,13 +72,14 @@ class CypressTest(Step):
             execute_with_stream(logger=self._logger, container=docker_container, command=f"rm -rf {reports_folder}",
                                 task_name="Remove old report files")
 
+            ci_build_id = f"{cypress_config.ci_build_id}-{step_input.project.name}"
             run_command = f'bash -c "yarn cypress run --spec {specs_string} --ci-build-id ' \
-                          f'{cypress_config.ci_build_id} --parallel --reporter-options ' \
+                          f'{ci_build_id} --parallel --reporter-options ' \
                           f'mochaFile="{reports_folder}/[hash].xml" || true"'
             record_key = cypress_config.record_key
             if record_key:
                 run_command = f'bash -c "yarn cypress run --spec {specs_string} --ci-build-id ' \
-                              f'{cypress_config.ci_build_id} --parallel --reporter-options ' \
+                              f'{ci_build_id} --parallel --reporter-options ' \
                               f'"mochaFile={reports_folder}/[hash].xml" --record --key ' \
                               f'b6a2aab1-0b80-4ca0-a56c-1c8d98a8189c || true "'
 
