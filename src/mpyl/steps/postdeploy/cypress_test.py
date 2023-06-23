@@ -47,8 +47,9 @@ class CypressTest(Step):
         if not isinstance(docker_container, Container):
             raise TypeError("Docker run command should return a container")
 
+        reports_folder = f"reports/{step_input.project.name}"
         artifact = input_to_artifact(artifact_type=ArtifactType.JUNIT_TESTS, step_input=step_input,
-                                     spec={TEST_OUTPUT_PATH_KEY: f"{volume_path}/reports/{step_input.project.name}",
+                                     spec={TEST_OUTPUT_PATH_KEY: f"{volume_path}/{reports_folder}",
                                            TEST_RESULTS_URL_KEY: ''})
 
         try:
@@ -68,8 +69,6 @@ class CypressTest(Step):
                                 task_name="Verifying cypress")
             execute_with_stream(logger=self._logger, container=docker_container, command="yarn tsc",
                                 task_name="Compiling typescript")
-
-            reports_folder = f"reports/{step_input.project.name}"
             execute_with_stream(logger=self._logger, container=docker_container, command=f"rm -rf {reports_folder}",
                                 task_name="Remove old report files")
 
