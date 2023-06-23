@@ -19,4 +19,4 @@ class CypressConfig:
         return CypressConfig(cypress_source_code_path=cypress_config.get('cypressSourceCodePath'),
                              record_key=cypress_config.get('recordKey'),
                              kubectl_config_path=cypress_config.get('kubectlConfigPath', '~/.kube/config'),
-                             ci_build_id=cypress_config.get('ciBuildId', 'local-1'))
+                             ci_build_id=cypress_config.get('ciBuildId', 'local-1').replace(" ", ""))
