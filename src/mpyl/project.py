@@ -41,6 +41,9 @@ class Target(Enum):
     def __eq__(self, other):
         return self.value == other.value
 
+    def __str__(self):
+        return str(self.value)
+
     PULL_REQUEST = 'PullRequest'
     PULL_REQUEST_BASE = 'PullRequestBase'
     ACCEPTANCE = 'Acceptance'
