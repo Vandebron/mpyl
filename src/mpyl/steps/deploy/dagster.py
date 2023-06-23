@@ -3,7 +3,7 @@ Step to deploy a dagster user code repository to k8s
 """
 from logging import Logger
 
-from .k8s import helm, get_key_of_config_map, rollout_restart_deployment
+from .k8s import helm, get_key_of_config_map, rollout_restart_deployment, cluster_config
 from .k8s.chart import ChartBuilder, to_dagster_user_code_chart
 from .. import Step, Meta, ArtifactType, Input, Output
 from ...project import Stage
@@ -24,6 +24,7 @@ class DeployDagster(Step):
     # Deploys the docker image produced in the build stage as a Dagster user-code-deployment
     def execute(self, step_input: Input) -> Output:
         namespace = 'dagster'
+        context = cluster_config(step_input).context
 
         # get dagster version command
         version = '1.3.10'
@@ -41,7 +42,7 @@ class DeployDagster(Step):
         new_deployment: dict = {}
 
         # DagsterDeploy we Apply it and retrieve it again to make sure it has the last-applied-configuration annotation
-        user_deployments = get_key_of_config_map(namespace, 'dagster-user-code', 'user-deployments.yaml')
+        user_deployments = get_key_of_config_map(context, namespace, 'dagster-user-code', 'user-deployments.yaml')
         user_code_deployments = user_deployments['deployments']
         # deployment_names = [u['name'] for u in user_code_deployments]
 
@@ -61,7 +62,7 @@ class DeployDagster(Step):
             rollout_restart_deployment(namespace, f"user-code-dagster-user-deployments-${new_deployment['name']}")
 
         # DagsterDeploy we Apply it and retrieve it again to make sure it has the last-applied-configuration annotation
-        workspace = get_key_of_config_map(namespace, 'dagster-workspace-yaml', 'workspace.yaml')
+        workspace = get_key_of_config_map(context, namespace, 'dagster-workspace-yaml', 'workspace.yaml')
         # workspace_names = [w['grpc_server'] for w in workspace['load_from']]
         is_new_server = False  # new_deployment['name'] not in workspace_names
 

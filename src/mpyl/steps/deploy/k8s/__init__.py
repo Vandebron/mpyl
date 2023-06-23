@@ -83,7 +83,8 @@ def upsert_namespace(
         logger.info(f"Found namespace {namespace}")
 
 
-def get_key_of_config_map(namespace: str, config_map_name: str, key: str):
+def get_key_of_config_map(context: str, namespace: str, config_map_name: str, key: str):
+    config.load_kube_config(context=context)
     api = client.CoreV1Api()
     user_code_config_map: V1ConfigMap = api.read_namespaced_config_map(config_map_name, namespace)
 
