@@ -1,5 +1,5 @@
 """ Step that runs relevant cypress tests in the post deploy stage """
-
+import multiprocessing
 import os
 
 from concurrent.futures import ThreadPoolExecutor
@@ -32,7 +32,7 @@ class CypressTest(Step):
         volume_path = os.path.join(os.getcwd(), cypress_config.cypress_source_code_path)
 
         if step_input.project.dependencies and step_input.project.dependencies.postdeploy:
-            specs_string = ', '.join(step_input.project.dependencies.postdeploy)
+            specs_string = ','.join(step_input.project.dependencies.postdeploy)
         else:
             raise ValueError("No cypress specs are defined in the project dependencies")
 
@@ -72,12 +72,11 @@ class CypressTest(Step):
             execute_with_stream(logger=self._logger, container=docker_container, command=f"rm -rf {reports_folder}",
                                 task_name="Remove old report files")
 
-            ci_build_id = f"{cypress_config.ci_build_id}-{step_input.project.name}"
-            run_command = f'bash -c "yarn cypress run --spec {specs_string} --ci-build-id ' \
-                          f'{ci_build_id} --parallel --reporter-options ' \
+            run_command = f'bash -c "yarn cypress run --spec {specs_string} --reporter-options ' \
                           f'mochaFile="{reports_folder}/[hash].xml" || true"'
             record_key = cypress_config.record_key
             if record_key:
+                ci_build_id = f"{cypress_config.ci_build_id}-{step_input.project.name}"
                 run_command = f'bash -c "yarn cypress run --spec {specs_string} --ci-build-id ' \
                               f'{ci_build_id} --parallel --reporter-options ' \
                               f'"mochaFile={reports_folder}/[hash].xml" --record --key ' \
@@ -87,12 +86,13 @@ class CypressTest(Step):
                 return execute_with_stream(logger=self._logger, container=docker_container, command=run_command,
                                            task_name="Running cypress tests")
 
-            executor = ThreadPoolExecutor(max_workers=4)
+            print('-------- number of cpus: ', os.cpu_count())
+            print('-------- number of cpus: ', multiprocessing.cpu_count())
+            executor = ThreadPoolExecutor(max_workers=3)
             thread1 = executor.submit(run_tests)
             thread2 = executor.submit(run_tests)
             thread3 = executor.submit(run_tests)
-            thread4 = executor.submit(run_tests)
-            result: list[str] = thread1.result() + thread2.result() + thread3.result() + thread4.result()
+            result: list[str] = thread1.result() + thread2.result() + thread3.result()
 
             for stdout in result:
                 if record_key and "Recorded Run" in stdout:
