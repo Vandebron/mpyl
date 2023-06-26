@@ -70,12 +70,12 @@ from ..project import Stage
 
 
 class IPluginRegistry(type):
-    plugin_registries: List[type] = []
+    plugins: List[type] = []
 
     def __init__(cls, name, _bases, _attrs):
         super().__init__(cls)
         if name != 'Step':
-            IPluginRegistry.plugin_registries.append(cls)
+            IPluginRegistry.plugins.append(cls)
 
 
 @dataclass(frozen=True)
