@@ -5,91 +5,155 @@ on:
     branches-ignore: [ 'main' ]
 
 jobs:
-  Build_Package:
+  Lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
-      id: cache-dependencies
-      with:
-        python-version: '3.9'
-        cache: 'pipenv'
-        cache-dependency-path: |
-          Pipfile.lock
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        id: cache-dependencies
+        with:
+          python-version: '3.9'
+          cache: 'pipenv'
+          cache-dependency-path: |
+            Pipfile.lock
 
-    - name: Install pipenv
-      run: pip install pipenv
+      - name: Install pipenv
+        run: pip install pipenv
 
-    - name: Install dependencies
-      if: steps.cache-dependencies.outputs.cache-hit != 'true'
-      run: pipenv install -d --deploy
+      - name: Install dependencies
+        if: steps.cache-dependencies.outputs.cache-hit != 'true'
+        run: pipenv install -d --deploy
 
-    - name: Run lint
-      run: pipenv run lint
+      - name: Run lint
+        run: pipenv run lint
 
-    - name: Install Types
-      if: steps.cache-dependencies.outputs.cache-hit != 'true'
-      run: pipenv run install-types
+  TypeCheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        id: cache-dependencies
+        with:
+          python-version: '3.9'
+          cache: 'pipenv'
+          cache-dependency-path: |
+            Pipfile.lock
 
-    - name: Validate Types
-      run: pipenv run check-types
+      - name: Install pipenv
+        run: pip install pipenv
 
-    - name: Test
-      run: pipenv run test-ci
+      - name: Install dependencies
+        if: steps.cache-dependencies.outputs.cache-hit != 'true'
+        run: pipenv install -d --deploy
 
-    - name: Validate Config Example
-      run: pipenv run validate-config-example
+      - name: Run lint
+        run: pipenv run lint
 
-    - name: Coverage to xml
-      run: pipenv run test-ci-coverage
+  Test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        id: cache-dependencies
+        with:
+          python-version: '3.9'
+          cache: 'pipenv'
+          cache-dependency-path: |
+            Pipfile.lock
 
-    - name: Code Coverage Report
-      uses: irongut/CodeCoverageSummary@v1.3.0
-      with:
-        filename: build/coverage.xml
-        badge: true
-        fail_below_min: true
-        format: markdown
-        hide_branch_rate: false
-        hide_complexity: true
-        indicators: true
-        output: both
-        thresholds: '70 99'
+      - name: Install pipenv
+        run: pip install pipenv
 
-    - name: Find PR number
-      uses: jwalton/gh-find-current-pr@v1
-      id: findPr
-      if: github.ref_name != 'main'
-      with:
-        state: open
+      - name: Install dependencies
+        if: steps.cache-dependencies.outputs.cache-hit != 'true'
+        run: pipenv install -d --deploy
 
-    - name: Add Coverage PR Comment
-      uses: marocchino/sticky-pull-request-comment@v2
-      with:
-        number: ${{ steps.findPr.outputs.pr }}
-        path: code-coverage-results.md
+      - name: Test
+        run: pipenv run test-ci
 
-    - name: Build
-      if: github.ref_name != 'main'
-      env:
-        PIPENV_DONT_LOAD_ENV: true
-        MPYL_VERSION: "${{ steps.findPr.outputs.pr }}.${{ github.run_number }}"
-      run: pipenv run build
+      - name: Validate Config Example
+        run: pipenv run validate-config-example
 
-    - name: Publish package
-      id: publish
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
-      run: pipenv run publish
+      - name: Coverage to xml
+        run: pipenv run test-ci-coverage
 
-    - name: Comment Published package
-      uses: thollander/actions-comment-pull-request@v2
-      if: success()
-      with:
-        pr_number: ${{ steps.findPr.outputs.pr }}
-        message: |
-          New release `${{ steps.findPr.outputs.pr }}.${{ github.run_number }}` deployed at [Test Pypi](https://test.pypi.org/project/mpyl/)
-        reactions: rocket
-        comment_tag: execution
+      - name: Code Coverage Report
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: build/coverage.xml
+          badge: true
+          fail_below_min: true
+          format: markdown
+          hide_branch_rate: false
+          hide_complexity: true
+          indicators: true
+          output: both
+          thresholds: '70 99'
+
+      - name: Find PR number
+        uses: jwalton/gh-find-current-pr@v1
+        id: findPr
+        if: github.ref_name != 'main'
+        with:
+          state: open
+
+      - name: Add Coverage PR Comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          number: ${{ steps.findPr.outputs.pr }}
+          path: code-coverage-results.md
+
+  Deploy:
+    runs-on: ubuntu-latest
+    needs: [Lint, TypeCheck, Test]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        id: cache-dependencies
+        with:
+          python-version: '3.9'
+          cache: 'pipenv'
+          cache-dependency-path: |
+            Pipfile.lock
+
+      - name: Install pipenv
+        run: pip install pipenv
+
+      - name: Install dependencies
+        if: steps.cache-dependencies.outputs.cache-hit != 'true'
+        run: pipenv install -d --deploy
+
+      - name: Find PR number
+        uses: jwalton/gh-find-current-pr@v1
+        id: findPr
+        if: github.ref_name != 'main'
+        with:
+          state: open
+
+      - name: Build
+        if: github.ref_name != 'main'
+        env:
+          PIPENV_DONT_LOAD_ENV: true
+          MPYL_VERSION: "${{ steps.findPr.outputs.pr }}.${{ github.run_number }}"
+        run: pipenv run build
+
+      - name: Publish package
+        id: publish
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+          TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
+        run: pipenv run publish
+
+      - name: Comment Published package
+        uses: thollander/actions-comment-pull-request@v2
+        if: success()
+        with:
+          pr_number: ${{ steps.findPr.outputs.pr }}
+          message: |
+            New release `${{ steps.findPr.outputs.pr }}.${{ github.run_number }}` deployed at [Test Pypi](https://test.pypi.org/project/mpyl/)
+          reactions: rocket
+          comment_tag: execution
+
+      - name: Report deployed pacakge
+        run: echo '### New release! 🚀`${{ steps.findPr.outputs.pr }}.${{ github.run_number }}` deployed at [Test Pypi](https://test.pypi.org/project/mpyl/)' >> $GITHUB_STEP_SUMMARY
