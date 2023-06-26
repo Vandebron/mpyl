@@ -50,52 +50,46 @@ class StepResult:
     timestamp: datetime = datetime.now()
 
 
+class StepsCollection:
+    _step_executors: set[Step]
+
+    def __init__(self, logger: Logger) -> None:
+        self._step_executors = {
+            BuildEcho(logger),
+            BuildSbt(logger),
+            BuildDocker(logger),
+            TestEcho(logger),
+            TestSbt(logger),
+            TestDocker(logger),
+            CloudFrontKubernetesDeploy(logger),
+            DeployEcho(logger),
+            DeployKubernetes(logger),
+            DeployKubernetesJob(logger),
+            DeployKubernetesSparkJob(logger),
+            EphemeralDockerDeploy(logger),
+            CypressTest(logger)
+        }
+
+    def get_executor(self, stage: Stage, step_name: str) -> Optional[Step]:
+        executors = filter(lambda e: step_name == e.meta.name and e.meta.stage == stage, self._step_executors)
+        return next(executors, None)
+
+
 class Steps:
     """ Executor of individual steps within a pipeline. """
-    _step_executors: dict[Stage, set[Step]]
     _logger: Logger
     _properties: RunProperties
 
-    def __init__(self, logger: Logger, properties: RunProperties) -> None:
+    def __init__(self, logger: Logger, properties: RunProperties,
+                 steps_collection: Optional[StepsCollection] = None) -> None:
+        self._logger = logger
+        self._properties = properties
+        self._steps_collection = steps_collection or StepsCollection(logger)
+
         schema_dict = pkgutil.get_data(__name__, "../schema/mpyl_config.schema.yml")
 
         if schema_dict:
             validate(properties.config, schema_dict.decode('utf-8'))
-
-        self._logger = logger
-
-        self._step_executors: dict[Stage, set[Step]] = {
-            Stage.BUILD: {
-                BuildEcho(logger),
-                BuildSbt(logger),
-                BuildDocker(logger)
-            },
-            Stage.TEST: {
-                TestEcho(logger),
-                TestSbt(logger),
-                TestDocker(logger)
-            },
-            Stage.DEPLOY: {
-                CloudFrontKubernetesDeploy(logger),
-                DeployEcho(logger),
-                DeployKubernetes(logger),
-                DeployKubernetesJob(logger),
-                DeployKubernetesSparkJob(logger),
-                EphemeralDockerDeploy(logger)
-            },
-            Stage.POST_DEPLOY: {
-                CypressTest(logger)
-            }
-        }
-
-        self._properties = properties
-        for stage, steps in self._step_executors.items():
-            self._logger.debug(f"Registered executors for stage {stage.name}: "  # pylint: disable=E1101
-                               f"{[step.meta.name for step in steps]}")
-
-    def _find_executor(self, stage: Stage, step_name: str) -> Optional[Step]:
-        executors = filter(lambda e: e.meta.stage == stage and step_name == e.meta.name, self._step_executors[stage])
-        return next(executors, None)
 
     def _execute(self, executor: Step, project: Project, properties: RunProperties,
                  artifact: Optional[Artifact], dry_run: bool = False) -> Output:
@@ -151,7 +145,7 @@ class Steps:
         if invalid_maintainers:
             return invalid_maintainers
 
-        executor: Optional[Step] = self._find_executor(stage, stage_name)
+        executor: Optional[Step] = self._steps_collection.get_executor(stage, stage_name)
         if executor:
             try:
                 self._logger.info(f'Executing {stage} for {project.name}')
