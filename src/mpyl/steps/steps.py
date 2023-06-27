@@ -38,9 +38,6 @@ class StepResult:
     timestamp: datetime = datetime.now()
 
 
-
-
-
 class Steps:
     """ Executor of individual steps within a pipeline. """
     _logger: Logger
