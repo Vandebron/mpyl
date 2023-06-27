@@ -51,17 +51,11 @@ properties:
         description: defines the run properties
         type: object
         additionalProperties: false
-        required:
-          - deploy_target
         properties:
           deploy_target:
             description: The deploy target.
-            type: string
-            enum:
-              - 'PullRequest'
-              - 'PullRequestBase'
-              - 'Acceptance'
-              - 'Production'
+            type: ["string", "null"]
+            enum: [ null,  'PullRequest', 'PullRequestBase', 'Production' ]
       console:
         type: object
         additionalProperties: false
