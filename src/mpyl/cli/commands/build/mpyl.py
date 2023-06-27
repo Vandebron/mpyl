@@ -70,7 +70,6 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter
     console_properties = mpyl_run_parameters.run_config.run_properties.console
     console = Console(markup=False, width=None if params.local else console_properties.width, no_color=False,
                       log_path=False, color_system='256')
-    print(f"Logging properties: {console_properties}, console: {console}")
     logging.raiseExceptions = False
     logging.basicConfig(
         level="DEBUG" if params.verbose else console_properties.log_level, format=FORMAT, datefmt="[%X]",
