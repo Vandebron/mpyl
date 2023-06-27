@@ -10,20 +10,8 @@ from typing import Optional
 from ruamel.yaml import YAML  # type: ignore
 
 from . import Step
-from .build.dockerbuild import BuildDocker
-from .build.echo import BuildEcho
-from .build.sbt import BuildSbt
-from .deploy.cloudfront_kubernetes_deploy import CloudFrontKubernetesDeploy
-from .deploy.echo import DeployEcho
-from .deploy.ephemeral_docker_deploy import EphemeralDockerDeploy
-from .deploy.kubernetes import DeployKubernetes
-from .deploy.kubernetes_job import DeployKubernetesJob
-from .deploy.kubernetes_spark_job import DeployKubernetesSparkJob
+from .collection import StepsCollection
 from .models import Output, Input, RunProperties, ArtifactType, Artifact
-from .postdeploy.cypress_test import CypressTest
-from .test.dockertest import TestDocker
-from .test.echo import TestEcho
-from .test.sbt import TestSbt
 from ..project import Project
 from ..project import Stage
 from ..validation import validate
@@ -50,29 +38,7 @@ class StepResult:
     timestamp: datetime = datetime.now()
 
 
-class StepsCollection:
-    _step_executors: set[Step]
 
-    def __init__(self, logger: Logger) -> None:
-        self._step_executors = {
-            BuildEcho(logger),
-            BuildSbt(logger),
-            BuildDocker(logger),
-            TestEcho(logger),
-            TestSbt(logger),
-            TestDocker(logger),
-            CloudFrontKubernetesDeploy(logger),
-            DeployEcho(logger),
-            DeployKubernetes(logger),
-            DeployKubernetesJob(logger),
-            DeployKubernetesSparkJob(logger),
-            EphemeralDockerDeploy(logger),
-            CypressTest(logger)
-        }
-
-    def get_executor(self, stage: Stage, step_name: str) -> Optional[Step]:
-        executors = filter(lambda e: step_name == e.meta.name and e.meta.stage == stage, self._step_executors)
-        return next(executors, None)
 
 
 class Steps:
@@ -137,15 +103,15 @@ class Steps:
         return None
 
     def _execute_stage(self, stage: Stage, project: Project, dry_run: bool = False) -> Output:
-        stage_name = project.stages.for_stage(stage)
-        if stage_name is None:
+        step_name = project.stages.for_stage(stage)
+        if step_name is None:
             return Output(success=False, message=f"Stage '{stage.value}' not defined on project '{project.name}'")
 
         invalid_maintainers = self._validate_project_against_config(project)
         if invalid_maintainers:
             return invalid_maintainers
 
-        executor: Optional[Step] = self._steps_collection.get_executor(stage, stage_name)
+        executor: Optional[Step] = self._steps_collection.get_executor(stage, step_name)
         if executor:
             try:
                 self._logger.info(f'Executing {stage} for {project.name}')
@@ -172,9 +138,9 @@ class Steps:
                     f"failed with exception: {message}", exc_info=True)
                 raise ExecutionException(project.name, executor.meta.name, stage.name, message) from exc
         else:
-            self._logger.warning(f"No executor found for {stage_name} in stage {stage}")
+            self._logger.warning(f"No executor found for {step_name} in stage {stage}")
 
-        return Output(success=False, message=f"Executor '{stage_name}' for '{stage.value}' not known or registered")
+        return Output(success=False, message=f"Executor '{step_name}' for '{stage.value}' not known or registered")
 
     def execute(self, stage: Stage, project: Project, dry_run: bool = False) -> StepResult:
         """
