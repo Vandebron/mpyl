@@ -70,6 +70,8 @@ class Repository:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._repo.close()
+        if exc_val:
+            raise exc_val
         return self
 
     @property
