@@ -107,7 +107,7 @@ class RunProperties:
 
         return RunProperties(
             details=RunContext.from_configuration(build['run']),
-            target=Target(build['parameters']['deploy_target'] or Target.PULL_REQUEST.value),
+            target=Target(build['parameters'].get('deploy_target', None) or Target.PULL_REQUEST.value),
             versioning=versioning,
             config=config,
             console=console,
