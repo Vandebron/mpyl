@@ -72,7 +72,7 @@ s3:
   accessKeyId: !ENV ${AWS_ACCESS_KEY_ID:aws_access_key_id}
   secretAccessKey: !ENV ${AWS_SECRET_ACCESS_KEY:aws_secret_access_key}
 project: # default values
-  allowedMaintainers: [ 'Team1', 'Team2' ]
+  allowedMaintainers: [ 'Team1', 'Team2', 'MPyL' ]
   deployment:
     traefik:
       enabled: true

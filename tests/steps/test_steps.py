@@ -85,7 +85,7 @@ class TestSteps:
         result = self.executor.execute(stage=Stage.BUILD, project=project)
         assert result.output.success
         assert result.output.message == 'Built test'
-        assert result.output.produced_artifact is None
+        assert result.output.produced_artifact.artifact_type == ArtifactType.DOCKER_IMAGE
 
     def test_should_fail_if_executor_is_not_known(self):
         project = test_data.get_project_with_stages({'build': 'Unknown Build'})
