@@ -107,13 +107,15 @@ class SlackReporter(Reporter):
 
     def send_report(self, results: RunResult, text: Optional[str] = None) -> ReportOutcome:
         try:
-            user_info = self.__get_user_info(results.run_properties.details.user_email)
+            email = results.run_properties.details.user_email
+            user_info = self.__get_user_info(email)
 
             if not self._channel and user_info.initiator:
                 self._channel = self.__open_conversation_with_user(user_info.initiator)
 
             if not self._channel:
-                raise ValueError('Channel not explicitly set and initiator could not be determined')
+                return SlackOutcome(success=False, exception=ValueError(
+                    f'Channel not explicitly set and initiator for {email} could not be determined'))
 
             body = to_slack_markdown(text if text else run_result_to_markdown(results))
             blocks = self.__compose_blocks(results, body, user_info)
