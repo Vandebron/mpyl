@@ -4,11 +4,16 @@ from pathlib import Path
 
 import click
 import jsonschema
-from click import ParamType, BadParameter
+from click import ParamType
 from click.shell_completion import CompletionItem
 from rich.markdown import Markdown
 
-from . import CliContext, CONFIG_PATH_HELP, create_console_logger
+from . import (
+    CliContext,
+    CONFIG_PATH_HELP,
+    create_console_logger,
+    parse_config_from_supplied_location,
+)
 from .commands.projects.formatting import print_project
 from ..constants import DEFAULT_CONFIG_FILE_NAME
 from ..project import validate_project, load_project, Project
@@ -74,18 +79,7 @@ class ProjectPath(ParamType):
     name = "project_path"
 
     def shell_complete(self, ctx: click.Context, param, incomplete: str):
-        if (
-            not ctx.parent
-            or ctx.parent.params["config"] is None
-            or not Path(ctx.parent.params["config"]).exists()
-        ):
-            raise BadParameter(
-                "Either --config parameter must or MPYL_CONFIG_PATH env var must be set",
-                ctx=ctx,
-                param=param,
-            )
-
-        parsed_config = parse_config(ctx.parent.params["config"])
+        parsed_config = parse_config_from_supplied_location(ctx, param)
         repo = ctx.with_resource(
             Repository(config=RepoConfig.from_config(parsed_config))
         )

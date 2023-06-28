@@ -4,15 +4,19 @@ import importlib
 import logging
 from dataclasses import dataclass
 from importlib.metadata import version as version_meta
+from pathlib import Path
 from typing import Optional
 
 import aiohttp
+import click
 import requests
 from aiohttp import ClientConnectorError, ClientTimeout
+from click import BadParameter
 
 from rich.console import Console
 from rich.logging import RichHandler
 
+from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository
 
 CONFIG_PATH_HELP = (
@@ -85,3 +89,17 @@ def create_console_logger(local: bool, verbose: bool) -> Console:
         handlers=[RichHandler(markup=True, console=console, show_path=local)],
     )
     return console
+
+
+def parse_config_from_supplied_location(ctx: click.Context, param) -> dict[str, str]:
+    if (
+        not ctx.parent
+        or ctx.parent.params["config"] is None
+        or not Path(ctx.parent.params["config"]).exists()
+    ):
+        raise BadParameter(
+            "Either --config parameter must or MPYL_CONFIG_PATH env var must be set",
+            ctx=ctx,
+            param=param,
+        )
+    return parse_config(ctx.parent.params["config"])

@@ -7,7 +7,7 @@ When unit tests are run within a docker container the test results need to be wr
 This means that the test step _within the docker container_ should not return a system error.
 Otherwise, building of the container would stop and the test results would not be committed to a layer.
 
-The test results need to be writted  written to a folder named `$WORKDIR/target/test-reports/` for
+The test results need to be written to a folder named `$WORKDIR/target/test-reports/` for
 `TestDocker.extract_test_results` to find and extract them.
 
 
@@ -40,15 +40,14 @@ from ...utilities.junit import (
 
 class TestDocker(Step):
     def __init__(self, logger: Logger) -> None:
-        meta = Meta(
-            name="Docker Test",
-            description="Test docker image",
-            version="0.0.1",
-            stage=Stage.TEST,
-        )
         super().__init__(
             logger=logger,
-            meta=meta,
+            meta=Meta(
+                name="Docker Test",
+                description="Test docker image",
+                version="0.0.1",
+                stage=Stage.TEST,
+            ),
             produced_artifact=ArtifactType.JUNIT_TESTS,
             required_artifact=ArtifactType.NONE,
             before=IntegrationTestBefore(logger),

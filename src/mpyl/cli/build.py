@@ -6,7 +6,7 @@ from typing import Optional
 
 import click
 import questionary
-from click import ParamType, BadParameter
+from click import ParamType
 from click.shell_completion import CompletionItem
 from github import Github
 from github.GitRelease import GitRelease
@@ -14,7 +14,13 @@ from questionary import Choice
 from rich.console import Console
 from rich.markdown import Markdown
 
-from . import CliContext, CONFIG_PATH_HELP, check_updates, get_meta_version
+from . import (
+    CliContext,
+    CONFIG_PATH_HELP,
+    check_updates,
+    get_meta_version,
+    parse_config_from_supplied_location,
+)
 from . import create_console_logger
 from .commands.build.jenkins import JenkinsRunParameters, run_jenkins, get_token
 from .commands.build.mpyl import (
@@ -180,23 +186,13 @@ class Pipeline(ParamType):
     name = "pipeline"
 
     def shell_complete(self, ctx: click.Context, param, incomplete: str):
-        if (
-            not ctx.parent
-            or ctx.parent.params["config"] is None
-            or not Path(ctx.parent.params["config"]).exists()
-        ):
-            raise BadParameter(
-                "Either --config parameter must or MPYL_CONFIG_PATH env var must be set",
-                ctx=ctx,
-                param=param,
-            )
+        config: dict = parse_config_from_supplied_location(ctx, param)
 
-        config: dict = parse_config(ctx.parent.params["config"])
-        parsed_config: dict[str, str] = config["jenkins"]["pipelines"]
+        pipelines: dict[str, str] = config["jenkins"]["pipelines"]
 
         return [
             CompletionItem(value=pl[0], help=pl[1])
-            for pl in parsed_config.items()
+            for pl in pipelines.items()
             if incomplete in pl[0]
         ]
 
