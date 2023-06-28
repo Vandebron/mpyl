@@ -23,7 +23,7 @@ class CypressTest(Step):
             stage=Stage.POST_DEPLOY
         ), produced_artifact=ArtifactType.JUNIT_TESTS, required_artifact=ArtifactType.NONE)
 
-    def execute(self, step_input: Input) -> Output:  # pylint: disable=too-many-locals, too-many-branches
+    def execute(self, step_input: Input) -> Output:  # pylint: disable=too-many-locals
         if step_input.run_properties.target == Target.PRODUCTION:
             return Output(success=True, message="Cypress tests are not run on production")
 
@@ -36,42 +36,14 @@ class CypressTest(Step):
         else:
             raise ValueError("No cypress specs are defined in the project dependencies")
 
-        custom_image_tag = "mpyl/cypress"
-        docker.build(context_path=volume_path, tags=[custom_image_tag], file=f"{volume_path}/Dockerfile-mpyl")
-        docker_container = docker.run(image=custom_image_tag, interactive=True, detach=True,
-                                      volumes=[
-                                          (volume_path, "/cypress"),
-                                          (os.path.expanduser(cypress_config.kubectl_config_path), "/root/.kube/config")
-                                      ],
-                                      workdir="/cypress")
-        if not isinstance(docker_container, Container):
-            raise TypeError("Docker run command should return a container")
-
+        docker_container = self._get_docker_container(volume_path, cypress_config)
         reports_folder = f"reports/{step_input.project.name}"
         artifact = input_to_artifact(artifact_type=ArtifactType.JUNIT_TESTS, step_input=step_input,
                                      spec={TEST_OUTPUT_PATH_KEY: f"{volume_path}/{reports_folder}",
                                            TEST_RESULTS_URL_KEY: ''})
 
         try:
-            execute_with_stream(logger=self._logger, container=docker_container,
-                                command=f"rm -rf {reports_folder} dist", task_name="Remove old files")
-            execute_with_stream(logger=self._logger, container=docker_container,
-                                command='bash -c "cp cypress.env.json.example cypress.env.json && '
-                                        f"sed -i 's/acceptance/"
-                                        f"{CypressTest._target_to_test_target(step_input.run_properties.target)}"
-                                        f"/' cypress.env.json && "
-                                        f"sed -i 's/{{PR_NUMBER}}/{step_input.run_properties.versioning.pr_number}/' "
-                                        'cypress.env.json"',
-                                task_name="Preparing env file")
-            execute_with_stream(logger=self._logger, container=docker_container, command="yarn install",
-                                task_name="Running yarn install")
-            execute_with_stream(logger=self._logger, container=docker_container, command="yarn cypress install",
-                                task_name="Installing cypress")
-            execute_with_stream(logger=self._logger, container=docker_container, command="yarn cypress verify",
-                                task_name="Verifying cypress")
-            execute_with_stream(logger=self._logger, container=docker_container, command="yarn tsc",
-                                task_name="Compiling typescript")
-
+            self._run_container_preparation_steps(docker_container, step_input, reports_folder)
             record_key = cypress_config.record_key
             run_command = ''
 
@@ -113,6 +85,42 @@ class CypressTest(Step):
 
         return Output(success=True, message=f"Cypress tests for project {step_input.project.name} passed",
                       produced_artifact=artifact)
+
+    @staticmethod
+    def _get_docker_container(volume_path: str, cypress_config: CypressConfig) -> Container:
+        custom_image_tag = "mpyl/cypress"
+        docker.build(context_path=volume_path, tags=[custom_image_tag], file=f"{volume_path}/Dockerfile-mpyl")
+        docker_container = docker.run(image=custom_image_tag, interactive=True, detach=True,
+                                      volumes=[
+                                          (volume_path, "/cypress"),
+                                          (os.path.expanduser(cypress_config.kubectl_config_path), "/root/.kube/config")
+                                      ],
+                                      workdir="/cypress")
+        if not isinstance(docker_container, Container):
+            raise TypeError("Docker run command should return a container")
+
+        return docker_container
+
+    def _run_container_preparation_steps(self, docker_container: Container, step_input: Input,
+                                         reports_folder: str) -> None:
+        execute_with_stream(logger=self._logger, container=docker_container,
+                            command=f"rm -rf {reports_folder} dist", task_name="Remove old files")
+        execute_with_stream(logger=self._logger, container=docker_container,
+                            command='bash -c "cp cypress.env.json.example cypress.env.json && '
+                                    f"sed -i 's/acceptance/"
+                                    f"{CypressTest._target_to_test_target(step_input.run_properties.target)}"
+                                    f"/' cypress.env.json && "
+                                    f"sed -i 's/{{PR_NUMBER}}/{step_input.run_properties.versioning.pr_number}/' "
+                                    'cypress.env.json"',
+                            task_name="Preparing env file")
+        execute_with_stream(logger=self._logger, container=docker_container, command="yarn install",
+                            task_name="Running yarn install")
+        execute_with_stream(logger=self._logger, container=docker_container, command="yarn cypress install",
+                            task_name="Installing cypress")
+        execute_with_stream(logger=self._logger, container=docker_container, command="yarn cypress verify",
+                            task_name="Verifying cypress")
+        execute_with_stream(logger=self._logger, container=docker_container, command="yarn tsc",
+                            task_name="Compiling typescript")
 
     @staticmethod
     def _target_to_test_target(target: Target) -> str:
