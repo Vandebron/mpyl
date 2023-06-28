@@ -74,7 +74,7 @@ definitions:
         type: string
         description: 'Path to kubectl config file'
       ciBuildId:
-        type: string
+        type: [ string, null ]
         description: 'Build id for cypress dashboard'
     required:
       - cypressSourceCodePath
