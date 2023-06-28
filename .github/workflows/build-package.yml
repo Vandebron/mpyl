@@ -4,6 +4,14 @@ on:
     branches-ignore: [ 'main' ]
 
 jobs:
+  Formatting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: psf/black@stable
+        with:
+          options: "--check --diff"
+          src: "."
   Lint:
     runs-on: ubuntu-latest
     steps:
