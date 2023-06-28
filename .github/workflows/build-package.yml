@@ -46,8 +46,8 @@ jobs:
         if: steps.cache-dependencies.outputs.cache-hit != 'true'
         run: pipenv install -d --deploy
 
-      - name: Run lint
-        run: pipenv run lint
+      - name: Check types
+        run: pipenv run check-types
 
   Test:
     runs-on: ubuntu-latest
