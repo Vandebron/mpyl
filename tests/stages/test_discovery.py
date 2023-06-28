@@ -2,8 +2,8 @@ from pathlib import Path
 
 from ruamel.yaml import YAML
 
-from mpyl.constants import BUILD_ARTIFACTS_FOLDER
-from mpyl.steps import Output
+from src.mpyl.constants import BUILD_ARTIFACTS_FOLDER
+from src.mpyl.steps import Output
 from src.mpyl.project import Stage
 from src.mpyl.projects.find import load_projects
 from src.mpyl.stages.discovery import find_invalidated_projects_for_stage, output_invalidated

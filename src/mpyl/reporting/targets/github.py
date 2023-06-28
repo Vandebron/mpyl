@@ -76,7 +76,6 @@ class PullRequestReporter(Reporter):
         self.git_repository = Repository(RepoConfig.from_config(config))
         self.compose_function = compose_function
         self.update_strategy: GithubUpdateStategy = update_stategy
-
         self.body_separator = "----"
 
     def _get_pull_request(self, repo: GithubRepository, run_properties: RunProperties) -> Optional[PullRequest]:
@@ -95,7 +94,7 @@ class PullRequestReporter(Reporter):
 
     def _extract_pr_header(self, current_body: Optional[str]) -> str:
         body_header = current_body.split(self.body_separator)[0] if current_body else ""
-        return body_header.rstrip("\n") + f"\n{self.body_separator}\n"
+        return body_header.rstrip("\n") + f"\n\n{self.body_separator}\n"
 
     def _change_pr_body(self, pull_request: PullRequest, results: RunResult):
         pull_request.edit(
