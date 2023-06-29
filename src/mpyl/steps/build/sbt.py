@@ -1,7 +1,7 @@
 """ Step that builds a docker image from a project in a multi-project sbt. Assumes that the
 [sbt-docker](https://github.com/marcuslonnberg/sbt-docker) plugin is present.
 """
-
+import os
 from logging import Logger
 from typing import Optional
 
@@ -34,8 +34,14 @@ class BuildSbt(Step):
         image_name = docker_image_tag(step_input)
         command = self._construct_sbt_command(step_input, image_name)
 
+        self.logger(f'Walking to project at: {step_input.project.path}')
+        prev_dir = os.getcwd()
+        os.chdir(step_input.project.path)
+
         output = custom_check_output(self.logger, command=command)
         artifact = input_to_artifact(ArtifactType.DOCKER_IMAGE, step_input, {'image': image_name})
+
+        os.chdir(prev_dir)
         if output.success:
             return Output(success=True, message=f"Built {step_input.project.name}", produced_artifact=artifact)
 
