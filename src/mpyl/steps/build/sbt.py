@@ -34,7 +34,7 @@ class BuildSbt(Step):
         image_name = docker_image_tag(step_input)
         command = self._construct_sbt_command(step_input, image_name)
 
-        self.logger.info(f'Walking to project at: {step_input.project.root_path}')
+        self.logger.debug(f'Walking to project at: {step_input.project.root_path}')
         prev_dir = os.getcwd()
         os.chdir(step_input.project.root_path)
 
