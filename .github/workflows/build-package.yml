@@ -1,5 +1,4 @@
 name: build
-
 on:
   push:
     branches-ignore: [ 'main' ]
@@ -103,7 +102,7 @@ jobs:
           number: ${{ steps.findPr.outputs.pr }}
           path: code-coverage-results.md
 
-  Deploy:
+  Build_Package:
     runs-on: ubuntu-latest
     needs: [Lint, TypeCheck, Test]
     steps:
