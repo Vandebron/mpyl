@@ -76,7 +76,7 @@ def main(log: Logger, args: argparse.Namespace):
         accumulator.add(check.send_report(run_result))
         accumulator.add(slack_channel.send_report(run_result))
         if slack_personal:
-            accumulator.add(slack_personal.send_report(run_result))
+            slack_personal.send_report(run_result)
         accumulator.add(jira.send_report(run_result))
         accumulator.add(github_comment.send_report(run_result))
         if accumulator.failures:
