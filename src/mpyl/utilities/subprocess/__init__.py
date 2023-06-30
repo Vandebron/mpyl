@@ -36,9 +36,10 @@ def custom_check_output(logger: Logger, command: Union[str, list[str]], capture_
                     break
             success = process.wait() == 0
             if not success:
-                logger.warning(f"Subprocess failed: {process.stderr.read() if process.stderr else 'No stderr output'}")
+                logger.warning('Subprocess failed' + f' with {process.stderr.read()}' if process.stderr else "")
+                return Output(success=False, message='Subprocess failed')
 
-            return Output(success=success, message='Subprocess executed successfully')
+            return Output(success=True, message='Subprocess executed successfully')
 
 
     except subprocess.CalledProcessError as exc:
