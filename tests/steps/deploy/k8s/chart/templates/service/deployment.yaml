@@ -56,9 +56,9 @@ spec:
         imagePullPolicy: Always
         livenessProbe:
           failureThreshold: 99
-          grpc:
-            port: 123
-            service: grpcService
+#          grpc:
+#            port: 123
+#            service: grpcService
           httpGet:
             path: /health
             port: port-0
