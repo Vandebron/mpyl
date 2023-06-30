@@ -1,0 +1,9 @@
+!Output
+success: true
+message: Dry run. Not pushing nodeservice:TEST to acme.docker.com
+produced_artifact: !Artifact
+  artifact_type: !ArtifactType DOCKER_IMAGE-1
+  revision:
+  producing_step: After Docker Build
+  spec:
+    image: acme.docker.com/nodeservice:TEST

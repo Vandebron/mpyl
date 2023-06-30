@@ -1,0 +1,10 @@
+!Output
+success: true
+message: Tests results produced for nodeservice (TestRunSummary(tests=1, failures=0,
+  errors=0, skipped=0))
+produced_artifact: !Artifact
+  artifact_type: !ArtifactType JUNIT_TESTS-2
+  revision:
+  producing_step: nodeservice
+  spec:
+    test_output_path: tests/projects/service/deployment/.mpyl/test_results

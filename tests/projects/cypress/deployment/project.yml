@@ -1,8 +1,0 @@
-name: cypress
-maintainer: [ 'MPyL' ]
-description: 'Running of cypress tests'
-stages:
-  postdeploy: Cypress Test
-dependencies:
-  postdeploy:
-    - 'specs/*.js'
