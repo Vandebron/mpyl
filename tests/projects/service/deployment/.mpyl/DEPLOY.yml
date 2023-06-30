@@ -1,0 +1,9 @@
+!Output
+success: true
+message: Subprocess executed successfully
+produced_artifact: !Artifact
+  artifact_type: !ArtifactType DEPLOYED_HELM_APP-3
+  revision: e06a0a806855900ba98f029bc2b1b5cd2308c7a6
+  producing_step: nodeservice
+  spec:
+    url: https://nodeservice-152.test.nl/

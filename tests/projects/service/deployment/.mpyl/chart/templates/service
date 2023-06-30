@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    description: This is a test container. For testing the MPL pipelines, not to be
+      deployed anywhere.
+  labels:
+    name: nodeservice
+    app.kubernetes.io/version: pr-152
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: nodeservice
+    app.kubernetes.io/instance: nodeservice
+    maintainers: MPyL
+    maintainer: MPyL
+    version: pr-152
+    revision: e06a0a806855900ba98f029bc2b1b5cd2308c7a6
+  name: nodeservice
+spec:
+  ports:
+  - name: 8081-webservice-port
+    port: 8081
+    protocol: TCP
+    targetPort: 8081
+  selector:
+    app.kubernetes.io/instance: nodeservice
+    app.kubernetes.io/name: nodeservice
+  type: ClusterIP

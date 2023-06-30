@@ -1,0 +1,20 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  annotations:
+    VPN: 40.113.125.116
+  labels:
+    name: nodeservice
+    app.kubernetes.io/version: pr-152
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: nodeservice
+    app.kubernetes.io/instance: nodeservice
+    maintainers: MPyL
+    maintainer: MPyL
+    version: pr-152
+    revision: e06a0a806855900ba98f029bc2b1b5cd2308c7a6
+  name: nodeservice-ingress-1-whitelist
+spec:
+  ipWhiteList:
+    sourceRange:
+    - 40.113.125.116

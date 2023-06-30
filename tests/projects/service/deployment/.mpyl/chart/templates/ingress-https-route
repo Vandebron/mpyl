@@ -1,0 +1,38 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  labels:
+    name: nodeservice
+    app.kubernetes.io/version: pr-152
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: nodeservice
+    app.kubernetes.io/instance: nodeservice
+    maintainers: MPyL
+    maintainer: MPyL
+    version: pr-152
+    revision: e06a0a806855900ba98f029bc2b1b5cd2308c7a6
+  name: nodeservice
+spec:
+  routes:
+  - kind: Rule
+    match: Host(`nodeservice-152.test.nl`)
+    services:
+    - name: nodeservice
+      kind: Service
+      port: 8081
+    middlewares:
+    - name: nodeservice-ingress-0-whitelist
+    - name: traefik-https-redirect@kubernetescrd
+  - kind: Rule
+    match: Host(`some.other.host.com`)
+    services:
+    - name: nodeservice
+      kind: Service
+      port: 8081
+    middlewares:
+    - name: nodeservice-ingress-1-whitelist
+    - name: traefik-https-redirect@kubernetescrd
+  entryPoints:
+  - websecure
+  tls:
+    secretName: le-prod-wildcard-cert

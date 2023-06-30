@@ -1,0 +1,50 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  labels:
+    name: job
+    app.kubernetes.io/version: pr-152
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: job
+    app.kubernetes.io/instance: job
+    maintainers: MPyL
+    maintainer: MPyL
+    version: pr-152
+    revision: e06a0a806855900ba98f029bc2b1b5cd2308c7a6
+  name: job
+spec:
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          annotations:
+            image: bigdataregistry.azurecr.io/job:pr-152
+          labels:
+            name: job
+            app.kubernetes.io/version: pr-152
+            app.kubernetes.io/managed-by: Helm
+            app.kubernetes.io/name: job
+            app.kubernetes.io/instance: job
+            maintainers: MPyL
+            maintainer: MPyL
+            version: pr-152
+            revision: e06a0a806855900ba98f029bc2b1b5cd2308c7a6
+          name: job
+        spec:
+          containers:
+          - env: []
+            image: bigdataregistry.azurecr.io/job:pr-152
+            imagePullPolicy: Always
+            name: job
+            resources:
+              limits:
+                cpu: 500m
+                memory: 1024Mi
+              requests:
+                cpu: 100m
+                memory: 512Mi
+          restartPolicy: Never
+          serviceAccount: job
+          serviceAccountName: job
+      ttlSecondsAfterFinished: 3600
+  schedule: 0 22 * * *

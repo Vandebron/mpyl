@@ -1,9 +1,9 @@
 !Output
 success: true
-message: Dry run. Not pushing nodeservice:TEST to acme.docker.com
+message: Pushed bigdataregistry.azurecr.io/nodeservice:pr-152
 produced_artifact: !Artifact
   artifact_type: !ArtifactType DOCKER_IMAGE-1
-  revision:
+  revision: e06a0a806855900ba98f029bc2b1b5cd2308c7a6
   producing_step: After Docker Build
   spec:
-    image: acme.docker.com/nodeservice:TEST
+    image: bigdataregistry.azurecr.io/nodeservice:pr-152

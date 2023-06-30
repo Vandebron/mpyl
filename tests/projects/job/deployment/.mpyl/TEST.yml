@@ -3,7 +3,8 @@ success: true
 message: Tested job
 produced_artifact: !Artifact
   artifact_type: !ArtifactType JUNIT_TESTS-2
-  revision:
+  revision: e06a0a806855900ba98f029bc2b1b5cd2308c7a6
   producing_step: job
   spec:
     test_output_path: tests/projects/job/deployment/.mpyl/test_results
+    test_results_url: https://jenkins.k8s-serv-backend.vdbinfra.nl/job/MPyL%20Pipeline%20-%20Test/job/PR-152/3/display/redirect?page=tests

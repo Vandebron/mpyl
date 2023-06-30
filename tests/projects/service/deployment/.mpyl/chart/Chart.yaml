@@ -1,0 +1,6 @@
+apiVersion: v3
+name: nodeservice
+description: A helm chart used by the MPyL pipeline
+type: application
+version: 0.1.0
+appVersion: "pr-152"
