@@ -58,6 +58,10 @@ example `mpyl.utilities.docker.DockerConfig`, this can be constructed from the `
 dictionary on `mpyl.steps.models.Input.run_properties`.
 Make sure to update the schema under `src/mpyl/schema/mpyl_config.schema.yml` accordingly, so that the configuration
 remains type safe and mistakes are found as early as possible.
+
+##### Registration with the executor
+Importing the module in which your step is defined is enough to register it.
+Steps are automatically registered with the `mpyl.steps.steps.Steps` executor via the `IPluginRegistry` metaclass.
 """
 from __future__ import annotations
 
@@ -70,12 +74,12 @@ from ..project import Stage
 
 
 class IPluginRegistry(type):
-    plugin_registries: List[type] = []
+    plugins: List[type] = []
 
     def __init__(cls, name, _bases, _attrs):
         super().__init__(cls)
         if name != 'Step':
-            IPluginRegistry.plugin_registries.append(cls)
+            IPluginRegistry.plugins.append(cls)
 
 
 @dataclass(frozen=True)

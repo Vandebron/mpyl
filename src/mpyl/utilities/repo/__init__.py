@@ -70,6 +70,8 @@ class Repository:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._repo.close()
+        if exc_val:
+            raise exc_val
         return self
 
     @property
@@ -120,6 +122,9 @@ class Repository:
 
     def changes_in_branch(self) -> list[Revision]:
         revisions = list(reversed(list(self._repo.iter_commits(f"{self._config.main_branch}..HEAD"))))
+        if not revisions:
+            return []
+
         files_touched_in_branch = set(
             self._repo.git.diff(f'{revisions[0].hexsha}..{revisions[-1].hexsha}', name_only=True).splitlines())
         return [self.__to_revision(count, rev, files_touched_in_branch) for count, rev in enumerate(revisions)]

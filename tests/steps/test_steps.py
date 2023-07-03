@@ -7,6 +7,7 @@ from jsonschema import ValidationError
 from pyaml_env import parse_config
 from ruamel.yaml import YAML  # type: ignore
 
+from src.mpyl.steps.collection import StepsCollection
 from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME, BUILD_ARTIFACTS_FOLDER
 from src.mpyl.project import Project, Stages, Stage, Target, Dependencies
 from src.mpyl.steps.models import Output, ArtifactType, RunProperties, VersioningProperties, ConsoleProperties
@@ -20,7 +21,8 @@ yaml = YAML()
 
 class TestSteps:
     resource_path = root_test_path / "test_resources"
-    executor = Steps(logger=logging.getLogger(), properties=test_data.RUN_PROPERTIES)
+    executor = Steps(logger=logging.getLogger(), properties=test_data.RUN_PROPERTIES,
+                     steps_collection=StepsCollection(logging.getLogger(), "src"))
 
     docker_image = get_output()
     build_project = test_data.get_project_with_stages({'build': 'Echo Build'}, path=str(resource_path))
@@ -83,7 +85,7 @@ class TestSteps:
         result = self.executor.execute(stage=Stage.BUILD, project=project)
         assert result.output.success
         assert result.output.message == 'Built test'
-        assert result.output.produced_artifact is None
+        assert result.output.produced_artifact.artifact_type == ArtifactType.DOCKER_IMAGE
 
     def test_should_fail_if_executor_is_not_known(self):
         project = test_data.get_project_with_stages({'build': 'Unknown Build'})

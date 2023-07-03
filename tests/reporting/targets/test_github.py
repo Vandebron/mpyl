@@ -1,4 +1,4 @@
-from mpyl.reporting.targets.github import PullRequestReporter, GithubUpdateStategy
+from src.mpyl.reporting.targets.github import PullRequestReporter, GithubUpdateStategy
 from tests.test_resources.test_data import get_config_values
 
 
@@ -8,16 +8,18 @@ class TestGithubReporter:
     def test_replace_pr_body_empty(self):
         assert self.reporter._extract_pr_header(
             current_body=None
-        ) == f"\n{self.reporter.body_separator}\n"
+        ) == f"\n\n{self.reporter.body_separator}\n"
 
     def test_replace_pr_body(self):
         assert self.reporter._extract_pr_header(
             current_body="body"
-        ) == f"body\n{self.reporter.body_separator}\n"
+        ) == f"body\n\n{self.reporter.body_separator}\n"
 
     def test_replace_pr_body_repeated(self):
         assert self.reporter._extract_pr_header(
             current_body=self.reporter._extract_pr_header(
-                current_body="body"
+                current_body=self.reporter._extract_pr_header(
+                    current_body="body"
+                )
             )
-        ) == f"body\n{self.reporter.body_separator}\n"
+        ) == f"body\n\n{self.reporter.body_separator}\n"

@@ -51,17 +51,11 @@ properties:
         description: defines the run properties
         type: object
         additionalProperties: false
-        required:
-          - deploy_target
         properties:
           deploy_target:
             description: The deploy target.
-            type: string
-            enum:
-              - 'PullRequest'
-              - 'PullRequestBase'
-              - 'Acceptance'
-              - 'Production'
+            type: ["string", "null"]
+            enum: [ null,  'PullRequest', 'PullRequestBase', 'Production' ]
       console:
         type: object
         additionalProperties: false
@@ -93,3 +87,14 @@ properties:
           tag:
             description: reference that points to the MPyL version
             type: ["string", "null"]
+  stages:
+    description: defines stages in a run
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+        icon:
+          type: string

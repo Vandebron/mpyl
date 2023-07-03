@@ -70,7 +70,6 @@ def run_mpyl(mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter
     console_properties = mpyl_run_parameters.run_config.run_properties.console
     console = Console(markup=False, width=None if params.local else console_properties.width, no_color=False,
                       log_path=False, color_system='256')
-    print(f"Logging properties: {console_properties}, console: {console}")
     logging.raiseExceptions = False
     logging.basicConfig(
         level="DEBUG" if params.verbose else console_properties.log_level, format=FORMAT, datefmt="[%X]",
@@ -126,18 +125,22 @@ def find_build_set(repo: Repository, changes_in_branch: list[Revision], build_al
 
 
 def run_build(accumulator: RunResult, executor: Steps, reporter: Optional[Reporter] = None, dry_run: bool = True):
-    for stage, projects in accumulator.run_plan.items():
-        for proj in projects:
-            result = executor.execute(stage, proj, dry_run)
-            accumulator.append(result)
-            if reporter:
-                reporter.send_report(accumulator)
+    try:
+        for stage, projects in accumulator.run_plan.items():
+            for proj in projects:
+                result = executor.execute(stage, proj, dry_run)
+                accumulator.append(result)
+                if reporter:
+                    reporter.send_report(accumulator)
 
-            if not result.output.success and stage == Stage.DEPLOY:
-                logging.warning(f'Deployment failed for {proj.name}')
+                if not result.output.success and stage == Stage.DEPLOY:
+                    logging.warning(f'Deployment failed for {proj.name}')
+                    return accumulator
+
+            if accumulator.failed_result:
+                logging.warning(f'One of the builds failed at {stage}')
                 return accumulator
-
-        if accumulator.failed_result:
-            logging.warning(f'One of the builds failed at {stage}')
-            return accumulator
-    return accumulator
+        return accumulator
+    except ExecutionException as exc:
+        accumulator.exception = exc
+        return accumulator

@@ -1,4 +1,4 @@
-from mpyl.utilities.s3 import S3Client
+from src.mpyl.utilities.s3 import S3Client
 
 
 class TestS3:

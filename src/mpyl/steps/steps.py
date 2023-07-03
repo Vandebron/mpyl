@@ -10,20 +10,8 @@ from typing import Optional
 from ruamel.yaml import YAML  # type: ignore
 
 from . import Step
-from .build.dockerbuild import BuildDocker
-from .build.echo import BuildEcho
-from .build.sbt import BuildSbt
-from .deploy.cloudfront_kubernetes_deploy import CloudFrontKubernetesDeploy
-from .deploy.echo import DeployEcho
-from .deploy.ephemeral_docker_deploy import EphemeralDockerDeploy
-from .deploy.kubernetes import DeployKubernetes
-from .deploy.kubernetes_job import DeployKubernetesJob
-from .deploy.kubernetes_spark_job import DeployKubernetesSparkJob
+from .collection import StepsCollection
 from .models import Output, Input, RunProperties, ArtifactType, Artifact
-from .postdeploy.cypress_test import CypressTest
-from .test.dockertest import TestDocker
-from .test.echo import TestEcho
-from .test.sbt import TestSbt
 from ..project import Project
 from ..project import Stage
 from ..validation import validate
@@ -52,50 +40,19 @@ class StepResult:
 
 class Steps:
     """ Executor of individual steps within a pipeline. """
-    _step_executors: dict[Stage, set[Step]]
     _logger: Logger
     _properties: RunProperties
 
-    def __init__(self, logger: Logger, properties: RunProperties) -> None:
+    def __init__(self, logger: Logger, properties: RunProperties,
+                 steps_collection: Optional[StepsCollection] = None) -> None:
+        self._logger = logger
+        self._properties = properties
+        self._steps_collection = steps_collection or StepsCollection(logger)
+
         schema_dict = pkgutil.get_data(__name__, "../schema/mpyl_config.schema.yml")
 
         if schema_dict:
             validate(properties.config, schema_dict.decode('utf-8'))
-
-        self._logger = logger
-
-        self._step_executors: dict[Stage, set[Step]] = {
-            Stage.BUILD: {
-                BuildEcho(logger),
-                BuildSbt(logger),
-                BuildDocker(logger)
-            },
-            Stage.TEST: {
-                TestEcho(logger),
-                TestSbt(logger),
-                TestDocker(logger)
-            },
-            Stage.DEPLOY: {
-                CloudFrontKubernetesDeploy(logger),
-                DeployEcho(logger),
-                DeployKubernetes(logger),
-                DeployKubernetesJob(logger),
-                DeployKubernetesSparkJob(logger),
-                EphemeralDockerDeploy(logger)
-            },
-            Stage.POST_DEPLOY: {
-                CypressTest(logger)
-            }
-        }
-
-        self._properties = properties
-        for stage, steps in self._step_executors.items():
-            self._logger.debug(f"Registered executors for stage {stage.name}: "  # pylint: disable=E1101
-                               f"{[step.meta.name for step in steps]}")
-
-    def _find_executor(self, stage: Stage, step_name: str) -> Optional[Step]:
-        executors = filter(lambda e: e.meta.stage == stage and step_name == e.meta.name, self._step_executors[stage])
-        return next(executors, None)
 
     def _execute(self, executor: Step, project: Project, properties: RunProperties,
                  artifact: Optional[Artifact], dry_run: bool = False) -> Output:
@@ -143,44 +100,44 @@ class Steps:
         return None
 
     def _execute_stage(self, stage: Stage, project: Project, dry_run: bool = False) -> Output:
-        stage_name = project.stages.for_stage(stage)
-        if stage_name is None:
+        step_name = project.stages.for_stage(stage)
+        if step_name is None:
             return Output(success=False, message=f"Stage '{stage.value}' not defined on project '{project.name}'")
 
         invalid_maintainers = self._validate_project_against_config(project)
         if invalid_maintainers:
             return invalid_maintainers
 
-        executor: Optional[Step] = self._find_executor(stage, stage_name)
-        if executor:
-            try:
-                self._logger.info(f'Executing {stage} for {project.name}')
-                artifact: Optional[Artifact] = self._find_required_artifact(project, executor.required_artifact)
-                if executor.before:
-                    before_result = self._execute(executor.before, project, self._properties,
-                                                  self._find_required_artifact(project,
-                                                                               executor.before.required_artifact),
-                                                  dry_run)
-                    if not before_result.success:
-                        return before_result
+        executor: Optional[Step] = self._steps_collection.get_executor(stage, step_name)
+        if not executor:
+            self._logger.warning(f"No executor found for {step_name} in stage {stage}")
 
-                result = self._execute(executor, project, self._properties, artifact, dry_run)
-                result.write(project.target_path, stage)
+            return Output(success=False, message=f"Executor '{step_name}' for '{stage.value}' not known or registered")
 
-                if executor.after:
-                    return self._execute_after_(result, executor.after, project, stage, dry_run)
+        try:
+            self._logger.info(f'Executing {stage} for {project.name}')
+            artifact: Optional[Artifact] = self._find_required_artifact(project, executor.required_artifact)
+            if executor.before:
+                before_result = self._execute(executor.before, project, self._properties,
+                                              self._find_required_artifact(project,
+                                                                           executor.before.required_artifact),
+                                              dry_run)
+                if not before_result.success:
+                    return before_result
 
-                return result
-            except Exception as exc:
-                message = str(exc)
-                self._logger.warning(
-                    f"Execution of '{executor.meta.name}' for project '{project.name}' in stage {stage} "
-                    f"failed with exception: {message}", exc_info=True)
-                raise ExecutionException(project.name, executor.meta.name, stage.name, message) from exc
-        else:
-            self._logger.warning(f"No executor found for {stage_name} in stage {stage}")
+            result = self._execute(executor, project, self._properties, artifact, dry_run)
+            result.write(project.target_path, stage)
 
-        return Output(success=False, message=f"Executor '{stage_name}' for '{stage.value}' not known or registered")
+            if executor.after:
+                return self._execute_after_(result, executor.after, project, stage, dry_run)
+
+            return result
+        except Exception as exc:
+            message = str(exc)
+            self._logger.warning(
+                f"Execution of '{executor.meta.name}' for project '{project.name}' in stage {stage} "
+                f"failed with exception: {message}", exc_info=True)
+            raise ExecutionException(project.name, executor.meta.name, stage.name, message) from exc
 
     def execute(self, stage: Stage, project: Project, dry_run: bool = False) -> StepResult:
         """
