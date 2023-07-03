@@ -43,9 +43,11 @@ def custom_check_output(
             success = process.wait() == 0
             if not success:
                 logger.warning(
-                    'Subprocess failed' + f' with {process.stderr.read()}' if process.stderr else ""
+                    "Subprocess failed" + f" with {process.stderr.read()}"
+                    if process.stderr
+                    else ""
                 )
-                return Output(success=False, message='Subprocess failed')
+                return Output(success=False, message="Subprocess failed")
 
             return Output(success=True, message="Subprocess executed successfully")
 
