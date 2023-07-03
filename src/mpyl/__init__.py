@@ -17,7 +17,7 @@ from .utilities.pyaml_env import parse_config
 from .utilities.repo import RepoConfig, Repository
 
 
-@click.group(name='mpyl')
+@click.group(name="mpyl")
 def main_group():
     """Command Line Interface for MPyL"""
 

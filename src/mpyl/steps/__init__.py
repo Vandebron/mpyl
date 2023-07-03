@@ -78,7 +78,7 @@ class IPluginRegistry(type):
 
     def __init__(cls, name, _bases, _attrs):
         super().__init__(cls)
-        if name != 'Step':
+        if name != "Step":
             IPluginRegistry.plugins.append(cls)
 
 
@@ -92,13 +92,14 @@ class Meta:
     """The stage that this step relates to"""
 
     def __str__(self) -> str:
-        return f'{self.name}: {self.version}'
+        return f"{self.name}: {self.version}"
 
 
 class Step(metaclass=IPluginRegistry):
-    """ Abstract base class for execution steps. Any execution step (e.g. build, test, deploy) will need to implement
+    """Abstract base class for execution steps. Any execution step (e.g. build, test, deploy) will need to implement
     this interface.
     """
+
     meta: Meta
     """Information _about_ the specific instance of `Step`. For example its name, description, version or the stage
     to which it applies.
@@ -114,9 +115,16 @@ class Step(metaclass=IPluginRegistry):
     """Will be executed after completion of this step. Can be used for shared post processing steps, like pushing the
     produced docker image to a registry or filing test results."""
 
-    def __init__(self, logger: Logger, meta: Meta, produced_artifact: ArtifactType,
-                 required_artifact: ArtifactType, before: Optional[Step] = None, after: Optional[Step] = None) -> None:
-        self._logger = logger.getChild(meta.name.replace(' ', ''))
+    def __init__(
+        self,
+        logger: Logger,
+        meta: Meta,
+        produced_artifact: ArtifactType,
+        required_artifact: ArtifactType,
+        before: Optional[Step] = None,
+        after: Optional[Step] = None,
+    ) -> None:
+        self._logger = logger.getChild(meta.name.replace(" ", ""))
         self.meta = meta
         self.produced_artifact = produced_artifact
         self.required_artifact = required_artifact
@@ -124,9 +132,13 @@ class Step(metaclass=IPluginRegistry):
         self.after = after
 
     def execute(self, step_input: Input) -> Output:
-        """ Execute an individual step for a specific `project` at a specific `stage` of the pipeline.
+        """Execute an individual step for a specific `project` at a specific `stage` of the pipeline.
         :param step_input: The input of the project along with its build properties and required artifact (if any).
         :return Output: The result of the execution. `success` will be `False` if any exception was thrown during
         execution.
         """
-        return Output(success=False, message=f"Not implemented for {step_input.project.name}", produced_artifact=None)
+        return Output(
+            success=False,
+            message=f"Not implemented for {step_input.project.name}",
+            produced_artifact=None,
+        )

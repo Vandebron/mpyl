@@ -7,9 +7,9 @@ from junitparser import JUnitXml, TestSuite
 
 from ...steps.models import Artifact, ArtifactType
 
-TEST_OUTPUT_PATH_KEY = 'test_output_path'
-TEST_RESULTS_URL_KEY = 'test_results_url'
-TEST_RESULTS_URL_NAME_KEY = 'test_results_url_name'
+TEST_OUTPUT_PATH_KEY = "test_output_path"
+TEST_RESULTS_URL_KEY = "test_results_url"
+TEST_RESULTS_URL_NAME_KEY = "test_results_url_name"
 
 
 @dataclass(frozen=True)
@@ -26,11 +26,15 @@ class TestRunSummary:
 
 def to_test_suites(artifact: Artifact) -> list[TestSuite]:
     if artifact.artifact_type != ArtifactType.JUNIT_TESTS:
-        raise ValueError(f'Artifact {artifact} should be of type {ArtifactType.JUNIT_TESTS}')
+        raise ValueError(
+            f"Artifact {artifact} should be of type {ArtifactType.JUNIT_TESTS}"
+        )
     junit_result_path = artifact.spec[TEST_OUTPUT_PATH_KEY]
 
     xml = JUnitXml()
-    for file_name in [fn for fn in os.listdir(junit_result_path) if fn.endswith('.xml')]:
+    for file_name in [
+        fn for fn in os.listdir(junit_result_path) if fn.endswith(".xml")
+    ]:
         xml += JUnitXml.fromfile(Path(junit_result_path, file_name).as_posix())
 
     suites = [TestSuite.fromelem(s) for s in xml]
@@ -38,5 +42,9 @@ def to_test_suites(artifact: Artifact) -> list[TestSuite]:
 
 
 def sum_suites(suites: list[TestSuite]) -> TestRunSummary:
-    return TestRunSummary(tests=sum(s.tests for s in suites), failures=sum(s.failures for s in suites),
-                          errors=sum(s.errors for s in suites), skipped=sum(s.skipped for s in suites))
+    return TestRunSummary(
+        tests=sum(s.tests for s in suites),
+        failures=sum(s.failures for s in suites),
+        errors=sum(s.errors for s in suites),
+        skipped=sum(s.skipped for s in suites),
+    )

@@ -20,22 +20,35 @@ SAMPLE_JUNIT_RESULT = """
 
 
 class TestEcho(Step):
-
     def __init__(self, logger: Logger) -> None:
-        super().__init__(logger, Meta(
-            name='Echo Test',
-            description='Dummy test step to test the framework',
-            version='0.0.1',
-            stage=Stage.TEST
-        ), produced_artifact=ArtifactType.JUNIT_TESTS, required_artifact=ArtifactType.NONE)
+        super().__init__(
+            logger,
+            Meta(
+                name="Echo Test",
+                description="Dummy test step to test the framework",
+                version="0.0.1",
+                stage=Stage.TEST,
+            ),
+            produced_artifact=ArtifactType.JUNIT_TESTS,
+            required_artifact=ArtifactType.NONE,
+        )
 
     def execute(self, step_input: Input) -> Output:
         self._logger.info(f"Testing project {step_input.project.name}")
         path = Path(step_input.project.target_path, "test_results")
         path.mkdir(parents=True, exist_ok=True)
-        Path(path, "test.xml").write_text(SAMPLE_JUNIT_RESULT, encoding='utf-8')
+        Path(path, "test.xml").write_text(SAMPLE_JUNIT_RESULT, encoding="utf-8")
 
-        artifact = input_to_artifact(artifact_type=ArtifactType.JUNIT_TESTS, step_input=step_input,
-                                     spec={TEST_OUTPUT_PATH_KEY: str(path),
-                                           TEST_RESULTS_URL_KEY: step_input.run_properties.details.tests_url})
-        return Output(success=True, message=f"Tested {step_input.project.name}", produced_artifact=artifact)
+        artifact = input_to_artifact(
+            artifact_type=ArtifactType.JUNIT_TESTS,
+            step_input=step_input,
+            spec={
+                TEST_OUTPUT_PATH_KEY: str(path),
+                TEST_RESULTS_URL_KEY: step_input.run_properties.details.tests_url,
+            },
+        )
+        return Output(
+            success=True,
+            message=f"Tested {step_input.project.name}",
+            produced_artifact=artifact,
+        )

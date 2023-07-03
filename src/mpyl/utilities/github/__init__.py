@@ -13,13 +13,15 @@ class GithubAppConfig:
     app_key: str
 
     def __init__(self, config: Dict):
-        self.private_app_key_path = config.get('privateKeyPath')
-        self.private_key_base_64_encoded = config.get('privateKeyBase64Encoded')
+        self.private_app_key_path = config.get("privateKeyPath")
+        self.private_key_base_64_encoded = config.get("privateKeyBase64Encoded")
         if not self.private_key_base_64_encoded and not self.private_app_key_path:
-            raise KeyError("When github.app is configured, either 'privateKeyPath' "
-                           "or 'privateKeyBase64Encoded' need to be defined")
+            raise KeyError(
+                "When github.app is configured, either 'privateKeyPath' "
+                "or 'privateKeyBase64Encoded' need to be defined"
+            )
 
-        self.app_key = config['appId']
+        self.app_key = config["appId"]
 
 
 @dataclass(frozen=True)
@@ -32,14 +34,14 @@ class GithubConfig:
 
     @staticmethod
     def from_config(config: Dict):
-        github = config['cvs']['github']
-        repo_parts = github['repository'].split('/')
+        github = config["cvs"]["github"]
+        repo_parts = github["repository"].split("/")
         return GithubConfig(
-            repository=(github['repository']),
+            repository=(github["repository"]),
             owner=repo_parts[0],
             repo_name=repo_parts[1],
-            token=github['token'],
-            app_config=github.get('app', {})
+            token=github["token"],
+            app_config=github.get("app", {}),
         )
 
     @property
@@ -48,9 +50,11 @@ class GithubConfig:
 
 
 def get_pr_for_branch(repo: Repository, branch: str) -> PullRequest:
-    pulls = repo.get_pulls(head=f'{repo.full_name}:{branch}').get_page(0)
+    pulls = repo.get_pulls(head=f"{repo.full_name}:{branch}").get_page(0)
 
     if len(pulls) == 0:
-        raise ValueError(f'No PR related to {branch} was found. Did you create it yet? `gh pr create --draft`')
+        raise ValueError(
+            f"No PR related to {branch} was found. Did you create it yet? `gh pr create --draft`"
+        )
 
     return pulls.pop()

@@ -27,15 +27,15 @@ class RunResult:
     @property
     def status_line(self) -> str:
         if self._exception:
-            return '❗ Failed with exception'
+            return "❗ Failed with exception"
         if self.is_in_progress:
-            return '🏗️ Building'
+            return "🏗️ Building"
         if not self.has_results:
-            return '🦥 Nothing to do'
+            return "🦥 Nothing to do"
         if self._results_success():
-            return '✅ Successful'
+            return "✅ Successful"
 
-        return '❌ Failed'
+        return "❌ Failed"
 
     @property
     def failed_result(self) -> Optional[StepResult]:
@@ -46,7 +46,9 @@ class RunResult:
         unfinished = 0
         finished = 0
         for stage, projects in self.run_plan.items():
-            finished_project_names = set(map(lambda r: r.project.name, self.results_for_stage(stage)))
+            finished_project_names = set(
+                map(lambda r: r.project.name, self.results_for_stage(stage))
+            )
             for project in projects:
                 if project.name in finished_project_names:
                     finished += 1
@@ -97,17 +99,21 @@ class RunResult:
 
     @property
     def is_in_progress(self):
-        return len(self.run_plan.items()) > 0 and self.is_success and not self.is_finished
+        return (
+            len(self.run_plan.items()) > 0 and self.is_success and not self.is_finished
+        )
 
     def _results_success(self):
         return not self.has_results or all(r.output.success for r in self._results)
 
     @staticmethod
     def sort_chronologically(results: list[StepResult]) -> list[StepResult]:
-        return sorted(results, key=operator.attrgetter('timestamp'))
+        return sorted(results, key=operator.attrgetter("timestamp"))
 
     def results_for_stage(self, stage: Stage) -> list[StepResult]:
-        return RunResult.sort_chronologically([res for res in self._results if res.stage == stage])
+        return RunResult.sort_chronologically(
+            [res for res in self._results if res.stage == stage]
+        )
 
     def plan_for_stage(self, stage: Stage) -> set[Project]:
         plan: Optional[set[Project]] = self.run_plan.get(stage)

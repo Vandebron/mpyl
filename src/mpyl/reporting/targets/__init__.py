@@ -30,12 +30,16 @@ class ReportAccumulator:
 
     @property
     def failures(self) -> list[str]:
-        return [f'{type(outcome).__name__} failed with exception {outcome.exception}' for outcome in self.outcomes if
-                not outcome.success]
+        return [
+            f"{type(outcome).__name__} failed with exception {outcome.exception}"
+            for outcome in self.outcomes
+            if not outcome.success
+        ]
 
 
 class Reporter:
-
     @abstractmethod
-    def send_report(self, results: RunResult, text: Optional[str] = None) -> ReportOutcome:
+    def send_report(
+        self, results: RunResult, text: Optional[str] = None
+    ) -> ReportOutcome:
         pass

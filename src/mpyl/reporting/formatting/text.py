@@ -24,7 +24,7 @@ def to_string(run_result: RunResult) -> str:
 
 
 def to_test_report(artifact: Artifact) -> str:
-    """ Gather the first test suites and test cases. Output is truncated to around 200 lines to not overwhelm Github """
+    """Gather the first test suites and test cases. Output is truncated to around 200 lines to not overwhelm Github"""
     test_result = []
     suites = to_test_suites(artifact)
     total_tests = sum_suites(suites)
