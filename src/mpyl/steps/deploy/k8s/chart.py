@@ -69,6 +69,7 @@ from ....project import (
     Traefik,
     Host,
     get_env_variables,
+    Alert,
 )
 from ....stages.discovery import DeploySet
 
@@ -336,12 +337,12 @@ class ChartBuilder:
             metadata=self._to_object_meta(),
         )
 
-    def to_prometheus_rule(self) -> V1PrometheusRule:
+    def to_prometheus_rule(self, alerts: list[Alert]) -> V1PrometheusRule:
         return V1PrometheusRule(
             metadata=self._to_object_meta(
                 name=f"{self.project.name.lower()}-prometheus-rule"
             ),
-            alerts=self.project.deployment.kubernetes.metrics.alerts,
+            alerts=alerts,
         )
 
     def __find_default_port(self) -> int:
@@ -602,12 +603,22 @@ def to_service_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinitio
 
 
 def _to_service_components_chart(builder):
-    return {
+    common_chart = {
         "deployment": builder.to_deployment(),
         "service": builder.to_service(),
         "ingress-https-route": builder.to_ingress_routes(),
-        "prometheus-rule": builder.to_prometheus_rule(),
     }
+    prometheus_chart = (
+        {
+            "prometheus-rule": builder.to_prometheus_rule(
+                alerts=builder.project.kubernetes.metrics.alerts
+            )
+        }
+        if builder.project.kubernetes.metrics
+        and builder.project.kubernetes.metrics.enabled
+        else {}
+    )
+    return common_chart | prometheus_chart
 
 
 def to_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:

@@ -203,17 +203,18 @@ class Alert:
         if not values:
             return None
         return Alert(
-            name=values.get("name"),
-            expr=values.get("expr"),
-            for_duration=values.get("forDuration"),
-            description=values.get("description"),
-            severity=values.get("severity"),
+            name=values.get("name", ""),
+            expr=values.get("expr", ""),
+            for_duration=values.get("forDuration", ""),
+            description=values.get("description", ""),
+            severity=values.get("severity", ""),
         )
 
 
 @dataclass(frozen=True)
 class Metrics:
     path: str
+    port: Optional[str]
     enabled: bool
     alerts: list[Alert]
 
@@ -223,6 +224,7 @@ class Metrics:
             return None
         return Metrics(
             path=values.get("path", "/metrics"),
+            port=values.get("port", None),
             enabled=values.get("enabled", False),
             alerts=[Alert.from_config(v) for v in values.get("alerts", [])],
         )
