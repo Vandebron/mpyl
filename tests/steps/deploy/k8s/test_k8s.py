@@ -153,11 +153,13 @@ class TestKubernetesChart:
             "ingress-https-route",
             "dockertest-ingress-0-whitelist",
             "dockertest-ingress-1-whitelist",
+            "prometheus-rule",
         ],
     )
     def test_service_chart_roundtrip(self, template):
         builder = self._get_builder(get_project())
         chart = to_service_chart(builder)
+        print(chart)
         self._roundtrip(self.template_path / "service", template, chart)
         assert chart.keys() == {
             "service-account",

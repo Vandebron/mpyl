@@ -608,6 +608,7 @@ def _to_service_components_chart(builder):
         "service": builder.to_service(),
         "ingress-https-route": builder.to_ingress_routes(),
     }
+    print(f"here with {builder.project.kubernetes.metrics}")
     prometheus_chart = (
         {
             "prometheus-rule": builder.to_prometheus_rule(

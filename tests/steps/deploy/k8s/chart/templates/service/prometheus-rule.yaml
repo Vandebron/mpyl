@@ -1,0 +1,26 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    name: dockertest
+    app.kubernetes.io/version: pr-1234
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: dockertest
+    app.kubernetes.io/instance: dockertest
+    maintainers: MPyL
+    maintainer: MPyL
+    version: pr-1234
+    revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
+  name: dockertest-prometheus-rule
+spec:
+  groups:
+  - name: dockertest-prometheus-rule-group
+    rules:
+    - alert: ServiceError
+      annotations:
+        description: Service has encountered errors
+      expr: 'true'
+      for: 1m
+      labels:
+        alertname: ServiceError
+        severity: warning
