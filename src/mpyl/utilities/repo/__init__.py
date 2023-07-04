@@ -141,7 +141,9 @@ class Repository:
         if not revisions:
             return []
 
-        first_revision = revisions[0].hexsha if len(revisions) != 1 else self._config.main_branch
+        first_revision = (
+            revisions[0].hexsha if len(revisions) != 1 else self._config.main_branch
+        )
 
         files_touched_in_branch = set(
             self._repo.git.diff(
