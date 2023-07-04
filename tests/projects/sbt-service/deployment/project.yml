@@ -8,10 +8,10 @@ description: 'Demonstrates how an SBT project can be built and tested'
 deployment:
   properties:
     env:
-      - key: SOME_ENV
-        test: "Test"
-        acceptance: "Acceptance"
-        production: "Production"
+    - key: SOME_ENV
+      test: "Test"
+      acceptance: "Acceptance"
+      production: "Production"
   kubernetes:
     livenessProbe:
       path:
@@ -20,8 +20,6 @@ deployment:
       failureThreshold: 99
     portMappings:
       8080: 8080
-    metrics:
-      enabled: false
     resources:
       instances:
         all: 1
@@ -30,13 +28,26 @@ deployment:
           all: 0.5
         mem:
           all: 1024
+    metrics:
+      enabled: true
+      alerts:
+      - name: 'ServiceError'
+        expr: 'true'
+        forDuration: '1m'
+        description: 'Service has encountered errors'
+        severity: 'warning'
+      - name: 'ServiceErrorCritical'
+        expr: 'true'
+        forDuration: '1m'
+        description: 'Service has encountered critical errors'
+        severity: 'critical'
   traefik:
     hosts:
-      - host:
-          pr: "Host(`sbtservice-{PR-NUMBER}.test.nl`)"
-          test: "Host(`sbtservice.test.nl`)"
-          acceptance: "Host(`sbtservice.acceptance1.nl`)"
-          production: "Host(`sbtservice.nl`)"
-        tls:
-          all: "le-custom-prod-wildcard-cert"
-        insecure: true
+    - host:
+        pr: "Host(`sbtservice-{PR-NUMBER}.test.nl`)"
+        test: "Host(`sbtservice.test.nl`)"
+        acceptance: "Host(`sbtservice.acceptance1.nl`)"
+        production: "Host(`sbtservice.nl`)"
+      tls:
+        all: "le-custom-prod-wildcard-cert"
+      insecure: true

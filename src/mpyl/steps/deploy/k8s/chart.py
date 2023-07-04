@@ -43,6 +43,7 @@ from .resources import (
     CustomResourceDefinition,
     to_dict,
 )  # pylint: disable = no-name-in-module
+from .resources.prometheus import V1PrometheusRule
 from .resources.sealed_secret import V1SealedSecret
 from .resources.spark import (
     to_spark_body,
@@ -335,6 +336,14 @@ class ChartBuilder:
             metadata=self._to_object_meta(),
         )
 
+    def to_prometheus_rule(self) -> V1PrometheusRule:
+        return V1PrometheusRule(
+            metadata=self._to_object_meta(
+                name=f"{self.project.name.lower()}-prometheus-rule"
+            ),
+            alerts=self.project.deployment.kubernetes.metrics.alerts,
+        )
+
     def __find_default_port(self) -> int:
         found = next(iter(self.mappings.keys()))
         if found:
@@ -587,13 +596,18 @@ class ChartBuilder:
 def to_service_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
     return (
         builder.to_common_chart()
-        | {
-            "deployment": builder.to_deployment(),
-            "service": builder.to_service(),
-            "ingress-https-route": builder.to_ingress_routes(),
-        }
+        | _to_service_components_chart(builder)
         | builder.to_middlewares()
     )
+
+
+def _to_service_components_chart(builder):
+    return {
+        "deployment": builder.to_deployment(),
+        "service": builder.to_service(),
+        "ingress-https-route": builder.to_ingress_routes(),
+        "prometheus-rule": builder.to_prometheus_rule(),
+    }
 
 
 def to_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
