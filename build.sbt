@@ -1,5 +1,5 @@
 name                     := "sbt-multi-project-example"
-ThisBuild / organization := "vandebron.nl"
+ThisBuild / organization := "organization"
 
 lazy val mpyl = project
   .in(file("."))
