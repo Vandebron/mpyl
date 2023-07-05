@@ -1,4 +1,4 @@
-name: 'enrichChargeSessionsJob'
+name: 'sparkJob'
 description: 'Job to enrich charge session with total amount earned'
 maintainer: [ 'MPyL' ]
 stages:
@@ -6,7 +6,7 @@ stages:
   test: Sbt Test
   deploy: Kubernetes Spark Job Deploy
 deployment:
-  namespace: 'batterypack-jobs'
+  namespace: 'jobs'
   properties:
     env:
       - key: DEPLOY_ENV
@@ -15,18 +15,11 @@ deployment:
         acceptance: "Acceptance"
         production: "Production"
       - key: APP_NAME
-        all: "enrichChargeSessionsJob"
+        all: "sparkJob"
       - key: CASSANDRA_HOST
         all: "cassandra.cassandra.svc.cluster.local"
-      - key: CASSANDRA_DC
-        pr: "dc1_k8s_test"
-        test: "dc1_k8s_test"
-        acceptance: "dc1_k8s_acce"
-        production: "dc1_k8s_prod"
       - key: VAULT_ENABLED
         all: "true"
-      - key: VAULT_ADDR
-        all: "https://vs.nl/"
       - key: DEPLOY_MODE
         all: "cluster"
       - key: ELASTICSEARCH_HOST
@@ -38,8 +31,8 @@ deployment:
       cron:
         schedule: "0 7 * * *"
       spark:
-        mainClass: "enrichchargesessions.EnrichChargeSessionsJobMain"
-        mainApplicationFile: "local:///app/enrichchargesessionsjob-assembly-1.0.jar"
+        mainClass: "sparkjob.sparkJobMain"
+        mainApplicationFile: "local:///app/sparkjob-assembly-1.0.jar"
     resources:
       instances:
         all: 2
