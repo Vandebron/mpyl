@@ -138,6 +138,11 @@ class Repository:
         revisions = list(
             reversed(list(self._repo.iter_commits(f"{self._config.main_branch}..HEAD")))
         )
+
+        logging.debug(
+            f"Found {len(revisions)} revisions in branch: {[r.hexsha for r in revisions]}"
+        )
+
         if not revisions:
             return []
 
