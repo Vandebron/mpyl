@@ -49,7 +49,7 @@ class CypressTest(Step):
 
             if record_key:
                 ci_build_id = f"{cypress_config.ci_build_id}-{step_input.project.name}"
-                machines = [1, 2, 3]
+                machines = [1, 2, 3, 4]
                 threads: list[Future] = []
 
                 for machine in machines:
