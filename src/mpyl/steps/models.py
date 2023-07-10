@@ -125,7 +125,7 @@ class RunProperties:
             details=RunContext.from_configuration(build["run"]),
             target=Target(
                 build["parameters"].get("deploy_target", None)
-                or Target.PULL_REQUEST.value
+                or Target.PULL_REQUEST.value  # pylint: disable=no-member
             ),
             versioning=versioning,
             config=config,

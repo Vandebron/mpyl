@@ -73,6 +73,9 @@ definitions:
       kubectlConfigPath:
         type: string
         description: 'Path to kubectl config file'
+      ciBuildId:
+        type: [ string, null ]
+        description: 'Build id for cypress dashboard'
     required:
       - cypressSourceCodePath
   Kubernetes:

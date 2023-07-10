@@ -3,7 +3,6 @@ import logging
 import shlex
 
 from dataclasses import dataclass
-from itertools import tee
 from logging import Logger
 from traceback import print_exc
 from typing import Dict, Optional, Iterator, cast, Union
@@ -11,7 +10,7 @@ import shutil
 from pathlib import Path
 from python_on_whales import docker, Image, Container, DockerException
 from python_on_whales.exceptions import NoSuchContainer
-from rich.text import Text
+from rich.logging import RichHandler
 
 from ..logging import try_parse_ansi
 from ...project import Project
@@ -67,13 +66,23 @@ class DockerConfig:
 
 
 def execute_with_stream(
-    logger: Logger, container: Container, command: str, task_name: str
+    logger: Logger,
+    container: Container,
+    command: str,
+    task_name: str,
+    multiprocess: bool = False,
 ):
+    if multiprocess:  # Logger settings need to be re-applied in each process
+        logger.setLevel(logging.INFO)
+        logger.addHandler(RichHandler())
+
     result = cast(
         Iterator[tuple[str, bytes]],
         container.execute(command=shlex.split(command), stream=True),
     )
     result_list = stream_docker_logging(logger, result, task_name)
+
+    logger.handlers.clear()
 
     return result_list
 
