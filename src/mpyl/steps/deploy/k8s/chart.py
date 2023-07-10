@@ -449,8 +449,8 @@ class ChartBuilder:
         docker_image = self.step_input.required_artifact
         if not docker_image or docker_image.artifact_type != ArtifactType.DOCKER_IMAGE:
             raise ValueError(
-                f"Required artifact of type {ArtifactType.DOCKER_IMAGE.name} must be defined"
-            )  # pylint: disable=E1101
+                f"Required artifact of type {ArtifactType.DOCKER_IMAGE.name} must be defined"  # pylint: disable=no-member
+            )
         return docker_image.spec["image"]
 
     def _get_resources(self):
