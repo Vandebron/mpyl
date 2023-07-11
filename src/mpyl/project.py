@@ -200,15 +200,15 @@ class Alert:
 
     @staticmethod
     def from_config(values: dict):
-        if not values:
-            return None
         name = values.get("name")
         expr = values.get("expr")
         for_duration = values.get("forDuration")
         description = values.get("description")
         severity = values.get("severity")
         if not name or not expr or not for_duration or not description or not severity:
-            return None
+            raise KeyError(
+                "Alerts must have a name, expr, forDuration, description and severity set."
+            )
         return Alert(name, expr, for_duration, description, severity)
 
 
