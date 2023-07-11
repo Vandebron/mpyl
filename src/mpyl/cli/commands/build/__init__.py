@@ -9,13 +9,13 @@ from rich.console import Console
 
 @dataclass(frozen=True)
 class Sound(Enum):
-    SUCCESS = 'Glass.aiff'
-    FAILURE = 'Sosumi.aiff'
+    SUCCESS = "Glass.aiff"
+    FAILURE = "Sosumi.aiff"
 
 
 def play_sound(sound: Sound):
-    if shutil.which('afplay') is None:
+    if shutil.which("afplay") is None:
         Console().bell()
         return
 
-    os.system(f'afplay /System/Library/Sounds/{sound.value}')
+    os.system(f"afplay /System/Library/Sounds/{sound.value}")
