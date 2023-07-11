@@ -8,10 +8,10 @@ description: 'Demonstrates how an SBT project can be built and tested'
 deployment:
   properties:
     env:
-    - key: SOME_ENV
-      test: "Test"
-      acceptance: "Acceptance"
-      production: "Production"
+      - key: SOME_ENV
+        test: "Test"
+        acceptance: "Acceptance"
+        production: "Production"
   kubernetes:
     livenessProbe:
       path:
@@ -43,11 +43,11 @@ deployment:
         severity: 'critical'
   traefik:
     hosts:
-    - host:
-        pr: "Host(`sbtservice-{PR-NUMBER}.test.nl`)"
-        test: "Host(`sbtservice.test.nl`)"
-        acceptance: "Host(`sbtservice.acceptance1.nl`)"
-        production: "Host(`sbtservice.nl`)"
-      tls:
-        all: "le-custom-prod-wildcard-cert"
-      insecure: true
+      - host:
+          pr: "Host(`sbtservice-{PR-NUMBER}.test.nl`)"
+          test: "Host(`sbtservice.test.nl`)"
+          acceptance: "Host(`sbtservice.acceptance1.nl`)"
+          production: "Host(`sbtservice.nl`)"
+        tls:
+          all: "le-custom-prod-wildcard-cert"
+        insecure: true
