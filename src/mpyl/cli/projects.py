@@ -15,6 +15,7 @@ from . import (
     parse_config_from_supplied_location,
 )
 from .commands.projects.formatting import print_project
+from .commands.build.mpyl import find_build_set
 from ..constants import DEFAULT_CONFIG_FILE_NAME
 from ..project import validate_project, load_project, Project
 from ..utilities.pyaml_env import parse_config
@@ -99,10 +100,31 @@ def show_project(obj, name):
     )
 
 
-@projects.command(help="Validate the yaml of found projects against their schema")
+@projects.command(help="Validate the yaml of changed projects against their schema")
+@click.option(
+    "--all",
+    "all_",
+    is_flag=True,
+    help="Validate all project yaml's, regardless of changes on branch",
+)
 @click.pass_obj
-def lint(obj: ProjectsContext):
-    found_projects = obj.cli.repo.find_projects(obj.filter)
+def lint(obj: ProjectsContext, all_):
+    found_projects = []
+    if all_:
+        found_projects = obj.cli.repo.find_projects(obj.filter)
+    else:
+        branch = obj.cli.repo.get_branch
+        changes = (
+            obj.cli.repo.changes_in_branch_including_local()
+            if branch
+            else obj.cli.repo.changes_in_merge_commit()
+        )
+        build_set = find_build_set(obj.cli.repo, changes, False)
+        for all_projects in build_set.values():
+            for project in all_projects:
+                if project.path not in found_projects:
+                    found_projects.append(project.path)
+
     invalid = 0
     valid = 0
     for project in found_projects:
