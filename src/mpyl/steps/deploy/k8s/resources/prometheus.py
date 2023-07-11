@@ -32,6 +32,7 @@ class V1PrometheusRule(CustomResourceDefinition):
             api_version="monitoring.coreos.com/v1",
             kind="PrometheusRule",
             metadata=metadata,
+            schema="monitoring.coreos.com_prometheuses.yaml",
             spec={
                 "groups": [
                     {
