@@ -66,30 +66,30 @@ deployment:
           all: 1024
   traefik:
     hosts:
-    - host:
-        pr: "Host(`payments-{PR-NUMBER}.test.nl`)"
-        test: "Host(`payments.test.nl`)"
-        acceptance: "Host(`payments.acceptance1.nl`)"
-        production: "Host(`payments.nl`)"
-      tls:
-        all: "le-custom-prod-wildcard-cert"
-      insecure: true
-      whitelists:
-        test:
-        - "Test"
-    - host:
-        all: "Host(`some.other.host.com`)"
-      servicePort: 4091
-      priority: 1000
-      whitelists:
-        pr:
-        - "K8s-Test"
-        - "VPN"
-        test:
-        - "K8s-Test"
-        - "VPN"
-        acceptance:
-        - "VPN"
-        production:
-        - "Outside-World"
+      - host:
+          pr: "Host(`payments-{PR-NUMBER}.test.nl`)"
+          test: "Host(`payments.test.nl`)"
+          acceptance: "Host(`payments.acceptance1.nl`)"
+          production: "Host(`payments.nl`)"
+        tls:
+          all: "le-custom-prod-wildcard-cert"
+        insecure: true
+        whitelists:
+          test:
+          - "Test"
+      - host:
+          all: "Host(`some.other.host.com`)"
+        servicePort: 4091
+        priority: 1000
+        whitelists:
+          pr:
+          - "K8s-Test"
+          - "VPN"
+          test:
+          - "K8s-Test"
+          - "VPN"
+          acceptance:
+          - "VPN"
+          production:
+          - "Outside-World"
 

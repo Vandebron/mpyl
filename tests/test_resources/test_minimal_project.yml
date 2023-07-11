@@ -8,22 +8,22 @@ maintainer: [ 'MPyL' ]
 build:
   args:
     plain:
-    - key: SOME_ENV
-      test: "Test"
-      acceptance: "Acceptance"
-      production: "Production"
+      - key: SOME_ENV
+        test: "Test"
+        acceptance: "Acceptance"
+        production: "Production"
 dependencies:
   build:
-  - 'test/docker/'
+    - 'test/docker/'
 deployment:
   namespace: "mpyl"
   properties:
     env:
-    - key: SOME_ENV
-      pr: "PullRequest"
-      test: "Test"
-      acceptance: "Acceptance"
-      production: "Production"
+      - key: SOME_ENV
+        pr: "PullRequest"
+        test: "Test"
+        acceptance: "Acceptance"
+        production: "Production"
   kubernetes:
     livenessProbe:
       path:
