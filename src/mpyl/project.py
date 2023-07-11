@@ -202,13 +202,14 @@ class Alert:
     def from_config(values: dict):
         if not values:
             return None
-        return Alert(
-            name=values.get("name", ""),
-            expr=values.get("expr", ""),
-            for_duration=values.get("forDuration", ""),
-            description=values.get("description", ""),
-            severity=values.get("severity", ""),
-        )
+        name = values.get("name")
+        expr = values.get("expr")
+        for_duration = values.get("forDuration")
+        description = values.get("description")
+        severity = values.get("severity")
+        if not name or not expr or not for_duration or not description or not severity:
+            return None
+        return Alert(name, expr, for_duration, description, severity)
 
 
 @dataclass(frozen=True)
