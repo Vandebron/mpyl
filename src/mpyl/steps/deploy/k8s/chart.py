@@ -459,7 +459,8 @@ class ChartBuilder:
         docker_image = self.step_input.required_artifact
         if not docker_image or docker_image.artifact_type != ArtifactType.DOCKER_IMAGE:
             raise ValueError(
-                f"Required artifact of type {ArtifactType.DOCKER_IMAGE.name} must be defined"  # pylint: disable=no-member
+                f"Required artifact of type {ArtifactType.DOCKER_IMAGE.name} must be defined"
+                # pylint: disable=no-member
             )
         return docker_image.spec["image"]
 
@@ -608,7 +609,6 @@ def _to_service_components_chart(builder):
         "service": builder.to_service(),
         "ingress-https-route": builder.to_ingress_routes(),
     }
-    print(f"here with {builder.project.kubernetes.metrics}")
     prometheus_chart = (
         {
             "prometheus-rule": builder.to_prometheus_rule(
