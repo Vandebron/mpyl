@@ -4,7 +4,7 @@ stages:
   build: Sbt Build
   test: Sbt Test
   deploy: Kubernetes Deploy
-description: 'Demonstrates h ow an SBT project can be built and tested'
+description: 'Demonstrates how an SBT project can be built and tested'
 deployment:
   properties:
     env:
