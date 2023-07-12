@@ -109,9 +109,9 @@ def show_project(obj, name):
 )
 @click.pass_obj
 def lint(obj: ProjectsContext, all_):
-    found_projects = []
+    project_paths = []
     if all_:
-        found_projects = obj.cli.repo.find_projects(obj.filter)
+        project_paths = obj.cli.repo.find_projects(obj.filter)
     else:
         branch = obj.cli.repo.get_branch
         changes = (
@@ -122,23 +122,23 @@ def lint(obj: ProjectsContext, all_):
         build_set = find_build_set(obj.cli.repo, changes, False)
         for all_projects in build_set.values():
             for project in all_projects:
-                if project.path not in found_projects:
-                    found_projects.append(project.path)
+                if project.path not in project_paths:
+                    project_paths.append(project.path)
 
     invalid = 0
     valid = 0
-    for project in found_projects:
+    for project_path in project_paths:
         try:
-            project_path = Path(obj.cli.repo.root_dir()) / Path(project)
-            with open(project_path, encoding="utf-8") as file:
+            path = Path(obj.cli.repo.root_dir()) / Path(project_path)
+            with open(path, encoding="utf-8") as file:
                 validate_project(file)
         except jsonschema.exceptions.ValidationError as exc:
-            obj.cli.console.print(f"❌ {project}: {exc.message}")
+            obj.cli.console.print(f"❌ {project_path}: {exc.message}")
             invalid += 1
         else:
             valid += 1
             if obj.cli.verbose:
-                obj.cli.console.print(f"✅ {project}")
+                obj.cli.console.print(f"✅ {project_path}")
     obj.cli.console.print(
         f"Validated {valid + invalid} projects. {valid} valid, {invalid} invalid"
     )
