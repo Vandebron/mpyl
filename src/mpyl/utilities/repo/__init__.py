@@ -138,12 +138,21 @@ class Repository:
         revisions = list(
             reversed(list(self._repo.iter_commits(f"{self._config.main_branch}..HEAD")))
         )
+
+        logging.debug(
+            f"Found {len(revisions)} revisions in branch: {[r.hexsha for r in revisions]}"
+        )
+
         if not revisions:
             return []
 
+        first_revision = (
+            revisions[0].hexsha if len(revisions) != 1 else self._config.main_branch
+        )
+
         files_touched_in_branch = set(
             self._repo.git.diff(
-                f"{revisions[0].hexsha}..{revisions[-1].hexsha}", name_only=True
+                f"{first_revision}..{revisions[-1].hexsha}", name_only=True
             ).splitlines()
         )
         return [
