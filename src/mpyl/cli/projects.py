@@ -122,12 +122,11 @@ def lint(obj: ProjectsContext, all_):
         build_set = find_build_set(obj.cli.repo, changes, False)
         for all_projects in build_set.values():
             for project in all_projects:
-                if project.path not in project_paths:
-                    project_paths.append(project.path)
+                project_paths.append(project.path)
 
     invalid = 0
     valid = 0
-    for project_path in project_paths:
+    for project_path in set(project_paths):
         try:
             path = Path(obj.cli.repo.root_dir()) / Path(project_path)
             with open(path, encoding="utf-8") as file:
