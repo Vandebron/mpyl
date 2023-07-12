@@ -14,6 +14,7 @@ from ....project import load_project, Stage, Project
 from ....reporting.formatting.markdown import run_result_to_markdown
 from ....reporting.targets import Reporter
 from ....stages.discovery import for_stage, find_invalidated_projects_per_stage
+from ....steps.collection import StepsCollection
 from ....steps.models import RunProperties
 from ....steps.run import RunResult
 from ....steps.steps import Steps, ExecutionException
@@ -125,6 +126,9 @@ def run_mpyl(
                 steps = Steps(
                     logger=logger,
                     properties=mpyl_run_parameters.run_config.run_properties,
+                    steps_collection=StepsCollection(
+                        logger=logger, base_path="src" if params.local else None
+                    ),
                 )
                 run_result = run_build(
                     run_plan, steps, reporter, mpyl_run_parameters.parameters.local

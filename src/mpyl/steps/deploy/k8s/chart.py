@@ -43,6 +43,7 @@ from .resources import (
     CustomResourceDefinition,
     to_dict,
 )  # pylint: disable = no-name-in-module
+from .resources.prometheus import V1PrometheusRule
 from .resources.sealed_secret import V1SealedSecret
 from .resources.spark import (
     to_spark_body,
@@ -68,6 +69,7 @@ from ....project import (
     Traefik,
     Host,
     get_env_variables,
+    Alert,
 )
 from ....stages.discovery import DeploySet
 
@@ -335,6 +337,14 @@ class ChartBuilder:
             metadata=self._to_object_meta(),
         )
 
+    def to_prometheus_rule(self, alerts: list[Alert]) -> V1PrometheusRule:
+        return V1PrometheusRule(
+            metadata=self._to_object_meta(
+                name=f"{self.project.name.lower()}-prometheus-rule"
+            ),
+            alerts=alerts,
+        )
+
     def __find_default_port(self) -> int:
         found = next(iter(self.mappings.keys()))
         if found:
@@ -449,7 +459,8 @@ class ChartBuilder:
         docker_image = self.step_input.required_artifact
         if not docker_image or docker_image.artifact_type != ArtifactType.DOCKER_IMAGE:
             raise ValueError(
-                f"Required artifact of type {ArtifactType.DOCKER_IMAGE.name} must be defined"  # pylint: disable=no-member
+                # pylint: disable-next=no-member
+                f"Required artifact of type {ArtifactType.DOCKER_IMAGE.name} must be defined"
             )
         return docker_image.spec["image"]
 
@@ -587,13 +598,28 @@ class ChartBuilder:
 def to_service_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
     return (
         builder.to_common_chart()
-        | {
-            "deployment": builder.to_deployment(),
-            "service": builder.to_service(),
-            "ingress-https-route": builder.to_ingress_routes(),
-        }
+        | _to_service_components_chart(builder)
         | builder.to_middlewares()
     )
+
+
+def _to_service_components_chart(builder):
+    common_chart = {
+        "deployment": builder.to_deployment(),
+        "service": builder.to_service(),
+        "ingress-https-route": builder.to_ingress_routes(),
+    }
+    prometheus_chart = (
+        {
+            "prometheus-rule": builder.to_prometheus_rule(
+                alerts=builder.project.kubernetes.metrics.alerts
+            )
+        }
+        if builder.project.kubernetes.metrics
+        and builder.project.kubernetes.metrics.enabled
+        else {}
+    )
+    return common_chart | prometheus_chart
 
 
 def to_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:

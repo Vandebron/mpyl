@@ -49,7 +49,13 @@ deployment:
     portMappings:
       8080: 80
     metrics:
-      enabled: false
+      enabled: true
+      alerts:
+      - name: 'ServiceError'
+        expr: 'true'
+        forDuration: '1m'
+        description: 'Service has encountered errors'
+        severity: 'warning'
     resources:
       instances:
         all: 1

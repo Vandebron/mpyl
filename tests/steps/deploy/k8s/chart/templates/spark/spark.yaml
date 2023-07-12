@@ -11,7 +11,7 @@ spec:
     sparkVersion: 3.1.1
     restartPolicy:
       type: Never
-    sparkConfigMap: enrichchargesessionsjob
+    sparkConfigMap: sparkjob
     image: bigdataregistry.azurecr.io/send-slack-notification:PR-1231
     arguments:
     - python
@@ -24,14 +24,12 @@ spec:
       memoryOverhead: '1024'
       labels:
         version: 3.1.1
-      serviceAccount: enrichchargesessionsjob
+      serviceAccount: sparkjob
       envVars:
         DEPLOY_ENV: Test
-        APP_NAME: enrichChargeSessionsJob
+        APP_NAME: sparkJob
         CASSANDRA_HOST: cassandra.cassandra.svc.cluster.local
-        CASSANDRA_DC: dc1_k8s_test
         VAULT_ENABLED: 'true'
-        VAULT_ADDR: https://vs.nl/
         DEPLOY_MODE: cluster
         ELASTICSEARCH_HOST: elastic-es-http.elastic
     executor:
@@ -43,11 +41,9 @@ spec:
         version: 3.1.1
       envVars:
         DEPLOY_ENV: Test
-        APP_NAME: enrichChargeSessionsJob
+        APP_NAME: sparkJob
         CASSANDRA_HOST: cassandra.cassandra.svc.cluster.local
-        CASSANDRA_DC: dc1_k8s_test
         VAULT_ENABLED: 'true'
-        VAULT_ADDR: https://vs.nl/
         DEPLOY_MODE: cluster
         ELASTICSEARCH_HOST: elastic-es-http.elastic
     deps:
@@ -58,5 +54,5 @@ spec:
       spark.executor.extraClassPath: mssql-jdbc-11.2.1.jre8.jar
       spark.sql.legacy.timeParserPolicy: LEGACY
       spark.sql.broadcastTimeout: '600'
-    mainClass: enrichchargesessions.EnrichChargeSessionsJobMain
-    mainApplicationFile: local:///app/enrichchargesessionsjob-assembly-1.0.jar
+    mainClass: sparkjob.sparkJobMain
+    mainApplicationFile: local:///app/sparkjob-assembly-1.0.jar

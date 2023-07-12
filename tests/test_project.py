@@ -43,9 +43,7 @@ class TestMplSchema:
             )
             == "/health"
         )
-        assert (
-            not project.deployment.kubernetes.metrics.enabled
-        ), "metrics should be disabled"
+        assert project.deployment.kubernetes.metrics.enabled
 
         host = project.deployment.traefik.hosts[0]
         assert (

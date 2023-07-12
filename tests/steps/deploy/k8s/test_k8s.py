@@ -153,6 +153,7 @@ class TestKubernetesChart:
             "ingress-https-route",
             "dockertest-ingress-0-whitelist",
             "dockertest-ingress-1-whitelist",
+            "prometheus-rule",
         ],
     )
     def test_service_chart_roundtrip(self, template):
@@ -167,6 +168,7 @@ class TestKubernetesChart:
             "ingress-https-route",
             "dockertest-ingress-0-whitelist",
             "dockertest-ingress-1-whitelist",
+            "prometheus-rule",
         }
 
     def test_default_ingress(self):

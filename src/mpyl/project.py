@@ -191,16 +191,43 @@ class Probe:
 
 
 @dataclass(frozen=True)
+class Alert:
+    name: str
+    expr: str
+    for_duration: str
+    description: str
+    severity: str
+
+    @staticmethod
+    def from_config(values: dict):
+        name = values.get("name")
+        expr = values.get("expr")
+        for_duration = values.get("forDuration")
+        description = values.get("description")
+        severity = values.get("severity")
+        if not name or not expr or not for_duration or not description or not severity:
+            raise KeyError(
+                "Alerts must have a name, expr, forDuration, description and severity set."
+            )
+        return Alert(name, expr, for_duration, description, severity)
+
+
+@dataclass(frozen=True)
 class Metrics:
     path: str
+    port: Optional[str]
     enabled: bool
+    alerts: list[Alert]
 
     @staticmethod
     def from_config(values: dict):
         if not values:
             return None
         return Metrics(
-            path=values.get("path", "/metrics"), enabled=values.get("enabled", False)
+            path=values.get("path", "/metrics"),
+            port=values.get("port", None),
+            enabled=values.get("enabled", False),
+            alerts=[Alert.from_config(v) for v in values.get("alerts", [])],
         )
 
 
