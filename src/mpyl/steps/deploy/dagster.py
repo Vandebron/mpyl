@@ -4,9 +4,9 @@ Step to deploy a dagster user code repository to k8s
 from logging import Logger
 from typing import List
 
-from mpyl.steps.models import RunProperties
 
 from .k8s import helm, get_key_of_config_map, rollout_restart_deployment, cluster_config
+from ..models import RunProperties
 from .. import Step, Meta, ArtifactType, Input, Output
 from ...project import Stage, Project, Target, get_env_variables
 from ...stages.discovery import find_deploy_set
