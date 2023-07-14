@@ -25,8 +25,8 @@ class DeployDagster(Step):
 
     def __to_user_code_deployment(self, project: Project, run_properties: RunProperties):
         env_variables = get_env_variables(project, run_properties.target)
-        name_prefix = f'pr-{run_properties.versioning.pr_number}_' if run_properties.target == Target.PULL_REQUEST else ''
-        a =  {'deployments': [{
+        name_prefix = f'pr-{run_properties.versioning.pr_number}-' if run_properties.target == Target.PULL_REQUEST else ''
+        return {'deployments': [{
             'dagsterApiGrpcArgs': [
                 "--python-file",
                 project.dagster.repo
@@ -49,8 +49,6 @@ class DeployDagster(Step):
             'name': f'{name_prefix}{project.name}',
             'port': 3030
         }]}
-        self._logger.info(a)
-        return a
 
     # Deploys the docker image produced in the build stage as a Dagster user-code-deployment
     def execute(self, step_input: Input) -> Output:
