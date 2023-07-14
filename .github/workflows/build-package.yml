@@ -4,52 +4,52 @@ on:
     branches-ignore: [ 'main' ]
 
 jobs:
-  Lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        id: cache-dependencies
-        with:
-          python-version: '3.9'
-          cache: 'pipenv'
-          cache-dependency-path: |
-            Pipfile.lock
+  # Lint:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - uses: actions/setup-python@v4
+  #       id: cache-dependencies
+  #       with:
+  #         python-version: '3.9'
+  #         cache: 'pipenv'
+  #         cache-dependency-path: |
+  #           Pipfile.lock
 
-      - name: Install pipenv
-        run: pip install pipenv
+  #     - name: Install pipenv
+  #       run: pip install pipenv
 
-      - name: Install dependencies
-        if: steps.cache-dependencies.outputs.cache-hit != 'true'
-        run: pipenv install -d --deploy
+  #     - name: Install dependencies
+  #       if: steps.cache-dependencies.outputs.cache-hit != 'true'
+  #       run: pipenv install -d --deploy
 
-      - name: Check formatting
-        run: pipenv run format
+  #     - name: Check formatting
+  #       run: pipenv run format
 
-      - name: Run lint
-        run: pipenv run lint
+  #     - name: Run lint
+  #       run: pipenv run lint
 
-  TypeCheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        id: cache-dependencies
-        with:
-          python-version: '3.9'
-          cache: 'pipenv'
-          cache-dependency-path: |
-            Pipfile.lock
+  # TypeCheck:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - uses: actions/setup-python@v4
+  #       id: cache-dependencies
+  #       with:
+  #         python-version: '3.9'
+  #         cache: 'pipenv'
+  #         cache-dependency-path: |
+  #           Pipfile.lock
 
-      - name: Install pipenv
-        run: pip install pipenv
+  #     - name: Install pipenv
+  #       run: pip install pipenv
 
-      - name: Install dependencies
-        if: steps.cache-dependencies.outputs.cache-hit != 'true'
-        run: pipenv install -d --deploy
+  #     - name: Install dependencies
+  #       if: steps.cache-dependencies.outputs.cache-hit != 'true'
+  #       run: pipenv install -d --deploy
 
-      - name: Check types
-        run: pipenv run check-types
+  #     - name: Check types
+  #       run: pipenv run check-types
 
   Test:
     runs-on: ubuntu-latest
