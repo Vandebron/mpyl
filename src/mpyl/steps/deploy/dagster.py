@@ -76,16 +76,16 @@ class DeployDagster(Step):
         # DagsterDeploy we "Apply it and retrieve it again to make sure it has the last-applied-configuration annotation"
         workspace = get_key_of_config_map(context, namespace, 'dagster-workspace-yaml', 'workspace.yaml')
         workspace_names = [w['grpc_server'] for w in workspace['load_from']]
-        is_new_server = user_code_deployments['name'] not in workspace_names
+        # is_new_server = user_code_deployments['name'] not in workspace_names
 
-        if is_new_server:
-            self._logger.info('Adding new server')
-            new_workspace_servers_list = workspace['load_from']
-            new_workspace_servers_list.append(user_code_deployments)
+        # if is_new_server:
+        #     self._logger.info('Adding new server')
+        #     new_workspace_servers_list = workspace['load_from']
+        #     new_workspace_servers_list.append(user_code_deployments)
 
-            # kubectl apply with updated workspace.yaml
+        #     # kubectl apply with updated workspace.yaml
 
-            rollout_restart_deployment(namespace, "dagster-dagit")
-            rollout_restart_deployment(namespace, "dagster-daemon")
+        #     rollout_restart_deployment(namespace, "dagster-dagit")
+        #     rollout_restart_deployment(namespace, "dagster-daemon")
 
         return deploy_results[0]
