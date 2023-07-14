@@ -4,7 +4,7 @@ from pathlib import Path
 
 import click
 import jsonschema
-from click import ParamType
+from click import ParamType, Argument
 from click.shell_completion import CompletionItem
 from rich.markdown import Markdown
 
@@ -93,11 +93,25 @@ class ProjectPath(ParamType):
 
 @projects.command(name="show", help="Show details of a project")
 @click.argument("name", required=True, type=ProjectPath())
-@click.pass_obj
-def show_project(obj, name):
-    print_project(
-        obj.cli.repo, obj.cli.console, f"{name}/{Project.project_yaml_path()}"
-    )
+@click.pass_context
+def show_project(ctx, name):
+    obj = ctx.obj
+    project_path = f"{name}/{Project.project_yaml_path()}"
+    if not (obj.cli.repo.root_dir() / project_path).exists():
+        obj.cli.console.print(
+            Markdown(
+                f"Project `{name}` not found. 👉 Finding projects is much easier with [auto completion]"
+                f"(https://github.com/Vandebron/mpyl/blob/096df81404985d966b870e7d33697c0101563a88/"
+                f"README-usage.md#auto-completion) enabled."
+            )
+        )
+        complete = ProjectPath().shell_complete(
+            ctx, Argument(param_decls=["--name"]), name
+        )
+        obj.cli.console.print("Did you mean one of these?")
+        obj.cli.console.print([file.value for file in complete])
+        return
+    print_project(obj.cli.repo, obj.cli.console, project_path)
 
 
 @projects.command(help="Validate the yaml of changed projects against their schema")
