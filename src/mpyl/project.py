@@ -434,6 +434,12 @@ class Project:
         return self.deployment.s3_bucket
 
     @property
+    def dagster(self) -> Dagster:
+        if self.deployment is None or self.deployment.dagster is None:
+            raise KeyError(f"Project '{self.name}' does not have kubernetes configuration")
+        return self.deployment.dagster
+
+    @property
     def resources(self) -> Resources:
         return self.kubernetes.resources
 

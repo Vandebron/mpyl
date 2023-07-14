@@ -29,7 +29,7 @@ class DeployDagster(Step):
         return {'deployments': [{
             'dagsterApiGrpcArgs': [
                 "--python-file",
-                project.deployment.dagster.repo
+                project.dagster.repo
             ],
             'env': env_variables,
             'envSecrets': [],
