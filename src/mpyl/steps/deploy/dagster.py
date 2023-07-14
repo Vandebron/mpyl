@@ -45,7 +45,7 @@ class DeployDagster(Step):
     # Deploys the docker image produced in the build stage as a Dagster user-code-deployment
     def execute(self, step_input: Input) -> Output:
         namespace = 'dagster'
-        context = cluster_config(step_input).context
+        context = cluster_config(step_input.run_properties.target, step_input.run_properties).context
 
         # get dagster version command
         version = '1.3.10'
