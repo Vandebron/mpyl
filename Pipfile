@@ -40,6 +40,7 @@ pdoc = "==13.1.1"
 sqlalchemy = "<2.0.0" # forced downgrade https://github.com/dagster-io/dagster/discussions/11881
 coverage = "==7.2.2"
 'black[d]' = "==23.3.0"
+black = "==23.3.0"
 
 [requires]
 python_version = "3.9"
