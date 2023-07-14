@@ -25,8 +25,8 @@ class DeployDagster(Step):
 
     def __to_user_code_deployment(self, project: Project, run_properties: RunProperties):
         env_variables = get_env_variables(project, run_properties.target)
-        name_prefix = f'{run_properties.versioning.pr_number}_' if run_properties.target == Target.PULL_REQUEST else ''
-        return {'deployments': [{
+        name_prefix = f'pr-{run_properties.versioning.pr_number}_' if run_properties.target == Target.PULL_REQUEST else ''
+        a =  {'deployments': [{
             'dagsterApiGrpcArgs': [
                 "--python-file",
                 project.dagster.repo
@@ -35,12 +35,22 @@ class DeployDagster(Step):
             'envSecrets': [],
             'image': {
                 'pullPolicy': 'Always',
-                'imagePullSecrets': [],
-                'tag': ''
+                'imagePullSecrets': [
+                    {
+                        'name': 'bigdataregistry'
+                    }
+                ],
+                'tag': run_properties.versioning.identifier,
+                'repository': f'bigdataregistry.azurecr.io/{project.name}'
+            },
+            'includeConfigInLaunchedRuns': {
+                'enabled': True
             },
             'name': f'{name_prefix}{project.name}',
             'port': 3030
         }]}
+        self._logger.info(a)
+        return a
 
     # Deploys the docker image produced in the build stage as a Dagster user-code-deployment
     def execute(self, step_input: Input) -> Output:
@@ -55,7 +65,7 @@ class DeployDagster(Step):
         # TODO is there a global way for installing this depenendency?
         helm.add_repo(self._logger, namespace, 'https://dagster-io.github.io/helm')
 
-        deploy_set = find_deploy_set(RepoConfig.from_config(step_input.run_properties.config))
+        deploy_set = find_deploy_set(RepoConfig.from_config(step_input.run_properties.config), step_input.run_properties.versioning.tag)
         # we have the possiblity to have more than one project to be deployed
         # we could bulk upsert them here, or we run the upsertion per project
         user_code_deployments: List[dict] = []
@@ -66,11 +76,16 @@ class DeployDagster(Step):
             # conversion of project.yml to user-code chart
             # Chartbuilder might not be needed, or needs adjustment to accommodate for appending to existing chart
 
-        context = cluster_config(step_input).context
-
         deploy_results = []
         for deployment in user_code_deployments:
-            result = helm.install_with_values_yaml(self._logger, step_input, deployment, 'suser-code', 'dagster', context)
+            result = helm.install_with_values_yaml(
+                self._logger,
+                step_input,
+                deployment,
+                'uc-test',
+                'dagster/dagster-user-deployments',
+                'dagster',
+                context)
             deploy_results.append(result)
 
         # DagsterDeploy we "Apply it and retrieve it again to make sure it has the last-applied-configuration annotation"
