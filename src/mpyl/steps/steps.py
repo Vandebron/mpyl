@@ -7,24 +7,11 @@ from datetime import datetime
 from logging import Logger
 from typing import Optional
 
-from ruamel.yaml import YAML
+from ruamel.yaml import YAML # type: ignore
 
 from . import Step
 from .collection import StepsCollection
-from .build.dockerbuild import BuildDocker
-from .build.echo import BuildEcho
-from .build.sbt import BuildSbt
-from .deploy.dagster import DeployDagster
-from .deploy.echo import DeployEcho
-from .deploy.ephemeral_docker_deploy import EphemeralDockerDeploy
-from .deploy.kubernetes import DeployKubernetes
-from .deploy.kubernetes_job import DeployKubernetesJob
-from .deploy.kubernetes_spark_job import DeployKubernetesSparkJob
 from .models import Output, Input, RunProperties, ArtifactType, Artifact
-from ..steps.test.dockertest import TestDocker
-from ..steps.test.echo import TestEcho
-from ..steps.test.sbt import TestSbt  # type: ignore
-from ..steps.postdeploy.cypress_test import CypressTest
 from ..project import Project
 from ..project import Stage
 from ..validation import validate
@@ -64,31 +51,6 @@ class Steps:
         steps_collection: Optional[StepsCollection] = None,
     ) -> None:
         self._logger = logger
-
-        self._step_executors: dict[Stage, set[Step]] = {
-            Stage.BUILD: {
-                BuildEcho(logger),
-                BuildSbt(logger),
-                BuildDocker(logger)
-            },
-            Stage.TEST: {
-                TestEcho(logger),
-                TestSbt(logger),
-                TestDocker(logger)
-            },
-            Stage.DEPLOY: {
-                DeployEcho(logger),
-                DeployDagster(logger),
-                DeployKubernetes(logger),
-                DeployKubernetesJob(logger),
-                DeployKubernetesSparkJob(logger),
-                EphemeralDockerDeploy(logger)
-            },
-            Stage.POST_DEPLOY: {
-                CypressTest(logger)
-            }
-        }
-
         self._properties = properties
         self._steps_collection = steps_collection or StepsCollection(logger)
 
