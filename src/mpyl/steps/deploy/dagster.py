@@ -2,10 +2,13 @@
 Step to deploy a dagster user code repository to k8s
 """
 from logging import Logger
+from typing import List
+
+from mpyl.steps.models import RunProperties
 
 from .k8s import helm, get_key_of_config_map, rollout_restart_deployment, cluster_config
 from .. import Step, Meta, ArtifactType, Input, Output
-from ...project import Stage, Project
+from ...project import Stage, Project, Target, get_env_variables
 from ...stages.discovery import find_deploy_set
 from ...utilities.repo import RepoConfig
 
@@ -20,21 +23,24 @@ class DeployDagster(Step):
             stage=Stage.DEPLOY
         ), produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.DOCKER_IMAGE)
 
-    def __to_user_code_deployment(self, project: Project):
-        return {
+    def __to_user_code_deployment(self, project: Project, run_properties: RunProperties):
+        env_variables = get_env_variables(project, run_properties.target)
+        name_prefix = f'{run_properties.versioning.pr_number}_' if run_properties.target == Target.PULL_REQUEST else ''
+        return {'deployments': [{
             'dagsterApiGrpcArgs': [
                 "--python-file",
-                project.name
+                project.deployment.dagster.repo
             ],
+            'env': env_variables,
             'envSecrets': [],
             'image': {
                 'pullPolicy': 'Always',
                 'imagePullSecrets': [],
                 'tag': ''
             },
-            'name': project.name,  # make PR distinction
+            'name': f'{name_prefix}{project.name}',
             'port': 3030
-        }
+        }]}
 
     # Deploys the docker image produced in the build stage as a Dagster user-code-deployment
     def execute(self, step_input: Input) -> Output:
@@ -44,52 +50,42 @@ class DeployDagster(Step):
         # get dagster version command
         version = '1.3.10'
         self._logger.info(f'Dagster Version: {version}')
-        self._logger.info(f'Namespace will be overwritten and project will be pushed to {namespace}')
-        # namespace: dagster
         # checking dagster-dagit version
 
+        # TODO is there a global way for installing this depenendency?
         helm.add_repo(self._logger, namespace, 'https://dagster-io.github.io/helm')
 
         deploy_set = find_deploy_set(RepoConfig.from_config(step_input.run_properties.config))
-        print(deploy_set.projects_to_deploy)
-        new_user_code_deployments = []
+        # we have the possiblity to have more than one project to be deployed
+        # we could bulk upsert them here, or we run the upsertion per project
+        user_code_deployments: List[dict] = []
+
+        # TODO we dont need create user_deployment.yaml anymore -> we can provide a values.yaml to the helm upgrade command
         for project in deploy_set.projects_to_deploy:
-            new_user_code_deployments.append(self.__to_user_code_deployment(project))
-        new_user_code_deployment = new_user_code_deployments[0]
-        # conversion of project.yml to user-code chart
+            user_code_deployments.append(self.__to_user_code_deployment(project, step_input.run_properties))
+            # conversion of project.yml to user-code chart
+            # Chartbuilder might not be needed, or needs adjustment to accommodate for appending to existing chart
 
-        # DagsterDeploy we Apply it and retrieve it again to make sure it has the last-applied-configuration annotation
-        user_deployments = get_key_of_config_map(context, namespace, 'dagster-user-code', 'user-deployments.yaml')
-        user_code_deployments = user_deployments['deployments']
-        # deployment_names = [u['name'] for u in user_code_deployments]
+        context = cluster_config(step_input).context
 
-        is_new_deployment = False  # new_deployment['name'] not in deployment_names
+        deploy_results = []
+        for deployment in user_code_deployments:
+            result = helm.install_with_values_yaml(self._logger, step_input, deployment, 'suser-code', 'dagster', context)
+            deploy_results.append(result)
 
-        # merge usercode, maybe do a copy?
-        if is_new_deployment:
-            user_code_deployments.append(new_user_code_deployment)
-        else:
-            for i, deployment in enumerate(user_code_deployments):
-                if deployment['name'] == new_user_code_deployment['name']:
-                    user_code_deployments[i] = new_user_code_deployment
-
-        # deploy_result = deploy_helm_chart(self._logger, chart, step_input, builder.release_name)
-
-        if is_new_deployment:
-            rollout_restart_deployment(namespace,
-                                       f"user-code-dagster-user-deployments-${new_user_code_deployment['name']}")
-
-        # DagsterDeploy we Apply it and retrieve it again to make sure it has the last-applied-configuration annotation
+        # DagsterDeploy we "Apply it and retrieve it again to make sure it has the last-applied-configuration annotation"
         workspace = get_key_of_config_map(context, namespace, 'dagster-workspace-yaml', 'workspace.yaml')
-        # workspace_names = [w['grpc_server'] for w in workspace['load_from']]
-        is_new_server = False  # new_user_code_deployment['name'] not in workspace_names
+        workspace_names = [w['grpc_server'] for w in workspace['load_from']]
+        is_new_server = user_code_deployments['name'] not in workspace_names
 
         if is_new_server:
             self._logger.info('Adding new server')
             new_workspace_servers_list = workspace['load_from']
-            new_workspace_servers_list.append(new_user_code_deployment)
+            new_workspace_servers_list.append(user_code_deployments)
+
+            # kubectl apply with updated workspace.yaml
 
             rollout_restart_deployment(namespace, "dagster-dagit")
             rollout_restart_deployment(namespace, "dagster-daemon")
 
-        return Output(False, "Still implementing")
+        return deploy_results[0]

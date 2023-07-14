@@ -71,6 +71,16 @@ def __remove_existing_chart(
         success=True, message=f"No existing chart {chart_name} found to delete"
     )
 
+def install_with_values_yaml(logger: Logger, step_input: Input, values: dict, chart_name: str, namespace: str, kube_context: str) -> Output:
+
+    values_path = Path(step_input.project.target_path)
+    logger.info(f"Writing HELM values to {values_path}")
+
+    with open(values_path / Path("values.yaml"), mode='w+', encoding='utf-8') as file:
+        file.write(to_yaml(values))
+
+    cmd = f'helm upgrade -i {chart_name} -n {namespace} --kube-context {kube_context} -f {values_path / Path("values.yaml")}'
+    return custom_check_output(logger, cmd)
 
 def write_helm_chart(
     logger: Logger,

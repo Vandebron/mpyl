@@ -333,6 +333,9 @@ class Host:
             whitelists=TargetProperty.from_config(values.get("whitelists", {})),
         )
 
+@dataclass(frozen=True)
+class Dagster:
+    repo: str
 
 @dataclass(frozen=True)
 class Traefik:
@@ -362,6 +365,7 @@ class Deployment:
     namespace: Optional[str]
     properties: Properties
     kubernetes: Optional[Kubernetes]
+    dagster: Optional[Dagster]
     traefik: Optional[Traefik]
     s3_bucket: Optional[S3Bucket]
 
