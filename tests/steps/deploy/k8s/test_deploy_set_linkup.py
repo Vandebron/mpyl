@@ -49,13 +49,13 @@ class TestDeploySetLinkup:
 
     def test_should_replace_namespace_with_subproject(self):
         envs = {
-            "KEY_1": "http://energy-dashboard.{namespace/subproject}.svc.cluster.local:4082",
-            "KEY_2": "http://main-website.{namespace}.svc.cluster.local:4050",
+            "KEY_1": "http://energy-dashboard.{namespace}.svc.cluster.local:4082",
+            "KEY_2": "http://main-website.{namespace=fallback}.svc.cluster.local:4050",
         }
 
         expected_envs = {
             "KEY_1": "http://energy-dashboard.pr-1234.svc.cluster.local:4082",
-            "KEY_2": "http://main-website.webapps.svc.cluster.local:4050",
+            "KEY_2": "http://main-website.fallback.svc.cluster.local:4050",
         }
 
         replaced_envs = substitute_namespaces(

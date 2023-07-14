@@ -83,23 +83,24 @@ def substitute_namespaces(
 ) -> dict[str, str]:
     env = env_vars.copy()
 
-    def is_subproject_within_namespace(env_value: str):
-        regex = re.compile("{namespace/.*?}")
+    def has_fallback_namespace(env_value: str):
+        regex = re.compile("{namespace=(.*?)}")
         return regex.search(env_value)
 
     def get_namespace_for_linked_project(env_value: str, project_name: ProjectName):
         is_part_of_same_deploy_set = project_name in projects_to_deploy
-        if (
-            is_part_of_same_deploy_set or is_subproject_within_namespace(env_value)
-        ) and pr_identifier:
+        if is_part_of_same_deploy_set and pr_identifier:
             return f"pr-{pr_identifier}"
+        fallback_namespace = has_fallback_namespace(env_value)
+        if fallback_namespace:
+            return fallback_namespace.group(1)
         return project_name.namespace
 
     def replace_namespace(env_value: str, project_name: str):
         namespace = get_namespace_for_linked_project(env_value, project)
         search_value = project_name + r"\.{namespace}"
-        if is_subproject_within_namespace(env_value):
-            search_value = project_name + r"\.{namespace/.*?}"
+        if has_fallback_namespace(env_value):
+            search_value = project_name + r"\.{namespace=.*?}"
         replace_value = project_name + "." + namespace
         return re.sub(search_value, replace_value, env_value)
 
