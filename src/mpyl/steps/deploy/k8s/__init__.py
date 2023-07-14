@@ -1,4 +1,5 @@
 """Kubernetes deployment related helper methods"""
+import re
 from logging import Logger
 from typing import Optional
 
@@ -82,24 +83,30 @@ def substitute_namespaces(
 ) -> dict[str, str]:
     env = env_vars.copy()
 
-    def get_namespace_for_linked_project(project_name: ProjectName):
+    def is_subproject_within_namespace(env_value: str):
+        regex = re.compile("{namespace/.*?}")
+        return regex.search(env_value)
+
+    def get_namespace_for_linked_project(env_value: str, project_name: ProjectName):
         is_part_of_same_deploy_set = project_name in projects_to_deploy
-        if is_part_of_same_deploy_set and pr_identifier:
+        if (
+            is_part_of_same_deploy_set or is_subproject_within_namespace(env_value)
+        ) and pr_identifier:
             return f"pr-{pr_identifier}"
         return project_name.namespace
 
-    def replace_namespace(env_value, project_name, namespace):
-        search_value = project_name + ".{namespace}"
+    def replace_namespace(env_value: str, project_name: str):
+        namespace = get_namespace_for_linked_project(env_value, project)
+        search_value = project_name + r"\.{namespace}"
+        if is_subproject_within_namespace(env_value):
+            search_value = project_name + r"\.{namespace/.*?}"
         replace_value = project_name + "." + namespace
-        return env_value.replace(search_value, replace_value)
+        return re.sub(search_value, replace_value, env_value)
 
     for project in all_projects:
         if project.namespace:
-            linked_project_namespace = get_namespace_for_linked_project(project)
             for key, value in env.items():
-                replaced_namespace = replace_namespace(
-                    value, project.name, linked_project_namespace
-                )
+                replaced_namespace = replace_namespace(value, project.name)
                 updated_pr = (
                     replaced_namespace.replace("{PR-NUMBER}", str(pr_identifier))
                     if pr_identifier
