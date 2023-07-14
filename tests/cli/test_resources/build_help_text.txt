@@ -1,0 +1,16 @@
+Usage: mpyl build [OPTIONS] COMMAND [ARGS]...
+
+  Pipeline build commands
+
+Options:
+  -c, --config PATH      Path to the config.yml. Can be set via
+                         `MPYL_CONFIG_PATH` env var.   [required]
+  -p, --properties PATH  Path to run properties  [default: run_properties.yml]
+  -v, --verbose          Verbose output
+  --help                 Show this message and exit.
+
+Commands:
+  clean    Clean MPyL metadata in `.mpyl` folders
+  jenkins  Run a multi branch pipeline build on Jenkins
+  run      Run an MPyL build
+  status   The status of the current local branch from MPyL's perspective

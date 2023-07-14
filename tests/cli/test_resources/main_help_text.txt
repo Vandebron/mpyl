@@ -1,0 +1,12 @@
+Usage: mpyl [OPTIONS] COMMAND [ARGS]...
+
+  Command Line Interface for MPyL
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  build     Pipeline build commands
+  health    Health check
+  projects  Commands related to projects
+  version   Version information
