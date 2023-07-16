@@ -126,9 +126,7 @@ def run_mpyl(
                 steps = Steps(
                     logger=logger,
                     properties=mpyl_run_parameters.run_config.run_properties,
-                    steps_collection=StepsCollection(
-                        logger=logger, base_path="src" if params.local else None
-                    ),
+                    steps_collection=StepsCollection(logger=logger),
                 )
                 run_result = run_build(
                     run_plan, steps, reporter, mpyl_run_parameters.parameters.local

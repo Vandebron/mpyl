@@ -51,7 +51,7 @@ class TestBuildCommand:
         executor = Steps(
             logging.getLogger(),
             run_properties,
-            StepsCollection(logging.getLogger(), "src"),
+            StepsCollection(logging.getLogger()),
         )
         result = run_build(accumulator, executor, None)
         assert not result.has_results
@@ -67,7 +67,7 @@ class TestBuildCommand:
         executor = Steps(
             logging.getLogger(),
             run_properties,
-            StepsCollection(logging.getLogger(), "src"),
+            StepsCollection(logging.getLogger()),
         )
         result = run_build(accumulator, executor, None)
         assert result.exception is None
@@ -83,7 +83,7 @@ class TestBuildCommand:
         run_plan = {Stage.BUILD: projects}
         accumulator = RunResult(run_properties=run_properties, run_plan=run_plan)
         logger = logging.getLogger()
-        collection = StepsCollection(logger, "src")
+        collection = StepsCollection(logger)
         executor = Steps(logger, run_properties, collection)
 
         result = run_build(accumulator, executor, None)

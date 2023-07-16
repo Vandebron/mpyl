@@ -1,5 +1,6 @@
 """A collection of all available step executors."""
 import importlib
+import importlib.util
 import pkgutil
 from logging import Logger
 from typing import Optional
@@ -11,8 +12,9 @@ from ..project import Stage
 class StepsCollection:
     _step_executors: set[Step]
 
-    def __init__(self, logger: Logger, base_path: Optional[str] = None) -> None:
+    def __init__(self, logger: Logger) -> None:
         self._step_executors = set()
+        base_path = "src" if importlib.util.find_spec("src") else None
         self.__load_steps_in_module(".", base_path)
 
         for plugin in IPluginRegistry.plugins:

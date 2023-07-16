@@ -30,7 +30,7 @@ class TestSteps:
     executor = Steps(
         logger=logging.getLogger(),
         properties=test_data.RUN_PROPERTIES,
-        steps_collection=StepsCollection(logging.getLogger(), "src"),
+        steps_collection=StepsCollection(logging.getLogger()),
     )
 
     docker_image = get_output()
