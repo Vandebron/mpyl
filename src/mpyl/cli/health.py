@@ -17,5 +17,7 @@ from .commands.health.checks import perform_health_checks
 )
 def health(is_ci):
     """Health check"""
-    console: Console = create_console_logger(local=False, verbose=False)
+    console: Console = create_console_logger(
+        show_path=False, verbose=False, max_width=0
+    )
     perform_health_checks(console, is_ci)

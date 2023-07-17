@@ -6,10 +6,9 @@ from pathlib import Path
 from typing import Optional
 
 from jsonschema import ValidationError
-from rich.console import Console
-from rich.logging import RichHandler
 from rich.markdown import Markdown
 
+from ... import create_console_logger
 from ....project import load_project, Stage, Project
 from ....reporting.formatting.markdown import run_result_to_markdown
 from ....reporting.targets import Reporter
@@ -91,20 +90,11 @@ def run_mpyl(
 ) -> RunResult:
     params = mpyl_run_parameters.parameters
     console_properties = mpyl_run_parameters.run_config.run_properties.console
-    console = Console(
-        markup=False,
-        width=None if params.local else console_properties.width,
-        no_color=False,
-        log_path=False,
-        color_system="256",
+    console = create_console_logger(
+        console_properties.show_paths, params.verbose, console_properties.width or 0
     )
+
     logging.raiseExceptions = False
-    logging.basicConfig(
-        level="DEBUG" if params.verbose else console_properties.log_level,
-        format=FORMAT,
-        datefmt="[%X]",
-        handlers=[RichHandler(markup=False, console=console, show_path=params.local)],
-    )
     logger = logging.getLogger("mpyl")
     try:
         with Repository(

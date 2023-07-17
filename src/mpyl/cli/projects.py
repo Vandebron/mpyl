@@ -54,7 +54,7 @@ class ProjectsContext:
 @click.pass_context
 def projects(ctx, config, verbose, filter_):
     """Commands related to projects"""
-    console = create_console_logger(local=False, verbose=verbose)
+    console = create_console_logger(show_path=False, verbose=verbose, max_width=0)
     parsed_config = parse_config(config)
     ctx.obj = ProjectsContext(
         cli=CliContext(
