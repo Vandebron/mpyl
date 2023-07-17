@@ -84,7 +84,7 @@ def substitute_namespaces(
     env = env_vars.copy()
 
     def has_fallback_namespace(env_value: str):
-        regex = re.compile("{namespace=(.*?)}")
+        regex = re.compile("{namespace:(.*?)}")
         return regex.search(env_value)
 
     def get_namespace_for_linked_project(env_value: str, project_name: ProjectName):
@@ -100,7 +100,7 @@ def substitute_namespaces(
         namespace = get_namespace_for_linked_project(env_value, project)
         search_value = project_name + r"\.{namespace}"
         if has_fallback_namespace(env_value):
-            search_value = project_name + r"\.{namespace=.*?}"
+            search_value = project_name + r"\.{namespace:.*?}"
         replace_value = project_name + "." + namespace
         return re.sub(search_value, replace_value, env_value)
 
