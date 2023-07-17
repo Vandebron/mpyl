@@ -89,9 +89,16 @@ async def warn_if_update(console: Console):
 @click.pass_context
 def build(ctx, config, properties, verbose):
     """Pipeline build commands"""
-    console = create_console_logger(local=False, verbose=verbose)
-    parsed_config = parse_config(config)
     parsed_properties = parse_config(properties)
+    parsed_config = parse_config(config)
+    console_config = RunProperties.from_configuration(
+        parsed_properties, parsed_config
+    ).console
+    console = create_console_logger(
+        show_path=console_config.show_paths,
+        verbose=verbose,
+        max_width=console_config.width,
+    )
 
     repo = ctx.with_resource(Repository(config=RepoConfig.from_config(parsed_config)))
     ctx.obj = CliContext(parsed_config, repo, console, verbose, parsed_properties)

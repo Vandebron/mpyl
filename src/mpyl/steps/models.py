@@ -61,6 +61,7 @@ class RunContext:
 @dataclass(frozen=True)
 class ConsoleProperties:
     log_level: str
+    show_paths: bool
     width: Optional[int]
 
     @staticmethod
@@ -68,7 +69,9 @@ class ConsoleProperties:
         console_config = build_config["console"]
         width = console_config.get("width", 130)
         return ConsoleProperties(
-            console_config.get("logLevel", "INFO"), None if width == 0 else width
+            log_level=console_config.get("logLevel", "INFO"),
+            show_paths=console_config.get("showPaths", False),
+            width=None if width == 0 else width,
         )
 
 
@@ -98,7 +101,7 @@ class RunProperties:
             target=Target.PULL_REQUEST,
             versioning=VersioningProperties(revision, branch, 123, tag),
             config=config,
-            console=ConsoleProperties("INFO", 130),
+            console=ConsoleProperties("INFO", True, 130),
         )
 
     @staticmethod

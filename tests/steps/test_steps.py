@@ -105,7 +105,7 @@ class TestSteps:
             Target.PULL_REQUEST,
             VersioningProperties("", "feature/ARC-123", 1, None),
             config_values,
-            ConsoleProperties("INFO", 130),
+            ConsoleProperties("INFO", False, 130),
         )
         with pytest.raises(ValidationError) as excinfo:
             Steps(logger=Logger.manager.getLogger("logger"), properties=properties)
