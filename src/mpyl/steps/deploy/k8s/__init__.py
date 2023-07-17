@@ -30,20 +30,22 @@ def get_namespace_from_project(project: Project) -> Optional[str]:
     return None
 
 
-def upsert_namespace(logger: Logger, step_input: Input, context: str):
+def upsert_namespace(logger: Logger, step_input: Input, context: str) -> str:
     properties = step_input.run_properties
+
+    namespace = get_namespace(properties, step_input.project) or step_input.project.name
+
+    if step_input.dry_run:
+        return namespace
 
     config.load_kube_config(context=context)
     logger.info(f"Deploying target {properties.target} and k8s context {context}")
     api = client.CoreV1Api()
 
-    namespace = get_namespace(properties, step_input.project)
-    meta_data = rancher_namespace_metadata(
-        namespace or step_input.project.name, step_input
-    )
+    meta_data = rancher_namespace_metadata(namespace, step_input)
     namespaces = api.list_namespace(field_selector=f"metadata.name={namespace}")
 
-    if len(namespaces.items) == 0 and not step_input.dry_run:
+    if len(namespaces.items) == 0:
         api.create_namespace(
             client.V1Namespace(api_version="v1", kind="Namespace", metadata=meta_data)
         )
