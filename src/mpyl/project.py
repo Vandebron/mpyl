@@ -178,7 +178,7 @@ class Properties:
             ),
             kubernetes=list(
                 map(KeyValueProperty.from_config, values.get("kubernetes", []))
-            )
+            ),
         )
 
 
