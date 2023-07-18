@@ -8,15 +8,19 @@ from pathlib import Path
 
 from .resources import to_yaml, CustomResourceDefinition
 from ...models import RunProperties, Output
+from ....cli import get_version
 from ....utilities.subprocess import custom_check_output
 
 
 def to_chart_metadata(chart_name: str, run_properties: RunProperties):
+    mpyl_version = get_version()
     return f"""apiVersion: v3
 name: {chart_name}
-description: A helm chart used by the MPyL pipeline
+description: |
+    A helm chart rendered by an MPyL k8s deploy step. 
+    The version of this chart is the version of the MPyL release used to create this chart
 type: application
-version: 0.1.0
+version: {mpyl_version}
 appVersion: "{run_properties.versioning.identifier}"
 """
 
@@ -39,9 +43,9 @@ def write_chart(
         map(lambda item: (item[0], to_yaml(item[1])), chart.items())
     )
 
-    for name, template in my_dictionary.items():
+    for name, template_content in my_dictionary.items():
         with open(template_path / name, mode="w+", encoding="utf-8") as file:
-            file.write(template)
+            file.write(template_content)
 
 
 def __remove_existing_chart(
@@ -71,6 +75,14 @@ def write_helm_chart(
     logger.info(f"Writing HELM chart to {chart_path}")
     write_chart(chart, chart_path, to_chart_metadata(chart_name, run_properties))
     return chart_path
+
+
+def template(logger: Logger, chart_path: Path, name_space: str) -> Output:
+    cmd = f"helm template -n {name_space} {chart_path}"
+    output = custom_check_output(logger, cmd, capture_stdout=True)
+    template_file = chart_path / "template.yml"
+    template_file.write_text(output.message)
+    return Output(success=True, message=f"Chart templated to {template_file}")
 
 
 def install(
