@@ -82,6 +82,10 @@ definitions:
     type: object
     additionalProperties: false
     properties:
+      simulate:
+        type: boolean
+        description: 'Simulate kubernetes deployments'
+        default: false
       rancher:
         type: object
         additionalProperties: false

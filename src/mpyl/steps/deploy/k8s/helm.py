@@ -7,7 +7,7 @@ from logging import Logger
 from pathlib import Path
 
 from .resources import to_yaml, CustomResourceDefinition
-from ...models import RunProperties, Output, Input
+from ...models import RunProperties, Output
 from ....utilities.subprocess import custom_check_output
 
 
@@ -60,10 +60,23 @@ def __remove_existing_chart(
     )
 
 
-def install(
+def write_helm_chart(
     logger: Logger,
     chart: dict[str, CustomResourceDefinition],
-    step_input: Input,
+    target_path: Path,
+    run_properties: RunProperties,
+    chart_name: str,
+) -> Path:
+    chart_path = Path(target_path) / "chart"
+    logger.info(f"Writing HELM chart to {chart_path}")
+    write_chart(chart, chart_path, to_chart_metadata(chart_name, run_properties))
+    return chart_path
+
+
+def install(
+    logger: Logger,
+    chart_path: Path,
+    dry_run: bool,
     chart_name: str,
     name_space: str,
     kube_context: str,
@@ -74,17 +87,8 @@ def install(
         if not removed.success:
             return removed
 
-    chart_path = Path(step_input.project.target_path) / "chart"
-    logger.info(f"Writing HELM chart to {chart_path}")
-    write_chart(
-        chart, chart_path, to_chart_metadata(chart_name, step_input.run_properties)
-    )
-
     cmd = f"helm upgrade -i {chart_name} -n {name_space} --kube-context {kube_context} {chart_path}"
-    if step_input.dry_run:
-        cmd = (
-            f"echo helm upgrade -i {chart_name} -n namespace "
-            f"--kube-context {kube_context} {chart_path} --debug --dry-run"
-        )
+    if dry_run:
+        cmd = f"helm upgrade -i {chart_name} -n namespace --kube-context {kube_context} {chart_path} --debug --dry-run"
 
     return custom_check_output(logger, cmd)
