@@ -4,19 +4,20 @@ from dataclasses import dataclass
 
 from ...models import RunProperties
 from ....project import Target
-from ....steps import Input
 
 
 @dataclass(frozen=True)
 class ClusterConfig:
+    simulate: bool
     project_id: str
     cluster_id: str
     cluster_env: str
     context: str
 
     @staticmethod
-    def from_config(config: dict):
+    def from_config(config: dict, simulate: bool):
         return ClusterConfig(
+            simulate=simulate,
             project_id=config["clusterId"],
             cluster_id=config["clusterId"],
             cluster_env=config["clusterEnv"],
@@ -25,22 +26,20 @@ class ClusterConfig:
 
 
 def cluster_config(target: Target, run_properties: RunProperties) -> ClusterConfig:
-    cluster_configs = run_properties.config["kubernetes"]["rancher"]["cluster"]
+    kubernetes_config = run_properties.config["kubernetes"]
+    simulate = kubernetes_config.get("simulate", False)
+    cluster_configs = kubernetes_config["rancher"]["cluster"]
 
     if target in {Target.PULL_REQUEST, Target.PULL_REQUEST_BASE}:
-        return ClusterConfig.from_config(cluster_configs["test"])
+        return ClusterConfig.from_config(cluster_configs["test"], simulate)
     if target == Target.ACCEPTANCE:
-        return ClusterConfig.from_config(cluster_configs["acceptance"])
+        return ClusterConfig.from_config(cluster_configs["acceptance"], simulate)
     if target == Target.PRODUCTION:
-        return ClusterConfig.from_config(cluster_configs["production"])
+        return ClusterConfig.from_config(cluster_configs["production"], simulate)
     raise ValueError(f"Unknown target {target}")
 
 
-def rancher_namespace_metadata(namespace: str, step_input: Input):
-    rancher_config = cluster_config(
-        step_input.run_properties.target, step_input.run_properties
-    )
-
+def rancher_namespace_metadata(namespace: str, rancher_config: ClusterConfig):
     return {
         "annotations": {
             "field.cattle.io/projectId": f"{rancher_config.cluster_id}:{rancher_config.project_id}",

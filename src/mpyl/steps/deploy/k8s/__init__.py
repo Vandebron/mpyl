@@ -1,9 +1,11 @@
 """Kubernetes deployment related helper methods"""
 from logging import Logger
+from pathlib import Path
 from typing import Optional
 
 from kubernetes import config, client
 
+from .helm import write_helm_chart
 from ...deploy.k8s.resources import CustomResourceDefinition
 from ...models import RunProperties
 from ....project import Project, Target, ProjectName
@@ -30,29 +32,28 @@ def get_namespace_from_project(project: Project) -> Optional[str]:
     return None
 
 
-def upsert_namespace(logger: Logger, step_input: Input, context: str) -> str:
-    properties = step_input.run_properties
-
-    namespace = get_namespace(properties, step_input.project) or step_input.project.name
-
-    if step_input.dry_run:
-        return namespace
-
-    config.load_kube_config(context=context)
-    logger.info(f"Deploying target {properties.target} and k8s context {context}")
+def upsert_namespace(
+    logger: Logger,
+    namespace: str,
+    dry_run: bool,
+    run_properties: RunProperties,
+    rancher_config: ClusterConfig,
+) -> None:
+    config.load_kube_config(context=rancher_config.context)
+    logger.info(
+        f"Deploying target {run_properties.target} and k8s context {rancher_config.context}"
+    )
     api = client.CoreV1Api()
 
-    meta_data = rancher_namespace_metadata(namespace, step_input)
+    meta_data = rancher_namespace_metadata(namespace, rancher_config)
     namespaces = api.list_namespace(field_selector=f"metadata.name={namespace}")
 
-    if len(namespaces.items) == 0:
+    if len(namespaces.items) == 0 and not dry_run:
         api.create_namespace(
             client.V1Namespace(api_version="v1", kind="Namespace", metadata=meta_data)
         )
     else:
         logger.info(f"Found namespace {namespace}")
-
-    return namespace
 
 
 def deploy_helm_chart(
@@ -63,12 +64,30 @@ def deploy_helm_chart(
     release_name: str,
     delete_existing: bool = False,
 ) -> Output:
-    namespace = upsert_namespace(logger, step_input, target_cluster.context)
+    run_properties = step_input.run_properties
+    project = step_input.project
+    dry_run = step_input.dry_run
+
+    rancher_config: ClusterConfig = cluster_config(
+        run_properties.target, run_properties
+    )
+    chart_path = write_helm_chart(
+        logger, chart, Path(project.target_path), run_properties, release_name
+    )
+
+    if rancher_config.simulate:
+        return Output(
+            success=True,
+            message=f"Simulating deployment, wrote helm chart to {chart_path}",
+        )
+
+    namespace = get_namespace(run_properties, project) or project.name
+    upsert_namespace(logger, namespace, dry_run, run_properties, rancher_config)
 
     return helm.install(
         logger,
-        chart,
-        step_input,
+        chart_path,
+        dry_run,
         release_name,
         namespace,
         target_cluster.context,
