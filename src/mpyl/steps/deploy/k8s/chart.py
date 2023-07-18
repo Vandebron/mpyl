@@ -152,6 +152,7 @@ class ChartBuilder:
     mappings: dict[int, int]
     env: list[KeyValueProperty]
     sealed_secrets: list[KeyValueProperty]
+    secrets: list[KeyValueProperty]
     deployment: Deployment
     target: Target
     release_name: str
@@ -174,6 +175,9 @@ class ChartBuilder:
         self.env = properties.env if properties and properties.env else []
         self.sealed_secrets = (
             properties.sealed_secret if properties and properties.sealed_secret else []
+        )
+        self.secrets = (
+            properties.kubernetes if properties and properties.kubernetes else []
         )
         self.mappings = self.project.kubernetes.port_mappings
         self.target = step_input.run_properties.target
@@ -481,6 +485,27 @@ class ChartBuilder:
             raise AttributeError("deployment.kubernetes.job field should be set")
         return job
 
+    def _create_secret_env_vars(
+        self, secret_list: list[KeyValueProperty]
+    ) -> list[V1EnvVar]:
+        secrets_for_target = list(
+            filter(lambda v: v.get_value(self.target) is not None, secret_list)
+        )
+
+        return list(
+            map(
+                lambda e: V1EnvVar(
+                    name=e.key,
+                    value_from=V1EnvVarSource(
+                        secret_key_ref=V1SecretKeySelector(
+                            key=e.key, name=self.release_name, optional=False
+                        )
+                    ),
+                ),
+                secrets_for_target,
+            )
+        )
+
     def _get_env_vars(self):
         raw_env_vars = {
             e.key: e.get_value(self.target)
@@ -498,23 +523,10 @@ class ChartBuilder:
             V1EnvVar(name=key, value=value) for key, value in substituted.items()
         ]
 
-        sealed_for_target = list(
-            filter(lambda v: v.get_value(self.target) is not None, self.sealed_secrets)
-        )
-        sealed_secrets = list(
-            map(
-                lambda e: V1EnvVar(
-                    name=e.key,
-                    value_from=V1EnvVarSource(
-                        secret_key_ref=V1SecretKeySelector(
-                            key=e.key, name=self.release_name, optional=False
-                        )
-                    ),
-                ),
-                sealed_for_target,
-            )
-        )
-        return env_vars + sealed_secrets
+        sealed_secrets = self._create_secret_env_vars(self.sealed_secrets)
+        secrets = self._create_secret_env_vars(self.secrets)
+
+        return env_vars + sealed_secrets + secrets
 
     @property
     def is_cron_job(self) -> bool:
