@@ -9,9 +9,17 @@ deployment:
   properties:
     env:
       - key: SOME_ENV
+        pr: "PullRequest"
         test: "Test"
         acceptance: "Acceptance"
         production: "Production"
+    kubernetes:
+      - key: SOME_SECRET_ENV
+        valueFrom:
+          secretKeyRef:
+            name: SOME_SECRET_ENV
+            key: sbt-job
+            optional: false
   kubernetes:
     livenessProbe:
       path:
