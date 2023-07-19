@@ -136,7 +136,13 @@ class Repository:
 
     def changes_in_branch(self) -> list[Revision]:
         revisions = list(
-            reversed(list(self._repo.iter_commits(f"{self._config.main_branch}..HEAD")))
+            reversed(
+                list(
+                    self._repo.iter_commits(
+                        f"origin/{self._config.main_branch}..HEAD", no_merges=True
+                    )
+                )
+            )
         )
 
         logging.debug(
@@ -146,17 +152,16 @@ class Repository:
         if not revisions:
             return []
 
-        first_revision = (
-            revisions[0].hexsha if len(revisions) != 1 else self._config.main_branch
-        )
+        changed_files = []
+        for rev in revisions:
+            changed_files.extend(
+                self._repo.git.diff_tree(
+                    rev, name_only=True, no_commit_id=True, r=True
+                ).splitlines(),
+            )
 
-        files_touched_in_branch = set(
-            self._repo.git.diff(
-                f"{first_revision}..{revisions[-1].hexsha}", name_only=True
-            ).splitlines()
-        )
         return [
-            self.__to_revision(count, rev, files_touched_in_branch)
+            self.__to_revision(count, rev, set(changed_files))
             for count, rev in enumerate(revisions)
         ]
 
