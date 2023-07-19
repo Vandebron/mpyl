@@ -488,10 +488,6 @@ class ChartBuilder:
     def _create_secret_env_vars(
         self, secret_list: list[KeyValueProperty]
     ) -> list[V1EnvVar]:
-        secrets_for_target = list(
-            filter(lambda v: v.get_value(self.target) is not None, secret_list)
-        )
-
         return list(
             map(
                 lambda e: V1EnvVar(
@@ -502,7 +498,7 @@ class ChartBuilder:
                         )
                     ),
                 ),
-                secrets_for_target,
+                secret_list,
             )
         )
 
@@ -523,7 +519,10 @@ class ChartBuilder:
             V1EnvVar(name=key, value=value) for key, value in substituted.items()
         ]
 
-        sealed_secrets = self._create_secret_env_vars(self.sealed_secrets)
+        sealed_secrets_for_target = list(
+            filter(lambda v: v.get_value(self.target) is not None, self.sealed_secrets)
+        )
+        sealed_secrets = self._create_secret_env_vars(sealed_secrets_for_target)
         secrets = self._create_secret_env_vars(self.secrets)
 
         return env_vars + sealed_secrets + secrets
