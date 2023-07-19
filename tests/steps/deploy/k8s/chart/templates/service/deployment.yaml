@@ -46,6 +46,12 @@ spec:
           value: PullRequest
         - name: WITH_NAMESPACE
           value: minimalService.mpyl.svc.cluster.local
+        - name: SOME_SEALED_SECRET_ENV
+          valueFrom:
+            secretKeyRef:
+              key: SOME_SEALED_SECRET_ENV
+              name: dockertest
+              optional: false
         - name: SOME_SECRET_ENV
           valueFrom:
             secretKeyRef:
