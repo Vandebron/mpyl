@@ -488,19 +488,17 @@ class ChartBuilder:
     def _create_secret_env_vars(
         self, secret_list: list[KeyValueProperty]
     ) -> list[V1EnvVar]:
-        return list(
-            map(
-                lambda e: V1EnvVar(
-                    name=e.key,
-                    value_from=V1EnvVarSource(
-                        secret_key_ref=V1SecretKeySelector(
-                            key=e.key, name=self.release_name, optional=False
-                        )
-                    ),
+        return [
+            V1EnvVar(
+                name=e.key,
+                value_from=V1EnvVarSource(
+                    secret_key_ref=V1SecretKeySelector(
+                        key=e.key, name=self.release_name, optional=False
+                    )
                 ),
-                secret_list,
             )
-        )
+            for e in secret_list
+        ]
 
     def _get_env_vars(self):
         raw_env_vars = {
