@@ -251,8 +251,8 @@ class ChartBuilder:
         service_ports = list(
             map(
                 lambda key: V1ServicePort(
-                    port=key,
-                    target_port=self.mappings[key],
+                    port=int(key),
+                    target_port=int(self.mappings[key]),
                     protocol="TCP",
                     name=f"{key}-webservice-port",
                 ),
