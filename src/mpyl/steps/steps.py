@@ -7,7 +7,7 @@ from datetime import datetime
 from logging import Logger
 from typing import Optional
 
-from ruamel.yaml import YAML # type: ignore
+from ruamel.yaml import YAML  # type: ignore
 
 from . import Step
 from .collection import StepsCollection

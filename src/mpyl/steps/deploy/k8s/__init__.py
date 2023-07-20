@@ -36,20 +36,20 @@ def rollout_restart_deployment(logger: Logger, namespace: str, deployment: str):
     now = datetime.datetime.utcnow()
     now_str = now.isoformat("T") + "Z"
     body = {
-        'spec': {
-            'template': {
-                'metadata': {
-                    'annotations': {
-                        'kubectl.kubernetes.io/restartedAt': now_str
-                    }
+        "spec": {
+            "template": {
+                "metadata": {
+                    "annotations": {"kubectl.kubernetes.io/restartedAt": now_str}
                 }
             }
         }
     }
     try:
-        v1_apps.patch_namespaced_deployment(deployment, namespace, body, pretty='true')
+        v1_apps.patch_namespaced_deployment(deployment, namespace, body, pretty="true")
     except ApiException as api_exception:
-        logger.info(f'Exception when calling AppsV1Api->read_namespaced_deployment_status: {api_exception}\n')
+        logger.info(
+            f"Exception when calling AppsV1Api->read_namespaced_deployment_status: {api_exception}\n"
+        )
 
 
 def get_namespace_from_project(project: Project) -> Optional[str]:
@@ -86,11 +86,15 @@ def upsert_namespace(
 def get_config_map_as_yaml(context: str, namespace: str, config_map_name: str) -> dict:
     config.load_kube_config(context=context)
     api = client.CoreV1Api()
-    user_code_config_map: V1ConfigMap = api.read_namespaced_config_map(config_map_name, namespace)
+    user_code_config_map: V1ConfigMap = api.read_namespaced_config_map(
+        config_map_name, namespace
+    )
     return yaml.safe_load(user_code_config_map.data)
 
 
-def replace_config_map(context: str, namespace: str, config_map_name: str, config_map: dict):
+def replace_config_map(
+    context: str, namespace: str, config_map_name: str, config_map: dict
+):
     config.load_kube_config(context=context)
     api = client.CoreV1Api()
     api.replace_namespaced_config_map(config_map_name, namespace, config_map)
@@ -117,16 +121,13 @@ def deploy_helm_chart(
 
     namespace = get_namespace(run_properties, project)
     rancher_config: ClusterConfig = cluster_config(target, run_properties)
-    upsert_namespace(logger, namespace, dry_run, run_properties, rancher_config)
-
-    return helm.install(
-        logger,
-        chart_path,
+    upsert_namespace(logger, namespace, dry_run, run_properties, rancher_config)return helm.install(
+        logger, chart_path,
         dry_run,
         release_name,
         namespace,
-        rancher_config.context,
-        delete_existing,
+        rancher_config.context, delete_existing
+    ,
     )
 
 

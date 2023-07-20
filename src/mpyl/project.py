@@ -333,6 +333,7 @@ class Host:
             whitelists=TargetProperty.from_config(values.get("whitelists", {})),
         )
 
+
 @dataclass(frozen=True)
 class Dagster:
     repo: str
@@ -340,8 +341,9 @@ class Dagster:
     @staticmethod
     def from_config(values: dict):
         return Dagster(
-            repo=values.get('repo', {}),
+            repo=values.get("repo", {}),
         )
+
 
 @dataclass(frozen=True)
 class Traefik:
@@ -379,16 +381,18 @@ class Deployment:
     def from_config(values: dict):
         props = values.get("properties")
         kubernetes = values.get("kubernetes")
-        dagster = values.get('dagster')
+        dagster = values.get("dagster")
         traefik = values.get("traefik")
         s3_bucket = values.get("s3")
 
-        return Deployment(namespace=values.get('namespace'),
-                          properties=Properties.from_config(props) if props else None,
-                          kubernetes=Kubernetes.from_config(kubernetes) if kubernetes else None,
-                          dagster=Dagster.from_config(dagster) if dagster else None,
-                          traefik=Traefik.from_config(traefik) if traefik else None,
-                          s3_bucket=S3Bucket.from_config(s3_bucket) if s3_bucket else None)
+        return Deployment(
+            namespace=values.get("namespace"),
+            properties=Properties.from_config(props) if props else None,
+            kubernetes=Kubernetes.from_config(kubernetes) if kubernetes else None,
+            dagster=Dagster.from_config(dagster) if dagster else None,
+            traefik=Traefik.from_config(traefik) if traefik else None,
+            s3_bucket=S3Bucket.from_config(s3_bucket) if s3_bucket else None,
+        )
 
 
 @dataclass(frozen=True)
@@ -442,7 +446,9 @@ class Project:
     @property
     def dagster(self) -> Dagster:
         if self.deployment is None or self.deployment.dagster is None:
-            raise KeyError(f"Project '{self.name}' does not have kubernetes configuration")
+            raise KeyError(
+                f"Project '{self.name}' does not have kubernetes configuration"
+            )
         return self.deployment.dagster
 
     @property
