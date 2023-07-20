@@ -1,7 +1,6 @@
 """ Pushes the artifact created in the build stage to the docker registry for any build step that has
 ArtifactType.DOCKER_IMAGE as `mpyl.steps.models.ArtifactType`."""
 
-import os
 from logging import Logger
 
 from python_on_whales import docker
@@ -9,7 +8,7 @@ from python_on_whales import docker
 from .. import Step, Meta
 from ..models import Input, Output, Artifact, ArtifactType
 from ...project import Stage
-from ...utilities.docker import DockerConfig, login
+from ...utilities.docker import DockerConfig, login, docker_registry_path
 
 
 class AfterBuildDocker(Step):
@@ -40,7 +39,7 @@ class AfterBuildDocker(Step):
 
         docker_config = DockerConfig.from_dict(step_input.run_properties.config)
 
-        full_image_path = os.path.join(docker_config.host_name, image_name)
+        full_image_path = docker_registry_path(docker_config, image_name)
         artifact = Artifact(
             ArtifactType.DOCKER_IMAGE,
             step_input.run_properties.versioning.revision,

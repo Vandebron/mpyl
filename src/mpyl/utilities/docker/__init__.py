@@ -40,6 +40,7 @@ class DockerComposeConfig:
 @dataclass(frozen=True)
 class DockerConfig:
     host_name: str
+    organization: Optional[str]
     user_name: str
     password: str
     root_folder: str
@@ -55,6 +56,7 @@ class DockerConfig:
             return DockerConfig(
                 host_name=registry["hostName"],
                 user_name=registry["userName"],
+                organization=registry.get("organization", None),
                 password=registry["password"],
                 root_folder=build_config["rootFolder"],
                 build_target=build_config.get("buildTarget", None),
@@ -114,6 +116,15 @@ def docker_image_tag(step_input: Input):
     git = step_input.run_properties.versioning
     tag = git.tag if git.tag else f"pr-{git.pr_number}"
     return f"{step_input.project.name.lower()}:{tag}".replace("/", "_")
+
+
+def docker_registry_path(docker_config: DockerConfig, image_name: str) -> str:
+    path_components = [
+        docker_config.host_name,
+        docker_config.organization,
+        image_name,
+    ]
+    return "/".join([c for c in path_components if c]).lower()
 
 
 def docker_file_path(project: Project, docker_config: DockerConfig):
