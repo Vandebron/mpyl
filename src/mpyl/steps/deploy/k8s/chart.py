@@ -504,7 +504,8 @@ class ChartBuilder:
             for e in secret_list
         ]
 
-    def _map_key_value_refs(self, ref: KeyValueRef) -> V1EnvVar:
+    @staticmethod
+    def _map_key_value_refs(ref: KeyValueRef) -> V1EnvVar:
         if isinstance(ref.value_from, SecretKeyRef):
             return V1EnvVar(
                 name=ref.key,
@@ -514,7 +515,7 @@ class ChartBuilder:
                     )
                 ),
             )
-        elif isinstance(ref.value_from, FieldRef):
+        if isinstance(ref.value_from, FieldRef):
             return V1EnvVar(
                 name=ref.key,
                 value_from=V1EnvVarSource(
@@ -523,8 +524,7 @@ class ChartBuilder:
                     )
                 ),
             )
-        else:
-            raise ValueError(f"Unknown KeyValueRef type: {ref}")
+        raise ValueError(f"Unknown KeyValueRef type: {ref}")
 
     def _create_secret_env_vars(self, secret_list: list[KeyValueRef]) -> list[V1EnvVar]:
         return list(map(self._map_key_value_refs, secret_list))
