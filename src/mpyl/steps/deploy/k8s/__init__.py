@@ -83,17 +83,24 @@ def upsert_namespace(
         logger.info(f"Found namespace {namespace}")
 
 
-def get_config_map_as_yaml(context: str, namespace: str, config_map_name: str) -> dict:
+def get_config_map(context: str, namespace: str, config_map_name: str) -> V1ConfigMap:
     config.load_kube_config(context=context)
     api = client.CoreV1Api()
     user_code_config_map: V1ConfigMap = api.read_namespaced_config_map(
         config_map_name, namespace
     )
-    return yaml.safe_load(user_code_config_map.data)
+    return user_code_config_map
+
+
+def update_config_map_field(
+    config_map: V1ConfigMap, field: str, data: dict
+) -> V1ConfigMap:
+    config_map.data[field] = yaml.dump(data)
+    return config_map
 
 
 def replace_config_map(
-    context: str, namespace: str, config_map_name: str, config_map: dict
+    context: str, namespace: str, config_map_name: str, config_map: V1ConfigMap
 ):
     config.load_kube_config(context=context)
     api = client.CoreV1Api()

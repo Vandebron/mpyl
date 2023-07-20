@@ -3,12 +3,15 @@ Step to deploy a dagster user code repository to k8s
 """
 from logging import Logger
 
+import yaml
+
 from .k8s import (
     helm,
-    get_config_map_as_yaml,
+    get_config_map,
     rollout_restart_deployment,
     cluster_config,
     replace_config_map,
+    update_config_map_field,
 )
 from .k8s.resources.dagster import to_user_code_values, to_grpc_server_entry
 from .. import Step, Meta, ArtifactType, Input, Output
@@ -50,7 +53,7 @@ class DeployDagster(Step):
 
         user_code_deployment = to_user_code_values(
             env_vars=get_env_variables(project, step_input.run_properties.target),
-            env_secrets={},
+            env_secrets=[],
             project_name=project.name,
             suffix=name_suffix,
             tag=step_input.run_properties.versioning.tag,
@@ -66,21 +69,16 @@ class DeployDagster(Step):
             kube_context=context,
         )
 
-        # DagsterDeploy we "Apply it and retrieve it again to make sure it has the last-applied-configuration annotation"
-        dagster_workspace = get_config_map_as_yaml(
-            context, namespace, "dagster-workspace-yaml"
-        )
+        # "Apply it and retrieve it again to make sure it has the last-applied-configuration annotation"
+        config_map = get_config_map(context, namespace, "dagster-workspace-yaml")
+        dagster_workspace = yaml.safe_load(config_map.data["workspace.yaml"])
         self._logger.info(f"Got type: {type(dagster_workspace)}")
-        server_names = [
-            w["grpc_server"] for w in dagster_workspace["workspace.yaml"]["load_from"]
-        ]
+        server_names = [w["grpc_server"] for w in dagster_workspace["load_from"]]
         is_new_grpc_server = user_code_deployment["name"] not in server_names
 
         if is_new_grpc_server:
-            self._logger.info("Adding new server")
-            new_workspace_servers_list = dagster_workspace["workspace.yaml"][
-                "load_from"
-            ]
+            self._logger.info("Adding new server to dagster's workspace.yaml")
+            new_workspace_servers_list = dagster_workspace["load_from"]
             new_workspace_servers_list.append(
                 to_grpc_server_entry(
                     host=user_code_deployment["name"],
@@ -88,14 +86,12 @@ class DeployDagster(Step):
                     name=user_code_deployment["name"],
                 )
             )
-            dagster_workspace["workspace.yaml"][
-                "load_from"
-            ] = new_workspace_servers_list
-
             self._logger.info(dagster_workspace)
-
+            updated_config_map = update_config_map_field(
+                config_map, "workspace.yaml", new_workspace_servers_list
+            )
             replace_config_map(
-                context, "dagster", "dagster-workspace-yaml", dagster_workspace
+                context, "dagster", "dagster-workspace-yaml", updated_config_map
             )
         else:
             self._logger.info("Starting rollout restart of dagster-dagit...")

@@ -1,6 +1,11 @@
+"""
+This module contains the Dagster user-code-deployment values conversion
+"""
+
+
 def to_user_code_values(
     env_vars: dict,
-    env_secrets: dict,
+    env_secrets: [],
     project_name: str,
     suffix: str,
     tag: str,
