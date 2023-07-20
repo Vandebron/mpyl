@@ -120,10 +120,15 @@ class SecretKeyRef:
 
     @staticmethod
     def from_config(values: dict):
+        name = values.get("name")
+        key = values.get("key")
+        optional = values.get("optional", False)
+        if not name or not key or not optional:
+            raise KeyError("SecretKeyRef must have a name, key and optional fields set")
         return SecretKeyRef(
-            name=values.get("name"),
-            key=values.get("key"),
-            optional=values.get("optional", False),
+            name=name,
+            key=key,
+            optional=optional,
         )
 
 
@@ -134,7 +139,10 @@ class FieldRef:
 
     @staticmethod
     def from_config(values: dict):
-        return FieldRef(field_path=values.get("fieldPath"))
+        field_path = values.get("fieldPath")
+        if not field_path:
+            raise KeyError("FieldRef must have a fieldPath set")
+        return FieldRef(field_path=field_path)
 
 
 @dataclass(frozen=True)
