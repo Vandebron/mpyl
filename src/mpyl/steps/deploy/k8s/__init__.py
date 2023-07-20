@@ -29,7 +29,7 @@ def get_namespace(run_properties: RunProperties, project: Project) -> str:
     return get_namespace_from_project(project) or project.name
 
 
-def rollout_restart_deployment(namespace: str, deployment: str):
+def rollout_restart_deployment(logger: Logger, namespace: str, deployment: str):
     # from https://stackoverflow.com/a/67491253
     v1_apps = client.AppsV1Api()
 
@@ -49,7 +49,7 @@ def rollout_restart_deployment(namespace: str, deployment: str):
     try:
         v1_apps.patch_namespaced_deployment(deployment, namespace, body, pretty='true')
     except ApiException as api_exception:
-        print(f'Exception when calling AppsV1Api->read_namespaced_deployment_status: {api_exception}\n')
+        logger.info(f'Exception when calling AppsV1Api->read_namespaced_deployment_status: {api_exception}\n')
 
 
 def get_namespace_from_project(project: Project) -> Optional[str]:
@@ -83,12 +83,17 @@ def upsert_namespace(
         logger.info(f"Found namespace {namespace}")
 
 
-def get_key_of_config_map(context: str, namespace: str, config_map_name: str, key: str):
+def get_config_map_as_yaml(context: str, namespace: str, config_map_name: str) -> dict:
     config.load_kube_config(context=context)
     api = client.CoreV1Api()
     user_code_config_map: V1ConfigMap = api.read_namespaced_config_map(config_map_name, namespace)
+    return yaml.safe_load(user_code_config_map.data)
 
-    return yaml.safe_load(user_code_config_map.data[key])
+
+def replace_config_map(context: str, namespace: str, config_map_name: str, config_map: dict):
+    config.load_kube_config(context=context)
+    api = client.CoreV1Api()
+    api.replace_namespaced_config_map(config_map_name, namespace, config_map)
 
 
 def deploy_helm_chart(

@@ -2,15 +2,11 @@
 Step to deploy a dagster user code repository to k8s
 """
 from logging import Logger
-from typing import List
 
-
-from .k8s import helm, get_key_of_config_map, rollout_restart_deployment, cluster_config
-from ..models import RunProperties
+from .k8s import helm, get_config_map_as_yaml, rollout_restart_deployment, cluster_config, replace_config_map
+from .k8s.resources.dagster import to_user_code_values, to_grpc_server_entry
 from .. import Step, Meta, ArtifactType, Input, Output
-from ...project import Stage, Project, Target, get_env_variables
-from ...stages.discovery import find_deploy_set
-from ...utilities.repo import RepoConfig
+from ...project import Stage, Target, get_env_variables
 
 
 class DeployDagster(Step):
@@ -23,33 +19,6 @@ class DeployDagster(Step):
             stage=Stage.DEPLOY
         ), produced_artifact=ArtifactType.NONE, required_artifact=ArtifactType.DOCKER_IMAGE)
 
-    def __to_user_code_deployment(self, project: Project, run_properties: RunProperties):
-        env_variables = get_env_variables(project, run_properties.target)
-        name_prefix = f'pr-{run_properties.versioning.pr_number}-' if run_properties.target == Target.PULL_REQUEST else ''
-        return {'deployments': [{
-            'dagsterApiGrpcArgs': [
-                "--python-file",
-                project.dagster.repo
-            ],
-            'env': env_variables,
-            'envSecrets': [],
-            'image': {
-                'pullPolicy': 'Always',
-                'imagePullSecrets': [
-                    {
-                        'name': 'bigdataregistry'
-                    }
-                ],
-                'tag': run_properties.versioning.identifier,
-                'repository': f'bigdataregistry.azurecr.io/{project.name}'
-            },
-            'includeConfigInLaunchedRuns': {
-                'enabled': True
-            },
-            'name': f'{name_prefix}{project.name}',
-            'port': 3030
-        }]}
-
     # Deploys the docker image produced in the build stage as a Dagster user-code-deployment
     def execute(self, step_input: Input) -> Output:
         namespace = 'dagster'
@@ -59,46 +28,50 @@ class DeployDagster(Step):
         version = '1.3.10'
         self._logger.info(f'Dagster Version: {version}')
         # checking dagster-dagit version
-
-        # TODO is there a global way for installing this depenendency?
         helm.add_repo(self._logger, namespace, 'https://dagster-io.github.io/helm')
+        project = step_input.project
+        name_suffix = f'-pr-{step_input.run_properties.versioning.pr_number}' if step_input.run_properties.target == Target.PULL_REQUEST else ''
 
-        deploy_set = find_deploy_set(RepoConfig.from_config(step_input.run_properties.config), step_input.run_properties.versioning.tag)
-        # we have the possiblity to have more than one project to be deployed
-        # we could bulk upsert them here, or we run the upsertion per project
-        user_code_deployments: List[dict] = []
-
-        # TODO we dont need create user_deployment.yaml anymore -> we can provide a values.yaml to the helm upgrade command
-        for project in deploy_set.projects_to_deploy:
-            user_code_deployments.append(self.__to_user_code_deployment(project, step_input.run_properties))
-            # conversion of project.yml to user-code chart
-            # Chartbuilder might not be needed, or needs adjustment to accommodate for appending to existing chart
-
-        deploy_results = []
-        for deployment in user_code_deployments:
-            result = helm.install_with_values_yaml(
-                self._logger,
-                step_input,
-                deployment,
-                'uc-test',
-                'dagster/dagster-user-deployments',
-                'dagster',
-                context)
-            deploy_results.append(result)
+        user_code_deployment = to_user_code_values(
+            env_vars=get_env_variables(project, step_input.run_properties.target),
+            env_secrets={},
+            project_name=project.name,
+            suffix=name_suffix,
+            tag=step_input.run_properties.versioning.tag,
+            repo_file_path=project.dagster.repo,
+        )
+        deploy_result = helm.install_with_values_yaml(
+            logger=self._logger,
+            step_input=step_input,
+            values=user_code_deployment,
+            release_name='uc',
+            chart_name='dagster/dagster-user-deployments',
+            namespace='dagster',
+            kube_context=context)
 
         # DagsterDeploy we "Apply it and retrieve it again to make sure it has the last-applied-configuration annotation"
-        workspace = get_key_of_config_map(context, namespace, 'dagster-workspace-yaml', 'workspace.yaml')
-        workspace_names = [w['grpc_server'] for w in workspace['load_from']]
-        # is_new_server = user_code_deployments['name'] not in workspace_names
+        dagster_workspace = get_config_map_as_yaml(context, namespace, 'dagster-workspace-yaml')
+        self._logger.info(f'Got type: {type(dagster_workspace)}')
+        server_names = [w['grpc_server'] for w in dagster_workspace['workspace.yaml']['load_from']]
+        is_new_grpc_server = user_code_deployment['name'] not in server_names
 
-        # if is_new_server:
-        #     self._logger.info('Adding new server')
-        #     new_workspace_servers_list = workspace['load_from']
-        #     new_workspace_servers_list.append(user_code_deployments)
+        if is_new_grpc_server:
+            self._logger.info('Adding new server')
+            new_workspace_servers_list = dagster_workspace['workspace.yaml']['load_from']
+            new_workspace_servers_list.append(to_grpc_server_entry(
+                host=user_code_deployment['name'],
+                port=user_code_deployment['port'],
+                name=user_code_deployment['name'],
+            ))
+            dagster_workspace['workspace.yaml']['load_from'] = new_workspace_servers_list
 
-        #     # kubectl apply with updated workspace.yaml
+            self._logger.info(dagster_workspace)
 
-        #     rollout_restart_deployment(namespace, "dagster-dagit")
-        #     rollout_restart_deployment(namespace, "dagster-daemon")
+            replace_config_map(context, 'dagster', 'dagster-workspace-yaml', dagster_workspace)
+        else:
+            self._logger.info('Starting rollout restart of dagster-dagit...')
+            rollout_restart_deployment(self._logger, namespace, 'dagster-dagit')
+            self._logger.info('Starting rollout restart of dagster-daemon...')
+            rollout_restart_deployment(self._logger, namespace, 'dagster-daemon')
 
-        return deploy_results[0]
+        return deploy_result
