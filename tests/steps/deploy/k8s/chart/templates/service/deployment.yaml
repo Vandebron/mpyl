@@ -55,8 +55,8 @@ spec:
         - name: SOME_SECRET_ENV
           valueFrom:
             secretKeyRef:
-              key: SOME_SECRET_ENV
-              name: dockertest
+              key: password
+              name: some-secret-name
               optional: false
         image: registry/image:123
         imagePullPolicy: Always

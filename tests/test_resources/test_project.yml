@@ -41,8 +41,8 @@ deployment:
       - key: SOME_SECRET_ENV
         valueFrom:
           secretKeyRef:
-            name: SOME_SECRET_ENV
-            key: sbt-job
+            name: some-secret-name
+            key: password
             optional: false
   kubernetes:
     livenessProbe:

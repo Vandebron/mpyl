@@ -151,7 +151,7 @@ class KeyValueRef:
         if not key or not value_from:
             raise KeyError(f"KeyValueRef must have a key or valueFrom set")
 
-        key_name = value_from.keys()[0]
+        key_name = list(value_from.keys())[0]
 
         if key_name == SecretKeyRef.key_name:
             value = SecretKeyRef.from_config(value_from.get(key_name))
@@ -222,7 +222,7 @@ class Env:
 class Properties:
     env: list[KeyValueProperty]
     sealed_secret: list[KeyValueProperty]
-    kubernetes: list[KeyValueProperty]
+    kubernetes: list[KeyValueRef]
 
     @staticmethod
     def from_config(values: Dict[Any, Any]):
@@ -231,9 +231,7 @@ class Properties:
             sealed_secret=list(
                 map(KeyValueProperty.from_config, values.get("sealedSecret", []))
             ),
-            kubernetes=list(
-                map(KeyValueProperty.from_config, values.get("kubernetes", []))
-            ),
+            kubernetes=list(map(KeyValueRef.from_config, values.get("kubernetes", []))),
         )
 
 

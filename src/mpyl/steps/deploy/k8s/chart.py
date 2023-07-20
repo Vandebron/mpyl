@@ -70,6 +70,7 @@ from ....project import (
     Host,
     get_env_variables,
     Alert,
+    KeyValueRef,
 )
 from ....stages.discovery import DeploySet
 
@@ -152,7 +153,7 @@ class ChartBuilder:
     mappings: dict[int, int]
     env: list[KeyValueProperty]
     sealed_secrets: list[KeyValueProperty]
-    secrets: list[KeyValueProperty]
+    secrets: list[KeyValueRef]
     deployment: Deployment
     target: Target
     release_name: str
@@ -485,7 +486,7 @@ class ChartBuilder:
             raise AttributeError("deployment.kubernetes.job field should be set")
         return job
 
-    def _create_secret_env_vars(
+    def _create_sealed_secret_env_vars(
         self, secret_list: list[KeyValueProperty]
     ) -> list[V1EnvVar]:
         return [
@@ -494,6 +495,19 @@ class ChartBuilder:
                 value_from=V1EnvVarSource(
                     secret_key_ref=V1SecretKeySelector(
                         key=e.key, name=self.release_name, optional=False
+                    )
+                ),
+            )
+            for e in secret_list
+        ]
+
+    def _create_secret_env_vars(self, secret_list: list[KeyValueRef]) -> list[V1EnvVar]:
+        return [
+            V1EnvVar(
+                name=e.key,
+                value_from=V1EnvVarSource(
+                    secret_key_ref=V1SecretKeySelector(
+                        key=e.valueFrom.key, name=e.valueFrom.name, optional=False
                     )
                 ),
             )
@@ -520,7 +534,7 @@ class ChartBuilder:
         sealed_secrets_for_target = list(
             filter(lambda v: v.get_value(self.target) is not None, self.sealed_secrets)
         )
-        sealed_secrets = self._create_secret_env_vars(sealed_secrets_for_target)
+        sealed_secrets = self._create_sealed_secret_env_vars(sealed_secrets_for_target)
         secrets = self._create_secret_env_vars(self.secrets)
 
         return env_vars + sealed_secrets + secrets
