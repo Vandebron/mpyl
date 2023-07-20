@@ -100,11 +100,17 @@ def update_config_map_field(
 
 
 def replace_config_map(
-    context: str, namespace: str, config_map_name: str, config_map: V1ConfigMap
+    logger: Logger,
+    context: str,
+    namespace: str,
+    config_map_name: str,
+    config_map: V1ConfigMap,
 ):
     config.load_kube_config(context=context)
     api = client.CoreV1Api()
-    api.replace_namespaced_config_map(config_map_name, namespace, config_map)
+    result = api.replace_namespaced_config_map(config_map_name, namespace, config_map)
+    logger.info(f"Got type {type(result)}")
+    logger.info(result)
 
 
 def deploy_helm_chart(

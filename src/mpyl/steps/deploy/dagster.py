@@ -56,7 +56,7 @@ class DeployDagster(Step):
             env_secrets=[],
             project_name=project.name,
             suffix=name_suffix,
-            tag=step_input.run_properties.versioning.tag,
+            tag=step_input.run_properties.versioning.identifier,
             repo_file_path=project.dagster.repo,
         )
         deploy_result = helm.install_with_values_yaml(
@@ -72,7 +72,7 @@ class DeployDagster(Step):
         # "Apply it and retrieve it again to make sure it has the last-applied-configuration annotation"
         config_map = get_config_map(context, namespace, "dagster-workspace-yaml")
         dagster_workspace = yaml.safe_load(config_map.data["workspace.yaml"])
-        self._logger.info(f"Got type: {type(dagster_workspace)}")
+
         server_names = [w["grpc_server"] for w in dagster_workspace["load_from"]]
         is_new_grpc_server = (
             user_code_deployment["deployments"][0]["name"] not in server_names
@@ -93,7 +93,11 @@ class DeployDagster(Step):
                 config_map, "workspace.yaml", new_workspace_servers_list
             )
             replace_config_map(
-                context, "dagster", "dagster-workspace-yaml", updated_config_map
+                self._logger,
+                context,
+                "dagster",
+                "dagster-workspace-yaml",
+                updated_config_map,
             )
         else:
             self._logger.info("Starting rollout restart of dagster-dagit...")
