@@ -223,6 +223,8 @@ definitions:
     properties:
       hostName:
         type: [ string, null ]
+      organization:
+        type: [ string, null ]
       userName:
         type: string
       password:
