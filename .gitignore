@@ -130,6 +130,7 @@ dmypy.json
 #intellij
 *.iml
 .mpyl/
+Project_Default.xml
 
 #documentation
 docs/*
