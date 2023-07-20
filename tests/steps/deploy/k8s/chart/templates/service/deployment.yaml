@@ -58,6 +58,11 @@ spec:
               key: password
               name: some-secret-name
               optional: false
+        - name: KUBERNETES_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
         image: registry/image:123
         imagePullPolicy: Always
         livenessProbe:

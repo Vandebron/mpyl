@@ -122,13 +122,12 @@ class SecretKeyRef:
     def from_config(values: dict):
         name = values.get("name")
         key = values.get("key")
-        optional = values.get("optional", False)
-        if not name or not key or not optional:
-            raise KeyError("SecretKeyRef must have a name, key and optional fields set")
+        if not name or not key:
+            raise KeyError("SecretKeyRef must have a name and key fields set")
         return SecretKeyRef(
             name=name,
             key=key,
-            optional=optional,
+            optional=values.get("optional", False),
         )
 
 
@@ -159,6 +158,7 @@ class KeyValueRef:
             raise KeyError("KeyValueRef must have a key or valueFrom set")
 
         key_name = list(value_from.keys())[0]
+        print(f"key_name: {key_name}")
 
         if key_name == SecretKeyRef.key_name:
             value = SecretKeyRef.from_config(value_from.get(key_name))

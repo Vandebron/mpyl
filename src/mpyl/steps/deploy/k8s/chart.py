@@ -20,6 +20,7 @@ from kubernetes.client import (
     V1ServiceSpec,
     V1ServicePort,
     V1ServiceAccount,
+    V1ObjectFieldSelector,
     V1LocalObjectReference,
     V1EnvVarSource,
     V1SecretKeySelector,
@@ -71,6 +72,8 @@ from ....project import (
     get_env_variables,
     Alert,
     KeyValueRef,
+    SecretKeyRef,
+    FieldRef,
 )
 from ....stages.discovery import DeploySet
 
@@ -501,18 +504,30 @@ class ChartBuilder:
             for e in secret_list
         ]
 
-    def _create_secret_env_vars(self, secret_list: list[KeyValueRef]) -> list[V1EnvVar]:
-        return [
-            V1EnvVar(
-                name=e.key,
+    def _map_key_value_refs(self, ref: KeyValueRef) -> V1EnvVar:
+        if isinstance(ref.value_from, SecretKeyRef):
+            return V1EnvVar(
+                name=ref.key,
                 value_from=V1EnvVarSource(
                     secret_key_ref=V1SecretKeySelector(
-                        key=e.value_from.key, name=e.value_from.name, optional=False
+                        key=ref.value_from.key, name=ref.value_from.name, optional=False
                     )
                 ),
             )
-            for e in secret_list
-        ]
+        elif isinstance(ref.value_from, FieldRef):
+            return V1EnvVar(
+                name=ref.key,
+                value_from=V1EnvVarSource(
+                    field_ref=V1ObjectFieldSelector(
+                        api_version="v1", field_path=ref.value_from.field_path
+                    )
+                ),
+            )
+        else:
+            raise ValueError(f"Unknown KeyValueRef type: {ref}")
+
+    def _create_secret_env_vars(self, secret_list: list[KeyValueRef]) -> list[V1EnvVar]:
+        return list(map(self._map_key_value_refs, secret_list))
 
     def _get_env_vars(self):
         raw_env_vars = {

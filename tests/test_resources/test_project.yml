@@ -44,6 +44,10 @@ deployment:
             name: some-secret-name
             key: password
             optional: false
+      - key: KUBERNETES_NAMESPACE
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
   kubernetes:
     livenessProbe:
       path:
