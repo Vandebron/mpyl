@@ -507,7 +507,7 @@ class ChartBuilder:
                 name=e.key,
                 value_from=V1EnvVarSource(
                     secret_key_ref=V1SecretKeySelector(
-                        key=e.valueFrom.key, name=e.valueFrom.name, optional=False
+                        key=e.value_from.key, name=e.value_from.name, optional=False
                     )
                 ),
             )

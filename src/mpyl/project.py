@@ -17,7 +17,6 @@ import logging
 import pkgutil
 import time
 import traceback
-from abc import ABC
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -130,18 +129,18 @@ class SecretKeyRef:
 
 @dataclass(frozen=True)
 class FieldRef:
-    fieldPath: str
+    field_path: str
     key_name: str = "fieldRef"
 
     @staticmethod
     def from_config(values: dict):
-        return FieldRef(fieldPath=values.get("fieldPath"))
+        return FieldRef(field_path=values.get("fieldPath"))
 
 
 @dataclass(frozen=True)
 class KeyValueRef:
     key: str
-    valueFrom: Union[SecretKeyRef, FieldRef]
+    value_from: Union[SecretKeyRef, FieldRef]
 
     @staticmethod
     def from_config(values: dict):
@@ -149,7 +148,7 @@ class KeyValueRef:
         value_from = values.get("valueFrom")
 
         if not key or not value_from:
-            raise KeyError(f"KeyValueRef must have a key or valueFrom set")
+            raise KeyError("KeyValueRef must have a key or valueFrom set")
 
         key_name = list(value_from.keys())[0]
 
@@ -162,7 +161,7 @@ class KeyValueRef:
 
         return KeyValueRef(
             key=key,
-            valueFrom=value,
+            value_from=value,
         )
 
 
