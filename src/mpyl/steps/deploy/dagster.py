@@ -81,9 +81,9 @@ class DeployDagster(Step):
             new_workspace_servers_list = dagster_workspace["load_from"]
             new_workspace_servers_list.append(
                 to_grpc_server_entry(
-                    host=user_code_deployment["name"],
-                    port=user_code_deployment["port"],
-                    name=user_code_deployment["name"],
+                    host=user_code_deployment["deployments"][0]["name"],
+                    port=user_code_deployment["deployments"][0]["port"],
+                    name=user_code_deployment["deployments"][0]["name"],
                 )
             )
             self._logger.info(dagster_workspace)
