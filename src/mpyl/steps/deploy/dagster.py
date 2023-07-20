@@ -74,7 +74,9 @@ class DeployDagster(Step):
         dagster_workspace = yaml.safe_load(config_map.data["workspace.yaml"])
         self._logger.info(f"Got type: {type(dagster_workspace)}")
         server_names = [w["grpc_server"] for w in dagster_workspace["load_from"]]
-        is_new_grpc_server = user_code_deployment["name"] not in server_names
+        is_new_grpc_server = (
+            user_code_deployment["deployments"][0]["name"] not in server_names
+        )
 
         if is_new_grpc_server:
             self._logger.info("Adding new server to dagster's workspace.yaml")
