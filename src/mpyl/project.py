@@ -17,10 +17,11 @@ import logging
 import pkgutil
 import time
 import traceback
+from abc import ABC
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Optional, TypeVar, Dict, Any, TextIO
+from typing import Optional, TypeVar, Dict, Any, TextIO, Union
 
 import jsonschema
 from mypy.checker import Generic
@@ -108,6 +109,60 @@ class KeyValueProperty(TargetProperty[str]):
             acceptance=values.get("acceptance"),
             production=values.get("production"),
             all=values.get("all"),
+        )
+
+
+@dataclass(frozen=True)
+class SecretKeyRef:
+    name: str
+    key: str
+    optional: bool
+    key_name: str = "secretKeyRef"
+
+    @staticmethod
+    def from_config(values: dict):
+        return SecretKeyRef(
+            name=values.get("name"),
+            key=values.get("key"),
+            optional=values.get("optional", False),
+        )
+
+
+@dataclass(frozen=True)
+class FieldRef:
+    fieldPath: str
+    key_name: str = "fieldRef"
+
+    @staticmethod
+    def from_config(values: dict):
+        return FieldRef(fieldPath=values.get("fieldPath"))
+
+
+@dataclass(frozen=True)
+class KeyValueRef:
+    key: str
+    valueFrom: Union[SecretKeyRef, FieldRef]
+
+    @staticmethod
+    def from_config(values: dict):
+        key = values.get("key")
+        value_from = values.get("valueFrom")
+
+        if not key or not value_from:
+            raise KeyError(f"KeyValueRef must have a key or valueFrom set")
+
+        key_name = value_from.keys()[0]
+
+        if key_name == SecretKeyRef.key_name:
+            value = SecretKeyRef.from_config(value_from.get(key_name))
+        elif key_name == FieldRef.key_name:
+            value = FieldRef.from_config(value_from.get(key_name))
+        else:
+            raise KeyError(f"KeyValueRef unknown key name: {key_name}")
+
+        return KeyValueRef(
+            key=key,
+            valueFrom=value,
         )
 
 
