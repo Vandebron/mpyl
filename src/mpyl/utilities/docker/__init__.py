@@ -38,11 +38,22 @@ class DockerComposeConfig:
 
 
 @dataclass(frozen=True)
+class DockerCacheConfig:
+    cache_to: str
+    cache_from: str
+
+    @staticmethod
+    def from_dict(config: Dict):
+        return DockerCacheConfig(config["to"], config["from"])
+
+
+@dataclass(frozen=True)
 class DockerConfig:
     host_name: str
     organization: Optional[str]
     user_name: str
     password: str
+    cache: Optional[DockerCacheConfig]
     root_folder: str
     build_target: Optional[str]
     test_target: Optional[str]
@@ -57,6 +68,9 @@ class DockerConfig:
                 host_name=registry["hostName"],
                 user_name=registry["userName"],
                 organization=registry.get("organization", None),
+                cache=DockerCacheConfig.from_dict(registry["cache"])
+                if "cache" in registry
+                else None,
                 password=registry["password"],
                 root_folder=build_config["rootFolder"],
                 build_target=build_config.get("buildTarget", None),
@@ -162,9 +176,15 @@ def docker_copy(
 
 
 def build(
-    logger: Logger, root_path: str, file_path: str, image_tag: str, target: str
+    logger: Logger,
+    root_path: str,
+    file_path: str,
+    image_tag: str,
+    target: str,
+    cache: Optional[DockerCacheConfig] = None,
 ) -> bool:
     """
+    :param cache: optionally specify cache configuration
     :param logger: the logger
     :param root_path: the root path to which `docker_file_path` is relative
     :param file_path: path to the docker file to be built
@@ -180,7 +200,9 @@ def build(
             file=file_path,
             tags=[image_tag],
             target=target,
-            stream_logs=True,
+            stream_logs=False,
+            cache_from=cache.cache_from if cache else None,
+            cache_to=cache.cache_to if cache else None,
         )
         if logs is not None and not isinstance(logs, Image):
             stream_docker_logging(

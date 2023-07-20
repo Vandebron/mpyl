@@ -30,7 +30,11 @@ class IntegrationTestAfter(Step):
             return Output(success=True, message="No containers to stop")
 
         self._logger.debug(f"Stopping containers in {compose_file}")
-        docker_client = DockerClient(compose_files=[compose_file])
+        docker_client = DockerClient(
+            compose_files=[compose_file],
+            debug=True,
+            log_level=step_input.run_properties.console.log_level.lower(),
+        )
         logs = docker_client.compose.logs(stream=True)
         stream_docker_logging(
             logger=self._logger, generator=logs, task_name=f"Stop {compose_file}"

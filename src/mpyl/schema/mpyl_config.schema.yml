@@ -229,6 +229,16 @@ definitions:
         type: string
       password:
         type: string
+      cache:
+        type: object
+        additionalProperties: false
+        properties:
+          to:
+            description: "The --cache-to argument for docker buildx"
+            type: string
+          from:
+            description: "The --cache-from argument for docker buildx"
+            type: string
     required:
       - hostName
       - password

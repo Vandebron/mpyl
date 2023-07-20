@@ -72,6 +72,7 @@ class BuildDocker(Step):
             file_path=dockerfile,
             image_tag=image_tag,
             target=build_target,
+            cache=docker_config.cache,
         )
         artifact = input_to_artifact(
             ArtifactType.DOCKER_IMAGE, step_input, spec={"image": image_tag}
