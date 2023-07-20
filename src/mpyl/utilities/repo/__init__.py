@@ -2,13 +2,13 @@
 `mpyl.utilities.repo.Repository` is a facade for the Version Control System.
 At this moment Git is the only supported VCS.
 """
-
+import itertools
 import logging
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Optional
 from urllib.parse import urlparse
-
 from git import Git, Repo, Remote
 from git.objects import Commit
 
@@ -152,13 +152,16 @@ class Repository:
         if not revisions:
             return []
 
-        changed_files = []
-        for rev in revisions:
-            changed_files.extend(
-                self._repo.git.diff_tree(
-                    rev, name_only=True, no_commit_id=True, r=True
-                ).splitlines(),
+        changed_files = list(
+            itertools.chain.from_iterable(
+                [
+                    self._repo.git.diff_tree(
+                        rev, name_only=True, no_commit_id=True, r=True
+                    ).splitlines()
+                    for rev in revisions
+                ]
             )
+        )
 
         return [
             self.__to_revision(count, rev, set(changed_files))
