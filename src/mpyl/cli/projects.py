@@ -3,11 +3,15 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import click
-import jsonschema
 from click import ParamType, Argument
 from click.shell_completion import CompletionItem
 from rich.markdown import Markdown
 
+from mpyl.cli.commands.projects.lint import (
+    _find_projects,
+    _check_and_load_projects,
+    _assert_unique_project_names,
+)
 from . import (
     CliContext,
     CONFIG_PATH_HELP,
@@ -15,9 +19,8 @@ from . import (
     parse_config_from_supplied_location,
 )
 from .commands.projects.formatting import print_project
-from .commands.build.mpyl import find_build_set
 from ..constants import DEFAULT_CONFIG_FILE_NAME
-from ..project import validate_project, load_project, Project
+from ..project import load_project, Project
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
 
@@ -122,40 +125,11 @@ def show_project(ctx, name):
 )
 @click.pass_obj
 def lint(obj: ProjectsContext, all_):
-    project_paths = []
-    if all_:
-        project_paths = obj.cli.repo.find_projects(obj.filter)
-    else:
-        branch = obj.cli.repo.get_branch
-        changes = (
-            obj.cli.repo.changes_in_branch_including_local()
-            if branch
-            else obj.cli.repo.changes_in_merge_commit()
-        )
-        build_set = find_build_set(obj.cli.repo, changes, False)
-        for all_projects in build_set.values():
-            for project in all_projects:
-                project_paths.append(project.path)
-
-    invalid = 0
-    valid = 0
-    for project_path in set(project_paths):
-        try:
-            path = Path(obj.cli.repo.root_dir()) / Path(project_path)
-            with open(path, encoding="utf-8") as file:
-                validate_project(file)
-        except jsonschema.exceptions.ValidationError as exc:
-            obj.cli.console.print(f"❌ {project_path}: {exc.message}")
-            invalid += 1
-        else:
-            valid += 1
-            if obj.cli.verbose:
-                obj.cli.console.print(f"✅ {project_path}")
-    obj.cli.console.print(
-        f"Validated {valid + invalid} projects. {valid} valid, {invalid} invalid"
+    project_paths = _find_projects(all_, obj.cli.repo, obj.filter)
+    loaded_projects = _check_and_load_projects(
+        obj.cli.console, obj.cli.repo, project_paths
     )
-    if invalid > 0:
-        click.get_current_context().exit(1)
+    _assert_unique_project_names(obj.cli.console, obj.cli.repo, loaded_projects)
 
 
 if __name__ == "__main__":
