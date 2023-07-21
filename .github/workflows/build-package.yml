@@ -108,7 +108,7 @@ jobs:
   Build_Package:
     runs-on: ubuntu-latest
     needs: [Lint, TypeCheck, Test]
-      steps:
+    steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         id: cache-dependencies
