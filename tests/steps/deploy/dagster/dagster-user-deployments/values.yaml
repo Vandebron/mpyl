@@ -1,4 +1,3 @@
-nameOverride: ucd
 deployments:
 - dagsterApiGrpcArgs:
   - --python-file
@@ -19,3 +18,4 @@ deployments:
     enabled: true
   name: example-dagster-user-code-pr-1234
   port: 3030
+nameOverride: ucd

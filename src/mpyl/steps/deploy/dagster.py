@@ -16,7 +16,7 @@ from .k8s import (
 )
 from .k8s.resources.dagster import to_user_code_values, to_grpc_server_entry
 from .. import Step, Meta, ArtifactType, Input, Output
-from ...project import Stage, Target, get_env_variables
+from ...project import Stage, Target
 from ...utilities.docker import DockerConfig
 from ...utilities.helm import convert_name_to_helm_release_name
 

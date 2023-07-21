@@ -343,7 +343,10 @@ class DagsterSecret:
 
     @staticmethod
     def from_config(values: dict):
-        return DagsterSecret(values.get("name"))
+        name = values.get("name")
+        if not name:
+            raise KeyError("Dagster secret needs to have name field set")
+        return DagsterSecret(name=name)
 
 
 @dataclass(frozen=True)

@@ -13,7 +13,6 @@ def to_user_code_values(
     docker_config: DockerConfig,
 ) -> dict:
     return {
-        "nameOverride": "ucd",  # short for user-code-deployment
         "deployments": [
             {
                 "dagsterApiGrpcArgs": ["--python-file", project.dagster.repo],
@@ -28,8 +27,9 @@ def to_user_code_values(
                 "includeConfigInLaunchedRuns": {"enabled": True},
                 "name": f"{project.name}{name_suffix}",
                 "port": 3030,
-            }
+            },
         ],
+        "nameOverride": "ucd",  # short for user-code-deployment
     }
 
 
