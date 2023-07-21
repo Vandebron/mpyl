@@ -31,5 +31,5 @@ def to_user_code_values(
     }
 
 
-def to_grpc_server_entry(host: str, name: str, port: int) -> dict:
+def to_grpc_server_entry(host: str, location_name: str, port: int) -> dict:
     return {"grpc_server": {"host": host, "location_name": name, "port": port}}

@@ -89,30 +89,23 @@ class DeployDagster(Step):
                 to_grpc_server_entry(
                     host=user_code_deployment["deployments"][0]["name"],
                     port=user_code_deployment["deployments"][0]["port"],
-                    name=user_code_deployment["deployments"][0]["name"],
+                    location_name=user_code_deployment["deployments"][0]["name"],
                 )
             )
             updated_config_map = update_config_map_field(
-                config_map, "workspace.yaml", new_workspace_servers_list
+                config_map=config_map,
+                field="workspace.yaml",
+                data=new_workspace_servers_list,
             )
-            result = replace_config_map(
+            replace_config_map(
+                self._logger,
                 context,
                 "dagster",
                 "dagster-workspace-yaml",
                 updated_config_map,
             )
-            self._logger.info(f"Got type {type(result)}")
-            self._logger.info(result)
         else:
-            self._logger.info("Starting rollout restart of dagster-dagit...")
-            result = rollout_restart_deployment(
-                self._logger, namespace, "dagster-dagit"
-            )
-            self._logger.info(result)
-            self._logger.info("Starting rollout restart of dagster-daemon...")
-            result = rollout_restart_deployment(
-                self._logger, namespace, "dagster-daemon"
-            )
-            self._logger.info(result)
+            rollout_restart_deployment(self._logger, namespace, "dagster-dagit")
+            rollout_restart_deployment(self._logger, namespace, "dagster-daemon")
 
         return deploy_result
