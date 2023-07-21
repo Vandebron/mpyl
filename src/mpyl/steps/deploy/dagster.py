@@ -12,6 +12,7 @@ from .k8s import (
     cluster_config,
     replace_config_map,
     update_config_map_field,
+    get_version_of_deployment,
 )
 from .k8s.resources.dagster import to_user_code_values, to_grpc_server_entry
 from .. import Step, Meta, ArtifactType, Input, Output
@@ -39,10 +40,14 @@ class DeployDagster(Step):
             step_input.run_properties.target, step_input.run_properties
         ).context
 
-        # get dagster version command
-        version = "1.3.10"
+        version = get_version_of_deployment(
+            context=context,
+            namespace=namespace,
+            deployment="dagster-dagit",
+            version_label="app.kubernetes.io/version",
+        )
         self._logger.info(f"Dagster Version: {version}")
-        # checking dagster-dagit version
+
         helm.add_repo(self._logger, namespace, "https://dagster-io.github.io/helm")
         project = step_input.project
 
@@ -66,7 +71,7 @@ class DeployDagster(Step):
             values=user_code_deployment,
             release_name="uc",
             chart_name="dagster/dagster-user-deployments",
-            namespace="dagster",
+            namespace=namespace,
             kube_context=context,
         )
 

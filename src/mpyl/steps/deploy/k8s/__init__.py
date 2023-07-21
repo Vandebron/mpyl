@@ -6,7 +6,7 @@ from typing import Optional
 
 import yaml
 from kubernetes import config, client
-from kubernetes.client import V1ConfigMap, ApiException
+from kubernetes.client import V1ConfigMap, ApiException, V1Deployment
 
 from .helm import write_helm_chart
 from ...deploy.k8s.resources import CustomResourceDefinition
@@ -96,6 +96,15 @@ def get_config_map(context: str, namespace: str, config_map_name: str) -> V1Conf
         config_map_name, namespace
     )
     return user_code_config_map
+
+
+def get_version_of_deployment(
+    context: str, namespace: str, deployment: str, version_label: str
+) -> str:
+    config.load_kube_config(context=context)
+    api = client.AppsV1Api()
+    deployment: V1Deployment = api.read_namespaced_deployment(deployment, namespace)
+    return deployment.metadata.labels[version_label]
 
 
 def update_config_map_field(
