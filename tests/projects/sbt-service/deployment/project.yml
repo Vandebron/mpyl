@@ -17,7 +17,7 @@ deployment:
       - key: SOME_SECRET_ENV
         valueFrom:
           secretKeyRef:
-            name: SOME_SECRET_ENV
+            name: some-secret-name
             key: sbt-job
             optional: false
   kubernetes:
