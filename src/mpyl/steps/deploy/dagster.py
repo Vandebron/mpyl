@@ -18,7 +18,7 @@ from .k8s.resources.dagster import to_user_code_values, to_grpc_server_entry
 from .. import Step, Meta, ArtifactType, Input, Output
 from ...project import Stage, Target, get_env_variables
 from ...utilities.docker import DockerConfig
-from ...utilities.helm import convert_to_helm_release_name
+from ...utilities.helm import convert_name_to_helm_release_name
 
 
 class DeployDagster(Step):
@@ -64,7 +64,9 @@ class DeployDagster(Step):
             env_vars=get_env_variables(
                 step_input.project, step_input.run_properties.target
             ),
-            env_secrets=step_input.project.kubernetes.secrets,
+            env_secrets=[
+                {"name": s.name} for s in step_input.project.dagster.secrets
+            ],
             docker_registry=docker_config.host_name,
             project_name=step_input.project.name,
             suffix=name_suffix,
@@ -79,7 +81,7 @@ class DeployDagster(Step):
             logger=self._logger,
             step_input=step_input,
             values=user_code_deployment,
-            release_name=convert_to_helm_release_name(
+            release_name=convert_name_to_helm_release_name(
                 user_code_name_to_deploy, name_suffix
             ),
             chart_name="dagster/dagster-user-deployments",

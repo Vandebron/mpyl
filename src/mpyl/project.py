@@ -20,7 +20,7 @@ import traceback
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Optional, TypeVar, Any, TextIO
+from typing import Optional, TypeVar, Any, TextIO, List
 
 import jsonschema
 from mypy.checker import Generic
@@ -337,16 +337,29 @@ class Host:
         )
 
 
+@dataclass
+class DagsterSecret:
+    name: str
+
+    @staticmethod
+    def from_config(values: dict):
+        return DagsterSecret(values.get("name"))
+
+
 @dataclass(frozen=True)
 class Dagster:
     repo: str
+    secrets: List[DagsterSecret]
 
     @staticmethod
     def from_config(values: dict):
         repo = values.get("repo")
         if not repo:
             raise KeyError("Dagster config needs to have repo field set")
-        return Dagster(repo=repo)
+        return Dagster(
+            repo=repo,
+            secrets=[DagsterSecret.from_config(v) for v in values.get("secrets", [])],
+        )
 
 
 @dataclass(frozen=True)
