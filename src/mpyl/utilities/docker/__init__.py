@@ -53,7 +53,8 @@ class DockerConfig:
     organization: Optional[str]
     user_name: str
     password: str
-    cache: Optional[DockerCacheConfig]
+    cache_from_registry: bool
+    custom_cache_config: Optional[DockerCacheConfig]
     root_folder: str
     build_target: Optional[str]
     test_target: Optional[str]
@@ -64,12 +65,14 @@ class DockerConfig:
         try:
             registry: Dict = config["docker"]["registry"]
             build_config: Dict = config["docker"]["build"]
+            cache_config = registry.get("cache", {})
             return DockerConfig(
                 host_name=registry["hostName"],
                 user_name=registry["userName"],
                 organization=registry.get("organization", None),
-                cache=DockerCacheConfig.from_dict(registry["cache"])
-                if "cache" in registry
+                cache_from_registry=cache_config.get("cacheFromRegistry", False),
+                custom_cache_config=DockerCacheConfig.from_dict(cache_config["custom"])
+                if "custom" in cache_config
                 else None,
                 password=registry["password"],
                 root_folder=build_config["rootFolder"],
@@ -181,18 +184,31 @@ def build(
     file_path: str,
     image_tag: str,
     target: str,
-    cache: Optional[DockerCacheConfig] = None,
+    docker_config: Optional[DockerConfig] = None,
 ) -> bool:
     """
-    :param cache: optionally specify cache configuration
     :param logger: the logger
     :param root_path: the root path to which `docker_file_path` is relative
     :param file_path: path to the docker file to be built
     :param image_tag: the tag of the image
     :param target: the 'target' within the multi-stage docker image
-    :return: True if success, False if failure
+    :param docker_config: optional docker config, used what type of cache to use if any
+    :return: True for success, False for failure
     """
     logger.info(f"Building docker image with {file_path} and target {target}")
+
+    if docker_config and docker_config.cache_from_registry:
+        registry_path = docker_registry_path(docker_config, image_tag)
+        cache_from = f"type=registry,ref={registry_path}"
+        cache_to = "type=inline"
+    elif docker_config and docker_config.custom_cache_config:
+        cache_from = docker_config.custom_cache_config.cache_from
+        cache_to = docker_config.custom_cache_config.cache_to
+    else:
+        cache_from = None
+        cache_to = None
+
+    logger.debug(f"Building with cache from: {cache_from} {docker_config}")
 
     try:
         logs = docker.buildx.build(
@@ -200,9 +216,9 @@ def build(
             file=file_path,
             tags=[image_tag],
             target=target,
-            stream_logs=False,
-            cache_from=cache.cache_from if cache else None,
-            cache_to=cache.cache_to if cache else None,
+            stream_logs=True,
+            cache_from=cache_from,
+            cache_to=cache_to,
         )
         if logs is not None and not isinstance(logs, Image):
             stream_docker_logging(
