@@ -126,14 +126,13 @@ def show_project(ctx, name):
     help="Validate all project yaml's, regardless of changes on branch",
 )
 @click.option(
-    "--verbose",
-    "-v",
-    "verbose",
+    "--extended",
+    "extended",
     is_flag=True,
     help="Enable extra validations like PR namespace linkup",
 )
 @click.pass_obj
-def lint(obj: ProjectsContext, all_, verbose):
+def lint(obj: ProjectsContext, all_, extended):
     project_paths = _find_projects(all_, obj.cli.repo, obj.filter)
     loaded_projects = _check_and_load_projects(
         console=obj.cli.console,
@@ -152,7 +151,7 @@ def lint(obj: ProjectsContext, all_, verbose):
         projects=loaded_projects,
         all_projects=all_projects,
     )
-    if not all_ and verbose:
+    if not all_ and extended:
         _assert_correct_project_linkup(
             console=obj.cli.console,
             target=Target.PULL_REQUEST,
