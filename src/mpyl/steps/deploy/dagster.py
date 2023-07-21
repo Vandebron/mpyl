@@ -33,6 +33,17 @@ class DeployDagster(Step):
             required_artifact=ArtifactType.DOCKER_IMAGE,
         )
 
+    def __convert_to_helm_release_name(self, name: str, tag: str) -> str:
+        """
+        This function converts all _ and . into -, lowercases the name and returns the first letter of each bit
+        for a short helm release name to respect the 63 character limit
+        """
+        name = "".join(
+            [n[0] for n in name.replace("_", "-").replace(".", "-").lower().split("-")]
+        )
+        tag = tag.replace("_", "-").lower()
+        return f"{name}{tag}"
+
     # Deploys the docker image produced in the build stage as a Dagster user-code-deployment
     def execute(self, step_input: Input) -> Output:
         namespace = "dagster"
@@ -51,25 +62,31 @@ class DeployDagster(Step):
         helm.add_repo(self._logger, namespace, "https://dagster-io.github.io/helm")
         project = step_input.project
 
+        name_suffix = (
+            f"-pr-{step_input.run_properties.versioning.pr_number}"
+            if step_input.run_properties.target == Target.PULL_REQUEST
+            else ""
+        )
+
         user_code_deployment = to_user_code_values(
             env_vars=get_env_variables(project, step_input.run_properties.target),
             env_secrets=project.kubernetes.secrets,
             project_name=project.name,
-            suffix=(
-                f"-pr-{step_input.run_properties.versioning.pr_number}"
-                if step_input.run_properties.target == Target.PULL_REQUEST
-                else ""
-            ),
+            suffix=name_suffix,
             tag=step_input.run_properties.versioning.identifier,
             repo_file_path=project.dagster.repo,
         )
+        user_code_name_to_deploy = user_code_deployment["deployments"][0]["name"]
+
         self._logger.debug(f"Deploying user code with values: {user_code_deployment}")
 
         deploy_result = helm.install_with_values_yaml(
             logger=self._logger,
             step_input=step_input,
             values=user_code_deployment,
-            release_name="uc",
+            release_name=self.__convert_to_helm_release_name(
+                user_code_name_to_deploy, name_suffix
+            ),
             chart_name="dagster/dagster-user-deployments",
             namespace=namespace,
             kube_context=context,
@@ -79,7 +96,6 @@ class DeployDagster(Step):
             config_map = get_config_map(context, namespace, "dagster-workspace-yaml")
             dagster_workspace = yaml.safe_load(config_map.data["workspace.yaml"])
 
-            user_code_name_to_deploy = user_code_deployment["deployments"][0]["name"]
             server_names = [
                 w["grpc_server"]["location_name"]
                 for w in dagster_workspace["load_from"]

@@ -12,6 +12,7 @@ def to_user_code_values(
     repo_file_path: str,
 ) -> dict:
     return {
+        "nameOverride": "ucd",  # short for user-code-deployment
         "deployments": [
             {
                 "dagsterApiGrpcArgs": ["--python-file", repo_file_path],
@@ -27,7 +28,7 @@ def to_user_code_values(
                 "name": f"{project_name}{suffix}",
                 "port": 3030,
             }
-        ]
+        ],
     }
 
 
