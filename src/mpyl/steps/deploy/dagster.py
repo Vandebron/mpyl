@@ -97,8 +97,7 @@ class DeployDagster(Step):
                 self._logger.info(
                     f"Adding new server {user_code_name_to_deploy} to dagster's workspace.yaml"
                 )
-                new_workspace_servers_list = dagster_workspace
-                new_workspace_servers_list["load_from"].append(
+                dagster_workspace["load_from"].append(
                     to_grpc_server_entry(
                         host=user_code_deployment["deployments"][0]["name"],
                         port=user_code_deployment["deployments"][0]["port"],
@@ -108,7 +107,7 @@ class DeployDagster(Step):
                 updated_config_map = update_config_map_field(
                     config_map=config_map,
                     field="workspace.yaml",
-                    data=new_workspace_servers_list,
+                    data=dagster_workspace,
                 )
                 results.append(
                     replace_config_map(
