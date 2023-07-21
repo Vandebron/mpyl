@@ -45,17 +45,16 @@ class DeployDagster(Step):
         # checking dagster-dagit version
         helm.add_repo(self._logger, namespace, "https://dagster-io.github.io/helm")
         project = step_input.project
-        name_suffix = (
-            f"-pr-{step_input.run_properties.versioning.pr_number}"
-            if step_input.run_properties.target == Target.PULL_REQUEST
-            else ""
-        )
 
         user_code_deployment = to_user_code_values(
             env_vars=get_env_variables(project, step_input.run_properties.target),
             env_secrets=project.kubernetes.secrets,
             project_name=project.name,
-            suffix=name_suffix,
+            suffix=(
+                f"-pr-{step_input.run_properties.versioning.pr_number}"
+                if step_input.run_properties.target == Target.PULL_REQUEST
+                else ""
+            ),
             tag=step_input.run_properties.versioning.identifier,
             repo_file_path=project.dagster.repo,
         )
@@ -71,7 +70,6 @@ class DeployDagster(Step):
             kube_context=context,
         )
 
-        # "Apply it and retrieve it again to make sure it has the last-applied-configuration annotation"
         config_map = get_config_map(context, namespace, "dagster-workspace-yaml")
         dagster_workspace = yaml.safe_load(config_map.data["workspace.yaml"])
 
@@ -79,9 +77,9 @@ class DeployDagster(Step):
         server_names = [
             w["grpc_server"]["location_name"] for w in dagster_workspace["load_from"]
         ]
-        is_new_grpc_server = user_code_name_to_deploy not in server_names
 
-        if is_new_grpc_server:
+        # If the server new (not in existing workspace.yml), we append it
+        if user_code_name_to_deploy not in server_names:
             self._logger.info(
                 f"Adding new server {user_code_name_to_deploy} to dagster's workspace.yaml"
             )

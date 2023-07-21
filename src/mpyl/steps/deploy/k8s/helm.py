@@ -92,7 +92,13 @@ def install_with_values_yaml(
     with open(values_path / Path("values.yaml"), mode="w+", encoding="utf-8") as file:
         file.write(yaml.dump(values))
 
-    cmd = f'helm upgrade -i {release_name} -n {namespace} -f {values_path / Path("values.yaml")} --kube-context {kube_context} {chart_name}'
+    cmd = (
+        f"helm upgrade "
+        f"-i {release_name} "
+        f"-n {namespace} "
+        f'-f {values_path / Path("values.yaml")} '
+        f"--kube-context {kube_context} {chart_name}"
+    )
     return custom_check_output(logger, cmd)
 
 
