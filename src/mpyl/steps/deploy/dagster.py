@@ -134,4 +134,4 @@ class DeployDagster(Step):
 
     def __evaluate_step_results(self, step_outputs: List[Output]):
         for step_output in step_outputs:
-            self._logger.info({step_output})
+            self._logger.info(step_output)
