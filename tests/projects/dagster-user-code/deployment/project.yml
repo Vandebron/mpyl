@@ -1,0 +1,25 @@
+name: 'example-dagster-user-code'
+description: 'Example user-code deployment for dagster'
+maintainer:
+  - MPyL
+stages:
+  deploy: Dagster Deploy
+deployment:
+  properties:
+    env:
+      - key: DEPLOY_ENV
+        pr: 'test'
+        test: 'test'
+        acceptance: 'acce'
+        production: 'prod'
+      - key: LOGGING_LEVEL
+        pr: 'DEBUG'
+        test: 'DEBUG'
+        acceptance: 'DEBUG'
+        production: 'INFO'
+  dagster:
+    repo: "/example/repo.py"
+    secrets:
+      - name: 'all-dagster-secrets'
+      - name: 'example-dagster-user-code-secrets'
+
