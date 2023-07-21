@@ -58,20 +58,11 @@ class DeployDagster(Step):
             else ""
         )
 
-        docker_config = DockerConfig.from_dict(step_input.run_properties.config)
-
         user_code_deployment = to_user_code_values(
-            env_vars=get_env_variables(
-                step_input.project, step_input.run_properties.target
-            ),
-            env_secrets=[
-                {"name": s.name} for s in step_input.project.dagster.secrets
-            ],
-            docker_registry=docker_config.host_name,
-            project_name=step_input.project.name,
-            suffix=name_suffix,
-            tag=step_input.run_properties.versioning.identifier,
-            repo_file_path=step_input.project.dagster.repo,
+            project=step_input.project,
+            name_suffix=name_suffix,
+            run_properties=step_input.run_properties,
+            docker_config=DockerConfig.from_dict(step_input.run_properties.config),
         )
         user_code_name_to_deploy = user_code_deployment["deployments"][0]["name"]
 

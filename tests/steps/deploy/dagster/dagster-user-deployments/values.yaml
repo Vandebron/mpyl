@@ -1,0 +1,21 @@
+nameOverride: ucd
+deployments:
+- dagsterApiGrpcArgs:
+  - --python-file
+  - /example/repo.py
+  env:
+    DEPLOY_ENV: test
+    LOGGING_LEVEL: DEBUG
+  envSecrets:
+  - name: all-dagster-secrets
+  - name: example-dagster-user-code-secrets
+  image:
+    imagePullSecrets:
+    - name: bigdataregistry
+    pullPolicy: Always
+    repository: docker_host/example-dagster-user-code
+    tag: pr-1234
+  includeConfigInLaunchedRuns:
+    enabled: true
+  name: example-dagster-user-code-pr-1234
+  port: 3030

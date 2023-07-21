@@ -1,32 +1,32 @@
 """
 This module contains the Dagster user-code-deployment values conversion
 """
+from mpyl.project import Project, get_env_variables
+from mpyl.steps.models import RunProperties
+from mpyl.utilities.docker import DockerConfig
 
 
 def to_user_code_values(
-    env_vars: dict,
-    env_secrets: list,
-    docker_registry: str,
-    project_name: str,
-    suffix: str,
-    tag: str,
-    repo_file_path: str,
+    project: Project,
+    name_suffix: str,
+    run_properties: RunProperties,
+    docker_config: DockerConfig,
 ) -> dict:
     return {
         "nameOverride": "ucd",  # short for user-code-deployment
         "deployments": [
             {
-                "dagsterApiGrpcArgs": ["--python-file", repo_file_path],
-                "env": env_vars,
-                "envSecrets": env_secrets,
+                "dagsterApiGrpcArgs": ["--python-file", project.dagster.repo],
+                "env": get_env_variables(project, run_properties.target),
+                "envSecrets": [{"name": s.name} for s in project.dagster.secrets],
                 "image": {
                     "pullPolicy": "Always",
                     "imagePullSecrets": [{"name": "bigdataregistry"}],
-                    "tag": tag,
-                    "repository": f"{docker_registry}/{project_name}",
+                    "tag": run_properties.versioning.identifier,
+                    "repository": f"{docker_config.host_name}/{project.name}",
                 },
                 "includeConfigInLaunchedRuns": {"enabled": True},
-                "name": f"{project_name}{suffix}",
+                "name": f"{project.name}{name_suffix}",
                 "port": 3030,
             }
         ],
