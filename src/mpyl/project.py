@@ -343,9 +343,10 @@ class Dagster:
 
     @staticmethod
     def from_config(values: dict):
-        return Dagster(
-            repo=values.get("repo", {}),
-        )
+        repo = values.get("repo")
+        if not repo:
+            raise KeyError("Dagster config needs to have repo field set")
+        return Dagster(repo=repo)
 
 
 @dataclass(frozen=True)
@@ -449,9 +450,7 @@ class Project:
     @property
     def dagster(self) -> Dagster:
         if self.deployment is None or self.deployment.dagster is None:
-            raise KeyError(
-                f"Project '{self.name}' does not have kubernetes configuration"
-            )
+            raise KeyError(f"Project '{self.name}' does not have dagster configuration")
         return self.deployment.dagster
 
     @property

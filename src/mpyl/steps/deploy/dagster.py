@@ -18,6 +18,7 @@ from .k8s.resources.dagster import to_user_code_values, to_grpc_server_entry
 from .. import Step, Meta, ArtifactType, Input, Output
 from ...project import Stage, Target, get_env_variables
 from ...utilities.docker import DockerConfig
+from ...utilities.helm import convert_to_helm_release_name
 
 
 class DeployDagster(Step):
@@ -33,17 +34,6 @@ class DeployDagster(Step):
             produced_artifact=ArtifactType.NONE,
             required_artifact=ArtifactType.DOCKER_IMAGE,
         )
-
-    def __convert_to_helm_release_name(self, name: str, tag: str) -> str:
-        """
-        This function converts all _ and . into -, lowercases the name and returns the first letter of each bit
-        for a short helm release name to respect the 63 character limit
-        """
-        name = "".join(
-            [n[0] for n in name.replace("_", "-").replace(".", "-").lower().split("-")]
-        )
-        tag = tag.replace("_", "-").lower()
-        return f"{name}{tag}"
 
     # Deploys the docker image produced in the build stage as a Dagster user-code-deployment
     def execute(self, step_input: Input) -> Output:
@@ -89,7 +79,7 @@ class DeployDagster(Step):
             logger=self._logger,
             step_input=step_input,
             values=user_code_deployment,
-            release_name=self.__convert_to_helm_release_name(
+            release_name=convert_to_helm_release_name(
                 user_code_name_to_deploy, name_suffix
             ),
             chart_name="dagster/dagster-user-deployments",
