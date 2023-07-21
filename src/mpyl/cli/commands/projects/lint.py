@@ -102,8 +102,8 @@ def _assert_correct_project_linkup(
     project_names = set(map(__get_project_name, projects))
     all_project_names = set(map(__get_project_name, all_projects))
 
+    wrong_substitutions: dict[str, list[tuple[str, str]]] = {}
     for project in projects:
-        console.print(f"Checking namespace substitution for project {project.name}")
         env_vars = ChartBuilder.extract_raw_env(
             target=target, env=project.deployment.properties.env
         )
@@ -113,10 +113,16 @@ def _assert_correct_project_linkup(
             projects_to_deploy=project_names,
             pr_identifier=pr_identifier,
         )
-        wrong_subst = [k for k, v in substituted.items() if "{namespace}" in v]
-        if len(wrong_subst) == 0:
-            console.print(f"✅ No wrong namespace substitutions found")
-        else:
-            console.print(
-                f"❌ Found {len(wrong_subst)} wrong namespace substitutions: {wrong_subst}"
-            )
+        wrong_subs = [(k, v) for k, v in substituted.items() if "{namespace}" in v]
+        if len(wrong_subs) > 0:
+            wrong_substitutions[project.name] = wrong_subs
+    if len(wrong_substitutions.keys()) == 0:
+        console.print(f"✅ No wrong namespace substitutions found")
+    else:
+        for k, v in wrong_substitutions.items():
+            console.print(f"❌ Project {k} has wrong namespace substitutions:")
+            for env, url in v:
+                unrecognized_project_name = url.split(".{namespace}")[0].split("/")[-1]
+                console.print(
+                    f"  {env} references unrecognized project {unrecognized_project_name}"
+                )
