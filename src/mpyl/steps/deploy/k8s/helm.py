@@ -8,7 +8,6 @@ from pathlib import Path
 
 import yaml
 
-
 from .resources import to_yaml, CustomResourceDefinition
 from ...models import RunProperties, Output
 from ....cli import get_version
@@ -87,7 +86,7 @@ def install_with_values_yaml(
     kube_context: str,
 ) -> Output:
     values_path = Path(step_input.project.target_path)
-    logger.info(f"Writing HELM values to {values_path}")
+    logger.info(f"Writing Helm values to {values_path}")
 
     with open(values_path / Path("values.yaml"), mode="w+", encoding="utf-8") as file:
         file.write(yaml.dump(values))
@@ -99,7 +98,10 @@ def install_with_values_yaml(
         f'-f {values_path / Path("values.yaml")} '
         f"--kube-context {kube_context} {chart_name}"
     )
-    return custom_check_output(logger, cmd)
+    if step_input.dry_run:
+        return custom_check_output(logger, cmd + " --debug --dry-run")
+    else:
+        return custom_check_output(logger, cmd)
 
 
 def write_helm_chart(

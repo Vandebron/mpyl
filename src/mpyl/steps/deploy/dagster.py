@@ -63,7 +63,7 @@ class DeployDagster(Step):
             tag=step_input.run_properties.versioning.identifier,
             repo_file_path=project.dagster.repo,
         )
-        self._logger.info(f"Deploying user code with values: {user_code_deployment}")
+        self._logger.debug(f"Deploying user code with values: {user_code_deployment}")
 
         deploy_result = helm.install_with_values_yaml(
             logger=self._logger,
@@ -75,41 +75,43 @@ class DeployDagster(Step):
             kube_context=context,
         )
 
-        config_map = get_config_map(context, namespace, "dagster-workspace-yaml")
-        dagster_workspace = yaml.safe_load(config_map.data["workspace.yaml"])
+        if deploy_result.success and not step_input.dry_run:
+            config_map = get_config_map(context, namespace, "dagster-workspace-yaml")
+            dagster_workspace = yaml.safe_load(config_map.data["workspace.yaml"])
 
-        user_code_name_to_deploy = user_code_deployment["deployments"][0]["name"]
-        server_names = [
-            w["grpc_server"]["location_name"] for w in dagster_workspace["load_from"]
-        ]
+            user_code_name_to_deploy = user_code_deployment["deployments"][0]["name"]
+            server_names = [
+                w["grpc_server"]["location_name"]
+                for w in dagster_workspace["load_from"]
+            ]
 
-        # If the server new (not in existing workspace.yml), we append it
-        if user_code_name_to_deploy not in server_names:
-            self._logger.info(
-                f"Adding new server {user_code_name_to_deploy} to dagster's workspace.yaml"
-            )
-            new_workspace_servers_list = dagster_workspace
-            new_workspace_servers_list["load_from"].append(
-                to_grpc_server_entry(
-                    host=user_code_deployment["deployments"][0]["name"],
-                    port=user_code_deployment["deployments"][0]["port"],
-                    location_name=user_code_deployment["deployments"][0]["name"],
+            # If the server new (not in existing workspace.yml), we append it
+            if user_code_name_to_deploy not in server_names:
+                self._logger.info(
+                    f"Adding new server {user_code_name_to_deploy} to dagster's workspace.yaml"
                 )
-            )
-            updated_config_map = update_config_map_field(
-                config_map=config_map,
-                field="workspace.yaml",
-                data=new_workspace_servers_list,
-            )
-            replace_config_map(
-                self._logger,
-                context,
-                "dagster",
-                "dagster-workspace-yaml",
-                updated_config_map,
-            )
-        else:
-            rollout_restart_deployment(self._logger, namespace, "dagster-dagit")
-            rollout_restart_deployment(self._logger, namespace, "dagster-daemon")
+                new_workspace_servers_list = dagster_workspace
+                new_workspace_servers_list["load_from"].append(
+                    to_grpc_server_entry(
+                        host=user_code_deployment["deployments"][0]["name"],
+                        port=user_code_deployment["deployments"][0]["port"],
+                        location_name=user_code_deployment["deployments"][0]["name"],
+                    )
+                )
+                updated_config_map = update_config_map_field(
+                    config_map=config_map,
+                    field="workspace.yaml",
+                    data=new_workspace_servers_list,
+                )
+                replace_config_map(
+                    self._logger,
+                    context,
+                    "dagster",
+                    "dagster-workspace-yaml",
+                    updated_config_map,
+                )
+            else:
+                rollout_restart_deployment(self._logger, namespace, "dagster-dagit")
+                rollout_restart_deployment(self._logger, namespace, "dagster-daemon")
 
         return deploy_result
