@@ -509,12 +509,15 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
     def _create_secret_env_vars(self, secret_list: list[KeyValueRef]) -> list[V1EnvVar]:
         return list(map(self._map_key_value_refs, secret_list))
 
-    def _get_env_vars(self):
+    @staticmethod
+    def extract_raw_env(target: Target, env: list[KeyValueProperty]):
         raw_env_vars = {
-            e.key: e.get_value(self.target)
-            for e in self.env
-            if e.get_value(self.target) is not None
+            e.key: e.get_value(target) for e in env if e.get_value(target) is not None
         }
+        return raw_env_vars
+
+    def _get_env_vars(self):
+        raw_env_vars = self.extract_raw_env(self.target, self.env)
         pr_identifier = (
             None
             if self.step_input.run_properties.versioning.tag

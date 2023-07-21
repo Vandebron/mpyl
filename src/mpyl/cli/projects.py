@@ -11,7 +11,9 @@ from mpyl.cli.commands.projects.lint import (
     _find_projects,
     _check_and_load_projects,
     _assert_unique_project_names,
+    _assert_correct_project_linkup,
 )
+from mpyl.steps.models import RunProperties
 from . import (
     CliContext,
     CONFIG_PATH_HELP,
@@ -20,7 +22,7 @@ from . import (
 )
 from .commands.projects.formatting import print_project
 from ..constants import DEFAULT_CONFIG_FILE_NAME
-from ..project import load_project, Project
+from ..project import load_project, Project, Target
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
 
@@ -123,13 +125,41 @@ def show_project(ctx, name):
     is_flag=True,
     help="Validate all project yaml's, regardless of changes on branch",
 )
+@click.option(
+    "--verbose",
+    "-v",
+    "verbose",
+    is_flag=True,
+    help="Enable extra validations like PR namespace linkup",
+)
 @click.pass_obj
-def lint(obj: ProjectsContext, all_):
+def lint(obj: ProjectsContext, all_, verbose):
     project_paths = _find_projects(all_, obj.cli.repo, obj.filter)
     loaded_projects = _check_and_load_projects(
-        obj.cli.console, obj.cli.repo, project_paths
+        console=obj.cli.console,
+        repo=obj.cli.repo,
+        project_paths=project_paths,
+        strict=True,
     )
-    _assert_unique_project_names(obj.cli.console, obj.cli.repo, loaded_projects)
+    all_projects = _check_and_load_projects(
+        console=None,
+        repo=obj.cli.repo,
+        project_paths=_find_projects(True, obj.cli.repo, ""),
+        strict=False,
+    )
+    _assert_unique_project_names(
+        console=obj.cli.console,
+        projects=loaded_projects,
+        all_projects=all_projects,
+    )
+    if not all_ and verbose:
+        _assert_correct_project_linkup(
+            console=obj.cli.console,
+            target=Target.PULL_REQUEST,
+            projects=loaded_projects,
+            all_projects=all_projects,
+            pr_identifier="123",
+        )
 
 
 if __name__ == "__main__":
