@@ -100,8 +100,7 @@ def install_with_values_yaml(
     )
     if step_input.dry_run:
         return custom_check_output(logger, cmd + " --debug --dry-run")
-    else:
-        return custom_check_output(logger, cmd)
+    return custom_check_output(logger, cmd)
 
 
 def write_helm_chart(
