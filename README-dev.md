@@ -73,3 +73,17 @@ which will trigger a build and release to https://pypi.org/project/mpyl/
     pipenv run test
     ```
    which should now succeed.
+
+## ..running the mpyl sourcecode against another repository
+
+To test the mpyl sourcecode against the peculiarities of your own repository, you can run the following command:
+
+```shell
+PIPENV_PIPFILE=/<absolute_to_mpyl_repo>/Pipfile pipenv run cli-ext build status
+```
+Assign PIPENV_PIPFILE to the absolute path of your Pipfile and run the command.
+⚠️Note that an `.env` file needs to be present in the root if this repository, containing the following variable:
+
+```shell
+PYTHONPATH=/<absolute_to_mpyl_repo>/src
+```

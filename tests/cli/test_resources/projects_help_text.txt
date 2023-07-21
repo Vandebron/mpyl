@@ -1,0 +1,15 @@
+Usage: mpyl projects [OPTIONS] COMMAND [ARGS]...
+
+  Commands related to projects
+
+Options:
+  -c, --config PATH  Path to the config.yml. Can be set via `MPYL_CONFIG_PATH`
+                     env var.   [required]
+  -v, --verbose
+  -f, --filter TEXT  Filter based on filepath
+  --help             Show this message and exit.
+
+Commands:
+  lint  Validate the yaml of changed projects against their schema
+  list  List found projects
+  show  Show details of a project

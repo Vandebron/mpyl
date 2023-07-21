@@ -19,9 +19,25 @@ Will validate the configuration and check if all required tools are installed.
 
 ##### Command structure
 
+```
+.. include:: tests/cli/test_resources/main_help_text.txt
+```
+
 Top level commands options are passed on to sub commands and need to be specified *before* the sub command.
 In ```mpyl projects --filter <name> list ```, the `--filter` option applies to all `project` commands, like `list`
 or `lint`.
+
+###### Projects
+
+```
+.. include:: tests/cli/test_resources/projects_help_text.txt
+```
+
+###### Build
+
+```
+.. include:: tests/cli/test_resources/build_help_text.txt
+```
 
 ##### MPyL configuration
 

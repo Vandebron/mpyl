@@ -19,11 +19,7 @@ from rich.logging import RichHandler
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository
 
-CONFIG_PATH_HELP = (
-    "Path to the config.yml. Needs to comply with schema at "
-    "https://vandebron.github.io/mpyl/schema/mpyl_config.schema.yml "
-    "Can be set via `MPYL_CONFIG_PATH` env var. "
-)
+CONFIG_PATH_HELP = "Path to the config.yml. Can be set via `MPYL_CONFIG_PATH` env var. "
 
 
 @dataclass(frozen=True)

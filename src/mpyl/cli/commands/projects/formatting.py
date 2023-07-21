@@ -1,12 +1,15 @@
 """Serialization of projects for display purposes"""
 
 from pathlib import Path
+from typing import Tuple, Optional
 
 from rich.console import Console
+from rich.markdown import Markdown
 from rich.table import Table
 
 from ... import Repository
 from ....project import load_project
+from ....projects import ProjectWithDependents
 from ....projects.find import load_projects, find_dependencies
 
 
@@ -16,6 +19,14 @@ def print_project(repo: Repository, console: Console, project_path: str):
 
     with_dependencies = find_dependencies(project, other_projects)
 
+    table, readme = project_to_markdown(with_dependencies)
+    console.print(table, readme)
+
+
+def project_to_markdown(
+    with_dependencies: ProjectWithDependents,
+) -> Tuple[Table, Optional[Markdown]]:
+    project = with_dependencies.project
     table = Table(title=f"Project {project.name}", show_header=False)
     table.add_row("Name", project.name)
     table.add_row("Path", project.path)
@@ -26,4 +37,8 @@ def print_project(repo: Repository, console: Console, project_path: str):
         table.add_row(
             "Dependent projects", f"{set(with_dependencies.dependent_projects.keys())}"
         )
-    console.print(table)
+    readme = Path(project.root_path, "README.md")
+    return (
+        table,
+        Markdown(readme.read_text(encoding="utf-8")) if readme.exists() else None,
+    )
