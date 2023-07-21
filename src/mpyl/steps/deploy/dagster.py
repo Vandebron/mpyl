@@ -74,13 +74,16 @@ class DeployDagster(Step):
         dagster_workspace = yaml.safe_load(config_map.data["workspace.yaml"])
         self._logger.info(dagster_workspace)
 
-        server_names = [w["grpc_server"]["name"] for w in dagster_workspace["load_from"]]
-        is_new_grpc_server = (
-            user_code_deployment["deployments"][0]["name"] not in server_names
-        )
+        user_code_name_to_deploy = user_code_deployment["deployments"][0]["name"]
+        server_names = [
+            w["grpc_server"]["location_name"] for w in dagster_workspace["load_from"]
+        ]
+        is_new_grpc_server = user_code_name_to_deploy not in server_names
 
         if is_new_grpc_server:
-            self._logger.info("Adding new server to dagster's workspace.yaml")
+            self._logger.info(
+                f"Adding new server {user_code_name_to_deploy} to dagster's workspace.yaml"
+            )
             new_workspace_servers_list = dagster_workspace
             new_workspace_servers_list["load_from"].append(
                 to_grpc_server_entry(
@@ -92,17 +95,24 @@ class DeployDagster(Step):
             updated_config_map = update_config_map_field(
                 config_map, "workspace.yaml", new_workspace_servers_list
             )
-            replace_config_map(
-                self._logger,
+            result = replace_config_map(
                 context,
                 "dagster",
                 "dagster-workspace-yaml",
                 updated_config_map,
             )
+            self._logger.info(f"Got type {type(result)}")
+            self._logger.info(result)
         else:
             self._logger.info("Starting rollout restart of dagster-dagit...")
-            rollout_restart_deployment(self._logger, namespace, "dagster-dagit")
+            result = rollout_restart_deployment(
+                self._logger, namespace, "dagster-dagit"
+            )
+            self._logger.info(result)
             self._logger.info("Starting rollout restart of dagster-daemon...")
-            rollout_restart_deployment(self._logger, namespace, "dagster-daemon")
+            result = rollout_restart_deployment(
+                self._logger, namespace, "dagster-daemon"
+            )
+            self._logger.info(result)
 
         return deploy_result

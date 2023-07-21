@@ -45,7 +45,9 @@ def rollout_restart_deployment(logger: Logger, namespace: str, deployment: str):
         }
     }
     try:
-        v1_apps.patch_namespaced_deployment(deployment, namespace, body, pretty="true")
+        return v1_apps.patch_namespaced_deployment(
+            deployment, namespace, body, pretty="true"
+        )
     except ApiException as api_exception:
         logger.info(
             f"Exception when calling AppsV1Api->read_namespaced_deployment_status: {api_exception}\n"
@@ -100,7 +102,6 @@ def update_config_map_field(
 
 
 def replace_config_map(
-    logger: Logger,
     context: str,
     namespace: str,
     config_map_name: str,
@@ -108,9 +109,7 @@ def replace_config_map(
 ):
     config.load_kube_config(context=context)
     api = client.CoreV1Api()
-    result = api.replace_namespaced_config_map(config_map_name, namespace, config_map)
-    logger.info(f"Got type {type(result)}")
-    logger.info(result)
+    return api.replace_namespaced_config_map(config_map_name, namespace, config_map)
 
 
 def deploy_helm_chart(
