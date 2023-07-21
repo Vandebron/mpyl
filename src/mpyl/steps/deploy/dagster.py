@@ -133,8 +133,6 @@ class DeployDagster(Step):
         self.__evaluate_step_results(results)
         return deploy_result
 
-    def __evaluate_step_results(self, step_outputs: List[Output]) -> Output:
+    def __evaluate_step_results(self, step_outputs: List[Output]):
         for step_output in step_outputs:
             self._logger.info({step_output})
-            if not step_output.success:
-                return step_output
