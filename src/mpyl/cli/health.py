@@ -8,7 +8,13 @@ from .commands.health.checks import perform_health_checks
 
 
 @click.command("health")
-def health():
+@click.option(
+    "--ci",
+    is_flag=True,
+    default=False,
+    help="Run health checks relevant only for CI builds.",
+)
+def health(ci):
     """Health check"""
     console: Console = create_console_logger(local=False, verbose=False)
-    perform_health_checks(console)
+    perform_health_checks(console, ci)
