@@ -17,6 +17,7 @@ from .k8s import (
 from .k8s.resources.dagster import to_user_code_values, to_grpc_server_entry
 from .. import Step, Meta, ArtifactType, Input, Output
 from ...project import Stage, Target, get_env_variables
+from ...utilities.docker import DockerConfig
 
 
 class DeployDagster(Step):
@@ -60,7 +61,6 @@ class DeployDagster(Step):
         self._logger.info(f"Dagster Version: {version}")
 
         helm.add_repo(self._logger, namespace, "https://dagster-io.github.io/helm")
-        project = step_input.project
 
         name_suffix = (
             f"-pr-{step_input.run_properties.versioning.pr_number}"
@@ -68,13 +68,18 @@ class DeployDagster(Step):
             else ""
         )
 
+        docker_config = DockerConfig.from_dict(step_input.run_properties.config)
+
         user_code_deployment = to_user_code_values(
-            env_vars=get_env_variables(project, step_input.run_properties.target),
-            env_secrets=project.kubernetes.secrets,
-            project_name=project.name,
+            env_vars=get_env_variables(
+                step_input.project, step_input.run_properties.target
+            ),
+            env_secrets=step_input.project.kubernetes.secrets,
+            docker_registry=docker_config.host_name,
+            project_name=step_input.project.name,
             suffix=name_suffix,
             tag=step_input.run_properties.versioning.identifier,
-            repo_file_path=project.dagster.repo,
+            repo_file_path=step_input.project.dagster.repo,
         )
         user_code_name_to_deploy = user_code_deployment["deployments"][0]["name"]
 

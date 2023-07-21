@@ -6,6 +6,7 @@ This module contains the Dagster user-code-deployment values conversion
 def to_user_code_values(
     env_vars: dict,
     env_secrets: list,
+    docker_registry: str,
     project_name: str,
     suffix: str,
     tag: str,
@@ -22,7 +23,7 @@ def to_user_code_values(
                     "pullPolicy": "Always",
                     "imagePullSecrets": [{"name": "bigdataregistry"}],
                     "tag": tag,
-                    "repository": f"bigdataregistry.azurecr.io/{project_name}",
+                    "repository": f"{docker_registry}/{project_name}",
                 },
                 "includeConfigInLaunchedRuns": {"enabled": True},
                 "name": f"{project_name}{suffix}",
