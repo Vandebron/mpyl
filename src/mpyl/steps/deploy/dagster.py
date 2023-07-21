@@ -53,12 +53,14 @@ class DeployDagster(Step):
 
         user_code_deployment = to_user_code_values(
             env_vars=get_env_variables(project, step_input.run_properties.target),
-            env_secrets=[],
+            env_secrets=project.kubernetes.secrets,
             project_name=project.name,
             suffix=name_suffix,
             tag=step_input.run_properties.versioning.identifier,
             repo_file_path=project.dagster.repo,
         )
+        self._logger.info(f"Deploying user code with values: {user_code_deployment}")
+
         deploy_result = helm.install_with_values_yaml(
             logger=self._logger,
             step_input=step_input,

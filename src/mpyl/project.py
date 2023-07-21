@@ -299,6 +299,8 @@ class Job:
 @dataclass(frozen=True)
 class Kubernetes:
     port_mappings: dict[int, int]
+    # once mpyl is the main driver for deployments, we can move kubernetes.secrets to properties.secrets
+    secrets: list[dict[str, str]]
     liveness_probe: Optional[Probe]
     startup_probe: Optional[Probe]
     metrics: Optional[Metrics]
@@ -309,6 +311,7 @@ class Kubernetes:
     def from_config(values: dict):
         return Kubernetes(
             port_mappings=values.get("portMappings", {}),
+            secrets=values.get("secrets", []),
             liveness_probe=Probe.from_config(values.get("livenessProbe", {})),
             startup_probe=Probe.from_config(values.get("startupProbe", {})),
             metrics=Metrics.from_config(values.get("metrics", {})),
