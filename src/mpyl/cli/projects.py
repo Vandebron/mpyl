@@ -7,13 +7,12 @@ from click import ParamType, Argument
 from click.shell_completion import CompletionItem
 from rich.markdown import Markdown
 
-from mpyl.cli.commands.projects.lint import (
+from ..cli.commands.projects.lint import (
     _find_projects,
     _check_and_load_projects,
     _assert_unique_project_names,
     _assert_correct_project_linkup,
 )
-from mpyl.steps.models import RunProperties
 from . import (
     CliContext,
     CONFIG_PATH_HELP,
@@ -157,7 +156,7 @@ def lint(obj: ProjectsContext, all_, extended):
             target=Target.PULL_REQUEST,
             projects=loaded_projects,
             all_projects=all_projects,
-            pr_identifier="123",
+            pr_identifier=123,
         )
 
 

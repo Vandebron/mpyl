@@ -14,7 +14,7 @@ from .commands.health.checks import perform_health_checks
     default=False,
     help="Run health checks relevant only for CI builds.",
 )
-def health(ci):
+def health(is_ci):
     """Health check"""
     console: Console = create_console_logger(local=False, verbose=False)
-    perform_health_checks(console, ci)
+    perform_health_checks(console, is_ci)

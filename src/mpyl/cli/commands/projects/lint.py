@@ -1,3 +1,5 @@
+"""Helper methods for linting projects for correctnessare can be found here"""
+
 from pathlib import Path
 from typing import Optional
 
@@ -47,10 +49,9 @@ def __load_project(
         if console:
             console.print(f"❌ {project_path}: {exc}")
         return None
-    else:
-        if console and verbose:
-            console.print(f"✅ {project_path}")
-        return project
+    if console and verbose:
+        console.print(f"✅ {project_path}")
+    return project
 
 
 def _check_and_load_projects(
@@ -60,15 +61,15 @@ def _check_and_load_projects(
         __load_project(console, repo.root_dir(), project_path, strict)
         for project_path in set(project_paths)
     ]
-    valid = len([project for project in projects if project])
-    invalid = len(projects) - valid
+    valid = [project for project in projects if project]
+    invalid = len(projects) - len(valid)
     if console:
         console.print(
-            f"Validated {valid + invalid} projects. {valid} valid, {invalid} invalid"
+            f"Validated {len(valid) + invalid} projects. {len(valid)} valid, {invalid} invalid"
         )
     if invalid > 0:
         click.get_current_context().exit(1)
-    return projects
+    return valid
 
 
 def _assert_unique_project_names(
@@ -84,7 +85,7 @@ def _assert_unique_project_names(
             f"❌ Found {len(duplicates)} duplicate project names: {duplicates}"
         )
         click.get_current_context().exit(1)
-    console.print(f"✅ No duplicate project names found")
+    console.print("✅ No duplicate project names found")
 
 
 def __get_project_name(project: Project) -> ProjectName:
@@ -97,31 +98,30 @@ def _assert_correct_project_linkup(
     target: Target,
     projects: list[Project],
     all_projects: list[Project],
-    pr_identifier: Optional[str],
+    pr_identifier: Optional[int],
 ):
-    project_names = set(map(__get_project_name, projects))
-    all_project_names = set(map(__get_project_name, all_projects))
-
-    wrong_substitutions: dict[str, list[tuple[str, str]]] = {}
+    wrong_substitutions_per_project: dict[str, list[tuple[str, str]]] = {}
     for project in projects:
-        env_vars = ChartBuilder.extract_raw_env(
-            target=target, env=project.deployment.properties.env
-        )
-        substituted: dict[str, str] = substitute_namespaces(
-            env_vars=env_vars,
-            all_projects=all_project_names,
-            projects_to_deploy=project_names,
-            pr_identifier=pr_identifier,
-        )
-        wrong_subs = [(k, v) for k, v in substituted.items() if "{namespace}" in v]
-        if len(wrong_subs) > 0:
-            wrong_substitutions[project.name] = wrong_subs
-    if len(wrong_substitutions.keys()) == 0:
-        console.print(f"✅ No wrong namespace substitutions found")
+        if project.deployment:
+            substituted: dict[str, str] = substitute_namespaces(
+                env_vars=ChartBuilder.extract_raw_env(
+                    target=target, env=project.deployment.properties.env
+                ),
+                all_projects=set(map(__get_project_name, all_projects)),
+                projects_to_deploy=set(map(__get_project_name, projects)),
+                pr_identifier=pr_identifier,
+            )
+            wrong_subs = [(k, v) for k, v in substituted.items() if "{namespace}" in v]
+            if len(wrong_subs) > 0:
+                wrong_substitutions_per_project[project.name] = wrong_subs
+    if len(wrong_substitutions_per_project.keys()) == 0:
+        console.print("✅ No wrong namespace substitutions found")
     else:
-        for k, v in wrong_substitutions.items():
-            console.print(f"❌ Project {k} has wrong namespace substitutions:")
-            for env, url in v:
+        for project_name, wrong_subsitutions in wrong_substitutions_per_project.items():
+            console.print(
+                f"❌ Project {project_name} has wrong namespace substitutions:"
+            )
+            for env, url in wrong_subsitutions:
                 unrecognized_project_name = url.split(".{namespace}")[0].split("/")[-1]
                 console.print(
                     f"  {env} references unrecognized project {unrecognized_project_name}"
