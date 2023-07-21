@@ -103,8 +103,8 @@ def get_version_of_deployment(
 ) -> str:
     config.load_kube_config(context=context)
     api = client.AppsV1Api()
-    deployment: V1Deployment = api.read_namespaced_deployment(deployment, namespace)
-    return deployment.metadata.labels[version_label]
+    v1deployment: V1Deployment = api.read_namespaced_deployment(deployment, namespace)
+    return v1deployment.metadata.labels[version_label]
 
 
 def update_config_map_field(
