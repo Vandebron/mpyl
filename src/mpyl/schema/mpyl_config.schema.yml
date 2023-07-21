@@ -233,12 +233,20 @@ definitions:
         type: object
         additionalProperties: false
         properties:
-          to:
-            description: "The --cache-to argument for docker buildx"
-            type: string
-          from:
-            description: "The --cache-from argument for docker buildx"
-            type: string
+          cacheFromRegistry:
+            description: "Whether to cache from the registry. When true, the to and from properties are ignored."
+            type: boolean
+            default: false
+          custom:
+            type: object
+            additionalProperties: false
+            properties:
+              to:
+                description: "The --cache-to argument for docker buildx"
+                type: string
+              from:
+                description: "The --cache-from argument for docker buildx"
+                type: string
     required:
       - hostName
       - password
