@@ -72,7 +72,6 @@ class DeployDagster(Step):
         # "Apply it and retrieve it again to make sure it has the last-applied-configuration annotation"
         config_map = get_config_map(context, namespace, "dagster-workspace-yaml")
         dagster_workspace = yaml.safe_load(config_map.data["workspace.yaml"])
-        self._logger.info(dagster_workspace)
 
         user_code_name_to_deploy = user_code_deployment["deployments"][0]["name"]
         server_names = [
