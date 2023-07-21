@@ -101,8 +101,7 @@ def show_project(ctx, name):
         obj.cli.console.print(
             Markdown(
                 f"Project `{name}` not found. 👉 Finding projects is much easier with [auto completion]"
-                f"(https://github.com/Vandebron/mpyl/blob/096df81404985d966b870e7d33697c0101563a88/"
-                f"README-usage.md#auto-completion) enabled."
+                f"(https://vandebron.github.io/mpyl/mpyl.html#mpyl-cli) enabled."
             )
         )
         complete = ProjectPath().shell_complete(
