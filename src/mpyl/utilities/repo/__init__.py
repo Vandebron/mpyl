@@ -135,11 +135,12 @@ class Repository:
         return Revision(count, str(revision), intersection)
 
     def changes_in_branch(self) -> list[Revision]:
+        self.pull_main_branch()
         revisions = list(
             reversed(
                 list(
                     self._repo.iter_commits(
-                        f"origin/{self._config.main_branch}..HEAD", no_merges=True
+                        f"{self._config.main_branch}..HEAD", no_merges=True
                     )
                 )
             )
