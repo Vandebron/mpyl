@@ -2,6 +2,7 @@
 Step to deploy a dagster user code repository to k8s
 """
 from logging import Logger
+from typing import List
 
 import yaml
 
@@ -80,6 +81,8 @@ class DeployDagster(Step):
             kube_context=context,
         )
 
+        results: List[Output] = [deploy_result]
+
         if deploy_result.success and not step_input.dry_run:
             config_map = get_config_map(context, namespace, "dagster-workspace-yaml")
             dagster_workspace = yaml.safe_load(config_map.data["workspace.yaml"])
@@ -107,15 +110,31 @@ class DeployDagster(Step):
                     field="workspace.yaml",
                     data=new_workspace_servers_list,
                 )
-                replace_config_map(
-                    self._logger,
-                    context,
-                    "dagster",
-                    "dagster-workspace-yaml",
-                    updated_config_map,
+                results.append(
+                    replace_config_map(
+                        self._logger,
+                        context,
+                        "dagster",
+                        "dagster-workspace-yaml",
+                        updated_config_map,
+                    )
                 )
             else:
-                rollout_restart_deployment(self._logger, namespace, "dagster-dagit")
-                rollout_restart_deployment(self._logger, namespace, "dagster-daemon")
-
+                result = rollout_restart_deployment(
+                    self._logger, namespace, "dagster-dagit"
+                )
+                results.append(result)
+                if result.success:
+                    results.append(
+                        rollout_restart_deployment(
+                            self._logger, namespace, "dagster-daemon"
+                        )
+                    )
+        self.__evaluate_step_results(results)
         return deploy_result
+
+    def __evaluate_step_results(self, step_outputs: List[Output]) -> Output:
+        for step_output in step_outputs:
+            self._logger.info({step_output})
+            if not step_output.success:
+                return step_output

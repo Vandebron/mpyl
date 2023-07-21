@@ -29,7 +29,9 @@ def get_namespace(run_properties: RunProperties, project: Project) -> str:
     return get_namespace_from_project(project) or project.name
 
 
-def rollout_restart_deployment(logger: Logger, namespace: str, deployment: str):
+def rollout_restart_deployment(
+    logger: Logger, namespace: str, deployment: str
+) -> Output:
     # from https://stackoverflow.com/a/67491253
     v1_apps = client.AppsV1Api()
 
@@ -49,12 +51,13 @@ def rollout_restart_deployment(logger: Logger, namespace: str, deployment: str):
         _, status_code, _ = v1_apps.patch_namespaced_deployment_with_http_info(
             deployment, namespace, body, pretty="true"
         )
-        logger.info(
-            f"Rollout restart of {deployment} finished with statuscode {status_code}"
-        )
+        msg = f"Rollout restart of {deployment} finished with statuscode {status_code}"
+        logger.info(msg)
+        return Output(success=True, message=msg)
     except ApiException as api_exception:
-        logger.info(
-            f"Exception when calling AppsV1Api->read_namespaced_deployment_status: {api_exception}\n"
+        return Output(
+            success=False,
+            message=f"Exception when calling AppsV1Api->read_namespaced_deployment_status: {api_exception}\n",
         )
 
 
@@ -120,19 +123,20 @@ def replace_config_map(
     namespace: str,
     config_map_name: str,
     config_map: V1ConfigMap,
-):
+) -> Output:
     config.load_kube_config(context=context)
     api = client.CoreV1Api()
     try:
         _, status_code, _ = api.replace_namespaced_config_map_with_http_info(
             config_map_name, namespace, config_map
         )
-        logger.info(
-            f"ConfigMap Update of {config_map_name} finished with statuscode {status_code}"
-        )
+        msg = f"ConfigMap Update of {config_map_name} finished with statuscode {status_code}"
+        logger.info(msg)
+        return Output(success=True, message=msg)
     except ApiException as api_exception:
-        logger.info(
-            f"Exception when calling CoreV1Api->replace_namespaced_config_map: {api_exception}\n"
+        return Output(
+            success=False,
+            message=f"Exception when calling CoreV1Api->replace_namespaced_config_map: {api_exception}\n",
         )
 
 
