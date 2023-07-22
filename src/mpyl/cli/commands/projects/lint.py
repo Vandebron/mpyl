@@ -117,12 +117,17 @@ def _assert_correct_project_linkup(
     if len(wrong_substitutions_per_project.keys()) == 0:
         console.print("✅ No wrong namespace substitutions found")
     else:
+        all_project_names: dict[str, str] = {
+            project.name.lower(): project.name for project in all_projects
+        }
         for project_name, wrong_subsitutions in wrong_substitutions_per_project.items():
             console.print(
                 f"❌ Project {project_name} has wrong namespace substitutions:"
             )
             for env, url in wrong_subsitutions:
                 unrecognized_project_name = url.split(".{namespace}")[0].split("/")[-1]
+                suggestion = all_project_names.get(unrecognized_project_name.lower())
                 console.print(
                     f"  {env} references unrecognized project {unrecognized_project_name}"
+                    + (f" (did you mean {suggestion}?)" if suggestion else "")
                 )

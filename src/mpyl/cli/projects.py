@@ -126,17 +126,17 @@ def show_project(ctx, name):
 )
 @click.option(
     "--extended",
+    "-e",
     "extended",
     is_flag=True,
     help="Enable extra validations like PR namespace linkup",
 )
 @click.pass_obj
 def lint(obj: ProjectsContext, all_, extended):
-    project_paths = _find_projects(all_, obj.cli.repo, obj.filter)
     loaded_projects = _check_and_load_projects(
         console=obj.cli.console,
         repo=obj.cli.repo,
-        project_paths=project_paths,
+        project_paths=_find_projects(all_, obj.cli.repo, obj.filter),
         strict=True,
     )
     all_projects = _check_and_load_projects(
