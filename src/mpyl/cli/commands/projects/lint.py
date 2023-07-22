@@ -100,6 +100,23 @@ def _assert_correct_project_linkup(
     all_projects: list[Project],
     pr_identifier: Optional[int],
 ):
+    wrong_substitutions_per_project = __get_wrong_substitutions_per_project(
+        all_projects, projects, pr_identifier, target
+    )
+    if len(wrong_substitutions_per_project.keys()) == 0:
+        console.print("✅ No wrong namespace substitutions found")
+    else:
+        __detail_wrong_substitutions(
+            console, all_projects, wrong_substitutions_per_project
+        )
+
+
+def __get_wrong_substitutions_per_project(
+    all_projects: list[Project],
+    projects: list[Project],
+    pr_identifier: Optional[int],
+    target: Target,
+):
     wrong_substitutions_per_project: dict[str, list[tuple[str, str]]] = {}
     for project in projects:
         if project.deployment:
@@ -114,20 +131,23 @@ def _assert_correct_project_linkup(
             wrong_subs = [(k, v) for k, v in substituted.items() if "{namespace}" in v]
             if len(wrong_subs) > 0:
                 wrong_substitutions_per_project[project.name] = wrong_subs
-    if len(wrong_substitutions_per_project.keys()) == 0:
-        console.print("✅ No wrong namespace substitutions found")
-    else:
-        all_project_names: dict[str, str] = {
-            project.name.lower(): project.name for project in all_projects
-        }
-        for project_name, wrong_subsitutions in wrong_substitutions_per_project.items():
+    return wrong_substitutions_per_project
+
+
+def __detail_wrong_substitutions(
+    console: Console,
+    all_projects: list[Project],
+    wrong_substitutions_per_project: dict[str, list[tuple[str, str]]],
+):
+    all_project_names: dict[str, str] = {
+        project.name.lower(): project.name for project in all_projects
+    }
+    for project_name, wrong_subsitutions in wrong_substitutions_per_project.items():
+        console.print(f"❌ Project {project_name} has wrong namespace substitutions:")
+        for env, url in wrong_subsitutions:
+            unrecognized_project_name = url.split(".{namespace}")[0].split("/")[-1]
+            suggestion = all_project_names.get(unrecognized_project_name.lower())
             console.print(
-                f"❌ Project {project_name} has wrong namespace substitutions:"
+                f"  {env} references unrecognized project {unrecognized_project_name}"
+                + (f" (did you mean {suggestion}?)" if suggestion else "")
             )
-            for env, url in wrong_subsitutions:
-                unrecognized_project_name = url.split(".{namespace}")[0].split("/")[-1]
-                suggestion = all_project_names.get(unrecognized_project_name.lower())
-                console.print(
-                    f"  {env} references unrecognized project {unrecognized_project_name}"
-                    + (f" (did you mean {suggestion}?)" if suggestion else "")
-                )
