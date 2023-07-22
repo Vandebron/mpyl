@@ -1,5 +1,5 @@
 """Helper methods for linting projects for correctnessare can be found here"""
-
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
@@ -88,9 +88,10 @@ def _assert_unique_project_names(
     console.print("✅ No duplicate project names found")
 
 
-def __get_project_name(project: Project) -> ProjectName:
-    namespace = project.deployment.namespace if project.deployment else None
-    return ProjectName(project.name, namespace)
+@dataclass
+class ProjectLinkup:
+    name: str
+    wrong_substitutions: list[tuple[str, str]]
 
 
 def _assert_correct_project_linkup(
@@ -100,15 +101,18 @@ def _assert_correct_project_linkup(
     all_projects: list[Project],
     pr_identifier: Optional[int],
 ):
-    wrong_substitutions_per_project = __get_wrong_substitutions_per_project(
+    wrong_substitutions = __get_wrong_substitutions_per_project(
         all_projects, projects, pr_identifier, target
     )
-    if len(wrong_substitutions_per_project.keys()) == 0:
+    if len(wrong_substitutions) == 0:
         console.print("✅ No wrong namespace substitutions found")
     else:
-        __detail_wrong_substitutions(
-            console, all_projects, wrong_substitutions_per_project
-        )
+        __detail_wrong_substitutions(console, all_projects, wrong_substitutions)
+
+
+def __get_project_name(project: Project) -> ProjectName:
+    namespace = project.deployment.namespace if project.deployment else None
+    return ProjectName(project.name, namespace)
 
 
 def __get_wrong_substitutions_per_project(
@@ -116,8 +120,8 @@ def __get_wrong_substitutions_per_project(
     projects: list[Project],
     pr_identifier: Optional[int],
     target: Target,
-):
-    wrong_substitutions_per_project: dict[str, list[tuple[str, str]]] = {}
+) -> list[ProjectLinkup]:
+    project_linkup: list[ProjectLinkup] = []
     for project in projects:
         if project.deployment:
             substituted: dict[str, str] = substitute_namespaces(
@@ -130,21 +134,21 @@ def __get_wrong_substitutions_per_project(
             )
             wrong_subs = [(k, v) for k, v in substituted.items() if "{namespace}" in v]
             if len(wrong_subs) > 0:
-                wrong_substitutions_per_project[project.name] = wrong_subs
-    return wrong_substitutions_per_project
+                project_linkup.append(ProjectLinkup(project.name, wrong_subs))
+    return project_linkup
 
 
 def __detail_wrong_substitutions(
     console: Console,
     all_projects: list[Project],
-    wrong_substitutions_per_project: dict[str, list[tuple[str, str]]],
+    wrong_substitutions_per_project: list[ProjectLinkup],
 ):
     all_project_names: dict[str, str] = {
         project.name.lower(): project.name for project in all_projects
     }
-    for project_name, wrong_subsitutions in wrong_substitutions_per_project.items():
-        console.print(f"❌ Project {project_name} has wrong namespace substitutions:")
-        for env, url in wrong_subsitutions:
+    for project in wrong_substitutions_per_project:
+        console.print(f"❌ Project {project.name} has wrong namespace substitutions:")
+        for env, url in project.wrong_substitutions:
             unrecognized_project_name = url.split(".{namespace}")[0].split("/")[-1]
             suggestion = all_project_names.get(unrecognized_project_name.lower())
             console.print(
