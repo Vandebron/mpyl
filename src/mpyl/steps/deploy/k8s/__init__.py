@@ -80,6 +80,29 @@ def substitute_namespaces(
     projects_to_deploy: set[ProjectName],
     pr_identifier: Optional[int],
 ) -> dict[str, str]:
+    """
+    Substitute namespaces in environment variables.
+
+    In the project yamls we define references to other projects with e.g.:
+
+    ```yaml
+    - key: SOME_SERVICE_URL:
+      all: http://serviceName.{namespace}.svc.cluster.local
+    ```
+
+    When the env var is substituted, first the referenced service (serviceName) is looked up in the list of projects.
+    If it is part of the deploy set, and we're in deploying to target PullRequest,
+    the namespace is subsituted with the PR namespace (pr-XXXX).
+    Else is substituted with the namespace of the referenced project.
+
+    Note that the name of the service in the env var is case-sensitive!
+
+    :param env_vars: environment variables to substitute
+    :param all_projects: all project in repo
+    :param projects_to_deploy: projects in deploy set
+    :param pr_identifier: PR number if applicable
+    :return: dictionary of substituted env vars
+    """
     env = env_vars.copy()
 
     def get_namespace_for_linked_project(project_name: ProjectName):
