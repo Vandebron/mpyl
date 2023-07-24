@@ -1,4 +1,6 @@
-""" A step to deploy a job to kubernetes. """
+"""Deploys a Spark Job to a Kubernetes. Requires google
+[spark operator](https://github.com/GoogleCloudPlatform/spark-on-k8s-operator) to be installed.
+"""
 
 from logging import Logger
 

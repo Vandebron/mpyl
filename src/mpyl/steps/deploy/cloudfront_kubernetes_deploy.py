@@ -1,5 +1,5 @@
-""" Step that uploads static files to s3 and then deploys the docker image produced in the build stage to Kubernetes,
-using HELM."""
+"""Uploads static files to s3 and then deploys the docker image referring to the files on S3
+ and produced in the build stage to Kubernetes, using HELM."""
 from logging import Logger
 import tempfile
 
