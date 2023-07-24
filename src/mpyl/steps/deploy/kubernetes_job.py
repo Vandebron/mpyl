@@ -1,4 +1,4 @@
-""" A step to deploy a job to kubernetes. """
+"""Deploys a job to kubernetes, using HELM"""
 
 from logging import Logger
 
