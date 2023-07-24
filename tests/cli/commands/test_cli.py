@@ -3,6 +3,7 @@ import re
 from click.testing import CliRunner
 from importlib.metadata import version
 
+from src.mpyl.cli import create_console_logger
 from src.mpyl import main_group, add_commands
 from tests import root_test_path
 from tests.test_resources.test_data import assert_roundtrip
@@ -25,13 +26,30 @@ class TestCli:
         result = self.runner.invoke(main_group, ["build", "--help"])
         assert_roundtrip(self.resource_path / "build_help_text.txt", result.output)
 
-    def test_lint_output(self):
+    def test_projects_lint_output(self):
         config_path = root_test_path / "test_resources/mpyl_config.yml"
         result = self.runner.invoke(
             main_group,
             ["projects", "-c", config_path, "lint", "--all"],
         )
         assert re.match(r"Validated .* projects\. .* valid, .* invalid", result.output)
+
+    def test_show_project_not_found_output(self):
+        config_path = root_test_path / "test_resources/mpyl_config.yml"
+        result = self.runner.invoke(
+            main_group,
+            ["projects", "-c", config_path, "show", "job"],
+        )
+        print(result.output)
+        assert re.match(r"Project .* not found", result.output)
+
+    def test_show_project_output(self):
+        config_path = root_test_path / "test_resources/mpyl_config.yml"
+        result = self.runner.invoke(
+            main_group,
+            ["projects", "-c", config_path, "show", "tests/projects/job"],
+        )
+        assert_roundtrip(self.resource_path / "show_project_text.txt", result.output)
 
     def test_version_print(self):
         result = self.runner.invoke(
@@ -49,3 +67,7 @@ class TestCli:
         with open(self.resource_path / "metadata_text.txt", encoding="utf-8") as file:
             expected = file.read().replace("{version}", version("mpyl"))
             assert result.output == expected
+
+    def test_create_console(self):
+        console = create_console_logger(local=False, verbose=True)
+        assert console.width is 135
