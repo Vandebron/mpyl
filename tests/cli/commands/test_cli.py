@@ -1,3 +1,5 @@
+import re
+
 from click.testing import CliRunner
 
 from src.mpyl import main_group, add_commands
@@ -21,3 +23,11 @@ class TestCli:
     def test_build_projects_help_output(self):
         result = self.runner.invoke(main_group, ["build", "--help"])
         assert_roundtrip(self.resource_path / "build_help_text.txt", result.output)
+
+    def test_lint_output(self):
+        config_path = root_test_path / "test_resources/mpyl_config.yml"
+        result = self.runner.invoke(
+            main_group,
+            ["projects", "-c", config_path, "lint", "--all"],
+        )
+        assert re.match(r"Validated .* projects\. .* valid, .* invalid", result.output)
