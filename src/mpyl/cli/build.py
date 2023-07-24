@@ -147,12 +147,15 @@ def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
 @build.command(help="The status of the current local branch from MPyL's perspective")
 @click.pass_obj
 def status(obj: CliContext):
+    upgrade_check = None
     try:
         upgrade_check = asyncio.wait_for(warn_if_update(obj.console), timeout=3)
         __print_status(obj)
-        asyncio.get_event_loop().run_until_complete(upgrade_check)
     except asyncio.exceptions.TimeoutError:
         pass
+    finally:
+        if upgrade_check:
+            asyncio.get_event_loop().run_until_complete(upgrade_check)
 
 
 def __print_status(obj: CliContext):
@@ -351,6 +354,7 @@ def jenkins(  # pylint: disable=too-many-arguments
     silent,
     tag,
 ):
+    upgrade_check = None
     try:
         upgrade_check = asyncio.wait_for(warn_if_update(ctx.obj.console), timeout=5)
         if "jenkins" not in ctx.obj.config:
@@ -378,9 +382,11 @@ def jenkins(  # pylint: disable=too-many-arguments
         )
 
         run_jenkins(run_argument)
-        asyncio.get_event_loop().run_until_complete(upgrade_check)
     except asyncio.exceptions.TimeoutError:
         pass
+    finally:
+        if upgrade_check:
+            asyncio.get_event_loop().run_until_complete(upgrade_check)
 
 
 @build.command(help=f"Clean MPyL metadata in `{BUILD_ARTIFACTS_FOLDER}` folders")
