@@ -14,8 +14,21 @@ class StepsCollection:
 
     def __init__(self, logger: Logger) -> None:
         self._step_executors = set()
-        base_path = "src" if importlib.util.find_spec("src") else None
-        self.__load_steps_in_module(".", base_path)
+        package = "mpyl.steps"
+        local_package = f"src.{package}"
+        default_location, alternative_location = (
+            (local_package, package)
+            if importlib.util.find_spec("src")
+            else (package, local_package)
+        )
+        location = default_location
+
+        self.__load_steps_in_module(".", location)
+        if not IPluginRegistry.plugins:
+            location = alternative_location
+            self.__load_steps_in_module(".", location)
+
+        logger.info(f"Loaded {len(IPluginRegistry.plugins)} executors from {location}")
 
         for plugin in IPluginRegistry.plugins:
             step_instance: Step = plugin(logger)
@@ -26,14 +39,21 @@ class StepsCollection:
             self._step_executors.add(step_instance)
 
     @staticmethod
-    def __load_steps_in_module(module_root: str, base_path: Optional[str] = None):
-        module = importlib.import_module(
-            module_root, f'{base_path + "." if base_path else ""}mpyl.steps'
-        )
-        for _, modname, _ in pkgutil.walk_packages(
-            path=module.__path__, prefix=module.__name__ + ".", onerror=lambda x: None
-        ):
+    def __load_steps_in_module(module_root: str, base_path: str) -> int:
+        module = importlib.import_module(module_root, base_path)
+
+        module_names = [
+            modname
+            for _, modname, _ in pkgutil.walk_packages(
+                path=module.__path__,
+                prefix=module.__name__ + ".",
+                onerror=lambda x: None,
+            )
+        ]
+
+        for modname in module_names:
             importlib.import_module(modname)
+        return len(module_names)
 
     def get_executor(self, stage: Stage, step_name: str) -> Optional[Step]:
         executors = filter(
