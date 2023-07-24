@@ -154,7 +154,7 @@ class Steps:
 
         executor: Optional[Step] = self._steps_collection.get_executor(stage, step_name)
         if not executor:
-            self._logger.warning(f"No executor found for {step_name} in stage {stage}")
+            self._logger.error(f"No executor found for {step_name} in stage {stage}")
 
             return Output(
                 success=False,
