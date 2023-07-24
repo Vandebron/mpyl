@@ -1,6 +1,7 @@
 import re
 
 from click.testing import CliRunner
+from importlib.metadata import version
 
 from src.mpyl import main_group, add_commands
 from tests import root_test_path
@@ -31,3 +32,20 @@ class TestCli:
             ["projects", "-c", config_path, "lint", "--all"],
         )
         assert re.match(r"Validated .* projects\. .* valid, .* invalid", result.output)
+
+    def test_version_print(self):
+        result = self.runner.invoke(
+            main_group,
+            ["version"],
+        )
+        assert re.match(r"MPyL v\d+\.\d+\.\d+", result.output)
+
+    def test_verbose_version_print(self):
+        result = self.runner.invoke(
+            main_group,
+            ["version", "-v"],
+        )
+
+        with open(self.resource_path / "metadata_text.txt", encoding="utf-8") as file:
+            expected = file.read().replace("{version}", version("mpyl"))
+            assert result.output == expected
