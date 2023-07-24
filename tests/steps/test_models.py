@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from jsonschema import ValidationError
 from pyaml_env import parse_config
@@ -8,6 +10,7 @@ from src.mpyl.constants import (
     DEFAULT_RUN_PROPERTIES_FILE_NAME,
 )
 from src.mpyl.steps.models import RunProperties, VersioningProperties
+from tests.test_resources.test_data import assert_roundtrip
 from tests import root_test_path
 
 yaml = YAML()
@@ -28,6 +31,17 @@ class TestModels:
             )
 
         assert "'user' is a required property" in excinfo.value.message
+
+    def test_should_pass_validation(self):
+        os.environ["CHANGE_ID"] = "123"
+        valid_run_properties_values = parse_config(
+            root_test_path / "../run_properties.yml"
+        )
+        run_properties = RunProperties.from_configuration(
+            valid_run_properties_values, self.config_values
+        )
+
+        assert run_properties
 
     def test_should_return_error_if_pr_number_or_tag_not_set(self):
         versioning = self.run_properties_values["build"]["versioning"]
