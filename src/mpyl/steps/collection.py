@@ -29,6 +29,8 @@ class StepsCollection:
             self.__load_steps_in_module(".", location)
 
         logger.info(f"Loaded {len(IPluginRegistry.plugins)} executors from {location}")
+        if not IPluginRegistry.plugins:
+            logger.warning(f"No executors found. Check {location} for plugins.")
 
         for plugin in IPluginRegistry.plugins:
             step_instance: Step = plugin(logger)
@@ -39,7 +41,7 @@ class StepsCollection:
             self._step_executors.add(step_instance)
 
     @staticmethod
-    def __load_steps_in_module(module_root: str, base_path: str) -> int:
+    def __load_steps_in_module(module_root: str, base_path: str) -> None:
         module = importlib.import_module(module_root, base_path)
 
         module_names = [
@@ -53,7 +55,6 @@ class StepsCollection:
 
         for modname in module_names:
             importlib.import_module(modname)
-        return len(module_names)
 
     def get_executor(self, stage: Stage, step_name: str) -> Optional[Step]:
         executors = filter(
