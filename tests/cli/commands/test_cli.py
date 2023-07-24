@@ -3,7 +3,7 @@ import re
 from click.testing import CliRunner
 from importlib.metadata import version
 
-from src.mpyl.cli import create_console_logger
+from src.mpyl.cli import create_console_logger, fetch_latest_version
 from src.mpyl import main_group, add_commands
 from tests import root_test_path
 from tests.test_resources.test_data import assert_roundtrip
@@ -30,6 +30,14 @@ class TestCli:
         config_path = root_test_path / "test_resources/mpyl_config.yml"
         result = self.runner.invoke(
             main_group,
+            ["projects", "-c", config_path, "lint"],
+        )
+        assert result  # Hard to assert details since it depends on the changes in the current branch
+
+    def test_projects_lint_all_output(self):
+        config_path = root_test_path / "test_resources/mpyl_config.yml"
+        result = self.runner.invoke(
+            main_group,
             ["projects", "-c", config_path, "lint", "--all"],
         )
         assert re.match(r"Validated .* projects\. .* valid, .* invalid", result.output)
@@ -50,6 +58,14 @@ class TestCli:
             ["projects", "-c", config_path, "show", "tests/projects/job"],
         )
         assert_roundtrip(self.resource_path / "show_project_text.txt", result.output)
+
+    def test_list_projects_output(self):
+        config_path = root_test_path / "test_resources/mpyl_config.yml"
+        result = self.runner.invoke(
+            main_group,
+            ["projects", "-c", config_path, "list"],
+        )
+        assert_roundtrip(self.resource_path / "list_projects_text.txt", result.output)
 
     def test_version_print(self):
         result = self.runner.invoke(
