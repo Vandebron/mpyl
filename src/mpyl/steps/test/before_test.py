@@ -34,11 +34,7 @@ class IntegrationTestBefore(Step):
         config = DockerComposeConfig.from_yaml(step_input.run_properties.config)
 
         self._logger.debug(f"Starting containers in {compose_file}")
-        docker_client = DockerClient(
-            compose_files=[compose_file],
-            debug=True,
-            log_level=step_input.run_properties.console.log_level.lower(),
-        )
+        docker_client = DockerClient(compose_files=[compose_file])
         docker_client.compose.down(remove_orphans=True)
         docker_client.compose.build()
         docker_client.compose.up(detach=True, color=True, quiet=False)
