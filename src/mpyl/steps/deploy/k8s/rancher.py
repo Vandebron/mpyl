@@ -8,16 +8,16 @@ from ....project import Target
 
 @dataclass(frozen=True)
 class ClusterConfig:
-    simulate: bool
+    render_templates: bool
     project_id: str
     cluster_id: str
     cluster_env: str
     context: str
 
     @staticmethod
-    def from_config(config: dict, simulate: bool):
+    def from_config(config: dict, render_templates: bool):
         return ClusterConfig(
-            simulate=simulate,
+            render_templates=render_templates,
             project_id=config["clusterId"],
             cluster_id=config["clusterId"],
             cluster_env=config["clusterEnv"],
@@ -27,15 +27,15 @@ class ClusterConfig:
 
 def cluster_config(target: Target, run_properties: RunProperties) -> ClusterConfig:
     kubernetes_config = run_properties.config["kubernetes"]
-    simulate = kubernetes_config.get("simulate", False)
+    render = kubernetes_config.get("renderTemplates", False)
     cluster_configs = kubernetes_config["rancher"]["cluster"]
 
     if target in {Target.PULL_REQUEST, Target.PULL_REQUEST_BASE}:
-        return ClusterConfig.from_config(cluster_configs["test"], simulate)
+        return ClusterConfig.from_config(cluster_configs["test"], render)
     if target == Target.ACCEPTANCE:
-        return ClusterConfig.from_config(cluster_configs["acceptance"], simulate)
+        return ClusterConfig.from_config(cluster_configs["acceptance"], render)
     if target == Target.PRODUCTION:
-        return ClusterConfig.from_config(cluster_configs["production"], simulate)
+        return ClusterConfig.from_config(cluster_configs["production"], render)
     raise ValueError(f"Unknown target {target}")
 
 
