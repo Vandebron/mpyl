@@ -1,16 +1,15 @@
 """Docker related utility methods"""
 import logging
 import shlex
-
+import shutil
 from dataclasses import dataclass
 from logging import Logger
+from pathlib import Path
 from traceback import print_exc
 from typing import Dict, Optional, Iterator, cast, Union
-import shutil
-from pathlib import Path
+
 from python_on_whales import docker, Image, Container, DockerException
 from python_on_whales.exceptions import NoSuchContainer
-from rich.logging import RichHandler
 
 from ..logging import try_parse_ansi
 from ...project import Project
@@ -93,7 +92,7 @@ def execute_with_stream(
 ):
     if multiprocess:  # Logger settings need to be re-applied in each process
         logger.setLevel(logging.INFO)
-        logger.addHandler(RichHandler())
+        logger.handlers.clear()
 
     result = cast(
         Iterator[tuple[str, bytes]],
