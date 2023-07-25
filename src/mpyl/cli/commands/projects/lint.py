@@ -11,11 +11,11 @@ from ....steps.deploy.k8s import substitute_namespaces
 from ....steps.deploy.k8s.chart import ChartBuilder
 from ....utilities.repo import Repository
 from ....cli.commands.build.mpyl import find_build_set
-from ....project import Project, load_project, ProjectName, Target
+from ....project import Project, load_project, Target
 
 
 def _find_project_paths(all_: bool, repo: Repository, filter_: str):
-    project_paths = []
+    project_paths: list[str] = []
     if all_:
         project_paths = repo.find_projects(filter_)
     else:
@@ -106,11 +106,6 @@ def _assert_correct_project_linkup(
         __detail_wrong_substitutions(console, all_projects, wrong_substitutions)
 
 
-def __get_project_name(project: Project) -> ProjectName:
-    namespace = project.deployment.namespace if project.deployment else None
-    return ProjectName(project.name, namespace)
-
-
 def __get_wrong_substitutions_per_project(
     all_projects: list[Project],
     projects: list[Project],
@@ -125,8 +120,8 @@ def __get_wrong_substitutions_per_project(
             )
             substituted: dict[str, str] = substitute_namespaces(
                 env_vars=env,
-                all_projects=set(map(__get_project_name, all_projects)),
-                projects_to_deploy=set(map(__get_project_name, projects)),
+                all_projects=set(map(lambda p: p.to_name, all_projects)),
+                projects_to_deploy=set(map(lambda p: p.to_name, projects)),
                 pr_identifier=pr_identifier,
             )
             wrong_subs = list(
