@@ -69,7 +69,11 @@ class TestCli:
             main_group,
             ["version"],
         )
-        assert re.match(r"MPyL v\d+\.\d+\.\d+", result.output)
+        regex = r"MPyL v\d+\.\d+\.\d+"
+        if "GITHUB_JOB" in os.environ:
+            regex = r"MPyL \(local\)"
+
+        assert re.match(regex, result.output)
 
     @pytest.mark.skipif(
         condition="GITHUB_JOB" in os.environ,
