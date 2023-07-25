@@ -75,7 +75,7 @@ def deploy_helm_chart(
         logger, chart, Path(project.target_path), run_properties, release_name
     )
 
-    if rancher_config.simulate:
+    if rancher_config.render_templates:
         return helm.template(logger, chart_path, release_name)
 
     namespace = get_namespace(run_properties, project) or project.name

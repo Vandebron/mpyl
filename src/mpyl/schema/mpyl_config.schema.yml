@@ -82,9 +82,9 @@ definitions:
     type: object
     additionalProperties: false
     properties:
-      simulate:
+      renderTemplates:
         type: boolean
-        description: 'Simulate kubernetes deployments'
+        description: 'Rather than deploying, render the HELM templates to a combined yaml file via the `helm template` command. Useful for debugging.'
         default: false
       rancher:
         type: object
