@@ -1,5 +1,10 @@
 import logging
+import os
 
+from click.testing import CliRunner
+
+from tests import root_test_path
+from src.mpyl import main_group, add_commands
 from src.mpyl.cli.commands.build.mpyl import run_build
 from src.mpyl.project import Stage
 from src.mpyl.steps import Step, Meta, ArtifactType, Input, Output
@@ -31,6 +36,12 @@ class ThrowingStep(Step):
 
 
 class TestBuildCommand:
+    resource_path = root_test_path / "cli" / "test_resources"
+    config_path = root_test_path / "test_resources/mpyl_config.yml"
+    run_properties_path = root_test_path / "../run_properties.yml"
+    runner = CliRunner()
+    add_commands()
+
     def test_run_build_without_plan_should_be_successful(self):
         run_properties = RUN_PROPERTIES
         accumulator = RunResult(run_properties=run_properties)
@@ -80,3 +91,30 @@ class TestBuildCommand:
         assert result.exception.stage == Stage.BUILD.name
         assert result.exception.project_name == "test"
         assert result.exception.executor == "Throwing Build"
+
+    def test_build_status_output(self):
+        cwd = os.getcwd()
+
+        try:
+            os.environ["CHANGE_ID"] = "123"
+            if cwd.endswith("tests"):
+                os.chdir("../")
+            result = self.runner.invoke(
+                main_group,
+                ["build", "-c", self.config_path, "status"],
+            )
+        finally:
+            os.chdir(cwd)
+
+        assert (
+            "No changes detected, nothing to do." in result.output
+            or "Execution plan:" in result.output
+        )
+
+    def test_build_clean_output(self):
+        result = self.runner.invoke(
+            main_group,
+            ["build", "-c", self.config_path, "-p", self.run_properties_path, "clean"],
+        )
+
+        assert "Nothing to clean" in result.output

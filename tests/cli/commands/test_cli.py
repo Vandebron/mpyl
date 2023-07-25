@@ -3,7 +3,7 @@ import re
 from click.testing import CliRunner
 from importlib.metadata import version
 
-from src.mpyl.cli import create_console_logger, fetch_latest_version
+from src.mpyl.cli import create_console_logger
 from src.mpyl import main_group, add_commands
 from tests import root_test_path
 from tests.test_resources.test_data import assert_roundtrip
@@ -11,6 +11,7 @@ from tests.test_resources.test_data import assert_roundtrip
 
 class TestCli:
     resource_path = root_test_path / "cli" / "test_resources"
+    config_path = root_test_path / "test_resources/mpyl_config.yml"
     runner = CliRunner()
     add_commands()
 
@@ -27,43 +28,38 @@ class TestCli:
         assert_roundtrip(self.resource_path / "build_help_text.txt", result.output)
 
     def test_projects_lint_output(self):
-        config_path = root_test_path / "test_resources/mpyl_config.yml"
         result = self.runner.invoke(
             main_group,
-            ["projects", "-c", config_path, "lint"],
+            ["projects", "-c", self.config_path, "lint"],
         )
         assert result  # Hard to assert details since it depends on the changes in the current branch
 
     def test_projects_lint_all_output(self):
-        config_path = root_test_path / "test_resources/mpyl_config.yml"
         result = self.runner.invoke(
             main_group,
-            ["projects", "-c", config_path, "lint", "--all"],
+            ["projects", "-c", self.config_path, "lint", "--all"],
         )
         assert re.match(r"Validated .* projects\. .* valid, .* invalid", result.output)
 
     def test_show_project_not_found_output(self):
-        config_path = root_test_path / "test_resources/mpyl_config.yml"
         result = self.runner.invoke(
             main_group,
-            ["projects", "-c", config_path, "show", "job"],
+            ["projects", "-c", self.config_path, "show", "job"],
         )
         print(result.output)
         assert re.match(r"Project .* not found", result.output)
 
     def test_show_project_output(self):
-        config_path = root_test_path / "test_resources/mpyl_config.yml"
         result = self.runner.invoke(
             main_group,
-            ["projects", "-c", config_path, "show", "tests/projects/job"],
+            ["projects", "-c", self.config_path, "show", "tests/projects/job"],
         )
         assert_roundtrip(self.resource_path / "show_project_text.txt", result.output)
 
     def test_list_projects_output(self):
-        config_path = root_test_path / "test_resources/mpyl_config.yml"
         result = self.runner.invoke(
             main_group,
-            ["projects", "-c", config_path, "list"],
+            ["projects", "-c", self.config_path, "list"],
         )
         assert_roundtrip(self.resource_path / "list_projects_text.txt", result.output)
 

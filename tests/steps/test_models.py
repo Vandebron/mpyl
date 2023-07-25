@@ -10,7 +10,6 @@ from src.mpyl.constants import (
     DEFAULT_RUN_PROPERTIES_FILE_NAME,
 )
 from src.mpyl.steps.models import RunProperties, VersioningProperties
-from tests.test_resources.test_data import assert_roundtrip
 from tests import root_test_path
 
 yaml = YAML()
