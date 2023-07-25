@@ -1,6 +1,7 @@
 import logging
 import os
 
+import pytest
 from click.testing import CliRunner
 
 from tests import root_test_path
@@ -92,6 +93,10 @@ class TestBuildCommand:
         assert result.exception.project_name == "test"
         assert result.exception.executor == "Throwing Build"
 
+    @pytest.mark.skipif(
+        condition="GITHUB_JOB" in os.environ,
+        reason="no build status in github action",
+    )
     def test_build_status_output(self):
         cwd = os.getcwd()
 
