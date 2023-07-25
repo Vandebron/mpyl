@@ -14,7 +14,7 @@ from ....cli.commands.build.mpyl import find_build_set
 from ....project import Project, load_project, ProjectName, Target
 
 
-def _find_projects(all_: bool, repo: Repository, filter_: str):
+def _find_project_paths(all_: bool, repo: Repository, filter_: str):
     project_paths = []
     if all_:
         project_paths = repo.find_projects(filter_)

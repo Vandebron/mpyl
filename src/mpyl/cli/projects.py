@@ -8,7 +8,7 @@ from click.shell_completion import CompletionItem
 from rich.markdown import Markdown
 
 from ..cli.commands.projects.lint import (
-    _find_projects,
+    _find_project_paths,
     _check_and_load_projects,
     _assert_unique_project_names,
     _assert_correct_project_linkup,
@@ -136,13 +136,13 @@ def lint(obj: ProjectsContext, all_, extended):
     loaded_projects = _check_and_load_projects(
         console=obj.cli.console,
         repo=obj.cli.repo,
-        project_paths=_find_projects(all_, obj.cli.repo, obj.filter),
+        project_paths=_find_project_paths(all_, obj.cli.repo, obj.filter),
         strict=True,
     )
     all_projects = _check_and_load_projects(
         console=None,
         repo=obj.cli.repo,
-        project_paths=_find_projects(True, obj.cli.repo, ""),
+        project_paths=_find_project_paths(True, obj.cli.repo, ""),
         strict=False,
     )
     _assert_unique_project_names(
