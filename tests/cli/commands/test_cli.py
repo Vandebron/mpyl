@@ -1,5 +1,7 @@
+import os
 import re
 
+import pytest
 from click.testing import CliRunner
 from importlib.metadata import version
 
@@ -46,7 +48,6 @@ class TestCli:
             main_group,
             ["projects", "-c", self.config_path, "show", "job"],
         )
-        print(result.output)
         assert re.match(r"Project .* not found", result.output)
 
     def test_show_project_output(self):
@@ -70,6 +71,10 @@ class TestCli:
         )
         assert re.match(r"MPyL v\d+\.\d+\.\d+", result.output)
 
+    @pytest.mark.skipif(
+        condition="GITHUB_JOB" in os.environ,
+        reason="mpyl distribution is not available in github action",
+    )
     def test_verbose_version_print(self):
         result = self.runner.invoke(
             main_group,
