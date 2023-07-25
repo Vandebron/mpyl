@@ -147,7 +147,6 @@ def lint(obj: ProjectsContext, all_, extended):
     )
     _assert_unique_project_names(
         console=obj.cli.console,
-        projects=loaded_projects,
         all_projects=all_projects,
     )
     if not all_ and extended:

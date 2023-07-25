@@ -61,25 +61,21 @@ def _check_and_load_projects(
         __load_project(console, repo.root_dir(), project_path, strict)
         for project_path in set(project_paths)
     ]
-    valid = [project for project in projects if project]
-    invalid = len(projects) - len(valid)
+    valid_projects = [project for project in projects if project]
+    num_invalid = len(projects) - len(valid_projects)
     if console:
         console.print(
-            f"Validated {len(valid) + invalid} projects. {len(valid)} valid, {invalid} invalid"
+            f"Validated {len(projects)} projects. {len(valid_projects)} valid, {num_invalid} invalid"
         )
-    if invalid > 0:
+    if num_invalid > 0:
         click.get_current_context().exit(1)
-    return valid
+    return valid_projects
 
 
-def _assert_unique_project_names(
-    console: Console, projects: list[Project], all_projects: list[Project]
-):
-    current_project_names: set[str] = {project.name for project in projects}
-    remaining_project_names: set[str] = {
-        project.name for project in set(all_projects)
-    }.difference(current_project_names)
-    duplicates = current_project_names.intersection(remaining_project_names)
+def _assert_unique_project_names(console: Console, all_projects: list[Project]):
+    duplicates = [
+        project.name for project in all_projects if all_projects.count(project) > 1
+    ]
     if duplicates:
         console.print(
             f"❌ Found {len(duplicates)} duplicate project names: {duplicates}"
@@ -89,7 +85,7 @@ def _assert_unique_project_names(
 
 
 @dataclass
-class ProjectLinkup:
+class WrongLinkupPerProject:
     name: str
     wrong_substitutions: list[tuple[str, str]]
 
@@ -120,28 +116,31 @@ def __get_wrong_substitutions_per_project(
     projects: list[Project],
     pr_identifier: Optional[int],
     target: Target,
-) -> list[ProjectLinkup]:
-    project_linkup: list[ProjectLinkup] = []
+) -> list[WrongLinkupPerProject]:
+    project_linkup: list[WrongLinkupPerProject] = []
     for project in projects:
         if project.deployment:
+            env = ChartBuilder.extract_raw_env(
+                target=target, env=project.deployment.properties.env
+            )
             substituted: dict[str, str] = substitute_namespaces(
-                env_vars=ChartBuilder.extract_raw_env(
-                    target=target, env=project.deployment.properties.env
-                ),
+                env_vars=env,
                 all_projects=set(map(__get_project_name, all_projects)),
                 projects_to_deploy=set(map(__get_project_name, projects)),
                 pr_identifier=pr_identifier,
             )
-            wrong_subs = [(k, v) for k, v in substituted.items() if "{namespace}" in v]
+            wrong_subs = list(
+                filter(lambda x: "{namespace}" in x[1], substituted.items())
+            )
             if len(wrong_subs) > 0:
-                project_linkup.append(ProjectLinkup(project.name, wrong_subs))
+                project_linkup.append(WrongLinkupPerProject(project.name, wrong_subs))
     return project_linkup
 
 
 def __detail_wrong_substitutions(
     console: Console,
     all_projects: list[Project],
-    wrong_substitutions_per_project: list[ProjectLinkup],
+    wrong_substitutions_per_project: list[WrongLinkupPerProject],
 ):
     all_project_names: dict[str, str] = {
         project.name.lower(): project.name for project in all_projects
