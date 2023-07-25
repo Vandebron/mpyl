@@ -48,6 +48,12 @@ deployment:
         valueFrom:
           fieldRef:
             fieldPath: metadata.namespace
+      - key: RESOURCE_FIELD_REFERENCE
+        valueFrom:
+          resourceFieldRef:
+            containerName: 'minimalService'
+            divisor: 0.5
+            resource: limits.memory
   kubernetes:
     livenessProbe:
       path:

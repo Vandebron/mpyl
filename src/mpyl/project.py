@@ -20,7 +20,7 @@ import traceback
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Optional, TypeVar, Dict, Any, TextIO, Union
+from typing import Optional, TypeVar, Dict, Any, TextIO
 
 import jsonschema
 from mypy.checker import Generic
@@ -112,64 +112,18 @@ class KeyValueProperty(TargetProperty[str]):
 
 
 @dataclass(frozen=True)
-class SecretKeyRef:
-    name: str
-    key: str
-    optional: bool
-    key_name: str = "secretKeyRef"
-
-    @staticmethod
-    def from_config(values: dict):
-        name = values.get("name")
-        key = values.get("key")
-        if not name or not key:
-            raise KeyError("SecretKeyRef must have a name and key fields set")
-        return SecretKeyRef(
-            name=name,
-            key=key,
-            optional=values.get("optional", False),
-        )
-
-
-@dataclass(frozen=True)
-class FieldRef:
-    field_path: str
-    key_name: str = "fieldRef"
-
-    @staticmethod
-    def from_config(values: dict):
-        field_path = values.get("fieldPath")
-        if not field_path:
-            raise KeyError("FieldRef must have a fieldPath set")
-        return FieldRef(field_path=field_path)
-
-
-@dataclass(frozen=True)
 class KeyValueRef:
     key: str
-    value_from: Union[SecretKeyRef, FieldRef]
+    value_from: dict
 
     @staticmethod
     def from_config(values: dict):
-        key = values.get("key")
-        value_from = values.get("valueFrom")
-
-        if not key or not value_from:
-            raise KeyError("KeyValueRef must have a key or valueFrom set")
-
-        key_name = list(value_from.keys())[0]
-        print(f"key_name: {key_name}")
-
-        if key_name == SecretKeyRef.key_name:
-            value = SecretKeyRef.from_config(value_from.get(key_name))
-        elif key_name == FieldRef.key_name:
-            value = FieldRef.from_config(value_from.get(key_name))
-        else:
-            raise KeyError(f"KeyValueRef unknown key name: {key_name}")
+        key = values["key"]
+        value_from = values["valueFrom"]
 
         return KeyValueRef(
             key=key,
-            value_from=value,
+            value_from=value_from,
         )
 
 

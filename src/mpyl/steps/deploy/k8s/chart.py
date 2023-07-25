@@ -20,7 +20,6 @@ from kubernetes.client import (
     V1ServiceSpec,
     V1ServicePort,
     V1ServiceAccount,
-    V1ObjectFieldSelector,
     V1LocalObjectReference,
     V1EnvVarSource,
     V1SecretKeySelector,
@@ -72,8 +71,6 @@ from ....project import (
     get_env_variables,
     Alert,
     KeyValueRef,
-    SecretKeyRef,
-    FieldRef,
 )
 from ....stages.discovery import DeploySet
 
@@ -150,7 +147,7 @@ class DeploymentDefaults:
         )
 
 
-class ChartBuilder:
+class ChartBuilder:  # pylint: disable = too-many-instance-attributes
     step_input: Input
     project: Project
     mappings: dict[int, int]
@@ -504,27 +501,10 @@ class ChartBuilder:
             for e in secret_list
         ]
 
-    @staticmethod
-    def _map_key_value_refs(ref: KeyValueRef) -> V1EnvVar:
-        if isinstance(ref.value_from, SecretKeyRef):
-            return V1EnvVar(
-                name=ref.key,
-                value_from=V1EnvVarSource(
-                    secret_key_ref=V1SecretKeySelector(
-                        key=ref.value_from.key, name=ref.value_from.name, optional=False
-                    )
-                ),
-            )
-        if isinstance(ref.value_from, FieldRef):
-            return V1EnvVar(
-                name=ref.key,
-                value_from=V1EnvVarSource(
-                    field_ref=V1ObjectFieldSelector(
-                        api_version="v1", field_path=ref.value_from.field_path
-                    )
-                ),
-            )
-        raise ValueError(f"Unknown KeyValueRef type: {ref}")
+    def _map_key_value_refs(self, ref: KeyValueRef) -> V1EnvVar:
+        value_from = self._to_k8s_model(ref.value_from, V1EnvVarSource)
+
+        return V1EnvVar(name=ref.key, value_from=value_from)
 
     def _create_secret_env_vars(self, secret_list: list[KeyValueRef]) -> list[V1EnvVar]:
         return list(map(self._map_key_value_refs, secret_list))

@@ -61,8 +61,13 @@ spec:
         - name: KUBERNETES_NAMESPACE
           valueFrom:
             fieldRef:
-              apiVersion: v1
               fieldPath: metadata.namespace
+        - name: RESOURCE_FIELD_REFERENCE
+          valueFrom:
+            resourceFieldRef:
+              containerName: minimalService
+              divisor: '0.5'
+              resource: limits.memory
         image: registry/image:123
         imagePullPolicy: Always
         livenessProbe:
