@@ -1,6 +1,7 @@
 """Commands related to build"""
 import asyncio
 import shutil
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -332,9 +333,15 @@ def jenkins(  # pylint: disable=too-many-arguments
 ):
     try:
         upgrade_check = asyncio.wait_for(warn_if_update(ctx.obj.console), timeout=5)
-        selected_pipeline = (
-            pipeline if pipeline else ctx.obj.config["jenkins"]["defaultPipeline"]
-        )
+        jenkins_config = ctx.obj.config
+        if "jenkins" not in jenkins_config:
+            ctx.obj.console.print(
+                "No Jenkins configuration found in config file. "
+                "Please add a `jenkins` section to your MPyL config file."
+            )
+            sys.exit(0)
+
+        selected_pipeline = pipeline if pipeline else jenkins_config["defaultPipeline"]
         pipeline_parameters = {"TEST": "true", "VERSION": test} if test else {}
         if arguments:
             pipeline_parameters["BUILD_PARAMS"] = " ".join(arguments)
