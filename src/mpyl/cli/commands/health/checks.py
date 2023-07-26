@@ -79,7 +79,8 @@ def __check_jenkins(console: HealthConsole):
             success=True,
         )
     except KeyError as exc:
-        console.check(f"Jenkins config not valid: {exc}", success=False)
+        console.check(f"Jenkins not (correctly) configured: {exc}", success=False)
+        return
 
     gh_is_installed = shutil.which("gh")
     if gh_is_installed:
