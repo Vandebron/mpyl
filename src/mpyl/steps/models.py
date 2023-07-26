@@ -9,6 +9,7 @@ from typing import Optional, Dict
 from ruamel.yaml import YAML, yaml_object  # type: ignore
 
 from ..project import Project, Stage, Target
+from ..utilities.github import get_pr_number
 from ..validation import validate
 
 yaml = YAML()
@@ -110,13 +111,13 @@ class RunProperties:
         build = run_properties["build"]
         versioning_config = build["versioning"]
 
-        pr_num: str = versioning_config.get("pr_number")
-        tag: str = versioning_config.get("tag")
+        pr_num: Optional[int] = get_pr_number(versioning_config.get("pr_number"))
+        tag: Optional[str] = versioning_config.get("tag")
 
         versioning = VersioningProperties(
             revision=versioning_config["revision"],
             branch=versioning_config["branch"],
-            pr_number=int(pr_num) if pr_num else None,
+            pr_number=pr_num if pr_num else None,
             tag=tag,
         )
         console = ConsoleProperties.from_configuration(build)

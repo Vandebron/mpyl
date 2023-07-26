@@ -1,9 +1,13 @@
 """Github related utility methods"""
+import json
 from dataclasses import dataclass
+from json import JSONDecodeError
 from typing import Dict, Optional
 
 from github.PullRequest import PullRequest
 from github.Repository import Repository
+
+import subprocess
 
 
 @dataclass
@@ -58,3 +62,23 @@ def get_pr_for_branch(repo: Repository, branch: str) -> PullRequest:
         )
 
     return pulls.pop()
+
+
+def get_pr_number(pr_number_from_config: Optional[str] = None) -> Optional[int]:
+    try:
+        if pr_number_from_config:
+            return int(pr_number_from_config)
+        return int(
+            json.loads(
+                subprocess.run(
+                    ["gh", "pr", "view", "--json", "number"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    check=True,
+                )
+                .stdout.decode("utf-8")
+                .strip()
+            )["number"]
+        )
+    except JSONDecodeError:
+        return None
