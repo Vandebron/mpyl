@@ -4,7 +4,7 @@
 
 from logging import Logger
 
-from .k8s import deploy_helm_chart, cluster_config
+from .k8s import deploy_helm_chart
 from .k8s.chart import ChartBuilder, to_spark_job_chart
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
@@ -38,12 +38,11 @@ class DeployKubernetesSparkJob(Step):
                 ),
             )
         )
-        target_cluster = cluster_config(run_properties.target, run_properties)
         return deploy_helm_chart(
             self._logger,
             chart,
             step_input,
-            target_cluster,
+            run_properties.target,
             ChartBuilder(step_input).release_name,
             delete_existing=True,
         )

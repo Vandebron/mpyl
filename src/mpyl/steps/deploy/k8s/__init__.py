@@ -15,6 +15,7 @@ from ....steps.deploy.k8s.rancher import (
     cluster_config,
     rancher_namespace_metadata,
     ClusterConfig,
+    render_templates,
 )
 
 
@@ -60,7 +61,7 @@ def deploy_helm_chart(
     logger: Logger,
     chart: dict[str, CustomResourceDefinition],
     step_input: Input,
-    target_cluster: ClusterConfig,
+    target: Target,
     release_name: str,
     delete_existing: bool = False,
 ) -> Output:
@@ -68,17 +69,16 @@ def deploy_helm_chart(
     project = step_input.project
     dry_run = step_input.dry_run
 
-    rancher_config: ClusterConfig = cluster_config(
-        run_properties.target, run_properties
-    )
     chart_path = write_helm_chart(
         logger, chart, Path(project.target_path), run_properties, release_name
     )
 
-    if rancher_config.render_templates:
+    if render_templates(run_properties):
         return helm.template(logger, chart_path, release_name)
 
     namespace = get_namespace(run_properties, project) or project.name
+
+    rancher_config: ClusterConfig = cluster_config(target, run_properties)
     upsert_namespace(logger, namespace, dry_run, run_properties, rancher_config)
 
     return helm.install(
@@ -87,7 +87,7 @@ def deploy_helm_chart(
         dry_run,
         release_name,
         namespace,
-        target_cluster.context,
+        rancher_config.context,
         delete_existing,
     )
 

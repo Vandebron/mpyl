@@ -3,7 +3,7 @@ import re
 from logging import Logger
 from typing import Optional
 
-from .k8s import deploy_helm_chart, CustomResourceDefinition, cluster_config
+from .k8s import deploy_helm_chart, CustomResourceDefinition
 from .k8s.chart import ChartBuilder, to_service_chart
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType, input_to_artifact
@@ -55,9 +55,8 @@ class DeployKubernetes(Step):
         )
         chart = to_service_chart(builder)
 
-        target_cluster = cluster_config(properties.target, properties)
         deploy_result = deploy_helm_chart(
-            self._logger, chart, step_input, target_cluster, builder.release_name
+            self._logger, chart, step_input, properties.target, builder.release_name
         )
         if deploy_result.success:
             hostname = self.try_extract_hostname(chart)
@@ -82,12 +81,11 @@ class DeployKubernetes(Step):
                     f"Release to production successful, updating base images in {Target.PULL_REQUEST_BASE} "
                     f"to make sure the Test environment is in sync with production"
                 )
-                target_cluster = cluster_config(Target.PRODUCTION, properties)
                 deploy_to_prod_result = deploy_helm_chart(
                     self._logger,
                     chart,
                     step_input,
-                    target_cluster,
+                    Target.PRODUCTION,
                     builder.release_name,
                 )
                 return Output(

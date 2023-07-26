@@ -8,16 +8,14 @@ from ....project import Target
 
 @dataclass(frozen=True)
 class ClusterConfig:
-    render_templates: bool
     project_id: str
     cluster_id: str
     cluster_env: str
     context: str
 
     @staticmethod
-    def from_config(config: dict, render_templates: bool):
+    def from_config(config: dict):
         return ClusterConfig(
-            render_templates=render_templates,
             project_id=config["clusterId"],
             cluster_id=config["clusterId"],
             cluster_env=config["clusterEnv"],
@@ -25,17 +23,20 @@ class ClusterConfig:
         )
 
 
+def render_templates(run_properties: RunProperties) -> bool:
+    return run_properties.config["kubernetes"].get("renderTemplates", False)
+
+
 def cluster_config(target: Target, run_properties: RunProperties) -> ClusterConfig:
     kubernetes_config = run_properties.config["kubernetes"]
-    render = kubernetes_config.get("renderTemplates", False)
     cluster_configs = kubernetes_config["rancher"]["cluster"]
 
     if target in {Target.PULL_REQUEST, Target.PULL_REQUEST_BASE}:
-        return ClusterConfig.from_config(cluster_configs["test"], render)
+        return ClusterConfig.from_config(cluster_configs["test"])
     if target == Target.ACCEPTANCE:
-        return ClusterConfig.from_config(cluster_configs["acceptance"], render)
+        return ClusterConfig.from_config(cluster_configs["acceptance"])
     if target == Target.PRODUCTION:
-        return ClusterConfig.from_config(cluster_configs["production"], render)
+        return ClusterConfig.from_config(cluster_configs["production"])
     raise ValueError(f"Unknown target {target}")
 
 
