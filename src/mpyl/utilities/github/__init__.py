@@ -1,13 +1,12 @@
 """Github related utility methods"""
 import json
+import subprocess
 from dataclasses import dataclass
 from json import JSONDecodeError
 from typing import Dict, Optional
 
 from github.PullRequest import PullRequest
 from github.Repository import Repository
-
-import subprocess
 
 
 @dataclass
