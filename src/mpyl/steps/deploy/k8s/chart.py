@@ -516,9 +516,9 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
             if e.get_value(self.target) is not None
         }
         pr_identifier = (
-            self.step_input.run_properties.versioning.pr_number
-            if not self.step_input.run_properties.versioning.tag
-            else None
+            None
+            if self.step_input.run_properties.versioning.tag
+            else self.step_input.run_properties.versioning.pr_number
         )
         substituted = substitute_namespaces(
             raw_env_vars,
