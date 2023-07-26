@@ -149,11 +149,11 @@ def lint(obj: ProjectsContext, all_, extended):
         console=obj.cli.console,
         all_projects=all_projects,
     )
-    if not all_ and extended:
+    if extended:
         _assert_correct_project_linkup(
             console=obj.cli.console,
             target=Target.PULL_REQUEST,
-            projects=loaded_projects,
+            projects=all_projects if all_ else loaded_projects,
             all_projects=all_projects,
             pr_identifier=123,
         )

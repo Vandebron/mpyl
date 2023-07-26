@@ -114,7 +114,7 @@ def __get_wrong_substitutions_per_project(
 ) -> list[WrongLinkupPerProject]:
     project_linkup: list[WrongLinkupPerProject] = []
     for project in projects:
-        if project.deployment:
+        if project.deployment and project.deployment.properties:
             env = ChartBuilder.extract_raw_env(
                 target=target, env=project.deployment.properties.env
             )
