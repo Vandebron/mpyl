@@ -18,13 +18,13 @@ class TestCypress:
     def test_should_check_defined_specs(self):
         stages = Stages.from_config({"postdeploy": "Cypress Test"})
         project = Project(
-            "test",
-            "Test project",
-            "",
-            stages,
-            [],
-            None,
-            Dependencies.from_config({"postdeploy": []}),
+            name="test",
+            description="Test project",
+            path="",
+            stages=stages,
+            maintainer=[],
+            deployment=None,
+            dependencies=Dependencies.from_config({"postdeploy": []}),
         )
 
         with pytest.raises(ExecutionException) as exc_info:
