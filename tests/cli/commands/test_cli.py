@@ -3,10 +3,9 @@ import re
 
 import pytest
 from click.testing import CliRunner
-from importlib.metadata import version
 
-from src.mpyl.cli import create_console_logger
 from src.mpyl import main_group, add_commands
+from src.mpyl.cli import create_console_logger
 from tests import root_test_path
 from tests.test_resources.test_data import assert_roundtrip
 
@@ -84,11 +83,11 @@ class TestCli:
             main_group,
             ["version", "-v"],
         )
-
-        with open(self.resource_path / "metadata_text.txt", encoding="utf-8") as file:
-            expected = file.read().replace("{version}", version("mpyl"))
-            assert result.output == expected
+        assert_roundtrip(
+            self.resource_path / "metadata_text.txt",
+            re.sub(r"Version: .*", "Version: {version}", result.output, re.M),
+        )
 
     def test_create_console(self):
         console = create_console_logger(local=False, verbose=True)
-        assert console.width is 135
+        assert console.width == 135
