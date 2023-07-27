@@ -2,13 +2,13 @@
 `mpyl.utilities.repo.Repository` is a facade for the Version Control System.
 At this moment Git is the only supported VCS.
 """
-
+import itertools
 import logging
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Optional
 from urllib.parse import urlparse
-
 from git import Git, Repo, Remote
 from git.objects import Commit
 
@@ -135,8 +135,15 @@ class Repository:
         return Revision(count, str(revision), intersection)
 
     def changes_in_branch(self) -> list[Revision]:
+        self.pull_main_branch()
         revisions = list(
-            reversed(list(self._repo.iter_commits(f"{self._config.main_branch}..HEAD")))
+            reversed(
+                list(
+                    self._repo.iter_commits(
+                        f"{self._config.main_branch}..HEAD", no_merges=True
+                    )
+                )
+            )
         )
 
         logging.debug(
@@ -146,17 +153,19 @@ class Repository:
         if not revisions:
             return []
 
-        first_revision = (
-            revisions[0].hexsha if len(revisions) != 1 else self._config.main_branch
+        changed_files = list(
+            itertools.chain.from_iterable(
+                [
+                    self._repo.git.diff_tree(
+                        rev, name_only=True, no_commit_id=True, r=True
+                    ).splitlines()
+                    for rev in revisions
+                ]
+            )
         )
 
-        files_touched_in_branch = set(
-            self._repo.git.diff(
-                f"{first_revision}..{revisions[-1].hexsha}", name_only=True
-            ).splitlines()
-        )
         return [
-            self.__to_revision(count, rev, files_touched_in_branch)
+            self.__to_revision(count, rev, set(changed_files))
             for count, rev in enumerate(revisions)
         ]
 
