@@ -9,7 +9,6 @@ from typing import Optional, Dict
 from ruamel.yaml import YAML, yaml_object  # type: ignore
 
 from ..project import Project, Stage, Target
-from ..utilities.github import get_pr_number_from_gh
 from ..validation import validate
 
 yaml = YAML()
