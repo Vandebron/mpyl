@@ -224,10 +224,15 @@ class Repository:
             self._config.repo_credentials.to_url_with_credentials
         )
 
-    def pull_main_branch(self):
+    def fetch_main_branch(self):
         remote = self.__get_remote()
         main = self._config.main_branch
         return remote.fetch(f"+refs/heads/{main}:refs/heads/{main}")
+
+    def pull_main_branch(self):
+        remote = self.__get_remote()
+        main = self._config.main_branch
+        return remote.pull(f"+refs/heads/{main}:refs/heads/{main}")
 
     def find_projects(self, folder_pattern: str = "") -> list[str]:
         """returns a set of all project.yml files
