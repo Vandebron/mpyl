@@ -114,9 +114,7 @@ class RunProperties:
         tag: Optional[str] = versioning_config.get("tag")
         pr_from_config: Optional[str] = versioning_config.get("pr_number")
         pr_num: Optional[int] = (
-            None
-            if tag
-            else (int(pr_from_config) if pr_from_config else get_pr_number_from_gh())
+            None if tag else (int(pr_from_config) if pr_from_config else 1)
         )
 
         versioning = VersioningProperties(
