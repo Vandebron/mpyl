@@ -63,10 +63,8 @@ def get_pr_for_branch(repo: Repository, branch: str) -> PullRequest:
     return pulls.pop()
 
 
-def get_pr_number(pr_number_from_config: Optional[str] = None) -> Optional[int]:
+def get_pr_number_from_gh() -> Optional[int]:
     try:
-        if pr_number_from_config:
-            return int(pr_number_from_config)
         return int(
             json.loads(
                 subprocess.run(
