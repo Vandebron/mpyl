@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 
 import pytest
 from click.testing import CliRunner
@@ -15,6 +16,7 @@ from tests.test_resources.test_data import (
     get_minimal_project,
     RUN_PROPERTIES,
     get_project_with_stages,
+    assert_roundtrip,
 )
 
 
@@ -39,7 +41,7 @@ class ThrowingStep(Step):
 class TestBuildCommand:
     resource_path = root_test_path / "cli" / "test_resources"
     config_path = root_test_path / "test_resources/mpyl_config.yml"
-    run_properties_path = root_test_path / "../run_properties.yml"
+    run_properties_path = root_test_path / "test_resources/run_properties.yml"
     runner = CliRunner()
     add_commands()
 
@@ -93,28 +95,28 @@ class TestBuildCommand:
         assert result.exception.project_name == "test"
         assert result.exception.executor == "Throwing Build"
 
-    @pytest.mark.skipif(
-        condition="GITHUB_JOB" in os.environ,
-        reason="no build status in github action",
-    )
     def test_build_status_output(self):
-        cwd = os.getcwd()
-
-        try:
-            os.environ["CHANGE_ID"] = "123"
-            if cwd.endswith("tests"):
-                os.chdir("../")
-            result = self.runner.invoke(
-                main_group,
-                ["build", "-c", self.config_path, "status"],
-            )
-        finally:
-            os.chdir(cwd)
-
-        assert (
-            "No changes detected, nothing to do." in result.output
-            or "Execution plan:" in result.output
+        os.environ["CHANGE_ID"] = "123"
+        cmd = [
+            "build",
+            "-c",
+            self.config_path,
+            "-p",
+            self.run_properties_path,
+            "status",
+        ]
+        result = self.runner.invoke(
+            main_group,
+            cmd,
         )
+
+        without_upgrade_suggestion = re.sub(
+            r".*You can upgrade.*", "", result.output
+        ).rstrip()
+        first_line_only = without_upgrade_suggestion.split("\n")[0].rstrip()
+
+        self.maxDiff = None
+        assert_roundtrip(self.resource_path / "build_status.txt", first_line_only)
 
     def test_build_clean_output(self):
         result = self.runner.invoke(
