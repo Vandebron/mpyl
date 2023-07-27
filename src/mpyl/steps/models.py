@@ -111,8 +111,10 @@ class RunProperties:
         build = run_properties["build"]
         versioning_config = build["versioning"]
 
-        pr_num: Optional[int] = get_pr_number(versioning_config.get("pr_number"))
         tag: Optional[str] = versioning_config.get("tag")
+        pr_num: Optional[int] = (
+            None if tag else get_pr_number(versioning_config.get("pr_number"))
+        )
 
         versioning = VersioningProperties(
             revision=versioning_config["revision"],
