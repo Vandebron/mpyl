@@ -184,21 +184,18 @@ properties:
               $ref: '#/definitions/env'
             uniqueItems: true
           kubernetes:
+            description: >-
+              Represents a source for the value of an EnvVar as defined in 
+              https://kubernetesjsonschema.dev/v1.14.0/_definitions.json#definitions/io.k8s.api.core.v1.EnvVarSource
             type: array
             items:
               type: object
               additionalProperties: false
-              required:
-                - key
-                - valueFrom
               properties:
                 key:
                   type: string
                 valueFrom:
-                  oneOf:
-                    - $ref: '#/definitions/fieldRef'
-                    - $ref: '#/definitions/secretKeyRef'
-                    - $ref: '#/definitions/resourceFieldRef'
+                  $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.core.v1.EnvVarSource'
       namespace:
         description: >-
           Corresponds to the namespace in Kubernetes to which the artifact will
@@ -521,58 +518,6 @@ definitions:
         type: string
       path:
         type: string
-  fieldRef:
-    type: object
-    additionalItems: false
-    required:
-      - fieldRef
-    properties:
-      fieldRef:
-        type: object
-        additionalItems: false
-        required:
-          - fieldPath
-        properties:
-          fieldPath:
-            type: string
-  secretKeyRef:
-    type: object
-    additionalItems: false
-    required:
-      - secretKeyRef
-    properties:
-      secretKeyRef:
-        type: object
-        additionalItems: false
-        required:
-          - name
-          - key
-          - optional
-        properties:
-          name:
-            type: string
-          key:
-            type: string
-          optional:
-            type: boolean
-            default: false
-  resourceFieldRef:
-    type: object
-    additionalItems: false
-    required:
-      - resourceFieldRef
-    properties:
-      resourceFieldRef:
-        type: object
-        additionalItems: false
-        required:
-          - containerName
-          - resource
-        properties:
-          containerName:
-            type: string
-          resource:
-            type: string
   secret:
     type: object
     additionalItems: false

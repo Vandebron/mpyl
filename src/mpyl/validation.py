@@ -10,19 +10,29 @@ from ruamel.yaml import YAML
 yaml = YAML()
 
 
+def __load_schema_from_local(local_uri: str):
+    project_schema_string = pkgutil.get_data(__name__, f"schema/{local_uri}")
+    if not project_schema_string:
+        raise ImportError(f"'schema/{local_uri}' was not found in bundle")
+    return yaml.load(project_schema_string.decode("utf-8"))
+
+
+def load_schemas_from_local(local_uris: list[str]):
+    return {local_uri: __load_schema_from_local(local_uri) for local_uri in local_uris}
+
+
 @lru_cache(maxsize=10)
 def load_schema(schema_string: str) -> Draft7Validator:
     schema = yaml.load(schema_string)
-    project_schema_string = pkgutil.get_data(__name__, "schema/project.schema.yml")
-    if not project_schema_string:
-        raise ImportError("'schema/project.schema.yml' was not found in bundle")
 
-    project_schema = yaml.load(project_schema_string.decode("utf-8"))
+    local_schema_dictionary = load_schemas_from_local(
+        ["project.schema.yml", "k8s_api_core.schema.yml"]
+    )
 
     def load_schema_from_local(uri):
-        if "project.schema.yml" in uri:
-            return project_schema
-        return {}
+        return next(
+            (value for key, value in local_schema_dictionary.items() if key in uri), {}
+        )
 
     resolver = RefResolver(
         referrer=schema, base_uri="", handlers={"": load_schema_from_local}

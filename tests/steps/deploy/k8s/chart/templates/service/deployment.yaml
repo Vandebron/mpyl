@@ -46,12 +46,28 @@ spec:
           value: PullRequest
         - name: WITH_NAMESPACE
           value: minimalService.mpyl.svc.cluster.local
+        - name: SOME_SEALED_SECRET_ENV
+          valueFrom:
+            secretKeyRef:
+              key: SOME_SEALED_SECRET_ENV
+              name: dockertest
+              optional: false
         - name: SOME_SECRET_ENV
           valueFrom:
             secretKeyRef:
-              key: SOME_SECRET_ENV
-              name: dockertest
+              key: password
+              name: some-secret-name
               optional: false
+        - name: KUBERNETES_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: RESOURCE_FIELD_REFERENCE
+          valueFrom:
+            resourceFieldRef:
+              containerName: minimalService
+              divisor: '0.5'
+              resource: limits.memory
         image: registry/image:123
         imagePullPolicy: Always
         livenessProbe:

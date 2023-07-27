@@ -70,6 +70,7 @@ from ....project import (
     Host,
     get_env_variables,
     Alert,
+    KeyValueRef,
 )
 from ....stages.discovery import DeploySet
 
@@ -146,12 +147,13 @@ class DeploymentDefaults:
         )
 
 
-class ChartBuilder:
+class ChartBuilder:  # pylint: disable = too-many-instance-attributes
     step_input: Input
     project: Project
     mappings: dict[int, int]
     env: list[KeyValueProperty]
     sealed_secrets: list[KeyValueProperty]
+    secrets: list[KeyValueRef]
     deployment: Deployment
     target: Target
     release_name: str
@@ -174,6 +176,9 @@ class ChartBuilder:
         self.env = properties.env if properties and properties.env else []
         self.sealed_secrets = (
             properties.sealed_secret if properties and properties.sealed_secret else []
+        )
+        self.secrets = (
+            properties.kubernetes if properties and properties.kubernetes else []
         )
         self.mappings = self.project.kubernetes.port_mappings
         self.target = step_input.run_properties.target
@@ -247,8 +252,8 @@ class ChartBuilder:
         service_ports = list(
             map(
                 lambda key: V1ServicePort(
-                    port=key,
-                    target_port=self.mappings[key],
+                    port=int(key),
+                    target_port=int(self.mappings[key]),
                     protocol="TCP",
                     name=f"{key}-webservice-port",
                 ),
@@ -481,6 +486,29 @@ class ChartBuilder:
             raise AttributeError("deployment.kubernetes.job field should be set")
         return job
 
+    def _create_sealed_secret_env_vars(
+        self, secret_list: list[KeyValueProperty]
+    ) -> list[V1EnvVar]:
+        return [
+            V1EnvVar(
+                name=e.key,
+                value_from=V1EnvVarSource(
+                    secret_key_ref=V1SecretKeySelector(
+                        key=e.key, name=self.release_name, optional=False
+                    )
+                ),
+            )
+            for e in secret_list
+        ]
+
+    def _map_key_value_refs(self, ref: KeyValueRef) -> V1EnvVar:
+        value_from = self._to_k8s_model(ref.value_from, V1EnvVarSource)
+
+        return V1EnvVar(name=ref.key, value_from=value_from)
+
+    def _create_secret_env_vars(self, secret_list: list[KeyValueRef]) -> list[V1EnvVar]:
+        return list(map(self._map_key_value_refs, secret_list))
+
     def _get_env_vars(self):
         raw_env_vars = {
             e.key: e.get_value(self.target)
@@ -498,23 +526,13 @@ class ChartBuilder:
             V1EnvVar(name=key, value=value) for key, value in substituted.items()
         ]
 
-        sealed_for_target = list(
+        sealed_secrets_for_target = list(
             filter(lambda v: v.get_value(self.target) is not None, self.sealed_secrets)
         )
-        sealed_secrets = list(
-            map(
-                lambda e: V1EnvVar(
-                    name=e.key,
-                    value_from=V1EnvVarSource(
-                        secret_key_ref=V1SecretKeySelector(
-                            key=e.key, name=self.release_name, optional=False
-                        )
-                    ),
-                ),
-                sealed_for_target,
-            )
-        )
-        return env_vars + sealed_secrets
+        sealed_secrets = self._create_sealed_secret_env_vars(sealed_secrets_for_target)
+        secrets = self._create_secret_env_vars(self.secrets)
+
+        return env_vars + sealed_secrets + secrets
 
     @property
     def is_cron_job(self) -> bool:

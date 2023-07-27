@@ -27,7 +27,7 @@ class TestMplSchema:
         secret_env = [
             x
             for x in project.deployment.properties.sealed_secret
-            if x.key == "SOME_SECRET_ENV"
+            if x.key == "SOME_SEALED_SECRET_ENV"
         ].pop()
         assert secret_env.get_value(Target.PULL_REQUEST).startswith(
             "AgCA5/qvMMp"

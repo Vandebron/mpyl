@@ -112,6 +112,22 @@ class KeyValueProperty(TargetProperty[str]):
 
 
 @dataclass(frozen=True)
+class KeyValueRef:
+    key: str
+    value_from: dict
+
+    @staticmethod
+    def from_config(values: dict):
+        key = values["key"]
+        value_from = values["valueFrom"]
+
+        return KeyValueRef(
+            key=key,
+            value_from=value_from,
+        )
+
+
+@dataclass(frozen=True)
 class StageSpecificProperty(Generic[T]):
     build: Optional[T]
     test: Optional[T]
@@ -167,6 +183,7 @@ class Env:
 class Properties:
     env: list[KeyValueProperty]
     sealed_secret: list[KeyValueProperty]
+    kubernetes: list[KeyValueRef]
 
     @staticmethod
     def from_config(values: Dict[Any, Any]):
@@ -175,6 +192,7 @@ class Properties:
             sealed_secret=list(
                 map(KeyValueProperty.from_config, values.get("sealedSecret", []))
             ),
+            kubernetes=list(map(KeyValueRef.from_config, values.get("kubernetes", []))),
         )
 
 
