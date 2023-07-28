@@ -110,13 +110,16 @@ class RunProperties:
         build = run_properties["build"]
         versioning_config = build["versioning"]
 
-        pr_num: str = versioning_config.get("pr_number")
-        tag: str = versioning_config.get("tag")
+        tag: Optional[str] = versioning_config.get("tag")
+        pr_from_config: Optional[str] = versioning_config.get("pr_number")
+        pr_num: Optional[int] = (
+            None if tag else (int(pr_from_config) if pr_from_config else 1)
+        )
 
         versioning = VersioningProperties(
             revision=versioning_config["revision"],
             branch=versioning_config["branch"],
-            pr_number=int(pr_num) if pr_num else None,
+            pr_number=pr_num,
             tag=tag,
         )
         console = ConsoleProperties.from_configuration(build)
