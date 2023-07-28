@@ -184,7 +184,7 @@ def build(
             f"Docker build failed with command {command} and exit code {exc.return_code}"
         )
         return False
-    except Exception as exc:  # pylint: disable=broad-exception-caught
+    except Exception as exc:
         print(f"Docker build failed with {exc.__class__.__name__}")
         print_exc()
         return False

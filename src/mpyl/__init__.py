@@ -31,4 +31,3 @@ def add_commands():
 def main():
     add_commands()
     main_group()  # pylint: disable = no-value-for-parameter
-
