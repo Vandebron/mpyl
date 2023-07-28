@@ -47,12 +47,18 @@ pipeline {
 
                             if (params.MANUAL_BUILD) {
                                 def projects = sh(script: "pipenv run mpyl projects names", returnStdout: true)
+                                def boolParams = projects.split('\n').collect { project ->
+                                    booleanParam(name: project, defaultValue: false)
+                                }
+                                def selectedProjects = input(id: 'userInput', message: 'Select project(s)', parameters: boolParams)
+                                def selectedProjectsString = selectedProjects.findAll { key, value -> value }.keySet().join(',')
+                                env.SELECTED_PROJECTS = "--projects " + selectedProjectsString
                             }
 
                             sh "pipenv run mpyl projects lint --all"
                             sh "pipenv run mpyl health"
                             sh "pipenv run mpyl build status"
-                            sh "pipenv run run-ci ${params.BUILD_PARAMS}"
+                            sh "pipenv run run-ci ${params.BUILD_PARAMS} ${env.SELECTED_PROJECTS}"
                         }
                     }
                 }
