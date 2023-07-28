@@ -62,7 +62,7 @@ def get_build_plan(
             )
         else:
             logger.info(f"Pulling `{repo.main_branch}` from {repo.get_remote_url}")
-            pull_result = repo.pull_main_branch()
+            pull_result = repo.fetch_main_branch()
             logger.info(f"Pulled `{pull_result[0].remote_ref_path.strip()}` to local")
         changes = (
             repo.changes_in_branch_including_local()
