@@ -16,7 +16,6 @@ from .cli.projects import projects
 from .utilities.pyaml_env import parse_config
 from .utilities.repo import RepoConfig, Repository
 
-
 @click.group(name="mpyl", help="Command Line Interface for MPyL")
 def main_group():
     """Command Line Interface for MPyL"""
@@ -32,3 +31,4 @@ def add_commands():
 def main():
     add_commands()
     main_group()  # pylint: disable = no-value-for-parameter
+
