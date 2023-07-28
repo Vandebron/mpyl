@@ -10,6 +10,7 @@ Options:
   --help             Show this message and exit.
 
 Commands:
-  lint  Validate the yaml of changed projects against their schema
-  list  List found projects
-  show  Show details of a project
+  lint   Validate the yaml of changed projects against their schema
+  list   List found projects
+  names  List found project names
+  show   Show details of a project

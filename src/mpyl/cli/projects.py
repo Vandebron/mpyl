@@ -80,7 +80,7 @@ def list_projects(obj: ProjectsContext):
         obj.cli.console.print(Markdown(f"{proj} `{name}`"))
 
 
-@projects.command(name="names", help="List found projects names")
+@projects.command(name="names", help="List found project names")
 @click.pass_obj
 def list_project_names(obj: ProjectsContext):
     found_projects = obj.cli.repo.find_projects(obj.filter)
