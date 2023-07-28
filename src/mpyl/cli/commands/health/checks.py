@@ -33,7 +33,7 @@ class HealthConsole:
         self.console.print(Markdown(f"&nbsp;&nbsp;{icon} {check}"))
 
 
-def perform_health_checks(bare_console: Console):
+def perform_health_checks(bare_console: Console, is_ci: bool = False):
     console = HealthConsole(bare_console)
     load_dotenv(Path(".env"))
 
@@ -58,8 +58,9 @@ def perform_health_checks(bare_console: Console):
         name="run properties",
     )
 
-    console.title("Jenkins")
-    __check_jenkins(console)
+    if not is_ci:
+        console.title("Jenkins")
+        __check_jenkins(console)
 
 
 def __check_jenkins(console: HealthConsole):
