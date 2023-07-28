@@ -46,7 +46,7 @@ pipeline {
                             sh "pipenv install -d --skip-lock"
 
                             if (params.MANUAL_BUILD) {
-                                def projects = sh(script: "pipenv run mpyl projects list", returnStdout: true)
+                                def projects = sh(script: "pipenv run mpyl projects names", returnStdout: true)
                             }
 
                             sh "pipenv run mpyl projects lint --all"
