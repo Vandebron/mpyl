@@ -148,7 +148,8 @@ def status(obj: CliContext):
 def __print_status(obj: CliContext):
     run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
     branch = run_properties.versioning.branch
-    if not branch:
+    ci_mode = branch is not None
+    if not ci_mode:
         branch = obj.repo.get_branch
         obj.console.log(
             Markdown(
@@ -157,22 +158,28 @@ def __print_status(obj: CliContext):
             )
         )
 
-    if branch and obj.repo.main_branch == obj.repo.get_branch:
+    if branch == obj.repo.main_branch:
         obj.console.log(f"On main branch ({branch}), cannot determine build status")
         return
+
     tag = obj.repo.get_tag if not branch else None
     version = run_properties.versioning
-    reference = "Tag" if tag else "Branch"
     revision = version.revision or obj.repo.get_sha
     obj.console.print(
-        Markdown(f"**{reference}:** `{branch or version.tag}` at `{revision}`")
+        Markdown(
+            f"**{'Tag' if tag else 'Branch'}:** `{branch or version.tag}` at `{revision}`"
+        )
     )
 
     if obj.repo.main_branch_pulled:
         changes = (
             obj.repo.changes_in_branch_including_local()
-            if branch
-            else obj.repo.changes_in_merge_commit()
+            if not ci_mode
+            else (
+                obj.repo.changes_in_merge_commit()
+                if tag
+                else obj.repo.changes_in_branch()
+            )
         )
         build_set = find_build_set(obj.repo, changes, False)
         result = RunResult(run_properties=run_properties, run_plan=build_set)
