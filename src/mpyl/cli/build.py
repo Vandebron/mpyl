@@ -36,7 +36,9 @@ from ..constants import (
     BUILD_ARTIFACTS_FOLDER,
 )
 from ..project import load_project
-from ..reporting.formatting.markdown import run_result_to_markdown
+from ..reporting.formatting.markdown import (
+    execution_plan_as_markdown,
+)
 from ..steps.models import RunProperties
 from ..steps.run import RunResult
 from ..utilities.github import GithubConfig
@@ -185,7 +187,7 @@ def __print_status(obj: CliContext):
         result = RunResult(run_properties=run_properties, run_plan=build_set)
         if result.run_plan:
             obj.console.print(
-                Markdown("**Execution plan:**  \n" + run_result_to_markdown(result))
+                Markdown("**Execution plan:**  \n" + execution_plan_as_markdown(result))
             )
         else:
             obj.console.print("No changes detected, nothing to do.")
