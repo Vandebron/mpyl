@@ -151,7 +151,10 @@ def __print_status(obj: CliContext):
     if not branch:
         branch = obj.repo.get_branch
         obj.console.log(
-            f"Branch not specified in `{DEFAULT_RUN_PROPERTIES_FILE_NAME}`. Branch determined via git: {branch}"
+            Markdown(
+                f"Branch not specified at `build.versioning.branch` in _{DEFAULT_RUN_PROPERTIES_FILE_NAME}_. "
+                f"Branch determined via git: _{branch}_"
+            )
         )
 
     if branch and obj.repo.main_branch == obj.repo.get_branch:
@@ -159,11 +162,10 @@ def __print_status(obj: CliContext):
         return
     tag = obj.repo.get_tag if not branch else None
     version = run_properties.versioning
-    revision = "Tag" if tag else "Branch"
+    reference = "Tag" if tag else "Branch"
+    revision = version.revision or obj.repo.get_sha
     obj.console.print(
-        Markdown(
-            f"**{revision}:** `{version.branch or version.tag}` at `{version.revision}`"
-        )
+        Markdown(f"**{reference}:** `{branch or version.tag}` at `{revision}`")
     )
 
     if obj.repo.main_branch_pulled:
