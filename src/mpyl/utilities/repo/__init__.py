@@ -135,8 +135,34 @@ class Repository:
         return Revision(count, str(revision), intersection)
 
     def changes_in_branch(self) -> list[Revision]:
+        for ref in self._repo.references:
+            print(f"Ref: {ref} {ref.commit.hexsha} {ref.name}")
+
+        main_branch = self._config.main_branch
+        refs = (
+            ref
+            for ref in self._repo.references
+            if ref.name in [main_branch, f"origin/{main_branch}"]
+        )
+
+        base_ref = next(refs, None)
+        if not base_ref:
+            logging.warning(
+                f"Could not find {main_branch} among refs. Did you fetch them?"
+                f" `git fetch --tags origin`"
+            )
+            return []
+
+        logging.info(f"Base reference: {base_ref} {base_ref.commit.hexsha}")
+
         revisions = list(
-            reversed(list(self._repo.iter_commits("origin..HEAD", no_merges=True)))
+            reversed(
+                list(
+                    self._repo.iter_commits(
+                        f"{base_ref.commit.hexsha}..HEAD", no_merges=True
+                    )
+                )
+            )
         )
 
         logging.debug(
