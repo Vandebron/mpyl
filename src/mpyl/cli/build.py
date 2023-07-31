@@ -174,24 +174,21 @@ def __print_status(obj: CliContext):
         )
     )
 
-    if obj.repo.main_branch_pulled:
-        changes = (
-            obj.repo.changes_in_branch_including_local()
-            if not ci_mode
-            else (
-                obj.repo.changes_in_merge_commit()
-                if tag
-                else obj.repo.changes_in_branch()
-            )
+    changes = (
+        obj.repo.changes_in_branch_including_local()
+        if not ci_mode
+        else (
+            obj.repo.changes_in_merge_commit() if tag else obj.repo.changes_in_branch()
         )
-        build_set = find_build_set(obj.repo, changes, False)
-        result = RunResult(run_properties=run_properties, run_plan=build_set)
-        if result.run_plan:
-            obj.console.print(
-                Markdown("**Execution plan:**  \n" + execution_plan_as_markdown(result))
-            )
-        else:
-            obj.console.print("No changes detected, nothing to do.")
+    )
+    build_set = find_build_set(obj.repo, changes, False)
+    result = RunResult(run_properties=run_properties, run_plan=build_set)
+    if result.run_plan:
+        obj.console.print(
+            Markdown("**Execution plan:**  \n" + execution_plan_as_markdown(result))
+        )
+    else:
+        obj.console.print("No changes detected, nothing to do.")
 
 
 class Pipeline(ParamType):

@@ -136,13 +136,7 @@ class Repository:
 
     def changes_in_branch(self) -> list[Revision]:
         revisions = list(
-            reversed(
-                list(
-                    self._repo.iter_commits(
-                        f"{self._config.main_branch}..HEAD", no_merges=True
-                    )
-                )
-            )
+            reversed(list(self._repo.iter_commits("origin..HEAD", no_merges=True)))
         )
 
         logging.debug(
