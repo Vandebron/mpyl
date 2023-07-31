@@ -35,6 +35,7 @@ class MpylCliParameters:
     pull_main: bool = False
     verbose: bool = False
     all: bool = False
+    projects: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -78,8 +79,9 @@ def get_build_plan(
     logger.debug(f"Changes: {changes}")
 
     projects_per_stage: dict[Stage, set[Project]] = find_build_set(
-        repo, changes, params.all
+        repo, changes, params.all, params.projects
     )
+
     return RunResult(
         run_properties=mpyl_run_parameters.run_config.run_properties,
         run_plan=projects_per_stage,
@@ -153,14 +155,21 @@ def run_mpyl(
 
 
 def find_build_set(
-    repo: Repository, changes_in_branch: list[Revision], build_all: bool
+    repo: Repository,
+    changes_in_branch: list[Revision],
+    build_all: bool,
+    projects: Optional[str] = None,
 ) -> dict[Stage, set[Project]]:
     project_paths = repo.find_projects()
     all_projects = set(
         map(lambda p: load_project(Path(""), Path(p), False), project_paths)
     )
 
-    if build_all:
+    if build_all or projects:
+        if projects:
+            projects_list = projects.split(",")
+            all_projects = set(filter(lambda p: p.name in projects_list, all_projects))
+
         return {
             Stage.BUILD: for_stage(all_projects, Stage.BUILD),
             Stage.TEST: for_stage(all_projects, Stage.TEST),

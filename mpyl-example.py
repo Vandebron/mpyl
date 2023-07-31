@@ -41,6 +41,7 @@ def main(log: Logger, args: argparse.Namespace):
             verbose=args.verbose,
             all=args.all,
             target=run_properties.target.value,
+            projects=args.projects,
         ),
     )
     check = None
@@ -114,6 +115,9 @@ if __name__ == "__main__":
         action="store_true",
     )
     parser.add_argument("--tag", "-t", help="The name of the tag to build", type=str)
+    parser.add_argument(
+        "--projects", "-p", help="Names of the projects to build", type=str
+    )
     parser.add_argument(
         "--all",
         "-a",
