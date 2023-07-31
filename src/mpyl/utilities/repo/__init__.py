@@ -135,7 +135,6 @@ class Repository:
         return Revision(count, str(revision), intersection)
 
     def changes_in_branch(self) -> list[Revision]:
-        self.pull_main_branch()
         revisions = list(
             reversed(
                 list(
