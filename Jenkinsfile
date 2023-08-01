@@ -24,6 +24,7 @@ pipeline {
         stage('Build') {
            environment {
                 DOCKER_REGISTRY = credentials('91751de6-20aa-4b12-8459-6e16094a233a')
+                GIT_CREDENTIALS = credentials('e8bc2c24-e461-4dae-9122-e8ae8bd7ec07')
                 GITHUB_TOKEN = credentials('github-pat-mpyl-vandebronjenkins')
                 MPYL_GITHUB_APP_PRIVATE_KEY = credentials('mpyl_pipeline_github_app_private_key')
                 SLACK_TOKEN = credentials('JENKINS_MPYL_APP_OAUTH_TOKEN')
@@ -33,12 +34,13 @@ pipeline {
             }
             steps {
                 script {
+                    sh("git tag -d \$(git tag -l)")
+                    
                     def gitconfig = scm.userRemoteConfigs.getAt(0)
-                    git(branch: params.MPYL_CONFIG_BRANCH, credentialsId: gitconfig.getCredentialsId(), url: 'https://github.com/Vandebron/mpyl_config.git')
-                    def config = readFile('mpyl_config.yml')
                     git(branch: env.BRANCH_NAME, credentialsId: gitconfig.getCredentialsId(), url: gitconfig.getUrl())
-                    sh("rm -rf .git/refs/main")
-                    writeFile(file: 'mpyl_config.yml', text: config)
+
+                    def content = sh(script: "curl https://api.github.com/repos/Vandebron/mpyl_config/contents/mpyl_config.yml -H 'Authorization: token $GIT_CREDENTIALS_PSW' -H 'Accept: application/vnd.github.v3.raw'", returnStdout: true)
+                    writeFile(file: 'mpyl_config.yml', text: content)
                     withKubeConfig([credentialsId: 'jenkins-rancher-service-account-kubeconfig-test']) {
                         wrap([$class: 'BuildUser']) {
                             sh "pipenv clean"
