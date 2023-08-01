@@ -330,13 +330,13 @@ def jenkins(  # pylint: disable=too-many-arguments
 ):
     try:
         upgrade_check = asyncio.wait_for(warn_if_update(ctx.obj.console), timeout=5)
-        jenkins_config = ctx.obj.config
-        if "jenkins" not in jenkins_config:
+        if "jenkins" not in ctx.obj.config:
             ctx.obj.console.print(
                 "No Jenkins configuration found in config file. "
                 "Please add a `jenkins` section to your MPyL config file."
             )
             sys.exit(0)
+        jenkins_config = ctx.obj.config["jenkins"]
 
         selected_pipeline = pipeline if pipeline else jenkins_config["defaultPipeline"]
         pipeline_parameters = {"TEST": "true", "VERSION": test} if test else {}
