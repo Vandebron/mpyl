@@ -136,27 +136,28 @@ class Repository:
 
     def changes_in_branch(self) -> list[Revision]:
         for ref in self._repo.references:
-            logging.info(f"Ref: {ref} {ref.commit.hexsha} {ref.name}")
+            logging.debug(f"Ref: {ref} {ref.commit.hexsha} {ref.name}")
 
         main_branch = self._config.main_branch
-        refs = [
+        refs = (
             ref
             for ref in self._repo.references
             if ref.name in [main_branch, f"origin/{main_branch}"]
-        ]
+        )
 
-        base_ref = (
-            main_branch if refs else self._repo.git.rev_list("--max-parents=0", "HEAD")
+        base_ref = next(refs, None)
+        base_hex = (
+            base_ref.commit.hexsha
+            if base_ref
+            else self._repo.git.rev_list("--max-parents=0", "HEAD")
         )
 
         logging.debug(
-            f"Base reference: [bright_blue]{base_ref or '(grafted)'}[/bright_blue]"
+            f"Base reference: [bright_blue]{base_ref or '(grafted)'}[/bright_blue] [italic]{base_hex}[/italic]"
         )
 
         revisions = list(
-            reversed(
-                list(self._repo.iter_commits(f"{base_ref}..HEAD", no_merges=False))
-            )
+            reversed(list(self._repo.iter_commits(f"{base_hex}..HEAD", no_merges=True)))
         )
 
         logging.debug(
