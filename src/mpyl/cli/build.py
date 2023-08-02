@@ -168,9 +168,11 @@ def __print_status(obj: CliContext):
     tag = obj.repo.get_tag if not branch else None
     version = run_properties.versioning
     revision = version.revision or obj.repo.get_sha
+    base_revision = obj.repo.base_revision
     obj.console.print(
         Markdown(
-            f"**{'Tag' if tag else 'Branch'}:** `{branch or version.tag}` at `{revision}`"
+            f"**{'Tag' if tag else 'Branch'}:** `{branch or version.tag}` at `{revision}`. "
+            f"Base `{obj.repo.main_branch}` {f'at `{base_revision}`' if base_revision else 'not present (grafted).'}"
         )
     )
 
