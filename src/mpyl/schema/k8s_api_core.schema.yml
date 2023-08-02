@@ -1,3 +1,4 @@
+# Taken from https://github.com/instrumenta/kubernetes-json-schema and converted to YAML
 definitions:
   io.k8s.api.core.v1.EnvVarSource:
     description: EnvVarSource represents a source for the value of an EnvVar.
