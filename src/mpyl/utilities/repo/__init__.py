@@ -98,7 +98,7 @@ class Repository:
     @property
     def base_revision(self) -> Optional[str]:
         try:
-            return self._repo.rev_parse(self.main_branch)
+            return self._repo.rev_parse(self.main_origin_branch)
         except BadName as exc:
             logging.debug(f"Does not exist: {exc}")
             return None
@@ -119,8 +119,11 @@ class Repository:
 
     @property
     def main_branch(self) -> str:
-        main = self._config.main_branch.replace("origin/", "")
-        return f"origin/{main}"
+        return self._config.main_branch.replace("origin/", "")
+
+    @property
+    def main_origin_branch(self) -> str:
+        return f"origin/{self.main_branch}"
 
     def __get_filter_patterns(self):
         return ["--"] + [f":!{pattern}" for pattern in self._config.ignore_patterns]
@@ -223,13 +226,6 @@ class Repository:
             f"{str(self._repo.head.commit)}..{str(parent_revs[0])}", name_only=True
         ).splitlines()
         return [Revision(ord=0, hash=str(self.get_sha), files_touched=files_changed)]
-
-    @property
-    def main_branch_pulled(self) -> bool:
-        if self._repo.head.is_detached:
-            return False
-        branch_names = list(map(lambda n: n.name, self._repo.heads))
-        return f"{self._config.main_branch}" in branch_names
 
     def __get_remote(self) -> Remote:
         default_remote = self._repo.remote("origin")

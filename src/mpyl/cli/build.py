@@ -156,12 +156,13 @@ def __print_status(obj: CliContext):
         branch = obj.repo.get_branch
         obj.console.log(
             Markdown(
-                f"Branch not specified at `build.versioning.branch` in _{DEFAULT_RUN_PROPERTIES_FILE_NAME}_. "
-                f"Branch determined via git: _{branch}_"
+                f"Branch not specified at `build.versioning.branch` in _{DEFAULT_RUN_PROPERTIES_FILE_NAME}_, "
+                f"falling back to git: _{branch}_"
             )
         )
 
-    if branch == obj.repo.main_branch:
+    main_branch = obj.repo.main_branch
+    if branch == main_branch:
         obj.console.log(f"On main branch ({branch}), cannot determine build status")
         return
 
@@ -172,9 +173,18 @@ def __print_status(obj: CliContext):
     obj.console.print(
         Markdown(
             f"**{'Tag' if tag else 'Branch'}:** `{branch or version.tag}` at `{revision}`. "
-            f"Base `{obj.repo.main_branch}` {f'at `{base_revision}`' if base_revision else 'not present (grafted).'}"
+            f"Base `{main_branch}` {f'at `{base_revision}`' if base_revision else 'not present (grafted).'}"
         )
     )
+
+    if not base_revision:
+        obj.console.print(
+            Markdown(
+                f"Cannot determine what to build, since this branch has no base. "
+                f"Did you `git fetch origin {main_branch}:refs/remotes/origin/{main_branch}`?"
+            )
+        )
+        return
 
     changes = (
         obj.repo.changes_in_branch_including_local()

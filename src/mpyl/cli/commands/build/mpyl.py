@@ -56,7 +56,7 @@ def get_build_plan(
     )
     logger.info(f"Running with {params}")
     if branch:
-        if repo.main_branch_pulled:
+        if repo.base_revision:
             logger.info(
                 f"Branch `{repo.main_branch}` already present locally. Skipping pull."
             )
