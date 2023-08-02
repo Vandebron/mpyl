@@ -153,7 +153,8 @@ jobs:
         with:
           pr_number: ${{ steps.findPr.outputs.pr }}
           message: |
-            New release `${{ steps.findPr.outputs.pr }}.${{ github.run_number }}` deployed at [Test Pypi](https://test.pypi.org/project/mpyl/)
+            New release `${{ steps.findPr.outputs.pr }}.${{ github.run_number }}` deployed at [Test Pypi](https://test.pypi.org/project/mpyl/). 
+            Install with `pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ steps.findPr.outputs.pr }}.${{ github.run_number }}`
           reactions: rocket
           comment_tag: execution
 
