@@ -34,7 +34,7 @@ twine = "==4.0.1"
 types-six = "==1.16.21.4"
 dagit = "==1.2.6"
 dagster = "==1.2.6"
-pylint = "==2.17.0"
+pylint = "==2.17.5"
 pytest = "==7.2.1"
 pdoc = "==13.1.1"
 sqlalchemy = "<2.0.0" # forced downgrade https://github.com/dagster-io/dagster/discussions/11881
