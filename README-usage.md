@@ -85,6 +85,9 @@ eval (env _MPYL_COMPLETE=fish_source mpyl)
 ```
 
 #### YAML auto completion 
+
+![Schema based autocompletion](documentation_images/autocompletion.gif)
+
 ###### Intellij IDEA or PyCharm
 Go to: `Preferences | Languages & Frameworks | Schemas and DTDs | JSON Schema Mappings`
 - Add new schema
