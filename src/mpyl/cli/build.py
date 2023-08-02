@@ -138,30 +138,42 @@ def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
 
 
 @build.command(help="The status of the current local branch from MPyL's perspective")
+@click.option(
+    "-f",
+    "--fix-pr",
+    is_flag=True,
+    help="Attempt to make the current branch fit for a PR build",
+)
 @click.pass_obj
-def status(obj: CliContext):
+def status(obj: CliContext, fix_pr):
     try:
         upgrade_check = asyncio.wait_for(warn_if_update(obj.console), timeout=3)
-        __print_status(obj)
+        __print_status(obj, fix_pr)
         asyncio.get_event_loop().run_until_complete(upgrade_check)
     except asyncio.exceptions.TimeoutError:
         pass
 
 
-def __print_status(obj: CliContext):
+def __print_status(obj: CliContext, fix_pr: bool = False):
     run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
-    branch = run_properties.versioning.branch
-    ci_mode = branch is not None
-    if not ci_mode:
-        branch = obj.repo.get_branch
+    ci_branch = run_properties.versioning.branch
+
+    if ci_branch and not obj.repo.get_branch:
+        obj.console.print("Current branch is detached.")
+        if fix_pr:
+            obj.console.print(f"Checking out: `git checkout -b {ci_branch}`")
+            obj.repo.checkout(ci_branch)
+    else:
         obj.console.log(
             Markdown(
                 f"Branch not specified at `build.versioning.branch` in _{DEFAULT_RUN_PROPERTIES_FILE_NAME}_, "
-                f"falling back to git: _{branch}_"
+                f"falling back to git: _{obj.repo.get_branch}_"
             )
         )
 
+    branch = obj.repo.get_branch
     main_branch = obj.repo.main_branch
+
     if branch == main_branch:
         obj.console.log(f"On main branch ({branch}), cannot determine build status")
         return
@@ -178,17 +190,24 @@ def __print_status(obj: CliContext):
     )
 
     if not base_revision:
-        obj.console.print(
-            Markdown(
-                f"Cannot determine what to build, since this branch has no base. "
-                f"Did you `git fetch origin {main_branch}:refs/remotes/origin/{main_branch}`?"
+        fetch = f"`git fetch origin {main_branch}:refs/remotes/origin/{main_branch}`"
+        if fix_pr:
+            obj.console.print(
+                f"Main branch {main_branch} not present locally. Fetching: {fetch}`"
             )
-        )
-        return
+            obj.repo.fetch_main_branch()
+        else:
+            obj.console.print(
+                Markdown(
+                    f"Cannot determine what to build, since this branch has no base. "
+                    f"Did you {fetch}?"
+                )
+            )
+            return
 
     changes = (
         obj.repo.changes_in_branch_including_local()
-        if not ci_mode
+        if ci_branch is None
         else (
             obj.repo.changes_in_merge_commit() if tag else obj.repo.changes_in_branch()
         )
