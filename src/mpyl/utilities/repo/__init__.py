@@ -228,7 +228,7 @@ class Repository:
     def main_branch_pulled(self) -> bool:
         if self._repo.head.is_detached:
             return False
-        branch_names = list(map(lambda n: n.name, self._repo.references))
+        branch_names = list(map(lambda n: n.name, self._repo.heads))
         return f"{self._config.main_branch}" in branch_names
 
     def __get_remote(self) -> Remote:
@@ -244,11 +244,6 @@ class Repository:
         remote = self.__get_remote()
         main = self._config.main_branch
         return remote.fetch(f"+refs/heads/{main}:refs/heads/{main}")
-
-    def pull_main_branch(self):
-        remote = self.__get_remote()
-        main = self._config.main_branch
-        return remote.pull(f"+refs/heads/{main}:refs/heads/{main}")
 
     def find_projects(self, folder_pattern: str = "") -> list[str]:
         """returns a set of all project.yml files
