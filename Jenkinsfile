@@ -39,7 +39,7 @@ pipeline {
                     def gitconfig = scm.userRemoteConfigs.getAt(0)
                     git(branch: env.BRANCH_NAME, credentialsId: gitconfig.getCredentialsId(), url: gitconfig.getUrl())
 
-                    def content = sh(script: "curl https://api.github.com/repos/Vandebron/mpyl_config/contents/mpyl_config.yml -H 'Authorization: token $GIT_CREDENTIALS_PSW' -H 'Accept: application/vnd.github.v3.raw'", returnStdout: true)
+                    def content = sh(script: "curl -s https://api.github.com/repos/Vandebron/mpyl_config/contents/mpyl_config.yml -H 'Authorization: token $GIT_CREDENTIALS_PSW' -H 'Accept: application/vnd.github.v3.raw'", returnStdout: true)
                     writeFile(file: 'mpyl_config.yml', text: content)
                     withKubeConfig([credentialsId: 'jenkins-rancher-service-account-kubeconfig-test']) {
                         wrap([$class: 'BuildUser']) {
