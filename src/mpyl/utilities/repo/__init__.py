@@ -148,6 +148,9 @@ class Repository:
         intersection = files_in_revision.intersection(files_touched_in_branch)
         return Revision(count, str(revision), intersection)
 
+    def checkout(self, branch_name: str):
+        self._repo.git.checkout("-b", branch_name)
+
     def changes_in_branch(self) -> list[Revision]:
         base_ref = self.base_revision
         base_hex = (
@@ -238,8 +241,9 @@ class Repository:
 
     def fetch_main_branch(self):
         remote = self.__get_remote()
-        main = self._config.main_branch
-        return remote.fetch(f"+refs/heads/{main}:refs/heads/{main}")
+        return remote.fetch(
+            f"{self.main_branch}:refs/remotes/{self.main_origin_branch}"
+        )
 
     def find_projects(self, folder_pattern: str = "") -> list[str]:
         """returns a set of all project.yml files
