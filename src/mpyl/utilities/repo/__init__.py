@@ -9,8 +9,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Optional
 from urllib.parse import urlparse
+
 from git import Git, Repo, Remote
 from git.objects import Commit
+from gitdb.exc import BadName
 
 from ...project import Project
 
@@ -94,6 +96,14 @@ class Repository:
         return self._repo.active_branch.name
 
     @property
+    def base_revision(self) -> Optional[str]:
+        try:
+            return self._repo.rev_parse(self.main_branch)
+        except BadName as exc:
+            logging.debug(f"Does not exist: {exc}")
+            return None
+
+    @property
     def get_tag(self) -> Optional[str]:
         current_revision = self._repo.head.commit
         current_tag = self._repo.git.describe(current_revision, tags=True)
@@ -109,7 +119,8 @@ class Repository:
 
     @property
     def main_branch(self) -> str:
-        return self._config.main_branch
+        main = self._config.main_branch.replace("origin/", "")
+        return f"origin/{main}"
 
     def __get_filter_patterns(self):
         return ["--"] + [f":!{pattern}" for pattern in self._config.ignore_patterns]
@@ -135,21 +146,9 @@ class Repository:
         return Revision(count, str(revision), intersection)
 
     def changes_in_branch(self) -> list[Revision]:
-        for ref in self._repo.heads:
-            logging.debug(f"Branch: {ref} {ref.commit.hexsha} {ref.name}")
-
-        main_branch = self._config.main_branch
-        refs = (
-            ref
-            for ref in self._repo.heads
-            if ref.name in [main_branch, f"origin/{main_branch}"]
-        )
-
-        base_ref = next(refs, None)
+        base_ref = self.base_revision
         base_hex = (
-            base_ref.commit.hexsha
-            if base_ref
-            else self._repo.git.rev_list("--max-parents=0", "HEAD")
+            base_ref if base_ref else self._repo.git.rev_list("--max-parents=0", "HEAD")
         )
 
         head_hex = self._repo.active_branch.commit.hexsha
