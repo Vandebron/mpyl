@@ -82,6 +82,10 @@ class Repository:
         return self
 
     @property
+    def has_valid_head(self):
+        return self._repo.head.is_valid()
+
+    @property
     def get_sha(self):
         return self._repo.head.commit.hexsha
 
@@ -96,7 +100,7 @@ class Repository:
         return self._repo.active_branch.name
 
     @property
-    def base_revision(self) -> Optional[str]:
+    def base_revision(self) -> Optional[Commit]:
         try:
             return self._repo.rev_parse(self.main_origin_branch)
         except BadName as exc:
@@ -111,8 +115,10 @@ class Repository:
         return current_tag
 
     @property
-    def get_remote_url(self):
-        return self._repo.remote().url
+    def remote_url(self) -> Optional[str]:
+        if self._repo.remotes:
+            return self._repo.remote().url
+        return None
 
     def root_dir(self) -> Path:
         return Path(self._root_dir)
@@ -151,6 +157,17 @@ class Repository:
     def checkout(self, branch_name: str):
         self._repo.git.checkout("-b", branch_name)
 
+    def changes_between(self, base_revision: str, head_revision: str) -> list[Commit]:
+        return list(
+            reversed(
+                list(
+                    self._repo.iter_commits(
+                        f"{base_revision}..{head_revision}", no_merges=True
+                    )
+                )
+            )
+        )
+
     def changes_in_branch(self) -> list[Revision]:
         base_ref = self.base_revision
         base_hex = (
@@ -162,11 +179,7 @@ class Repository:
             f"Base reference: [bright_blue]{base_ref or '(grafted)'}[/bright_blue] [italic]{base_hex}[/italic]"
         )
 
-        revisions = list(
-            reversed(
-                list(self._repo.iter_commits(f"{base_hex}..{head_hex}", no_merges=True))
-            )
-        )
+        revisions = self.changes_between(base_hex, head_hex)
 
         logging.debug(
             f"Found {len(revisions)} revisions in branch: {[r.hexsha for r in revisions]}"

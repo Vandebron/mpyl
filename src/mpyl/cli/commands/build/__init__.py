@@ -1,4 +1,4 @@
-"""CLI support for Jenkins multibranch pipeline"""
+"""CI build related command group"""
 import os
 import shutil
 from dataclasses import dataclass
