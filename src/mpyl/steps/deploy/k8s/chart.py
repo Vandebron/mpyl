@@ -6,6 +6,7 @@ import itertools
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+from kubernetes import config
 from kubernetes.client import (
     V1Deployment,
     V1Container,
@@ -35,6 +36,9 @@ from kubernetes.client import (
     V1CronJobSpec,
     V1JobTemplateSpec,
     V1ConfigMap,
+    CoreV1Api,
+    V1SecretList,
+    V1Secret,
 )
 from ruamel.yaml import YAML
 
@@ -538,6 +542,34 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
             filter(lambda v: v.get_value(self.target) is not None, self.sealed_secrets)
         )
         sealed_secrets = self._create_sealed_secret_env_vars(sealed_secrets_for_target)
+
+        if (
+            self.step_input.run_properties.target == Target.PULL_REQUEST
+        ):  # and not step_input.dry_run:
+            config.load_kube_config(
+                context="vdb-core-digital-k8s-test-fqdn"
+            )  # Use context=self.release_name?
+            kubernetes_api = CoreV1Api()
+            cluster_secrets: V1SecretList = kubernetes_api.list_namespaced_secret(
+                namespace=self.deployment.namespace
+            )
+            secrets_to_copy: list[V1Secret] = list(
+                (
+                    cluster_secret
+                    for cluster_secret, defined_secret in zip(
+                        cluster_secrets.items, self.secrets
+                    )
+                    if cluster_secret.metadata.name
+                    == defined_secret.value_from.get("secretKeyRef").get("name")
+                )
+            )
+            new_namespace = "cypress"  # Use real pr namespace
+            for secret_to_copy in secrets_to_copy:
+                secret_to_copy.metadata.resource_version = None
+                secret_to_copy.metadata.namespace = new_namespace
+                kubernetes_api.create_namespaced_secret(
+                    namespace=new_namespace, body=secret_to_copy
+                )
         secrets = self._create_secret_env_vars(self.secrets)
 
         return env_vars + sealed_secrets + secrets
