@@ -61,7 +61,7 @@ def get_build_plan(
                 f"Branch `{repo.main_branch}` already present locally. Skipping pull."
             )
         else:
-            logger.info(f"Pulling `{repo.main_branch}` from {repo.get_remote_url}")
+            logger.info(f"Pulling `{repo.main_branch}` from {repo.remote_url}")
             pull_result = repo.fetch_main_branch()
             logger.info(f"Pulled `{pull_result[0].remote_ref_path.strip()}` to local")
         changes = (

@@ -9,4 +9,5 @@ Commands:
   build     Pipeline build commands
   health    Health check
   projects  Commands related to projects
+  repo      Manage CVS (git) repositories
   version   Version information

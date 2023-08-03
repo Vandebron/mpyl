@@ -1,1 +1,1 @@
-"""Project related command implementations"""
+"""MPyL project definition related command group"""
