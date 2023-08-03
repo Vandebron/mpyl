@@ -73,3 +73,4 @@ MPyL is extensible and has a minimal footprint. Having said that, batteries for 
 - [Jira](https://www.atlassian.com) `mpyl.reporting.targets.jira`
 - [Github](https://github.com/) `mpyl.reporting.targets.github`
 - [Slack](https://slack.com/) `mpyl.reporting.targets.slack`
+
