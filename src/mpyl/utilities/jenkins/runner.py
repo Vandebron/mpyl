@@ -189,6 +189,9 @@ class JenkinsRunner:
         if not list(job.get_build_ids()):
             self.await_parameter_build(job)
 
+        self.status.console.log("TESTING COMMENT")
+        self.status.console.log("Pipeline Parameters", pipeline_parameters)
+
         build = job.get_last_build()
         last_build_number = build.get_number()
         if job.is_running():
