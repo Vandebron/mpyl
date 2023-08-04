@@ -42,6 +42,7 @@ from kubernetes.client import (
 )
 from ruamel.yaml import YAML
 
+from ..k8s import cluster_config
 from . import substitute_namespaces
 from .resources import (
     CustomResourceDefinition,
@@ -546,12 +547,14 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
         if (
             self.step_input.run_properties.target == Target.PULL_REQUEST
         ):  # and not step_input.dry_run:
-            config.load_kube_config(
-                context="vdb-core-digital-k8s-test-fqdn"
-            )  # Use context=self.release_name?
+            ranger_config = cluster_config(
+                self.step_input.run_properties.target, self.step_input.run_properties
+            )
+            config.load_kube_config(context=ranger_config.context)
+            #  Use context="vdb-core-digital-k8s-test-fqdn" for local testing
             kubernetes_api = CoreV1Api()
             cluster_secrets: V1SecretList = kubernetes_api.list_namespaced_secret(
-                namespace=self.deployment.namespace
+                namespace=self.deployment.namespace  # Should be source namespace?
             )
             secrets_to_copy: list[V1Secret] = list(
                 (
@@ -563,12 +566,12 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
                     == defined_secret.value_from.get("secretKeyRef").get("name")
                 )
             )
-            new_namespace = "cypress"  # Use real pr namespace
+            pr_namespace = "cypress"  # Should be pr namespace
             for secret_to_copy in secrets_to_copy:
                 secret_to_copy.metadata.resource_version = None
-                secret_to_copy.metadata.namespace = new_namespace
+                secret_to_copy.metadata.namespace = pr_namespace
                 kubernetes_api.create_namespaced_secret(
-                    namespace=new_namespace, body=secret_to_copy
+                    namespace=pr_namespace, body=secret_to_copy
                 )
         secrets = self._create_secret_env_vars(self.secrets)
 

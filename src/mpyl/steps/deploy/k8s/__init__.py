@@ -92,7 +92,7 @@ def substitute_namespaces(
 
     When the env var is substituted, first the referenced service (serviceName) is looked up in the list of projects.
     If it is part of the deploy set, and we're in deploying to target PullRequest,
-    the namespace is subsituted with the PR namespace (pr-XXXX).
+    the namespace is substituted with the PR namespace (pr-XXXX).
     Else is substituted with the namespace of the referenced project.
 
     Note that the name of the service in the env var is case-sensitive!
