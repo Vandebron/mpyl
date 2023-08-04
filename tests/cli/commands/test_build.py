@@ -121,7 +121,16 @@ class TestBuildCommand:
     def test_build_clean_output(self):
         result = self.runner.invoke(
             main_group,
-            ["build", "-c", self.config_path, "-p", self.run_properties_path, "clean"],
+            [
+                "build",
+                "-c",
+                self.config_path,
+                "-p",
+                self.run_properties_path,
+                "clean",
+                "--filter",
+                "non_existing_project",
+            ],
         )
 
         assert "Nothing to clean" in result.output
