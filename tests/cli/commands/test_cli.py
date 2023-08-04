@@ -40,7 +40,10 @@ class TestCli:
             main_group,
             ["projects", "-c", self.config_path, "lint", "--all"],
         )
-        assert re.match(r"Validated .* projects\. .* valid, .* invalid", result.output)
+        assert re.match(
+            r"(.|\n)*Validated .* projects\. .* valid, .* invalid\n.*No duplicate project names found",
+            result.output,
+        )
 
     def test_show_project_not_found_output(self):
         result = self.runner.invoke(
