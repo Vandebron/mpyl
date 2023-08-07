@@ -1,0 +1,1 @@
+[1mBranch:[0m [1;36;40mfeature/some-branch[0m at [1;36;40mhash[0m

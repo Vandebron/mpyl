@@ -1,5 +1,12 @@
 import logging
+import os
+import re
 
+import pytest
+from click.testing import CliRunner
+
+from tests import root_test_path
+from src.mpyl import main_group, add_commands
 from src.mpyl.cli.commands.build.mpyl import run_build
 from src.mpyl.project import Stage
 from src.mpyl.steps import Step, Meta, ArtifactType, Input, Output
@@ -9,6 +16,7 @@ from tests.test_resources.test_data import (
     get_minimal_project,
     RUN_PROPERTIES,
     get_project_with_stages,
+    assert_roundtrip,
 )
 
 
@@ -31,6 +39,12 @@ class ThrowingStep(Step):
 
 
 class TestBuildCommand:
+    resource_path = root_test_path / "cli" / "test_resources"
+    config_path = root_test_path / "test_resources/mpyl_config.yml"
+    run_properties_path = root_test_path / "test_resources/run_properties.yml"
+    runner = CliRunner()
+    add_commands()
+
     def test_run_build_without_plan_should_be_successful(self):
         run_properties = RUN_PROPERTIES
         accumulator = RunResult(run_properties=run_properties)
@@ -80,3 +94,43 @@ class TestBuildCommand:
         assert result.exception.stage == Stage.BUILD.name
         assert result.exception.project_name == "test"
         assert result.exception.executor == "Throwing Build"
+
+    def test_build_status_output(self):
+        os.environ["CHANGE_ID"] = "123"
+        cmd = [
+            "build",
+            "-c",
+            self.config_path,
+            "-p",
+            self.run_properties_path,
+            "status",
+        ]
+        result = self.runner.invoke(
+            main_group,
+            cmd,
+        )
+
+        without_upgrade_suggestion = re.sub(
+            r".*You can upgrade.*", "", result.output
+        ).rstrip()
+        first_line_only = without_upgrade_suggestion.split("\n")[0].rstrip()
+
+        self.maxDiff = None
+        assert_roundtrip(self.resource_path / "build_status.txt", first_line_only)
+
+    def test_build_clean_output(self):
+        result = self.runner.invoke(
+            main_group,
+            [
+                "build",
+                "-c",
+                self.config_path,
+                "-p",
+                self.run_properties_path,
+                "clean",
+                "--filter",
+                "non_existing_project",
+            ],
+        )
+
+        assert "Nothing to clean" in result.output

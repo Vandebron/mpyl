@@ -1,0 +1,7 @@
+tests/projects/cloudfront/deployment/project.yml [1;36;40mcloudfront-service[0m                                                                    
+tests/projects/cypress/deployment/project.yml [1;36;40mcypress[0m                                                                                  
+tests/projects/ephemeral/deployment/project.yml [1;36;40mkong-sync[0m                                                                              
+tests/projects/job/deployment/project.yml [1;36;40mjob[0m                                                                                          
+tests/projects/sbt-service/deployment/project.yml [1;36;40msbtservice[0m                                                                           
+tests/projects/service/deployment/project.yml [1;36;40mnodeservice[0m                                                                              
+tests/projects/spark-job/deployment/project.yml [1;36;40msparkJob[0m                                                                               
