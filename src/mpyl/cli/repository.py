@@ -54,6 +54,7 @@ def repository(ctx, config, properties, verbose):
 def status(obj: CliContext):
     """Print the status of the current repository"""
     run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
+    ci_branch = run_properties.versioning.branch
     console = obj.console
     repo = obj.repo
 
@@ -62,7 +63,6 @@ def status(obj: CliContext):
         if repo.remote_url
         else Markdown("Repository not tracking any remote origin")
     )
-    ci_branch = run_properties.versioning.branch
 
     console.print(
         Markdown(
@@ -109,3 +109,44 @@ def status(obj: CliContext):
                 f"Revision for `{repo.main_origin_branch}` not found. Cannot diff with base"
             )
         )
+
+
+@repository.command(help="Initialize the repository for a build run")
+@click.option("--url", "-u", type=click.STRING, help="URL to the remote repository")
+@click.option("--pull", "-pr", type=click.INT, help="PR number to fetch")
+@click.option("--branch", "-b", type=click.STRING, help="Branch to fetch")
+@click.pass_obj
+def init(obj: CliContext, url, pull, branch):
+    repo = obj.repo
+    console = obj.console
+
+    console.log("Preparing repository for a new run...")
+
+    if not repo.remote_url:
+        with console.status("👷 Initializing remote origin") as progress:
+            remote = repo.init_remote(url)
+            progress.console.log(f"👷 Remote initialized at {remote.url}")
+
+    console.log(f"✅ Repository tracking {repo.remote_url}")
+
+    properties = RunProperties.from_configuration(obj.run_properties, obj.config)
+    pr_number = pull or properties.versioning.pr_number
+    target_branch = branch or properties.versioning.branch
+
+    if pr_number:
+        if repo.get_branch != target_branch:
+            with console.status(f"👷 Fetching PR #{pr_number}"):
+                repo.fetch_pr(pr_number, target_branch)
+
+                repo.checkout_branch(target_branch)
+                console.log(f"✅ Fetched PR #{pr_number} to {target_branch}")
+        with console.status("Finding base"):
+            base_revision = repo.base_revision
+            if not base_revision:
+                obj.repo.fetch_main_branch()
+
+            console.log(
+                Markdown(
+                    f"✅ Found base `{repo.main_origin_branch}` at `{repo.base_revision}`"
+                )
+            )

@@ -4,7 +4,6 @@ At this moment Git is the only supported VCS.
 """
 import itertools
 import logging
-
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Optional
@@ -90,10 +89,6 @@ class Repository:
         return self._repo.head.commit.hexsha
 
     @property
-    def get_short_sha(self):
-        return self._repo.git.rev_parse(self._repo.head, short=True)
-
-    @property
     def get_branch(self) -> Optional[str]:
         if self._repo.head.is_detached:
             return None
@@ -120,6 +115,7 @@ class Repository:
             return self._repo.remote().url
         return None
 
+    @property
     def root_dir(self) -> Path:
         return Path(self._root_dir)
 
@@ -134,12 +130,6 @@ class Repository:
     def __get_filter_patterns(self):
         return ["--"] + [f":!{pattern}" for pattern in self._config.ignore_patterns]
 
-    @property
-    def latest_tag(self) -> str:
-        return str(
-            sorted(self._repo.tags, key=lambda t: t.commit.committed_datetime)[-1]
-        )
-
     def __to_revision(
         self, count: int, revision: Commit, files_touched_in_branch: set[str]
     ) -> Revision:
@@ -153,9 +143,6 @@ class Repository:
         )
         intersection = files_in_revision.intersection(files_touched_in_branch)
         return Revision(count, str(revision), intersection)
-
-    def checkout(self, branch_name: str):
-        self._repo.git.checkout("-b", branch_name)
 
     def changes_between(self, base_revision: str, head_revision: str) -> list[Commit]:
         return list(
@@ -243,20 +230,30 @@ class Repository:
         ).splitlines()
         return [Revision(ord=0, hash=str(self.get_sha), files_touched=files_changed)]
 
-    def __get_remote(self) -> Remote:
-        default_remote = self._repo.remote("origin")
-        if "https:" not in default_remote.url or self._config.repo_credentials is None:
-            return default_remote
+    def init_remote(self, url: Optional[str]) -> Remote:
+        if url:
+            return self._repo.create_remote("origin", url=url)
 
-        return default_remote.set_url(
-            self._config.repo_credentials.to_url_with_credentials
-        )
+        if self.remote_url and "https:" not in self.remote_url:
+            return self._repo.remote()
+
+        if self._config.repo_credentials:
+            return self._repo.create_remote(
+                "origin", url=self._config.repo_credentials.to_url_with_credentials
+            )
+
+        return self._repo.remote()
 
     def fetch_main_branch(self):
-        remote = self.__get_remote()
-        return remote.fetch(
+        return self._repo.remote().fetch(
             f"{self.main_branch}:refs/remotes/{self.main_origin_branch}"
         )
+
+    def fetch_pr(self, pr_number: int, branch_name: str):
+        return self._repo.remote().fetch(f"pull/{pr_number}/head:{branch_name}")
+
+    def checkout_branch(self, branch_name: str):
+        self._repo.git.switch(branch_name)
 
     def find_projects(self, folder_pattern: str = "") -> list[str]:
         """returns a set of all project.yml files

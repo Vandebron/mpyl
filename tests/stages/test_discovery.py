@@ -21,7 +21,7 @@ class TestDiscovery:
     def test_should_find_invalidated_test_dependencies(self):
         with test_data.get_repo() as repo:
             touched_files = {"tests/projects/service/file.py", "tests/some_file.txt"}
-            projects = set(load_projects(repo.root_dir(), repo.find_projects()))
+            projects = set(load_projects(repo.root_dir, repo.find_projects()))
             assert (
                 len(
                     find_invalidated_projects_for_stage(

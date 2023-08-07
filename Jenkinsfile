@@ -34,11 +34,6 @@ pipeline {
             }
             steps {
                 script {
-                    sh("git tag -d \$(git tag -l)")
-                    
-                    def gitconfig = scm.userRemoteConfigs.getAt(0)
-                    git(branch: env.BRANCH_NAME, credentialsId: gitconfig.getCredentialsId(), url: gitconfig.getUrl())
-
                     def content = sh(script: "curl -s https://api.github.com/repos/Vandebron/mpyl_config/contents/mpyl_config.yml -H 'Authorization: token $GIT_CREDENTIALS_PSW' -H 'Accept: application/vnd.github.v3.raw'", returnStdout: true)
                     writeFile(file: 'mpyl_config.yml', text: content)
                     withKubeConfig([credentialsId: 'jenkins-rancher-service-account-kubeconfig-test']) {
@@ -48,6 +43,8 @@ pipeline {
                             sh "pipenv install -d --skip-lock"
                             sh "pipenv run mpyl projects lint --all"
                             sh "pipenv run mpyl health"
+                            sh "pipenv run mpyl repo status"
+                            sh "pipenv run mpyl repo init"
                             sh "pipenv run mpyl build status"
                             sh "pipenv run run-ci ${params.BUILD_PARAMS}"
                         }

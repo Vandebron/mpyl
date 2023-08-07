@@ -138,31 +138,22 @@ def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
 
 
 @build.command(help="The status of the current local branch from MPyL's perspective")
-@click.option(
-    "-f",
-    "--fix-pr",
-    is_flag=True,
-    help="Attempt to make the current branch fit for a PR build",
-)
 @click.pass_obj
-def status(obj: CliContext, fix_pr):
+def status(obj: CliContext):
     try:
         upgrade_check = asyncio.wait_for(warn_if_update(obj.console), timeout=3)
-        __print_status(obj, fix_pr)
+        __print_status(obj)
         asyncio.get_event_loop().run_until_complete(upgrade_check)
     except asyncio.exceptions.TimeoutError:
         pass
 
 
-def __print_status(obj: CliContext, fix_pr: bool = False):
+def __print_status(obj: CliContext):
     run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
     ci_branch = run_properties.versioning.branch
 
     if ci_branch and not obj.repo.get_branch:
         obj.console.print("Current branch is detached.")
-        if fix_pr:
-            obj.console.print(f"Checking out: `git checkout -b {ci_branch}`")
-            obj.repo.checkout(ci_branch)
     else:
         obj.console.log(
             Markdown(
@@ -191,19 +182,13 @@ def __print_status(obj: CliContext, fix_pr: bool = False):
 
     if not base_revision:
         fetch = f"`git fetch origin {main_branch}:refs/remotes/origin/{main_branch}`"
-        if fix_pr:
-            obj.console.print(
-                f"Main branch {main_branch} not present locally. Fetching: {fetch}`"
+        obj.console.print(
+            Markdown(
+                f"Cannot determine what to build, since this branch has no base. "
+                f"Did you {fetch}?"
             )
-            obj.repo.fetch_main_branch()
-        else:
-            obj.console.print(
-                Markdown(
-                    f"Cannot determine what to build, since this branch has no base. "
-                    f"Did you {fetch}?"
-                )
-            )
-            return
+        )
+        return
 
     changes = (
         obj.repo.changes_in_branch_including_local()
@@ -405,7 +390,7 @@ def clean(obj: CliContext, filter_):
     found_projects: list[Path] = [
         Path(
             load_project(
-                obj.repo.root_dir(), Path(project_path), strict=False
+                obj.repo.root_dir, Path(project_path), strict=False
             ).target_path
         )
         for project_path in obj.repo.find_projects(filter_ if filter_ else "")
