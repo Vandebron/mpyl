@@ -27,17 +27,26 @@ Top level commands options are passed on to sub commands and need to be specifie
 In ```mpyl projects --filter <name> list ```, the `--filter` option applies to all `project` commands, like `list`
 or `lint`.
 
-###### Projects
-
+<details>
+  <summary>Projects</summary>
 ```
 .. include:: tests/cli/test_resources/projects_help_text.txt
 ```
+</details>
 
-###### Build
+<details>
+  <summary>Repo</summary>
+```
+.. include:: tests/cli/test_resources/repo_help_text.txt
+```
+</details>
 
+<details>
+  <summary>Build</summary>
 ```
 .. include:: tests/cli/test_resources/build_help_text.txt
 ```
+</details>
 
 ##### MPyL configuration
 

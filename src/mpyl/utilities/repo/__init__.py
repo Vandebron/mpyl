@@ -146,13 +146,7 @@ class Repository:
 
     def changes_between(self, base_revision: str, head_revision: str) -> list[Commit]:
         return list(
-            reversed(
-                list(
-                    self._repo.iter_commits(
-                        f"{base_revision}..{head_revision}", no_merges=True
-                    )
-                )
-            )
+            reversed(list(self._repo.iter_commits(f"{base_revision}..{head_revision}")))
         )
 
     def changes_in_branch(self) -> list[Revision]:
@@ -249,8 +243,8 @@ class Repository:
             f"{self.main_branch}:refs/remotes/{self.main_origin_branch}"
         )
 
-    def fetch_pr(self, pr_number: int, branch_name: str):
-        return self._repo.remote().fetch(f"pull/{pr_number}/head:{branch_name}")
+    def fetch_pr(self, pr_number: int):
+        return self._repo.remote().fetch(f"pull/{pr_number}/head:PR-{pr_number}")
 
     def checkout_branch(self, branch_name: str):
         self._repo.git.switch(branch_name)

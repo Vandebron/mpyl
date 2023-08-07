@@ -113,6 +113,7 @@ class TestBuildCommand:
         without_upgrade_suggestion = re.sub(
             r".*You can upgrade.*", "", result.output
         ).rstrip()
+        without_upgrade_suggestion = re.sub("git:.*", "", without_upgrade_suggestion)
         first_line_only = without_upgrade_suggestion.split("\n")[0].rstrip()
 
         self.maxDiff = None

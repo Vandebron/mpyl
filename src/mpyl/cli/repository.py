@@ -106,7 +106,8 @@ def status(obj: CliContext):
     else:
         console.log(
             Markdown(
-                f"Revision for `{repo.main_origin_branch}` not found. Cannot diff with base"
+                f"Revision for `{repo.main_origin_branch}` not found. Cannot diff with base. "
+                f"Have you run `mpyl repo init`?"
             )
         )
 
@@ -131,15 +132,20 @@ def init(obj: CliContext, url, pull, branch):
 
     properties = RunProperties.from_configuration(obj.run_properties, obj.config)
     pr_number = pull or properties.versioning.pr_number
-    target_branch = branch or properties.versioning.branch
+    target_branch = (
+        f"PR-{pr_number}" if pr_number else branch or properties.versioning.branch
+    )
 
     if pr_number:
+        console.log(Markdown(f"Initializing `{target_branch}`..."))
         if repo.get_branch != target_branch:
             with console.status(f"👷 Fetching PR #{pr_number}"):
-                repo.fetch_pr(pr_number, target_branch)
+                repo.fetch_pr(pr_number)
 
                 repo.checkout_branch(target_branch)
-                console.log(f"✅ Fetched PR #{pr_number} to {target_branch}")
+                console.log(Markdown(f"✅ Fetched PR #{pr_number} to `{target_branch}`"))
+        else:
+            console.log(Markdown(f"✅ HEAD is on `{target_branch}`"))
         with console.status("Finding base"):
             base_revision = repo.base_revision
             if not base_revision:
