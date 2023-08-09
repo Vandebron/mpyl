@@ -48,6 +48,8 @@ class AfterBuildDocker(Step):
             {"image": full_image_path},
         )
 
+        scan_image(image_name)
+
         if step_input.dry_run:
             return Output(
                 success=True,
@@ -67,3 +69,11 @@ class AfterBuildDocker(Step):
             message=f"Pushed {full_image_path}",
             produced_artifact=artifact,
         )
+
+
+def scan_image(image):
+    import subprocess
+
+    with open("image_scan/%s.json" % image, "w") as output:
+        subprocess.call(["docker scout recommendations ", image], shell=True, stdout=output,
+                        stderr=output)
