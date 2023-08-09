@@ -34,14 +34,10 @@ class RepoCredentials:
     password: str
 
     @property
-    def to_url_with_credentials(self):
+    def to_url(self):
         parsed = urlparse(self.url)
 
-        repo = f"{parsed.netloc}{parsed.path}"
-        if not self.user_name:
-            return f"{parsed.scheme}://{repo}"
-
-        return f"{parsed.scheme}://{self.user_name or ''}{f':{self.password}' if self.password else ''}@{repo}"
+        return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
 
     @staticmethod
     def from_config(config: Dict):
@@ -235,14 +231,6 @@ class Repository:
     def init_remote(self, url: Optional[str]) -> Remote:
         if url:
             return self._repo.create_remote("origin", url=url)
-
-        if self.remote_url and "https:" not in self.remote_url:
-            return self._repo.remote()
-
-        if self._config.repo_credentials:
-            return self._repo.create_remote(
-                "origin", url=self._config.repo_credentials.to_url_with_credentials
-            )
 
         return self._repo.remote()
 

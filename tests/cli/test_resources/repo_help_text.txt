@@ -10,5 +10,6 @@ Options:
   --help                 Show this message and exit.
 
 Commands:
-  init    Initialize the repository for a build run
-  status  The status of the current local repository
+  credentials  Return repository credentials
+  init         Initialize the repository for a build run
+  status       The status of the current local repository

@@ -21,9 +21,10 @@ class VersioningProperties:
     pr_number: Optional[int]
     tag: Optional[str]
 
-    def __post_init__(self):
+    def validate(self) -> Optional[str]:
         if not self.pr_number and not self.tag:
-            raise ValueError("Either pr_number or tag need to be set")
+            return "Either pr_number or tag need to be set"
+        return None
 
     @property
     def identifier(self) -> str:
@@ -113,7 +114,7 @@ class RunProperties:
         tag: Optional[str] = versioning_config.get("tag")
         pr_from_config: Optional[str] = versioning_config.get("pr_number")
         pr_num: Optional[int] = (
-            None if tag else (int(pr_from_config) if pr_from_config else 1)
+            None if tag else (int(pr_from_config) if pr_from_config else None)
         )
 
         versioning = VersioningProperties(

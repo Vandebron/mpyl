@@ -1,4 +1,6 @@
 """Commands related to the CSV (git) repository"""
+import sys
+
 import click
 from rich.markdown import Markdown
 
@@ -112,6 +114,21 @@ def status(obj: CliContext):
         )
 
 
+@repository.command(help="Return repository credentials")
+@click.pass_obj
+def credentials(obj: CliContext):
+    repo_config = RepoConfig.from_config(obj.config).repo_credentials
+    if "username" in sys.argv[1].lower():
+        print(repo_config.username)
+        sys.exit()
+
+    if "password" in sys.argv[1].lower():
+        print(repo_config.password)
+        sys.exit()
+
+    sys.exit(1)
+
+
 @repository.command(help="Initialize the repository for a build run")
 @click.option("--url", "-u", type=click.STRING, help="URL to the remote repository")
 @click.option("--pull", "-pr", type=click.INT, help="PR number to fetch")
@@ -126,7 +143,7 @@ def init(obj: CliContext, url, pull, branch):
     if not repo.remote_url:
         with console.status("👷 Initializing remote origin") as progress:
             repo_config = RepoConfig.from_config(obj.config).repo_credentials
-            url = url or (repo_config and repo_config.to_url_with_credentials)
+            url = url or (repo_config and repo_config.to_url)
             remote = repo.init_remote(url)
             progress.console.log(f"👷 Remote initialized at {remote.url}")
 
@@ -158,3 +175,10 @@ def init(obj: CliContext, url, pull, branch):
                     f"✅ Found base `{repo.main_origin_branch}` at `{repo.base_revision}`"
                 )
             )
+    else:
+        console.log(
+            Markdown(
+                "❌ PR number not specified. Cannot initialize repository for build."
+            )
+        )
+        sys.exit(1)
