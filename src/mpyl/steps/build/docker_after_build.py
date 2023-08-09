@@ -74,5 +74,8 @@ class AfterBuildDocker(Step):
 
 def scan_image(image):
     with open(f"image_scan/{image}.json", "w", encoding="utf-8") as output:
-        subprocess.call(["docker scout recommendations" , image], shell=True, stdout=output,
-                        stderr=output)
+        subprocess.call(
+            ["docker scout recommendations ", image],
+            shell=True,
+            stdout=output,
+            stderr=output)
