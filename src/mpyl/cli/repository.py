@@ -125,6 +125,8 @@ def init(obj: CliContext, url, pull, branch):
 
     if not repo.remote_url:
         with console.status("👷 Initializing remote origin") as progress:
+            repo_config = RepoConfig.from_config(obj.config).repo_credentials
+            url = url or (repo_config and repo_config.to_url_with_credentials)
             remote = repo.init_remote(url)
             progress.console.log(f"👷 Remote initialized at {remote.url}")
 

@@ -35,7 +35,12 @@ class RepoCredentials:
     @property
     def to_url_with_credentials(self):
         parsed = urlparse(self.url)
-        return f"{parsed.scheme}://{self.user_name}:{self.password}@{parsed.netloc}{parsed.path}"
+
+        repo = f"{parsed.netloc}{parsed.path}"
+        if not self.user_name:
+            return f"{parsed.scheme}://{repo}"
+
+        return f"{parsed.scheme}://{self.user_name or ''}{f':{self.password}' if self.password else ''}@{repo}"
 
     @staticmethod
     def from_config(config: Dict):
