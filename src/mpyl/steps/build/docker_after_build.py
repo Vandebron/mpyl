@@ -3,6 +3,7 @@ ArtifactType.DOCKER_IMAGE as `mpyl.steps.models.ArtifactType`."""
 
 import os
 from logging import Logger
+import subprocess
 
 from python_on_whales import docker
 
@@ -72,8 +73,6 @@ class AfterBuildDocker(Step):
 
 
 def scan_image(image):
-    import subprocess
-
-    with open("image_scan/%s.json" % image, "w") as output:
-        subprocess.call(["docker scout recommendations ", image], shell=True, stdout=output,
+    with open(f"image_scan/{image}.json", "w", encoding="utf-8") as output:
+        subprocess.call(["docker scout recommendations" , image], shell=True, stdout=output,
                         stderr=output)
