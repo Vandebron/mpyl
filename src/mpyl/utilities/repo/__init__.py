@@ -4,6 +4,7 @@ At this moment Git is the only supported VCS.
 """
 import itertools
 import logging
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Optional
@@ -75,6 +76,8 @@ class Repository:
         self._repo = Repo(
             self._root_dir
         )  # pylint: disable=attribute-defined-outside-init
+        if self._config.repo_credentials:
+            os.environ["GIT_ASKPASS"] = "echo"
 
     def __enter__(self):
         return self
