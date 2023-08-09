@@ -72,8 +72,6 @@ class Repository:
         self._repo = Repo(
             self._root_dir
         )  # pylint: disable=attribute-defined-outside-init
-        if self._config.repo_credentials:
-            os.environ["GIT_ASKPASS"] = "echo"
 
     def __enter__(self):
         return self
