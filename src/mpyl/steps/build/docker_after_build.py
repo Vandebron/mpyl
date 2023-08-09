@@ -78,4 +78,5 @@ def scan_image(image):
             ["docker scout recommendations ", image],
             shell=True,
             stdout=output,
-            stderr=output)
+            stderr=output,
+        )
