@@ -1,0 +1,67 @@
+    ✓ SBOM of image already cached, 55 packages indexed
+
+Recommended fixes for image  job:TEST 
+
+  Base image is  python:3.9-alpine 
+
+  Name            │  3.9.17-alpine3.18                                                         
+  Digest          │  sha256:990e2a6988138c2cd9625f38d7876bb26866c7dcbee8c829d44fd55b1bae608c   
+  Vulnerabilities │    0C     1H     0M     0L                                                 
+  Pushed          │ 2 weeks ago                                                                
+  Size            │ 18 MB                                                                      
+  Packages        │ 55                                                                         
+  Flavor          │ alpine                                                                     
+  OS              │ 3.18                                                                       
+  Runtime         │ 3.9.17                                                                     
+
+                                                                                                                                                                    
+  │ The base image is also available under the supported tag(s) `3.9-alpine3.18`, `3.9.17-alpine`, `3.9.17-alpine3.18`. If you want to display recommendations       
+  │ specifically for a different tag, please re-run the command using the `--tag` flag.                                                                              
+
+
+
+
+Refresh base image
+  Rebuild the image using a newer base image version. Updating this may result in breaking changes.
+
+  ✓ This image version is up to date.
+
+
+Change base image
+  Select the tag you would like to see recommendations for. The list displays new recommended tags in descending order, where the top results are rated as most suitable.
+
+
+              Tag              │                        Details                        │   Pushed    │       Vulnerabilities        
+───────────────────────────────┼───────────────────────────────────────────────────────┼─────────────┼──────────────────────────────
+   3.10-alpine                 │ Benefits:                                             │ 2 weeks ago │    0C     0H     0M     0L   
+  Minor runtime version update │ • Same OS detected                                    │             │           -1                 
+  Also known as:               │ • Minor runtime version update                        │             │                              
+  • 3.10.12-alpine             │ • Image has similar size                              │             │                              
+  • 3.10.12-alpine3.18         │ • Image introduces no new vulnerability but removes 1 │             │                              
+  • 3.10-alpine3.18            │ • Image contains equal number of packages             │             │                              
+                               │ • 3.10-alpine was pulled 62K times last month         │             │                              
+                               │                                                       │             │                              
+                               │ Image details:                                        │             │                              
+                               │ • Size: 19 MB                                         │             │                              
+                               │ • Flavor: alpine                                      │             │                              
+                               │ • OS: 3.18                                            │             │                              
+                               │ • Runtime: 3.10.12                                    │             │                              
+                               │                                                       │             │                              
+                               │                                                       │             │                              
+                               │                                                       │             │                              
+   3.11-alpine                 │ Benefits:                                             │ 2 weeks ago │    0C     0H     0M     0L   
+  Tag is preferred tag         │ • Same OS detected                                    │             │           -1                 
+  Also known as:               │ • Tag is preferred tag                                │             │                              
+  • 3.11.4-alpine              │ • Image has similar size                              │             │                              
+  • 3.11.4-alpine3.18          │ • Image introduces no new vulnerability but removes 1 │             │                              
+  • 3.11-alpine3.18            │ • Image contains equal number of packages             │             │                              
+  • 3-alpine                   │ • 3.11-alpine was pulled 19K times last month         │             │                              
+  • 3-alpine3.18               │                                                       │             │                              
+  • alpine                     │ Image details:                                        │             │                              
+  • alpine3.18                 │ • Size: 20 MB                                         │             │                              
+                               │ • Flavor: alpine                                      │             │                              
+                               │ • OS: 3.18                                            │             │                              
+                               │                                                       │             │                              
+                               │                                                       │             │                              
+                               │                                                       │             │                              
+

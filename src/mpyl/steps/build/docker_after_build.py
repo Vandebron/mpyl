@@ -49,6 +49,7 @@ class AfterBuildDocker(Step):
             {"image": full_image_path},
         )
 
+
         scan_image(image_name)
 
         if step_input.dry_run:
@@ -73,6 +74,8 @@ class AfterBuildDocker(Step):
 
 
 def scan_image(image):
+    subprocess.run("curl -sSfL https://raw.githubusercontent.com/docker/scout-cli/main/install.sh | sh -s --", shell=True)
+
     with open(f"image_scan/{image}.json", "w", encoding="utf-8") as output:
         subprocess.call(
             ["docker scout recommendations ", image],
