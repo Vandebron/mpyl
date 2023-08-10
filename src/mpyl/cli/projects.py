@@ -76,7 +76,7 @@ def list_projects(obj: ProjectsContext):
     found_projects = obj.cli.repo.find_projects(obj.filter)
 
     for proj in found_projects:
-        name = load_project(obj.cli.repo.root_dir(), Path(proj), False).name
+        name = load_project(obj.cli.repo.root_dir, Path(proj), False).name
         obj.cli.console.print(Markdown(f"{proj} `{name}`"))
 
 
@@ -101,7 +101,7 @@ class ProjectPath(ParamType):
 def show_project(ctx, name):
     obj = ctx.obj
     project_path = f"{name}/{Project.project_yaml_path()}"
-    if not (obj.cli.repo.root_dir() / project_path).exists():
+    if not (obj.cli.repo.root_dir / project_path).exists():
         obj.cli.console.print(
             Markdown(
                 f"Project `{name}` not found. 👉 Finding projects is much easier with [auto completion]"

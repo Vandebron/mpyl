@@ -4,13 +4,15 @@ At this moment Git is the only supported VCS.
 """
 import itertools
 import logging
-
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Optional
 from urllib.parse import urlparse
+
 from git import Git, Repo, Remote
 from git.objects import Commit
+from gitdb.exc import BadName
 
 from ...project import Project
 
@@ -32,9 +34,10 @@ class RepoCredentials:
     password: str
 
     @property
-    def to_url_with_credentials(self):
+    def to_url(self):
         parsed = urlparse(self.url)
-        return f"{parsed.scheme}://{self.user_name}:{self.password}@{parsed.netloc}{parsed.path}"
+
+        return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
 
     @staticmethod
     def from_config(config: Dict):
@@ -80,18 +83,26 @@ class Repository:
         return self
 
     @property
-    def get_sha(self):
-        return self._repo.head.commit.hexsha
+    def has_valid_head(self):
+        return self._repo.head.is_valid()
 
     @property
-    def get_short_sha(self):
-        return self._repo.git.rev_parse(self._repo.head, short=True)
+    def get_sha(self):
+        return self._repo.head.commit.hexsha
 
     @property
     def get_branch(self) -> Optional[str]:
         if self._repo.head.is_detached:
             return None
         return self._repo.active_branch.name
+
+    @property
+    def base_revision(self) -> Optional[Commit]:
+        try:
+            return self._repo.rev_parse(self.main_origin_branch)
+        except BadName as exc:
+            logging.debug(f"Does not exist: {exc}")
+            return None
 
     @property
     def get_tag(self) -> Optional[str]:
@@ -101,24 +112,25 @@ class Repository:
         return current_tag
 
     @property
-    def get_remote_url(self):
-        return self._repo.remote().url
+    def remote_url(self) -> Optional[str]:
+        if self._repo.remotes:
+            return self._repo.remote().url
+        return None
 
+    @property
     def root_dir(self) -> Path:
         return Path(self._root_dir)
 
     @property
     def main_branch(self) -> str:
-        return self._config.main_branch
+        return self._config.main_branch.replace("origin/", "")
+
+    @property
+    def main_origin_branch(self) -> str:
+        return f"origin/{self.main_branch}"
 
     def __get_filter_patterns(self):
         return ["--"] + [f":!{pattern}" for pattern in self._config.ignore_patterns]
-
-    @property
-    def latest_tag(self) -> str:
-        return str(
-            sorted(self._repo.tags, key=lambda t: t.commit.committed_datetime)[-1]
-        )
 
     def __to_revision(
         self, count: int, revision: Commit, files_touched_in_branch: set[str]
@@ -134,17 +146,23 @@ class Repository:
         intersection = files_in_revision.intersection(files_touched_in_branch)
         return Revision(count, str(revision), intersection)
 
-    def changes_in_branch(self) -> list[Revision]:
-        self.pull_main_branch()
-        revisions = list(
-            reversed(
-                list(
-                    self._repo.iter_commits(
-                        f"{self._config.main_branch}..HEAD", no_merges=True
-                    )
-                )
-            )
+    def changes_between(self, base_revision: str, head_revision: str) -> list[Commit]:
+        return list(
+            reversed(list(self._repo.iter_commits(f"{base_revision}..{head_revision}")))
         )
+
+    def changes_in_branch(self) -> list[Revision]:
+        base_ref = self.base_revision
+        base_hex = (
+            base_ref if base_ref else self._repo.git.rev_list("--max-parents=0", "HEAD")
+        )
+
+        head_hex = self._repo.active_branch.commit.hexsha
+        logging.debug(
+            f"Base reference: [bright_blue]{base_ref or '(grafted)'}[/bright_blue] [italic]{base_hex}[/italic]"
+        )
+
+        revisions = self.changes_between(base_hex, head_hex)
 
         logging.debug(
             f"Found {len(revisions)} revisions in branch: {[r.hexsha for r in revisions]}"
@@ -208,31 +226,22 @@ class Repository:
         ).splitlines()
         return [Revision(ord=0, hash=str(self.get_sha), files_touched=files_changed)]
 
-    @property
-    def main_branch_pulled(self) -> bool:
-        if self._repo.head.is_detached:
-            return False
-        branch_names = list(map(lambda n: n.name, self._repo.references))
-        return f"{self._config.main_branch}" in branch_names
+    def init_remote(self, url: Optional[str]) -> Remote:
+        if url:
+            return self._repo.create_remote("origin", url=url)
 
-    def __get_remote(self) -> Remote:
-        default_remote = self._repo.remote("origin")
-        if "https:" not in default_remote.url or self._config.repo_credentials is None:
-            return default_remote
-
-        return default_remote.set_url(
-            self._config.repo_credentials.to_url_with_credentials
-        )
+        return self._repo.remote()
 
     def fetch_main_branch(self):
-        remote = self.__get_remote()
-        main = self._config.main_branch
-        return remote.fetch(f"+refs/heads/{main}:refs/heads/{main}")
+        return self._repo.remote().fetch(
+            f"{self.main_branch}:refs/remotes/{self.main_origin_branch}"
+        )
 
-    def pull_main_branch(self):
-        remote = self.__get_remote()
-        main = self._config.main_branch
-        return remote.pull(f"+refs/heads/{main}:refs/heads/{main}")
+    def fetch_pr(self, pr_number: int):
+        return self._repo.remote().fetch(f"pull/{pr_number}/head:PR-{pr_number}")
+
+    def checkout_branch(self, branch_name: str):
+        self._repo.git.switch(branch_name)
 
     def find_projects(self, folder_pattern: str = "") -> list[str]:
         """returns a set of all project.yml files

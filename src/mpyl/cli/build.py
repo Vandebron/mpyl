@@ -1,6 +1,7 @@
 """Commands related to build"""
 import asyncio
 import shutil
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -36,7 +37,9 @@ from ..constants import (
     BUILD_ARTIFACTS_FOLDER,
 )
 from ..project import load_project
-from ..reporting.formatting.markdown import run_result_to_markdown
+from ..reporting.formatting.markdown import (
+    execution_plan_as_markdown,
+)
 from ..steps.models import RunProperties
 from ..steps.run import RunResult
 from ..utilities.github import GithubConfig
@@ -147,39 +150,61 @@ def status(obj: CliContext):
 
 def __print_status(obj: CliContext):
     run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
-    branch = run_properties.versioning.branch
-    if not branch:
-        branch = obj.repo.get_branch
+    ci_branch = run_properties.versioning.branch
+
+    if ci_branch and not obj.repo.get_branch:
+        obj.console.print("Current branch is detached.")
+    else:
         obj.console.log(
-            f"Branch not specified in `{DEFAULT_RUN_PROPERTIES_FILE_NAME}`. Branch determined via git: {branch}"
+            Markdown(
+                f"Branch not specified at `build.versioning.branch` in _{DEFAULT_RUN_PROPERTIES_FILE_NAME}_, "
+                f"falling back to git: _{obj.repo.get_branch}_"
+            )
         )
 
-    if branch and obj.repo.main_branch == obj.repo.get_branch:
+    branch = obj.repo.get_branch
+    main_branch = obj.repo.main_branch
+
+    if branch == main_branch:
         obj.console.log(f"On main branch ({branch}), cannot determine build status")
         return
+
     tag = obj.repo.get_tag if not branch else None
     version = run_properties.versioning
-    revision = "Tag" if tag else "Branch"
+    revision = version.revision or obj.repo.get_sha
+    base_revision = obj.repo.base_revision
     obj.console.print(
         Markdown(
-            f"**{revision}:** `{version.branch or version.tag}` at `{version.revision}`"
+            f"**{'Tag' if tag else 'Branch'}:** `{branch or version.tag}` at `{revision}`. "
+            f"Base `{main_branch}` {f'at `{base_revision}`' if base_revision else 'not present (grafted).'}"
         )
     )
 
-    if obj.repo.main_branch_pulled:
-        changes = (
-            obj.repo.changes_in_branch_including_local()
-            if branch
-            else obj.repo.changes_in_merge_commit()
-        )
-        build_set = find_build_set(obj.repo, changes, False)
-        result = RunResult(run_properties=run_properties, run_plan=build_set)
-        if result.run_plan:
-            obj.console.print(
-                Markdown("**Execution plan:**  \n" + run_result_to_markdown(result))
+    if not base_revision:
+        fetch = f"`git fetch origin {main_branch}:refs/remotes/origin/{main_branch}`"
+        obj.console.print(
+            Markdown(
+                f"Cannot determine what to build, since this branch has no base. "
+                f"Did you {fetch}?"
             )
-        else:
-            obj.console.print("No changes detected, nothing to do.")
+        )
+        return
+
+    changes = (
+        obj.repo.changes_in_branch_including_local()
+        if ci_branch is None
+        else (
+            obj.repo.changes_in_merge_commit() if tag else obj.repo.changes_in_branch()
+        )
+    )
+    build_set = find_build_set(obj.repo, changes, False)
+    result = RunResult(run_properties=run_properties, run_plan=build_set)
+    if result.run_plan:
+        obj.console.print(
+            Markdown("**Execution plan:**  \n" + execution_plan_as_markdown(result))
+        )
+    else:
+        obj.console.print("No changes detected, nothing to do.")
 
 
 class Pipeline(ParamType):
@@ -321,9 +346,15 @@ def jenkins(  # pylint: disable=too-many-arguments
 ):
     try:
         upgrade_check = asyncio.wait_for(warn_if_update(ctx.obj.console), timeout=5)
-        selected_pipeline = (
-            pipeline if pipeline else ctx.obj.config["jenkins"]["defaultPipeline"]
-        )
+        if "jenkins" not in ctx.obj.config:
+            ctx.obj.console.print(
+                "No Jenkins configuration found in config file. "
+                "Please add a `jenkins` section to your MPyL config file."
+            )
+            sys.exit(0)
+        jenkins_config = ctx.obj.config["jenkins"]
+
+        selected_pipeline = pipeline if pipeline else jenkins_config["defaultPipeline"]
         pipeline_parameters = {"TEST": "true", "VERSION": test} if test else {}
         if arguments:
             pipeline_parameters["BUILD_PARAMS"] = " ".join(arguments)
@@ -359,7 +390,7 @@ def clean(obj: CliContext, filter_):
     found_projects: list[Path] = [
         Path(
             load_project(
-                obj.repo.root_dir(), Path(project_path), strict=False
+                obj.repo.root_dir, Path(project_path), strict=False
             ).target_path
         )
         for project_path in obj.repo.find_projects(filter_ if filter_ else "")

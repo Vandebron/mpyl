@@ -196,7 +196,7 @@ class JenkinsRunner:
                 f"Build {last_build_number} 🏗️ for {self.pipeline.human_readable()} is still running."
             )
             self.status.console.log(f"{build.get_build_url()}")
-            self.follow_logs(job, last_build_number, 0)
+            self.follow_logs(job, last_build_number, 0, self.verbose)
 
         self.status.update("Starting build...")
 

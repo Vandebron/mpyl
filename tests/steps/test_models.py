@@ -43,10 +43,10 @@ class TestModels:
         assert run_properties
 
     def test_should_return_error_if_pr_number_or_tag_not_set(self):
-        with pytest.raises(ValueError, match="pr_number"):
-            VersioningProperties(
-                "reviesion_hash",
-                "some_branch",
-                None,
-                None,
-            )
+        properties = VersioningProperties(
+            "reviesion_hash",
+            "some_branch",
+            None,
+            None,
+        )
+        assert properties.validate() == "Either pr_number or tag need to be set"

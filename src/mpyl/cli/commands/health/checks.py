@@ -79,7 +79,8 @@ def __check_jenkins(console: HealthConsole):
             success=True,
         )
     except KeyError as exc:
-        console.check(f"Jenkins config not valid: {exc}", success=False)
+        console.check(f"Jenkins not (correctly) configured: {exc}", success=False)
+        return
 
     gh_is_installed = shutil.which("gh")
     if gh_is_installed:
@@ -138,9 +139,9 @@ def __check_config(console, env_var, default, schema_path, name):
     path_env = os.environ.get(env_var)
     path = path_env or default
     location = (
-        f"{name} at `/{path}` via environment variable `{env_var}`"
+        f"{name} at `{path}` via environment variable `{env_var}`"
         if path_env
-        else f"{name} at `/{path}`"
+        else f"{name} at `{path}`"
     )
     if os.path.exists(path):
         console.check(f"Found {location}", success=True)

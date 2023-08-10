@@ -100,7 +100,12 @@ def markdown_for_stage(run_result: RunResult, stage: Stage):
 
 
 def run_result_to_markdown(run_result: RunResult) -> str:
-    result: str = f"{run_result.status_line}  \n"
+    status_line: str = f"{run_result.status_line}  \n"
+    return status_line + execution_plan_as_markdown(run_result)
+
+
+def execution_plan_as_markdown(run_result):
+    result = ""
     exception = run_result.exception
     if exception:
         result += f"For _{exception.executor}_ on _{exception.project_name}_ at _{exception.stage}_ \n"
@@ -109,10 +114,8 @@ def run_result_to_markdown(run_result: RunResult) -> str:
         failed = run_result.failed_result
         result += f"For _{failed.project.name}_ at _{failed.stage}_ \n"
         result += f"\n\n{run_result.failed_result.output.message}\n\n"
-
     for stage in Stage:
         result += markdown_for_stage(run_result, stage)
-
     return result
 
 
