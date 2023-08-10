@@ -238,7 +238,9 @@ class Repository:
         )
 
     def fetch_pr(self, pr_number: int):
-        return self._repo.remote().fetch(f"pull/{pr_number}/head:PR-{pr_number}")
+        return self._repo.remote().fetch(
+            f"pull/{pr_number}/head:PR-{pr_number}", force=True
+        )
 
     def checkout_branch(self, branch_name: str):
         self._repo.git.switch(branch_name)
