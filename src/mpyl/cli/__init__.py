@@ -70,7 +70,7 @@ FORMAT = "%(message)s"
 
 
 def create_console_logger(
-    show_path: bool, verbose: bool, max_width: Optional[int]
+    show_path: bool, verbose: bool, max_width: Optional[int] = None
 ) -> Console:
     console = Console(
         markup=True,
