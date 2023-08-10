@@ -3,6 +3,7 @@ step.
 """
 
 import shutil
+import sys
 from logging import Logger
 from pathlib import Path
 
@@ -78,7 +79,6 @@ def install(
     logger.info(f"Writing HELM chart to {chart_path} and checking STEP_INPUT: {step_input.dry_run}")
     logger.info(f"STEP_INPUT: {step_input.dry_run}")
 
-    import sys
     sys.stderr.write(f"my info\n{step_input.dry_run}")
     sys.stdout.flush()
 

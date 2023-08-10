@@ -4,6 +4,7 @@ import signal
 import sys
 import time
 from dataclasses import dataclass
+import logging
 
 import requests
 from jenkinsapi.build import Build
@@ -189,9 +190,8 @@ class JenkinsRunner:
         if not list(job.get_build_ids()):
             self.await_parameter_build(job)
 
-        import logging
         logging.info("TESTING COMMENT")
-        logging.info("Pipeline Parameters", pipeline_parameters)
+        logging.info(f"Pipeline Parameters: {pipeline_parameters}")
 
         build = job.get_last_build()
         last_build_number = build.get_number()
