@@ -4,7 +4,7 @@ import signal
 import sys
 import time
 from dataclasses import dataclass
-import logging
+from logging import Logger
 
 import requests
 from jenkinsapi.build import Build
@@ -65,6 +65,7 @@ class JenkinsRunner:
     status: Status
     follow: bool
     verbose: bool
+    logger: Logger
 
     def get_job(self, name: str) -> Job:
         try:
@@ -189,9 +190,6 @@ class JenkinsRunner:
         job: Job = self.get_job(self.pipeline.job_name())
         if not list(job.get_build_ids()):
             self.await_parameter_build(job)
-
-        logging.info("TESTING COMMENT")
-        logging.info(f"Pipeline Parameters: {pipeline_parameters}")
 
         build = job.get_last_build()
         last_build_number = build.get_number()
