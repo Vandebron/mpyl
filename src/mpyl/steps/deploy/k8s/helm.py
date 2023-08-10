@@ -3,7 +3,6 @@ step.
 """
 
 import shutil
-import sys
 from logging import Logger
 from pathlib import Path
 
