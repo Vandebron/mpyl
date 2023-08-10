@@ -210,5 +210,6 @@ def create_container(logger: Logger, image_name: str) -> Container:
 
 def remove_container(logger: Logger, container: Container) -> None:
     logger.info(f"Removing container {container.id}")
+    logger.info("hihihi")
     docker.remove(container.id)
     logger.info(f"Removed container {container.id}")
