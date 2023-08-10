@@ -2,6 +2,7 @@
 import subprocess
 from dataclasses import dataclass
 from typing import Optional
+import logging
 
 import requests
 from github import Github
@@ -79,6 +80,9 @@ def __get_pr_pipeline(
 
 
 def run_jenkins(run_config: JenkinsRunParameters):
+    logging.info(f"Checking if jenkins parameters: {run_config}")
+    logging.info(f"Checking if jenkins parameters: {run_config.pipeline_parameters}")
+
     log_console = Console(log_path=False, log_time=False)
     with log_console.status(
         "Fetching Github info.. [bright_blue]>gh pr view[/bright_blue]"
