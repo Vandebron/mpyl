@@ -76,7 +76,9 @@ def install(
             return removed
 
     chart_path = Path(step_input.project.target_path) / "chart"
-    logger.info(f"Writing HELM chart to {chart_path} and checking STEP_INPUT: {step_input.dry_run}")
+    logger.info(
+        f"Writing HELM chart to {chart_path} and checking STEP_INPUT: {step_input.dry_run}"
+    )
     logger.info(f"STEP_INPUT: {step_input.dry_run}")
 
     sys.stderr.write(f"my info\n{step_input.dry_run}")
