@@ -12,7 +12,7 @@ class TestCypress:
     executor = Steps(
         logger=logging.getLogger(),
         properties=test_data.RUN_PROPERTIES,
-        steps_collection=StepsCollection(logging.getLogger(), "src"),
+        steps_collection=StepsCollection(logging.getLogger()),
     )
 
     def test_should_check_defined_specs(self):

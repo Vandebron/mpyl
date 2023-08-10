@@ -96,5 +96,5 @@ class TestCli:
         )
 
     def test_create_console(self):
-        console = create_console_logger(local=False, verbose=True)
+        console = create_console_logger(show_path=False, verbose=True, max_width=135)
         assert console.width == 135
