@@ -4,6 +4,7 @@ import shutil
 import sys
 from pathlib import Path
 from typing import Optional
+import logging
 
 import click
 import questionary
@@ -369,6 +370,8 @@ def jenkins(  # pylint: disable=too-many-arguments
             follow=not background,
             tag=tag,
         )
+
+        logging.info(f"print pipeline parameters: {pipeline_parameters}")
 
         run_jenkins(run_argument)
         asyncio.get_event_loop().run_until_complete(upgrade_check)
