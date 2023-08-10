@@ -4,7 +4,6 @@ import shutil
 import sys
 from pathlib import Path
 from typing import Optional
-import logging
 
 import click
 import questionary
@@ -333,6 +332,14 @@ def ask_for_input(ctx, _param, value) -> Optional[str]:
     default="not_set",
     callback=ask_for_input,
 )
+@click.option(
+    "--dryrun",
+    "-d",
+    help="don't push or deploy images",
+    is_flag=True,
+    default=False,
+    show_default=True,
+)
 @click.pass_context
 def jenkins(  # pylint: disable=too-many-arguments
     ctx,
@@ -344,6 +351,7 @@ def jenkins(  # pylint: disable=too-many-arguments
     background,
     silent,
     tag,
+    dryrun,
 ):
     try:
         upgrade_check = asyncio.wait_for(warn_if_update(ctx.obj.console), timeout=5)
@@ -369,9 +377,8 @@ def jenkins(  # pylint: disable=too-many-arguments
             verbose=not silent or ctx.obj.verbose,
             follow=not background,
             tag=tag,
+            dryrun=dryrun,
         )
-
-        logging.info(f"print pipeline parameters: {pipeline_parameters}")
 
         run_jenkins(run_argument)
         asyncio.get_event_loop().run_until_complete(upgrade_check)

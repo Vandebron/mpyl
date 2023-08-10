@@ -2,7 +2,6 @@
 import subprocess
 from dataclasses import dataclass
 from typing import Optional
-import logging
 
 import requests
 from github import Github
@@ -28,6 +27,7 @@ class JenkinsRunParameters:
     pipeline_parameters: dict
     verbose: bool
     follow: bool
+    dryrun: bool
     tag: Optional[str] = None
 
 
@@ -80,9 +80,6 @@ def __get_pr_pipeline(
 
 
 def run_jenkins(run_config: JenkinsRunParameters):
-    logging.info(f"Checking if jenkins parameters: {run_config}")
-    logging.info(f"Checking if jenkins parameters: {run_config.pipeline_parameters}")
-
     log_console = Console(log_path=False, log_time=False)
     with log_console.status(
         "Fetching Github info.. [bright_blue]>gh pr view[/bright_blue]"
@@ -123,6 +120,7 @@ def run_jenkins(run_config: JenkinsRunParameters):
                     status=status,
                     follow=run_config.follow,
                     verbose=run_config.verbose,
+                    dryrun=run_config.dryrun,
                 )
                 runner.run(run_config.pipeline_parameters)
             except requests.ConnectionError:
