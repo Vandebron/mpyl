@@ -76,6 +76,8 @@ def install(
 
     chart_path = Path(step_input.project.target_path) / "chart"
     logger.info(f"Writing HELM chart to {chart_path}")
+    logger.info(f"Checking if it's a dryrun: {step_input}")
+
     write_chart(
         chart, chart_path, to_chart_metadata(chart_name, step_input.run_properties)
     )

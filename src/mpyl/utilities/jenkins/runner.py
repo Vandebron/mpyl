@@ -186,6 +186,7 @@ class JenkinsRunner:
             progress.update(build_task_id, completed=duration_estimation)
 
     def run(self, pipeline_parameters: dict):
+        self.status.console.log(f"1234: {pipeline_parameters}")
         job: Job = self.get_job(self.pipeline.job_name())
         if not list(job.get_build_ids()):
             self.await_parameter_build(job)
@@ -202,6 +203,8 @@ class JenkinsRunner:
         self.status.update("Starting build...")
 
         last_build = 0
+
+        print(f"JOBBIE: {self.pipeline.job_name()}")
 
         self.jenkins.build_job(self.pipeline.job_name(), params=pipeline_parameters)
 
