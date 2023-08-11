@@ -343,16 +343,7 @@ def ask_for_input(ctx, _param, value) -> Optional[str]:
 )
 @click.pass_context
 def jenkins(  # pylint: disable=too-many-arguments
-    ctx,
-    user,
-    password,
-    pipeline,
-    test,
-    arguments,
-    background,
-    silent,
-    tag,
-    dryrun
+        ctx, user, password, pipeline, test, arguments, background, silent, tag, dryrun
 ):
     try:
         upgrade_check = asyncio.wait_for(warn_if_update(ctx.obj.console), timeout=5)
