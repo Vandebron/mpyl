@@ -2,7 +2,6 @@
 Step to deploy a dagster user code repository to k8s
 """
 from logging import Logger
-from typing import List
 
 import yaml
 
