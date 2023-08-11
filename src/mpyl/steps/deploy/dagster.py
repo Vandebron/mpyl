@@ -81,8 +81,6 @@ class DeployDagster(Step):
             kube_context=context,
         )
 
-        results: List[Output] = [deploy_result]
-
         if deploy_result.success and not step_input.dry_run:
             config_map = get_config_map(context, namespace, "dagster-workspace-yaml")
             dagster_workspace = yaml.safe_load(config_map.data["workspace.yaml"])
@@ -109,29 +107,25 @@ class DeployDagster(Step):
                     field="workspace.yaml",
                     data=dagster_workspace,
                 )
-                results.append(
-                    replace_config_map(
-                        self._logger,
-                        context,
-                        "dagster",
-                        "dagster-workspace-yaml",
-                        updated_config_map,
-                    )
+                replaced_configmap_result = replace_config_map(
+                    self._logger,
+                    context,
+                    "dagster",
+                    "dagster-workspace-yaml",
+                    updated_config_map,
                 )
+                if not replaced_configmap_result.success:
+                    return replaced_configmap_result
             else:
-                result = rollout_restart_deployment(
+                rollout_restart_ouput = rollout_restart_deployment(
                     self._logger, namespace, "dagster-dagit"
                 )
-                results.append(result)
-                if result.success:
-                    results.append(
-                        rollout_restart_deployment(
-                            self._logger, namespace, "dagster-daemon"
-                        )
+                if rollout_restart_ouput.success:
+                    rollout_restart_ouput = rollout_restart_deployment(
+                        self._logger, namespace, "dagster-dagit"
                     )
-        self.__evaluate_step_results(results)
+                    if not rollout_restart_ouput.success:
+                        return rollout_restart_ouput
+                else:
+                    return rollout_restart_ouput
         return deploy_result
-
-    def __evaluate_step_results(self, step_outputs: List[Output]):
-        for step_output in step_outputs:
-            self._logger.info(step_output)

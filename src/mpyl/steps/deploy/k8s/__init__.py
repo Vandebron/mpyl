@@ -57,7 +57,8 @@ def rollout_restart_deployment(
     except ApiException as api_exception:
         return Output(
             success=False,
-            message=f"Exception when calling AppsV1Api->read_namespaced_deployment_status: {api_exception}\n",
+            message=f"Exception when calling AppsV1Api->patch_namespaced_deployment: {api_exception}\n"
+            f"{deployment} was NOT restarted",
         )
 
 
