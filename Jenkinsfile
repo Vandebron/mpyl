@@ -9,7 +9,7 @@ pipeline {
             steps {
                 script {
                     properties([parameters([
-                        string(name: 'BUILD_PARAMS', defaultValue: '--all', description: 'Build parameters passed along with the run. Example: --help or --all'),
+                        string(name: 'BUILD_PARAMS', defaultValue: '--all --dryrun', description: 'Build parameters passed along with the run. Example: --help or --all'),
                         string(name: 'MPYL_CONFIG_BRANCH', defaultValue: 'main', description: 'Branch to use for mpyl_config repository')
                     ])])
                     currentBuild.result = 'NOT_BUILT'
@@ -46,6 +46,7 @@ pipeline {
                             sh "pipenv run mpyl repo status"
                             sh "pipenv run mpyl repo init"
                             sh "pipenv run mpyl build status"
+                            echo "BUILD_PARAMS ${params.BUILD_PARAMS}"
                             sh "pipenv run run-ci ${params.BUILD_PARAMS}"
                         }
                     }

@@ -35,6 +35,7 @@ class MpylCliParameters:
     pull_main: bool = False
     verbose: bool = False
     all: bool = False
+    dryrun: bool = False
 
 
 @dataclass(frozen=True)

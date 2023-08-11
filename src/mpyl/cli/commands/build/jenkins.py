@@ -27,7 +27,6 @@ class JenkinsRunParameters:
     pipeline_parameters: dict
     verbose: bool
     follow: bool
-    dryrun: bool
     tag: Optional[str] = None
 
 
@@ -120,12 +119,11 @@ def run_jenkins(run_config: JenkinsRunParameters):
                     status=status,
                     follow=run_config.follow,
                     verbose=run_config.verbose,
-                    dryrun=run_config.dryrun,
                 )
 
-                run_config.pipeline_parameters["dryrun"] = run_config.dryrun
+                #run_config.pipeline_parameters["dryrun"] = run_config.dryrun
                 status.console.log(f"Pipeline params: {run_config.pipeline_parameters}")
-                status.console.log(f"Dryrun: {run_config.dryrun}")
+                #status.console.log(f"Dryrun: {run_config.dryrun}")
 
                 runner.run(run_config.pipeline_parameters)
             except requests.ConnectionError:

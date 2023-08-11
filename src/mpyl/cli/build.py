@@ -111,7 +111,7 @@ def build(ctx, config, properties, verbose):
 )
 @click.option("--tag", "-t", help="Tag to build", type=click.STRING, required=False)
 @click.pass_obj
-def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
+def run(obj: CliContext, ci, all_, tag, dryrun):  # pylint: disable=invalid-name
     asyncio.run(warn_if_update(obj.console))
     run_properties = (
         RunProperties.from_configuration(obj.run_properties, obj.config)
@@ -128,6 +128,7 @@ def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
         verbose=obj.verbose,
         tag=tag,
         target=run_properties.target,
+        dryrun=dryrun
     )
     obj.console.log(parameters)
     run_parameters = MpylRunParameters(
@@ -351,7 +352,7 @@ def jenkins(  # pylint: disable=too-many-arguments
     background,
     silent,
     tag,
-    dryrun,
+    dryrun
 ):
     try:
         upgrade_check = asyncio.wait_for(warn_if_update(ctx.obj.console), timeout=5)
@@ -365,6 +366,7 @@ def jenkins(  # pylint: disable=too-many-arguments
 
         selected_pipeline = pipeline if pipeline else jenkins_config["defaultPipeline"]
         pipeline_parameters = {"TEST": "true", "VERSION": test} if test else {}
+        pipeline_parameters["dryrun"] = dryrun
         if arguments:
             pipeline_parameters["BUILD_PARAMS"] = " ".join(arguments)
 
@@ -377,7 +379,6 @@ def jenkins(  # pylint: disable=too-many-arguments
             verbose=not silent or ctx.obj.verbose,
             follow=not background,
             tag=tag,
-            dryrun=dryrun,
         )
 
         run_jenkins(run_argument)
