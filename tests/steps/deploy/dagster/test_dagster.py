@@ -6,7 +6,6 @@ import yaml
 from mpyl import parse_config
 from mpyl.project import load_project
 from mpyl.steps import Input
-from mpyl.steps.deploy.k8s.resources import to_yaml
 from mpyl.steps.deploy.k8s.resources.dagster import to_user_code_values
 from mpyl.utilities.docker import DockerConfig
 from tests import root_test_path

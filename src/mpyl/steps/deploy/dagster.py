@@ -74,7 +74,7 @@ class DeployDagster(Step):
             step_input=step_input,
             values=user_code_deployment,
             release_name=convert_name_to_helm_release_name(
-                user_code_name_to_deploy, name_suffix
+                step_input.project.name, name_suffix
             ),
             chart_name="dagster/dagster-user-deployments",
             namespace=namespace,
