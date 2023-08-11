@@ -203,8 +203,6 @@ class JenkinsRunner:
 
         last_build = 0
 
-        print(f"JOBBIE: {self.pipeline.job_name()}")
-
         self.jenkins.build_job(self.pipeline.job_name(), params=pipeline_parameters)
 
         if last_build_number > 1:

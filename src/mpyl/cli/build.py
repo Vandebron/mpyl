@@ -366,9 +366,13 @@ def jenkins(  # pylint: disable=too-many-arguments
 
         selected_pipeline = pipeline if pipeline else jenkins_config["defaultPipeline"]
         pipeline_parameters = {"TEST": "true", "VERSION": test} if test else {}
-        pipeline_parameters["dryrun"] = dryrun
+
+        if dryrun:
+            arguments = arguments + ("--dryrun",)
+
         if arguments:
             pipeline_parameters["BUILD_PARAMS"] = " ".join(arguments)
+            print(f'PPP: {pipeline_parameters["BUILD_PARAMS"]}')
 
         run_argument = JenkinsRunParameters(
             jenkins_user=user,
