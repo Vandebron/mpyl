@@ -128,7 +128,7 @@ def run(obj: CliContext, ci, all_, tag, dryrun):  # pylint: disable=invalid-name
         verbose=obj.verbose,
         tag=tag,
         target=run_properties.target,
-        dryrun=dryrun
+        dryrun=dryrun,
     )
     obj.console.log(parameters)
     run_parameters = MpylRunParameters(

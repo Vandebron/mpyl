@@ -121,9 +121,9 @@ def run_jenkins(run_config: JenkinsRunParameters):
                     verbose=run_config.verbose,
                 )
 
-                #run_config.pipeline_parameters["dryrun"] = run_config.dryrun
+                # run_config.pipeline_parameters["dryrun"] = run_config.dryrun
                 status.console.log(f"Pipeline params: {run_config.pipeline_parameters}")
-                #status.console.log(f"Dryrun: {run_config.dryrun}")
+                # status.console.log(f"Dryrun: {run_config.dryrun}")
 
                 runner.run(run_config.pipeline_parameters)
             except requests.ConnectionError:
