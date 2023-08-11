@@ -41,7 +41,7 @@ def main(log: Logger, args: argparse.Namespace):
             verbose=args.verbose,
             all=args.all,
             target=run_properties.target.value,
-            dryrun=True,
+            dry_run=True,
         ),
     )
     check = None
