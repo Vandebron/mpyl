@@ -115,16 +115,17 @@ class DeployDagster(Step):
                 )
                 if not replaced_configmap_result.success:
                     return replaced_configmap_result
-            else:
-                rollout_restart_ouput = rollout_restart_deployment(
+
+            # restarting ui and daemon
+            rollout_restart_output = rollout_restart_deployment(
+                self._logger, namespace, "dagster-dagit"
+            )
+            if rollout_restart_output.success:
+                rollout_restart_output = rollout_restart_deployment(
                     self._logger, namespace, "dagster-dagit"
                 )
-                if rollout_restart_ouput.success:
-                    rollout_restart_ouput = rollout_restart_deployment(
-                        self._logger, namespace, "dagster-dagit"
-                    )
-                    if not rollout_restart_ouput.success:
-                        return rollout_restart_ouput
-                else:
-                    return rollout_restart_ouput
+                if not rollout_restart_output.success:
+                    return rollout_restart_output
+            else:
+                return rollout_restart_output
         return deploy_result
