@@ -26,6 +26,7 @@ Will validate the configuration and check if all required tools are installed.
 Top level commands options are passed on to sub commands and need to be specified *before* the sub command.
 In ```mpyl projects --filter <name> list ```, the `--filter` option applies to all `project` commands, like `list`
 or `lint`.
+For example: `mpyl  projects --verbose --filter <name> list` will list all projects with `<name>` with verbose output.
 
 <details>
   <summary>Projects</summary>
@@ -53,7 +54,7 @@ or `lint`.
 MPyL can be configured through a file that adheres to the `mpyl_config.yml`
 [schema](https://vandebron.github.io/mpyl/schema/mpyl_config.schema.yml).  
 Which configuration fields need to be set depends on your usecase. The error messages that you
-encounter while using the cli may guide you through the process.
+may encounter while using the will guide you through the process.
 Note that the included `mpyl_config.example.yml` is just an example. 
 
 Secrets can be injected
@@ -94,6 +95,8 @@ eval (env _MPYL_COMPLETE=fish_source mpyl)
 ```
 
 #### YAML auto completion 
+
+Composing `project.yml` project definitions is made a lot easier by enabling YAML autocompletion in your IDE.
 
 ![Schema based autocompletion](documentation_images/autocompletion.gif)
 
