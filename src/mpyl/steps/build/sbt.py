@@ -8,7 +8,13 @@ from typing import Optional
 from .docker_after_build import AfterBuildDocker
 from .. import Step, Meta
 from ...project import Stage, Target
-from ...steps.models import ArtifactType, Input, Output, input_to_artifact
+from ...steps.models import (
+    ArtifactType,
+    Input,
+    Output,
+    input_to_artifact,
+    DockerImageSpec,
+)
 from ...utilities.docker import docker_image_tag
 from ...utilities.sbt import SbtConfig
 from ...utilities.subprocess import custom_check_output
@@ -36,7 +42,7 @@ class BuildSbt(Step):
 
         output = custom_check_output(self.logger, command=command)
         artifact = input_to_artifact(
-            ArtifactType.DOCKER_IMAGE, step_input, {"image": image_name}
+            ArtifactType.DOCKER_IMAGE, step_input, DockerImageSpec(image=image_name)
         )
         if output.success:
             return Output(

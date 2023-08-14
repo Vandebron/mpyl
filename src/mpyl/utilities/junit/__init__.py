@@ -5,11 +5,7 @@ from pathlib import Path
 
 from junitparser import JUnitXml, TestSuite
 
-from ...steps.models import Artifact, ArtifactType
-
-TEST_OUTPUT_PATH_KEY = "test_output_path"
-TEST_RESULTS_URL_KEY = "test_results_url"
-TEST_RESULTS_URL_NAME_KEY = "test_results_url_name"
+from ...steps.models import JunitTestSpec
 
 
 @dataclass(frozen=True)
@@ -24,12 +20,8 @@ class TestRunSummary:
         return self.errors == 0 and self.failures == 0
 
 
-def to_test_suites(artifact: Artifact) -> list[TestSuite]:
-    if artifact.artifact_type != ArtifactType.JUNIT_TESTS:
-        raise ValueError(
-            f"Artifact {artifact} should be of type {ArtifactType.JUNIT_TESTS}"
-        )
-    junit_result_path = artifact.spec[TEST_OUTPUT_PATH_KEY]
+def to_test_suites(artifact: JunitTestSpec) -> list[TestSuite]:
+    junit_result_path = artifact.test_output_path
 
     xml = JUnitXml()
     for file_name in [

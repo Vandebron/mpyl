@@ -129,7 +129,7 @@ def stream_docker_logging(
             return copied_logs
 
 
-def docker_image_tag(step_input: Input):
+def docker_image_tag(step_input: Input) -> str:
     git = step_input.run_properties.versioning
     tag = git.tag if git.tag else f"pr-{git.pr_number}"
     return f"{step_input.project.name.lower()}:{tag}".replace("/", "_")

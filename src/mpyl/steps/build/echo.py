@@ -3,7 +3,7 @@
 from logging import Logger
 
 from .. import Step, Meta
-from ..models import Input, Output, ArtifactType, input_to_artifact
+from ..models import Input, Output, ArtifactType, input_to_artifact, DockerImageSpec
 from ...project import Stage
 from ...utilities.docker import docker_image_tag
 
@@ -27,7 +27,7 @@ class BuildEcho(Step):
         artifact = input_to_artifact(
             ArtifactType.DOCKER_IMAGE,
             step_input,
-            spec={"image": docker_image_tag(step_input)},
+            spec=DockerImageSpec(docker_image_tag(step_input)),
         )
         return Output(
             success=True,

@@ -5,5 +5,5 @@ produced_artifact: !Artifact
   artifact_type: !ArtifactType DOCKER_IMAGE-1
   revision: '123'
   producing_step: Producing Step
-  spec:
+  spec: !DockerImageSpec
     image: image:latest
