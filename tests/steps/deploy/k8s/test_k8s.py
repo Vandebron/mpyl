@@ -18,7 +18,7 @@ from src.mpyl.steps.deploy.k8s.chart import (
 )
 from src.mpyl.steps.deploy.k8s.resources import to_yaml, CustomResourceDefinition
 from src.mpyl.steps.deploy.k8s.resources.traefik import V1AlphaIngressRoute
-from src.mpyl.steps.models import Input, Artifact, ArtifactType
+from src.mpyl.steps.models import Input, Artifact, ArtifactType, DockerImageSpec
 from src.mpyl.utilities.docker import DockerConfig
 from tests import root_test_path
 from tests.test_resources import test_data
@@ -59,7 +59,7 @@ class TestKubernetesChart:
             artifact_type=ArtifactType.DOCKER_IMAGE,
             revision="revision",
             producing_step="build_docker_Step",
-            spec={"image": "registry/image:123"},
+            spec=DockerImageSpec("registry/image:123"),
         )
         other_project = get_minimal_project()
         return ChartBuilder(

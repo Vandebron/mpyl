@@ -171,12 +171,41 @@ class ArtifactType(Enum):
 
 
 @yaml_object(yaml)
+@dataclass
+class ArtifactSpec:
+    pass
+
+
+@yaml_object(yaml)
+@dataclass
+class DockerImageSpec(ArtifactSpec):
+    yaml_tag = "!DockerImageSpec"
+    image: str
+
+
+@yaml_object(yaml)
+@dataclass
+class JunitTestSpec(ArtifactSpec):
+    yaml_tag = "!JunitTestSpec"
+    test_output_path: str
+    test_results_url: Optional[str] = None
+    test_results_url_name: Optional[str] = None
+
+
+@yaml_object(yaml)
+@dataclass
+class DeployedHelmAppSpec(ArtifactSpec):
+    yaml_tag = "!DeployedHelmAppSpec"
+    url: Optional[str]
+
+
+@yaml_object(yaml)
 @dataclass(frozen=True)
 class Artifact:
     artifact_type: ArtifactType
     revision: str
     producing_step: str
-    spec: dict
+    spec: ArtifactSpec
 
 
 @yaml_object(yaml)
@@ -214,7 +243,9 @@ class Output:
         return None
 
 
-def input_to_artifact(artifact_type: ArtifactType, step_input: Input, spec: dict):
+def input_to_artifact(
+    artifact_type: ArtifactType, step_input: Input, spec: ArtifactSpec
+):
     return Artifact(
         artifact_type=artifact_type,
         revision=step_input.run_properties.versioning.revision,
