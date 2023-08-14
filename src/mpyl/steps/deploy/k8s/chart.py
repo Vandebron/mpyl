@@ -546,12 +546,12 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
 
         if (
             self.step_input.run_properties.target == Target.PULL_REQUEST
-        ):  # and not step_input.dry_run:
-            ranger_config = cluster_config(
+            and not self.step_input.dry_run
+        ):
+            rancher_config = cluster_config(
                 self.step_input.run_properties.target, self.step_input.run_properties
             )
-            k8s_config.load_kube_config(context=ranger_config.context)
-            #  Use context="vdb-core-digital-k8s-test-fqdn" for local testing
+            k8s_config.load_kube_config(context=rancher_config.context)
             kubernetes_api = CoreV1Api()
             cluster_secrets: V1SecretList = kubernetes_api.list_namespaced_secret(
                 namespace=self.deployment.namespace  # Should be source namespace?
@@ -566,7 +566,7 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
                     == defined_secret.value_from.get("secretKeyRef").get("name")
                 )
             )
-            pr_namespace = "cypress"  # Should be pr namespace
+            pr_namespace = self.step_input.run_properties.versioning.identifier
             for secret_to_copy in secrets_to_copy:
                 secret_to_copy.metadata.resource_version = None
                 secret_to_copy.metadata.namespace = pr_namespace
