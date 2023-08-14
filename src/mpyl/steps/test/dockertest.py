@@ -26,7 +26,6 @@ from ..models import (
     ArtifactType,
     input_to_artifact,
     Artifact,
-    JunitTestSpec,
 )
 from ...project import Stage, Project
 from ...utilities.docker import (
@@ -41,6 +40,7 @@ from ...utilities.docker import (
 from ...utilities.junit import (
     to_test_suites,
     sum_suites,
+    JunitTestSpec,
 )
 
 

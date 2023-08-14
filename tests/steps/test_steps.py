@@ -7,6 +7,7 @@ from jsonschema import ValidationError
 from pyaml_env import parse_config
 from ruamel.yaml import YAML  # type: ignore
 
+from src.mpyl.utilities.docker import DockerImageSpec
 from src.mpyl.steps.collection import StepsCollection
 from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME, BUILD_ARTIFACTS_FOLDER
 from src.mpyl.project import Project, Stages, Stage, Target, Dependencies
@@ -16,7 +17,6 @@ from src.mpyl.steps.models import (
     RunProperties,
     VersioningProperties,
     ConsoleProperties,
-    DockerImageSpec,
 )
 from src.mpyl.steps.steps import Steps
 from tests import root_test_path, test_resource_path

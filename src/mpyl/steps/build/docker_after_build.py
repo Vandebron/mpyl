@@ -7,9 +7,14 @@ from typing import cast
 from python_on_whales import docker
 
 from .. import Step, Meta
-from ..models import Input, Output, Artifact, ArtifactType, DockerImageSpec
+from ..models import Input, Output, Artifact, ArtifactType
 from ...project import Stage
-from ...utilities.docker import DockerConfig, login, docker_registry_path
+from ...utilities.docker import (
+    DockerConfig,
+    login,
+    docker_registry_path,
+    DockerImageSpec,
+)
 
 
 class AfterBuildDocker(Step):

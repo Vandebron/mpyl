@@ -7,10 +7,11 @@ from logging import Logger
 from python_on_whales import docker, Container, DockerException
 
 from .. import Step, Meta
-from ..models import ArtifactType, Input, Output, input_to_artifact, JunitTestSpec
+from ..models import ArtifactType, Input, Output, input_to_artifact
 from ...project import Stage, Target
 from ...utilities.cypress import CypressConfig
 from ...utilities.docker import execute_with_stream
+from ...utilities.junit import JunitTestSpec
 
 
 class CypressTest(Step):

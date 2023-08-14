@@ -4,9 +4,9 @@ Simple run result formatters
 from typing import cast
 
 from ...project import Stage
-from ...steps.models import ArtifactType, JunitTestSpec
+from ...steps.models import ArtifactType
 from ...steps.run import RunResult
-from ...utilities.junit import to_test_suites, sum_suites
+from ...utilities.junit import to_test_suites, sum_suites, JunitTestSpec
 
 
 def to_string(run_result: RunResult) -> str:

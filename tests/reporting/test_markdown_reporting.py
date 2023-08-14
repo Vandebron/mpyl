@@ -5,10 +5,11 @@ from src.mpyl.reporting.formatting.markdown import (
     summary_to_markdown,
     run_result_to_markdown,
 )
-from src.mpyl.steps.models import Output, Artifact, ArtifactType, JunitTestSpec
+from src.mpyl.steps.models import Output, Artifact, ArtifactType
 from src.mpyl.steps.steps import StepResult, ExecutionException
 from src.mpyl.utilities.junit import (
     TestRunSummary,
+    JunitTestSpec,
 )
 from tests import root_test_path
 from tests.reporting import (

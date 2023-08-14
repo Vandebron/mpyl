@@ -4,8 +4,9 @@ from logging import Logger
 from pathlib import Path
 
 from .. import Step, Meta
-from ..models import Input, Output, ArtifactType, input_to_artifact, JunitTestSpec
+from ..models import Input, Output, ArtifactType, input_to_artifact
 from ...project import Stage
+from ...utilities.junit import JunitTestSpec
 
 SAMPLE_JUNIT_RESULT = """
 <?xml version="1.0" encoding="UTF-8"?>

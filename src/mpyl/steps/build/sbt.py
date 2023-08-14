@@ -13,9 +13,8 @@ from ...steps.models import (
     Input,
     Output,
     input_to_artifact,
-    DockerImageSpec,
 )
-from ...utilities.docker import docker_image_tag
+from ...utilities.docker import docker_image_tag, DockerImageSpec
 from ...utilities.sbt import SbtConfig
 from ...utilities.subprocess import custom_check_output
 
