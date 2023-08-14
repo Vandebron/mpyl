@@ -5,10 +5,11 @@ from src.mpyl.reporting.formatting.markdown import (
     summary_to_markdown,
     run_result_to_markdown,
 )
-from src.mpyl.steps.models import Output, Artifact, ArtifactType, JunitTestSpec
+from src.mpyl.steps.models import Output, Artifact, ArtifactType
 from src.mpyl.steps.steps import StepResult, ExecutionException
 from src.mpyl.utilities.junit import (
     TestRunSummary,
+    JunitTestSpec,
 )
 from tests import root_test_path
 from tests.reporting import (
@@ -80,7 +81,7 @@ class TestMarkdownReporting:
                         revision="revision",
                         producing_step="Jest",
                         spec=JunitTestSpec(
-                            self.test_resource_path, "http://localhost/tests"
+                            str(self.test_resource_path), "http://localhost/tests"
                         ),
                     ),
                 ),
@@ -99,7 +100,7 @@ class TestMarkdownReporting:
                         revision="revision",
                         producing_step="Cypress",
                         spec=JunitTestSpec(
-                            self.test_resource_path, "https://cypress.io"
+                            str(self.test_resource_path), "https://cypress.io"
                         ),
                     ),
                 ),

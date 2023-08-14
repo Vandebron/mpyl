@@ -177,29 +177,6 @@ class ArtifactSpec:
 
 
 @yaml_object(yaml)
-@dataclass
-class DockerImageSpec(ArtifactSpec):
-    yaml_tag = "!DockerImageSpec"
-    image: str
-
-
-@yaml_object(yaml)
-@dataclass
-class JunitTestSpec(ArtifactSpec):
-    yaml_tag = "!JunitTestSpec"
-    test_output_path: str
-    test_results_url: Optional[str] = None
-    test_results_url_name: Optional[str] = None
-
-
-@yaml_object(yaml)
-@dataclass
-class DeployedHelmAppSpec(ArtifactSpec):
-    yaml_tag = "!DeployedHelmAppSpec"
-    url: Optional[str]
-
-
-@yaml_object(yaml)
 @dataclass(frozen=True)
 class Artifact:
     artifact_type: ArtifactType

@@ -22,7 +22,7 @@ from logging import Logger
 
 from .docker_after_build import AfterBuildDocker
 from .. import Step, Meta
-from ..models import Input, Output, ArtifactType, input_to_artifact, DockerImageSpec
+from ..models import Input, Output, ArtifactType, input_to_artifact
 from ...constants import BUILD_ARTIFACTS_FOLDER
 from ...project import Stage
 from ...utilities.docker import (
@@ -31,6 +31,7 @@ from ...utilities.docker import (
     docker_image_tag,
     docker_file_path,
     login,
+    DockerImageSpec,
 )
 
 DOCKER_IGNORE_DEFAULT = ["**/target/*", f"**/{BUILD_ARTIFACTS_FOLDER}/*"]

@@ -5,12 +5,13 @@ from typing import Callable, cast
 from .after_test import IntegrationTestAfter
 from .before_test import IntegrationTestBefore
 from .. import Input, Output, Step
-from ..models import Artifact, input_to_artifact, JunitTestSpec
+from ..models import Artifact, input_to_artifact
 from ...project import Stage, Project
 from ...steps import Meta, ArtifactType
 from ...utilities.junit import (
     to_test_suites,
     sum_suites,
+    JunitTestSpec,
 )
 from ...utilities.sbt import SbtConfig
 from ...utilities.subprocess import custom_check_output

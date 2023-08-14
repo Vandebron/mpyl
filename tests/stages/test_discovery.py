@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from ruamel.yaml import YAML
+from ruamel.yaml import YAML  # type: ignore
 
 from src.mpyl.constants import BUILD_ARTIFACTS_FOLDER
 from src.mpyl.steps import Output

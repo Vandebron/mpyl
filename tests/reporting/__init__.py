@@ -1,12 +1,12 @@
 from datetime import datetime
 
+from src.mpyl.utilities.junit import JunitTestSpec
+from src.mpyl.steps.deploy.kubernetes import DeployedHelmAppSpec
 from src.mpyl.project import Stages, Project, Stage
 from src.mpyl.steps.models import (
     Output,
     Artifact,
     ArtifactType,
-    JunitTestSpec,
-    DeployedHelmAppSpec,
 )
 from src.mpyl.steps.run import RunResult
 from src.mpyl.steps.steps import StepResult
@@ -65,7 +65,9 @@ def append_results(result: RunResult) -> None:
                     artifact_type=ArtifactType.JUNIT_TESTS,
                     revision="revision",
                     producing_step="Docker Test",
-                    spec=JunitTestSpec(test_resource_path, "http://localhost/tests"),
+                    spec=JunitTestSpec(
+                        str(test_resource_path), "http://localhost/tests"
+                    ),
                 ),
             ),
             timestamp=datetime.fromisoformat("2019-01-04T16:41:45+02:00"),
