@@ -66,6 +66,7 @@ class TestKubernetesChart:
                 project,
                 run_properties=test_data.RUN_PROPERTIES,
                 required_artifact=required_artifact,
+                dry_run=True,
             ),
             deploy_set=DeploySet({project, other_project}, {project}),
         )
