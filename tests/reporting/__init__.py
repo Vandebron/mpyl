@@ -1,11 +1,15 @@
 from datetime import datetime
 
-from src.mpyl.steps.deploy.kubernetes import DEPLOYED_SERVICE_KEY
 from src.mpyl.project import Stages, Project, Stage
-from src.mpyl.steps.models import Output, Artifact, ArtifactType
+from src.mpyl.steps.models import (
+    Output,
+    Artifact,
+    ArtifactType,
+    JunitTestSpec,
+    DeployedHelmAppSpec,
+)
 from src.mpyl.steps.run import RunResult
 from src.mpyl.steps.steps import StepResult
-from src.mpyl.utilities.junit import TEST_OUTPUT_PATH_KEY, TEST_RESULTS_URL_KEY
 from tests import root_test_path
 from tests.test_resources import test_data
 
@@ -61,10 +65,7 @@ def append_results(result: RunResult) -> None:
                     artifact_type=ArtifactType.JUNIT_TESTS,
                     revision="revision",
                     producing_step="Docker Test",
-                    spec={
-                        TEST_OUTPUT_PATH_KEY: test_resource_path,
-                        TEST_RESULTS_URL_KEY: "http://localhost/tests",
-                    },
+                    spec=JunitTestSpec(test_resource_path, "http://localhost/tests"),
                 ),
             ),
             timestamp=datetime.fromisoformat("2019-01-04T16:41:45+02:00"),
@@ -81,7 +82,7 @@ def append_results(result: RunResult) -> None:
                     artifact_type=ArtifactType.DEPLOYED_HELM_APP,
                     revision="revision",
                     producing_step="Kubernetes Deploy",
-                    spec={DEPLOYED_SERVICE_KEY: "https://some.location.com"},
+                    spec=DeployedHelmAppSpec(url="https://some.location.com"),
                 ),
             ),
             timestamp=datetime.fromisoformat("2019-01-04T16:41:45+02:00"),

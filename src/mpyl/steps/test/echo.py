@@ -4,9 +4,8 @@ from logging import Logger
 from pathlib import Path
 
 from .. import Step, Meta
-from ..models import Input, Output, ArtifactType, input_to_artifact
+from ..models import Input, Output, ArtifactType, input_to_artifact, JunitTestSpec
 from ...project import Stage
-from ...utilities.junit import TEST_OUTPUT_PATH_KEY, TEST_RESULTS_URL_KEY
 
 SAMPLE_JUNIT_RESULT = """
 <?xml version="1.0" encoding="UTF-8"?>
@@ -42,10 +41,10 @@ class TestEcho(Step):
         artifact = input_to_artifact(
             artifact_type=ArtifactType.JUNIT_TESTS,
             step_input=step_input,
-            spec={
-                TEST_OUTPUT_PATH_KEY: str(path),
-                TEST_RESULTS_URL_KEY: step_input.run_properties.details.tests_url,
-            },
+            spec=JunitTestSpec(
+                test_output_path=str(path),
+                test_results_url=step_input.run_properties.details.tests_url,
+            ),
         )
         return Output(
             success=True,

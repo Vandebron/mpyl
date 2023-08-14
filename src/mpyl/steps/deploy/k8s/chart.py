@@ -4,7 +4,7 @@ More info: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/c
 """
 import itertools
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, cast
 
 from kubernetes.client import (
     V1Deployment,
@@ -55,7 +55,7 @@ from .resources.traefik import (
     V1AlphaMiddleware,
     HostWrapper,
 )  # pylint: disable = no-name-in-module
-from ...models import Input, ArtifactType
+from ...models import Input, ArtifactType, DockerImageSpec
 from ....project import (
     Project,
     KeyValueProperty,
@@ -467,7 +467,8 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
                 # pylint: disable-next=no-member
                 f"Required artifact of type {ArtifactType.DOCKER_IMAGE.name} must be defined"
             )
-        return docker_image.spec["image"]
+        spec = cast(DockerImageSpec, docker_image.spec)
+        return spec.image
 
     def _get_resources(self):
         resources = self.project.kubernetes.resources

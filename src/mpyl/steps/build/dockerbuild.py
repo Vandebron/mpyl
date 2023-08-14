@@ -22,7 +22,7 @@ from logging import Logger
 
 from .docker_after_build import AfterBuildDocker
 from .. import Step, Meta
-from ..models import Input, Output, ArtifactType, input_to_artifact
+from ..models import Input, Output, ArtifactType, input_to_artifact, DockerImageSpec
 from ...constants import BUILD_ARTIFACTS_FOLDER
 from ...project import Stage
 from ...utilities.docker import (
@@ -75,7 +75,7 @@ class BuildDocker(Step):
             docker_config=docker_config,
         )
         artifact = input_to_artifact(
-            ArtifactType.DOCKER_IMAGE, step_input, spec={"image": image_tag}
+            ArtifactType.DOCKER_IMAGE, step_input, spec=DockerImageSpec(image=image_tag)
         )
 
         with open(".dockerignore", "w+", encoding="utf-8") as ignore_file:

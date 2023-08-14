@@ -16,6 +16,7 @@ from src.mpyl.steps.models import (
     RunProperties,
     VersioningProperties,
     ConsoleProperties,
+    DockerImageSpec,
 )
 from src.mpyl.steps.steps import Steps
 from tests import root_test_path, test_resource_path
@@ -54,7 +55,7 @@ class TestSteps:
     def test_output_roundtrip(self):
         output: Output = self._roundtrip(self.docker_image)
         assert output.produced_artifact.artifact_type.name == "DOCKER_IMAGE"
-        assert output.produced_artifact.spec == {"image": "image:latest"}
+        assert output.produced_artifact.spec == DockerImageSpec(image="image:latest")
 
     def test_write_output(self):
         stream = StringIO()

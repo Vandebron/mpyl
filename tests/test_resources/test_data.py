@@ -13,6 +13,7 @@ from src.mpyl.steps.models import (
     ArtifactType,
     Artifact,
     ConsoleProperties,
+    DockerImageSpec,
 )
 from src.mpyl.utilities.repo import Repository, RepoConfig
 from tests import root_test_path
@@ -70,7 +71,7 @@ def get_output() -> Output:
             artifact_type=ArtifactType.DOCKER_IMAGE,
             revision="123",
             producing_step="Producing Step",
-            spec={"image": "image:latest"},
+            spec=DockerImageSpec(image="image:latest"),
         ),
     )
 

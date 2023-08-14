@@ -49,7 +49,7 @@ The `produced_artifact` can be constructed with `mpyl.steps.models.input_to_arti
 specifying `ArtifactType` specific metadata, that can be picked up by another step that has `ArtifactType.DOCKER_IMAGE`
 as `required_artifact`, like `mpyl.steps.deploy.kubernetes.DeployKubernetes` for example.
 ```python
-input_to_artifact(ArtifactType.DOCKER_IMAGE, step_input, spec={'image': image_tag})
+input_to_artifact(ArtifactType.DOCKER_IMAGE, step_input, spec=DockerImageSpec(image=image_tag)
 ```
 
 ##### Step input

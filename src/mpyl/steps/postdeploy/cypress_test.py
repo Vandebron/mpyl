@@ -1,17 +1,16 @@
 """ Step that runs relevant cypress tests in the post deploy stage """
 import itertools
 import os
-
 from concurrent.futures import ProcessPoolExecutor, Future
 from logging import Logger
+
 from python_on_whales import docker, Container, DockerException
 
 from .. import Step, Meta
-from ..models import ArtifactType, Input, Output, input_to_artifact
+from ..models import ArtifactType, Input, Output, input_to_artifact, JunitTestSpec
 from ...project import Stage, Target
 from ...utilities.cypress import CypressConfig
 from ...utilities.docker import execute_with_stream
-from ...utilities.junit import TEST_OUTPUT_PATH_KEY, TEST_RESULTS_URL_KEY
 
 
 class CypressTest(Step):
@@ -53,12 +52,8 @@ class CypressTest(Step):
         artifact = input_to_artifact(
             artifact_type=ArtifactType.JUNIT_TESTS,
             step_input=step_input,
-            spec={
-                TEST_OUTPUT_PATH_KEY: f"{volume_path}/{reports_folder}",
-                TEST_RESULTS_URL_KEY: "",
-            },
+            spec=JunitTestSpec(test_output_path=f"{volume_path}/{reports_folder}"),
         )
-
         try:
             self._run_container_preparation_steps(
                 docker_container, step_input, reports_folder
@@ -110,9 +105,16 @@ class CypressTest(Step):
 
             for stdout in result:
                 if record_key and "Recorded Run" in stdout:
-                    artifact.spec[TEST_RESULTS_URL_KEY] = stdout.rstrip().rsplit(
-                        "Recorded Run: ", 1
-                    )[1]
+                    artifact = input_to_artifact(
+                        artifact_type=ArtifactType.JUNIT_TESTS,
+                        step_input=step_input,
+                        spec=JunitTestSpec(
+                            test_output_path=f"{volume_path}/{reports_folder}",
+                            test_results_url=stdout.rstrip().rsplit(
+                                "Recorded Run: ", 1
+                            )[1],
+                        ),
+                    )
                 if "error Command failed with exit code" in stdout:
                     raise DockerException(command_launched=[run_command], return_code=1)
         except DockerException:
