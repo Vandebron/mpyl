@@ -6,7 +6,7 @@ import itertools
 from dataclasses import dataclass
 from typing import Dict, Optional
 
-from kubernetes import config
+from kubernetes import config as k8s_config
 from kubernetes.client import (
     V1Deployment,
     V1Container,
@@ -550,7 +550,7 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
             ranger_config = cluster_config(
                 self.step_input.run_properties.target, self.step_input.run_properties
             )
-            config.load_kube_config(context=ranger_config.context)
+            k8s_config.load_kube_config(context=ranger_config.context)
             #  Use context="vdb-core-digital-k8s-test-fqdn" for local testing
             kubernetes_api = CoreV1Api()
             cluster_secrets: V1SecretList = kubernetes_api.list_namespaced_secret(
