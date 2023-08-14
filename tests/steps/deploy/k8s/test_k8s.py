@@ -19,7 +19,8 @@ from src.mpyl.steps.deploy.k8s.resources import to_yaml, CustomResourceDefinitio
 from src.mpyl.steps.deploy.k8s.resources.traefik import V1AlphaIngressRoute
 from src.mpyl.steps.deploy.kubernetes import DeployKubernetes
 from src.mpyl.steps.models import Input, Artifact, ArtifactType
-from src.mpyl.utilities.docker import DockerConfig, DockerImageSpec
+from src.mpyl.utilities.docker import DockerConfig
+from src.mpyl.utilities.docker import DockerImageSpec
 from tests import root_test_path
 from tests.test_resources import test_data
 from tests.test_resources.test_data import (

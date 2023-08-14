@@ -1,5 +1,5 @@
-from src.mpyl.utilities.junit import JunitTestSpec
 from src.mpyl.reporting.formatting.text import to_string, to_test_report
+from src.mpyl.utilities.junit import JunitTestSpec
 from tests import root_test_path
 from tests.reporting import create_test_result
 from tests.test_resources.test_data import assert_roundtrip
