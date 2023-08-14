@@ -8,12 +8,13 @@ import yaml
 from kubernetes import config, client
 from kubernetes.client import V1ConfigMap, ApiException, V1Deployment
 
-from .helm import write_helm_chart
+from .helm import write_helm_chart, GENERATED_WARNING
 from ...deploy.k8s.resources import CustomResourceDefinition
 from ...models import RunProperties
 from ....project import Project, Target, ProjectName
 from ....steps import Input, Output
 from ....steps.deploy.k8s import helm
+from ....steps.deploy.k8s.resources import to_yaml
 from ....steps.deploy.k8s.rancher import (
     cluster_config,
     rancher_namespace_metadata,
@@ -90,6 +91,18 @@ def upsert_namespace(
         )
     else:
         logger.info(f"Found namespace {namespace}")
+
+
+def render_manifests(chart: dict[str, CustomResourceDefinition]):
+    result = f"{GENERATED_WARNING}\n"
+    for name, template_content in chart.items():
+        manifest = render_crd(name, template_content)
+        result += manifest
+    return result
+
+
+def render_crd(name: str, crd: CustomResourceDefinition):
+    return f"---\n# {name}\n{to_yaml(crd)}"
 
 
 def get_config_map(
