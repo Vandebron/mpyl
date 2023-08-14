@@ -2,10 +2,23 @@
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 from junitparser import JUnitXml, TestSuite
+from ruamel.yaml import yaml_object, YAML
 
-from ...steps.models import JunitTestSpec
+from ...steps.models import ArtifactSpec
+
+yaml = YAML()
+
+
+@yaml_object(yaml)
+@dataclass
+class JunitTestSpec(ArtifactSpec):
+    yaml_tag = "!JunitTestSpec"
+    test_output_path: str
+    test_results_url: Optional[str] = None
+    test_results_url_name: Optional[str] = None
 
 
 @dataclass(frozen=True)

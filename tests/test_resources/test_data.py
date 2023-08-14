@@ -2,6 +2,7 @@ import dataclasses
 import os
 from pathlib import Path
 
+from src.mpyl.utilities.docker import DockerImageSpec
 from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME
 from src.mpyl.utilities.pyaml_env import parse_config
 
@@ -14,7 +15,6 @@ from src.mpyl.steps.models import (
     ArtifactType,
     Artifact,
     ConsoleProperties,
-    DockerImageSpec,
 )
 from src.mpyl.utilities.repo import Repository, RepoConfig
 from tests import root_test_path

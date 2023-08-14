@@ -11,10 +11,20 @@ from typing import Optional, Iterator, cast, Union
 
 from python_on_whales import docker, Image, Container, DockerException
 from python_on_whales.exceptions import NoSuchContainer
+from ruamel.yaml import yaml_object, YAML
 
 from ..logging import try_parse_ansi
 from ...project import Project
-from ...steps.models import Input
+from ...steps.models import Input, ArtifactSpec
+
+yaml = YAML()
+
+
+@yaml_object(yaml)
+@dataclass
+class DockerImageSpec(ArtifactSpec):
+    yaml_tag = "!DockerImageSpec"
+    image: str
 
 
 @dataclass(frozen=True)

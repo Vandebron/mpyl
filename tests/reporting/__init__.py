@@ -1,12 +1,12 @@
 from datetime import datetime
 
+from src.mpyl.utilities.junit import JunitTestSpec
+from src.mpyl.steps.deploy.kubernetes import DeployedHelmAppSpec
 from src.mpyl.project import Stages, Project, Stage
 from src.mpyl.steps.models import (
     Output,
     Artifact,
     ArtifactType,
-    JunitTestSpec,
-    DeployedHelmAppSpec,
 )
 from src.mpyl.steps.run import RunResult
 from src.mpyl.steps.steps import StepResult
