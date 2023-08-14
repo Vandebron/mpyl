@@ -514,6 +514,33 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
     def _create_secret_env_vars(self, secret_list: list[KeyValueRef]) -> list[V1EnvVar]:
         return list(map(self._map_key_value_refs, secret_list))
 
+    def _copy_secrets(self):
+        rancher_config = cluster_config(
+            self.step_input.run_properties.target, self.step_input.run_properties
+        )
+        k8s_config.load_kube_config(context=rancher_config.context)
+        kubernetes_api = CoreV1Api()
+        cluster_secrets: V1SecretList = kubernetes_api.list_namespaced_secret(
+            namespace=self.deployment.namespace  # Should be source namespace?
+        )
+        secrets_to_copy: list[V1Secret] = list(
+            (
+                cluster_secret
+                for cluster_secret, defined_secret in zip(
+                    cluster_secrets.items, self.secrets
+                )
+                if cluster_secret.metadata.name
+                == defined_secret.value_from.get("secretKeyRef").get("name")
+            )
+        )
+        pr_namespace = self.step_input.run_properties.versioning.identifier
+        for secret_to_copy in secrets_to_copy:
+            secret_to_copy.metadata.resource_version = None
+            secret_to_copy.metadata.namespace = pr_namespace
+            kubernetes_api.create_namespaced_secret(
+                namespace=pr_namespace, body=secret_to_copy
+            )
+
     @staticmethod
     def extract_raw_env(target: Target, env: list[KeyValueProperty]):
         raw_env_vars = {
@@ -548,31 +575,8 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
             self.step_input.run_properties.target == Target.PULL_REQUEST
             and not self.step_input.dry_run
         ):
-            rancher_config = cluster_config(
-                self.step_input.run_properties.target, self.step_input.run_properties
-            )
-            k8s_config.load_kube_config(context=rancher_config.context)
-            kubernetes_api = CoreV1Api()
-            cluster_secrets: V1SecretList = kubernetes_api.list_namespaced_secret(
-                namespace=self.deployment.namespace  # Should be source namespace?
-            )
-            secrets_to_copy: list[V1Secret] = list(
-                (
-                    cluster_secret
-                    for cluster_secret, defined_secret in zip(
-                        cluster_secrets.items, self.secrets
-                    )
-                    if cluster_secret.metadata.name
-                    == defined_secret.value_from.get("secretKeyRef").get("name")
-                )
-            )
-            pr_namespace = self.step_input.run_properties.versioning.identifier
-            for secret_to_copy in secrets_to_copy:
-                secret_to_copy.metadata.resource_version = None
-                secret_to_copy.metadata.namespace = pr_namespace
-                kubernetes_api.create_namespaced_secret(
-                    namespace=pr_namespace, body=secret_to_copy
-                )
+            self._copy_secrets()
+
         secrets = self._create_secret_env_vars(self.secrets)
 
         return env_vars + sealed_secrets + secrets
