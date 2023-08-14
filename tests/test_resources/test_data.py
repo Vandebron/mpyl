@@ -121,6 +121,9 @@ def get_repo() -> Repository:
 
 def assert_roundtrip(file_path: Path, actual_contents: str, overwrite: bool = False):
     if overwrite:
+        if not file_path.exists():
+            os.makedirs(file_path.parent, exist_ok=True)
+
         with open(file_path, "w+", encoding="utf-8") as file:
             file.write(actual_contents)
             assert not overwrite, "Should not commit with overwrite"
