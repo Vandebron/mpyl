@@ -24,7 +24,7 @@ from . import (
 )
 from . import create_console_logger
 from .commands.build.jenkins import JenkinsRunParameters, run_jenkins, get_token
-from .commands.build.mpyl import (
+from ..mpyl import (
     MpylRunParameters,
     run_mpyl,
     MpylCliParameters,

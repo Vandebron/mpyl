@@ -2,12 +2,11 @@ import logging
 import os
 import re
 
-import pytest
 from click.testing import CliRunner
 
 from tests import root_test_path
 from src.mpyl import main_group, add_commands
-from src.mpyl.cli.commands.build.mpyl import run_build
+from src.mpyl.mpyl import run_build
 from src.mpyl.project import Stage
 from src.mpyl.steps import Step, Meta, ArtifactType, Input, Output
 from src.mpyl.steps.run import RunResult
