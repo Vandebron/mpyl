@@ -84,10 +84,25 @@ definitions:
     type: object
     additionalProperties: false
     properties:
-      renderTemplates:
-        type: boolean
-        description: 'Rather than deploying, render the HELM templates to a combined yaml file via the `helm template` command. Useful for debugging.'
-        default: false
+      deployAction:
+        type: string
+        enum:
+          - 'HelmDeploy'
+          - 'HelmDryRun'
+          - 'HelmTemplate'
+          - 'KubectlManifest'
+        description: >-
+          Defines the action to take in the deploy step. Defaults to helmDeploy. 
+          If set to helmDryRun, the helm chart will be rendered and the result will be printed to the console.
+          If set to helmTemplate, the helm chart will be rendered and the result will be written to the file specified in the helmTemplateOutputPath property
+          If set to kubectlManifest, the helm chart will be rendered and the result will be written to the file specified in the kubectlManifestOutputPath property.
+        default: 'HelmDeploy'
+      outputPath:
+        type: string
+        default: target/kubernetes
+        description: >-
+          The path to the folder where the rendered helm chart or kubectl manifest will be written.
+          Defaults to target/kubernetes under the root folder of the project.
       rancher:
         type: object
         additionalProperties: false
