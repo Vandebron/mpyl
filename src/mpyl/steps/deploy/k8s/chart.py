@@ -521,8 +521,9 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
         k8s_config.load_kube_config(context=rancher_config.context)
         kubernetes_api = CoreV1Api()
 
+        project_namespace = self.deployment.namespace or self.step_input.project.name
         cluster_secrets: V1SecretList = kubernetes_api.list_namespaced_secret(
-            namespace=self.deployment.namespace, async_req=True
+            namespace=project_namespace, async_req=True
         ).get()
         secrets_to_copy: list[V1Secret] = []
         for requested_secret in self.secrets:
