@@ -520,26 +520,38 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
         )
         k8s_config.load_kube_config(context=rancher_config.context)
         kubernetes_api = CoreV1Api()
+
         cluster_secrets: V1SecretList = kubernetes_api.list_namespaced_secret(
-            namespace=self.deployment.namespace  # Should be source namespace?
-        )
-        secrets_to_copy: list[V1Secret] = list(
-            (
-                cluster_secret
-                for cluster_secret, defined_secret in zip(
-                    cluster_secrets.items, self.secrets
-                )
-                if cluster_secret.metadata.name
-                == defined_secret.value_from.get("secretKeyRef").get("name")
-            )
-        )
+            namespace=self.deployment.namespace, async_req=True
+        ).get()
+        secrets_to_copy: list[V1Secret] = []
+        for requested_secret in self.secrets:
+            for cluster_secret in cluster_secrets.items:
+                if cluster_secret.metadata.name == requested_secret.value_from.get(
+                    "secretKeyRef"
+                ).get("name"):
+                    secrets_to_copy.append(cluster_secret)
+
         pr_namespace = self.step_input.run_properties.versioning.identifier
         for secret_to_copy in secrets_to_copy:
+            existing_secrets = kubernetes_api.list_namespaced_secret(
+                namespace=pr_namespace, async_req=True
+            ).get()
+            if secret_to_copy.metadata.name in [
+                existing_secret.metadata.name
+                for existing_secret in existing_secrets.items
+            ]:  # Delete secret from pr namespace if it already exists
+                kubernetes_api.delete_namespaced_secret(
+                    name=secret_to_copy.metadata.name,
+                    namespace=pr_namespace,
+                    async_req=True,
+                ).get()
+
             secret_to_copy.metadata.resource_version = None
             secret_to_copy.metadata.namespace = pr_namespace
             kubernetes_api.create_namespaced_secret(
-                namespace=pr_namespace, body=secret_to_copy
-            )
+                namespace=pr_namespace, body=secret_to_copy, async_req=True
+            ).get()
 
     @staticmethod
     def extract_raw_env(target: Target, env: list[KeyValueProperty]):
