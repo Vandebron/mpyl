@@ -166,8 +166,13 @@ class ArtifactType(Enum):
     JUNIT_TESTS = 2
     """A test suite in junit compatible `.xml` format"""
     DEPLOYED_HELM_APP = 3
-    """A helm chart deployed to kubernetes"""
+    """Null object"""
     NONE = 4
+    """A helm chart deployed to kubernetes"""
+    HELM_CHART = 5
+    """A helm chart written to a folder"""
+    KUBERNETES_MANIFEST = 6
+    """"A k8s manifest writen to a file"""
 
 
 @yaml_object(yaml)

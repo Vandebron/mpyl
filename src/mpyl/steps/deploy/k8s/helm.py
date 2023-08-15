@@ -80,12 +80,12 @@ def write_helm_chart(
     return chart_path
 
 
-def template(logger: Logger, chart_path: Path, name_space: str) -> Output:
+def template(logger: Logger, chart_path: Path, name_space: str) -> Path:
     cmd = f"helm template -n {name_space} {chart_path}"
     output = custom_check_output(logger, cmd, capture_stdout=True)
     template_file = chart_path / "template.yml"
     template_file.write_text(f"{GENERATED_WARNING}\n{output.message}")
-    return Output(success=True, message=f"Chart templated to {template_file}")
+    return template_file
 
 
 def install(

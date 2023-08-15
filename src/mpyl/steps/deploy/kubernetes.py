@@ -1,12 +1,9 @@
 """Deploys the docker image produced in the build stage to Kubernetes, using HELM. """
 import re
-from dataclasses import dataclass
 from logging import Logger
 from typing import Optional
 
-from ruamel.yaml import yaml_object, YAML
-
-from .k8s import deploy_helm_chart, CustomResourceDefinition
+from .k8s import deploy_helm_chart, CustomResourceDefinition, DeployedHelmAppSpec
 from .k8s.chart import ChartBuilder, to_service_chart
 from .. import Step, Meta
 from ..models import (
@@ -14,20 +11,10 @@ from ..models import (
     Output,
     ArtifactType,
     input_to_artifact,
-    ArtifactSpec,
 )
 from ...project import Stage, Target
 from ...stages.discovery import find_deploy_set
 from ...utilities.repo import RepoConfig
-
-yaml = YAML()
-
-
-@yaml_object(yaml)
-@dataclass
-class DeployedHelmAppSpec(ArtifactSpec):
-    yaml_tag = "!DeployedHelmAppSpec"
-    url: Optional[str]
 
 
 class DeployKubernetes(Step):
