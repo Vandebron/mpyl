@@ -9,7 +9,7 @@ from junitparser import TestSuite
 
 from ...project import Stage, Project
 from ...steps import Output, ArtifactType
-from ...steps.deploy.kubernetes import DeployedHelmAppSpec
+from ...steps.deploy.k8s import DeployedHelmAppSpec
 from ...steps.run import RunResult
 from ...steps.steps import StepResult
 from ...utilities.junit import (

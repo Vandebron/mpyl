@@ -1,7 +1,7 @@
 from datetime import datetime
 
+from src.mpyl.steps.deploy.k8s import DeployedHelmAppSpec
 from src.mpyl.utilities.junit import JunitTestSpec
-from src.mpyl.steps.deploy.kubernetes import DeployedHelmAppSpec
 from src.mpyl.project import Stages, Project, Stage
 from src.mpyl.steps.models import (
     Output,
