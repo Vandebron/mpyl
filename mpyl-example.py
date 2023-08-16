@@ -12,7 +12,6 @@ def main(log: Logger, args: argparse.Namespace):
         from src.mpyl.mpyl import (
             run_mpyl,
             MpylRunParameters,
-            MpylRunConfig,
             MpylCliParameters,
         )
 
@@ -23,7 +22,6 @@ def main(log: Logger, args: argparse.Namespace):
         from mpyl.mpyl import (
             run_mpyl,
             MpylRunParameters,
-            MpylRunConfig,
             MpylCliParameters,
         )
 
@@ -33,7 +31,7 @@ def main(log: Logger, args: argparse.Namespace):
         run_properties=properties, config=config
     )
     params = MpylRunParameters(
-        run_config=MpylRunConfig(config=config, run_properties=run_properties),
+        run_properties=run_properties,
         parameters=MpylCliParameters(
             local=args.local,
             tag=args.tag,

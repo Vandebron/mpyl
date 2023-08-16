@@ -28,7 +28,6 @@ from ..mpyl import (
     MpylRunParameters,
     run_mpyl,
     MpylCliParameters,
-    MpylRunConfig,
     find_build_set,
 )
 from ..constants import (
@@ -138,7 +137,7 @@ def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
     )
     obj.console.log(parameters)
     run_parameters = MpylRunParameters(
-        run_config=MpylRunConfig(config=obj.config, run_properties=run_properties),
+        run_properties=run_properties,
         parameters=parameters,
     )
     run_mpyl(run_parameters, None)

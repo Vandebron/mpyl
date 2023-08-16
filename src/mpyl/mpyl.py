@@ -22,12 +22,6 @@ from .utilities.repo import Repository, RepoConfig, Revision
 
 
 @dataclass(frozen=True)
-class MpylRunConfig:
-    config: dict
-    run_properties: RunProperties
-
-
-@dataclass(frozen=True)
 class MpylCliParameters:
     local: bool
     target: str
@@ -39,7 +33,7 @@ class MpylCliParameters:
 
 @dataclass(frozen=True)
 class MpylRunParameters:
-    run_config: MpylRunConfig
+    run_properties: RunProperties
     parameters: MpylCliParameters
 
 
@@ -50,10 +44,7 @@ def get_build_plan(
     logger: logging.Logger, repo: Repository, mpyl_run_parameters: MpylRunParameters
 ) -> RunResult:
     params = mpyl_run_parameters.parameters
-    branch = (
-        repo.get_branch
-        or mpyl_run_parameters.run_config.run_properties.versioning.branch
-    )
+    branch = repo.get_branch or mpyl_run_parameters.run_properties.versioning.branch
     logger.info(f"Running with {params}")
     if branch:
         if repo.base_revision:
@@ -81,7 +72,7 @@ def get_build_plan(
         repo, changes, params.all
     )
     return RunResult(
-        run_properties=mpyl_run_parameters.run_config.run_properties,
+        run_properties=mpyl_run_parameters.run_properties,
         run_plan=projects_per_stage,
     )
 
@@ -90,7 +81,7 @@ def run_mpyl(
     mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter]
 ) -> RunResult:
     params = mpyl_run_parameters.parameters
-    console_properties = mpyl_run_parameters.run_config.run_properties.console
+    console_properties = mpyl_run_parameters.run_properties.console
     console = Console(
         markup=False,
         width=None if params.local else console_properties.width,
@@ -108,7 +99,7 @@ def run_mpyl(
     logger = logging.getLogger("mpyl")
     try:
         with Repository(
-            RepoConfig.from_config(mpyl_run_parameters.run_config.config)
+            RepoConfig.from_config(mpyl_run_parameters.run_properties.config)
         ) as repo:
             run_plan = get_build_plan(logger, repo, mpyl_run_parameters)
 
@@ -125,7 +116,7 @@ def run_mpyl(
             try:
                 steps = Steps(
                     logger=logger,
-                    properties=mpyl_run_parameters.run_config.run_properties,
+                    properties=mpyl_run_parameters.run_properties,
                     steps_collection=StepsCollection(logger=logger),
                 )
                 run_result = run_build(
