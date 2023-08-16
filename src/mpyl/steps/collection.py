@@ -16,17 +16,17 @@ class StepsCollection:
         self._step_executors = set()
         package = "mpyl.steps"
         local_package = f"src.{package}"
-        default_location, alternative_location = (
+        default_library_location, alternative_library_location = (
             (local_package, package)
             if importlib.util.find_spec("src")
             else (package, local_package)
         )
-        location = default_location
+        location = default_library_location
 
         self.__load_steps_in_module(".", location)
         if not IPluginRegistry.plugins:
-            location = alternative_location
-            self.__load_steps_in_module(".", location)
+            self.__load_steps_in_module(".", alternative_library_location)
+            location = alternative_library_location
 
         logger.info(f"Loaded {len(IPluginRegistry.plugins)} executors from {location}")
         if not IPluginRegistry.plugins:
