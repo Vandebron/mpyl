@@ -8,6 +8,9 @@ from pathlib import Path
 from traceback import print_exc
 from typing import Dict, Optional, Iterator, cast, Union
 
+from typing import Optional, Iterator, cast, Union
+import shutil
+from pathlib import Path
 from python_on_whales import docker, Image, Container, DockerException
 from python_on_whales.exceptions import NoSuchContainer
 
@@ -60,10 +63,10 @@ class DockerConfig:
     docker_file_name: str
 
     @staticmethod
-    def from_dict(config: Dict):
+    def from_dict(config: dict):
         try:
-            registry: Dict = config["docker"]["registry"]
-            build_config: Dict = config["docker"]["build"]
+            registry: dict = config["docker"]["registry"]
+            build_config: dict = config["docker"]["build"]
             cache_config = registry.get("cache", {})
             return DockerConfig(
                 host_name=registry["hostName"],

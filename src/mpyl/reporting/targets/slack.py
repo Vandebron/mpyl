@@ -32,7 +32,7 @@ settings:
 """
 import re
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Optional
 
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackClientError, SlackApiError
@@ -97,7 +97,7 @@ class SlackReporter(Reporter):
 
     def __init__(
         self,
-        config: Dict,
+        config: dict,
         channel: Optional[str],
         versioning_identifier: str,
         target: str,

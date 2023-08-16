@@ -1,7 +1,6 @@
 """SBT config"""
-import ast
+
 from dataclasses import dataclass
-from typing import Dict
 
 
 @dataclass(frozen=True)
@@ -16,7 +15,7 @@ class SbtConfig:
     test_with_client: bool
 
     @staticmethod
-    def from_config(config: Dict):
+    def from_config(config: dict):
         sbt_config = config.get("sbt", None)
         if not sbt_config:
             raise KeyError(f"'sbt' could not be loaded from {config}")

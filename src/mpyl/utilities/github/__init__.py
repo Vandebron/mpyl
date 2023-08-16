@@ -1,6 +1,6 @@
 """Github related utility methods"""
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Optional
 
 from github.PullRequest import PullRequest
 from github.Repository import Repository
@@ -12,7 +12,7 @@ class GithubAppConfig:
     private_key_base_64_encoded: Optional[str]
     app_key: str
 
-    def __init__(self, config: Dict):
+    def __init__(self, config: dict):
         self.private_app_key_path = config.get("privateKeyPath")
         self.private_key_base_64_encoded = config.get("privateKeyBase64Encoded")
         if not self.private_key_base_64_encoded and not self.private_app_key_path:
@@ -33,7 +33,7 @@ class GithubConfig:
     app_config: dict
 
     @staticmethod
-    def from_config(config: Dict):
+    def from_config(config: dict):
         github = config["cvs"]["github"]
         repo_parts = github["repository"].split("/")
         return GithubConfig(

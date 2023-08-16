@@ -36,7 +36,7 @@ from datetime import datetime
 from enum import Enum
 from logging import Logger
 from pathlib import Path
-from typing import Dict, Optional, Callable
+from typing import Optional, Callable
 
 from github import Github, GithubIntegration, GithubException
 from github.IssueComment import IssueComment
@@ -53,7 +53,7 @@ from ...utilities.repo import Repository, RepoConfig
 
 
 def compose_message_body(
-    results: RunResult, _unused_config: Optional[Dict] = None
+    results: RunResult, _unused_config: Optional[dict] = None
 ) -> str:
     return run_result_to_markdown(results)
 
@@ -72,9 +72,9 @@ class PullRequestReporter(Reporter):
 
     def __init__(
         self,
-        config: Dict,
+        config: dict,
         compose_function: Callable[
-            [RunResult, Optional[Dict]], str
+            [RunResult, Optional[dict]], str
         ] = compose_message_body,
         update_stategy: GithubUpdateStategy = GithubUpdateStategy.BODY,
     ):
@@ -147,7 +147,7 @@ class CommitCheck(Reporter):
     _github_config: GithubConfig
     _check_run_id: Optional[int]
 
-    def __init__(self, config: Dict, logger: Logger):
+    def __init__(self, config: dict, logger: Logger):
         self._config = config
         self._github_config = GithubConfig.from_config(config)
         self._check_run_id = None

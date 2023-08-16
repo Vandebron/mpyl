@@ -20,7 +20,7 @@ import traceback
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Optional, TypeVar, Dict, Any, TextIO
+from typing import Optional, TypeVar, Any, TextIO
 
 import jsonschema
 from mypy.checker import Generic
@@ -186,7 +186,7 @@ class Properties:
     kubernetes: list[KeyValueRef]
 
     @staticmethod
-    def from_config(values: Dict[Any, Any]):
+    def from_config(values: dict[Any, Any]):
         return Properties(
             env=list(map(KeyValueProperty.from_config, values.get("env", []))),
             sealed_secret=list(
