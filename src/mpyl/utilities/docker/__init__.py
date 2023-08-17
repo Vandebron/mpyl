@@ -6,11 +6,9 @@ from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
 from traceback import print_exc
-from typing import Dict, Optional, Iterator, cast, Union
-
+from typing import Dict
 from typing import Optional, Iterator, cast, Union
-import shutil
-from pathlib import Path
+
 from python_on_whales import docker, Image, Container, DockerException
 from python_on_whales.exceptions import NoSuchContainer
 

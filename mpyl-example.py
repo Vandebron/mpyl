@@ -11,7 +11,6 @@ def main(log: Logger, args: argparse.Namespace):
         from src.mpyl.utilities.pyaml_env import parse_config
         from src.mpyl.mpyl import (
             run_mpyl,
-            MpylRunParameters,
             MpylCliParameters,
         )
 
@@ -21,25 +20,13 @@ def main(log: Logger, args: argparse.Namespace):
         from mpyl.utilities.pyaml_env import parse_config
         from mpyl.mpyl import (
             run_mpyl,
-            MpylRunParameters,
             MpylCliParameters,
         )
 
     config = parse_config("mpyl_config.yml")
     properties = parse_config("run_properties.yml")
     run_properties = RunProperties.from_configuration(
-        run_properties=properties, config=config
-    )
-    params = MpylRunParameters(
-        run_properties=run_properties,
-        parameters=MpylCliParameters(
-            local=args.local,
-            tag=args.tag,
-            pull_main=True,
-            verbose=args.verbose,
-            all=args.all,
-            target=run_properties.target.value,
-        ),
+        run_properties=properties, config=config, cli_tag=args.tag
     )
     check = None
     slack_channel = None
@@ -84,7 +71,18 @@ def main(log: Logger, args: argparse.Namespace):
             check.send_report(RunResult(run_properties=run_properties, run_plan={}))
         )
 
-    run_result = run_mpyl(params, slack_personal)
+    cli_parameters = MpylCliParameters(
+        local=args.local,
+        tag=args.tag,
+        pull_main=True,
+        verbose=args.verbose,
+        all=args.all,
+    )
+    run_result = run_mpyl(
+        run_properties=run_properties,
+        cli_parameters=cli_parameters,
+        reporter=slack_personal,
+    )
 
     if not args.local:
         accumulator.add(check.send_report(run_result))

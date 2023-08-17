@@ -25,7 +25,6 @@ from . import (
 from . import create_console_logger
 from .commands.build.jenkins import JenkinsRunParameters, run_jenkins, get_token
 from ..mpyl import (
-    MpylRunParameters,
     run_mpyl,
     MpylCliParameters,
     find_build_set,
@@ -119,13 +118,6 @@ def build(ctx, config, properties, verbose):
 @click.pass_obj
 def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
     asyncio.run(warn_if_update(obj.console))
-    run_properties = (
-        RunProperties.from_configuration(obj.run_properties, obj.config)
-        if ci
-        else RunProperties.for_local_run(
-            obj.config, obj.repo.get_sha, obj.repo.get_branch, tag
-        )
-    )
 
     parameters = MpylCliParameters(
         local=not ci,
@@ -133,14 +125,17 @@ def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
         all=all_,
         verbose=obj.verbose,
         tag=tag,
-        target=run_properties.target,
     )
     obj.console.log(parameters)
-    run_parameters = MpylRunParameters(
-        run_properties=run_properties,
-        parameters=parameters,
+
+    run_properties = (
+        RunProperties.from_configuration(obj.run_properties, obj.config, tag)
+        if ci
+        else RunProperties.for_local_run(
+            obj.config, obj.repo.get_sha, obj.repo.get_branch, tag
+        )
     )
-    run_mpyl(run_parameters, None)
+    run_mpyl(run_properties=run_properties, cli_parameters=parameters, reporter=None)
 
 
 @build.command(help="The status of the current local branch from MPyL's perspective")

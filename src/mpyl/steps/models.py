@@ -105,7 +105,11 @@ class RunProperties:
         )
 
     @staticmethod
-    def from_configuration(run_properties: dict, config: dict):
+    def from_configuration(
+        run_properties: dict,
+        config: dict,
+        cli_tag: Optional[str] = None,
+    ):
         build_dict = pkgutil.get_data(__name__, "../schema/run_properties.schema.yml")
 
         if build_dict:
@@ -114,7 +118,7 @@ class RunProperties:
         build = run_properties["build"]
         versioning_config = build["versioning"]
 
-        tag: Optional[str] = versioning_config.get("tag")
+        tag: Optional[str] = cli_tag or versioning_config.get("tag")
         pr_from_config: Optional[str] = versioning_config.get("pr_number")
         pr_num: Optional[int] = (
             None if tag else (int(pr_from_config) if pr_from_config else None)

@@ -31,6 +31,15 @@ class CliContext:
     run_properties: dict
 
 
+@dataclass(frozen=True)
+class MpylCliParameters:
+    local: bool = False
+    tag: Optional[str] = None
+    pull_main: bool = False
+    verbose: bool = False
+    all: bool = False
+
+
 async def fetch_latest_version() -> Optional[str]:
     try:
         async with aiohttp.ClientSession(timeout=ClientTimeout(total=10)) as session:
