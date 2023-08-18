@@ -30,11 +30,9 @@ def get_namespace(run_properties: RunProperties, project: Project) -> str:
 
 
 def rollout_restart_deployment(
-    logger: Logger, namespace: str, deployment: str
+    logger: Logger, apps_api: client.AppsV1Api, namespace: str, deployment: str
 ) -> Output:
     # from https://stackoverflow.com/a/67491253
-    v1_apps = client.AppsV1Api()
-
     now = datetime.datetime.utcnow()
     now_str = now.isoformat("T") + "Z"
     body = {
@@ -48,10 +46,13 @@ def rollout_restart_deployment(
     }
     try:
         logger.info(f"Starting rollout restart of {deployment}...")
-        _, status_code, _ = v1_apps.patch_namespaced_deployment_with_http_info(
+        _, status_code, _ = apps_api.patch_namespaced_deployment_with_http_info(
             deployment, namespace, body, pretty="true"
         )
-        return Output(success=True, message=f"Rollout restart of {deployment} finished with statuscode {status_code}")
+        return Output(
+            success=True,
+            message=f"Rollout restart of {deployment} finished with statuscode {status_code}",
+        )
     except ApiException as api_exception:
         return Output(
             success=False,
@@ -91,21 +92,21 @@ def upsert_namespace(
         logger.info(f"Found namespace {namespace}")
 
 
-def get_config_map(context: str, namespace: str, config_map_name: str) -> V1ConfigMap:
-    config.load_kube_config(context=context)
-    api = client.CoreV1Api()
-    user_code_config_map: V1ConfigMap = api.read_namespaced_config_map(
+def get_config_map(
+    core_api: client.CoreV1Api, namespace: str, config_map_name: str
+) -> V1ConfigMap:
+    user_code_config_map: V1ConfigMap = core_api.read_namespaced_config_map(
         config_map_name, namespace
     )
     return user_code_config_map
 
 
 def get_version_of_deployment(
-    context: str, namespace: str, deployment: str, version_label: str
+    apps_api: client.AppsV1Api, namespace: str, deployment: str, version_label: str
 ) -> str:
-    config.load_kube_config(context=context)
-    api = client.AppsV1Api()
-    v1deployment: V1Deployment = api.read_namespaced_deployment(deployment, namespace)
+    v1deployment: V1Deployment = apps_api.read_namespaced_deployment(
+        deployment, namespace
+    )
     return v1deployment.metadata.labels[version_label]
 
 
@@ -117,18 +118,19 @@ def update_config_map_field(
 
 
 def replace_config_map(
-    context: str,
+    core_api: client.CoreV1Api,
     namespace: str,
     config_map_name: str,
     config_map: V1ConfigMap,
 ) -> Output:
-    config.load_kube_config(context=context)
-    api = client.CoreV1Api()
     try:
-        _, status_code, _ = api.replace_namespaced_config_map_with_http_info(
+        _, status_code, _ = core_api.replace_namespaced_config_map_with_http_info(
             config_map_name, namespace, config_map
         )
-        return Output(success=True, message=f"ConfigMap Update of {config_map_name} finished with statuscode {status_code}")
+        return Output(
+            success=True,
+            message=f"ConfigMap Update of {config_map_name} finished with statuscode {status_code}",
+        )
     except ApiException as api_exception:
         return Output(
             success=False,

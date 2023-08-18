@@ -5,6 +5,7 @@ from functools import reduce
 from logging import Logger
 
 import yaml
+from kubernetes import config, client
 
 from .k8s import (
     helm,
@@ -44,13 +45,18 @@ class DeployDagster(Step):
         )
 
     # Deploys the docker image produced in the build stage as a Dagster user-code-deployment
+    # pylint: disable=R0914
     def execute(self, step_input: Input) -> Output:
         context = cluster_config(
             step_input.run_properties.target, step_input.run_properties
         ).context
 
+        config.load_kube_config(context=context)
+        core_api = client.CoreV1Api()
+        apps_api = client.AppsV1Api()
+
         version = get_version_of_deployment(
-            context=context,
+            apps_api=apps_api,
             namespace=Constants.DAGSTER_NAMESPACE,
             deployment=Constants.DAGSTER_DAGIT,
             version_label="app.kubernetes.io/version",
@@ -95,7 +101,7 @@ class DeployDagster(Step):
             dagster_deploy_results.append(helm_install_result)
 
             config_map = get_config_map(
-                context,
+                core_api,
                 Constants.DAGSTER_NAMESPACE,
                 Constants.DAGSTER_WORKSPACE_CONFIGMAP,
             )
@@ -126,7 +132,7 @@ class DeployDagster(Step):
                     data=dagster_workspace,
                 )
                 configmap_update_result = replace_config_map(
-                    context,
+                    core_api,
                     Constants.DAGSTER_NAMESPACE,
                     Constants.DAGSTER_WORKSPACE_CONFIGMAP,
                     updated_config_map,
@@ -141,13 +147,19 @@ class DeployDagster(Step):
 
             # restarting ui and daemon
             rollout_restart_output = rollout_restart_deployment(
-                self._logger, Constants.DAGSTER_NAMESPACE, Constants.DAGSTER_DAEMON
+                self._logger,
+                apps_api,
+                Constants.DAGSTER_NAMESPACE,
+                Constants.DAGSTER_DAEMON,
             )
             if rollout_restart_output.success:
                 self._logger.info(rollout_restart_output.message)
                 dagster_deploy_results.append(rollout_restart_output)
                 rollout_restart_output = rollout_restart_deployment(
-                    self._logger, Constants.DAGSTER_NAMESPACE, Constants.DAGSTER_DAGIT
+                    self._logger,
+                    apps_api,
+                    Constants.DAGSTER_NAMESPACE,
+                    Constants.DAGSTER_DAGIT,
                 )
                 if not rollout_restart_output.success:
                     return rollout_restart_output
