@@ -57,7 +57,7 @@ def rollout_restart_deployment(
     except ApiException as api_exception:
         return Output(
             success=False,
-            message=f"Exception when calling AppsV1Api->patch_namespaced_deployment: {api_exception}\n"
+            message=f"Exception when calling AppsV1Api -> patch_namespaced_deployment: {api_exception}\n"
             f"{deployment} was NOT restarted",
         )
 
@@ -137,7 +137,7 @@ def replace_config_map(
     except ApiException as api_exception:
         return Output(
             success=False,
-            message=f"Exception when calling CoreV1Api->replace_namespaced_config_map: {api_exception}\n",
+            message=f"Exception when calling CoreV1Api -> replace_namespaced_config_map: {api_exception}\n",
         )
 
 
