@@ -54,7 +54,7 @@ class DeployDagster(Step):
         helm.update_repo(self._logger)
 
         name_suffix = (
-            f"-pr-{step_input.run_properties.versioning.pr_number}"
+            f"-{step_input.run_properties.versioning.identifier}"
             if step_input.run_properties.target == Target.PULL_REQUEST
             else ""
         )
@@ -119,7 +119,7 @@ class DeployDagster(Step):
 
             # restarting ui and daemon
             rollout_restart_output = rollout_restart_deployment(
-                self._logger, namespace, "dagster-dagit"
+                self._logger, namespace, "dagster-daemon"
             )
             if rollout_restart_output.success:
                 rollout_restart_output = rollout_restart_deployment(
