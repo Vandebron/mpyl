@@ -51,6 +51,7 @@ class DeployDagster(Step):
         self._logger.info(f"Dagster Version: {version}")
 
         helm.add_repo(self._logger, namespace, "https://dagster-io.github.io/helm")
+        helm.update_repo(self._logger)
 
         name_suffix = (
             f"-pr-{step_input.run_properties.versioning.pr_number}"
