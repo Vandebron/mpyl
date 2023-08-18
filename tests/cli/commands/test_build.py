@@ -2,7 +2,6 @@ import logging
 import os
 import re
 
-import pytest
 from click.testing import CliRunner
 
 from tests import root_test_path

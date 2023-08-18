@@ -128,7 +128,7 @@ def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
         verbose=obj.verbose,
         tag=tag,
         target=run_properties.target,
-        dry_run=True,
+        # dry_run=True,
     )
     obj.console.log(parameters)
     run_parameters = MpylRunParameters(
@@ -343,7 +343,7 @@ def ask_for_input(ctx, _param, value) -> Optional[str]:
 )
 @click.pass_context
 def jenkins(  # pylint: disable=too-many-arguments
-    ctx, user, password, pipeline, test, arguments, background, silent, tag, dry_run
+    ctx, user, password, pipeline, test, arguments, background, silent, tag, dryrun
 ):
     try:
         upgrade_check = asyncio.wait_for(warn_if_update(ctx.obj.console), timeout=5)
@@ -358,7 +358,7 @@ def jenkins(  # pylint: disable=too-many-arguments
         selected_pipeline = pipeline if pipeline else jenkins_config["defaultPipeline"]
         pipeline_parameters = {"TEST": "true", "VERSION": test} if test else {}
 
-        if dry_run:
+        if dryrun:
             arguments = arguments + ("--dryrun",)
 
         if arguments:

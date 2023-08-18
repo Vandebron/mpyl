@@ -41,7 +41,7 @@ def main(log: Logger, args: argparse.Namespace):
             verbose=args.verbose,
             all=args.all,
             target=run_properties.target.value,
-            dry_run=True,
+            dryrun=True,
         ),
     )
     check = None
@@ -141,6 +141,8 @@ if __name__ == "__main__":
     parsed_args = parser.parse_args()
     mpl_logger = logging.getLogger("mpyl")
     mpl_logger.info("Starting run.....")
+
+    print(f"PARSED_ARGS: {parsed_args}")
     try:
         main(mpl_logger, parsed_args)
     except Exception as e:
