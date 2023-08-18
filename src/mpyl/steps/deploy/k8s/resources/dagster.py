@@ -1,9 +1,24 @@
 """
 This module contains the Dagster user-code-deployment values conversion
 """
+from dataclasses import dataclass
+
 from mpyl.project import Project, get_env_variables
 from mpyl.steps.models import RunProperties
 from mpyl.utilities.docker import DockerConfig
+
+
+@dataclass(frozen=True)
+class Constants:
+    DAGSTER_NAMESPACE = "dagster"
+
+    DAGSTER_WORKSPACE_CONFIGMAP = "dagster-workspace-yaml"
+    DAGSTER_WORKSPACE_FILE = "workspace.yaml"
+    DAGSTER_DAEMON = "dagster-daemon"
+    DAGSTER_DAGIT = "dagster-dagit"
+
+    HELM_CHART_REPO = "https://dagster-io.github.io/helm"
+    CHART_NAME = "dagster/dagster-user-deployments"
 
 
 def to_user_code_values(
