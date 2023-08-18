@@ -3,7 +3,6 @@ Step to deploy a dagster user code repository to k8s
 """
 from functools import reduce
 from logging import Logger
-from typing import List
 
 import yaml
 
@@ -18,6 +17,7 @@ from .k8s import (
 )
 from .k8s.resources.dagster import to_user_code_values, to_grpc_server_entry, Constants
 from .. import Step, Meta, ArtifactType, Input, Output
+from ..models import merge_output_messages
 from ...project import Stage, Target
 from ...utilities.docker import DockerConfig
 from ...utilities.helm import convert_name_to_helm_release_name
@@ -35,20 +35,6 @@ class DeployDagster(Step):
             ),
             produced_artifact=ArtifactType.NONE,
             required_artifact=ArtifactType.DOCKER_IMAGE,
-        )
-
-    @staticmethod
-    def __flatten_result_messages(results: List[Output]) -> Output:
-        def merge_outputs(acc: Output, curr: Output) -> Output:
-            return Output(
-                success=acc.success and curr.success,
-                message=acc.message + "\n" + curr.message,
-            )
-
-        return (
-            reduce(merge_outputs, results[1:], results[0])
-            if len(results) > 1
-            else results[0]
         )
 
     # Deploys the docker image produced in the build stage as a Dagster user-code-deployment
@@ -165,4 +151,12 @@ class DeployDagster(Step):
                 dagster_deploy_results.append(rollout_restart_output)
             else:
                 return rollout_restart_output
-        return self.__flatten_result_messages(dagster_deploy_results)
+        return (
+            reduce(
+                merge_output_messages,
+                dagster_deploy_results[1:],
+                dagster_deploy_results[0],
+            )
+            if len(dagster_deploy_results) > 0
+            else dagster_deploy_results[0]
+        )
