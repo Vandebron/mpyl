@@ -126,7 +126,6 @@ class DeployDagster(Step):
                     data=dagster_workspace,
                 )
                 configmap_update_result = replace_config_map(
-                    self._logger,
                     context,
                     Constants.DAGSTER_NAMESPACE,
                     Constants.DAGSTER_WORKSPACE_CONFIGMAP,

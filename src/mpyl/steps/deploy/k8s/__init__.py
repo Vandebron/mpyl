@@ -51,9 +51,7 @@ def rollout_restart_deployment(
         _, status_code, _ = v1_apps.patch_namespaced_deployment_with_http_info(
             deployment, namespace, body, pretty="true"
         )
-        msg = f"Rollout restart of {deployment} finished with statuscode {status_code}"
-        logger.info(msg)
-        return Output(success=True, message=msg)
+        return Output(success=True, message=f"Rollout restart of {deployment} finished with statuscode {status_code}")
     except ApiException as api_exception:
         return Output(
             success=False,
@@ -119,7 +117,6 @@ def update_config_map_field(
 
 
 def replace_config_map(
-    logger: Logger,
     context: str,
     namespace: str,
     config_map_name: str,
@@ -131,9 +128,7 @@ def replace_config_map(
         _, status_code, _ = api.replace_namespaced_config_map_with_http_info(
             config_map_name, namespace, config_map
         )
-        msg = f"ConfigMap Update of {config_map_name} finished with statuscode {status_code}"
-        logger.info(msg)
-        return Output(success=True, message=msg)
+        return Output(success=True, message=f"ConfigMap Update of {config_map_name} finished with statuscode {status_code}")
     except ApiException as api_exception:
         return Output(
             success=False,
