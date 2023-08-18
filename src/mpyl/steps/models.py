@@ -214,13 +214,6 @@ class Output:
         return None
 
 
-def merge_output_messages(output1: Output, output2: Output) -> Output:
-    return Output(
-        success=output1.success and output2.success,
-        message=f"{output1.message}\n{output2.message}",
-    )
-
-
 def input_to_artifact(artifact_type: ArtifactType, step_input: Input, spec: dict):
     return Artifact(
         artifact_type=artifact_type,
