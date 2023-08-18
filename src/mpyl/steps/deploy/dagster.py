@@ -1,7 +1,9 @@
 """
 Step to deploy a dagster user code repository to k8s
 """
+from functools import reduce
 from logging import Logger
+from typing import List
 
 import yaml
 
@@ -33,6 +35,20 @@ class DeployDagster(Step):
             ),
             produced_artifact=ArtifactType.NONE,
             required_artifact=ArtifactType.DOCKER_IMAGE,
+        )
+
+    @staticmethod
+    def __flatten_result_messages(results: List[Output]) -> Output:
+        def merge_outputs(acc: Output, curr: Output) -> Output:
+            return Output(
+                success=acc.success and curr.success,
+                message=acc.message + "\n" + curr.message,
+            )
+
+        return (
+            reduce(merge_outputs, results[1:], results[0])
+            if len(results) > 1
+            else results[0]
         )
 
     # Deploys the docker image produced in the build stage as a Dagster user-code-deployment
@@ -70,7 +86,8 @@ class DeployDagster(Step):
 
         self._logger.debug(f"Deploying user code with values: {user_code_deployment}")
 
-        deploy_result = helm.install_with_values_yaml(
+        dagster_deploy_results = []
+        helm_install_result = helm.install_with_values_yaml(
             logger=self._logger,
             step_input=step_input,
             values=user_code_deployment,
@@ -82,7 +99,9 @@ class DeployDagster(Step):
             kube_context=context,
         )
 
-        if deploy_result.success and not step_input.dry_run:
+        if helm_install_result.success and not step_input.dry_run:
+            dagster_deploy_results.append(helm_install_result)
+
             config_map = get_config_map(
                 context,
                 Constants.DAGSTER_NAMESPACE,
@@ -114,26 +133,36 @@ class DeployDagster(Step):
                     field=Constants.DAGSTER_WORKSPACE_FILE,
                     data=dagster_workspace,
                 )
-                replaced_configmap_result = replace_config_map(
+                configmap_update_result = replace_config_map(
                     self._logger,
                     context,
                     Constants.DAGSTER_NAMESPACE,
                     Constants.DAGSTER_WORKSPACE_CONFIGMAP,
                     updated_config_map,
                 )
-                if not replaced_configmap_result.success:
-                    return replaced_configmap_result
+                if configmap_update_result.success:
+                    self._logger.info(
+                        f"Successfully added {user_code_name_to_deploy} to dagster's workspace.yaml"
+                    )
+                    dagster_deploy_results.append(configmap_update_result)
+                if not configmap_update_result.success:
+                    return configmap_update_result
 
             # restarting ui and daemon
             rollout_restart_output = rollout_restart_deployment(
                 self._logger, Constants.DAGSTER_NAMESPACE, Constants.DAGSTER_DAEMON
             )
             if rollout_restart_output.success:
+                self._logger.info(rollout_restart_output.message)
+                dagster_deploy_results.append(rollout_restart_output)
                 rollout_restart_output = rollout_restart_deployment(
                     self._logger, Constants.DAGSTER_NAMESPACE, Constants.DAGSTER_DAGIT
                 )
                 if not rollout_restart_output.success:
                     return rollout_restart_output
+
+                self._logger.info(rollout_restart_output.message)
+                dagster_deploy_results.append(rollout_restart_output)
             else:
                 return rollout_restart_output
-        return deploy_result
+        return self.__flatten_result_messages(dagster_deploy_results)
