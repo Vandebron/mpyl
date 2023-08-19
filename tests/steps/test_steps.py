@@ -1,24 +1,27 @@
 import logging
 from io import StringIO
 from logging import Logger
+from typing import cast
 
 import pytest
 from jsonschema import ValidationError
 from pyaml_env import parse_config
 from ruamel.yaml import YAML  # type: ignore
 
-from src.mpyl.utilities.docker import DockerImageSpec
-from src.mpyl.steps.collection import StepsCollection
+from mpyl.steps.deploy.k8s import RenderedHelmChartSpec
 from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME, BUILD_ARTIFACTS_FOLDER
 from src.mpyl.project import Project, Stages, Stage, Target, Dependencies
+from src.mpyl.steps.collection import StepsCollection
 from src.mpyl.steps.models import (
     Output,
     ArtifactType,
     RunProperties,
     VersioningProperties,
     ConsoleProperties,
+    Artifact,
 )
 from src.mpyl.steps.steps import Steps
+from src.mpyl.utilities.docker import DockerImageSpec
 from tests import root_test_path, test_resource_path
 from tests.test_resources import test_data
 from tests.test_resources.test_data import assert_roundtrip, get_output, RUN_PROPERTIES
@@ -56,7 +59,9 @@ class TestSteps:
         output: Output = self._roundtrip(self.docker_image)
         assert output.produced_artifact is not None
         assert output.produced_artifact.artifact_type.name == "DOCKER_IMAGE"
-        assert output.produced_artifact.spec == DockerImageSpec(image="image:latest")
+        assert (
+            cast(DockerImageSpec, output.produced_artifact.spec).image == "image:latest"
+        )
 
     def test_write_output(self):
         stream = StringIO()
@@ -67,11 +72,34 @@ class TestSteps:
             value,
         )
 
+    def test_write_deploy_output(self):
+        stream = StringIO()
+        output = Output(
+            success=True,
+            message="deploy success  success",
+            produced_artifact=Artifact(
+                artifact_type=ArtifactType.KUBERNETES_MANIFEST,
+                revision="123",
+                producing_step="Producing Step",
+                spec=RenderedHelmChartSpec("target/template.yml"),
+            ),
+        )
+        yaml.dump(output, stream)
+        assert_roundtrip(
+            test_resource_path / "deployment" / BUILD_ARTIFACTS_FOLDER / "DEPLOY.yml",
+            stream.getvalue(),
+        )
+
     def test_find_required_output(self):
         found_artifact = Steps._find_required_artifact(
             self.build_project, ArtifactType.DOCKER_IMAGE
         )
-        assert found_artifact == self.docker_image.produced_artifact
+        assert found_artifact is not None
+        assert self.docker_image.produced_artifact is not None
+        assert (
+            cast(DockerImageSpec, found_artifact.spec).image
+            == cast(DockerImageSpec, self.docker_image.produced_artifact.spec).image
+        )
 
     def test_find_not_required_output(self):
         with pytest.raises(ValueError) as exc_info:
