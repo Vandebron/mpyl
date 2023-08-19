@@ -85,11 +85,11 @@ def markdown_for_stage(run_result: RunResult, stage: Stage):
     test_artifacts: dict[str, JunitTestSpec] = _collect_test_artifacts(step_results)
     test_results: dict[str, list[TestSuite]] = _collect_test_results(test_artifacts)
 
-    listoflists: list[list[TestSuite]] = [value for key, value in test_results.items()]
-    suites: list[TestSuite] = list(itertools.chain.from_iterable(listoflists))
-
     if test_results:
-        result += to_markdown_test_report(suites)
+        test_suites = list(
+            itertools.chain.from_iterable([value for _, value in test_results.items()])
+        )
+        result += to_markdown_test_report(test_suites)
         unique_artifacts = _collect_unique_test_artifacts_with_url(test_artifacts)
 
         for unique_artifact in unique_artifacts:
@@ -124,7 +124,6 @@ def execution_plan_as_markdown(run_result):
 
 
 def to_markdown_test_report(suites: list[TestSuite]):
-    print(suites)
     total_tests = sum_suites(suites)
     return f"{summary_to_markdown(total_tests)}"
 
