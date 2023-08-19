@@ -5,7 +5,6 @@ from kubernetes.client import V1Probe, V1ObjectMeta
 from pyaml_env import parse_config
 
 from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME
-from src.mpyl.steps.deploy.kubernetes import DeployKubernetes
 from src.mpyl.project import Target, Project
 from src.mpyl.steps.deploy.k8s import cluster_config, render_manifests
 from src.mpyl.steps.deploy.k8s.chart import (
@@ -18,6 +17,7 @@ from src.mpyl.steps.deploy.k8s.chart import (
 )
 from src.mpyl.steps.deploy.k8s.resources import to_yaml, CustomResourceDefinition
 from src.mpyl.steps.deploy.k8s.resources.traefik import V1AlphaIngressRoute
+from src.mpyl.steps.deploy.kubernetes import DeployKubernetes
 from src.mpyl.steps.models import Input, Artifact, ArtifactType
 from src.mpyl.utilities.docker import DockerConfig, DockerImageSpec
 from tests import root_test_path
