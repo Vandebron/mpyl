@@ -36,14 +36,14 @@ class DeployedHelmAppSpec(ArtifactSpec):
 @dataclass
 class RenderedHelmChartSpec(ArtifactSpec):
     yaml_tag = "!RenderedHelmChartSpec"
-    chart_path: Path
+    chart_path: str
 
 
 @yaml_object(yaml)
 @dataclass
 class KubernetesManifestSpec(ArtifactSpec):
     yaml_tag = "!KubernetesManifestSpec"
-    manifest_file_path: Path
+    manifest_file_path: str
 
 
 @dataclass(frozen=True)
@@ -64,7 +64,7 @@ class DeployConfig:
         kube_config = values["kubernetes"]
         action: str = kube_config.get("deployAction", "HelmDeploy")
         output_path = kube_config.get("outputPath", "target/kubernetes")
-        return DeployConfig(action=DeployAction[action], output_path=output_path)  # type: ignore
+        return DeployConfig(action=DeployAction(action), output_path=output_path)  # type: ignore
 
 
 def get_namespace(run_properties: RunProperties, project: Project) -> str:
@@ -149,7 +149,7 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
         artifact = input_to_artifact(
             ArtifactType.KUBERNETES_MANIFEST,
             step_input,
-            spec=KubernetesManifestSpec(file_path),
+            spec=KubernetesManifestSpec(str(file_path)),
         )
 
         return Output(
@@ -167,7 +167,7 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
         artifact = input_to_artifact(
             ArtifactType.KUBERNETES_MANIFEST,
             step_input,
-            spec=RenderedHelmChartSpec(template_path),
+            spec=RenderedHelmChartSpec(str(template_path)),
         )
         return Output(
             success=True,
