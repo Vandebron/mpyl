@@ -131,6 +131,7 @@ class DeploymentDefaults:
     job_defaults: dict
     treafik_defaults: dict
     white_lists: dict
+    image_pull_secrets: dict
 
     @staticmethod
     def from_config(config: dict):
@@ -145,6 +146,7 @@ class DeploymentDefaults:
             job_defaults=kubernetes.get("job", {}),
             treafik_defaults=deployment_values.get("traefik", {}),
             white_lists=config.get("whiteLists", {}),
+            image_pull_secrets=kubernetes.get("imagePullSecrets", {}),
         )
 
 
@@ -429,12 +431,25 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
             for host in hosts
         }
 
-    def to_service_account(self) -> V1ServiceAccount:
+    def to_service_account(
+        self,
+    ) -> V1ServiceAccount:
+        kubernetes = self._get_kubernetes()
+        image_pull_secrets_config = (
+            kubernetes.image_pull_secrets or self.config_defaults.image_pull_secrets
+        )
+        secrets = [
+            ChartBuilder._to_k8s_model(
+                secret,
+                V1LocalObjectReference,
+            )
+            for secret in image_pull_secrets_config
+        ]
         return V1ServiceAccount(
             api_version="v1",
             kind="ServiceAccount",
             metadata=self._to_object_meta(),
-            image_pull_secrets=[V1LocalObjectReference("bigdataregistry")],
+            image_pull_secrets=secrets,
         )
 
     def to_sealed_secrets(self) -> V1SealedSecret:

@@ -292,6 +292,7 @@ class Kubernetes:
     metrics: Optional[Metrics]
     resources: Resources
     job: Optional[Job]
+    image_pull_secrets: dict
 
     @staticmethod
     def from_config(values: dict):
@@ -302,6 +303,7 @@ class Kubernetes:
             metrics=Metrics.from_config(values.get("metrics", {})),
             resources=Resources.from_config(values.get("resources", {})),
             job=Job.from_config(values.get("job", {})),
+            image_pull_secrets=values.get("imagePullSecrets", {}),
         )
 
 
