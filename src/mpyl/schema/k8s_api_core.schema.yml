@@ -92,3 +92,11 @@ definitions:
     oneOf:
       - type: string
       - type: number
+  io.k8s.api.core.v1.LocalObjectReference:
+    description: LocalObjectReference contains enough information to let you locate
+      the referenced object inside the same namespace.
+    properties:
+      name:
+        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+        type: string
+    type: object

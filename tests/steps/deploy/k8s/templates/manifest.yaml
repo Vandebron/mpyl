@@ -3,7 +3,7 @@
 # service-account
 apiVersion: v1
 imagePullSecrets:
-- name: bigdataregistry
+- name: acme-registry
 kind: ServiceAccount
 metadata:
   labels:
