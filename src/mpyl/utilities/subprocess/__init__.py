@@ -26,7 +26,6 @@ def custom_check_output(
             out = subprocess.check_output(command, stderr=subprocess.STDOUT).decode(
                 "utf-8"
             )
-            print(out)
             return Output(success=True, message=out)
 
         with subprocess.Popen(command, stdout=subprocess.PIPE, text=True) as process:

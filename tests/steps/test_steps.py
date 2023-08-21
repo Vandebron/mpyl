@@ -30,7 +30,7 @@ class TestSteps:
     executor = Steps(
         logger=logging.getLogger(),
         properties=test_data.RUN_PROPERTIES,
-        steps_collection=StepsCollection(logging.getLogger(), "src"),
+        steps_collection=StepsCollection(logging.getLogger()),
     )
 
     docker_image = get_output()
@@ -105,7 +105,7 @@ class TestSteps:
             Target.PULL_REQUEST,
             VersioningProperties("", "feature/ARC-123", 1, None),
             config_values,
-            ConsoleProperties("INFO", 130),
+            ConsoleProperties("INFO", False, 130),
         )
         with pytest.raises(ValidationError) as excinfo:
             Steps(logger=Logger.manager.getLogger("logger"), properties=properties)

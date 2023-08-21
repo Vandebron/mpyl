@@ -36,7 +36,6 @@ class RepoCredentials:
     @property
     def to_url(self):
         parsed = urlparse(self.url)
-
         return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
 
     @staticmethod

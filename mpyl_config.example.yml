@@ -28,6 +28,11 @@ docker:
     hostName: 'acme.docker.com'
     userName: !ENV ${DOCKER_REGISTRY_USR:docker_user}
     password: !ENV ${DOCKER_REGISTRY_PSW:docker_password}
+    cache:
+      cacheFromRegistry: false
+      custom:
+        to: 'type=gha,mode=max'
+        from: 'type=gha'
   build:
     rootFolder: '.'
     buildTarget: 'builder'

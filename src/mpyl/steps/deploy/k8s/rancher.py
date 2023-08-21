@@ -4,7 +4,6 @@ from dataclasses import dataclass
 
 from ...models import RunProperties
 from ....project import Target
-from ....steps import Input
 
 
 @dataclass(frozen=True)
@@ -24,8 +23,13 @@ class ClusterConfig:
         )
 
 
+def render_templates(run_properties: RunProperties) -> bool:
+    return run_properties.config["kubernetes"].get("renderTemplates", False)
+
+
 def cluster_config(target: Target, run_properties: RunProperties) -> ClusterConfig:
-    cluster_configs = run_properties.config["kubernetes"]["rancher"]["cluster"]
+    kubernetes_config = run_properties.config["kubernetes"]
+    cluster_configs = kubernetes_config["rancher"]["cluster"]
 
     if target in {Target.PULL_REQUEST, Target.PULL_REQUEST_BASE}:
         return ClusterConfig.from_config(cluster_configs["test"])
@@ -36,11 +40,7 @@ def cluster_config(target: Target, run_properties: RunProperties) -> ClusterConf
     raise ValueError(f"Unknown target {target}")
 
 
-def rancher_namespace_metadata(namespace: str, step_input: Input):
-    rancher_config = cluster_config(
-        step_input.run_properties.target, step_input.run_properties
-    )
-
+def rancher_namespace_metadata(namespace: str, rancher_config: ClusterConfig):
     return {
         "annotations": {
             "field.cattle.io/projectId": f"{rancher_config.cluster_id}:{rancher_config.project_id}",

@@ -74,16 +74,24 @@ which will trigger a build and release to https://pypi.org/project/mpyl/
     ```
    which should now succeed.
 
+## ..installing a test release of MPyL
+Test versions of MPyL are published for every pull request to [test pypi](https://test.pypi.org/project/mpyl/).
+To install a test release, run:
+```shell
+pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==<version>
+```
+
 ## ..running the mpyl sourcecode against another repository
 
+For a shorter feedback loop, you can run the mpyl sourcecode against another repository.
 To test the mpyl sourcecode against the peculiarities of your own repository, you can run the following command:
 
 ```shell
-PIPENV_PIPFILE=/<absolute_to_mpyl_repo>/Pipfile pipenv run cli-ext build status
+PIPENV_PIPFILE=/<absolute_path_to_mpyl_repo>/Pipfile pipenv run cli-ext build status
 ```
 Assign PIPENV_PIPFILE to the absolute path of your Pipfile and run the command.
 ⚠️Note that an `.env` file needs to be present in the root if this repository, containing the following variable:
 
 ```shell
-PYTHONPATH=/<absolute_to_mpyl_repo>/src
+PYTHONPATH=/<absolute_path_to_mpyl_repo>/src
 ```

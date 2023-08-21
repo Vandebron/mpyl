@@ -177,8 +177,8 @@ properties:
             uniqueItems: true
           sealedSecret:
             description: >-
-              Bitnami sealed secrets. Will be decrypted in the cluster at deploy
-              time.
+              Bitnami sealed secrets (https://bitnami.com/stack/sealed-secrets/helm). 
+              Will be decrypted in the cluster at deploy time and converted to ordinary k8s secrets.
             type: array
             items:
               $ref: '#/definitions/env'
@@ -822,6 +822,9 @@ definitions:
                   it does not apply to already started executions.  Defaults to false.
                 type: boolean
           spark:
+            description: >-
+              Spark job. Requires google spark operator to be installed.
+              https://github.com/GoogleCloudPlatform/spark-on-k8s-operator
             type: object
             additionalProperties: false
             properties:
@@ -858,6 +861,9 @@ definitions:
             items:
               type: string
       metrics:
+        description: >-
+          Prometheus metrics. Requires prometheus operator to be installed.
+          https://bitnami.com/stack/prometheus-operator/helm
         required:
           - enabled
         additionalProperties: false

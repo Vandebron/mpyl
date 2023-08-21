@@ -39,7 +39,7 @@ from ..utilities.repo import Repository, RepoConfig
 @click.pass_context
 def repository(ctx, config, properties, verbose):
     """Manage CVS (git) repositories"""
-    console = create_console_logger(local=False, verbose=verbose)
+    console = create_console_logger(show_path=False, verbose=verbose)
     ctx.obj = CliContext(
         config=(parse_config(config)),
         repo=ctx.with_resource(

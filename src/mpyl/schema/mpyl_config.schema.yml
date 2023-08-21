@@ -82,6 +82,10 @@ definitions:
     type: object
     additionalProperties: false
     properties:
+      renderTemplates:
+        type: boolean
+        description: 'Rather than deploying, render the HELM templates to a combined yaml file via the `helm template` command. Useful for debugging.'
+        default: false
       rancher:
         type: object
         additionalProperties: false
@@ -219,10 +223,30 @@ definitions:
     properties:
       hostName:
         type: [ string, null ]
+      organization:
+        type: [ string, null ]
       userName:
         type: string
       password:
         type: string
+      cache:
+        type: object
+        additionalProperties: false
+        properties:
+          cacheFromRegistry:
+            description: "Whether to cache from the registry. When true, the to and from properties are ignored."
+            type: boolean
+            default: false
+          custom:
+            type: object
+            additionalProperties: false
+            properties:
+              to:
+                description: "The --cache-to argument for docker buildx"
+                type: string
+              from:
+                description: "The --cache-from argument for docker buildx"
+                type: string
     required:
       - hostName
       - password

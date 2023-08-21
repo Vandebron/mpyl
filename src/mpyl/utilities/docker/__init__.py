@@ -1,16 +1,15 @@
 """Docker related utility methods"""
 import logging
 import shlex
-
+import shutil
 from dataclasses import dataclass
 from logging import Logger
+from pathlib import Path
 from traceback import print_exc
 from typing import Dict, Optional, Iterator, cast, Union
-import shutil
-from pathlib import Path
+
 from python_on_whales import docker, Image, Container, DockerException
 from python_on_whales.exceptions import NoSuchContainer
-from rich.logging import RichHandler
 
 from ..logging import try_parse_ansi
 from ...project import Project
@@ -38,10 +37,23 @@ class DockerComposeConfig:
 
 
 @dataclass(frozen=True)
+class DockerCacheConfig:
+    cache_to: str
+    cache_from: str
+
+    @staticmethod
+    def from_dict(config: Dict):
+        return DockerCacheConfig(config["to"], config["from"])
+
+
+@dataclass(frozen=True)
 class DockerConfig:
     host_name: str
+    organization: Optional[str]
     user_name: str
     password: str
+    cache_from_registry: bool
+    custom_cache_config: Optional[DockerCacheConfig]
     root_folder: str
     build_target: Optional[str]
     test_target: Optional[str]
@@ -52,9 +64,15 @@ class DockerConfig:
         try:
             registry: Dict = config["docker"]["registry"]
             build_config: Dict = config["docker"]["build"]
+            cache_config = registry.get("cache", {})
             return DockerConfig(
                 host_name=registry["hostName"],
                 user_name=registry["userName"],
+                organization=registry.get("organization", None),
+                cache_from_registry=cache_config.get("cacheFromRegistry", False),
+                custom_cache_config=DockerCacheConfig.from_dict(cache_config["custom"])
+                if "custom" in cache_config
+                else None,
                 password=registry["password"],
                 root_folder=build_config["rootFolder"],
                 build_target=build_config.get("buildTarget", None),
@@ -74,7 +92,7 @@ def execute_with_stream(
 ):
     if multiprocess:  # Logger settings need to be re-applied in each process
         logger.setLevel(logging.INFO)
-        logger.addHandler(RichHandler())
+        logger.handlers.clear()
 
     result = cast(
         Iterator[tuple[str, bytes]],
@@ -116,6 +134,15 @@ def docker_image_tag(step_input: Input):
     return f"{step_input.project.name.lower()}:{tag}".replace("/", "_")
 
 
+def docker_registry_path(docker_config: DockerConfig, image_name: str) -> str:
+    path_components = [
+        docker_config.host_name,
+        docker_config.organization,
+        image_name,
+    ]
+    return "/".join([c for c in path_components if c]).lower()
+
+
 def docker_file_path(project: Project, docker_config: DockerConfig):
     return f"{project.deployment_path}/{docker_config.docker_file_name}"
 
@@ -151,7 +178,12 @@ def docker_copy(
 
 
 def build(
-    logger: Logger, root_path: str, file_path: str, image_tag: str, target: str
+    logger: Logger,
+    root_path: str,
+    file_path: str,
+    image_tag: str,
+    target: str,
+    docker_config: Optional[DockerConfig] = None,
 ) -> bool:
     """
     :param logger: the logger
@@ -159,9 +191,23 @@ def build(
     :param file_path: path to the docker file to be built
     :param image_tag: the tag of the image
     :param target: the 'target' within the multi-stage docker image
-    :return: True if success, False if failure
+    :param docker_config: optional docker config, used what type of cache to use if any
+    :return: True for success, False for failure
     """
     logger.info(f"Building docker image with {file_path} and target {target}")
+
+    if docker_config and docker_config.cache_from_registry:
+        registry_path = docker_registry_path(docker_config, image_tag)
+        cache_from = f"type=registry,ref={registry_path}"
+        cache_to = "type=inline"
+    elif docker_config and docker_config.custom_cache_config:
+        cache_from = docker_config.custom_cache_config.cache_from
+        cache_to = docker_config.custom_cache_config.cache_to
+    else:
+        cache_from = None
+        cache_to = None
+
+    logger.debug(f"Building with cache from: {cache_from} {docker_config}")
 
     try:
         logs = docker.buildx.build(
@@ -170,6 +216,8 @@ def build(
             tags=[image_tag],
             target=target,
             stream_logs=True,
+            cache_from=cache_from,
+            cache_to=cache_to,
         )
         if logs is not None and not isinstance(logs, Image):
             stream_docker_logging(

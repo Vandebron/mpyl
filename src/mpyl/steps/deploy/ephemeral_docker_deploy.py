@@ -1,4 +1,4 @@
-""" Step that deploys ephemeral the docker images produced in the build stage """
+"""Runs a deployment from a docker container. Useful for custom deploy steps"""
 
 from logging import Logger
 
