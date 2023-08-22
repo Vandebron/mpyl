@@ -353,11 +353,8 @@ class Dagster:
 
     @staticmethod
     def from_config(values: dict):
-        repo = values.get("repo")
-        if not repo:
-            raise KeyError("Dagster config needs to have repo field set")
         return Dagster(
-            repo=repo,
+            repo=values.get("repo"),
             secrets=[DagsterSecret.from_config(v) for v in values.get("secrets", [])],
         )
 
