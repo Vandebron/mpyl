@@ -10,7 +10,7 @@ from rich.console import Console
 from ....steps.deploy.k8s import substitute_namespaces
 from ....steps.deploy.k8s.chart import ChartBuilder
 from ....utilities.repo import Repository
-from ....mpyl import find_build_set
+from ....build import find_build_set
 from ....project import Project, load_project, Target
 
 
