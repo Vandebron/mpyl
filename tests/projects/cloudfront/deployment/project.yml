@@ -15,6 +15,7 @@ dependencies:
   build:
     - 'test/docker/'
 deployment:
+  namespace: "cloudfront-service"
   properties:
     env:
       - key: SOME_ENV
@@ -30,7 +31,7 @@ deployment:
     portMappings:
       8081: 8081
     metrics:
-      enabled: false
+      enabled: true
     resources:
       instances:
         all: 1

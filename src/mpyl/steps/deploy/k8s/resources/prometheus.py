@@ -8,6 +8,24 @@ from .....project import Alert
 from .. import CustomResourceDefinition
 
 
+class V1PrometheusRule(CustomResourceDefinition):
+    def __init__(self, metadata: V1ObjectMeta, alerts: list[Alert]):
+        super().__init__(
+            api_version="monitoring.coreos.com/v1",
+            kind="PrometheusRule",
+            metadata=metadata,
+            schema="monitoring.coreos.com_prometheuses.schema.yml",
+            spec={
+                "groups": [
+                    {
+                        "name": f"{metadata.name}-group",
+                        "rules": _alerts_to_rules(alerts),
+                    }
+                ]
+            },
+        )
+
+
 def _alerts_to_rules(alerts: list[Alert]) -> list[dict]:
     return [
         {
@@ -27,19 +45,16 @@ def _alerts_to_rules(alerts: list[Alert]) -> list[dict]:
     ]
 
 
-class V1PrometheusRule(CustomResourceDefinition):
-    def __init__(self, metadata: V1ObjectMeta, alerts: list[Alert]):
+class V1ServiceMonitor(CustomResourceDefinition):
+    def __init__(self, metadata: V1ObjectMeta, endpoint: dict, namespace: str):
         super().__init__(
             api_version="monitoring.coreos.com/v1",
-            kind="PrometheusRule",
+            kind="ServiceMonitor",
             metadata=metadata,
-            schema="monitoring.coreos.com_prometheuses.schema.yml",
+            schema="monitoring.coreos.com_servicemonitors.schema.yml",
             spec={
-                "groups": [
-                    {
-                        "name": f"{metadata.name}-group",
-                        "rules": _alerts_to_rules(alerts),
-                    }
-                ]
+                "endpoints": [endpoint],
+                "namespaceSelector": {"matchNames": [namespace]},
+                "selector": {"matchLabels": {"app.kubernetes.io/name": metadata.name}},
             },
         )
