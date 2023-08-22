@@ -2,6 +2,7 @@
 import asyncio
 import importlib
 import logging
+import pkgutil
 from dataclasses import dataclass
 from importlib.metadata import version as version_meta
 from pathlib import Path
@@ -73,6 +74,18 @@ def get_version():
         return f"v{version_meta('mpyl')}"
     except importlib.metadata.PackageNotFoundError:
         return "(local)"
+
+
+def get_releases() -> list[str]:
+    embedded_releases = pkgutil.get_data(__name__, "releases/releases.txt")
+    if not embedded_releases:
+        raise ValueError("File releases/releases.txt not found in package")
+    releases = embedded_releases.decode("utf-8").strip().splitlines()
+    return sorted(releases, reverse=True)
+
+
+def get_latest_release() -> str:
+    return get_releases()[0]
 
 
 FORMAT = "%(message)s"
