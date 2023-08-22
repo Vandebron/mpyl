@@ -44,9 +44,11 @@ class DeployDagster(Step):
             message=acc.message + "\n" + curr.message,
         )
 
-    # Deploys the docker image produced in the build stage as a Dagster user-code-deployment
     # pylint: disable=R0914
     def execute(self, step_input: Input) -> Output:
+        """
+        Deploys the docker image produced in the build stage as a Dagster user-code-deployment
+        """
         context = cluster_config(
             step_input.run_properties.target, step_input.run_properties
         ).context
@@ -80,7 +82,6 @@ class DeployDagster(Step):
             run_properties=step_input.run_properties,
             docker_config=DockerConfig.from_dict(step_input.run_properties.config),
         )
-        user_code_name_to_deploy = user_code_deployment["deployments"][0]["name"]
 
         self._logger.debug(f"Deploying user code with values: {user_code_deployment}")
 
@@ -115,15 +116,16 @@ class DeployDagster(Step):
             ]
 
             # If the server new (not in existing workspace.yml), we append it
+            user_code_name_to_deploy = user_code_deployment["deployments"][0]["name"]
             if user_code_name_to_deploy not in server_names:
                 self._logger.info(
                     f"Adding new server {user_code_name_to_deploy} to dagster's workspace.yaml"
                 )
                 dagster_workspace["load_from"].append(
                     to_grpc_server_entry(
-                        host=user_code_deployment["deployments"][0]["name"],
+                        host=user_code_name_to_deploy,
                         port=user_code_deployment["deployments"][0]["port"],
-                        location_name=user_code_deployment["deployments"][0]["name"],
+                        location_name=user_code_name_to_deploy,
                     )
                 )
                 updated_config_map = update_config_map_field(
