@@ -71,6 +71,7 @@ from ....project import (
     get_env_variables,
     Alert,
     KeyValueRef,
+    Metrics,
 )
 from ....stages.discovery import DeploySet
 
@@ -159,7 +160,7 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
     release_name: str
     config_defaults: DeploymentDefaults
     deploy_set: Optional[DeploySet]
-    namespace: str
+    namespace: Optional[str]
 
     def __init__(self, step_input: Input, deploy_set: Optional[DeploySet] = None):
         self.step_input = step_input
@@ -354,8 +355,7 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
             alerts=alerts,
         )
 
-    def to_service_monitor(self) -> V1ServiceMonitor:
-        metrics = self.deployment.kubernetes.metrics
+    def to_service_monitor(self, metrics: Metrics) -> V1ServiceMonitor:
         endpoint = {
             "honorLabels": "true",
             "path": metrics.path or "/metrics",
@@ -655,15 +655,15 @@ def _to_service_components_chart(builder):
         "service": builder.to_service(),
         "ingress-https-route": builder.to_ingress_routes(),
     }
+    metrics = builder.project.kubernetes.metrics
     prometheus_chart = (
         {
             "prometheus-rule": builder.to_prometheus_rule(
                 alerts=builder.project.kubernetes.metrics.alerts
             ),
-            "service-monitor": builder.to_service_monitor(),
+            "service-monitor": builder.to_service_monitor(metrics=metrics),
         }
-        if builder.project.kubernetes.metrics
-        and builder.project.kubernetes.metrics.enabled
+        if metrics and metrics.enabled
         else {}
     )
     return common_chart | prometheus_chart
