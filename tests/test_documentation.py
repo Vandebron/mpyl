@@ -1,19 +1,16 @@
 from pathlib import Path
 
+from src.mpyl.cli import get_releases, get_latest_release
 from tests.test_resources.test_data import assert_roundtrip, root_test_path
 
 
 class TestDocumentation:
-    releases_path = root_test_path / ".." / "releases"
+    source_root_path = root_test_path / ".."
+    releases_path = source_root_path / "releases"
+    releases_list_path = source_root_path / "src/mpyl/cli/releases"
 
     def test_release_notes(self):
-        releases = (
-            Path(self.releases_path / "releases.txt")
-            .read_text("utf-8")
-            .strip()
-            .splitlines()
-        )
-        reverse_chronological = sorted(releases, reverse=True)
+        reverse_chronological = get_releases()
         combined = "# Release notes\n\n"
         for release in reverse_chronological:
             combined += f"## MPyL {release}\n\n"
@@ -25,3 +22,6 @@ class TestDocumentation:
             combined += f"Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/{release})\n\n"
 
         assert_roundtrip(self.releases_path / "README.md", combined)
+
+    def test_get_latest_release(self):
+        assert get_latest_release() == "1.0.9"
