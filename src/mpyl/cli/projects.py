@@ -7,12 +7,6 @@ from click import ParamType, Argument
 from click.shell_completion import CompletionItem
 from rich.markdown import Markdown
 
-from ..cli.commands.projects.lint import (
-    _find_project_paths,
-    _check_and_load_projects,
-    _assert_unique_project_names,
-    _assert_correct_project_linkup,
-)
 from . import (
     CliContext,
     CONFIG_PATH_HELP,
@@ -20,6 +14,13 @@ from . import (
     parse_config_from_supplied_location,
 )
 from .commands.projects.formatting import print_project
+from ..cli.commands.projects.lint import (
+    _find_project_paths,
+    _check_and_load_projects,
+    _assert_unique_project_names,
+    _assert_correct_project_linkup,
+)
+from ..cli.commands.projects.upgrade import upgrade_project
 from ..constants import DEFAULT_CONFIG_FILE_NAME
 from ..project import load_project, Project, Target
 from ..utilities.pyaml_env import parse_config
@@ -157,6 +158,15 @@ def lint(obj: ProjectsContext, all_, extended):
             all_projects=all_projects,
             pr_identifier=123,
         )
+
+
+@projects.command(help="Upgrade `project.yml` files to the latest version")
+@click.pass_obj
+def upgrade(obj: ProjectsContext):
+    found_projects = obj.cli.repo.find_projects(obj.filter)
+
+    for proj in found_projects:
+        upgrade_project(obj.cli.console, Path(proj))
 
 
 if __name__ == "__main__":
