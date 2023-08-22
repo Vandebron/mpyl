@@ -38,7 +38,10 @@ def update_repo(logger: Logger):
 
 
 def write_chart(
-    chart: dict[str, CustomResourceDefinition], chart_path: Path, chart_metadata: str
+    chart: dict[str, CustomResourceDefinition],
+    chart_path: Path,
+    chart_metadata: str,
+    values: dict[str, str],
 ) -> None:
     shutil.rmtree(chart_path, ignore_errors=True)
     template_path = chart_path / Path("templates")
@@ -47,9 +50,12 @@ def write_chart(
     with open(chart_path / Path("Chart.yaml"), mode="w+", encoding="utf-8") as file:
         file.write(chart_metadata)
     with open(chart_path / Path("values.yaml"), mode="w+", encoding="utf-8") as file:
-        file.write(
-            "# This file is intentionally left empty. All values in /templates have been pre-interpolated"
-        )
+        if values == {}:
+            file.write(
+                "# This file is intentionally left empty. All values in /templates have been pre-interpolated"
+            )
+        else:
+            file.write(yaml.dump(values))
 
     my_dictionary: dict[str, str] = dict(
         map(lambda item: (item[0], to_yaml(item[1])), chart.items())
@@ -111,8 +117,7 @@ def install_with_values_yaml(
     values_path = Path(step_input.project.target_path)
     logger.info(f"Writing Helm values to {values_path}")
 
-    with open(values_path / Path("values.yaml"), mode="w+", encoding="utf-8") as file:
-        file.write(yaml.dump(values))
+    write_chart({}, values_path, "", values)
 
     values_path_arg = f'-f {values_path / Path("values.yaml")} {chart_name}'
     if step_input.dry_run:
@@ -164,6 +169,7 @@ def install(
         )
         if not removed.success:
             return removed
+
     additional_args = str(chart_path)
     if dry_run:
         additional_args += " --debug --dry-run"
