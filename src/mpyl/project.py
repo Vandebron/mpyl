@@ -343,7 +343,7 @@ class DagsterSecret:
 
     @staticmethod
     def from_config(values: dict):
-        return DagsterSecret(name=values.get("name"))
+        return DagsterSecret(name=values.get("name", ""))
 
 
 @dataclass(frozen=True)
