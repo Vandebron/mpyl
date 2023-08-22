@@ -354,7 +354,7 @@ class Dagster:
     @staticmethod
     def from_config(values: dict):
         return Dagster(
-            repo=values.get("repo"),
+            repo=values.get("repo", ""),
             secrets=[DagsterSecret.from_config(v) for v in values.get("secrets", [])],
         )
 
