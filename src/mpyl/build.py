@@ -1,59 +1,36 @@
 """Simple MPyL build runner"""
 
 import logging
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
 from jsonschema import ValidationError
+from rich.console import Console
+from rich.logging import RichHandler
 from rich.markdown import Markdown
 
-from ... import create_console_logger
-from ....project import load_project, Stage, Project
-from ....reporting.formatting.markdown import run_result_to_markdown
-from ....reporting.targets import Reporter
-from ....stages.discovery import for_stage, find_invalidated_projects_per_stage
-from ....steps.collection import StepsCollection
-from ....steps.models import RunProperties
-from ....steps.run import RunResult
-from ....steps.steps import Steps, ExecutionException
-from ....utilities.repo import Repository, RepoConfig, Revision
-
-
-@dataclass(frozen=True)
-class MpylRunConfig:
-    config: dict
-    run_properties: RunProperties
-
-
-@dataclass(frozen=True)
-class MpylCliParameters:
-    local: bool
-    target: str
-    tag: Optional[str] = None
-    pull_main: bool = False
-    verbose: bool = False
-    all: bool = False
-
-
-@dataclass(frozen=True)
-class MpylRunParameters:
-    run_config: MpylRunConfig
-    parameters: MpylCliParameters
+from .cli import MpylCliParameters
+from .project import load_project, Stage, Project
+from .reporting.formatting.markdown import run_result_to_markdown
+from .reporting.targets import Reporter
+from .stages.discovery import for_stage, find_invalidated_projects_per_stage
+from .steps.collection import StepsCollection
+from .steps.models import RunProperties
+from .steps.run import RunResult
+from .steps.steps import Steps, ExecutionException
+from .utilities.repo import Repository, RepoConfig, Revision
 
 
 FORMAT = "%(name)s  %(message)s"
 
 
 def get_build_plan(
-    logger: logging.Logger, repo: Repository, mpyl_run_parameters: MpylRunParameters
+    logger: logging.Logger,
+    repo: Repository,
+    run_properties: RunProperties,
+    cli_parameters: MpylCliParameters,
 ) -> RunResult:
-    params = mpyl_run_parameters.parameters
-    branch = (
-        repo.get_branch
-        or mpyl_run_parameters.run_config.run_properties.versioning.branch
-    )
-    logger.info(f"Running with {params}")
+    branch = repo.get_branch or run_properties.versioning.branch
     if branch:
         if repo.base_revision:
             logger.info(
@@ -65,42 +42,57 @@ def get_build_plan(
             logger.info(f"Pulled `{pull_result[0].remote_ref_path.strip()}` to local")
         changes = (
             repo.changes_in_branch_including_local()
-            if params.local
+            if cli_parameters.local
             else repo.changes_in_branch()
         )
     else:
         changes = (
-            repo.changes_in_tagged_commit(params.tag)
-            if params.tag
+            repo.changes_in_tagged_commit(run_properties.versioning.tag)
+            if run_properties.versioning.tag
             else repo.changes_in_merge_commit()
         )
     logger.debug(f"Changes: {changes}")
 
     projects_per_stage: dict[Stage, set[Project]] = find_build_set(
-        repo, changes, params.all
+        repo, changes, cli_parameters.all
     )
     return RunResult(
-        run_properties=mpyl_run_parameters.run_config.run_properties,
+        run_properties=run_properties,
         run_plan=projects_per_stage,
     )
 
 
 def run_mpyl(
-    mpyl_run_parameters: MpylRunParameters, reporter: Optional[Reporter]
+    run_properties: RunProperties,
+    cli_parameters: MpylCliParameters,
+    reporter: Optional[Reporter],
 ) -> RunResult:
-    params = mpyl_run_parameters.parameters
-    console_properties = mpyl_run_parameters.run_config.run_properties.console
-    console = create_console_logger(
-        console_properties.show_paths, params.verbose, console_properties.width or 0
+    console_properties = run_properties.console
+    console = Console(
+        markup=False,
+        width=None if cli_parameters.local else console_properties.width,
+        no_color=False,
+        log_path=False,
+        color_system="256",
     )
-
     logging.raiseExceptions = False
+    logging.basicConfig(
+        level="DEBUG" if cli_parameters.verbose else console_properties.log_level,
+        format=FORMAT,
+        datefmt="[%X]",
+        handlers=[
+            RichHandler(markup=False, console=console, show_path=cli_parameters.local)
+        ],
+    )
     logger = logging.getLogger("mpyl")
     try:
-        with Repository(
-            RepoConfig.from_config(mpyl_run_parameters.run_config.config)
-        ) as repo:
-            run_plan = get_build_plan(logger, repo, mpyl_run_parameters)
+        with Repository(RepoConfig.from_config(run_properties.config)) as repo:
+            run_plan = get_build_plan(
+                logger=logger,
+                repo=repo,
+                run_properties=run_properties,
+                cli_parameters=cli_parameters,
+            )
 
             if not run_plan.run_plan.items():
                 logger.info("Nothing to do. Exiting..")
@@ -115,12 +107,10 @@ def run_mpyl(
             try:
                 steps = Steps(
                     logger=logger,
-                    properties=mpyl_run_parameters.run_config.run_properties,
+                    properties=run_properties,
                     steps_collection=StepsCollection(logger=logger),
                 )
-                run_result = run_build(
-                    run_plan, steps, reporter, mpyl_run_parameters.parameters.local
-                )
+                run_result = run_build(run_plan, steps, reporter, cli_parameters.local)
             except ValidationError as exc:
                 console.log(
                     f'Schema validation failed {exc.message} at `{".".join(map(str, exc.path))}`'

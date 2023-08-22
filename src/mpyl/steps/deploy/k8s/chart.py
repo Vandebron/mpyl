@@ -4,7 +4,7 @@ More info: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/c
 """
 import itertools
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Optional
 
 from kubernetes.client import (
     V1Deployment,
@@ -185,7 +185,7 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
         self.release_name = self.project.name.lower()
         self.deploy_set = deploy_set
 
-    def _to_labels(self) -> Dict:
+    def _to_labels(self) -> dict:
         run_properties = self.step_input.run_properties
         app_labels = {
             "name": self.release_name,
@@ -208,14 +208,14 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
 
         return app_labels
 
-    def _to_annotations(self) -> Dict:
+    def _to_annotations(self) -> dict:
         return {"description": self.project.description}
 
-    def _to_image_annotation(self) -> Dict:
+    def _to_image_annotation(self) -> dict:
         return {"image": self._get_image()}
 
     def _to_object_meta(
-        self, name: Optional[str] = None, annotations: Optional[Dict] = None
+        self, name: Optional[str] = None, annotations: Optional[dict] = None
     ):
         return V1ObjectMeta(
             name=name if name else self.release_name,

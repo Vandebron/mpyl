@@ -4,10 +4,9 @@ At this moment Git is the only supported VCS.
 """
 import itertools
 import logging
-import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional
 from urllib.parse import urlparse
 
 from git import Git, Repo, Remote
@@ -39,7 +38,7 @@ class RepoCredentials:
         return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
 
     @staticmethod
-    def from_config(config: Dict):
+    def from_config(config: dict):
         return RepoCredentials(
             url=config["url"], user_name=config["userName"], password=config["password"]
         )
@@ -52,7 +51,7 @@ class RepoConfig:
     repo_credentials: Optional[RepoCredentials]
 
     @staticmethod
-    def from_config(config: Dict):
+    def from_config(config: dict):
         git_config = config["cvs"]["git"]
         maybe_remote_config = git_config.get("remote", None)
         return RepoConfig(

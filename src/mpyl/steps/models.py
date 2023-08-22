@@ -4,7 +4,7 @@ import pkgutil
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Optional, Dict
+from typing import Optional
 
 from ruamel.yaml import YAML, yaml_object  # type: ignore
 
@@ -47,7 +47,7 @@ class RunContext:
     """Email of of the user that triggered the run"""
 
     @staticmethod
-    def from_configuration(run_details: Dict):
+    def from_configuration(run_details: dict):
         return RunContext(
             build_id=run_details["id"],
             run_url=run_details["run_url"],
@@ -65,7 +65,7 @@ class ConsoleProperties:
     width: Optional[int]
 
     @staticmethod
-    def from_configuration(build_config: Dict):
+    def from_configuration(build_config: dict):
         console_config = build_config["console"]
         width = console_config.get("width", 130)
         return ConsoleProperties(
@@ -94,7 +94,7 @@ class RunProperties:
 
     @staticmethod
     def for_local_run(
-        config: Dict, revision: str, branch: Optional[str], tag: Optional[str]
+        config: dict, revision: str, branch: Optional[str], tag: Optional[str]
     ):
         return RunProperties(
             details=RunContext("", "", "", "", "", None),
@@ -105,7 +105,11 @@ class RunProperties:
         )
 
     @staticmethod
-    def from_configuration(run_properties: Dict, config: Dict):
+    def from_configuration(
+        run_properties: dict,
+        config: dict,
+        cli_tag: Optional[str] = None,
+    ):
         build_dict = pkgutil.get_data(__name__, "../schema/run_properties.schema.yml")
 
         if build_dict:
@@ -114,7 +118,7 @@ class RunProperties:
         build = run_properties["build"]
         versioning_config = build["versioning"]
 
-        tag: Optional[str] = versioning_config.get("tag")
+        tag: Optional[str] = cli_tag or versioning_config.get("tag")
         pr_from_config: Optional[str] = versioning_config.get("pr_number")
         pr_num: Optional[int] = (
             None if tag else (int(pr_from_config) if pr_from_config else None)
