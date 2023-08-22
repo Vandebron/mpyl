@@ -117,7 +117,7 @@ class TestSteps:
             properties=test_data.RUN_PROPERTIES,
         )
         stages = Stages(build=None, test=None, deploy=None, postdeploy=None)
-        project = Project("test", "Test project", "", stages, [], None, None)
+        project = Project("1.0.9", "test", "Test project", "", stages, [], None, None)
         output = steps.execute(stage=Stage.BUILD, project=project).output
         assert not output.success
         assert output.message == "Stage 'build' not defined on project 'test'"

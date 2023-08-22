@@ -18,6 +18,7 @@ class TestCypress:
     def test_should_check_defined_specs(self):
         stages = Stages.from_config({"postdeploy": "Cypress Test"})
         project = Project(
+            version="1.0.9",
             name="test",
             description="Test project",
             path="",

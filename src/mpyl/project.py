@@ -375,6 +375,7 @@ class ProjectName:
 
 @dataclass(frozen=True)
 class Project:
+    version: str
     name: str
     description: str
     path: str
@@ -456,6 +457,7 @@ class Project:
         deployment = values.get("deployment")
         dependencies = values.get("dependencies")
         return Project(
+            version="1.0.9",
             name=values["name"],
             description=values["description"],
             path=str(project_path),

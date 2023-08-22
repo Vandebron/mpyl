@@ -10,6 +10,12 @@ dependencies:
   deployment:
     - maintainer
 properties:
+  mpylVersion:
+    description: The version of the MPyL schema that this project is using
+    type: string
+    examples:
+      - 1.0.0
+      - 1.0.8
   name:
     description: Uniquely identifies this project
     type: string
