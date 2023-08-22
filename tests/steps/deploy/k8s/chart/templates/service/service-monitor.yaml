@@ -14,7 +14,7 @@ metadata:
   name: dockertest-service-monitor
 spec:
   endpoints:
-  - honorLabels: 'true'
+  - honorLabels: true
     path: /metrics
     targetPort: 8080
   namespaceSelector:
