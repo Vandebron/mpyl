@@ -1,8 +1,6 @@
 """
 This module contains the PrometheusRule CRD
 """
-from typing import Optional
-
 from kubernetes.client import V1ObjectMeta
 
 from .....project import Alert, Metrics
@@ -52,7 +50,7 @@ class V1ServiceMonitor(CustomResourceDefinition):
         metadata: V1ObjectMeta,
         metrics: Metrics,
         default_port: int,
-        namespace: Optional[str],
+        namespace: str,
     ):
         super().__init__(
             api_version="monitoring.coreos.com/v1",

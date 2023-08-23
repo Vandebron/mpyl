@@ -160,7 +160,7 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
     release_name: str
     config_defaults: DeploymentDefaults
     deploy_set: Optional[DeploySet]
-    namespace: Optional[str]
+    namespace: str
 
     def __init__(self, step_input: Input, deploy_set: Optional[DeploySet] = None):
         self.step_input = step_input
