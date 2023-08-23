@@ -1,11 +1,28 @@
 """
 This module contains the PrometheusRule CRD
 """
-
 from kubernetes.client import V1ObjectMeta
 
-from .....project import Alert
+from .....project import Alert, Metrics
 from .. import CustomResourceDefinition
+
+
+class V1PrometheusRule(CustomResourceDefinition):
+    def __init__(self, metadata: V1ObjectMeta, alerts: list[Alert]):
+        super().__init__(
+            api_version="monitoring.coreos.com/v1",
+            kind="PrometheusRule",
+            metadata=metadata,
+            schema="monitoring.coreos.com_prometheuses.schema.yml",
+            spec={
+                "groups": [
+                    {
+                        "name": f"{metadata.name}-group",
+                        "rules": _alerts_to_rules(alerts),
+                    }
+                ]
+            },
+        )
 
 
 def _alerts_to_rules(alerts: list[Alert]) -> list[dict]:
@@ -27,19 +44,28 @@ def _alerts_to_rules(alerts: list[Alert]) -> list[dict]:
     ]
 
 
-class V1PrometheusRule(CustomResourceDefinition):
-    def __init__(self, metadata: V1ObjectMeta, alerts: list[Alert]):
+class V1ServiceMonitor(CustomResourceDefinition):
+    def __init__(
+        self,
+        metadata: V1ObjectMeta,
+        metrics: Metrics,
+        default_port: int,
+        namespace: str,
+    ):
         super().__init__(
             api_version="monitoring.coreos.com/v1",
-            kind="PrometheusRule",
+            kind="ServiceMonitor",
             metadata=metadata,
-            schema="monitoring.coreos.com_prometheuses.schema.yml",
+            schema="monitoring.coreos.com_servicemonitors.schema.yml",
             spec={
-                "groups": [
+                "endpoints": [
                     {
-                        "name": f"{metadata.name}-group",
-                        "rules": _alerts_to_rules(alerts),
+                        "honorLabels": True,
+                        "path": metrics.path or "/metrics",
+                        "targetPort": metrics.port or default_port,
                     }
-                ]
+                ],
+                "namespaceSelector": {"matchNames": [namespace]},
+                "selector": {"matchLabels": {"app.kubernetes.io/name": metadata.name}},
             },
         )

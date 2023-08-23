@@ -38,12 +38,12 @@ from kubernetes.client import (
 )
 from ruamel.yaml import YAML
 
-from . import substitute_namespaces
+from . import substitute_namespaces, get_namespace
 from .resources import (
     CustomResourceDefinition,
     to_dict,
 )  # pylint: disable = no-name-in-module
-from .resources.prometheus import V1PrometheusRule
+from .resources.prometheus import V1PrometheusRule, V1ServiceMonitor
 from .resources.sealed_secret import V1SealedSecret
 from .resources.spark import (
     to_spark_body,
@@ -71,6 +71,7 @@ from ....project import (
     get_env_variables,
     Alert,
     KeyValueRef,
+    Metrics,
 )
 from ....stages.discovery import DeploySet
 
@@ -159,6 +160,7 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
     release_name: str
     config_defaults: DeploymentDefaults
     deploy_set: Optional[DeploySet]
+    namespace: str
 
     def __init__(self, step_input: Input, deploy_set: Optional[DeploySet] = None):
         self.step_input = step_input
@@ -184,6 +186,9 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
         self.target = step_input.run_properties.target
         self.release_name = self.project.name.lower()
         self.deploy_set = deploy_set
+        self.namespace = get_namespace(
+            run_properties=step_input.run_properties, project=project
+        )
 
     def _to_labels(self) -> dict:
         run_properties = self.step_input.run_properties
@@ -348,6 +353,16 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
                 name=f"{self.project.name.lower()}-prometheus-rule"
             ),
             alerts=alerts,
+        )
+
+    def to_service_monitor(self, metrics: Metrics) -> V1ServiceMonitor:
+        return V1ServiceMonitor(
+            metadata=self._to_object_meta(
+                name=f"{self.project.name.lower()}-service-monitor"
+            ),
+            metrics=metrics,
+            default_port=self.__find_default_port(),
+            namespace=self.namespace,
         )
 
     def __find_default_port(self) -> int:
@@ -635,14 +650,15 @@ def _to_service_components_chart(builder):
         "service": builder.to_service(),
         "ingress-https-route": builder.to_ingress_routes(),
     }
+    metrics = builder.project.kubernetes.metrics
     prometheus_chart = (
         {
             "prometheus-rule": builder.to_prometheus_rule(
                 alerts=builder.project.kubernetes.metrics.alerts
-            )
+            ),
+            "service-monitor": builder.to_service_monitor(metrics=metrics),
         }
-        if builder.project.kubernetes.metrics
-        and builder.project.kubernetes.metrics.enabled
+        if metrics and metrics.enabled
         else {}
     )
     return common_chart | prometheus_chart

@@ -19,11 +19,11 @@ from ....steps.deploy.k8s.rancher import (
 )
 
 
-def get_namespace(run_properties: RunProperties, project: Project) -> Optional[str]:
+def get_namespace(run_properties: RunProperties, project: Project) -> str:
     if run_properties.target == Target.PULL_REQUEST:
         return run_properties.versioning.identifier
 
-    return get_namespace_from_project(project)
+    return get_namespace_from_project(project) or project.name
 
 
 def get_namespace_from_project(project: Project) -> Optional[str]:
@@ -76,8 +76,7 @@ def deploy_helm_chart(
     if render_templates(run_properties):
         return helm.template(logger, chart_path, release_name)
 
-    namespace = get_namespace(run_properties, project) or project.name
-
+    namespace = get_namespace(run_properties, project)
     rancher_config: ClusterConfig = cluster_config(target, run_properties)
     upsert_namespace(logger, namespace, dry_run, run_properties, rancher_config)
 
