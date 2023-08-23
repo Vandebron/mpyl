@@ -5,7 +5,7 @@ from typing import Optional
 
 from kubernetes.client import V1ObjectMeta
 
-from .....project import Alert
+from .....project import Alert, Metrics
 from .. import CustomResourceDefinition
 
 
@@ -48,7 +48,11 @@ def _alerts_to_rules(alerts: list[Alert]) -> list[dict]:
 
 class V1ServiceMonitor(CustomResourceDefinition):
     def __init__(
-        self, metadata: V1ObjectMeta, endpoint: dict, namespace: Optional[str]
+        self,
+        metadata: V1ObjectMeta,
+        metrics: Metrics,
+        default_port: int,
+        namespace: Optional[str],
     ):
         super().__init__(
             api_version="monitoring.coreos.com/v1",
@@ -56,7 +60,13 @@ class V1ServiceMonitor(CustomResourceDefinition):
             metadata=metadata,
             schema="monitoring.coreos.com_servicemonitors.schema.yml",
             spec={
-                "endpoints": [endpoint],
+                "endpoints": [
+                    {
+                        "honorLabels": True,
+                        "path": metrics.path or "/metrics",
+                        "targetPort": metrics.port or default_port,
+                    }
+                ],
                 "namespaceSelector": {"matchNames": [namespace]},
                 "selector": {"matchLabels": {"app.kubernetes.io/name": metadata.name}},
             },

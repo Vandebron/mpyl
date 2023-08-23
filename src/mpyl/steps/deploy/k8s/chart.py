@@ -356,17 +356,12 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
         )
 
     def to_service_monitor(self, metrics: Metrics) -> V1ServiceMonitor:
-        endpoint = {
-            "honorLabels": True,
-            "path": metrics.path or "/metrics",
-            "targetPort": metrics.port or self.__find_default_port(),
-        }
-
         return V1ServiceMonitor(
             metadata=self._to_object_meta(
                 name=f"{self.project.name.lower()}-service-monitor"
             ),
-            endpoint=endpoint,
+            metrics=metrics,
+            default_port=self.__find_default_port(),
             namespace=self.namespace,
         )
 
