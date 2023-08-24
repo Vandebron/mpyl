@@ -350,8 +350,6 @@ def ask_for_input(ctx, _param, value) -> Optional[str]:
     "dryrun_",
     help="don't push or deploy images",
     is_flag=True,
-    default=False,
-    show_default=True,
 )
 @click.option(
     "--all",
