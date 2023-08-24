@@ -133,6 +133,7 @@ if __name__ == "__main__":
     mpl_logger = logging.getLogger("mpyl")
     mpl_logger.info("Starting run.....")
     try:
+        print("TEST")
         main(mpl_logger, parsed_args)
     except Exception as e:
         mpl_logger.warning(f"Unexpected exception: {e}", exc_info=True)
