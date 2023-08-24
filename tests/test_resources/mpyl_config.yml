@@ -1,4 +1,4 @@
-cvs:
+vcs:
   git:
     mainBranch: 'main'
     remote:
