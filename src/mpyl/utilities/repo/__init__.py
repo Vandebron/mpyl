@@ -150,38 +150,23 @@ class Repository:  # pylint: disable=too-many-public-methods
         )
 
     def changes_in_branch(self) -> list[Revision]:
-        base_ref = self.base_revision
-        base_hex = (
-            base_ref if base_ref else self._repo.git.rev_list("--max-parents=0", "HEAD")
+        revisions = list(
+            reversed(list(self._repo.iter_commits(f"{self._config.main_branch}..HEAD")))
         )
-
-        head_hex = self._repo.active_branch.commit.hexsha
-        logging.debug(
-            f"Base reference: [bright_blue]{base_ref or '(grafted)'}[/bright_blue] [italic]{base_hex}[/italic]"
-        )
-
-        revisions = self.changes_between(base_hex, head_hex)
-
-        logging.debug(
-            f"Found {len(revisions)} revisions in branch: {[r.hexsha for r in revisions]}"
-        )
-
         if not revisions:
             return []
 
-        changed_files = list(
-            itertools.chain.from_iterable(
-                [
-                    self._repo.git.diff_tree(
-                        rev, name_only=True, no_commit_id=True, r=True
-                    ).splitlines()
-                    for rev in revisions
-                ]
-            )
+        first_revision = (
+            revisions[0].hexsha if len(revisions) != 1 else self._config.main_branch
         )
 
+        files_touched_in_branch = set(
+            self._repo.git.diff(
+                f"{first_revision}..{revisions[-1].hexsha}", name_only=True
+            ).splitlines()
+        )
         return [
-            self.__to_revision(count, rev, set(changed_files))
+            self.__to_revision(count, rev, files_touched_in_branch)
             for count, rev in enumerate(revisions)
         ]
 
