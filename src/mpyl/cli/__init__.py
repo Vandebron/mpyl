@@ -38,7 +38,17 @@ class MpylCliParameters:
     pull_main: bool = False
     verbose: bool = False
     all: bool = False
-    dryrun: bool = True  # type: ignore
+    dryrun: bool = False
+
+
+@dataclass(frozen=True)
+class MpylCliParameters2:
+    local: bool = False
+    tag: Optional[str] = None
+    pull_main: bool = False
+    verbose: bool = False
+    all: bool = False
+    dryrun: bool = False
 
 
 async def fetch_latest_version() -> Optional[str]:

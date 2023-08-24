@@ -10,7 +10,7 @@ def main(log: Logger, args: argparse.Namespace):
         from src.mpyl.reporting.targets.jira import JiraReporter
         from src.mpyl.steps.models import RunProperties
         from src.mpyl.utilities.pyaml_env import parse_config
-        from src.mpyl.cli import MpylCliParameters
+        from src.mpyl.cli import MpylCliParameters2
         from src.mpyl.build import run_mpyl
         print("2")
     else:
@@ -18,7 +18,7 @@ def main(log: Logger, args: argparse.Namespace):
         from mpyl.steps.models import RunProperties
         from mpyl.utilities.pyaml_env import parse_config
         from mpyl.build import run_mpyl
-        from mpyl.cli import MpylCliParameters
+        from mpyl.cli import MpylCliParameters2
         print("2")
 
     print("3")
@@ -79,7 +79,7 @@ def main(log: Logger, args: argparse.Namespace):
     print(args.all)
     print("91")
 
-    cli_parameters = MpylCliParameters(
+    cli_parameters = MpylCliParameters2(
         local=args.local,
         tag=args.tag,
         pull_main=True,
