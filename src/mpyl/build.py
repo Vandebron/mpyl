@@ -54,7 +54,7 @@ def get_build_plan(
     logger.debug(f"Changes: {changes}")
 
     projects_per_stage: dict[Stage, set[Project]] = find_build_set(
-        repo, changes, cli_parameters.all, cli_parameters.dryrun,
+        repo, changes, cli_parameters.all,
     )
     return RunResult(
         run_properties=run_properties,

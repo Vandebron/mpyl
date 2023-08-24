@@ -4,7 +4,7 @@ import sys
 from logging import Logger
 
 
-def main(log: Logger, args: argparse.Namespace):
+def xmain(log: Logger, args: argparse.Namespace):
     if args.local:
         from src.mpyl.reporting.targets.jira import JiraReporter
         from src.mpyl.steps.models import RunProperties
