@@ -63,7 +63,7 @@ class RepoConfig:
         )
 
 
-class Repository:
+class Repository:  # pylint: disable=too-many-public-methods
     def __init__(self, config: RepoConfig):
         self._config = config
         self._root_dir = Git().rev_parse("--show-toplevel")
@@ -240,6 +240,12 @@ class Repository:
 
     def checkout_branch(self, branch_name: str):
         self._repo.git.switch(branch_name)
+
+    def does_local_branch_exist(self, branch_name: str) -> bool:
+        return branch_name in self._repo.git.branch("--list").splitlines()
+
+    def delete_branch(self, branch_name: str):
+        self._repo.git.branch("-D", branch_name)
 
     def find_projects(self, folder_pattern: str = "") -> list[str]:
         """returns a set of all project.yml files
