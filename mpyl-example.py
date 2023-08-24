@@ -75,7 +75,9 @@ def main(log: Logger, args: argparse.Namespace):
             check.send_report(RunResult(run_properties=run_properties, run_plan={}))
         )
 
+    print(args.dryrun)
     print("9")
+
     cli_parameters = MpylCliParameters(
         local=args.local,
         tag=args.tag,
