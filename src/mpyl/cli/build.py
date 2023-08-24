@@ -116,7 +116,7 @@ def build(ctx, config, properties, verbose):
 )
 @click.option("--tag", "-t", help="Tag to build", type=click.STRING, required=False)
 @click.pass_obj
-def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
+def run(obj: CliContext, ci, all_, tag, dryrun):  # pylint: disable=invalid-name
     asyncio.run(warn_if_update(obj.console))
 
     parameters = MpylCliParameters(
@@ -125,6 +125,7 @@ def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
         all=all_,
         verbose=obj.verbose,
         tag=tag,
+        dryrun=dryrun,
     )
     obj.console.log(parameters)
 
@@ -344,6 +345,12 @@ def ask_for_input(ctx, _param, value) -> Optional[str]:
     default=False,
     show_default=True,
 )
+@click.option(
+    "--all",
+    "all_",
+    is_flag=True,
+    help="Build all projects, regardless of changes on branch",
+)
 @click.pass_context
 def jenkins(  # pylint: disable=too-many-arguments
     ctx,
@@ -356,6 +363,7 @@ def jenkins(  # pylint: disable=too-many-arguments
     silent,
     tag,
     dryrun,
+    all_
 ):
     upgrade_check = None
     try:
@@ -386,6 +394,8 @@ def jenkins(  # pylint: disable=too-many-arguments
             verbose=not silent or ctx.obj.verbose,
             follow=not background,
             tag=tag,
+            dryrun=dryrun,
+            all=all_,
         )
 
         run_jenkins(run_argument)

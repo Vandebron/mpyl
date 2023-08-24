@@ -27,6 +27,8 @@ class JenkinsRunParameters:
     pipeline_parameters: dict
     verbose: bool
     follow: bool
+    dryrun: bool
+    all: bool
     tag: Optional[str] = None
 
 
