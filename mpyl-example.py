@@ -5,32 +5,38 @@ from logging import Logger
 
 
 def main(log: Logger, args: argparse.Namespace):
-    print("GERE")
+    print("1")
     if args.local:
         from src.mpyl.reporting.targets.jira import JiraReporter
         from src.mpyl.steps.models import RunProperties
         from src.mpyl.utilities.pyaml_env import parse_config
         from src.mpyl.cli import MpylCliParameters
         from src.mpyl.build import run_mpyl
-
+        print("2")
     else:
         from mpyl.reporting.targets.jira import JiraReporter
         from mpyl.steps.models import RunProperties
         from mpyl.utilities.pyaml_env import parse_config
         from mpyl.build import run_mpyl
         from mpyl.cli import MpylCliParameters
+        print("2")
 
+    print("3")
     config = parse_config("mpyl_config.yml")
+    print("4")
     properties = parse_config("run_properties.yml")
+    print("5")
     run_properties = RunProperties.from_configuration(
         run_properties=properties, config=config, cli_tag=args.tag
     )
+    print("6")
     check = None
     slack_channel = None
     slack_personal = None
     jira = None
     github_comment = None
 
+    print("7")
     if not args.local:
         from mpyl.reporting.targets.github import CommitCheck
         from mpyl.reporting.targets.slack import SlackReporter
@@ -39,6 +45,7 @@ def main(log: Logger, args: argparse.Namespace):
         from mpyl.reporting.targets.jira import compose_build_status
         from mpyl.reporting.targets import ReportAccumulator
 
+        print("8")
         check = CommitCheck(config=config, logger=log)
         accumulator = ReportAccumulator()
 
@@ -68,6 +75,7 @@ def main(log: Logger, args: argparse.Namespace):
             check.send_report(RunResult(run_properties=run_properties, run_plan={}))
         )
 
+    print("9")
     cli_parameters = MpylCliParameters(
         local=args.local,
         tag=args.tag,
@@ -76,6 +84,7 @@ def main(log: Logger, args: argparse.Namespace):
         all=args.all,
         dryrun=args.dryrun,
     )
+
 
     print("CHECKING")
 
