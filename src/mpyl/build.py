@@ -56,7 +56,9 @@ def get_build_plan(
     print(f"{cli_parameters.dryrun}: YESH")
 
     projects_per_stage: dict[Stage, set[Project]] = find_build_set(
-        repo, changes, cli_parameters.all,
+        repo,
+        changes,
+        cli_parameters.all,
     )
     return RunResult(
         run_properties=run_properties,
@@ -134,7 +136,9 @@ def run_mpyl(
 
 
 def find_build_set(
-    repo: Repository, changes_in_branch: list[Revision], build_all: bool,
+    repo: Repository,
+    changes_in_branch: list[Revision],
+    build_all: bool,
 ) -> dict[Stage, set[Project]]:
     project_paths = repo.find_projects()
     all_projects = set(
