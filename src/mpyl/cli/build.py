@@ -379,8 +379,13 @@ def jenkins(  # pylint: disable=too-many-arguments
         selected_pipeline = pipeline if pipeline else jenkins_config["defaultPipeline"]
         pipeline_parameters = {"TEST": "true", "VERSION": test} if test else {}
 
+        pipeline_parameters["BUILD_PARAMS"] = ""
+
         if dryrun:
-            pipeline_parameters["BUILD_PARAMS"] = " --dryrun"
+            pipeline_parameters["BUILD_PARAMS"] += " --dryrun"
+
+        if all_:
+            pipeline_parameters["BUILD_PARAMS"] += " --all"
 
         if arguments:
             pipeline_parameters["BUILD_PARAMS"] = " ".join(arguments)
