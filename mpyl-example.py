@@ -5,6 +5,7 @@ from logging import Logger
 
 
 def main(log: Logger, args: argparse.Namespace):
+    print("GERE")
     if args.local:
         from src.mpyl.reporting.targets.jira import JiraReporter
         from src.mpyl.steps.models import RunProperties
