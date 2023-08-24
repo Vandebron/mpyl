@@ -114,6 +114,14 @@ def build(ctx, config, properties, verbose):
     is_flag=True,
     help="Build all projects, regardless of changes on branch",
 )
+@click.option(
+    "--dryrun",
+    "-d",
+    help="don't push or deploy images",
+    is_flag=True,
+    default=False,
+    show_default=True,
+)
 @click.option("--tag", "-t", help="Tag to build", type=click.STRING, required=False)
 @click.pass_obj
 def run(obj: CliContext, ci, all_, tag, dryrun):  # pylint: disable=invalid-name
