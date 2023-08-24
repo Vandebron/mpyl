@@ -76,6 +76,7 @@ def main(log: Logger, args: argparse.Namespace):
         )
 
     print(args.dryrun)
+    print(args.all)
     print("9")
 
     cli_parameters = MpylCliParameters(
