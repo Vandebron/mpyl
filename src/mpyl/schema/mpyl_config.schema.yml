@@ -173,6 +173,9 @@ definitions:
         "$ref": "#/definitions/Git"
       github:
         "$ref": "#/definitions/Github"
+      artifactRepository:
+        description: "The repository where the build artifacts are cached"
+        type: string
     required:
       - git
       - github
