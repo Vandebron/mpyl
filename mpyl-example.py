@@ -75,6 +75,9 @@ def main(log: Logger, args: argparse.Namespace):
         all=args.all,
         dryrun=args.dryrun,
     )
+
+    print("CHECKING")
+
     run_result = run_mpyl(
         run_properties=run_properties,
         cli_parameters=cli_parameters,

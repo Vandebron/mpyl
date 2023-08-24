@@ -131,16 +131,12 @@ def run_mpyl(
 
 
 def find_build_set(
-    repo: Repository, changes_in_branch: list[Revision], build_all: bool, dryrun: bool,
+    repo: Repository, changes_in_branch: list[Revision], build_all: bool,
 ) -> dict[Stage, set[Project]]:
     project_paths = repo.find_projects()
     all_projects = set(
         map(lambda p: load_project(Path(""), Path(p), False), project_paths)
     )
-
-    if dryrun:
-        print(f"DRYRUN IS: {dryrun}")
-        return
 
     if build_all:
         return {
