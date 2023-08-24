@@ -371,7 +371,7 @@ def jenkins(  # pylint: disable=too-many-arguments
     silent,
     tag,
     dryrun,
-    all_
+    all_,
 ):
     upgrade_check = None
     try:
