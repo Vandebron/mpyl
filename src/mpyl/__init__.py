@@ -10,6 +10,7 @@
 
 import click
 
+from .cli.artifacts import artifacts
 from .cli.build import build
 from .cli.health import health
 from .cli.meta_info import get_version
@@ -28,6 +29,7 @@ def main_group():
 def add_commands():
     main_group.add_command(projects)
     main_group.add_command(build)
+    main_group.add_command(artifacts)
     main_group.add_command(version)
     main_group.add_command(health)
     main_group.add_command(repository)
