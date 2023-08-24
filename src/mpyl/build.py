@@ -67,6 +67,7 @@ def run_mpyl(
     cli_parameters: MpylCliParameters,
     reporter: Optional[Reporter],
 ) -> RunResult:
+    print("10")
     console_properties = run_properties.console
     console = Console(
         markup=False,
