@@ -12,6 +12,7 @@ cvs:
     app:
       privateKeyBase64Encoded: !ENV ${MPYL_GITHUB_APP_PRIVATE_KEY}
       appId: '295700'
+  artifactRepository: 'https://github.com/acme/artifact-repo.git'
 slack:
   botToken: !ENV ${SLACK_TOKEN}
   icons:
