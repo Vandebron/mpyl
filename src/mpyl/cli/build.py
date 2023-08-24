@@ -336,6 +336,14 @@ def ask_for_input(ctx, _param, value) -> Optional[str]:
     default="not_set",
     callback=ask_for_input,
 )
+@click.option(
+    "--dryrun",
+    "-d",
+    help="don't push or deploy images",
+    is_flag=True,
+    default=False,
+    show_default=True,
+)
 @click.pass_context
 def jenkins(  # pylint: disable=too-many-arguments
     ctx,
@@ -347,6 +355,7 @@ def jenkins(  # pylint: disable=too-many-arguments
     background,
     silent,
     tag,
+    dryrun,
 ):
     upgrade_check = None
     try:
@@ -361,6 +370,10 @@ def jenkins(  # pylint: disable=too-many-arguments
 
         selected_pipeline = pipeline if pipeline else jenkins_config["defaultPipeline"]
         pipeline_parameters = {"TEST": "true", "VERSION": test} if test else {}
+
+        if dryrun:
+            pipeline_parameters["BUILD_PARAMS"] = " --dryrun"
+
         if arguments:
             pipeline_parameters["BUILD_PARAMS"] = " ".join(arguments)
 
