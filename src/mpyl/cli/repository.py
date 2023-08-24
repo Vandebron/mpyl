@@ -160,6 +160,11 @@ def init(obj: CliContext, url, pull, branch):
         if repo.get_branch != target_branch:
             with console.status(f"👷 Fetching PR #{pr_number}"):
                 if repo.does_local_branch_exist(target_branch):
+                    console.log(
+                        Markdown(
+                            f"👷 Deleting local branch to prevent conflicts `{target_branch}`"
+                        )
+                    )
                     repo.delete_branch(target_branch)
 
                 repo.fetch_pr(pr_number)

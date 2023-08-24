@@ -242,7 +242,11 @@ class Repository:  # pylint: disable=too-many-public-methods
         self._repo.git.switch(branch_name)
 
     def does_local_branch_exist(self, branch_name: str) -> bool:
-        return branch_name in self._repo.git.branch("--list").splitlines()
+        local_branches = [
+            branch.strip(" ") for branch in self._repo.git.branch("--list").splitlines()
+        ]
+        logging.debug(f"Found local branches: {local_branches}")
+        return branch_name in local_branches
 
     def delete_branch(self, branch_name: str):
         self._repo.git.branch("-D", branch_name)
