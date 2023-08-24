@@ -124,7 +124,7 @@ def build(ctx, config, properties, verbose):
 )
 @click.option("--tag", "-t", help="Tag to build", type=click.STRING, required=False)
 @click.pass_obj
-def run(obj: CliContext, ci, all_, tag, dryrun_):  # pylint: disable=invalid-name
+def run(obj: CliContext, ci, all_, tag, dryrun):  # pylint: disable=invalid-name
     asyncio.run(warn_if_update(obj.console))
 
     parameters = MpylCliParameters(
@@ -133,7 +133,7 @@ def run(obj: CliContext, ci, all_, tag, dryrun_):  # pylint: disable=invalid-nam
         all=all_,
         verbose=obj.verbose,
         tag=tag,
-        dryrun=dryrun_,
+        dryrun=dryrun,
     )
     obj.console.log(parameters)
 

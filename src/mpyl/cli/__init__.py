@@ -31,14 +31,14 @@ class CliContext:
     run_properties: dict
 
 
-@dataclass(frozen=True)  # type: ignore
+@dataclass(frozen=True)
 class MpylCliParameters:
     local: bool = False
     tag: Optional[str] = None
     pull_main: bool = False
     verbose: bool = False
     all: bool = False
-    dryrun: bool = False
+    dryrun: bool = True  # type: ignore
 
 
 async def fetch_latest_version() -> Optional[str]:

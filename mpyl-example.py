@@ -88,7 +88,6 @@ def main(log: Logger, args: argparse.Namespace):
         dryrun=args.dryrun,
     )
 
-
     print("CHECKING")
 
     run_result = run_mpyl(
