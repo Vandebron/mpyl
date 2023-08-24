@@ -87,7 +87,7 @@ def main(log: Logger, args: argparse.Namespace):
         pull_main=True,
         verbose=args.verbose,
         all=args.all,
-        dryrun=args.dryrun,
+        dryrun=True,
     )
 
     print("CHECKING")
