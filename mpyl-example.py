@@ -132,6 +132,9 @@ if __name__ == "__main__":
     parsed_args = parser.parse_args()
     mpl_logger = logging.getLogger("mpyl")
     mpl_logger.info("Starting run.....")
+
+    print(f"PARSED_ARGS: {parsed_args}")
+
     try:
         main(mpl_logger, parsed_args)
     except Exception as e:

@@ -46,6 +46,7 @@ pipeline {
                             sh "pipenv run mpyl repo status"
                             sh "pipenv run mpyl repo init"
                             sh "pipenv run mpyl build status"
+                            echo "BUILD_PARAMS ${params.BUILD_PARAMS}"
                             sh "pipenv run run-ci ${params.BUILD_PARAMS}"
                         }
                     }
