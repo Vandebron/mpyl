@@ -31,7 +31,7 @@ class CliContext:
     run_properties: dict
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=False)
 class MpylCliParameters:
     local: bool = False
     tag: Optional[str] = None
