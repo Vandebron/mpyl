@@ -47,7 +47,6 @@ class DockerCacheConfig:
 
 @dataclass(frozen=True)
 class DockerConfig:
-    # pylint: disable = too-many-instance-attributes
     host_name: str
     organization: Optional[str]
     user_name: str

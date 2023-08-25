@@ -28,9 +28,7 @@ def to_user_code_values(
                 "envSecrets": [{"name": s.name} for s in project.dagster.secrets],
                 "image": {
                     "pullPolicy": "Always",
-                    "imagePullSecrets": [
-                        {"name": secret} for secret in docker_config.image_pull_secrets
-                    ],
+                    "imagePullSecrets": [{"name": "bigdataregistry"}],
                     "tag": run_properties.versioning.identifier,
                     "repository": f"{docker_config.host_name}/{project.name}",
                 },

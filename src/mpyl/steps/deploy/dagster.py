@@ -41,7 +41,7 @@ class DeployDagster(Step):
             required_artifact=ArtifactType.DOCKER_IMAGE,
         )
 
-    def evaluate_results(self, results: List[Output]):
+    def __evaluate_results(self, results: List[Output]):
         return (
             reduce(
                 self.__flatten_result_messages,
@@ -91,12 +91,12 @@ class DeployDagster(Step):
         )
         dagster_deploy_results.append(result)
         if not result.success:
-            return self.evaluate_results(dagster_deploy_results)
+            return self.__evaluate_results(dagster_deploy_results)
 
         result = helm.update_repo(self._logger)
         dagster_deploy_results.append(result)
         if not result.success:
-            return self.evaluate_results(dagster_deploy_results)
+            return self.__evaluate_results(dagster_deploy_results)
 
         name_suffix = (
             f"-{step_input.run_properties.versioning.identifier}"
@@ -200,4 +200,4 @@ class DeployDagster(Step):
                         )
                         dagster_deploy_results.append(rollout_restart_output)
                         self._logger.info(rollout_restart_output.message)
-        return self.evaluate_results(dagster_deploy_results)
+        return self.__evaluate_results(dagster_deploy_results)
