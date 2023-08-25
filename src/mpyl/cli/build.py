@@ -117,7 +117,6 @@ def build(ctx, config, properties, verbose):
 @click.option(
     "--dryrun",
     "-d",
-    help="don't push or deploy images",
     is_flag=True,
     default=False,
     show_default=True,
@@ -350,7 +349,6 @@ def ask_for_input(ctx, _param, value) -> Optional[str]:
 @click.option(
     "--dryrun",
     "dryrun_",
-    help="don't push or deploy images",
     is_flag=True,
 )
 @click.option(
