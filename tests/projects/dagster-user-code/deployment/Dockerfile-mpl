@@ -8,11 +8,6 @@ USER root
 ENV DAGSTER_VERSION="1.3.13"
 RUN pip install \
     dagster==${DAGSTER_VERSION} \
-    dagster-postgres \
-    dagster-aws \
-    dagster-k8s \
-    dagster-celery-k8s \
-    dagster-slack \
     # clean-up
     &&  rm -rf /var \
     &&  rm -rf /root/.cache  \
