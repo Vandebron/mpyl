@@ -42,7 +42,7 @@ class DeployDagster(Step):
 
     @staticmethod
     def __flatten_result_messages(acc: Output, curr: Output) -> Output:
-        formatted_acc_msg = f"{'SUCCESS' if acc.success else 'FAILURE'}:{acc.message}"
+        formatted_acc_msg = f"{'SUCCESS' if acc.success else 'FAILURE'}: {acc.message}"
         formatted_curr_msg = (
             f"{'SUCCESS' if curr.success else 'FAILURE'}: {curr.message}"
         )
@@ -60,6 +60,7 @@ class DeployDagster(Step):
             step_input.run_properties.target, step_input.run_properties
         ).context
         dagster_config = DagsterConfig.from_dict(step_input.run_properties.config)
+        dagster_deploy_results = []
 
         config.load_kube_config(context=context)
         core_api = client.CoreV1Api()
@@ -73,113 +74,123 @@ class DeployDagster(Step):
         )
         self._logger.info(f"Dagster Version: {version}")
 
-        helm.add_repo(
+        result = helm.add_repo(
             self._logger, dagster_config.base_namespace, Constants.HELM_CHART_REPO
         )
-        helm.update_repo(self._logger)
+        dagster_deploy_results.append(result)
+        if result.success:
+            result = helm.update_repo(self._logger)
+            dagster_deploy_results.append(result)
 
-        name_suffix = (
-            f"-{step_input.run_properties.versioning.identifier}"
-            if step_input.run_properties.target == Target.PULL_REQUEST
-            else ""
-        )
-
-        user_code_deployment = to_user_code_values(
-            project=step_input.project,
-            name_suffix=name_suffix,
-            run_properties=step_input.run_properties,
-            docker_config=DockerConfig.from_dict(step_input.run_properties.config),
-        )
-
-        self._logger.debug(f"Deploying user code with values: {user_code_deployment}")
-
-        values_path = Path(step_input.project.target_path)
-        self._logger.info(f"Writing Helm values to {values_path}")
-        write_chart(
-            chart={},
-            chart_path=values_path,
-            chart_metadata="",
-            values=user_code_deployment,
-        )
-
-        helm_install_result = helm.install_with_values_yaml(
-            logger=self._logger,
-            dry_run=step_input.dry_run,
-            values_path=values_path,
-            release_name=convert_to_helm_release_name(
-                shorten_name(step_input.project.name), name_suffix
-            ),
-            chart_name=Constants.CHART_NAME,
-            namespace=dagster_config.base_namespace,
-            kube_context=context,
-        )
-
-        dagster_deploy_results = [helm_install_result]
-        if helm_install_result.success and not step_input.dry_run:
-            config_map = get_config_map(
-                core_api,
-                dagster_config.base_namespace,
-                dagster_config.workspace_config_map,
-            )
-            dagster_workspace = yaml.safe_load(
-                config_map.data[dagster_config.workspace_file_key]
-            )
-
-            server_names = [
-                w["grpc_server"]["location_name"]
-                for w in dagster_workspace["load_from"]
-            ]
-
-            # If the server new (not in existing workspace.yml), we append it
-            user_code_name_to_deploy = user_code_deployment["deployments"][0]["name"]
-            if user_code_name_to_deploy not in server_names:
-                self._logger.info(
-                    f"Adding new server {user_code_name_to_deploy} to dagster's workspace.yaml"
-                )
-                dagster_workspace["load_from"].append(
-                    to_grpc_server_entry(
-                        host=user_code_name_to_deploy,
-                        port=user_code_deployment["deployments"][0]["port"],
-                        location_name=user_code_name_to_deploy,
-                    )
-                )
-                updated_config_map = update_config_map_field(
-                    config_map=config_map,
-                    field=dagster_config.workspace_file_key,
-                    data=dagster_workspace,
-                )
-                config_map_update_result = replace_config_map(
-                    core_api,
-                    dagster_config.base_namespace,
-                    dagster_config.workspace_config_map,
-                    updated_config_map,
+            if result.success:
+                name_suffix = (
+                    f"-{step_input.run_properties.versioning.identifier}"
+                    if step_input.run_properties.target == Target.PULL_REQUEST
+                    else ""
                 )
 
-                dagster_deploy_results.append(config_map_update_result)
-                if config_map_update_result.success:
-                    self._logger.info(
-                        f"Successfully added {user_code_name_to_deploy} to dagster's workspace.yaml"
-                    )
+                user_code_deployment = to_user_code_values(
+                    project=step_input.project,
+                    name_suffix=name_suffix,
+                    run_properties=step_input.run_properties,
+                    docker_config=DockerConfig.from_dict(
+                        step_input.run_properties.config
+                    ),
+                )
 
-                    # restarting ui and daemon
-                    rollout_restart_output = rollout_restart_deployment(
-                        self._logger,
-                        apps_api,
+                self._logger.debug(
+                    f"Deploying user code with values: {user_code_deployment}"
+                )
+
+                values_path = Path(step_input.project.target_path)
+                self._logger.info(f"Writing Helm values to {values_path}")
+                write_chart(
+                    chart={},
+                    chart_path=values_path,
+                    chart_metadata="",
+                    values=user_code_deployment,
+                )
+
+                helm_install_result = helm.install_with_values_yaml(
+                    logger=self._logger,
+                    dry_run=step_input.dry_run,
+                    values_path=values_path,
+                    release_name=convert_to_helm_release_name(
+                        shorten_name(step_input.project.name), name_suffix
+                    ),
+                    chart_name=Constants.CHART_NAME,
+                    namespace=dagster_config.base_namespace,
+                    kube_context=context,
+                )
+
+                dagster_deploy_results.append(helm_install_result)
+                if helm_install_result.success and not step_input.dry_run:
+                    config_map = get_config_map(
+                        core_api,
                         dagster_config.base_namespace,
-                        dagster_config.daemon,
+                        dagster_config.workspace_config_map,
+                    )
+                    dagster_workspace = yaml.safe_load(
+                        config_map.data[dagster_config.workspace_file_key]
                     )
 
-                    dagster_deploy_results.append(rollout_restart_output)
-                    if rollout_restart_output.success:
-                        self._logger.info(rollout_restart_output.message)
-                        rollout_restart_output = rollout_restart_deployment(
-                            self._logger,
-                            apps_api,
-                            dagster_config.base_namespace,
-                            dagster_config.dagit,
+                    server_names = [
+                        w["grpc_server"]["location_name"]
+                        for w in dagster_workspace["load_from"]
+                    ]
+
+                    # If the server new (not in existing workspace.yml), we append it
+                    user_code_name_to_deploy = user_code_deployment["deployments"][0][
+                        "name"
+                    ]
+                    if user_code_name_to_deploy not in server_names:
+                        self._logger.info(
+                            f"Adding new server {user_code_name_to_deploy} to dagster's workspace.yaml"
                         )
-                        dagster_deploy_results.append(rollout_restart_output)
-                        self._logger.info(rollout_restart_output.message)
+                        dagster_workspace["load_from"].append(
+                            to_grpc_server_entry(
+                                host=user_code_name_to_deploy,
+                                port=user_code_deployment["deployments"][0]["port"],
+                                location_name=user_code_name_to_deploy,
+                            )
+                        )
+                        updated_config_map = update_config_map_field(
+                            config_map=config_map,
+                            field=dagster_config.workspace_file_key,
+                            data=dagster_workspace,
+                        )
+                        config_map_update_result = replace_config_map(
+                            core_api,
+                            dagster_config.base_namespace,
+                            dagster_config.workspace_config_map,
+                            updated_config_map,
+                        )
+
+                        dagster_deploy_results.append(config_map_update_result)
+                        if config_map_update_result.success:
+                            self._logger.info(
+                                f"Successfully added {user_code_name_to_deploy} to dagster's workspace.yaml"
+                            )
+
+                            # restarting ui and daemon
+                            rollout_restart_output = rollout_restart_deployment(
+                                self._logger,
+                                apps_api,
+                                dagster_config.base_namespace,
+                                dagster_config.daemon,
+                            )
+
+                            dagster_deploy_results.append(rollout_restart_output)
+                            if rollout_restart_output.success:
+                                self._logger.info(rollout_restart_output.message)
+                                rollout_restart_output = rollout_restart_deployment(
+                                    self._logger,
+                                    apps_api,
+                                    dagster_config.base_namespace,
+                                    dagster_config.dagit,
+                                )
+                                dagster_deploy_results.append(rollout_restart_output)
+                                self._logger.info(rollout_restart_output.message)
         return (
             reduce(
                 self.__flatten_result_messages,
