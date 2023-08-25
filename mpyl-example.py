@@ -6,22 +6,12 @@ from logging import Logger
 
 def main(log: Logger, args: argparse.Namespace):
     print("1")
-    if args.local:
-        from src.mpyl.reporting.targets.jira import JiraReporter
-        from src.mpyl.steps.models import RunProperties
-        from src.mpyl.utilities.pyaml_env import parse_config
-        from src.mpyl.cli import MpylCliParameters
-        from src.mpyl.build import run_mpyl
 
-        print("2")
-    else:
-        from mpyl.reporting.targets.jira import JiraReporter
-        from mpyl.steps.models import RunProperties
-        from mpyl.utilities.pyaml_env import parse_config
-        from mpyl.build import run_mpyl
-        from mpyl.cli import MpylCliParameters
-
-        print("2")
+    from src.mpyl.reporting.targets.jira import JiraReporter
+    from src.mpyl.steps.models import RunProperties
+    from src.mpyl.utilities.pyaml_env import parse_config
+    from src.mpyl.cli import MpylCliParameters
+    from src.mpyl.build import run_mpyl
 
     print("3")
     config = parse_config("mpyl_config.yml")
