@@ -79,7 +79,7 @@ def main(log: Logger, args: argparse.Namespace):
 
     print(args.dryrun)
     print(args.all)
-    print("911")
+    print("9")
 
     cli_parameters = MpylCliParameters(
         local=args.local,
@@ -87,7 +87,7 @@ def main(log: Logger, args: argparse.Namespace):
         pull_main=True,
         verbose=args.verbose,
         all=args.all,
-        dryrun=True,
+        dryrun=args.all,
     )
 
     print("CHECKING")
