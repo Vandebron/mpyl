@@ -38,7 +38,7 @@ def main(log: Logger, args: argparse.Namespace):
     jira = None
     github_comment = None
 
-    print("7")
+    print("71")
     if not args.local:
         from mpyl.reporting.targets.github import CommitCheck
         from mpyl.reporting.targets.slack import SlackReporter
