@@ -3,6 +3,7 @@ description: 'Example user-code deployment for dagster'
 maintainer:
   - MPyL
 stages:
+  build: Docker Build
   deploy: Dagster Deploy
 deployment:
   properties:
@@ -18,8 +19,4 @@ deployment:
         acceptance: 'DEBUG'
         production: 'INFO'
   dagster:
-    repo: "/example/repo.py"
-    secrets:
-      - name: 'all-dagster-secrets'
-      - name: 'example-dagster-user-code-secrets'
-
+    repo: "/tests/projects/dagster-user-code/main.py"
