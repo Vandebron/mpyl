@@ -17,12 +17,13 @@ from .k8s import (
     update_config_map_field,
     get_version_of_deployment,
 )
+from .k8s.helm import write_chart
 from .k8s.resources.dagster import to_user_code_values, to_grpc_server_entry, Constants
 from .. import Step, Meta, ArtifactType, Input, Output
 from ...project import Stage, Target
 from ...utilities.dagster import DagsterConfig
 from ...utilities.docker import DockerConfig
-from ...utilities.helm import convert_name_to_helm_release_name
+from ...utilities.helm import convert_to_helm_release_name, shorten_name
 
 
 class DeployDagster(Step):
@@ -89,13 +90,21 @@ class DeployDagster(Step):
         self._logger.debug(f"Deploying user code with values: {user_code_deployment}")
 
         dagster_deploy_results = []
+        values_path = Path(step_input.project.target_path)
+        self._logger.info(f"Writing Helm values to {values_path}")
+        write_chart(
+            chart={},
+            chart_path=values_path,
+            chart_metadata="",
+            values=user_code_deployment,
+        )
+
         helm_install_result = helm.install_with_values_yaml(
             logger=self._logger,
             dry_run=step_input.dry_run,
-            values_path=Path(step_input.project.target_path),
-            values=user_code_deployment,
-            release_name=convert_name_to_helm_release_name(
-                step_input.project.name, name_suffix
+            values_path=values_path,
+            release_name=convert_to_helm_release_name(
+                shorten_name(step_input.project.name), name_suffix
             ),
             chart_name=Constants.CHART_NAME,
             namespace=dagster_config.base_namespace,

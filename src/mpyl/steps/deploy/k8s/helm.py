@@ -148,15 +148,11 @@ def install_with_values_yaml(
     logger: Logger,
     values_path: Path,
     dry_run: bool,
-    values: dict,
     release_name: str,
     chart_name: str,
     namespace: str,
     kube_context: str,
 ) -> Output:
-    logger.info(f"Writing Helm values to {values_path}")
-    write_chart({}, values_path, "", values)
-
     values_path_arg = f'-f {values_path / Path("values.yaml")} {chart_name}'
     return __execute_install_cmd(
         logger,
