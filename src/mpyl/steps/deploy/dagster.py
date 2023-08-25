@@ -3,6 +3,7 @@ Step to deploy a dagster user code repository to k8s
 """
 from functools import reduce
 from logging import Logger
+from pathlib import Path
 
 import yaml
 from kubernetes import config, client
@@ -90,7 +91,8 @@ class DeployDagster(Step):
         dagster_deploy_results = []
         helm_install_result = helm.install_with_values_yaml(
             logger=self._logger,
-            step_input=step_input,
+            dry_run=step_input.dry_run,
+            values_path=Path(step_input.project.target_path),
             values=user_code_deployment,
             release_name=convert_name_to_helm_release_name(
                 step_input.project.name, name_suffix

@@ -91,7 +91,9 @@ def write_helm_chart(
 ) -> Path:
     chart_path = Path(target_path) / "chart"
     logger.info(f"Writing HELM chart to {chart_path}")
-    write_chart(chart, chart_path, to_chart_metadata(chart_name, run_properties))
+    write_chart(
+        chart, chart_path, to_chart_metadata(chart_name, run_properties), values={}
+    )
     return chart_path
 
 
@@ -101,14 +103,8 @@ def __execute_install_cmd(
     chart_name: str,
     name_space: str,
     kube_context: str,
-    delete_existing: bool = False,
     additional_args: str = "",
 ) -> Output:
-    if delete_existing:
-        removed = __remove_existing_chart(logger, chart_name, name_space, kube_context)
-        if not removed.success:
-            return removed
-    
     cmd = f"helm upgrade -i {chart_name} -n {name_space} --kube-context {kube_context} {additional_args}"
     if dry_run:
         cmd = (
@@ -116,6 +112,13 @@ def __execute_install_cmd(
             f"--debug --dry-run"
         )
     return custom_check_output(logger, cmd)
+
+def template(logger: Logger, chart_path: Path, name_space: str) -> Output:
+    cmd = f"helm template -n {name_space} {chart_path}"
+    output = custom_check_output(logger, cmd, capture_stdout=True)
+    template_file = chart_path / "template.yml"
+    template_file.write_text(f"{GENERATED_WARNING}\n{output.message}")
+    return Output(success=True, message=f"Chart templated to {template_file}")
 
 
 def install(
@@ -126,7 +129,6 @@ def install(
     name_space: str,
     kube_context: str,
     delete_existing: bool = False,
-    additional_args: str = "",
 ) -> Output:
     if delete_existing:
         removed = __remove_existing_chart(logger, chart_name, name_space, kube_context)
@@ -138,38 +140,65 @@ def install(
         chart_name,
         name_space,
         kube_context,
-        delete_existing,
         additional_args=str(chart_path),
     )
 
 
 def install_with_values_yaml(
     logger: Logger,
-    step_input: Input,
+    values_path: Path,
+    dry_run: bool,
     values: dict,
     release_name: str,
     chart_name: str,
     namespace: str,
     kube_context: str,
 ) -> Output:
-    values_path = Path(step_input.project.target_path)
     logger.info(f"Writing Helm values to {values_path}")
-
     write_chart({}, values_path, "", values)
 
     values_path_arg = f'-f {values_path / Path("values.yaml")} {chart_name}'
     return __execute_install_cmd(
         logger,
-        step_input,
+        dry_run,
         release_name,
         namespace,
         kube_context,
         additional_args=values_path_arg,
     )
 
-def template(logger: Logger, chart_path: Path, name_space: str) -> Output:
-    cmd = f"helm template -n {name_space} {chart_path}"
-    output = custom_check_output(logger, cmd, capture_stdout=True)
-    template_file = chart_path / "template.yml"
-    template_file.write_text(f"{GENERATED_WARNING}\n{output.message}")
-    return Output(success=True, message=f"Chart templated to {template_file}")
+
+def install(
+    logger: Logger,
+    chart: dict[str, CustomResourceDefinition],
+    step_input: Input,
+    release_name: str,
+    name_space: str,
+    kube_context: str,
+    delete_existing: bool = False,
+) -> Output:
+    if delete_existing:
+        removed = __remove_existing_chart(
+            logger, release_name, name_space, kube_context
+        )
+        if not removed.success:
+            return removed
+
+    chart_path = Path(step_input.project.target_path) / "chart"
+    logger.info(f"Writing HELM chart to {chart_path}")
+    write_chart(
+        chart,
+        chart_path,
+        to_chart_metadata(release_name, step_input.run_properties),
+        {},
+    )
+
+    return __execute_install_cmd(
+        logger,
+        step_input,
+        release_name,
+        name_space,
+        kube_context,
+        delete_existing,
+        additional_args=str(chart_path),
+    )
