@@ -123,7 +123,7 @@ def build(ctx, config, properties, verbose):
 )
 @click.option("--tag", "-t", help="Tag to build", type=click.STRING, required=False)
 @click.pass_obj
-def run(obj: CliContext, ci, all_, tag, dryrun_):  # pylint: disable=invalid-name
+def run(obj: CliContext, ci, all_, tag, dryrun):  # pylint: disable=invalid-name
     asyncio.run(warn_if_update(obj.console))
 
     print("NOT HERE RIGHT??")
@@ -134,7 +134,7 @@ def run(obj: CliContext, ci, all_, tag, dryrun_):  # pylint: disable=invalid-nam
         all=all_,
         verbose=obj.verbose,
         tag=tag,
-        dryrun=dryrun_,
+        dryrun=dryrun,
     )
     obj.console.log(parameters)
 
@@ -348,7 +348,7 @@ def ask_for_input(ctx, _param, value) -> Optional[str]:
 )
 @click.option(
     "--dryrun",
-    "dryrun_",
+    "dryrun",
     is_flag=True,
 )
 @click.option(
@@ -368,7 +368,7 @@ def jenkins(  # pylint: disable=too-many-arguments
     background,
     silent,
     tag,
-    dryrun_,
+    dryrun,
     all_,
 ):
     upgrade_check = None
@@ -387,7 +387,7 @@ def jenkins(  # pylint: disable=too-many-arguments
 
         pipeline_parameters["BUILD_PARAMS"] = ""
 
-        if dryrun_:
+        if dryrun:
             pipeline_parameters["BUILD_PARAMS"] += " --dryrun"
 
         if all_:
@@ -405,7 +405,7 @@ def jenkins(  # pylint: disable=too-many-arguments
             verbose=not silent or ctx.obj.verbose,
             follow=not background,
             tag=tag,
-            dryrun=dryrun_,
+            dryrun=dryrun,
             all=all_,
         )
 
