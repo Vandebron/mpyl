@@ -10,13 +10,6 @@ from mpyl.utilities.docker import DockerConfig
 
 @dataclass(frozen=True)
 class Constants:
-    DAGSTER_NAMESPACE = "dagster"
-
-    DAGSTER_WORKSPACE_CONFIGMAP = "dagster-workspace-yaml"
-    DAGSTER_WORKSPACE_FILE = "workspace.yaml"
-    DAGSTER_DAEMON = "dagster-daemon"
-    DAGSTER_DAGIT = "dagster-dagit"
-
     HELM_CHART_REPO = "https://dagster-io.github.io/helm"
     CHART_NAME = "dagster/dagster-user-deployments"
 

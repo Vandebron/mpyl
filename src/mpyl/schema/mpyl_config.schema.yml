@@ -9,6 +9,8 @@ definitions:
         "$ref": "#/definitions/CVS"
       docker:
         "$ref": "#/definitions/Docker"
+      dagster:
+        "$ref": "#/definitions/Dagster"
       whiteLists:
         "$ref": "#/definitions/Whitelists"
       cypress:
@@ -366,3 +368,18 @@ definitions:
     dependencies:
       accessKeyId: [ secretAccessKey ]
       secretAccessKey: [ accessKeyId ]
+  Dagster:
+    title: Dagster
+    type: object
+    additionalProperties: false
+    properties:
+      baseNamespace:
+        type: string
+      workspaceConfigMap:
+        type: string
+      workspaceFileKey:
+        type: string
+      daemon:
+        type: string
+      dagit:
+        type: string
