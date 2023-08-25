@@ -10,7 +10,7 @@ deployments:
   - name: example-dagster-user-code-secrets
   image:
     imagePullSecrets:
-    - name: bigdataregistry
+    - name: imagePullSecret
     pullPolicy: Always
     repository: docker_host/example-dagster-user-code
     tag: pr-1234

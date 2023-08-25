@@ -15,10 +15,10 @@ class Constants:
 
 
 def to_user_code_values(
-        project: Project,
-        name_suffix: str,
-        run_properties: RunProperties,
-        docker_config: DockerConfig,
+    project: Project,
+    name_suffix: str,
+    run_properties: RunProperties,
+    docker_config: DockerConfig,
 ) -> dict:
     return {
         "deployments": [
@@ -28,8 +28,9 @@ def to_user_code_values(
                 "envSecrets": [{"name": s.name} for s in project.dagster.secrets],
                 "image": {
                     "pullPolicy": "Always",
-                    "imagePullSecrets": [{"name": secret} for secret in
-                                         docker_config.image_pull_secrets],
+                    "imagePullSecrets": [
+                        {"name": secret} for secret in docker_config.image_pull_secrets
+                    ],
                     "tag": run_properties.versioning.identifier,
                     "repository": f"{docker_config.host_name}/{project.name}",
                 },
