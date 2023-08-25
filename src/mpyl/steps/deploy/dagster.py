@@ -54,13 +54,9 @@ class DeployDagster(Step):
 
     @staticmethod
     def __flatten_result_messages(acc: Output, curr: Output) -> Output:
-        formatted_acc_msg = f"{'SUCCESS' if acc.success else 'FAILURE'}: {acc.message}"
-        formatted_curr_msg = (
-            f"{'SUCCESS' if curr.success else 'FAILURE'}: {curr.message}"
-        )
         return Output(
             success=acc.success and curr.success,
-            message=f"{formatted_acc_msg}\n{formatted_curr_msg}",
+            message=f"{acc.message}\n{curr.message}",
         )
 
     # pylint: disable=R0914
