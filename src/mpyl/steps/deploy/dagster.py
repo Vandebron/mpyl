@@ -42,9 +42,13 @@ class DeployDagster(Step):
 
     @staticmethod
     def __flatten_result_messages(acc: Output, curr: Output) -> Output:
+        formatted_acc_msg = f"{'SUCCESS' if acc.success else 'FAILURE'}:{acc.message}"
+        formatted_curr_msg = (
+            f"{'SUCCESS' if curr.success else 'FAILURE'}: {curr.message}"
+        )
         return Output(
             success=acc.success and curr.success,
-            message=acc.message + "\n" + curr.message,
+            message=f"{formatted_acc_msg}\n{formatted_curr_msg}",
         )
 
     # pylint: disable=R0914
@@ -89,7 +93,6 @@ class DeployDagster(Step):
 
         self._logger.debug(f"Deploying user code with values: {user_code_deployment}")
 
-        dagster_deploy_results = []
         values_path = Path(step_input.project.target_path)
         self._logger.info(f"Writing Helm values to {values_path}")
         write_chart(
@@ -111,9 +114,8 @@ class DeployDagster(Step):
             kube_context=context,
         )
 
+        dagster_deploy_results = [helm_install_result]
         if helm_install_result.success and not step_input.dry_run:
-            dagster_deploy_results.append(helm_install_result)
-
             config_map = get_config_map(
                 core_api,
                 dagster_config.base_namespace,
@@ -146,44 +148,38 @@ class DeployDagster(Step):
                     field=dagster_config.workspace_file_key,
                     data=dagster_workspace,
                 )
-                configmap_update_result = replace_config_map(
+                config_map_update_result = replace_config_map(
                     core_api,
                     dagster_config.base_namespace,
                     dagster_config.workspace_config_map,
                     updated_config_map,
                 )
-                if configmap_update_result.success:
+
+                dagster_deploy_results.append(config_map_update_result)
+                if config_map_update_result.success:
                     self._logger.info(
                         f"Successfully added {user_code_name_to_deploy} to dagster's workspace.yaml"
                     )
-                    dagster_deploy_results.append(configmap_update_result)
-                if not configmap_update_result.success:
-                    return configmap_update_result
 
-            # restarting ui and daemon
-            rollout_restart_output = rollout_restart_deployment(
-                self._logger,
-                apps_api,
-                dagster_config.base_namespace,
-                dagster_config.daemon,
-            )
-            if rollout_restart_output.success:
-                self._logger.info(rollout_restart_output.message)
-                dagster_deploy_results.append(rollout_restart_output)
-                rollout_restart_output = rollout_restart_deployment(
-                    self._logger,
-                    apps_api,
-                    dagster_config.base_namespace,
-                    dagster_config.dagit,
-                )
-                if not rollout_restart_output.success:
-                    return rollout_restart_output
+                    # restarting ui and daemon
+                    rollout_restart_output = rollout_restart_deployment(
+                        self._logger,
+                        apps_api,
+                        dagster_config.base_namespace,
+                        dagster_config.daemon,
+                    )
 
-                self._logger.info(rollout_restart_output.message)
-                dagster_deploy_results.append(rollout_restart_output)
-            else:
-                return rollout_restart_output
-
+                    dagster_deploy_results.append(rollout_restart_output)
+                    if rollout_restart_output.success:
+                        self._logger.info(rollout_restart_output.message)
+                        rollout_restart_output = rollout_restart_deployment(
+                            self._logger,
+                            apps_api,
+                            dagster_config.base_namespace,
+                            dagster_config.dagit,
+                        )
+                        dagster_deploy_results.append(rollout_restart_output)
+                        self._logger.info(rollout_restart_output.message)
         return (
             reduce(
                 self.__flatten_result_messages,
