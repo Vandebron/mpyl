@@ -7,8 +7,7 @@ from logging import Logger
 from pathlib import Path
 from traceback import print_exc
 from typing import Dict
-from typing import Optional, Iterator, cast, Union
-
+from typing import Optional, Iterator, cast, Union, List
 from python_on_whales import docker, Image, Container, DockerException
 from python_on_whales.exceptions import NoSuchContainer
 

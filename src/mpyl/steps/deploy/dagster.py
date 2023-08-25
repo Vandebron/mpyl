@@ -19,6 +19,7 @@ from .k8s import (
 from .k8s.resources.dagster import to_user_code_values, to_grpc_server_entry, Constants
 from .. import Step, Meta, ArtifactType, Input, Output
 from ...project import Stage, Target
+from ...utilities.dagster import DagsterConfig
 from ...utilities.docker import DockerConfig
 from ...utilities.helm import convert_name_to_helm_release_name
 
@@ -52,6 +53,7 @@ class DeployDagster(Step):
         context = cluster_config(
             step_input.run_properties.target, step_input.run_properties
         ).context
+        dagster_config = DagsterConfig.from_dict(step_input.run_properties.config)
 
         config.load_kube_config(context=context)
         core_api = client.CoreV1Api()
@@ -59,14 +61,14 @@ class DeployDagster(Step):
 
         version = get_version_of_deployment(
             apps_api=apps_api,
-            namespace=Constants.DAGSTER_NAMESPACE,
-            deployment=Constants.DAGSTER_DAGIT,
+            namespace=dagster_config.base_namespace,
+            deployment=dagster_config.dagit,
             version_label="app.kubernetes.io/version",
         )
         self._logger.info(f"Dagster Version: {version}")
 
         helm.add_repo(
-            self._logger, Constants.DAGSTER_NAMESPACE, Constants.HELM_CHART_REPO
+            self._logger, dagster_config.base_namespace, Constants.HELM_CHART_REPO
         )
         helm.update_repo(self._logger)
 
@@ -94,7 +96,7 @@ class DeployDagster(Step):
                 step_input.project.name, name_suffix
             ),
             chart_name=Constants.CHART_NAME,
-            namespace=Constants.DAGSTER_NAMESPACE,
+            namespace=dagster_config.base_namespace,
             kube_context=context,
         )
 
@@ -103,11 +105,11 @@ class DeployDagster(Step):
 
             config_map = get_config_map(
                 core_api,
-                Constants.DAGSTER_NAMESPACE,
-                Constants.DAGSTER_WORKSPACE_CONFIGMAP,
+                dagster_config.base_namespace,
+                dagster_config.workspace_config_map,
             )
             dagster_workspace = yaml.safe_load(
-                config_map.data[Constants.DAGSTER_WORKSPACE_FILE]
+                config_map.data[dagster_config.workspace_file_key]
             )
 
             server_names = [
@@ -130,13 +132,13 @@ class DeployDagster(Step):
                 )
                 updated_config_map = update_config_map_field(
                     config_map=config_map,
-                    field=Constants.DAGSTER_WORKSPACE_FILE,
+                    field=dagster_config.workspace_file_key,
                     data=dagster_workspace,
                 )
                 configmap_update_result = replace_config_map(
                     core_api,
-                    Constants.DAGSTER_NAMESPACE,
-                    Constants.DAGSTER_WORKSPACE_CONFIGMAP,
+                    dagster_config.base_namespace,
+                    dagster_config.workspace_config_map,
                     updated_config_map,
                 )
                 if configmap_update_result.success:
@@ -151,8 +153,8 @@ class DeployDagster(Step):
             rollout_restart_output = rollout_restart_deployment(
                 self._logger,
                 apps_api,
-                Constants.DAGSTER_NAMESPACE,
-                Constants.DAGSTER_DAEMON,
+                dagster_config.base_namespace,
+                dagster_config.daemon,
             )
             if rollout_restart_output.success:
                 self._logger.info(rollout_restart_output.message)
@@ -160,8 +162,8 @@ class DeployDagster(Step):
                 rollout_restart_output = rollout_restart_deployment(
                     self._logger,
                     apps_api,
-                    Constants.DAGSTER_NAMESPACE,
-                    Constants.DAGSTER_DAGIT,
+                    dagster_config.base_namespace,
+                    dagster_config.dagit,
                 )
                 if not rollout_restart_output.success:
                     return rollout_restart_output
