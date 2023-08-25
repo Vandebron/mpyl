@@ -358,7 +358,7 @@ def ask_for_input(ctx, _param, value) -> Optional[str]:
     help="Build all projects, regardless of changes on branch",
 )
 @click.pass_context
-def jenkins(  # pylint: disable=too-many-arguments
+def jenkins(  #pylint: disable=too-many-arguments
     ctx,
     user,
     password,
