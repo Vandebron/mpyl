@@ -50,13 +50,17 @@ IDE [here](https://black.readthedocs.io/en/stable/integrations/editors.html).
 
 ## ..create a new release
 
-Using the [Github cli](https://cli.github.com/), run:
-
-```shell
-gh release create 0.0.2 --generate-notes
-```
-
-which will trigger a build and release to https://pypi.org/project/mpyl/
+§§1. Check the latest [release number](https://github.com/Vandebron/mpyl/releases) 
+2. Add the new release number to [mpyl/cli/releases/releases.txt](src/mpyl/cli/releases/releases.txt)
+3. Create a new release notes file in [releases/notes/](releases/notes/) and name it `<version>.md`
+Noteworthy changes should be added to this file. Think: new cli commands, new features, breaking changes, upgrade 
+instructions, etc.
+4. Merge all PRs that you want to include in the release to `main`
+5. Using the [Github cli](https://cli.github.com/), run: 
+   ```shell
+   gh release create <version> --generate-notes
+   ```
+   which will trigger a build and release to https://pypi.org/project/mpyl/
 
 ## ..troubleshoot Python setup
 
