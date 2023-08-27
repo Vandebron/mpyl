@@ -75,7 +75,7 @@ class TestCli:
             main_group,
             ["version"],
         )
-        regex = r"MPyL v\d+\.\d+\.\d+"
+        regex = r"MPyL \d+\.\d+\.\d+"
         if "GITHUB_JOB" in os.environ:
             regex = r"MPyL \(local\)"
 

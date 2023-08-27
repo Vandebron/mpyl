@@ -71,7 +71,7 @@ async def check_updates(meta: str) -> Optional[str]:
 
 def get_version():
     try:
-        return f"v{version_meta('mpyl')}"
+        return f"{version_meta('mpyl')}"
     except importlib.metadata.PackageNotFoundError:
         return "(local)"
 
