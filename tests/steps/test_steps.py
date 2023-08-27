@@ -8,7 +8,7 @@ from jsonschema import ValidationError
 from pyaml_env import parse_config
 from ruamel.yaml import YAML  # type: ignore
 
-from mpyl.steps.deploy.k8s import RenderedHelmChartSpec
+from src.mpyl.steps.deploy.k8s import RenderedHelmChartSpec
 from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME, BUILD_ARTIFACTS_FOLDER
 from src.mpyl.project import Project, Stages, Stage, Target, Dependencies
 from src.mpyl.steps.collection import StepsCollection
