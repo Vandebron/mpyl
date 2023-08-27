@@ -81,7 +81,7 @@ def get_releases() -> list[str]:
     if not embedded_releases:
         raise ValueError("File releases/releases.txt not found in package")
     releases = embedded_releases.decode("utf-8").strip().splitlines()
-    return sorted(releases, reverse=True)
+    return list(reversed(releases))
 
 
 def get_latest_release() -> str:

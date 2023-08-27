@@ -1,5 +1,19 @@
 # Release notes
 
+## MPyL 1.0.10
+
+#### Highlights
+
+# New functionality
+
+### Support for service monitor
+The prometheus [ServiceMonitor](https://doc.crds.dev/github.com/prometheus-operator/kube-prometheus/monitoring.coreos.com/ServiceMonitor/v1@v0.7.0)
+CRD and a corresponding [PrometheusRule](https://doc.crds.dev/github.com/prometheus-operator/kube-prometheus/monitoring.coreos.com/PrometheusRule/v1@v0.7.0)
+are deployed whenever the `metrics` field is defined in `project.yml`
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.0.10)
+
 ## MPyL 1.0.9
 
 #### Highlights

@@ -24,4 +24,4 @@ class TestDocumentation:
         assert_roundtrip(self.releases_path / "README.md", combined)
 
     def test_get_latest_release(self):
-        assert get_latest_release() == "1.0.9"
+        assert get_latest_release() == "1.0.10"
