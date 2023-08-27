@@ -138,42 +138,19 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
 ) -> Output:
     run_properties = step_input.run_properties
     project = step_input.project
-
     deploy_config = DeployConfig.from_config(run_properties.config)
-
     action = deploy_config.action
+
     if action == DeployAction.KUBERNETES_MANIFEST:
-        path = Path(project.root_path, deploy_config.output_path)
-        file_path = write_manifest(release_name, path, chart)
-
-        artifact = input_to_artifact(
-            ArtifactType.KUBERNETES_MANIFEST,
-            step_input,
-            spec=KubernetesManifestSpec(str(file_path)),
-        )
-
-        return Output(
-            success=True,
-            message=f"Wrote kubectl manifest to {path}",
-            produced_artifact=artifact,
-        )
+        output_path = Path(project.root_path, deploy_config.output_path)
+        return _render_kubernetes_manifest(chart, output_path, release_name, step_input)
 
     chart_path = write_helm_chart(
         logger, chart, Path(project.target_path), run_properties, release_name
     )
 
     if action == DeployAction.HELM_TEMPLATE:
-        template_path = helm.template(logger, chart_path, release_name)
-        artifact = input_to_artifact(
-            ArtifactType.KUBERNETES_MANIFEST,
-            step_input,
-            spec=RenderedHelmChartSpec(str(template_path)),
-        )
-        return Output(
-            success=True,
-            message=f"Chart templated to {template_path}",
-            produced_artifact=artifact,
-        )
+        return _render_helm_chart(chart_path, logger, release_name, step_input)
 
     namespace = get_namespace(run_properties, project)
     rancher_config: ClusterConfig = cluster_config(target, run_properties)
@@ -194,6 +171,34 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
         namespace,
         rancher_config.context,
         delete_existing,
+    )
+
+
+def _render_helm_chart(chart_path, logger, release_name, step_input):
+    template_path = helm.template(logger, chart_path, release_name)
+    artifact = input_to_artifact(
+        ArtifactType.KUBERNETES_MANIFEST,
+        step_input,
+        spec=RenderedHelmChartSpec(str(template_path)),
+    )
+    return Output(
+        success=True,
+        message=f"Chart templated to {template_path}",
+        produced_artifact=artifact,
+    )
+
+
+def _render_kubernetes_manifest(chart, path: Path, release_name, step_input):
+    file_path = write_manifest(release_name, path, chart)
+    artifact = input_to_artifact(
+        ArtifactType.KUBERNETES_MANIFEST,
+        step_input,
+        spec=KubernetesManifestSpec(str(file_path)),
+    )
+    return Output(
+        success=True,
+        message=f"Wrote kubectl manifest to {path}",
+        produced_artifact=artifact,
     )
 
 
