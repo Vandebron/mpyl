@@ -82,7 +82,7 @@ def markdown_for_stage(run_result: RunResult, stage: Stage):
         return ""
 
     result = f"{stage_to_icon(stage)} {__to_oneliner(step_results, plan)}  \n"
-    test_artifacts: dict[str, JunitTestSpec] = _collect_test_artifacts(step_results)
+    test_artifacts: dict[str, JunitTestSpec] = _collect_test_specs(step_results)
     test_results: dict[str, list[TestSuite]] = _collect_test_results(test_artifacts)
 
     if test_results:
@@ -128,7 +128,7 @@ def to_markdown_test_report(suites: list[TestSuite]):
     return f"{summary_to_markdown(total_tests)}"
 
 
-def _collect_test_artifacts(step_results: list[StepResult]) -> dict[str, JunitTestSpec]:
+def _collect_test_specs(step_results: list[StepResult]) -> dict[str, JunitTestSpec]:
     return {
         res.output.produced_artifact.producing_step: cast(
             JunitTestSpec, res.output.produced_artifact.spec
