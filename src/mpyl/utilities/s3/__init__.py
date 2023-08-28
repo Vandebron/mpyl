@@ -15,17 +15,18 @@ from ...steps.models import RunProperties
 
 @dataclass
 class S3ClientConfig:
-    service_name = "s3"
-    region_name = "eu-central-1"
-    access_key_id: Optional[str]
-    secret_access_key: Optional[str]
     bucket_name: str
     bucket_root_path: str
+    service_name = "s3"
+    region_name = "eu-central-1"
+    access_key_id: Optional[str] = None
+    secret_access_key: Optional[str] = None
 
     def __init__(self, run_properties: RunProperties, bucket_name: str):
-        s3_connection_info = run_properties.config.get("s3", None)
-        self.access_key_id = s3_connection_info.get("accessKeyId")
-        self.secret_access_key = s3_connection_info.get("secretAccessKey")
+        s3_connection_info = run_properties.config.get("s3")
+        if s3_connection_info is not None:
+            self.access_key_id = s3_connection_info.get("accessKeyId")
+            self.secret_access_key = s3_connection_info.get("secretAccessKey")
         self.bucket_name = bucket_name
         self.bucket_root_path = run_properties.versioning.identifier
 
@@ -34,6 +35,10 @@ class S3Client:
     def __init__(self, logger: Logger, config: S3ClientConfig):
         """
         Creates a client that provides a wrapper for uploading a directory to an S3 bucket
+
+        Credentials can be provided via the s3.accessKeyId and s3.secretAccessKey properties in the mpyl_config or
+        via the numerous ways supported by boto3 (see
+        https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html)
 
         :param config: the S3 client config containing the necessary credentials and bucket information
         """

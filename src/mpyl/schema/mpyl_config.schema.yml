@@ -363,6 +363,3 @@ definitions:
         type: string
       secretAccessKey:
         type: string
-    required:
-      - accessKeyId
-      - secretAccessKey
