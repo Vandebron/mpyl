@@ -455,13 +455,29 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
 
     @staticmethod
     def _to_resources(resources: Resources, defaults: ResourceDefaults, target: Target):
-        cpus = resources.cpus if resources and resources.cpus else defaults.cpus
+        cpus = (
+            resources.limit.cpus
+            if resources and resources.limit and resources.limit.cpus
+            else defaults.cpus
+        )
         cpus_limit = cpus.get_value(target=target) * 1000.0
-        cpus_request = cpus_limit * CPU_REQUEST_SCALE_FACTOR
+        cpus_request = (
+            resources.request.cpus
+            if resources and resources.request and resources.request.cpus
+            else cpus_limit * CPU_REQUEST_SCALE_FACTOR
+        )
 
-        mem = resources.mem if resources and resources.mem else defaults.mem
+        mem = (
+            resources.limit.mem
+            if resources and resources.limit and resources.limit.mem
+            else defaults.mem
+        )
         mem_limit = mem.get_value(target=target)
-        mem_request = mem_limit * MEM_REQUEST_SCALE_FACTOR
+        mem_request = (
+            resources.request.mem
+            if resources and resources.request and resources.request.mem
+            else mem_limit * MEM_REQUEST_SCALE_FACTOR
+        )
         return V1ResourceRequirements(
             limits={"cpu": f"{int(cpus_limit)}m", "memory": f"{int(mem_limit)}Mi"},
             requests={

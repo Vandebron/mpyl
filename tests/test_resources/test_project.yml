@@ -75,7 +75,7 @@ deployment:
         severity: 'warning'
     resources:
       instances:
-        all: 1
+        all: 3
       limit:
         cpus:
           all: 0.5

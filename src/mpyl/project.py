@@ -250,20 +250,32 @@ class Metrics:
 
 
 @dataclass(frozen=True)
-class Resources:
-    instances: Optional[TargetProperty[int]]
+class ResourceSpecification:
     cpus: Optional[TargetProperty[float]]
     mem: Optional[TargetProperty[int]]
     disk: Optional[TargetProperty[int]]
 
     @staticmethod
     def from_config(values: dict):
-        limits = values.get("limit", {})
+        return ResourceSpecification(
+            cpus=TargetProperty.from_config(values.get("cpus", {})),
+            mem=TargetProperty.from_config(values.get("mem", {})),
+            disk=TargetProperty.from_config(values.get("disk", {})),
+        )
+
+
+@dataclass(frozen=True)
+class Resources:
+    instances: Optional[TargetProperty[int]]
+    limit: Optional[ResourceSpecification]
+    request: Optional[ResourceSpecification]
+
+    @staticmethod
+    def from_config(values: dict):
         return Resources(
-            instances=TargetProperty.from_config(limits.get("instances", {})),
-            cpus=TargetProperty.from_config(limits.get("cpus", {})),
-            mem=TargetProperty.from_config(limits.get("mem", {})),
-            disk=TargetProperty.from_config(limits.get("disk", {})),
+            instances=TargetProperty.from_config(values.get("instances", {})),
+            limit=ResourceSpecification.from_config(values.get("limit", {})),
+            request=ResourceSpecification.from_config(values.get("request", {})),
         )
 
 
