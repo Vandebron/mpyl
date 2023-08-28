@@ -206,9 +206,12 @@ properties:
         type: object
         required:
           - bucket
+          - region
         properties:
           bucket:
             $ref: '#/definitions/dtapValue'
+          region:
+            type: string
           path:
             $ref: '#/definitions/dtapValue'
       kubernetes:

@@ -22,12 +22,15 @@ class S3ClientConfig:
     access_key_id: Optional[str] = None
     secret_access_key: Optional[str] = None
 
-    def __init__(self, run_properties: RunProperties, bucket_name: str):
+    def __init__(
+        self, run_properties: RunProperties, bucket_name: str, bucket_region: str
+    ):
         s3_connection_info = run_properties.config.get("s3")
         if s3_connection_info is not None:
             self.access_key_id = s3_connection_info.get("accessKeyId")
             self.secret_access_key = s3_connection_info.get("secretAccessKey")
         self.bucket_name = bucket_name
+        self.region_name = bucket_region
         self.bucket_root_path = run_properties.versioning.identifier
 
 
@@ -72,39 +75,51 @@ class S3Client:
                 )
             raise exc
 
-    def upload_directory(self, directory: str):
+    def upload_directory(self, directory: str, root_asset_location: str):
         """
         Uploads all files in a directory and its subdirectories to the S3 bucket
 
         Note: boto3 does not provide a sync method, so we have to walk the directory and upload each file individually
 
         :param directory: the name of the root directory containing the content to upload
+        :param root_asset_location: the root location of the assets (typically 'static')
         """
         walks = walk(directory)
         for path, _, filenames in walks:
             for filename in filenames:
                 src_path = f"{path}/{filename}"
                 dst_path = self.create_file_dst(
-                    root_path=self._bucket_root_path, file_path=path, filename=filename
+                    root_path=self._bucket_root_path,
+                    file_path=path,
+                    filename=filename,
+                    root_asset_location=root_asset_location,
                 )
                 self.upload_file(src_path=src_path, dst_path=dst_path)
 
     @staticmethod
-    def create_file_dst(root_path: str, file_path: str, filename: str):
+    def create_file_dst(
+        root_path: str, file_path: str, filename: str, root_asset_location: str
+    ):
         """
         Creates the bucket key for a given file based on its relative path and the given bucket root path
         i.e. /root/path/relative/path/filename
 
-        The first 2 parts of the path are excluded as they are an auto created tmp directory of the form
-        '/tmp/asVx3sd/...'
+        The first n parts of the path up to 'root_asset_location' are excluded as they are part of an auto created tmp
+        directory
 
         :param root_path: the root path on the bucket
         :param file_path: the relative path of the file
         :param filename: the name of the file
+        :param root_asset_location: the root location of the assets (typically 'static')
         :return: the full destination path/key in the s3 bucket
         """
         path_parts = pathlib.Path(file_path).parts
-        non_tmp_parts = path_parts[3:]
+
+        asset_path_idx = next(
+            (idx for idx, part in enumerate(path_parts) if part == root_asset_location)
+        )
+        non_tmp_parts = path_parts[asset_path_idx:]
+
         relative_path = f"{'/'.join(filter(None, non_tmp_parts))}"
         return (
             f"{root_path}/{relative_path}/{filename}"

@@ -360,6 +360,9 @@ definitions:
     type: object
     properties:
       accessKeyId:
-        type: string
+        type: [ string, null ]
       secretAccessKey:
-        type: string
+        type: [ string, null ]
+    dependencies:
+      accessKeyId: [ secretAccessKey ]
+      secretAccessKey: [ accessKeyId ]
