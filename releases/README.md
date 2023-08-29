@@ -4,7 +4,7 @@
 
 #### Highlights
 
-# Hotfix release
+# New functionality
 
 ### Hotfix for mapping multiple ports to the same service
 
@@ -23,6 +23,12 @@ deployment:
         priority: 1000
 ```
 resulted in `8081` being used as servicePort in the treafik rule instead of `4091`.
+
+### Release notes
+
+The release notes (as you are reading them now) are generated from the `releases/notes` directory in the project repository.
+Whenever a release has changes that require your attention like: new cli commands, new features, breaking changes, upgrade
+instructions, etc. they will be included here.
 
 Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.0.11)
 
