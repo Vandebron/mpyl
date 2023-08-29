@@ -116,21 +116,6 @@ def status(obj: CliContext):
         )
 
 
-@repository.command(help="Return repository credentials")
-@click.pass_obj
-def credentials(obj: CliContext):
-    repo_config = RepoConfig.from_config(obj.config).repo_credentials
-    if "username" in sys.argv[1].lower():
-        print(repo_config.username)
-        sys.exit()
-
-    if "password" in sys.argv[1].lower():
-        print(repo_config.password)
-        sys.exit()
-
-    sys.exit(1)
-
-
 @repository.command(help="Initialize the repository for a build run")
 @click.option("--url", "-u", type=click.STRING, help="URL to the remote repository")
 @click.option("--pull", "-pr", type=click.INT, help="PR number to fetch")
