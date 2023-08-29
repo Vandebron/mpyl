@@ -81,6 +81,11 @@ deployment:
           all: 0.5
         mem:
           all: 1024
+      request:
+        cpus:
+          all: 0.2
+        mem:
+          all: 256
   traefik:
     hosts:
       - host:
