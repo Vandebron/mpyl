@@ -1,3 +1,4 @@
+import dataclasses
 import os
 from pathlib import Path
 
@@ -35,6 +36,14 @@ RUN_PROPERTIES = RunProperties(
     ),
     config_values,
     ConsoleProperties("INFO", True, 130),
+)
+
+RUN_PROPERTIES_PROD = dataclasses.replace(
+    RUN_PROPERTIES,
+    target=Target.PRODUCTION,
+    versioning=dataclasses.replace(
+        RUN_PROPERTIES.versioning, tag="20230829-1234", pr_number=None
+    ),
 )
 
 

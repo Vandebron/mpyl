@@ -129,7 +129,7 @@ class DeploymentDefaults:
     liveness_probe_defaults: dict
     startup_probe_defaults: dict
     job_defaults: dict
-    treafik_defaults: dict
+    traefik_defaults: dict
     white_lists: dict
 
     @staticmethod
@@ -143,7 +143,7 @@ class DeploymentDefaults:
             liveness_probe_defaults=kubernetes["livenessProbe"],
             startup_probe_defaults=kubernetes["startupProbe"],
             job_defaults=kubernetes.get("job", {}),
-            treafik_defaults=deployment_values.get("traefik", {}),
+            traefik_defaults=deployment_values.get("traefik", {}),
             white_lists=config.get("whiteLists", {}),
         )
 
@@ -404,7 +404,7 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
 
     def create_host_wrappers(self) -> list[HostWrapper]:
         default_hosts: list[Host] = Traefik.from_config(
-            self.config_defaults.treafik_defaults
+            self.config_defaults.traefik_defaults
         ).hosts
 
         hosts: list[Host] = (
@@ -447,6 +447,7 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
             metadata=self._to_object_meta(),
             hosts=hosts,
             target=self.target,
+            namespace=self.project.to_name.namespace,
             pr_number=self.step_input.run_properties.versioning.pr_number,
         )
 

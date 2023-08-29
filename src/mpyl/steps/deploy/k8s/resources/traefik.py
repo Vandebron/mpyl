@@ -29,10 +29,13 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
         metadata: V1ObjectMeta,
         hosts: list[HostWrapper],
         target: Target,
+        namespace: Optional[str],
         pr_number: Optional[int],
     ):
         def _interpolate_names(host: str, name: str) -> str:
             host = host.replace("{SERVICE-NAME}", name)
+            if namespace:
+                host = host.replace("{namespace}", namespace)
             if pr_number:
                 return host.replace("{PR-NUMBER}", str(pr_number))
             return host
@@ -41,7 +44,8 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
             {
                 "kind": "Rule",
                 "match": _interpolate_names(
-                    host.host.host.get_value(target), host.name
+                    host=host.host.host.get_value(target),
+                    name=host.name,
                 ),
                 "services": [
                     {"name": host.name, "kind": "Service", "port": host.service_port}
