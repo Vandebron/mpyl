@@ -380,13 +380,6 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
             self.deployment.traefik.hosts if self.deployment.traefik else []
         )
 
-        first_host = next(iter(hosts), None)
-        default_service_port = (
-            first_host.service_port
-            if first_host and first_host.service_port
-            else self.__find_default_port()
-        )
-
         configured_addresses = self.config_defaults.white_lists["addresses"]
         address_dictionary = {
             address["name"]: address["values"] for address in configured_addresses
@@ -410,7 +403,7 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
                 index=idx,
                 service_port=host.service_port
                 if host.service_port
-                else default_service_port,
+                else self.__find_default_port(),
                 white_lists=to_white_list(host.whitelists),
             )
             for idx, host in enumerate(hosts if hosts else default_hosts)
