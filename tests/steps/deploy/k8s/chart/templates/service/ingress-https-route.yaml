@@ -28,7 +28,7 @@ spec:
     services:
     - name: dockertest
       kind: Service
-      port: 8080
+      port: 4091
     middlewares:
     - name: dockertest-ingress-1-whitelist
     - name: traefik-https-redirect@kubernetescrd
