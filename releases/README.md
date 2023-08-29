@@ -1,5 +1,31 @@
 # Release notes
 
+## MPyL 1.0.11
+
+#### Highlights
+
+# Hotfix release
+
+### Hotfix for mapping multiple ports to the same service
+
+Due to a bug in the mapping of multiple ports to the same service, the following configuration:
+```yaml
+deployment:
+  kubernetes:
+  portMappings:
+    8081: 8081
+  traefik:
+    hosts:
+      ...
+      - host:
+          all: "Host(`some.other.host.com`)"
+        servicePort: 4091
+        priority: 1000
+```
+resulted in `8081` being used as servicePort in the treafik rule instead of `4091`.
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.0.11)
+
 ## MPyL 1.0.10
 
 #### Highlights
