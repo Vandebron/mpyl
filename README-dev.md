@@ -55,7 +55,7 @@ IDE [here](https://black.readthedocs.io/en/stable/integrations/editors.html).
 3. Create a new release notes file in [releases/notes/](releases/notes/) and name it `<version>.md`
 Noteworthy changes should be added to this file. Think: new cli commands, new features, breaking changes, upgrade 
 instructions, etc.
-4. Merge all PRs that you want to include in the release to `main`
+4. For each PR that you want to include in the release, repeat step 3 and merge to `main`.
 5. Using the [Github cli](https://cli.github.com/), run: 
    ```shell
    gh release create <version> --generate-notes
