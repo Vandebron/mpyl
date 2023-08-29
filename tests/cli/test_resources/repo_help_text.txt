@@ -4,7 +4,7 @@ Usage: mpyl repo [OPTIONS] COMMAND [ARGS]...
 
 Options:
   -c, --config PATH      Path to the config.yml. Can be set via
-                         `MPYL_CONFIG_PATH` env var.   [required]
+                         `MPYL_CONFIG_PATH` env var.
   -p, --properties PATH  Path to run properties  [default: run_properties.yml]
   -v, --verbose
   --help                 Show this message and exit.

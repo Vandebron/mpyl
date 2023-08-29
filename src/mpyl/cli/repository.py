@@ -29,8 +29,8 @@ class RepoContext:
 @click.option(
     "--config",
     "-c",
-    required=True,
-    type=click.Path(exists=True),
+    required=False,
+    type=click.Path(exists=False),
     help=CONFIG_PATH_HELP,
     envvar="MPYL_CONFIG_PATH",
     default=DEFAULT_CONFIG_FILE_NAME,
@@ -127,15 +127,17 @@ def status(obj: RepoContext):
 @click.option("--branch", "-b", type=click.STRING, help="Branch to fetch")
 @click.pass_obj
 def init(obj: RepoContext, url, pull, branch):
-    config = parse_config(obj.config)
-    run_properties = RunProperties.from_configuration(
-        parse_config(obj.run_properties), config
-    )
     console = obj.console
 
     console.log("Preparing repository for a new run...")
 
-    with Repository(config=RepoConfig.from_config(config)) as repo:
+    with Repository.clone_from_branch(
+        branch.replace("refs/heads/", ""), url, "main", obj.config, Path(".")
+    ) as repo:
+        config = parse_config(obj.config)
+        run_properties = RunProperties.from_configuration(
+            parse_config(obj.run_properties), config
+        )
         if not repo.remote_url:
             with console.status("👷 Initializing remote origin") as progress:
                 repo_config = RepoConfig.from_config(config).repo_credentials
