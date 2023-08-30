@@ -284,7 +284,7 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
             else None
         )
 
-        return self.Probes(liveness_probe, startup_probe)
+        return liveness_probe, startup_probe
 
     def to_service(self) -> V1Service:
         service_ports = list(
