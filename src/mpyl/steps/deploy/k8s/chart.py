@@ -243,11 +243,12 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
         )
 
     @staticmethod
-    def _to_probe(probe: Probe, defaults: dict, target: Target) -> V1Probe:
+    def _to_probe(probe: Optional[Probe], defaults: dict, target: Target) -> V1Probe:
         values = defaults.copy()
-        values.update(probe.values)
+        if probe:
+            values.update(probe.values)
         v1_probe: V1Probe = ChartBuilder._to_k8s_model(values, V1Probe)
-        path = probe.path.get_value(target)
+        path = probe.path.get_value(target) if probe else None
         v1_probe.http_get = V1HTTPGetAction(
             path="/health" if path is None else path, port="port-0"
         )
