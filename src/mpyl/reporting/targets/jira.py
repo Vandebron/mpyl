@@ -30,6 +30,7 @@ from urllib.parse import urlsplit
 
 import requests
 from atlassian import Jira
+from typing_extensions import deprecated
 
 from . import Reporter, ReportOutcome
 from ..formatting.markdown import markdown_for_stage
@@ -226,22 +227,11 @@ class JiraReporter(Reporter):
 
             self.__move_ticket_forward(ticket)
 
-            user_email = results.run_properties.details.user_email
-            if user_email:
-                self.__assign_ticket(user_email, ticket)
             return JiraOutcome(success=True)
 
         except requests.exceptions.HTTPError as exc:
             self._logger.warning(f"Could not handle Jira ticket {self._ticket}: {exc}")
             return JiraOutcome(success=False, exception=exc)
-
-    def __assign_ticket(self, run_user_email: str, ticket: JiraTicket):
-        if ticket.assignee_email is None:
-            jira_user = self._jira.user_find_by_user_string(query=run_user_email)
-            if jira_user:
-                account_id = jira_user.pop().get("accountId")
-                self._logger.info(f"Assigning {ticket.ticket_id} to {account_id}")
-                self._jira.assign_issue(self._ticket, account_id=account_id)
 
     def __move_ticket_forward(self, ticket: JiraTicket):
         transitions = self._jira.get_issue_transitions(self._ticket)
