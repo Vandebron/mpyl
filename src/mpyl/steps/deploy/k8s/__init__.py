@@ -128,7 +128,9 @@ def substitute_namespaces(
             return f"pr-{pr_identifier}"
         return project_name.namespace
 
-    def replace_namespace(env_value: str, project_name: str, namespace):
+    def replace_namespace(
+        env_value: str, project_name: str, namespace: Optional[str]
+    ) -> str:
         search_value = project_name + ".{namespace}"
         replace_value = project_name + "." + namespace
         return env_value.replace(search_value, replace_value)
