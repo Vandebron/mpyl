@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Optional
 
 from kubernetes import config, client
+from kubernetes.client import V1NamespaceList
 
 from .helm import write_helm_chart
 from ...deploy.k8s.resources import CustomResourceDefinition
@@ -47,7 +48,9 @@ def upsert_namespace(
     api = client.CoreV1Api()
 
     meta_data = rancher_namespace_metadata(namespace, rancher_config)
-    namespaces = api.list_namespace(field_selector=f"metadata.name={namespace}")
+    namespaces: V1NamespaceList = api.list_namespace(
+        field_selector=f"metadata.name={namespace}"
+    )
 
     if len(namespaces.items) == 0 and not dry_run:
         api.create_namespace(
@@ -57,13 +60,20 @@ def upsert_namespace(
         logger.info(f"Found namespace {namespace}")
 
 
-def delete_namespace(logger: Logger, namespace: str, rancher_config: ClusterConfig):
+def delete_namespace_if_exists(
+    logger: Logger, namespace: str, rancher_config: ClusterConfig
+):
     config.load_kube_config(context=rancher_config.context)
     logger.info(
-        f"Deleting namespace {namespace} from k8s context {rancher_config.context} after successful deployment."
+        f"Deleting namespace {namespace} from k8s context {rancher_config.context} "
+        f"after successful deployment to production."
     )
     api = client.CoreV1Api()
-    api.delete_namespace(namespace)
+    namespaces: V1NamespaceList = api.list_namespace(
+        field_selector=f"metadata.name={namespace}"
+    )
+    if len(namespaces.items) == 1:
+        api.delete_namespace(namespace)
 
 
 def deploy_helm_chart(
@@ -100,10 +110,10 @@ def deploy_helm_chart(
     )
 
     if output.success and run_properties.target:
-        delete_namespace(
+        delete_namespace_if_exists(
             logger=logger,
             namespace=run_properties.versioning.get_pr_str(),
-            rancher_config=rancher_config,
+            rancher_config=rancher.cluster_config(Target.PULL_REQUEST, run_properties),
         )
 
 
