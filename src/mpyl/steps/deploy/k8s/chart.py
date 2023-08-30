@@ -591,6 +591,30 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
         kubernetes = project.kubernetes
         defaults = self.config_defaults.resources_defaults
 
+        liveness_probe = (
+            ChartBuilder._to_probe(
+                kubernetes.liveness_probe,
+                self.config_defaults.liveness_probe_defaults,
+                self.target,
+            )
+            if kubernetes.liveness_probe
+            else None
+        )
+
+        # add a startup probe if liveness_probe is defined
+        # NOTE: in MPL the same liveness probe was copied for startup probe,
+        #       if no startup probe was provided in the project yaml.
+        #       here we're using the startup probe default values from the config instead
+        startup_probe = (
+            ChartBuilder._to_probe(
+                kubernetes.startup_probe,
+                self.config_defaults.startup_probe_defaults,
+                self.target,
+            )
+            if kubernetes.liveness_probe
+            else None
+        )
+
         container = V1Container(
             name=self.release_name,
             image=self._get_image(),
@@ -600,20 +624,8 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
             resources=ChartBuilder._to_resource_requirements(
                 resources, defaults, self.target
             ),
-            liveness_probe=ChartBuilder._to_probe(
-                kubernetes.liveness_probe,
-                self.config_defaults.liveness_probe_defaults,
-                self.target,
-            )
-            if kubernetes.liveness_probe
-            else None,
-            startup_probe=ChartBuilder._to_probe(
-                kubernetes.startup_probe,
-                self.config_defaults.startup_probe_defaults,
-                self.target,
-            )
-            if kubernetes.startup_probe
-            else None,
+            liveness_probe=liveness_probe,
+            startup_probe=startup_probe,
         )
 
         instances = resources.instances if resources.instances else defaults.instances
