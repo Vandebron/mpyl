@@ -142,8 +142,7 @@ definitions:
       github:
         "$ref": "#/definitions/Github"
       artifactRepository:
-        description: "The repository where the build artifacts are cached"
-        type: string
+        "$ref": "#/definitions/Git"
     required:
       - git
       - github
@@ -171,6 +170,9 @@ definitions:
         default: [ ".md", "*.svg" ]
         items:
           type: string
+      folder:
+        description: "Custom folder location of the git repository. Default is the current working directory"
+        type: string
     required:
       - mainBranch
     title: Git

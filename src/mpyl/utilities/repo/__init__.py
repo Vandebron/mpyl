@@ -65,6 +65,7 @@ class Revision:
 @dataclass(frozen=True)
 class RepoCredentials:
     url: str
+    ssh_url: str
     user_name: str
     password: str
 
@@ -75,8 +76,13 @@ class RepoCredentials:
 
     @staticmethod
     def from_config(config: dict):
+        url = config["url"]
+        ssh_url = f"{url.replace('https://', 'git@').replace('.com/', '.com:')}"
         return RepoCredentials(
-            url=config["url"], user_name=config["userName"], password=config["password"]
+            url=url,
+            ssh_url=ssh_url,
+            user_name=config["userName"],
+            password=config["password"],
         )
 
 
@@ -85,10 +91,15 @@ class RepoConfig:
     main_branch: str
     ignore_patterns: list[str]
     repo_credentials: Optional[RepoCredentials]
+    folder: Optional[str]
 
     @staticmethod
     def from_config(config: dict):
         git_config = config["vcs"]["git"]
+        return RepoConfig.from_git_config(git_config=git_config)
+
+    @staticmethod
+    def from_git_config(git_config: dict):
         maybe_remote_config = git_config.get("remote", None)
         return RepoConfig(
             main_branch=git_config["mainBranch"],
@@ -96,13 +107,14 @@ class RepoConfig:
             repo_credentials=RepoCredentials.from_config(maybe_remote_config)
             if maybe_remote_config
             else None,
+            folder=git_config.get("folder", None),
         )
 
 
 class Repository:  # pylint: disable=too-many-public-methods
-    def __init__(self, config: RepoConfig):
+    def __init__(self, config: RepoConfig, root_dir=Git().rev_parse("--show-toplevel")):
         self._config = config
-        self._root_dir = Git().rev_parse("--show-toplevel")
+        self._root_dir = root_dir
         self._repo = Repo(
             self._root_dir
         )  # pylint: disable=attribute-defined-outside-init
@@ -269,15 +281,34 @@ class Repository:  # pylint: disable=too-many-public-methods
         parsed_config = parse_config(config_path)
         return Repository(RepoConfig.from_config(parsed_config))
 
+    def fetch_branch(self, branch_name: str):
+        return self._repo.remote().fetch(branch_name)
+
+    def create_branch(self, branch_name: str):
+        return self._repo.git.checkout("-b", f"{branch_name}")
+
+    def stage_all_changes(self):
+        return self._repo.git.add(".")
+
+    def commit(self, message: str):
+        logging.debug("Committing staged files")
+        return self._repo.git.commit("-m", message)
+
+    def push(self):
+        logging.debug("Pushing to remote")
+        return self._repo.git.push("-u")
+
     def checkout_branch(self, branch_name: str):
         self._repo.git.switch(branch_name)
 
-    def does_local_branch_exist(self, branch_name: str) -> bool:
-        local_branches = [
-            branch.strip(" ") for branch in self._repo.git.branch("--list").splitlines()
+    def does_branch_exist(self, branch_name: str, remote=False) -> bool:
+        found_branches = [
+            branch.strip(" ")
+            for branch in self._repo.git.branch(
+                "--list", "-r" if remote else None
+            ).splitlines()
         ]
-        logging.debug(f"Found local branches: {local_branches}")
-        return branch_name in local_branches
+        return (f"origin/{branch_name}" if remote else branch_name) in found_branches
 
     def delete_branch(self, branch_name: str):
         self._repo.git.branch("-D", branch_name)

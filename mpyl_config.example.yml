@@ -12,7 +12,12 @@ vcs:
     app:
       privateKeyBase64Encoded: !ENV ${MPYL_GITHUB_APP_PRIVATE_KEY}
       appId: '295700'
-  artifactRepository: 'https://github.com/acme/artifact-repo.git'
+  artifactRepository:
+    mainBranch: 'main'
+    remote:
+      url: 'https://github.com/acme/artifact-repo.git'
+      userName: !ENV ${GIT_CREDENTIALS_USR}
+      password: !ENV ${GIT_CREDENTIALS_PSW}
 slack:
   botToken: !ENV ${SLACK_TOKEN}
   icons:
