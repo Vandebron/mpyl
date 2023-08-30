@@ -131,9 +131,11 @@ def substitute_namespaces(
     def replace_namespace(
         env_value: str, project_name: str, namespace: Optional[str]
     ) -> str:
-        search_value = project_name + ".{namespace}"
-        replace_value = project_name + "." + namespace
-        return env_value.replace(search_value, replace_value)
+        if namespace:
+            search_value = project_name + ".{namespace}"
+            replace_value = project_name + "." + namespace
+            return env_value.replace(search_value, replace_value)
+        return env_value
 
     for project in all_projects:
         if project.namespace:
