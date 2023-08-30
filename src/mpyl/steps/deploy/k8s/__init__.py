@@ -113,8 +113,10 @@ def deploy_helm_chart(
         delete_namespace_if_exists(
             logger=logger,
             namespace=run_properties.versioning.get_pr_str(),
-            rancher_config=rancher.cluster_config(Target.PULL_REQUEST, run_properties),
+            rancher_config=cluster_config(Target.PULL_REQUEST, run_properties),
         )
+
+    return output
 
 
 def substitute_namespaces(
