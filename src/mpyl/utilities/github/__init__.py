@@ -1,9 +1,14 @@
 """Github related utility methods"""
+import logging
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Optional
 
 from github.PullRequest import PullRequest
 from github.Repository import Repository
+
+from ..repo import RepoConfig
+from ..subprocess import custom_check_output
 
 
 @dataclass
@@ -58,3 +63,11 @@ def get_pr_for_branch(repo: Repository, branch: str) -> PullRequest:
         )
 
     return pulls.pop()
+
+
+def clone_repository(artifact_repo_config: RepoConfig, repo_path: Path) -> None:
+    repo_path.mkdir(parents=True, exist_ok=True)
+    custom_check_output(
+        logging.getLogger(),
+        f"git clone {artifact_repo_config.repo_credentials.ssh_url} {repo_path}",
+    )

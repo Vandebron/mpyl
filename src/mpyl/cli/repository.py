@@ -189,7 +189,7 @@ def init(obj: RepoContext, url: str, pull: int, branch: str, pristine: bool):
 
             if repo.get_branch != target_branch:
                 with console.status(f"👷 Fetching PR #{pr_number}"):
-                    if repo.does_local_branch_exist(target_branch):
+                    if repo.does_branch_exist(target_branch):
                         console.log(
                             Markdown(
                                 f"👷 Deleting local branch to prevent conflicts `{target_branch}`"
