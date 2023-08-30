@@ -16,7 +16,7 @@ metadata:
     revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
   name: dockertest
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app.kubernetes.io/instance: dockertest
@@ -91,7 +91,7 @@ spec:
             cpu: 500m
             memory: 1024Mi
           requests:
-            cpu: 100m
-            memory: 512Mi
+            cpu: 200m
+            memory: 256Mi
       serviceAccount: dockertest
       serviceAccountName: dockertest

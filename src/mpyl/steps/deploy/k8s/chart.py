@@ -454,14 +454,36 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
         return V1SealedSecret(name=self.release_name, secrets=secrets)
 
     @staticmethod
-    def _to_resources(resources: Resources, defaults: ResourceDefaults, target: Target):
-        cpus = resources.cpus if resources and resources.cpus else defaults.cpus
-        cpus_limit = cpus.get_value(target=target) * 1000.0
-        cpus_request = cpus_limit * CPU_REQUEST_SCALE_FACTOR
+    def _to_resource_requirements(
+        resources: Resources, defaults: ResourceDefaults, target: Target
+    ):
+        cpus = (
+            resources.limit.cpus
+            if resources.limit and resources.limit.cpus
+            else defaults.cpus
+        )
 
-        mem = resources.mem if resources and resources.mem else defaults.mem
-        mem_limit = mem.get_value(target=target)
-        mem_request = mem_limit * MEM_REQUEST_SCALE_FACTOR
+        cpus_limit: float = cpus.get_value(target=target) * 1000.0
+
+        cpus_request: float = (
+            resources.request.cpus.get_value(target=target) * 1000.0
+            if resources.request and resources.request.cpus
+            else cpus_limit * CPU_REQUEST_SCALE_FACTOR
+        )
+
+        mem = (
+            resources.limit.mem
+            if resources.limit and resources.limit.mem
+            else defaults.mem
+        )
+        mem_limit: float = mem.get_value(target=target)
+
+        mem_request: float = (
+            resources.request.mem.get_value(target=target)
+            if resources.request and resources.request.mem
+            else mem_limit * MEM_REQUEST_SCALE_FACTOR
+        )
+
         return V1ResourceRequirements(
             limits={"cpu": f"{int(cpus_limit)}m", "memory": f"{int(mem_limit)}Mi"},
             requests={
@@ -482,7 +504,7 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
     def _get_resources(self):
         resources = self.project.kubernetes.resources
         defaults = self.config_defaults.resources_defaults
-        return ChartBuilder._to_resources(resources, defaults, self.target)
+        return ChartBuilder._to_resource_requirements(resources, defaults, self.target)
 
     def _get_kubernetes(self) -> Kubernetes:
         kubernetes = self.deployment.kubernetes
@@ -575,7 +597,9 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
             env=self._get_env_vars(),
             ports=ports,
             image_pull_policy="Always",
-            resources=ChartBuilder._to_resources(resources, defaults, self.target),
+            resources=ChartBuilder._to_resource_requirements(
+                resources, defaults, self.target
+            ),
             liveness_probe=ChartBuilder._to_probe(
                 kubernetes.liveness_probe,
                 self.config_defaults.liveness_probe_defaults,

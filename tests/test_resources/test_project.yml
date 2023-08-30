@@ -75,12 +75,17 @@ deployment:
         severity: 'warning'
     resources:
       instances:
-        all: 1
+        all: 3
       limit:
         cpus:
           all: 0.5
         mem:
           all: 1024
+      request:
+        cpus:
+          all: 0.2
+        mem:
+          all: 256
   traefik:
     hosts:
       - host:
