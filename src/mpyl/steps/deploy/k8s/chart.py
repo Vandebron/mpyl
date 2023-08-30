@@ -447,7 +447,7 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
             metadata=self._to_object_meta(),
             hosts=hosts,
             target=self.target,
-            namespace=self.project.to_name.namespace,
+            namespace=get_namespace(self.step_input.run_properties, self.project),
             pr_number=self.step_input.run_properties.versioning.pr_number,
         )
 
