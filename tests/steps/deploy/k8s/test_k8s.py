@@ -127,7 +127,7 @@ class TestKubernetesChart:
             hosts=wrappers,
             target=Target.PRODUCTION,
             pr_number=1234,
-            namespace=None,
+            namespace="pr-1234",
         )
         route.spec["tls"] = {"secretName": 1234}
 
