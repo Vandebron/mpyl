@@ -254,6 +254,38 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
         )
         return v1_probe
 
+    def _construct_probes(self) -> tuple[Optional[V1Probe], Optional[V1Probe]]:
+        """
+        Construct kubernetes probes based on project yaml values and default values in mpyl_config.yaml.
+        Add a startup probe only if liveness_probe is defined
+
+        NOTE: in MPL the same liveness probe was copied for startup probe,
+              if no startup probe was provided in the project yaml.
+              here we're using the startup probe default values from the config instead
+        :return:
+        """
+        liveness_probe = (
+            ChartBuilder._to_probe(
+                self.project.kubernetes.liveness_probe,
+                self.config_defaults.liveness_probe_defaults,
+                self.target,
+            )
+            if self.project.kubernetes.liveness_probe
+            else None
+        )
+
+        startup_probe = (
+            ChartBuilder._to_probe(
+                self.project.kubernetes.startup_probe,
+                self.config_defaults.startup_probe_defaults,
+                self.target,
+            )
+            if self.project.kubernetes.liveness_probe
+            else None
+        )
+
+        return self.Probes(liveness_probe, startup_probe)
+
     def to_service(self) -> V1Service:
         service_ports = list(
             map(
@@ -589,32 +621,9 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
 
         project = self.project
         resources = project.resources
-        kubernetes = project.kubernetes
         defaults = self.config_defaults.resources_defaults
 
-        liveness_probe = (
-            ChartBuilder._to_probe(
-                kubernetes.liveness_probe,
-                self.config_defaults.liveness_probe_defaults,
-                self.target,
-            )
-            if kubernetes.liveness_probe
-            else None
-        )
-
-        # add a startup probe if liveness_probe is defined
-        # NOTE: in MPL the same liveness probe was copied for startup probe,
-        #       if no startup probe was provided in the project yaml.
-        #       here we're using the startup probe default values from the config instead
-        startup_probe = (
-            ChartBuilder._to_probe(
-                kubernetes.startup_probe,
-                self.config_defaults.startup_probe_defaults,
-                self.target,
-            )
-            if kubernetes.liveness_probe
-            else None
-        )
+        liveness_probe, startup_probe = self._construct_probes()
 
         container = V1Container(
             name=self.release_name,
