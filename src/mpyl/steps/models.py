@@ -37,7 +37,7 @@ class VersioningProperties:
             else (self.tag.split("-")[1] if self.tag else None)
         )
         if not pr_num:
-            raise Exception("Either pr_number or tag need to be set")
+            raise KeyError("Either pr_number or tag need to be set")
         return f"pr-{pr_num}"
 
 
