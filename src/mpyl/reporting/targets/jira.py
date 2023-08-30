@@ -30,6 +30,7 @@ from urllib.parse import urlsplit
 
 import requests
 from atlassian import Jira
+from typing_extensions import deprecated
 
 from . import Reporter, ReportOutcome
 from ..formatting.markdown import markdown_for_stage
