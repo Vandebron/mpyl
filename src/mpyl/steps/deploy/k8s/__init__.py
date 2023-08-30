@@ -57,6 +57,15 @@ def upsert_namespace(
         logger.info(f"Found namespace {namespace}")
 
 
+def delete_namespace(logger: Logger, namespace: str, rancher_config: ClusterConfig):
+    config.load_kube_config(context=rancher_config.context)
+    logger.info(
+        f"Deleting namespace {namespace} from k8s context {rancher_config.context} after successful deployment."
+    )
+    api = client.CoreV1Api()
+    api.delete_namespace(namespace)
+
+
 def deploy_helm_chart(
     logger: Logger,
     chart: dict[str, CustomResourceDefinition],
@@ -80,7 +89,7 @@ def deploy_helm_chart(
     rancher_config: ClusterConfig = cluster_config(target, run_properties)
     upsert_namespace(logger, namespace, dry_run, run_properties, rancher_config)
 
-    return helm.install(
+    output = helm.install(
         logger,
         chart_path,
         dry_run,
@@ -89,6 +98,13 @@ def deploy_helm_chart(
         rancher_config.context,
         delete_existing,
     )
+
+    if output.success and run_properties.target:
+        delete_namespace(
+            logger=logger,
+            namespace=run_properties.versioning.get_pr_str(),
+            rancher_config=rancher_config,
+        )
 
 
 def substitute_namespaces(

@@ -30,6 +30,10 @@ class VersioningProperties:
     def identifier(self) -> str:
         return self.tag if self.tag else f"pr-{self.pr_number}"
 
+    def get_pr_str(self) -> str:
+        pr_num = self.pr_number if self.pr_number else self.tag.split("-")[1]
+        return f"pr-{pr_num}"
+
 
 @dataclass(frozen=True)
 class RunContext:
