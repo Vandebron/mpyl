@@ -227,7 +227,7 @@ class JiraReporter(Reporter):
             self.__move_ticket_forward(ticket)
 
             user_email = results.run_properties.details.user_email
-            if user_email:
+            if user_email and not ticket.user_email:
                 self.__assign_ticket(user_email, ticket)
             return JiraOutcome(success=True)
 
