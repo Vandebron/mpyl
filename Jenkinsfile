@@ -44,7 +44,8 @@ pipeline {
                             sh "pipenv run mpyl projects lint --all"
                             sh "pipenv run mpyl health"
                             sh "pipenv run mpyl repo status"
-                            sh "pipenv run mpyl repo init"
+                            sh "rm -rf *"
+                            sh "pipenv run mpyl repo init -b $CHANGE_BRANCH -u https://github.com/mpyl-example-gha.git"
                             sh "pipenv run mpyl build status"
                             sh "pipenv run run-ci ${params.BUILD_PARAMS}"
                         }

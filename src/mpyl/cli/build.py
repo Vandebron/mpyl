@@ -155,11 +155,12 @@ def status(obj: CliContext):
 def __print_status(obj: CliContext):
     run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
     ci_branch = run_properties.versioning.branch
+    console = obj.console
 
     if ci_branch and not obj.repo.get_branch:
-        obj.console.print("Current branch is detached.")
+        console.print("Current branch is detached.")
     else:
-        obj.console.log(
+        console.log(
             Markdown(
                 f"Branch not specified at `build.versioning.branch` in _{DEFAULT_RUN_PROPERTIES_FILE_NAME}_, "
                 f"falling back to git: _{obj.repo.get_branch}_"
@@ -170,29 +171,24 @@ def __print_status(obj: CliContext):
     main_branch = obj.repo.main_branch
 
     if branch == main_branch:
-        obj.console.log(f"On main branch ({branch}), cannot determine build status")
+        console.log(f"On main branch ({branch}), cannot determine build status")
         return
 
     tag = obj.repo.get_tag if not branch else None
     version = run_properties.versioning
     revision = version.revision or obj.repo.get_sha
     base_revision = obj.repo.base_revision
-    obj.console.print(
+    base_revision_specification = (
+        f"at `{base_revision}`"
+        if base_revision
+        else f"not present. Earliest revision: `{obj.repo.root_commit_hex}` (grafted)."
+    )
+    console.print(
         Markdown(
-            f"**{'Tag' if tag else 'Branch'}:** `{branch or version.tag}` at `{revision}`. "
-            f"Base `{main_branch}` {f'at `{base_revision}`' if base_revision else 'not present (grafted).'}"
+            f"**{'Tag' if tag else 'Branch'}:** `{branch or version.tag}` at `{revision}`"
         )
     )
-
-    if not base_revision:
-        fetch = f"`git fetch origin {main_branch}:refs/remotes/origin/{main_branch}`"
-        obj.console.print(
-            Markdown(
-                f"Cannot determine what to build, since this branch has no base. "
-                f"Did you {fetch}?"
-            )
-        )
-        return
+    console.print(Markdown(f"Base `{main_branch}` {base_revision_specification}"))
 
     changes = (
         obj.repo.changes_in_branch_including_local()
@@ -204,11 +200,11 @@ def __print_status(obj: CliContext):
     build_set = find_build_set(obj.repo, changes, False)
     result = RunResult(run_properties=run_properties, run_plan=build_set)
     if result.run_plan:
-        obj.console.print(
+        console.print(
             Markdown("**Execution plan:**  \n" + execution_plan_as_markdown(result))
         )
     else:
-        obj.console.print("No changes detected, nothing to do.")
+        console.print("No changes detected, nothing to do.")
 
 
 class Pipeline(ParamType):
