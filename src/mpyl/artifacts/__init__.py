@@ -1,3 +1,5 @@
+"""Class that handles remote caching of build artifacts"""
+
 import os
 import shutil
 from logging import Logger
@@ -51,6 +53,8 @@ class BuildArtifacts:
                     dst=artifact_path,
                     dirs_exist_ok=True,
                 )
+        else:
+            self.logger.info(f"Branch '{branch}' has no remote to pull from")
 
     def push(self, branch: str) -> None:
         if self.artifact_repo.does_branch_exist(branch_name=branch):

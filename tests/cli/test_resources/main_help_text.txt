@@ -6,6 +6,7 @@ Options:
   --help  Show this message and exit.
 
 Commands:
+  artifacts  Manage remote build artifacts
   build     Pipeline build commands
   health    Health check
   projects  Commands related to MPyL project configurations (project.yml)
