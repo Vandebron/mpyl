@@ -98,8 +98,6 @@ def install(
     delete_existing: bool = False,
 ) -> Output:
 
-    print(f"DRYRUNYES: {dry_run}")
-
     if delete_existing:
         removed = __remove_existing_chart(logger, chart_name, name_space, kube_context)
         if not removed.success:

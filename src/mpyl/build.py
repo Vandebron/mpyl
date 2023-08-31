@@ -113,7 +113,6 @@ def run_mpyl(
                     properties=run_properties,
                     steps_collection=StepsCollection(logger=logger),
                 )
-                print(f"EXECUTING STEPS: {Steps.execute}")
                 run_result = run_build(run_plan, steps, reporter, cli_parameters.dryrun)
 
             except ValidationError as exc:
@@ -162,7 +161,6 @@ def run_build(
     reporter: Optional[Reporter] = None,
     dry_run: bool = False,
 ):
-    print(f"RUN RESULT HERE{dry_run}")
     try:
         for stage, projects in accumulator.run_plan.items():
             for proj in projects:

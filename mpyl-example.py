@@ -5,18 +5,18 @@ from logging import Logger
 
 
 def main(log: Logger, args: argparse.Namespace):
-    from src.mpyl.reporting.targets.jira import JiraReporter
-    from src.mpyl.steps.models import RunProperties
-    from src.mpyl.utilities.pyaml_env import parse_config
-    from src.mpyl.cli import MpylCliParameters
-    from src.mpyl.build import run_mpyl
-
-    # else:
-    #     from mpyl.reporting.targets.jira import JiraReporter
-    #     from mpyl.steps.models import RunProperties
-    #     from mpyl.utilities.pyaml_env import parse_config
-    #     from mpyl.build import run_mpyl
-    #     from mpyl.cli import MpylCliParameters
+    if args.local:
+        from src.mpyl.reporting.targets.jira import JiraReporter
+        from src.mpyl.steps.models import RunProperties
+        from src.mpyl.utilities.pyaml_env import parse_config
+        from src.mpyl.cli import MpylCliParameters
+        from src.mpyl.build import run_mpyl
+    else:
+        from mpyl.reporting.targets.jira import JiraReporter
+        from mpyl.steps.models import RunProperties
+        from mpyl.utilities.pyaml_env import parse_config
+        from mpyl.build import run_mpyl
+        from mpyl.cli import MpylCliParameters
 
     config = parse_config("mpyl_config.yml")
     properties = parse_config("run_properties.yml")
@@ -74,8 +74,6 @@ def main(log: Logger, args: argparse.Namespace):
         all=args.all,
         dryrun=args.dryrun,
     )
-
-    print("RUNNING MPYL...")
 
     run_result = run_mpyl(
         run_properties=run_properties,
@@ -136,7 +134,6 @@ if __name__ == "__main__":
     mpl_logger = logging.getLogger("mpyl")
     mpl_logger.info("Starting run.....")
     try:
-        print(f"parser.args: {parsed_args}")
         main(mpl_logger, parsed_args)
     except Exception as e:
         mpl_logger.warning(f"Unexpected exception: {e}", exc_info=True)
