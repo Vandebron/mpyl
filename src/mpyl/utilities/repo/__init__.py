@@ -287,8 +287,11 @@ class Repository:  # pylint: disable=too-many-public-methods
     def create_branch(self, branch_name: str):
         return self._repo.git.checkout("-b", f"{branch_name}")
 
-    def stage_all_changes(self):
-        return self._repo.git.add(".")
+    def has_changes(self):
+        return self._repo.is_dirty(untracked_files=True)
+
+    def stage(self, path: str):
+        return self._repo.git.add(path)
 
     def commit(self, message: str):
         logging.debug("Committing staged files")
@@ -302,8 +305,9 @@ class Repository:  # pylint: disable=too-many-public-methods
         self._repo.git.switch(branch_name)
 
     def does_branch_exist(self, branch_name: str, remote=False) -> bool:
+        self._repo.remote().fetch()
         found_branches = [
-            branch.strip(" ")
+            branch.strip(" ").strip("*")
             for branch in self._repo.git.branch(
                 "--list", "-r" if remote else None
             ).splitlines()
