@@ -53,14 +53,12 @@ def get_build_plan(
         )
     logger.debug(f"Changes: {changes}")
 
-    print(f"{cli_parameters.dryrun}: YESH")
-    print(f"{cli_parameters.all}: YESH")
-
     projects_per_stage: dict[Stage, set[Project]] = find_build_set(
         repo,
         changes,
         cli_parameters.all,
     )
+
     return RunResult(
         run_properties=run_properties,
         run_plan=projects_per_stage,
@@ -115,6 +113,7 @@ def run_mpyl(
                     properties=run_properties,
                     steps_collection=StepsCollection(logger=logger),
                 )
+                print(f"EXECUTING STEPS: {Steps.execute}")
                 run_result = run_build(run_plan, steps, reporter, cli_parameters.local)
             except ValidationError as exc:
                 console.log(
