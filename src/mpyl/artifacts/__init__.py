@@ -6,11 +6,14 @@ from ..project import load_project
 from ..utilities.repo import Repository
 
 
+CACHE_FOLDER_NAME = "cache"
+
+
 class BuildArtifacts:
     logger: Logger
     codebase_repo: Repository
     artifact_repo: Repository
-    artifact_repo_path: Path
+    cache_folder: Path
 
     def __init__(
         self,
@@ -18,11 +21,11 @@ class BuildArtifacts:
         codebase_repo: Repository,
         artifact_repo: Repository,
         artifact_repo_path: Path,
-    ):  # codebase repo might not be needed
+    ):
         self.logger = logger
         self.codebase_repo = codebase_repo
         self.artifact_repo = artifact_repo
-        self.artifact_repo_path = artifact_repo_path
+        self.cache_folder = artifact_repo_path / CACHE_FOLDER_NAME
 
     def get_build_artifacts_paths(self) -> list[Path]:
         found_projects: list[Path] = [
@@ -49,18 +52,20 @@ class BuildArtifacts:
                 self.artifact_repo.checkout_branch(branch_name=branch)
         else:
             if self.artifact_repo.does_branch_exist(branch_name=branch, remote=True):
-                self.logger.info("Fetching branch from remote")
+                self.logger.info(f"Fetching branch '{branch}' from remote")
                 self.artifact_repo.fetch_branch(branch_name=branch)
                 self.artifact_repo.checkout_branch(branch_name=branch)
             else:
-                self.logger.info("Creating new branch")
+                self.logger.info(f"Creating new branch '{branch}'")
                 self.artifact_repo.create_branch(branch_name=branch)
 
         artifact_paths = self.get_build_artifacts_paths()
+        shutil.rmtree(self.cache_folder, ignore_errors=True)
         for artifact_path in artifact_paths:
-            shutil.copytree(artifact_path, self.artifact_repo_path / artifact_path)
+            shutil.copytree(src=artifact_path, dst=self.cache_folder / artifact_path)
 
-        self.logger.info("Committing and pushing all artifacts")
-        self.artifact_repo.stage_all_changes()
-        self.artifact_repo.commit(f"Add artifacts for {branch}")
-        self.artifact_repo.push()
+        if self.artifact_repo.has_changes():
+            self.logger.info("Committing and pushing all artifacts")
+            self.artifact_repo.stage(CACHE_FOLDER_NAME)
+            self.artifact_repo.commit(f"Add artifacts for {branch}")
+            self.artifact_repo.push()

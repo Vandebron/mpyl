@@ -1,4 +1,6 @@
 import logging
+import os
+import shutil
 from pathlib import Path
 
 import click
@@ -63,7 +65,8 @@ def push(obj: CliContext, tag: str, pr: int):
     artifact_repo_path = Path("../" + artifact_repo_config.folder)
 
     try:
-        clone_repository(artifact_repo_config, artifact_repo_path)
+        if not os.path.exists(artifact_repo_path / ".git"):
+            clone_repository(artifact_repo_config, artifact_repo_path)
         artifact_repo = Repository(
             config=artifact_repo_config, root_dir=artifact_repo_path
         )
@@ -75,5 +78,5 @@ def push(obj: CliContext, tag: str, pr: int):
         )
         build_artifacts.push(branch=target_branch)
     finally:
-        print()
         # shutil.rmtree(artifact_repo_path, ignore_errors=True)
+        pass
