@@ -257,11 +257,9 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
     def _construct_probes(self) -> tuple[Optional[V1Probe], Optional[V1Probe]]:
         """
         Construct kubernetes probes based on project yaml values and default values in mpyl_config.yaml.
-        Add a startup probe only if liveness_probe is defined
 
-        NOTE: in MPL the same liveness probe was copied for startup probe,
-              if no startup probe was provided in the project yaml.
-              here we're using the startup probe default values from the config instead
+        NOTE: If no startup probe was provided in the project yaml, but a liveness probe was,
+              this method constructs a startup probe from the default values!
         :return:
         """
         liveness_probe = (
