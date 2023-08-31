@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 from src.mpyl.cli import get_releases, get_latest_release
@@ -15,10 +16,18 @@ class TestDocumentation:
         for release in reverse_chronological:
             combined += f"## MPyL {release}\n\n"
 
-            notes = Path(self.releases_path / "notes" / f"{release}.md")
+            file = f"{release}.md"
+            notes = Path(self.releases_path / "notes" / file)
             if notes.exists():
                 combined += "#### Highlights\n\n"
-                combined += notes.read_text("utf-8") + "\n\n"
+                text = notes.read_text("utf-8")
+
+                # Titles mess up the TOC in the documentation
+                assert not re.match("^# ", text), f"{file} contains a title"
+                assert not re.match("^## ", text), f"{file} contains a subtitle"
+                assert not re.match("^### ", text), f"{file} contains a sub sub title"
+
+                combined += text + "\n\n"
             combined += f"Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/{release})\n\n"
 
         assert_roundtrip(self.releases_path / "README.md", combined)
