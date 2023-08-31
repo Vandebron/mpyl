@@ -243,15 +243,46 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
         )
 
     @staticmethod
-    def _to_probe(probe: Probe, defaults: dict, target: Target) -> V1Probe:
+    def _to_probe(probe: Optional[Probe], defaults: dict, target: Target) -> V1Probe:
         values = defaults.copy()
-        values.update(probe.values)
+        if probe:
+            values.update(probe.values)
         v1_probe: V1Probe = ChartBuilder._to_k8s_model(values, V1Probe)
-        path = probe.path.get_value(target)
+        path = probe.path.get_value(target) if probe else None
         v1_probe.http_get = V1HTTPGetAction(
             path="/health" if path is None else path, port="port-0"
         )
         return v1_probe
+
+    def _construct_probes(self) -> tuple[Optional[V1Probe], Optional[V1Probe]]:
+        """
+        Construct kubernetes probes based on project yaml values and default values in mpyl_config.yaml.
+
+        NOTE: If no startup probe was provided in the project yaml, but a liveness probe was,
+              this method constructs a startup probe from the default values!
+        :return:
+        """
+        liveness_probe = (
+            ChartBuilder._to_probe(
+                self.project.kubernetes.liveness_probe,
+                self.config_defaults.liveness_probe_defaults,
+                self.target,
+            )
+            if self.project.kubernetes.liveness_probe
+            else None
+        )
+
+        startup_probe = (
+            ChartBuilder._to_probe(
+                self.project.kubernetes.startup_probe,
+                self.config_defaults.startup_probe_defaults,
+                self.target,
+            )
+            if self.project.kubernetes.liveness_probe
+            else None
+        )
+
+        return liveness_probe, startup_probe
 
     def to_service(self) -> V1Service:
         service_ports = list(
@@ -588,8 +619,9 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
 
         project = self.project
         resources = project.resources
-        kubernetes = project.kubernetes
         defaults = self.config_defaults.resources_defaults
+
+        liveness_probe, startup_probe = self._construct_probes()
 
         container = V1Container(
             name=self.release_name,
@@ -600,20 +632,8 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
             resources=ChartBuilder._to_resource_requirements(
                 resources, defaults, self.target
             ),
-            liveness_probe=ChartBuilder._to_probe(
-                kubernetes.liveness_probe,
-                self.config_defaults.liveness_probe_defaults,
-                self.target,
-            )
-            if kubernetes.liveness_probe
-            else None,
-            startup_probe=ChartBuilder._to_probe(
-                kubernetes.startup_probe,
-                self.config_defaults.startup_probe_defaults,
-                self.target,
-            )
-            if kubernetes.startup_probe
-            else None,
+            liveness_probe=liveness_probe,
+            startup_probe=startup_probe,
         )
 
         instances = resources.instances if resources.instances else defaults.instances
