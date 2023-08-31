@@ -63,6 +63,12 @@ def upsert_namespace(
 def delete_namespace_if_exists(
     logger: Logger, namespace: str, rancher_config: ClusterConfig
 ):
+    if "pr" not in namespace:
+        logger.error(
+            f"Not deleting namespace {namespace}, because it is not a PR namespace"
+        )
+        return
+
     config.load_kube_config(context=rancher_config.context)
     logger.info(
         f"Deleting namespace {namespace} from k8s context {rancher_config.context} "
@@ -109,7 +115,7 @@ def deploy_helm_chart(
         delete_existing,
     )
 
-    if output.success and run_properties.target:
+    if output.success and run_properties.target == Target.PRODUCTION:
         delete_namespace_if_exists(
             logger=logger,
             namespace=run_properties.versioning.get_pr_str(),
