@@ -1,3 +1,5 @@
+"""Commands to manage remotely cached artifacts"""
+
 import logging
 import os
 import shutil
@@ -26,6 +28,7 @@ from ..utilities.repo import Repository, RepoConfig
 @click.option("--verbose", "-v", is_flag=True, default=False)
 @click.pass_context
 def artifacts(ctx: click.Context, config: str, verbose: bool):
+    """Manage remote build artifacts"""
     console = create_console_logger(show_path=False, verbose=verbose, max_width=0)
     parsed_config = parse_config(config)
     repo = ctx.with_resource(Repository(config=RepoConfig.from_config(parsed_config)))
@@ -39,11 +42,11 @@ def artifacts(ctx: click.Context, config: str, verbose: bool):
 
 
 @artifacts.command(help="Pull artifacts")
-@click.option("--tag", "-t", help="Tag to build", type=click.STRING, required=False)
-@click.option("--pr", type=click.INT, help="PR number to fetch", required=False)
+@click.option("--tag", "-t", type=click.STRING, help="Tag to build", required=False)
+@click.option("--pr_number", type=click.INT, help="PR number to fetch", required=False)
 @click.pass_obj
-def pull(obj: CliContext, tag: str, pr: int):
-    target_branch = tag if tag else f"PR-{pr}"
+def pull(obj: CliContext, tag: str, pr_number: int):
+    target_branch = tag if tag else f"PR-{pr_number}"
     if not target_branch:
         raise click.ClickException("Either --pr or --tag must be specified")
 
@@ -57,11 +60,11 @@ def pull(obj: CliContext, tag: str, pr: int):
 
 
 @artifacts.command(help="Push artifacts")
-@click.option("--tag", "-t", help="Tag to build", type=click.STRING, required=False)
-@click.option("--pr", type=click.INT, help="PR number to fetch", required=False)
+@click.option("--tag", "-t", type=click.STRING, help="Tag to build", required=False)
+@click.option("--pr_number", type=click.INT, help="PR number to fetch", required=False)
 @click.pass_obj
-def push(obj: CliContext, tag: str, pr: int):
-    target_branch = tag if tag else f"PR-{pr}"
+def push(obj: CliContext, tag: str, pr_number: int):
+    target_branch = tag if tag else f"PR-{pr_number}"
     if not target_branch:
         raise click.ClickException("Either --pr or --tag must be specified")
 
@@ -78,12 +81,13 @@ def _prepare_artifacts_repo(obj: CliContext) -> BuildArtifacts:
     artifact_repo_config: RepoConfig = RepoConfig.from_git_config(
         obj.config["vcs"]["artifactRepository"]
     )
-    artifact_repo_path = Path(artifact_repo_config.folder)
-    if not os.path.exists(artifact_repo_path / ".git"):
-        clone_repository(artifact_repo_config, artifact_repo_path)
+    if artifact_repo_config.folder and not os.path.exists(
+        Path(artifact_repo_config.folder) / ".git"
+    ):
+        clone_repository(artifact_repo_config)
 
     logger = logging.getLogger("mpyl")
-    artifact_repo = Repository(config=artifact_repo_config, root_dir=artifact_repo_path)
+    artifact_repo = Repository(config=artifact_repo_config)
     return BuildArtifacts(
         logger=logger,
         codebase_repo=obj.repo,
