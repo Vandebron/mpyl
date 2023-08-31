@@ -67,7 +67,7 @@ from ....project import (
     Kubernetes,
     Job,
     Traefik,
-    Host,
+    TraefikHost,
     get_env_variables,
     Alert,
     KeyValueRef,
@@ -403,11 +403,11 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
         raise KeyError("No default port found. Did you define a port mapping?")
 
     def create_host_wrappers(self) -> list[HostWrapper]:
-        default_hosts: list[Host] = Traefik.from_config(
+        default_hosts: list[TraefikHost] = Traefik.from_config(
             self.config_defaults.traefik_defaults
         ).hosts
 
-        hosts: list[Host] = (
+        hosts: list[TraefikHost] = (
             self.deployment.traefik.hosts if self.deployment.traefik else []
         )
 
@@ -429,7 +429,7 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
 
         return [
             HostWrapper(
-                host=host,
+                traefik_host=host,
                 name=self.release_name,
                 index=idx,
                 service_port=host.service_port
