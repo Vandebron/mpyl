@@ -44,6 +44,7 @@ class JiraTicket:
     ticket_id: str
     ticket_url: str
     issue_type: str
+    issue_hierarchy: int  # level 1 - Epic, level 0 - Story, level -1 - Sub-task
     summary: str
     description: str
     status_name: str
@@ -68,6 +69,7 @@ class JiraTicket:
             ticket_id=ticket_id,
             ticket_url=ticket_url,
             issue_type=fields["issuetype"]["name"],
+            issue_hierarchy=fields["issuetype"]["hierarchyLevel"],
             summary=fields["summary"],
             status_name=status_name,
             description=fields["description"],
@@ -227,7 +229,7 @@ class JiraReporter(Reporter):
             self.__move_ticket_forward(ticket)
 
             user_email = results.run_properties.details.user_email
-            if user_email and not ticket.user_email:
+            if user_email and not ticket.issue_hierarchy < 1:
                 self.__assign_ticket(user_email, ticket)
             return JiraOutcome(success=True)
 
