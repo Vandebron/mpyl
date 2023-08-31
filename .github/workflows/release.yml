@@ -18,6 +18,9 @@ jobs:
       - name: Install dependencies
         run: pipenv install -d --deploy
 
+      - name: Validate version
+        run: python latest_release.py "${{ github.event.release.name }}"
+
       - name: Build
         env:
           PIPENV_DONT_LOAD_ENV: true

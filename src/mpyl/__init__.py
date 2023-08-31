@@ -4,6 +4,8 @@
 .. include:: ../../README-usage.md
 
 .. include:: ../../README-dev.md
+
+.. include:: ../../releases/README.md
 """
 
 import click

@@ -5,7 +5,7 @@ from importlib.metadata import distribution
 
 import click
 
-from . import get_version
+from . import get_version, get_latest_release
 
 VDB_LOGO = """
                                          .::.               
@@ -38,7 +38,12 @@ VDB_LOGO = """
 
 
 def simple_version():
-    return f"MPyL {get_version()}"
+    binary_version = get_version()
+    release = get_latest_release()
+    release_text = (
+        f"\nLatest public release {release}" if binary_version != release else ""
+    )
+    return f"MPyL {binary_version}{release_text}"
 
 
 def about():
