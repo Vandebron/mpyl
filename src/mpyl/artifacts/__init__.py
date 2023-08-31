@@ -1,3 +1,4 @@
+import os
 import shutil
 from logging import Logger
 from pathlib import Path
@@ -20,12 +21,11 @@ class BuildArtifacts:
         logger: Logger,
         codebase_repo: Repository,
         artifact_repo: Repository,
-        artifact_repo_path: Path,
     ):
         self.logger = logger
         self.codebase_repo = codebase_repo
         self.artifact_repo = artifact_repo
-        self.cache_folder = artifact_repo_path / CACHE_FOLDER_NAME
+        self.cache_folder = self.artifact_repo.root_dir / CACHE_FOLDER_NAME
 
     def get_build_artifacts_paths(self) -> list[Path]:
         found_projects: list[Path] = [
@@ -40,11 +40,17 @@ class BuildArtifacts:
         return [path for path in found_projects if path.exists()]
 
     def pull(self, branch: str) -> None:
-        if not self.artifact_repo.does_branch_exist(branch_name=branch, remote=True):
-            self.logger.info("No remote branch to pull artifacts from")
-        artifact_paths = self.get_build_artifacts_paths()
-        # pull if exists
-        # copy files to local
+        if self.artifact_repo.does_branch_exist(branch_name=branch, remote=True):
+            self.logger.info(f"Fetching branch '{branch}' from remote")
+            self.artifact_repo.fetch_branch(branch_name=branch)
+            self.artifact_repo.checkout_branch(branch_name=branch)
+
+            for artifact_path in os.listdir(self.cache_folder):
+                shutil.copytree(
+                    src=self.cache_folder / artifact_path,
+                    dst=artifact_path,
+                    dirs_exist_ok=True,
+                )
 
     def push(self, branch: str) -> None:
         if self.artifact_repo.does_branch_exist(branch_name=branch):
@@ -59,8 +65,9 @@ class BuildArtifacts:
                 self.logger.info(f"Creating new branch '{branch}'")
                 self.artifact_repo.create_branch(branch_name=branch)
 
-        artifact_paths = self.get_build_artifacts_paths()
         shutil.rmtree(self.cache_folder, ignore_errors=True)
+        artifact_paths = self.get_build_artifacts_paths()
+
         for artifact_path in artifact_paths:
             shutil.copytree(src=artifact_path, dst=self.cache_folder / artifact_path)
 
