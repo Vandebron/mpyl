@@ -18,22 +18,17 @@ def main(log: Logger, args: argparse.Namespace):
     #     from mpyl.build import run_mpyl
     #     from mpyl.cli import MpylCliParameters
 
-    print("3")
     config = parse_config("mpyl_config.yml")
-    print("4")
     properties = parse_config("run_properties.yml")
-    print("5")
     run_properties = RunProperties.from_configuration(
         run_properties=properties, config=config, cli_tag=args.tag
     )
-    print("6")
     check = None
     slack_channel = None
     slack_personal = None
     jira = None
     github_comment = None
 
-    print("7")
     if not args.local:
         from mpyl.reporting.targets.github import CommitCheck
         from mpyl.reporting.targets.slack import SlackReporter
@@ -42,7 +37,6 @@ def main(log: Logger, args: argparse.Namespace):
         from mpyl.reporting.targets.jira import compose_build_status
         from mpyl.reporting.targets import ReportAccumulator
 
-        print("8")
         check = CommitCheck(config=config, logger=log)
         accumulator = ReportAccumulator()
 
@@ -72,10 +66,6 @@ def main(log: Logger, args: argparse.Namespace):
             check.send_report(RunResult(run_properties=run_properties, run_plan={}))
         )
 
-    print(args.dryrun)
-    print(args.all)
-    print("9")
-
     cli_parameters = MpylCliParameters(
         local=args.local,
         tag=args.tag,
@@ -85,7 +75,7 @@ def main(log: Logger, args: argparse.Namespace):
         dryrun=args.dryrun,
     )
 
-    print("CHECKING")
+    print("RUNNING MPYL...")
 
     run_result = run_mpyl(
         run_properties=run_properties,
@@ -146,7 +136,6 @@ if __name__ == "__main__":
     mpl_logger = logging.getLogger("mpyl")
     mpl_logger.info("Starting run.....")
     try:
-        print("YEAH")
         print(f"parser.args: {parsed_args}")
         main(mpl_logger, parsed_args)
     except Exception as e:

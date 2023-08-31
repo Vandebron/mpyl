@@ -125,8 +125,6 @@ def build(ctx, config, properties, verbose):
 def run(obj: CliContext, ci, all_, tag, dryrun_):  # pylint: disable=invalid-name
     asyncio.run(warn_if_update(obj.console))
 
-    print("NOT HERE RIGHT??")
-
     parameters = MpylCliParameters(
         local=not ci,
         pull_main=all_,
