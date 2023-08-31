@@ -28,6 +28,16 @@ The release notes (as you are reading them now) are generated from the `releases
 Whenever a release has changes that require your attention like: new cli commands, new features, breaking changes, upgrade
 instructions, etc. they will be included here.
 
+### Create startup probes by default
+
+When a project is using livenesProbes, but has no startupProbe defined, we resort to creating a startup probe from the
+default values defined in the `mpyl_config.yml` file. This is done to prevent the project from being marked as
+unhealthy.
+
+### Fix namespace interpolation in the Traefik default hosts
+
+The default hosts for Traefik are now interpolated with the namespace of the project in test/acceptance/production.
+
 Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.0.11)
 
 ## MPyL 1.0.10

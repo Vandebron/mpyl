@@ -39,7 +39,7 @@ from ...steps.run import RunResult
 
 
 @dataclass(frozen=True)
-class JiraTicket:
+class JiraTicket:  # pylint: disable = too-many-instance-attributes
     jira_url: str
     ticket_id: str
     ticket_url: str
@@ -229,7 +229,7 @@ class JiraReporter(Reporter):
             self.__move_ticket_forward(ticket)
 
             user_email = results.run_properties.details.user_email
-            if user_email and not ticket.issue_hierarchy < 1:
+            if user_email and ticket.issue_hierarchy < 1:
                 self.__assign_ticket(user_email, ticket)
             return JiraOutcome(success=True)
 
