@@ -69,6 +69,11 @@ def delete_namespace_if_exists(
         )
         return
 
+    if "test" not in rancher_config.cluster_env:
+        logger.error(
+            f"Not deleting namespace {namespace}, because cluster config {rancher_config} is not test"
+        )
+
     config.load_kube_config(context=rancher_config.context)
     logger.info(
         f"Deleting namespace {namespace} from k8s context {rancher_config.context} "
