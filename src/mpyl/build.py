@@ -114,7 +114,8 @@ def run_mpyl(
                     steps_collection=StepsCollection(logger=logger),
                 )
                 print(f"EXECUTING STEPS: {Steps.execute}")
-                run_result = run_build(run_plan, steps, reporter, cli_parameters.local)
+                run_result = run_build(run_plan, steps, reporter, cli_parameters.dryrun)
+
             except ValidationError as exc:
                 console.log(
                     f'Schema validation failed {exc.message} at `{".".join(map(str, exc.path))}`'
@@ -159,8 +160,9 @@ def run_build(
     accumulator: RunResult,
     executor: Steps,
     reporter: Optional[Reporter] = None,
-    dry_run: bool = True,
+    dry_run: bool = False,
 ):
+    print(f"RUN RESULT HERE{dry_run}")
     try:
         for stage, projects in accumulator.run_plan.items():
             for proj in projects:
