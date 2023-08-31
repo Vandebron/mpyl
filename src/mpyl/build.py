@@ -54,6 +54,7 @@ def get_build_plan(
     logger.debug(f"Changes: {changes}")
 
     print(f"{cli_parameters.dryrun}: YESH")
+    print(f"{cli_parameters.all}: YESH")
 
     projects_per_stage: dict[Stage, set[Project]] = find_build_set(
         repo,
