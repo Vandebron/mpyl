@@ -1,0 +1,13 @@
+Usage: mpyl artifacts [OPTIONS] COMMAND [ARGS]...
+
+  Manage remote build artifacts
+
+Options:
+  -c, --config PATH  Path to the config.yml. Can be set via `MPYL_CONFIG_PATH`
+                     env var.   [required]
+  -v, --verbose
+  --help             Show this message and exit.
+
+Commands:
+  pull  Pull build artifacts from remote artifact repository
+  push  Push build artifacts to remote artifact repository
