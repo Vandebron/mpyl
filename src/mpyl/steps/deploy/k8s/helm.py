@@ -99,7 +99,7 @@ def install(
 ) -> Output:
     from src.mpyl.cli import MpylCliParameters
 
-    print(f"TESTING IF DRYRYN{MpylCliParameters}")
+    print(f"TESTING IF DRYRYN{MpylCliParameters.dryrun}")
 
     if delete_existing:
         removed = __remove_existing_chart(logger, chart_name, name_space, kube_context)
