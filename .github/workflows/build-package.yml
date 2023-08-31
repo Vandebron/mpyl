@@ -26,8 +26,8 @@ jobs:
       - name: Check formatting
         run: pipenv run format
 
-     - name: Run lint
-       run: pipenv run lint
+      - name: Run lint
+        run: pipenv run lint
 
   TypeCheck:
     runs-on: ubuntu-latest
