@@ -4,9 +4,7 @@
 
 #### Highlights
 
-# New functionality
-
-### Hotfix for mapping multiple ports to the same service
+#### Hotfix for mapping multiple ports to the same service
 
 Due to a bug in the mapping of multiple ports to the same service, the following configuration:
 ```yaml
@@ -24,7 +22,7 @@ deployment:
 ```
 resulted in `8081` being used as servicePort in the treafik rule instead of `4091`.
 
-### Release notes
+#### Release notes
 
 The release notes (as you are reading them now) are generated from the `releases/notes` directory in the project repository.
 Whenever a release has changes that require your attention like: new cli commands, new features, breaking changes, upgrade
@@ -36,9 +34,7 @@ Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.0.11)
 
 #### Highlights
 
-# New functionality
-
-### Support for service monitor
+#### Support for service monitor
 The prometheus [ServiceMonitor](https://doc.crds.dev/github.com/prometheus-operator/kube-prometheus/monitoring.coreos.com/ServiceMonitor/v1@v0.7.0)
 CRD and a corresponding [PrometheusRule](https://doc.crds.dev/github.com/prometheus-operator/kube-prometheus/monitoring.coreos.com/PrometheusRule/v1@v0.7.0)
 are deployed whenever the `metrics` field is defined in `project.yml`
