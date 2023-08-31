@@ -1,6 +1,6 @@
 # Release notes
 
-## MPyL 1.1.0
+## MPyL 1.0.11
 
 #### Highlights
 

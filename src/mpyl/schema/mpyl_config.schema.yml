@@ -93,9 +93,10 @@ definitions:
           - 'KubectlManifest'
         description: >-
           Defines the action to take in the deploy step. Defaults to helmDeploy. 
-          If set to helmDryRun, the helm chart will be rendered and the result will be printed to the console.
-          If set to helmTemplate, the helm chart will be rendered and the result will be written to the file specified in the helmTemplateOutputPath property
-          If set to kubectlManifest, the helm chart will be rendered and the result will be written to the file specified in the kubectlManifestOutputPath property.
+          If set to HelmDeploy, the helm chart will be deployed to the cluster.
+          If set to HelmDryRun, a helm chart deployment to the cluster will be simulated.
+          If set to HelmTemplate, the helm chart will be rendered and the result will be written to the folder specified in the helmTemplateOutputPath property
+          If set to KubectlManifest, a k8s manifest be written to the file specified in the kubectlManifestOutputPath property. This manifest can be deployd with kubectl apply -f <manifest>
         default: 'HelmDeploy'
       outputPath:
         type: string
@@ -383,23 +384,3 @@ definitions:
     dependencies:
       accessKeyId: [ secretAccessKey ]
       secretAccessKey: [ accessKeyId ]
-  Dagster:
-    title: Dagster
-    type: object
-    additionalProperties: false
-    properties:
-      baseNamespace:
-        description: "Namespace that contains dagster instances"
-        type: string
-      workspaceConfigMap:
-        description: "Configmap that contains the dagster workspace configuration"
-        type: string
-      workspaceFileKey:
-        description: "Key of the workspaceConfigMap entry that contains the list of servers that are hosted on the dagster instance"
-        type: string
-      daemon:
-        description: "Name of the kubernetes instance that runs the dagster daemon"
-        type: string
-      webserver:
-        description: "Name of the kubernetes instance that runs the dagster web UI, default"
-        type: string
