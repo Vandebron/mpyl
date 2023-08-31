@@ -97,9 +97,8 @@ def install(
     kube_context: str,
     delete_existing: bool = False,
 ) -> Output:
-    from src.mpyl.cli import MpylCliParameters
 
-    print(f"TESTING IF DRYRYN{MpylCliParameters.dryrun}")
+    print(f"DRYRUNYES: {dry_run}")
 
     if delete_existing:
         removed = __remove_existing_chart(logger, chart_name, name_space, kube_context)
@@ -107,7 +106,7 @@ def install(
             return removed
 
     cmd = f"helm upgrade -i {chart_name} -n {name_space} --kube-context {kube_context} {chart_path}"
-    if dry_run or MpylCliParameters.dryrun:
+    if dry_run:
         cmd = f"helm upgrade -i {chart_name} -n namespace --kube-context {kube_context} {chart_path} --debug --dry-run"
 
     return custom_check_output(logger, cmd)
