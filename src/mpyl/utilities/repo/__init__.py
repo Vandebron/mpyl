@@ -112,9 +112,9 @@ class RepoConfig:
 
 
 class Repository:  # pylint: disable=too-many-public-methods
-    def __init__(self, config: RepoConfig, root_dir=Git().rev_parse("--show-toplevel")):
+    def __init__(self, config: RepoConfig):
         self._config = config
-        self._root_dir = root_dir
+        self._root_dir = config.folder or Git().rev_parse("--show-toplevel")
         self._repo = Repo(
             self._root_dir
         )  # pylint: disable=attribute-defined-outside-init
