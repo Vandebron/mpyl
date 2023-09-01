@@ -29,6 +29,7 @@ class JenkinsRunParameters:
     follow: bool
     dryrun: bool
     all: bool
+    version: Optional[str] = None
     tag: Optional[str] = None
 
 

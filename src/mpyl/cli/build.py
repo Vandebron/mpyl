@@ -20,6 +20,7 @@ from . import (
     CONFIG_PATH_HELP,
     check_updates,
     get_meta_version,
+    get_version,
     parse_config_from_supplied_location,
 )
 from . import create_console_logger
@@ -270,11 +271,19 @@ def select_tag(ctx) -> str:
         return release.tag_name
 
 
-def ask_for_input(ctx, _param, value) -> Optional[str]:
+def ask_for_tag(ctx, _param, value) -> Optional[str]:
     if value == "not_set":
         return None
     if value == "prompt":
         return select_tag(ctx)
+    return value
+
+
+def ask_for_version(ctx, _param, value) -> Optional[str]:
+    if value == "not_set":
+        return None
+    if value == "prompt":
+        return get_version()
     return value
 
 
@@ -341,7 +350,7 @@ def ask_for_input(ctx, _param, value) -> Optional[str]:
     is_flag=False,
     flag_value="prompt",
     default="not_set",
-    callback=ask_for_input,
+    callback=ask_for_tag,
 )
 @click.option(
     "--all",
@@ -354,6 +363,14 @@ def ask_for_input(ctx, _param, value) -> Optional[str]:
     "dryrun_",
     is_flag=True,
     default=False,
+)
+@click.option(
+    "--version",
+    "-v",
+    is_flag=False,
+    flag_value="prompt",
+    default="not_set",
+    callback=ask_for_version,
 )
 @click.pass_context
 def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
@@ -368,6 +385,7 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
     tag,
     all_,
     dryrun_,
+    version,
 ):
     upgrade_check = None
     try:
@@ -401,6 +419,7 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
             tag=tag,
             dryrun=dryrun_,
             all=all_,
+            version=version,
         )
 
         run_jenkins(run_argument)
