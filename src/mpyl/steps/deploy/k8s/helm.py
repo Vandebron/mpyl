@@ -97,7 +97,6 @@ def install(
     kube_context: str,
     delete_existing: bool = False,
 ) -> Output:
-
     if delete_existing:
         removed = __remove_existing_chart(logger, chart_name, name_space, kube_context)
         if not removed.success:
