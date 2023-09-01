@@ -74,13 +74,13 @@ class DeployDagster(Step):
         core_api = client.CoreV1Api()
         apps_api = client.AppsV1Api()
 
-        version = get_version_of_deployment(
+        dagster_version = get_version_of_deployment(
             apps_api=apps_api,
             namespace=dagster_config.base_namespace,
             deployment=dagster_config.dagit,
             version_label="app.kubernetes.io/version",
         )
-        self._logger.info(f"Dagster Version: {version}")
+        self._logger.info(f"Dagster Version: {dagster_version}")
 
         result = helm.add_repo(
             self._logger, dagster_config.base_namespace, Constants.HELM_CHART_REPO
@@ -118,13 +118,14 @@ class DeployDagster(Step):
             values=user_code_deployment,
         )
 
-        helm_install_result = helm.install_with_values_yaml(
+        helm_install_result = helm.install_chart_with_values(
             logger=self._logger,
             dry_run=step_input.dry_run,
-            values_path=values_path,
+            values_path=values_path / Path("values.yaml"),
             release_name=convert_to_helm_release_name(
                 shorten_name(step_input.project.name), name_suffix
             ),
+            chart_version=dagster_version,
             chart_name=Constants.CHART_NAME,
             namespace=dagster_config.base_namespace,
             kube_context=context,

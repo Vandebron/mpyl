@@ -145,16 +145,17 @@ def install(
     )
 
 
-def install_with_values_yaml(
+def install_chart_with_values(
     logger: Logger,
     values_path: Path,
     dry_run: bool,
     release_name: str,
+    chart_version: str,
     chart_name: str,
     namespace: str,
     kube_context: str,
 ) -> Output:
-    values_path_arg = f'-f {values_path / Path("values.yaml")} {chart_name}'
+    values_path_arg = f'-f {values_path} --version {chart_version} {chart_name}'
     return __execute_install_cmd(
         logger,
         dry_run,
