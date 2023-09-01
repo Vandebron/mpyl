@@ -114,15 +114,22 @@ def build(ctx, config, properties, verbose):
     is_flag=True,
     help="Build all projects, regardless of changes on branch",
 )
+@click.option(
+    "--dryrun",
+    "dryrun_",
+    is_flag=True,
+    default=False,
+)
 @click.option("--tag", "-t", help="Tag to build", type=click.STRING, required=False)
 @click.pass_obj
-def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
+def run(obj: CliContext, ci, all_, dryrun_, tag):  # pylint: disable=invalid-name
     asyncio.run(warn_if_update(obj.console))
 
     parameters = MpylCliParameters(
         local=not ci,
         pull_main=all_,
         all=all_,
+        dryrun=dryrun_,
         verbose=obj.verbose,
         tag=tag,
     )
@@ -336,6 +343,18 @@ def ask_for_input(ctx, _param, value) -> Optional[str]:
     default="not_set",
     callback=ask_for_input,
 )
+@click.option(
+    "--all",
+    "all_",
+    is_flag=True,
+    help="Build all projects, regardless of changes on branch",
+)
+@click.option(
+    "--dryrun",
+    "dryrun_",
+    is_flag=True,
+    default=False,
+)
 @click.pass_context
 def jenkins(  # pylint: disable=too-many-arguments
     ctx,
@@ -347,6 +366,8 @@ def jenkins(  # pylint: disable=too-many-arguments
     background,
     silent,
     tag,
+    all_,
+    dryrun_,
 ):
     upgrade_check = None
     try:
@@ -361,6 +382,11 @@ def jenkins(  # pylint: disable=too-many-arguments
 
         selected_pipeline = pipeline if pipeline else jenkins_config["defaultPipeline"]
         pipeline_parameters = {"TEST": "true", "VERSION": test} if test else {}
+        pipeline_parameters["BUILD_PARAMS"] = ""
+        if dryrun_:
+            pipeline_parameters["BUILD_PARAMS"] += " --dryrun"
+        if all_:
+            pipeline_parameters["BUILD_PARAMS"] += " --all"
         if arguments:
             pipeline_parameters["BUILD_PARAMS"] = " ".join(arguments)
 
@@ -373,6 +399,8 @@ def jenkins(  # pylint: disable=too-many-arguments
             verbose=not silent or ctx.obj.verbose,
             follow=not background,
             tag=tag,
+            dryrun=dryrun_,
+            all=all_,
         )
 
         run_jenkins(run_argument)
