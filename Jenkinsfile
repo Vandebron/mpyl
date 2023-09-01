@@ -38,13 +38,11 @@ pipeline {
                     writeFile(file: 'mpyl_config.yml', text: content)
                     withKubeConfig([credentialsId: 'jenkins-rancher-service-account-kubeconfig-test']) {
                         wrap([$class: 'BuildUser']) {
-                            sh "pipenv clean"
+                            sh "docker run -it --rm -v $(pwd):/opt/mpyl samvandebron/mpyl:latest mpyl repo init -b feature/test-174 -u https://github.com/SamTheisens/mpyl-example-gha.git"
                             sh "pipenv install --ignore-pipfile --skip-lock --site-packages --index https://test.pypi.org/simple/ 'mpyl==$CHANGE_ID.*'"
-                            sh "pipenv install -d --skip-lock"
                             sh "pipenv run mpyl projects lint --all"
                             sh "pipenv run mpyl health"
                             sh "pipenv run mpyl repo status"
-                            sh "pipenv run rm -rf * && mpyl repo init -b $CHANGE_BRANCH -u https://github.com/mpyl-example-gha.git"
                             sh "pipenv run mpyl build status"
                             sh "pipenv run run-ci ${params.BUILD_PARAMS}"
                         }
