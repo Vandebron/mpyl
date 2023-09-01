@@ -67,7 +67,7 @@ from ....project import (
     Kubernetes,
     Job,
     Traefik,
-    Host,
+    TraefikHost,
     get_env_variables,
     Alert,
     KeyValueRef,
@@ -129,7 +129,7 @@ class DeploymentDefaults:
     liveness_probe_defaults: dict
     startup_probe_defaults: dict
     job_defaults: dict
-    treafik_defaults: dict
+    traefik_defaults: dict
     white_lists: dict
 
     @staticmethod
@@ -143,7 +143,7 @@ class DeploymentDefaults:
             liveness_probe_defaults=kubernetes["livenessProbe"],
             startup_probe_defaults=kubernetes["startupProbe"],
             job_defaults=kubernetes.get("job", {}),
-            treafik_defaults=deployment_values.get("traefik", {}),
+            traefik_defaults=deployment_values.get("traefik", {}),
             white_lists=config.get("whiteLists", {}),
         )
 
@@ -403,11 +403,11 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
         raise KeyError("No default port found. Did you define a port mapping?")
 
     def create_host_wrappers(self) -> list[HostWrapper]:
-        default_hosts: list[Host] = Traefik.from_config(
-            self.config_defaults.treafik_defaults
+        default_hosts: list[TraefikHost] = Traefik.from_config(
+            self.config_defaults.traefik_defaults
         ).hosts
 
-        hosts: list[Host] = (
+        hosts: list[TraefikHost] = (
             self.deployment.traefik.hosts if self.deployment.traefik else []
         )
 
@@ -429,7 +429,7 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
 
         return [
             HostWrapper(
-                host=host,
+                traefik_host=host,
                 name=self.release_name,
                 index=idx,
                 service_port=host.service_port
@@ -447,6 +447,7 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
             metadata=self._to_object_meta(),
             hosts=hosts,
             target=self.target,
+            namespace=get_namespace(self.step_input.run_properties, self.project),
             pr_number=self.step_input.run_properties.versioning.pr_number,
         )
 

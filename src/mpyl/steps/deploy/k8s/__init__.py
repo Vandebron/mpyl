@@ -122,13 +122,13 @@ def substitute_namespaces(
     """
     env = env_vars.copy()
 
-    def get_namespace_for_linked_project(project_name: ProjectName):
+    def get_namespace_for_linked_project(project_name: ProjectName) -> str:
         is_part_of_same_deploy_set = project_name in projects_to_deploy
         if is_part_of_same_deploy_set and pr_identifier:
             return f"pr-{pr_identifier}"
-        return project_name.namespace
+        return project_name.namespace or project.name
 
-    def replace_namespace(env_value, project_name, namespace):
+    def replace_namespace(env_value: str, project_name: str, namespace: str) -> str:
         search_value = project_name + ".{namespace}"
         replace_value = project_name + "." + namespace
         return env_value.replace(search_value, replace_value)

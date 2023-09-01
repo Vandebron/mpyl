@@ -1,0 +1,29 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  labels:
+    name: minimalservice
+    app.kubernetes.io/version: 20230829-1234
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: minimalservice
+    app.kubernetes.io/instance: minimalservice
+    maintainers: MPyL
+    maintainer: MPyL
+    version: 20230829-1234
+    revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
+  name: minimalservice
+spec:
+  routes:
+  - kind: Rule
+    match: Host(`mpyl-minimalservice.prod-backend.nl`)
+    services:
+    - name: minimalservice
+      kind: Service
+      port: 8080
+    middlewares:
+    - name: minimalservice-ingress-0-whitelist
+    - name: traefik-https-redirect@kubernetescrd
+  entryPoints:
+  - websecure
+  tls:
+    secretName: le-prod-wildcard-cert

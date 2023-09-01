@@ -53,7 +53,7 @@ class TestKubernetesChart:
         assert_roundtrip(name_chart, to_yaml(resource), overwrite)
 
     @staticmethod
-    def _get_builder(project: Project):
+    def _get_builder(project: Project, run_properties=test_data.RUN_PROPERTIES):
         required_artifact = Artifact(
             artifact_type=ArtifactType.DOCKER_IMAGE,
             revision="revision",
@@ -64,7 +64,7 @@ class TestKubernetesChart:
         return ChartBuilder(
             step_input=Input(
                 project,
-                run_properties=test_data.RUN_PROPERTIES,
+                run_properties=run_properties,
                 required_artifact=required_artifact,
             ),
             deploy_set=DeploySet({project, other_project}, {project}),
@@ -127,6 +127,7 @@ class TestKubernetesChart:
             hosts=wrappers,
             target=Target.PRODUCTION,
             pr_number=1234,
+            namespace="pr-1234",
         )
         route.spec["tls"] = {"secretName": 1234}
 
@@ -178,6 +179,14 @@ class TestKubernetesChart:
         builder = self._get_builder(project)
         chart = to_service_chart(builder)
         self._roundtrip(self.template_path / "ingress", "ingress-https-route", chart)
+
+    def test_production_ingress(self):
+        project = get_minimal_project()
+        builder = self._get_builder(project, test_data.RUN_PROPERTIES_PROD)
+        chart = to_service_chart(builder)
+        self._roundtrip(
+            self.template_path / "ingress-prod", "ingress-https-route", chart
+        )
 
     def test_ingress_to_urls(self):
         project = get_minimal_project()
