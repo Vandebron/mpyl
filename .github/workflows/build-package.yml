@@ -182,4 +182,4 @@ jobs:
           context: .
           platforms: linux/amd64
           push: true
-          tags: Vandebron/mpyl:latest
+          tags: vandebron/mpyl:latest
