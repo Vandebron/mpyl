@@ -155,6 +155,7 @@ def status(obj: CliContext):
 def __print_status(obj: CliContext):
     run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
     ci_branch = run_properties.versioning.branch
+    obj.console.print(f"MPyL log level is set to {run_properties.console.log_level}")
 
     branch = obj.repo.get_branch
     main_branch = obj.repo.main_branch
