@@ -173,7 +173,7 @@ jobs:
         uses: docker/login-action@v2
         with:
           username: 'samvandebron'
-          password: 'sam@vandebron'
+          password: 'dckr_pat_f4mNf3r0-brJFD18Q96tbQnzUN0'
 
       - name: Build and push
         uses: docker/build-push-action@v4
