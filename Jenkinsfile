@@ -39,6 +39,7 @@ pipeline {
                     withKubeConfig([credentialsId: 'jenkins-rancher-service-account-kubeconfig-test']) {
                         wrap([$class: 'BuildUser']) {
                             sh 'rm -rf {,.[!.],..?}*' // remove all files in the workspace
+                            sh 'ls -latr'
                             sh "docker run --rm -v \$(pwd):/opt/mpyl samvandebron/mpyl:latest mpyl repo init -b feature/test-174 -u https://github.com/SamTheisens/mpyl-example-gha.git"
                             sh "pipenv install --ignore-pipfile --skip-lock --site-packages --index https://test.pypi.org/simple/ 'mpyl==$CHANGE_ID.*'"
                             sh "pipenv run mpyl projects lint --all"
