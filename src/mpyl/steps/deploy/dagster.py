@@ -77,7 +77,7 @@ class DeployDagster(Step):
         dagster_version = get_version_of_deployment(
             apps_api=apps_api,
             namespace=dagster_config.base_namespace,
-            deployment=dagster_config.dagit,
+            deployment=dagster_config.webserver,
             version_label="app.kubernetes.io/version",
         )
         self._logger.info(f"Dagster Version: {dagster_version}")
@@ -193,7 +193,7 @@ class DeployDagster(Step):
                             self._logger,
                             apps_api,
                             dagster_config.base_namespace,
-                            dagster_config.dagit,
+                            dagster_config.webserver,
                         )
                         dagster_deploy_results.append(rollout_restart_output)
                         self._logger.info(rollout_restart_output.message)

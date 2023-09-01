@@ -11,7 +11,7 @@ class DagsterConfig:
     workspace_config_map: str
     workspace_file_key: str
     daemon: str
-    dagit: str
+    webserver: str
 
     @staticmethod
     def from_dict(config: Dict):
@@ -22,7 +22,7 @@ class DagsterConfig:
                 workspace_config_map=dagster_config["workspaceConfigMap"],
                 workspace_file_key=dagster_config["workspaceFileKey"],
                 daemon=dagster_config["daemon"],
-                dagit=dagster_config["dagit"],
+                webserver=dagster_config["webserver"],
             )
         except KeyError as exc:
             raise KeyError(f"Dagster config could not be loaded from {config}") from exc

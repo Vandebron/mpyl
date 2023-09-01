@@ -1,13 +1,11 @@
 deployments:
 - dagsterApiGrpcArgs:
   - --python-file
-  - /example/repo.py
+  - /tests/projects/dagster-user-code/main.py
   env:
     DEPLOY_ENV: test
     LOGGING_LEVEL: DEBUG
-  envSecrets:
-  - name: all-dagster-secrets
-  - name: example-dagster-user-code-secrets
+  envSecrets: []
   image:
     imagePullSecrets:
     - name: bigdataregistry
