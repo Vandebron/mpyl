@@ -347,10 +347,14 @@ class Traefik:
 @dataclass(frozen=True)
 class S3Bucket:
     bucket: TargetProperty[str]
+    region: str
 
     @staticmethod
     def from_config(values: dict):
-        return S3Bucket(bucket=TargetProperty.from_config(values.get("bucket", {})))
+        return S3Bucket(
+            bucket=TargetProperty.from_config(values.get("bucket", {})),
+            region=values.get("region", {}),
+        )
 
 
 @dataclass(frozen=True)

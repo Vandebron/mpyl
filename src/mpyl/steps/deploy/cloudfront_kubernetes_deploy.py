@@ -61,16 +61,23 @@ class CloudFrontKubernetesDeploy(Step):
         Creates an S3 client and uploads the static assets stored in the temp folder
         """
         logger.info("Creating S3 client")
+
         bucket_name = step_input.project.s3_bucket.bucket.get_value(
             step_input.run_properties.target
         )
+        bucket_region = step_input.project.s3_bucket.region
+
         s3_config = S3ClientConfig(
-            run_properties=step_input.run_properties, bucket_name=bucket_name
+            run_properties=step_input.run_properties,
+            bucket_name=bucket_name,
+            bucket_region=bucket_region,
         )
         s3_client = S3Client(logger, s3_config)
 
         logger.info(
             f"Uploading assets to '{s3_config.bucket_root_path}' in bucket '{s3_config.bucket_name}'"
         )
-        s3_client.upload_directory(directory=tmp_folder)
+        s3_client.upload_directory(
+            directory=tmp_folder, root_asset_location=STATIC_FOLDER
+        )
         logger.info("Upload complete")

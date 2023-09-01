@@ -60,3 +60,4 @@ deployment:
       test: mpyl-cloudfront-aws-test-bucket
       acceptance: mpyl-cloudfront-aws-test-bucket
       production: mpyl-cloudfront-aws-test-bucket
+    region: "eu-central-1"
