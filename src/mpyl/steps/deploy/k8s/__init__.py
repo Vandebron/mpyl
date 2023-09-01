@@ -159,13 +159,15 @@ def deploy_helm_chart(
 
     namespace = get_namespace(run_properties, project)
     rancher_config: ClusterConfig = cluster_config(target, run_properties)
-    upsert_namespace(logger, namespace, dry_run, run_properties, rancher_config)return helm.install(
-        logger, chart_path,
+    upsert_namespace(logger, namespace, dry_run, run_properties, rancher_config)
+    return helm.install(
+        logger,
+        chart_path,
         dry_run,
         release_name,
         namespace,
-        rancher_config.context, delete_existing
-    ,
+        rancher_config.context,
+        delete_existing,
     )
 
 
