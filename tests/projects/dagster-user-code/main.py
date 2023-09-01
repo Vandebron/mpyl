@@ -13,6 +13,4 @@ def hello_job():
 
 @repository
 def my_repository():
-    return [
-        hello_job
-    ]
+    return [hello_job]

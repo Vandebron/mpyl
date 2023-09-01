@@ -155,7 +155,7 @@ def install_chart_with_values(
     namespace: str,
     kube_context: str,
 ) -> Output:
-    values_path_arg = f'-f {values_path} --version {chart_version} {chart_name}'
+    values_path_arg = f"-f {values_path} --version {chart_version} {chart_name}"
     return __execute_install_cmd(
         logger,
         dry_run,
