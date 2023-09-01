@@ -5,7 +5,8 @@ from importlib.metadata import distribution
 
 import click
 
-from . import get_version, get_latest_release
+from . import get_version
+from ..projects.versioning import get_latest_release
 
 VDB_LOGO = """
                                          .::.               
