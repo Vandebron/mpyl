@@ -172,8 +172,8 @@ jobs:
       - name: 'Login to GitHub Container Registry'
         uses: docker/login-action@v2
         with:
-          username: samvandebron
-          password: sam@vandebron
+          username: 'samvandebron'
+          password: 'sam@vandebron'
 
       - name: Build and push
         uses: docker/build-push-action@v4
