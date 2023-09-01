@@ -1,5 +1,8 @@
 """Versioning and upgrade utilities for mpyl projects."""
 import pkgutil
+from io import StringIO
+
+from ruamel.yaml import YAML
 
 
 def get_releases() -> list[str]:
@@ -12,3 +15,9 @@ def get_releases() -> list[str]:
 
 def get_latest_release() -> str:
     return get_releases()[0]
+
+
+def yaml_to_string(serializable: object, yaml: YAML) -> str:
+    with StringIO() as stream:
+        yaml.dump(serializable, stream)
+        return stream.getvalue()
