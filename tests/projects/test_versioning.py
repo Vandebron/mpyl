@@ -23,3 +23,9 @@ class TestVersioning:
             self.upgrades_path / "test_project_1_0_9.yml",
             upgrade_file(self.upgrades_path / "test_project_1_0_8.yml"),
         )
+
+    def test_namespace_upgrade(self):
+        assert_roundtrip(
+            self.upgrades_path / "test_project_1_0_10.yml",
+            upgrade_file(self.upgrades_path / "test_project_1_0_9.yml"),
+        )

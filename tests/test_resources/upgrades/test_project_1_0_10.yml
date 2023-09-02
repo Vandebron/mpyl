@@ -5,7 +5,7 @@ stages:
   test: Docker Test
   deploy: Kubernetes Deploy
   postdeploy: Cypress Test
-mpylVersion: 1.0.9
+mpylVersion: 1.0.10
 maintainer: ['MPyL']
 build:
   args:
@@ -20,6 +20,7 @@ dependencies:
   postdeploy:
     - 'specs/*.js'
 deployment:
+  namespace: 'dockertest'
   properties:
     env:
       - key: SOME_ENV

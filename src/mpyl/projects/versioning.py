@@ -3,7 +3,9 @@ import pkgutil
 from io import StringIO
 from pathlib import Path
 from typing import Optional
+import copy
 
+from deepdiff import DeepDiff
 from ruamel.yaml import YAML
 from ruamel.yaml.compat import ordereddict
 
@@ -44,6 +46,13 @@ class Upgrader10(Upgrader):
     target_version = "1.0.10"
 
     def upgrade(self, previous_dict: ordereddict) -> ordereddict:
+        if found_deployment := previous_dict.get("deployment", {}):
+            existing_namespace = found_deployment.get("namespace", None)
+            if not existing_namespace:
+                previous_dict["deployment"].insert(
+                    0, "namespace", previous_dict["name"]
+                )
+
         return previous_dict
 
 
@@ -89,8 +98,9 @@ def upgrade_file(project_file: Path) -> Optional[str]:
         current_version = __get_version(to_upgrade)
         next_upgrader = get_next_upgrader(current_version)
         if next_upgrader:
-            upgraded = next_upgrader.upgrade(to_upgrade.copy())
-            if upgraded != to_upgrade:
+            upgraded = next_upgrader.upgrade(copy.deepcopy(to_upgrade))
+            diff = DeepDiff(upgraded, to_upgrade, ignore_order=True)
+            if diff:
                 upgraded["mpylVersion"] = next_upgrader.target_version
                 return yaml_to_string(upgraded, yaml)
             return None

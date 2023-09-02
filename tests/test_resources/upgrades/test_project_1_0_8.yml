@@ -19,7 +19,6 @@ dependencies:
   postdeploy:
     - 'specs/*.js'
 deployment:
-  namespace: "mpyl"
   properties:
     env:
       - key: SOME_ENV

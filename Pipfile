@@ -25,6 +25,7 @@ python-dotenv = "==1.0.0"
 questionary = "==1.10.0"
 toml = "==0.10.2"
 boto3 = "==1.26.140"
+deepdiff = "==6.4.1"
 
 [dev-packages]
 types-jsonschema = "==4.17.0.1"
