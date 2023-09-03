@@ -77,10 +77,10 @@ UPGRADERS = [Upgrader8(), Upgrader9(), Upgrader10(), Upgrader11()]
 
 
 def get_entry_upgrader_index(
-    current_version: str, uppers: list[Upgrader]
+    current_version: str, upgraders: list[Upgrader]
 ) -> Optional[int]:
     next_index = next(
-        (i for i, v in enumerate(uppers) if v.target_version == current_version),
+        (i for i, v in enumerate(upgraders) if v.target_version == current_version),
         None,
     )
     return next_index
@@ -90,15 +90,15 @@ def __get_version(project: dict) -> str:
     return project.get(VERSION_FIELD, "1.0.8")
 
 
-def upgrade_to_latest(to_upgrade: ordereddict, uppers: list[Upgrader]):
+def upgrade_to_latest(to_upgrade: ordereddict, upgraders: list[Upgrader]):
     versie = __get_version(to_upgrade)
-    upgrade_index = get_entry_upgrader_index(versie, uppers)
+    upgrade_index = get_entry_upgrader_index(versie, upgraders)
     if upgrade_index is None:
         return to_upgrade
 
     upgraded = to_upgrade
-    for i in range(upgrade_index, len(uppers)):
-        upgrader = uppers[i]
+    for i in range(upgrade_index, len(upgraders)):
+        upgrader = upgraders[i]
         upgraded = upgrader.upgrade(copy.deepcopy(upgraded))
         diff = DeepDiff(upgraded, to_upgrade, ignore_order=True)
         if diff:
@@ -106,12 +106,12 @@ def upgrade_to_latest(to_upgrade: ordereddict, uppers: list[Upgrader]):
     return upgraded
 
 
-def upgrade_file(project_file: Path, uppers: list[Upgrader]) -> Optional[str]:
+def upgrade_file(project_file: Path, upgraders: list[Upgrader]) -> Optional[str]:
     yaml = YAML()
     yaml.indent(mapping=2, sequence=4, offset=2)
     yaml.width = 4096  # type: ignore
     yaml.preserve_quotes = True  # type: ignore
     with project_file.open(encoding="utf-8") as file:
         to_upgrade: ordereddict = yaml.load(file)
-        upgraded = upgrade_to_latest(copy.deepcopy(to_upgrade), uppers)
+        upgraded = upgrade_to_latest(copy.deepcopy(to_upgrade), upgraders)
         return yaml_to_string(upgraded, yaml)
