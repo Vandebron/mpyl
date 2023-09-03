@@ -6,6 +6,7 @@ import click
 from click import ParamType, Argument
 from click.shell_completion import CompletionItem
 from rich.markdown import Markdown
+from rich.prompt import Confirm
 
 from . import (
     CliContext,
@@ -23,6 +24,12 @@ from ..cli.commands.projects.lint import (
 from ..cli.commands.projects.upgrade import check_upgrade
 from ..constants import DEFAULT_CONFIG_FILE_NAME
 from ..project import load_project, Project, Target
+from ..projects.versioning import (
+    check_upgrade_needed,
+    check_upgrades_needed,
+    upgrade_file,
+    UPGRADERS,
+)
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
 
@@ -169,9 +176,30 @@ def lint(obj: ProjectsContext, all_, extended):
 )
 @click.pass_obj
 def upgrade(obj: ProjectsContext, check):
+    paths = map(Path, _find_project_paths(True, obj.cli.repo, ""))
     if check:
-        paths = _find_project_paths(True, obj.cli.repo, "")
-        check_upgrade(obj.cli.console, list(map(Path, paths)))
+        check_upgrade(obj.cli.console, check_upgrades_needed(list(paths)))
+    else:
+        with obj.cli.console.status("Checking for upgrades...") as status:
+            candidates = [check_upgrade_needed(project_path) for project_path in paths]
+            need_upgrade = [path for path, diff in candidates if diff is not None]
+            status.console.print(
+                f"Found {len(candidates)} projects, of which {len(need_upgrade)} need to be upgraded"
+            )
+            status.stop()
+            if Confirm.ask("Upgrade all?"):
+                status.start()
+                for path in need_upgrade:
+                    status.update(f"Upgrading {path}")
+                    upgraded = upgrade_file(path, UPGRADERS)
+                    if upgraded:
+                        path.write_text(upgraded)
+                status.stop()
+                status.console.print(
+                    Markdown(
+                        f"Upgraded {len(need_upgrade)} projects. Validate with `mpyl projects lint`"
+                    )
+                )
 
 
 if __name__ == "__main__":

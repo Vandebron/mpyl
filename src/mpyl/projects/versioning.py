@@ -111,23 +111,28 @@ def diff_to_string(diff: DeepDiff) -> str:
     result = ""
     if "dictionary_item_added" in diff:
         for key, value in diff["dictionary_item_added"].items():
-            result += f"\n+ {key} -> {value}"
+            result += f"\n+ {key} -> '{value}'"
     if "dictionary_item_removed" in diff:
         for key, value in diff["dictionary_item_removed"].items():
-            result += f"\n- {key} -> {value}"
+            result += f"\n- {key} -> '{value}'"
     if "values_changed" in diff:
         for key, values in diff["values_changed"].items():
             result += f"\n{key}: {values['old_value']} -> {values['new_value']}\n"
     return result
 
 
-def check_upgrade_needed(file_path: Path) -> Optional[DeepDiff]:
+def check_upgrades_needed(file_path: list[Path]):
+    for path in file_path:
+        yield check_upgrade_needed(path)
+
+
+def check_upgrade_needed(file_path: Path) -> tuple[Path, Optional[DeepDiff]]:
     loaded, _ = load_for_roundtrip(file_path)
     upgraded = upgrade_to_latest(loaded, UPGRADERS)
-    diff = DeepDiff(loaded, upgraded, ignore_order=True)
+    diff = DeepDiff(loaded, upgraded, ignore_order=True, view="_delta")
     if diff:
-        return diff
-    return None
+        return file_path, diff
+    return file_path, None
 
 
 def load_for_roundtrip(project_file: Path) -> tuple[ordereddict, YAML]:
