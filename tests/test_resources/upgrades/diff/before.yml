@@ -1,0 +1,25 @@
+name: 'dockertest'
+description: 'This is a test container. For testing the MPL pipelines, not to be deployed anywhere.'
+stages:
+  build: Docker Build
+  test: Sbt Test
+maintainer: [ 'MPyL']
+deployment:
+  namespace: 'namespace'
+  traefik:
+    hosts:
+      - host:
+          all: "Host(`some.other.host.com`)"
+        servicePort: 4091
+        priority: 1000
+        whitelists:
+          pr:
+            - "VPN"
+          test:
+            - "K8s-Test"
+            - "VPM"
+          acceptance:
+            - "VPN"
+          production:
+            - "Outside-World"
+

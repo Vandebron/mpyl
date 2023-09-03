@@ -107,18 +107,20 @@ def upgrade_to_latest(to_upgrade: ordereddict, upgraders: list[Upgrader]):
     return upgraded
 
 
-def diff_to_string(diff: DeepDiff) -> str:
-    result = ""
+def pretty_print(diff: DeepDiff) -> str:
+    result = []
     if "dictionary_item_added" in diff:
         for key, value in diff["dictionary_item_added"].items():
-            result += f"\n+ {key} -> '{value}'"
+            result.append(f"+ {key} -> '{value}'")
     if "dictionary_item_removed" in diff:
         for key, value in diff["dictionary_item_removed"].items():
-            result += f"\n- {key} -> '{value}'"
+            result.append(f"- {key} -> '{value}'")
     if "values_changed" in diff:
         for key, values in diff["values_changed"].items():
-            result += f"\n{key}: {values['old_value']} -> {values['new_value']}\n"
-    return result
+            new = values.get("new_value", None)
+            old = values.get("old_value", None)
+            result.append(f"  {key}: {f'{old} ->' if old else ''}{new if new else ''}")
+    return "\n".join(result)
 
 
 def check_upgrades_needed(file_path: list[Path]):
