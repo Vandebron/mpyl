@@ -1,7 +1,7 @@
 """Upgrade a project configuration file to the latest version."""
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Generator
 
 from deepdiff import DeepDiff
 from rich.console import Console
@@ -10,7 +10,8 @@ from ....projects.versioning import pretty_print
 
 
 def check_upgrade(
-    console: Console, all_projects: list[tuple[Path, Optional[DeepDiff]]]
+    console: Console,
+    all_projects: Generator[tuple[Path, Optional[DeepDiff]], None, None],
 ):
     for project_path, diff in all_projects:
         if diff:

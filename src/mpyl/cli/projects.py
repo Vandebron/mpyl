@@ -1,4 +1,5 @@
 """Commands related to projects and how they relate"""
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -25,7 +26,6 @@ from ..cli.commands.projects.upgrade import check_upgrade
 from ..constants import DEFAULT_CONFIG_FILE_NAME
 from ..project import load_project, Project, Target
 from ..projects.versioning import (
-    check_upgrade_needed,
     check_upgrades_needed,
     upgrade_file,
     UPGRADERS,
@@ -177,14 +177,20 @@ def lint(obj: ProjectsContext, all_, extended):
 @click.pass_obj
 def upgrade(obj: ProjectsContext, check):
     paths = map(Path, _find_project_paths(True, obj.cli.repo, ""))
+    candidates = check_upgrades_needed(list(paths))
     if check:
-        check_upgrade(obj.cli.console, check_upgrades_needed(list(paths)))
+        check_upgrade(obj.cli.console, candidates)
+        number_in_need_of_upgrade = len(
+            [path for path, diff in candidates if diff is not None]
+        )
+        if number_in_need_of_upgrade > 0:
+            sys.exit(1)
     else:
         with obj.cli.console.status("Checking for upgrades...") as status:
-            candidates = [check_upgrade_needed(project_path) for project_path in paths]
-            need_upgrade = [path for path, diff in candidates if diff is not None]
+            materialized = list(candidates)
+            need_upgrade = [path for path, diff in materialized if diff is not None]
             status.console.print(
-                f"Found {len(candidates)} projects, of which {len(need_upgrade)} need to be upgraded"
+                f"Found {len(materialized)} projects, of which {len(need_upgrade)} need to be upgraded"
             )
             status.stop()
             if Confirm.ask("Upgrade all?"):

@@ -2,7 +2,7 @@
 import pkgutil
 from io import StringIO
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Generator
 import copy
 
 from deepdiff import DeepDiff
@@ -123,7 +123,9 @@ def pretty_print(diff: DeepDiff) -> str:
     return "\n".join(result)
 
 
-def check_upgrades_needed(file_path: list[Path]):
+def check_upgrades_needed(
+    file_path: list[Path],
+) -> Generator[tuple[Path, DeepDiff], None, None]:
     for path in file_path:
         yield check_upgrade_needed(path)
 
