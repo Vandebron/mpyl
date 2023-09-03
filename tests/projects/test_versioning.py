@@ -2,11 +2,11 @@ from ruamel.yaml import YAML
 
 from mpyl.projects.versioning import (
     upgrade_file,
-    UPGRADERS,
-    Upgrader10,
-    Upgrader9,
-    Upgrader8,
     get_entry_upgrader_index,
+    UPGRADERS,
+    Upgrader8,
+    Upgrader9,
+    Upgrader10,
 )
 from tests.test_resources.test_data import assert_roundtrip
 from tests.test_resources.test_data import root_test_path

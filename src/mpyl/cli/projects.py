@@ -7,12 +7,6 @@ from click import ParamType, Argument
 from click.shell_completion import CompletionItem
 from rich.markdown import Markdown
 
-from ..cli.commands.projects.lint import (
-    _find_project_paths,
-    _check_and_load_projects,
-    _assert_unique_project_names,
-    _assert_correct_project_linkup,
-)
 from . import (
     CliContext,
     CONFIG_PATH_HELP,
@@ -20,6 +14,13 @@ from . import (
     parse_config_from_supplied_location,
 )
 from .commands.projects.formatting import print_project
+from ..cli.commands.projects.lint import (
+    _find_project_paths,
+    _check_and_load_projects,
+    _assert_unique_project_names,
+    _assert_correct_project_linkup,
+)
+from ..cli.commands.projects.upgrade import check_upgrade
 from ..constants import DEFAULT_CONFIG_FILE_NAME
 from ..project import load_project, Project, Target
 from ..utilities.pyaml_env import parse_config
@@ -157,6 +158,20 @@ def lint(obj: ProjectsContext, all_, extended):
             all_projects=all_projects,
             pr_identifier=123,
         )
+
+
+@projects.command(help="Upgrade projects to conform with the latest schema")
+@click.option(
+    "--check",
+    "-c",
+    is_flag=True,
+    help="Check if an upgrade is necessary",
+)
+@click.pass_obj
+def upgrade(obj: ProjectsContext, check):
+    if check:
+        paths = _find_project_paths(True, obj.cli.repo, "")
+        check_upgrade(obj.cli.console, list(map(Path, paths)))
 
 
 if __name__ == "__main__":

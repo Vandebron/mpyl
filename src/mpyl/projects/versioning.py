@@ -99,19 +99,48 @@ def upgrade_to_latest(to_upgrade: ordereddict, upgraders: list[Upgrader]):
     upgraded = to_upgrade
     for i in range(upgrade_index, len(upgraders)):
         upgrader = upgraders[i]
-        upgraded = upgrader.upgrade(copy.deepcopy(upgraded))
-        diff = DeepDiff(upgraded, to_upgrade, ignore_order=True)
+        before_upgrade = copy.deepcopy(upgraded)
+        upgraded = upgrader.upgrade(copy.deepcopy(before_upgrade))
+        diff = DeepDiff(before_upgrade, upgraded, ignore_order=True, view="tree")
         if diff:
             upgraded[VERSION_FIELD] = upgrader.target_version
     return upgraded
 
 
-def upgrade_file(project_file: Path, upgraders: list[Upgrader]) -> Optional[str]:
+def diff_to_string(diff: DeepDiff) -> str:
+    result = ""
+    if "dictionary_item_added" in diff:
+        for key, value in diff["dictionary_item_added"].items():
+            result += f"\n+ {key} -> {value}"
+    if "dictionary_item_removed" in diff:
+        for key, value in diff["dictionary_item_removed"].items():
+            result += f"\n- {key} -> {value}"
+    if "values_changed" in diff:
+        for key, values in diff["values_changed"].items():
+            result += f"\n{key}: {values['old_value']} -> {values['new_value']}\n"
+    return result
+
+
+def check_upgrade_needed(file_path: Path) -> Optional[DeepDiff]:
+    loaded, _ = load_for_roundtrip(file_path)
+    upgraded = upgrade_to_latest(loaded, UPGRADERS)
+    diff = DeepDiff(loaded, upgraded, ignore_order=True)
+    if diff:
+        return diff
+    return None
+
+
+def load_for_roundtrip(project_file: Path) -> tuple[ordereddict, YAML]:
     yaml = YAML()
     yaml.indent(mapping=2, sequence=4, offset=2)
     yaml.width = 4096  # type: ignore
     yaml.preserve_quotes = True  # type: ignore
     with project_file.open(encoding="utf-8") as file:
-        to_upgrade: ordereddict = yaml.load(file)
-        upgraded = upgrade_to_latest(copy.deepcopy(to_upgrade), upgraders)
-        return yaml_to_string(upgraded, yaml)
+        dictionary = yaml.load(file)
+        return dictionary, yaml
+
+
+def upgrade_file(project_file: Path, upgraders: list[Upgrader]) -> Optional[str]:
+    to_upgrade, yaml = load_for_roundtrip(project_file)
+    upgraded = upgrade_to_latest(copy.deepcopy(to_upgrade), upgraders)
+    return yaml_to_string(upgraded, yaml)
