@@ -41,6 +41,7 @@ pipeline {
                             sh "pipenv clean"
                             sh "pipenv install --ignore-pipfile --skip-lock --site-packages --index https://test.pypi.org/simple/ 'mpyl==$CHANGE_ID.*'"
                             sh "pipenv install -d --skip-lock"
+                            sh "pipenv run mpyl version"
                             sh "pipenv run mpyl projects lint --all"
                             sh "pipenv run mpyl health"
                             sh "pipenv run mpyl repo status"
