@@ -115,8 +115,8 @@ class TestJiraReporter:
         load_dotenv()
         config = JiraConfig(
             site="https://vandebron.atlassian.net",
-            user_name=os.environ.get("JIRA_USER_PASSWORD_USR"),
-            password=os.environ.get("JIRA_USER_PASSWORD_PSW"),
+            user_name=os.environ.get("JIRA_USER_PASSWORD_USR", "user"),
+            password=os.environ.get("JIRA_USER_PASSWORD_PSW", "password"),
             ticket_pattern=re.compile(""),
             token=None,
         )

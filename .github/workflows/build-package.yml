@@ -54,6 +54,9 @@ jobs:
       - name: Check types
         run: pipenv run check-types
 
+      - name: Check types test
+        run: pipenv run check-types-test
+
   Test:
     runs-on: ubuntu-latest
     steps:
