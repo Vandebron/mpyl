@@ -95,7 +95,9 @@ def __get_version(project: dict) -> str:
     return project.get(VERSION_FIELD, "1.0.8")
 
 
-def upgrade_to_latest(to_upgrade: ordereddict, upgraders: list[Upgrader]):
+def upgrade_to_latest(
+    to_upgrade: ordereddict, upgraders: list[Upgrader]
+) -> ordereddict:
     upgrade_index = get_entry_upgrader_index(__get_version(to_upgrade), upgraders)
     if upgrade_index is None:
         return to_upgrade

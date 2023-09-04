@@ -1,7 +1,9 @@
+from pathlib import Path
+
 from deepdiff import DeepDiff
 from ruamel.yaml import YAML
 
-from mpyl.projects.versioning import (
+from src.mpyl.projects.versioning import (
     upgrade_file,
     get_entry_upgrader_index,
     UPGRADERS,
@@ -10,6 +12,7 @@ from mpyl.projects.versioning import (
     UpgraderOne10,
     load_for_roundtrip,
     pretty_print,
+    Upgrader,
 )
 from tests.test_resources.test_data import assert_roundtrip
 from tests.test_resources.test_data import root_test_path
@@ -22,33 +25,36 @@ class TestVersioning:
     upgrades_path = test_resources_path / "upgrades"
     latest_release_file = "test_project_1_0_11.yml"
 
+    @staticmethod
+    def __roundtrip(source: Path, target: Path, upgraders: list[Upgrader]):
+        upgraded = upgrade_file(source, upgraders)
+        assert upgraded is not None
+        assert_roundtrip(target, upgraded)
+
     def test_get_upgrader_index(self):
         assert get_entry_upgrader_index("1.0.8", UPGRADERS) == 0
         assert get_entry_upgrader_index("1.0.9", UPGRADERS) == 1
         assert get_entry_upgrader_index("1.0.7", UPGRADERS) is None
 
     def test_first_upgrade(self):
-        assert_roundtrip(
+        self.__roundtrip(
+            self.upgrades_path / "test_project_1_0_8.yml",
             self.upgrades_path / "test_project_1_0_9.yml",
-            upgrade_file(
-                self.upgrades_path / "test_project_1_0_8.yml",
-                [UpgraderOne8(), UpgraderOne9()],
-            ),
+            [UpgraderOne8(), UpgraderOne9()],
         )
 
     def test_namespace_upgrade(self):
-        assert_roundtrip(
+        self.__roundtrip(
+            self.upgrades_path / "test_project_1_0_9.yml",
             self.upgrades_path / "test_project_1_0_10.yml",
-            upgrade_file(
-                self.upgrades_path / "test_project_1_0_9.yml",
-                [UpgraderOne9(), UpgraderOne10()],
-            ),
+            [UpgraderOne9(), UpgraderOne10()],
         )
 
     def test_full_upgrade(self):
-        assert_roundtrip(
+        self.__roundtrip(
+            self.upgrades_path / "test_project_1_0_8.yml",
             self.upgrades_path / self.latest_release_file,
-            upgrade_file(self.upgrades_path / "test_project_1_0_8.yml", UPGRADERS),
+            UPGRADERS,
         )
 
     def test_upgraded_should_match_test_config(self):
