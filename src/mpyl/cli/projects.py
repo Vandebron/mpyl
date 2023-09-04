@@ -179,11 +179,12 @@ def upgrade(obj: ProjectsContext, check):
     paths = map(Path, _find_project_paths(True, obj.cli.repo, ""))
     candidates = check_upgrades_needed(list(paths))
     if check:
-        check_upgrade(obj.cli.console, candidates)
-        number_in_need_of_upgrade = len(
-            [path for path, diff in candidates if diff is not None]
-        )
+        upgradable = check_upgrade(obj.cli.console, candidates)
+        number_in_need_of_upgrade = len(upgradable)
         if number_in_need_of_upgrade > 0:
+            obj.cli.console.print(
+                f"{number_in_need_of_upgrade} projects need to be upgraded"
+            )
             sys.exit(1)
     else:
         with obj.cli.console.status("Checking for upgrades...") as status:
