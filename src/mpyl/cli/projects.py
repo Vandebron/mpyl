@@ -190,11 +190,12 @@ def upgrade(obj: ProjectsContext, apply):
     with obj.cli.console.status("Checking for upgrades...") as status:
         materialized = list(candidates)
         need_upgrade = [path for path, diff in materialized if diff is not None]
+        number_of_upgrades = len(need_upgrade)
         status.console.print(
-            f"Found {len(materialized)} projects, of which {len(need_upgrade)} need to be upgraded"
+            f"Found {len(materialized)} projects, of which {number_of_upgrades} need to be upgraded"
         )
         status.stop()
-        if Confirm.ask("Upgrade all?"):
+        if number_of_upgrades > 0 and Confirm.ask("Upgrade all?"):
             status.start()
             for path in need_upgrade:
                 status.update(f"Upgrading {path}")
@@ -204,7 +205,7 @@ def upgrade(obj: ProjectsContext, apply):
             status.stop()
             status.console.print(
                 Markdown(
-                    f"Upgraded {len(need_upgrade)} projects. Validate with `mpyl projects lint`"
+                    f"Upgraded {number_of_upgrades} projects. Validate with `mpyl projects lint`"
                 )
             )
 
