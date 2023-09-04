@@ -18,7 +18,9 @@ yaml = YAML()
 
 
 class TestVersioning:
-    upgrades_path = root_test_path / "test_resources" / "upgrades"
+    test_resources_path = root_test_path / "test_resources"
+    upgrades_path = test_resources_path / "upgrades"
+    latest_release_file = "test_project_1_0_11.yml"
 
     def test_get_upgrader_index(self):
         assert get_entry_upgrader_index("1.0.8", UPGRADERS) == 0
@@ -45,8 +47,14 @@ class TestVersioning:
 
     def test_full_upgrade(self):
         assert_roundtrip(
-            self.upgrades_path / "test_project_1_0_11.yml",
+            self.upgrades_path / self.latest_release_file,
             upgrade_file(self.upgrades_path / "test_project_1_0_8.yml", UPGRADERS),
+        )
+
+    def test_upgraded_should_match_test_config(self):
+        assert_roundtrip(
+            self.test_resources_path / "test_project.yml",
+            (self.upgrades_path / self.latest_release_file).read_text("utf-8"),
         )
 
     def test_diff_pretty_print(self):

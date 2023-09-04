@@ -5,7 +5,8 @@ stages:
   test: Docker Test
   deploy: Kubernetes Deploy
   postdeploy: Cypress Test
-maintainer: [ 'MPyL' ]
+mpylVersion: 1.0.10
+maintainer: ['MPyL']
 build:
   args:
     plain:
@@ -19,7 +20,7 @@ dependencies:
   postdeploy:
     - 'specs/*.js'
 deployment:
-  namespace: "mpyl"
+  namespace: 'dockertest'
   properties:
     env:
       - key: SOME_ENV
@@ -68,11 +69,11 @@ deployment:
     metrics:
       enabled: true
       alerts:
-      - name: 'ServiceError'
-        expr: 'true'
-        forDuration: '1m'
-        description: 'Service has encountered errors'
-        severity: 'warning'
+        - name: 'ServiceError'
+          expr: 'true'
+          forDuration: '1m'
+          description: 'Service has encountered errors'
+          severity: 'warning'
     resources:
       instances:
         all: 3
