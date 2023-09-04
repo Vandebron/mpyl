@@ -6,16 +6,16 @@ implements the `upgrade` method. This class should then be added to the `UPGRADE
 list in this module.
 
 """
+import copy
 import pkgutil
 from abc import ABC
-from io import StringIO
 from pathlib import Path
 from typing import Optional, Generator
-import copy
 
 from deepdiff import DeepDiff
-from ruamel.yaml import YAML
 from ruamel.yaml.compat import ordereddict
+
+from ..utilities.yaml import yaml_to_string, load_for_roundtrip
 
 VERSION_FIELD = "mpylVersion"
 
@@ -30,12 +30,6 @@ def get_releases() -> list[str]:
 
 def get_latest_release() -> str:
     return get_releases()[0]
-
-
-def yaml_to_string(serializable: object, yaml: YAML) -> str:
-    with StringIO() as stream:
-        yaml.dump(serializable, stream)
-        return stream.getvalue()
 
 
 class Upgrader(ABC):
@@ -147,16 +141,6 @@ def check_upgrade_needed(file_path: Path) -> tuple[Path, Optional[DeepDiff]]:
     if diff:
         return file_path, diff
     return file_path, None
-
-
-def load_for_roundtrip(project_file: Path) -> tuple[ordereddict, YAML]:
-    yaml = YAML()
-    yaml.indent(mapping=2, sequence=4, offset=2)
-    yaml.width = 4096  # type: ignore
-    yaml.preserve_quotes = True  # type: ignore
-    with project_file.open(encoding="utf-8") as file:
-        dictionary = yaml.load(file)
-        return dictionary, yaml
 
 
 def upgrade_file(project_file: Path, upgraders: list[Upgrader]) -> Optional[str]:
