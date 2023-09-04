@@ -61,7 +61,7 @@ class ProjectsContext:
 )
 @click.pass_context
 def projects(ctx, config, verbose, filter_):
-    """Commands related to projects"""
+    """Commands related to MPyL project configurations (project.yml)"""
     console = create_console_logger(show_path=False, verbose=verbose, max_width=0)
     parsed_config = parse_config(config)
     ctx.obj = ProjectsContext(

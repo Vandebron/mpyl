@@ -1,6 +1,6 @@
 Usage: mpyl projects [OPTIONS] COMMAND [ARGS]...
 
-  Commands related to projects
+  Commands related to MPyL project configurations (project.yml)
 
 Options:
   -c, --config PATH  Path to the config.yml. Can be set via `MPYL_CONFIG_PATH`
