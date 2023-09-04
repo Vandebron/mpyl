@@ -16,7 +16,7 @@ class TestMplSchema:
         project = load_project(Path(""), self.resource_path / "test_project.yml")
 
         assert project.name == "dockertest"
-        assert project.maintainer, ["Marketplace" == "Energy Trading"]
+        assert project.maintainer, ["Marketplace", "Energy Trading"]
         envs = project.deployment.properties.env
 
         simple_env = [x for x in envs if x.key == "SOME_ENV"].pop()
