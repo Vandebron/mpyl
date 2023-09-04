@@ -169,16 +169,16 @@ def lint(obj: ProjectsContext, all_, extended):
 
 @projects.command(help="Upgrade projects to conform with the latest schema")
 @click.option(
-    "--check",
-    "-c",
+    "--apply",
+    "-a",
     is_flag=True,
-    help="Check if an upgrade is necessary",
+    help="Apply upgrade operations to the project files",
 )
 @click.pass_obj
-def upgrade(obj: ProjectsContext, check):
+def upgrade(obj: ProjectsContext, apply):
     paths = map(Path, _find_project_paths(True, obj.cli.repo, ""))
     candidates = check_upgrades_needed(list(paths))
-    if check:
+    if not apply:
         upgradable = check_upgrade(obj.cli.console, candidates)
         number_in_need_of_upgrade = len(upgradable)
         if number_in_need_of_upgrade > 0:
@@ -186,27 +186,27 @@ def upgrade(obj: ProjectsContext, check):
                 f"{number_in_need_of_upgrade} projects need to be upgraded"
             )
             sys.exit(1)
-    else:
-        with obj.cli.console.status("Checking for upgrades...") as status:
-            materialized = list(candidates)
-            need_upgrade = [path for path, diff in materialized if diff is not None]
-            status.console.print(
-                f"Found {len(materialized)} projects, of which {len(need_upgrade)} need to be upgraded"
-            )
+
+    with obj.cli.console.status("Checking for upgrades...") as status:
+        materialized = list(candidates)
+        need_upgrade = [path for path, diff in materialized if diff is not None]
+        status.console.print(
+            f"Found {len(materialized)} projects, of which {len(need_upgrade)} need to be upgraded"
+        )
+        status.stop()
+        if Confirm.ask("Upgrade all?"):
+            status.start()
+            for path in need_upgrade:
+                status.update(f"Upgrading {path}")
+                upgraded = upgrade_file(path, UPGRADERS)
+                if upgraded:
+                    path.write_text(upgraded)
             status.stop()
-            if Confirm.ask("Upgrade all?"):
-                status.start()
-                for path in need_upgrade:
-                    status.update(f"Upgrading {path}")
-                    upgraded = upgrade_file(path, UPGRADERS)
-                    if upgraded:
-                        path.write_text(upgraded)
-                status.stop()
-                status.console.print(
-                    Markdown(
-                        f"Upgraded {len(need_upgrade)} projects. Validate with `mpyl projects lint`"
-                    )
+            status.console.print(
+                Markdown(
+                    f"Upgraded {len(need_upgrade)} projects. Validate with `mpyl projects lint`"
                 )
+            )
 
 
 if __name__ == "__main__":
