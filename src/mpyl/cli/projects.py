@@ -175,7 +175,7 @@ def lint(obj: ProjectsContext, all_, extended):
     help="Apply upgrade operations to the project files",
 )
 @click.pass_obj
-def upgrade(obj: ProjectsContext, apply):
+def upgrade(obj: ProjectsContext, apply: bool):
     paths = map(Path, _find_project_paths(True, obj.cli.repo, ""))
     candidates = check_upgrades_needed(list(paths))
     if not apply:
