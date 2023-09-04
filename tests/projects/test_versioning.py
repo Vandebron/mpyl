@@ -5,9 +5,9 @@ from mpyl.projects.versioning import (
     upgrade_file,
     get_entry_upgrader_index,
     UPGRADERS,
-    Upgrader8,
-    Upgrader9,
-    Upgrader10,
+    UpgraderOne8,
+    UpgraderOne9,
+    UpgraderOne10,
     load_for_roundtrip,
     pretty_print,
 )
@@ -32,7 +32,7 @@ class TestVersioning:
             self.upgrades_path / "test_project_1_0_9.yml",
             upgrade_file(
                 self.upgrades_path / "test_project_1_0_8.yml",
-                [Upgrader8(), Upgrader9()],
+                [UpgraderOne8(), UpgraderOne9()],
             ),
         )
 
@@ -41,7 +41,7 @@ class TestVersioning:
             self.upgrades_path / "test_project_1_0_10.yml",
             upgrade_file(
                 self.upgrades_path / "test_project_1_0_9.yml",
-                [Upgrader9(), Upgrader10()],
+                [UpgraderOne9(), UpgraderOne10()],
             ),
         )
 

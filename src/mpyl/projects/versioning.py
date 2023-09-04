@@ -41,14 +41,14 @@ class Upgrader(ABC):
         return previous_dict
 
 
-class Upgrader11(Upgrader):
+class UpgraderOne11(Upgrader):
     target_version = "1.0.11"
 
     def upgrade(self, previous_dict: ordereddict) -> ordereddict:
         return previous_dict
 
 
-class Upgrader10(Upgrader):
+class UpgraderOne10(Upgrader):
     target_version = "1.0.10"
 
     def upgrade(self, previous_dict: ordereddict) -> ordereddict:
@@ -62,7 +62,7 @@ class Upgrader10(Upgrader):
         return previous_dict
 
 
-class Upgrader9(Upgrader):
+class UpgraderOne9(Upgrader):
     target_version = "1.0.9"
 
     def upgrade(self, previous_dict: ordereddict) -> ordereddict:
@@ -70,14 +70,14 @@ class Upgrader9(Upgrader):
         return previous_dict
 
 
-class Upgrader8(Upgrader):
+class UpgraderOne8(Upgrader):
     target_version = "1.0.8"
 
     def upgrade(self, previous_dict: ordereddict) -> ordereddict:
         return previous_dict
 
 
-UPGRADERS = [Upgrader8(), Upgrader9(), Upgrader10(), Upgrader11()]
+UPGRADERS = [UpgraderOne8(), UpgraderOne9(), UpgraderOne10(), UpgraderOne11()]
 
 
 def get_entry_upgrader_index(
