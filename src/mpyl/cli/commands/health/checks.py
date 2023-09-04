@@ -157,8 +157,8 @@ def __check_config(console, env_var, default, schema_path, name):
                 console.check(f"{name.capitalize()} is valid", success=True)
             except jsonschema.exceptions.ValidationError as exc:
                 console.check(
-                    f"{name.capitalize()} is invalid: {exc.message} at '{'.'.join(map(str,exc.path))}'. 🤔Did you rebase"
-                    f" your branch onto {parsed['cvs']['git']['mainBranch']}?",
+                    f"{name.capitalize()} is invalid: {exc.message} at '{'.'.join(map(str, exc.path))}'."
+                    f" 🤔Did you rebase your branch onto {parsed['cvs']['git']['mainBranch']}?",
                     success=False,
                 )
     else:
