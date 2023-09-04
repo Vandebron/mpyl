@@ -587,15 +587,19 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
             if self.step_input.run_properties.versioning.tag
             else self.step_input.run_properties.versioning.pr_number
         )
-        substituted = substitute_namespaces(
-            raw_env_vars,
-            {p.to_name for p in self.deploy_set.all_projects},
-            {p.to_name for p in self.deploy_set.projects_to_deploy},
-            pr_identifier,
+        processed_env_vars = (
+            substitute_namespaces(
+                raw_env_vars,
+                {p.to_name for p in self.deploy_set.all_projects},
+                {p.to_name for p in self.deploy_set.projects_to_deploy},
+                pr_identifier,
+            )
+            if self.deploy_set
+            else raw_env_vars
         )
 
         env_vars = [
-            V1EnvVar(name=key, value=value) for key, value in substituted.items()
+            V1EnvVar(name=key, value=value) for key, value in processed_env_vars.items()
         ]
 
         sealed_secrets_for_target = list(

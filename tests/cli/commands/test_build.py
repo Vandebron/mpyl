@@ -99,9 +99,9 @@ class TestBuildCommand:
         cmd = [
             "build",
             "-c",
-            self.config_path,
+            str(self.config_path),
             "-p",
-            self.run_properties_path,
+            str(self.run_properties_path),
             "status",
         ]
         result = self.runner.invoke(
@@ -124,9 +124,9 @@ class TestBuildCommand:
             [
                 "build",
                 "-c",
-                self.config_path,
+                str(self.config_path),
                 "-p",
-                self.run_properties_path,
+                str(self.run_properties_path),
                 "clean",
                 "--filter",
                 "non_existing_project",

@@ -89,7 +89,7 @@ class TestMarkdownReporting:
                 ),
                 timestamp=datetime.fromisoformat("2019-01-04T16:41:24+02:00"),
             )
-        ),
+        )
         run_result.append(
             StepResult(
                 stage=Stage.TEST,
@@ -109,7 +109,7 @@ class TestMarkdownReporting:
                 ),
                 timestamp=datetime.fromisoformat("2019-01-04T16:41:24+02:00"),
             )
-        ),
+        )
         simple_report = run_result_to_markdown(run_result)
         assert_roundtrip(
             self.test_resource_path / "markdown_run_multiple_urls.md", simple_report

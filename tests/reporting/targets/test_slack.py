@@ -33,6 +33,7 @@ class TestSlackReporter:
             },
             None,
             "MPyL test build",
+            "target",
         )
         slack.send_report(run_result)
         append_results(run_result)

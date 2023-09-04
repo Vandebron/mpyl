@@ -20,7 +20,7 @@ from src.mpyl.steps.models import (
 from src.mpyl.steps.steps import Steps
 from tests import root_test_path, test_resource_path
 from tests.test_resources import test_data
-from tests.test_resources.test_data import assert_roundtrip, get_output
+from tests.test_resources.test_data import assert_roundtrip, get_output, RUN_PROPERTIES
 
 yaml = YAML()
 
@@ -53,6 +53,7 @@ class TestSteps:
 
     def test_output_roundtrip(self):
         output: Output = self._roundtrip(self.docker_image)
+        assert output.produced_artifact is not None
         assert output.produced_artifact.artifact_type.name == "DOCKER_IMAGE"
         assert output.produced_artifact.spec == {"image": "image:latest"}
 
@@ -101,7 +102,7 @@ class TestSteps:
             "invalid"
         ] = "somevalue"
         properties = RunProperties(
-            "id",
+            RUN_PROPERTIES.details,
             Target.PULL_REQUEST,
             VersioningProperties("", "feature/ARC-123", 1, None),
             config_values,
@@ -116,6 +117,7 @@ class TestSteps:
         result = self.executor.execute(stage=Stage.BUILD, project=project)
         assert result.output.success
         assert result.output.message == "Built test"
+        assert result.output.produced_artifact is not None
         assert (
             result.output.produced_artifact.artifact_type == ArtifactType.DOCKER_IMAGE
         )

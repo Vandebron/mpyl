@@ -77,6 +77,7 @@ class TestKubernetesChart:
         custom_success_threshold = 0
         custom_failure_threshold = 99
 
+        assert probe is not None
         assert probe.values["successThreshold"] == custom_success_threshold
         assert probe.values["failureThreshold"] == custom_failure_threshold
 
@@ -93,6 +94,7 @@ class TestKubernetesChart:
         project = test_data.get_project()
         probe = project.kubernetes.liveness_probe
 
+        assert probe is not None
         probe.values["httpGet"] = "incorrect"
 
         with pytest.raises(ValueError) as exc_info:

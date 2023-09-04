@@ -10,4 +10,5 @@ class TestValidation:
             __name__, "../src/mpyl/schema/mpyl_config.schema.yml"
         )
 
+        assert schema_dict is not None
         validate(config_values, schema_dict.decode("utf-8"))
