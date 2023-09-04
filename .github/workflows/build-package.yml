@@ -29,6 +29,9 @@ jobs:
       - name: Run lint
         run: pipenv run lint
 
+      - name: Run test code lint
+        run: pipenv run lint-test
+
   TypeCheck:
     runs-on: ubuntu-latest
     steps:
