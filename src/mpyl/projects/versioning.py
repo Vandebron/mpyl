@@ -18,6 +18,7 @@ from ruamel.yaml.compat import ordereddict
 from ..utilities.yaml import yaml_to_string, load_for_roundtrip
 
 VERSION_FIELD = "mpylVersion"
+BASE_RELEASE = "1.0.8"
 
 
 def get_releases() -> list[str]:
@@ -71,7 +72,7 @@ class UpgraderOne9(Upgrader):
 
 
 class UpgraderOne8(Upgrader):
-    target_version = "1.0.8"
+    target_version = BASE_RELEASE
 
     def upgrade(self, previous_dict: ordereddict) -> ordereddict:
         return previous_dict
@@ -95,8 +96,7 @@ def __get_version(project: dict) -> str:
 
 
 def upgrade_to_latest(to_upgrade: ordereddict, upgraders: list[Upgrader]):
-    versie = __get_version(to_upgrade)
-    upgrade_index = get_entry_upgrader_index(versie, upgraders)
+    upgrade_index = get_entry_upgrader_index(__get_version(to_upgrade), upgraders)
     if upgrade_index is None:
         return to_upgrade
 
