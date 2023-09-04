@@ -1,11 +1,13 @@
 name: job
 description: "A job"
-maintainer: [ "MPyL" ]
+maintainer: ["MPyL"]
+mpylVersion: 1.0.10
 stages:
   build: "Docker Build"
   test: "Echo Test"
   deploy: "Kubernetes Job Deploy"
 deployment:
+  namespace: job
   kubernetes:
     job:
       cron:

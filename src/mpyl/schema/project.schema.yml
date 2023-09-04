@@ -269,6 +269,8 @@ properties:
             examples:
               - /python/my_project/dagster/repo.py
     minProperties: 1
+    required:
+      - namespace
   postdeployment:
     type: object
     additionalProperties: false

@@ -1,11 +1,13 @@
 name: 'sbtservice'
-maintainer: [ 'MPyL' ]
+maintainer: ['MPyL']
 stages:
   build: Sbt Build
   test: Sbt Test
   deploy: Kubernetes Deploy
+mpylVersion: 1.0.10
 description: 'Demonstrates how an SBT project can be built and tested'
 deployment:
+  namespace: 'sbtservice'
   properties:
     env:
       - key: SOME_ENV
@@ -39,16 +41,16 @@ deployment:
     metrics:
       enabled: true
       alerts:
-      - name: 'ServiceError'
-        expr: 'true'
-        forDuration: '1m'
-        description: 'Service has encountered errors'
-        severity: 'warning'
-      - name: 'ServiceErrorCritical'
-        expr: 'true'
-        forDuration: '1m'
-        description: 'Service has encountered critical errors'
-        severity: 'critical'
+        - name: 'ServiceError'
+          expr: 'true'
+          forDuration: '1m'
+          description: 'Service has encountered errors'
+          severity: 'warning'
+        - name: 'ServiceErrorCritical'
+          expr: 'true'
+          forDuration: '1m'
+          description: 'Service has encountered critical errors'
+          severity: 'critical'
   traefik:
     hosts:
       - host:
