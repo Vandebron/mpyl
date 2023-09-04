@@ -51,6 +51,7 @@ cli-ext = "bash -c \"python $(dirname \\$PIPENV_PIPFILE)/src/mpyl/__main__.py $(
 build = "python setup.py bdist_wheel"
 create-graph = "pyreverse -o png src/mpyl"
 lint = "pylint --rcfile .pylintrc src/"
+lint-test = "pylint --rcfile .pylintrc-test tests/"
 format = "black --check --diff . --exclude venv|build/lib"
 format-update = "black . --exclude venv|build/lib"
 test = "pytest -W ignore::pytest.PytestCollectionWarning -v tests"
