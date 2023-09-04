@@ -2,14 +2,14 @@ import os
 
 import pytest
 from jsonschema import ValidationError
-from src.mpyl.utilities.pyaml_env import parse_config
-from ruamel.yaml import YAML  # type: ignore
+from ruamel.yaml import YAML
 
 from src.mpyl.constants import (
     DEFAULT_CONFIG_FILE_NAME,
     DEFAULT_RUN_PROPERTIES_FILE_NAME,
 )
 from src.mpyl.steps.models import RunProperties, VersioningProperties
+from src.mpyl.utilities.pyaml_env import parse_config
 from tests import root_test_path
 
 yaml = YAML()
