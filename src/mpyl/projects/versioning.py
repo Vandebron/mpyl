@@ -7,6 +7,7 @@ list in this module.
 
 """
 import pkgutil
+from abc import ABC
 from io import StringIO
 from pathlib import Path
 from typing import Optional, Generator
@@ -37,7 +38,7 @@ def yaml_to_string(serializable: object, yaml: YAML) -> str:
         return stream.getvalue()
 
 
-class Upgrader:
+class Upgrader(ABC):
     """Base class for upgrade scripts"""
 
     target_version: str
