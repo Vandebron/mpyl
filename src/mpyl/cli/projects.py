@@ -205,7 +205,7 @@ def upgrade(obj: ProjectsContext, apply):
             status.stop()
             status.console.print(
                 Markdown(
-                    f"Upgraded {number_of_upgrades} projects. Validate with `mpyl projects lint`"
+                    f"Upgraded {number_of_upgrades} projects. Validate with `mpyl projects lint --extended`"
                 )
             )
 
