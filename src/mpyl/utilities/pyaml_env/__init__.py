@@ -7,7 +7,7 @@ from pyaml_env import parse_config as original_parse_config
 from dotenv import load_dotenv
 
 
-def parse_config(path: Path) -> dict[str, str]:
+def parse_config(path: Path) -> dict:
     load_dotenv(Path(".env"))
 
     def default_to_none(obj, default_value="N/A"):
