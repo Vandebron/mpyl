@@ -171,7 +171,7 @@ def __print_status(obj: CliContext):
                 )
             )
 
-        if branch == main_branch and not tag:
+        if branch == main_branch:
             obj.console.log(f"On main branch ({branch}), cannot determine build status")
             return
 
