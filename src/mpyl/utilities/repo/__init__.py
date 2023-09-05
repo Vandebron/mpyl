@@ -314,8 +314,11 @@ class Repository:  # pylint: disable=too-many-public-methods
         ]
         return (f"origin/{branch_name}" if remote else branch_name) in found_branches
 
-    def delete_branch(self, branch_name: str):
+    def delete_local_branch(self, branch_name: str):
         self._repo.git.branch("-D", branch_name)
+
+    def delete_remote_branch(self, branch_name: str):
+        self._repo.git.push("-d", "origin", branch_name)
 
     def find_projects(self, folder_pattern: str = "") -> list[str]:
         """returns a set of all project.yml files
