@@ -20,7 +20,6 @@ class TestArtifacts:
     run_properties_path = test_resource_path / "run_properties.yml"
     tmp_folder = Path("tmp")
     test_build_artifacts = Path("test_resources/deployment/.mpyl")
-    test_build_artifacts2 = Path(root_test_path / "test_resources/deployment/.mpyl")
     tmp_build_artifacts = tmp_folder / test_build_artifacts
 
     @patch(
@@ -53,7 +52,7 @@ class TestArtifacts:
 
         try:
             shutil.copytree(
-                src=self.test_build_artifacts2, dst=self.tmp_build_artifacts
+                src=self.test_build_artifacts, dst=self.tmp_build_artifacts
             )  # copy test files to temporary folder
             shutil.rmtree(repo_path, ignore_errors=True)
             clone_repository(artifact_repo_config)
