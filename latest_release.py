@@ -4,7 +4,7 @@ from src.mpyl.cli.meta_info import get_latest_release
 
 latest = get_latest_release()
 requested = sys.argv[1]
-matching = requested != latest
+matching = requested == latest
 if matching:
     print(f"Latest release: {latest}, matches {requested} 👍.")
     sys.exit(0)
