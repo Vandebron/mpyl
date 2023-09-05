@@ -1,5 +1,6 @@
 """Commands related to build"""
 import asyncio
+import logging
 import shutil
 import sys
 from pathlib import Path
@@ -28,6 +29,7 @@ from ..build import (
     run_mpyl,
     MpylCliParameters,
     find_build_set,
+    get_build_plan,
 )
 from ..constants import (
     DEFAULT_CONFIG_FILE_NAME,
@@ -195,15 +197,12 @@ def __print_status(obj: CliContext):
         )
         return
 
-    changes = (
-        obj.repo.changes_in_branch_including_local()
-        if ci_branch is None
-        else (
-            obj.repo.changes_in_merge_commit() if tag else obj.repo.changes_in_branch()
-        )
+    result = get_build_plan(
+        logger=logging.getLogger("mpyl"),
+        repo=obj.repo,
+        run_properties=run_properties,
+        cli_parameters=MpylCliParameters(),
     )
-    build_set = find_build_set(obj.repo, changes, False)
-    result = RunResult(run_properties=run_properties, run_plan=build_set)
     if result.run_plan:
         obj.console.print(
             Markdown("**Execution plan:**  \n" + execution_plan_as_markdown(result))
