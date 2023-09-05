@@ -28,7 +28,6 @@ from .commands.build.jenkins import JenkinsRunParameters, run_jenkins, get_token
 from ..build import (
     run_mpyl,
     MpylCliParameters,
-    find_build_set,
     get_build_plan,
 )
 from ..constants import (
@@ -41,7 +40,6 @@ from ..reporting.formatting.markdown import (
     execution_plan_as_markdown,
 )
 from ..steps.models import RunProperties
-from ..steps.run import RunResult
 from ..utilities.github import GithubConfig
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
