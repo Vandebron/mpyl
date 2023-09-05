@@ -158,12 +158,13 @@ def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
 
     branch = run_properties.versioning.branch or obj.repo.get_branch or obj.repo.get_tag
     build_artifacts = _prepare_artifacts_repo(obj)
-    if obj.cached:
+    if obj.cached and branch:
         build_artifacts.pull(branch=branch)
     result = run_mpyl(
         run_properties=run_properties, cli_parameters=parameters, reporter=None
     )
-    build_artifacts.push(branch=branch)
+    if branch:
+        build_artifacts.push(branch=branch)
     sys.exit(0 if result.is_success else 1)
 
 
@@ -221,6 +222,9 @@ def __print_status(obj: CliContext):
         )
 
     build_artifacts = _prepare_artifacts_repo(obj)
+    remote_branch = tag if tag else branch
+    if remote_branch:
+        build_artifacts.pull(branch=remote_branch)
     build_artifacts.pull(branch=tag if tag else branch)
     result = get_build_plan(
         logger=logging.getLogger("mpyl"),
