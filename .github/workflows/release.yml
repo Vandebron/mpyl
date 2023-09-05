@@ -19,7 +19,7 @@ jobs:
         run: pipenv install -d --deploy
 
       - name: Validate version
-        run: pipenv check-version "${{ github.event.release.name }}"
+        run: pipenv run check-version "${{ github.event.release.name }}"
 
       - name: Build
         env:
