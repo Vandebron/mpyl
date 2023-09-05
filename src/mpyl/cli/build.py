@@ -16,6 +16,7 @@ from questionary import Choice
 from rich.console import Console
 from rich.markdown import Markdown
 
+from .artifacts import _prepare_artifacts_repo
 from . import (
     CliContext,
     CONFIG_PATH_HELP,
@@ -85,8 +86,15 @@ async def warn_if_update(console: Console):
     show_default=True,
     help="Verbose output",
 )
+@click.option(
+    "--cached",
+    help="Use cached build artifacts",
+    is_flag=True,
+    required=False,
+    default=True,
+)
 @click.pass_context
-def build(ctx, config, properties, verbose):
+def build(ctx, config, properties, verbose, cached):
     """Pipeline build commands"""
     parsed_properties = parse_config(properties)
     parsed_config = parse_config(config)
@@ -100,7 +108,9 @@ def build(ctx, config, properties, verbose):
     )
 
     repo = ctx.with_resource(Repository(config=RepoConfig.from_config(parsed_config)))
-    ctx.obj = CliContext(parsed_config, repo, console, verbose, parsed_properties)
+    ctx.obj = CliContext(
+        parsed_config, repo, console, verbose, parsed_properties, cached
+    )
 
 
 @build.command(help="Run an MPyL build")
@@ -145,9 +155,15 @@ def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
             obj.config, obj.repo.get_sha, obj.repo.get_branch, tag
         )
     )
+
+    branch = run_properties.versioning.branch or obj.repo.get_branch or obj.repo.get_tag
+    build_artifacts = _prepare_artifacts_repo(obj)
+    if obj.cached:
+        build_artifacts.pull(branch=branch)
     result = run_mpyl(
         run_properties=run_properties, cli_parameters=parameters, reporter=None
     )
+    build_artifacts.push(branch=branch)
     sys.exit(0 if result.is_success else 1)
 
 
@@ -204,6 +220,8 @@ def __print_status(obj: CliContext):
             Markdown(f"**Branch:** `{branch}`. Base {base_revision_specification}. ")
         )
 
+    build_artifacts = _prepare_artifacts_repo(obj)
+    build_artifacts.pull(branch=tag if tag else branch)
     result = get_build_plan(
         logger=logging.getLogger("mpyl"),
         repo=obj.repo,
