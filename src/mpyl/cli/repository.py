@@ -195,7 +195,7 @@ def init(obj: RepoContext, url: str, pull: int, branch: str, pristine: bool):
                                 f"👷 Deleting local branch to prevent conflicts `{target_branch}`"
                             )
                         )
-                        repo.delete_branch(target_branch)
+                        repo.delete_local_branch(target_branch)
 
                     repo.fetch_pr(pr_number)
                     repo.checkout_branch(target_branch)

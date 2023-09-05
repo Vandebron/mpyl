@@ -7,7 +7,7 @@ build:
     user_email: !ENV ${BUILD_USER_EMAIL}
     user: 'anonymous'
   parameters:
-    deploy_target: !ENV ${DEPLOY_TARGET}
+    deploy_target: !ENV ${DEPLOY_TARGET:PullRequest}
   versioning:
     revision: !ENV ${GIT_COMMIT:hash}
     branch: !ENV ${CHANGE_BRANCH:feature/some-branch}
