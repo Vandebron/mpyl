@@ -156,24 +156,10 @@ def __print_status(obj: CliContext):
     run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
     ci_branch = run_properties.versioning.branch
 
-    if ci_branch and not obj.repo.get_branch:
-        obj.console.print("Current branch is detached.")
-    else:
-        obj.console.log(
-            Markdown(
-                f"Branch not specified at `build.versioning.branch` in _{DEFAULT_RUN_PROPERTIES_FILE_NAME}_, "
-                f"falling back to git: _{obj.repo.get_branch}_"
-            )
-        )
-
     branch = obj.repo.get_branch
     main_branch = obj.repo.main_branch
-
-    if branch == main_branch:
-        obj.console.log(f"On main branch ({branch}), cannot determine build status")
-        return
-
     tag = obj.repo.get_tag if not branch else None
+
     version = run_properties.versioning
     revision = version.revision or obj.repo.get_sha
     base_revision = obj.repo.base_revision
@@ -184,15 +170,32 @@ def __print_status(obj: CliContext):
         )
     )
 
-    if not base_revision:
-        fetch = f"`git fetch origin {main_branch}:refs/remotes/origin/{main_branch}`"
-        obj.console.print(
-            Markdown(
-                f"Cannot determine what to build, since this branch has no base. "
-                f"Did you {fetch}?"
+    if not tag:
+        if ci_branch and not obj.repo.get_branch:
+            obj.console.print("Current branch is detached.")
+        else:
+            obj.console.log(
+                Markdown(
+                    f"Branch not specified at `build.versioning.branch` in _{DEFAULT_RUN_PROPERTIES_FILE_NAME}_, "
+                    f"falling back to git: _{obj.repo.get_branch}_"
+                )
             )
-        )
-        return
+
+        if branch == main_branch and not tag:
+            obj.console.log(f"On main branch ({branch}), cannot determine build status")
+            return
+
+        if not base_revision:
+            fetch = (
+                f"`git fetch origin {main_branch}:refs/remotes/origin/{main_branch}`"
+            )
+            obj.console.print(
+                Markdown(
+                    f"Cannot determine what to build, since this branch has no base. "
+                    f"Did you {fetch}?"
+                )
+            )
+            return
 
     changes = (
         obj.repo.changes_in_branch_including_local()
