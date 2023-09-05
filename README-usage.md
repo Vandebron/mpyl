@@ -184,7 +184,7 @@ fully up and running.
 
 ## ..create a custom CI-CD flow
 
-MPyL is not a task or even a tool to define and run CI-CD flows. It does however provide a building blocks that can
+MPyL is not a task runner or a tool to define CI-CD flows. It does however provide a building blocks that can
 easily be plugged into your own CI-CD flow.
 Here's an example using [Dagster](https://dagster.io/) as a runner
 
