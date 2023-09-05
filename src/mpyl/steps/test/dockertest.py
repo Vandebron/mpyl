@@ -37,6 +37,7 @@ from ...utilities.docker import (
     remove_container,
     create_container,
     push_to_registry,
+    registry_for_project,
 )
 from ...utilities.junit import (
     to_test_suites,
@@ -70,13 +71,14 @@ class TestDocker(Step):
         tag = docker_image_tag(step_input) + "-test"
         project = step_input.project
         dockerfile = docker_file_path(project=project, docker_config=docker_config)
+        docker_registry_config = registry_for_project(docker_config, step_input.project)
         success = build(
             logger=self._logger,
             root_path=docker_config.root_folder,
             file_path=dockerfile,
             image_tag=tag,
             target=test_target,
-            docker_config=docker_config,
+            docker_config=docker_registry_config,
         )
 
         if success:
@@ -84,8 +86,9 @@ class TestDocker(Step):
             artifact = self.extract_test_results(
                 self._logger, project, container, step_input
             )
-            if not step_input.dry_run and docker_config.cache_from_registry:
-                push_to_registry(self._logger, docker_config, tag)
+            docker_registry = registry_for_project(docker_config, step_input.project)
+            if not step_input.dry_run and docker_registry.cache_from_registry:
+                push_to_registry(self._logger, docker_registry, tag)
 
             suite = to_test_suites(cast(JunitTestSpec, artifact.spec))
             summary = sum_suites(suite)

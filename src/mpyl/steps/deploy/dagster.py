@@ -23,7 +23,7 @@ from .k8s.resources.dagster import to_user_code_values, to_grpc_server_entry, Co
 from .. import Step, Meta, ArtifactType, Input, Output
 from ...project import Stage, Target
 from ...utilities.dagster import DagsterConfig
-from ...utilities.docker import DockerConfig
+from ...utilities.docker import DockerRegistryConfig
 from ...utilities.helm import convert_to_helm_release_name, shorten_name
 
 
@@ -104,7 +104,9 @@ class DeployDagster(Step):
             project=step_input.project,
             name_suffix=name_suffix,
             run_properties=step_input.run_properties,
-            docker_config=DockerConfig.from_dict(step_input.run_properties.config),
+            docker_config=DockerRegistryConfig.from_dict(
+                step_input.run_properties.config
+            ),
         )
 
         self._logger.debug(f"Deploying user code with values: {user_code_deployment}")

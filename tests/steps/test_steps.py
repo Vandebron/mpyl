@@ -115,7 +115,7 @@ class TestSteps:
             properties=test_data.RUN_PROPERTIES,
         )
         stages = Stages(build=None, test=None, deploy=None, postdeploy=None)
-        project = Project("test", "Test project", "", stages, [], None, None)
+        project = Project("test", "Test project", "", stages, [], None, None, None)
         output = steps.execute(stage=Stage.BUILD, project=project).output
         assert not output.success
         assert output.message == "Stage 'build' not defined on project 'test'"
@@ -182,6 +182,7 @@ class TestSteps:
             "",
             stages,
             [],
+            None,
             None,
             Dependencies.from_config({"postdeploy": ["specs/*.js"]}),
         )

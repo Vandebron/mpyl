@@ -11,6 +11,7 @@ from ...utilities.docker import (
     docker_registry_path,
     DockerImageSpec,
     push_to_registry,
+    registry_for_project,
 )
 
 
@@ -33,8 +34,9 @@ class AfterBuildDocker(Step):
         self._logger.debug(f"Image to publish: {image_name}")
 
         docker_config = DockerConfig.from_dict(step_input.run_properties.config)
+        docker_registry = registry_for_project(docker_config, step_input.project)
 
-        full_image_path = docker_registry_path(docker_config, image_name)
+        full_image_path = docker_registry_path(docker_registry, image_name)
         artifact = Artifact(
             ArtifactType.DOCKER_IMAGE,
             step_input.run_properties.versioning.revision,
@@ -45,7 +47,7 @@ class AfterBuildDocker(Step):
         if step_input.dry_run:
             return Output(
                 success=True,
-                message=f"Dry run. Not pushing {image_name} to {docker_config.host_name}",
+                message=f"Dry run. Not pushing {image_name} to {docker_registry.host_name}",
                 produced_artifact=artifact,
             )
 

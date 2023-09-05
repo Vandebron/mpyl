@@ -32,6 +32,7 @@ from ...utilities.docker import (
     docker_file_path,
     login,
     DockerImageSpec,
+    registry_for_project,
 )
 
 DOCKER_IGNORE_DEFAULT = ["**/target/*", f"**/{BUILD_ARTIFACTS_FOLDER}/*"]
@@ -67,13 +68,14 @@ class BuildDocker(Step):
             # log in to registry, because we may need to pull in a base image
             login(logger=self._logger, docker_config=docker_config)
 
+        docker_registry_config = registry_for_project(docker_config, step_input.project)
         success = build(
             logger=self._logger,
             root_path=docker_config.root_folder,
             file_path=dockerfile,
             image_tag=image_tag,
             target=build_target,
-            docker_config=docker_config,
+            docker_config=docker_registry_config,
         )
         artifact = input_to_artifact(
             ArtifactType.DOCKER_IMAGE, step_input, spec=DockerImageSpec(image=image_tag)

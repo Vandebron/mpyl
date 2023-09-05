@@ -7,6 +7,6 @@ class TestDocker:
     def test_registry_path(self):
         config_values = get_config_values()
         conf = DockerConfig.from_dict(config_values)
-        assert conf.host_name == "docker_host"
-        assert conf.organization is None
-        assert docker_registry_path(conf, "image") == "docker_host/image"
+        assert conf.registries[0].host_name == "docker_host"
+        assert conf.registries[0].organization is None
+        assert docker_registry_path(conf.registries[0], "image") == "docker_host/image"
