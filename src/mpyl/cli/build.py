@@ -225,7 +225,7 @@ def __print_status(obj: CliContext):
     remote_branch = tag if tag else branch
     if remote_branch:
         build_artifacts.pull(branch=remote_branch)
-    build_artifacts.pull(branch=tag if tag else branch)
+
     result = get_build_plan(
         logger=logging.getLogger("mpyl"),
         repo=obj.repo,
