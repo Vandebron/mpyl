@@ -1,8 +1,9 @@
+import os
 import logging
 import shutil
 
-from unittest import mock
 from pathlib import Path
+from unittest.mock import patch, PropertyMock
 
 from pyaml_env import parse_config
 
@@ -10,21 +11,33 @@ from src.mpyl.utilities.github import clone_repository
 from src.mpyl.artifacts import BuildArtifacts
 from src.mpyl.utilities.repo import RepoCredentials, Repository
 from src.mpyl import RepoConfig
-from tests import root_test_path
+from tests import root_test_path, test_resource_path
 
 
 class TestArtifacts:
-    test_branch = "pr-1234"
-    resource_path = root_test_path / "cli" / "test_resources"
-    config_path = root_test_path / "test_resources/mpyl_config.yml"
-    run_properties_path = root_test_path / "test_resources/run_properties.yml"
+    test_branch = "unittest-tmp"
+    config_path = test_resource_path / "mpyl_config.yml"
+    run_properties_path = test_resource_path / "run_properties.yml"
+    tmp_folder = Path("tmp")
+    test_build_artifacts = Path("test_resources/deployment/.mpyl")
+    test_build_artifacts2 = Path(root_test_path / "test_resources/deployment/.mpyl")
+    tmp_build_artifacts = tmp_folder / test_build_artifacts
 
-    @mock.patch("src.mpyl.artifacts.BuildArtifacts.get_build_artifacts_paths")
-    def test_push_pull_logic(self, mocked):
-        tmp_folder = Path("tmp")
-        test_build_artifacts = Path("test_resources/deployment/.mpyl")
-        tmp_build_artifacts = tmp_folder / test_build_artifacts
-        mocked.return_value = [tmp_build_artifacts]
+    @patch(
+        target="src.mpyl.artifacts.BuildArtifacts.get_build_artifacts_paths",
+        return_value=[tmp_build_artifacts],
+    )
+    @patch(
+        target="src.mpyl.utilities.repo.Repository.root_dir",
+        new_callable=PropertyMock,
+        side_effect=[Path(root_test_path / ".artifacts"), root_test_path],
+    )
+    def test_push_pull_logic(self, _mock1, _mock2):
+        old_working_dir = os.getcwd()
+        os.chdir(
+            root_test_path
+        )  # to ensure actions in BuildArtifacts don't interfere with the real artifact repo
+        shutil.rmtree(self.tmp_folder, ignore_errors=True)
         artifact_repo_config = RepoConfig(
             main_branch="main",
             ignore_patterns=[],
@@ -37,12 +50,12 @@ class TestArtifacts:
             folder=".artifacts",
         )
         repo_path = Path(root_test_path / artifact_repo_config.folder)
-        print(repo_path)
 
         try:
             shutil.copytree(
-                src=test_build_artifacts, dst=tmp_build_artifacts
+                src=self.test_build_artifacts2, dst=self.tmp_build_artifacts
             )  # copy test files to temporary folder
+            shutil.rmtree(repo_path, ignore_errors=True)
             clone_repository(artifact_repo_config)
 
             logger = logging.getLogger()
@@ -55,13 +68,14 @@ class TestArtifacts:
                 artifact_repo=artifact_repo,
             )
             build_artifacts.push(branch=self.test_branch)
-            shutil.rmtree(tmp_folder, ignore_errors=True)
+            shutil.rmtree(self.tmp_folder, ignore_errors=True)
             build_artifacts.pull(branch=self.test_branch)
-            assert tmp_build_artifacts.exists()
+            assert self.tmp_build_artifacts.exists()
         finally:  # cleanup
+            shutil.rmtree(self.tmp_folder, ignore_errors=True)
             artifact_repo = Repository(
                 config=artifact_repo_config
             )  # re-init since the previous init has to be in the try block, after cloning the repo
             artifact_repo.delete_remote_branch(branch_name=self.test_branch)
             shutil.rmtree(repo_path, ignore_errors=True)
-            shutil.rmtree(tmp_folder, ignore_errors=True)
+            os.chdir(old_working_dir)

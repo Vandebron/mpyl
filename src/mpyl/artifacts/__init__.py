@@ -1,5 +1,6 @@
 """Class that handles remote caching of build artifacts"""
 
+import os
 import shutil
 from logging import Logger
 from pathlib import Path
@@ -46,7 +47,7 @@ class BuildArtifacts:
             self.artifact_repo.fetch_branch(branch_name=branch)
             self.artifact_repo.checkout_branch(branch_name=branch)
 
-            for artifact_path in self.get_build_artifacts_paths():
+            for artifact_path in os.listdir(self.cache_folder):
                 shutil.copytree(
                     src=self.cache_folder / artifact_path,
                     dst=artifact_path,
@@ -71,7 +72,11 @@ class BuildArtifacts:
         shutil.rmtree(self.cache_folder, ignore_errors=True)
 
         for artifact_path in self.get_build_artifacts_paths():
-            shutil.copytree(src=artifact_path, dst=self.cache_folder / artifact_path)
+            shutil.copytree(
+                src=artifact_path,
+                dst=self.cache_folder / artifact_path,
+                dirs_exist_ok=True,
+            )
 
         if self.artifact_repo.has_changes():
             self.logger.info("Committing and pushing all artifacts")
