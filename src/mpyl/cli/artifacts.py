@@ -8,7 +8,7 @@ from pathlib import Path
 import click
 from pyaml_env import parse_config
 
-from ..artifacts import BuildArtifacts
+from ..artifacts.build_artifacts import BuildArtifacts
 from ..cli import CliContext, create_console_logger, CONFIG_PATH_HELP
 from ..constants import DEFAULT_CONFIG_FILE_NAME, DEFAULT_RUN_PROPERTIES_FILE_NAME
 from ..steps.models import RunProperties
