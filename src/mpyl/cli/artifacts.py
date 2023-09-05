@@ -2,6 +2,7 @@
 
 import logging
 import os
+import shutil
 from pathlib import Path
 
 import click
@@ -90,11 +91,14 @@ def _prepare_artifacts_repo(obj: CliContext) -> BuildArtifacts:
         raise ValueError("No artifact repository configured")
     artifact_repo_config: RepoConfig = RepoConfig.from_git_config(git_config=git_config)
 
-    if artifact_repo_config.folder and not os.path.exists(
-        Path(artifact_repo_config.folder) / ".git"
-    ):
-        clone_repository(artifact_repo_config)
+    if not artifact_repo_config.folder:
+        raise ValueError("No artifact repository folder configured")
 
+    repo_path = Path(artifact_repo_config.folder)
+    if os.path.exists(repo_path):
+        shutil.rmtree(repo_path, ignore_errors=True)
+
+    clone_repository(artifact_repo_config)
     logger = logging.getLogger("mpyl")
     artifact_repo = Repository(config=artifact_repo_config)
     return BuildArtifacts(
