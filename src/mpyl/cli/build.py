@@ -160,16 +160,6 @@ def __print_status(obj: CliContext):
     main_branch = obj.repo.main_branch
     tag = obj.repo.get_tag if not branch else None
 
-    version = run_properties.versioning
-    revision = version.revision or obj.repo.get_sha
-    base_revision = obj.repo.base_revision
-    obj.console.print(
-        Markdown(
-            f"**{'Tag' if tag else 'Branch'}:** `{branch or version.tag}` at `{revision}`. "
-            f"Base `{main_branch}` {f'at `{base_revision}`' if base_revision else 'not present (grafted).'}"
-        )
-    )
-
     if not tag:
         if ci_branch and not obj.repo.get_branch:
             obj.console.print("Current branch is detached.")
@@ -185,17 +175,25 @@ def __print_status(obj: CliContext):
             obj.console.log(f"On main branch ({branch}), cannot determine build status")
             return
 
-        if not base_revision:
-            fetch = (
-                f"`git fetch origin {main_branch}:refs/remotes/origin/{main_branch}`"
+    version = run_properties.versioning
+    revision = version.revision or obj.repo.get_sha
+    base_revision = obj.repo.base_revision
+    obj.console.print(
+        Markdown(
+            f"**{'Tag' if tag else 'Branch'}:** `{branch or version.tag}` at `{revision}`. "
+            f"Base `{main_branch}` {f'at `{base_revision}`' if base_revision else 'not present (grafted).'}"
+        )
+    )
+
+    if not base_revision and not tag:
+        fetch = f"`git fetch origin {main_branch}:refs/remotes/origin/{main_branch}`"
+        obj.console.print(
+            Markdown(
+                f"Cannot determine what to build, since this branch has no base. "
+                f"Did you {fetch}?"
             )
-            obj.console.print(
-                Markdown(
-                    f"Cannot determine what to build, since this branch has no base. "
-                    f"Did you {fetch}?"
-                )
-            )
-            return
+        )
+        return
 
     changes = (
         obj.repo.changes_in_branch_including_local()
