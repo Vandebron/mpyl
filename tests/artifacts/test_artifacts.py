@@ -48,6 +48,7 @@ class TestArtifacts:
             ),
             folder=".artifacts",
         )
+        assert artifact_repo_config.folder == ".artifacts"
         repo_path = Path(root_test_path / artifact_repo_config.folder)
 
         try:
