@@ -8,7 +8,7 @@ from unittest.mock import patch, PropertyMock
 from pyaml_env import parse_config
 
 from src.mpyl.utilities.github import clone_repository
-from src.mpyl.artifacts import BuildArtifacts
+from src.mpyl.artifacts.build_artifacts import BuildArtifacts
 from src.mpyl.utilities.repo import RepoCredentials, Repository
 from src.mpyl import RepoConfig
 from tests import root_test_path, test_resource_path
@@ -23,7 +23,7 @@ class TestArtifacts:
     tmp_build_artifacts = tmp_folder / test_build_artifacts
 
     @patch(
-        target="src.mpyl.artifacts.BuildArtifacts.get_build_artifacts_paths",
+        target="src.mpyl.artifacts.build_artifacts.BuildArtifacts.get_build_artifacts_paths",
         return_value=[tmp_build_artifacts],
     )
     @patch(
