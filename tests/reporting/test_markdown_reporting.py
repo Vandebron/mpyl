@@ -81,7 +81,7 @@ class TestMarkdownReporting:
                         revision="revision",
                         producing_step="Jest",
                         spec=JunitTestSpec(
-                            self.test_resource_path, "http://localhost/tests"
+                            str(self.test_resource_path), "http://localhost/tests"
                         ),
                     ),
                 ),
@@ -100,7 +100,7 @@ class TestMarkdownReporting:
                         revision="revision",
                         producing_step="Cypress",
                         spec=JunitTestSpec(
-                            self.test_resource_path, "https://cypress.io"
+                            str(self.test_resource_path), "https://cypress.io"
                         ),
                     ),
                 ),

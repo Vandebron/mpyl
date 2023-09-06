@@ -8,7 +8,7 @@ from jsonschema import ValidationError
 from pyaml_env import parse_config
 from ruamel.yaml import YAML  # type: ignore
 
-from mpyl.steps.deploy.k8s import RenderedHelmChartSpec
+from src.mpyl.steps.deploy.k8s import RenderedHelmChartSpec
 from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME, BUILD_ARTIFACTS_FOLDER
 from src.mpyl.project import Project, Stages, Stage, Target, Dependencies
 from src.mpyl.steps.collection import StepsCollection
@@ -94,6 +94,8 @@ class TestSteps:
         found_artifact = Steps._find_required_artifact(
             self.build_project, ArtifactType.DOCKER_IMAGE
         )
+        assert found_artifact is not None
+        assert self.docker_image.produced_artifact is not None
         assert (
             cast(DockerImageSpec, found_artifact.spec).image
             == cast(DockerImageSpec, self.docker_image.produced_artifact.spec).image
