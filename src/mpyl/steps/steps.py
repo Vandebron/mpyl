@@ -67,6 +67,7 @@ class Steps:
         artifact: Optional[Artifact],
         dry_run: bool = False,
     ) -> Output:
+        self._logger.info(f"Executing {executor.meta.name} for '{project.name}'")
         required = executor.required_artifact
         if (
             artifact is not None
