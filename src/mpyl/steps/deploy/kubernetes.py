@@ -90,7 +90,7 @@ class DeployKubernetes(Step):
                     self._logger,
                     chart,
                     step_input,
-                    Target.PRODUCTION,
+                    Target.PULL_REQUEST_BASE,
                     builder.release_name,
                 )
                 return Output(
