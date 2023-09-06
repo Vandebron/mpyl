@@ -86,9 +86,12 @@ def to_row(job: Job) -> list[RenderableType]:
 
 
 def create_progress_table(jobs: list[Job]) -> Table:
-    table = Table(*["Status", "Command", "Message"], title="Validate sourcecode")
-    for task in jobs:
-        table.add_row(*to_row(task))
+    table = Table(
+        *["Status", "Command", "Message"],
+        title="Validate sourcecode",
+    )
+    for job in jobs:
+        table.add_row(*to_row(job))
 
     return table
 
