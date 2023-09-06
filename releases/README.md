@@ -1,6 +1,6 @@
 # Release notes
 
-## MPyL 1.0.12
+## MPyL 1.1.0
 
 #### Highlights
 
@@ -38,7 +38,7 @@ unhealthy.
 
 The default hosts for Traefik are now interpolated with the namespace of the project in test/acceptance/production.
 
-Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.0.12)
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.1.0)
 
 ## MPyL 1.0.11
 
