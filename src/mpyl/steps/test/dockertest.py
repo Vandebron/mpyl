@@ -92,14 +92,13 @@ class TestDocker(Step):
                 message=f"Tests results produced for {project.name} ({summary})",
                 produced_artifact=artifact,
             )
+            remove_container(self._logger, container)
         else:
             output = Output(
                 success=False,
                 message=f"Tests failed to run for {project.name}. No test results have been recorded.",
                 produced_artifact=None,
             )
-
-        remove_container(self._logger, container)
 
         return output
 
