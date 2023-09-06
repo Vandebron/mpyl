@@ -76,9 +76,9 @@ class TestDocker(Step):
             image_tag=tag,
             target=test_target,
         )
-        container = create_container(self._logger, tag)
 
         if success:
+            container = create_container(self._logger, tag)
             artifact = self.extract_test_results(
                 self._logger, project, container, step_input
             )
