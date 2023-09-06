@@ -1,10 +1,12 @@
 import concurrent.futures
+import os
+import shutil
 import subprocess
 import time
 from concurrent.futures import Future
 from dataclasses import dataclass
 
-from rich.console import RenderableType
+from rich.console import RenderableType, Console
 from rich.errors import ConsoleError
 from rich.live import Live
 from rich.spinner import Spinner
@@ -91,14 +93,27 @@ def create_progress_table(jobs: list[Job]) -> Table:
     return table
 
 
-def all_tasks_done(jobs: list[Job]) -> bool:
-    return all([job.future.done() for job in jobs])
+def all_tasks_done(jobs_to_finish: list[Job]) -> bool:
+    return all([job.future.done() for job in jobs_to_finish])
+
+
+def all_tasks_success(results: list[JobResult]) -> bool:
+    return all([job.exit_code == 0 for job in results])
+
+
+def play_sound(success: bool):
+    if shutil.which("afplay") is None:
+        Console().bell()
+        return
+
+    sound = "Glass.aiff" if success else "Sosumi.aiff"
+    os.system(f"afplay /System/Library/Sounds/{sound}")
 
 
 with concurrent.futures.ThreadPoolExecutor(max_workers=len(COMMANDS)) as executor:
-    tasks: list[Job] = [Job(cmd, executor.submit(run_command, cmd)) for cmd in COMMANDS]
-    with Live(create_progress_table(tasks), refresh_per_second=4) as live:
-        while not all_tasks_done(tasks):
+    jobs: list[Job] = [Job(cmd, executor.submit(run_command, cmd)) for cmd in COMMANDS]
+    with Live(create_progress_table(jobs), refresh_per_second=4) as live:
+        while not all_tasks_done(jobs):
             time.sleep(0.2)
-            live.update(create_progress_table(tasks))
-        live.console.print("All tasks done!")
+            live.update(create_progress_table(jobs))
+        play_sound(all_tasks_success([job.future.result() for job in jobs]))
