@@ -427,7 +427,7 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
     version,
 ):
     if version:
-        os.environ["CHANGE_ID"] = version
+        os.environ["CHANGE_ID"] = "231.*"
     upgrade_check = None
     try:
         upgrade_check = asyncio.wait_for(warn_if_update(ctx.obj.console), timeout=5)
