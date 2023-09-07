@@ -409,7 +409,7 @@ def ask_for_version(ctx, _param, value) -> Optional[str]:
     is_flag=False,
     flag_value="prompt",
     default="not_set",
-    envvar="CHANGE_ID",
+    envvar="MPYL_VERSION",
     callback=ask_for_version,
 )
 @click.pass_context
@@ -466,7 +466,7 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
         )
 
         print("PIPELINE", pipeline_parameters)
-        print(os.environ["CHANGE_ID"])
+        print(os.environ["MPYL_VERSION"])
         run_jenkins(run_argument)
     except asyncio.exceptions.TimeoutError:
         pass
