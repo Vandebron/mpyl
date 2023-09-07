@@ -205,7 +205,7 @@ jobs:
         run: mpyl repo -c mpyl_config.example.yml init -b ${{ github.ref }} -u https://${{ env.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git -p
 
       - name: Repo status
-        run: mpyl repo status
+        run: mpyl repo -c mpyl_config.example.yml status
 
       - name: Build status
-        run: mpyl build status
+        run: mpyl build -c mpyl_config.example.yml status

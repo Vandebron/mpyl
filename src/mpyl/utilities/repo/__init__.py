@@ -105,8 +105,11 @@ class Repository:  # pylint: disable=too-many-public-methods
     @property
     def base_revision(self) -> Optional[Commit]:
         main = self.main_origin_branch
-        local_main = main.replace("origin/", "")
-        return self._safe_ref_parse(local_main) or self._safe_ref_parse(main)
+        return self._safe_ref_parse(main)
+
+    @property
+    def root_commit_hex(self) -> str:
+        return self._repo.git.rev_list("--max-parents=0", "HEAD").splitlines()[-1]
 
     @property
     def get_tag(self) -> Optional[str]:
@@ -157,9 +160,7 @@ class Repository:  # pylint: disable=too-many-public-methods
 
     def changes_in_branch(self) -> list[Revision]:
         base_ref = self.base_revision
-        base_hex = (
-            base_ref if base_ref else self._repo.git.rev_list("--max-parents=0", "HEAD")
-        )
+        base_hex = base_ref.hexsha if base_ref else self.root_commit_hex
 
         head_hex = self._repo.active_branch.commit.hexsha
         logging.debug(
