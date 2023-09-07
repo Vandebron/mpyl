@@ -49,6 +49,7 @@ async def fetch_latest_version() -> Optional[str]:
                 return body.get("info", {}).get("version")
     except (
         asyncio.exceptions.TimeoutError,
+        asyncio.exceptions.CancelledError,
         ClientConnectorError,
         requests.exceptions.RequestException,
     ):
