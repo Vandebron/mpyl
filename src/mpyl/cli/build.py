@@ -444,7 +444,8 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
         selected_pipeline = pipeline if pipeline else jenkins_config["defaultPipeline"]
         pipeline_parameters = {"TEST": "true", "VERSION": test} if test else {}
 
-        pipeline_parameters["MPYL_TEST"] = ""
+        pipeline_parameters["MPYL_TEST"] = "jajajaj"
+
         pipeline_parameters["BUILD_PARAMS"] = ""
         if dryrun_:
             pipeline_parameters["BUILD_PARAMS"] += " --dryrun"

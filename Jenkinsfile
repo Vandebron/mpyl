@@ -5,8 +5,7 @@ pipeline {
     }
     stages {
         stage('Initialize Parameters') {
-            when { expression { return params.BUILD_PARAMS == null || params.BUILD_PARAMS == "" &&
-            params.MPYL_TEST == null || params.MPYL_TEST == ""  } }
+            when { expression { return params.BUILD_PARAMS == null || params.BUILD_PARAMS == ""  } }
             steps {
                 script {
                     properties([parameters([
