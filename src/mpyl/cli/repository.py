@@ -1,5 +1,4 @@
 """Commands related to the CSV (git) repository"""
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -110,13 +109,14 @@ def status(obj: RepoContext):
             )
             changes = repo.changes_between(base_revision.hexsha, repo.get_sha)
             console.log(
-                f"{len(changes)} commits between `{repo.main_origin_branch}` and `{repo.get_branch}`"
+                f"*{len(changes)}* commits between `{repo.main_origin_branch}` and `{repo.get_branch}`"
             )
         else:
+            changes = repo.changes_in_branch()
             console.log(
                 Markdown(
                     f"Revision for `{repo.main_origin_branch}` not found. Cannot diff with base. "
-                    f"Have you run `mpyl repo init`?"
+                    f"*{len(changes)}* (grafted) commits on `{repo.get_branch}`"
                 )
             )
 
@@ -162,11 +162,13 @@ def init(obj: RepoContext, url: str, pull: int, branch: str, pristine: bool):
             parse_config(obj.run_properties), config
         )
         pr_number = pull or properties.versioning.pr_number
-        target_branch = (
-            f"PR-{pr_number}" if pr_number else branch or properties.versioning.branch
-        )
 
         if pr_number:
+            target_branch = (
+                f"PR-{pr_number}"
+                if pr_number
+                else branch or properties.versioning.branch
+            )
             console.log(Markdown(f"Initializing `{target_branch}`..."))
             if repo.get_branch != target_branch:
                 with console.status(f"👷 Fetching PR #{pr_number}"):
@@ -195,10 +197,3 @@ def init(obj: RepoContext, url: str, pull: int, branch: str, pristine: bool):
                         f"✅ Found base `{repo.main_origin_branch}` at `{repo.base_revision}`"
                     )
                 )
-        else:
-            console.log(
-                Markdown(
-                    "❌ PR number not specified. Cannot initialize repository for build."
-                )
-            )
-            sys.exit(1)
