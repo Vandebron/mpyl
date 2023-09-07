@@ -128,9 +128,6 @@ def status(obj: RepoContext):
 @click.pass_obj
 def init(obj: RepoContext, url, pull, branch):
     config = parse_config(obj.config)
-    run_properties = RunProperties.from_configuration(
-        parse_config(obj.run_properties), config
-    )
     console = obj.console
 
     console.log("Preparing repository for a new run...")
@@ -145,7 +142,9 @@ def init(obj: RepoContext, url, pull, branch):
 
         console.log(f"✅ Repository tracking {repo.remote_url}")
 
-        properties = run_properties
+        properties = RunProperties.from_configuration(
+            parse_config(obj.run_properties), config
+        )
         pr_number = pull or properties.versioning.pr_number
         target_branch = (
             f"PR-{pr_number}" if pr_number else branch or properties.versioning.branch
