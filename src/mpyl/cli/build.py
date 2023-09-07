@@ -430,6 +430,9 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
     if version:
         os.environ["MPYL_RELEASE"] = version
     upgrade_check = None
+
+    pr_from_config: Optional[str] = versioning_config.get("pr_number")
+
     try:
         upgrade_check = asyncio.wait_for(warn_if_update(ctx.obj.console), timeout=5)
         if "jenkins" not in ctx.obj.config:
