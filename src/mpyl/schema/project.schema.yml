@@ -250,6 +250,14 @@ properties:
         required:
           - repo
         properties:
+          secrets:
+            description: >-
+              List of k8s secrets that will be injected into the Dagster
+              configuration file as envSecrets.
+            type: array
+            additionalItems: false
+            items:
+              $ref: '#/definitions/envSecret'
           repo:
             description: Absolute path to Dagster repository py-file
             type: string
@@ -491,6 +499,14 @@ definitions:
         type: string
       all:
         type: string
+  envSecret:
+    type: object
+    additionalProperties: false
+    required:
+      - name
+    properties:
+      name:
+        type: string
   label:
     type: object
     additionalProperties: false
@@ -706,13 +722,10 @@ definitions:
     additionalProperties: false
     properties:
       secrets:
-        type: object
+        type: array
         additionalItems: false
-        required:
-          - name
-        properties:
-          name:
-            type: string
+        items:
+          $ref: '#/definitions/envSecret'
       policies:
         type: array
         minItems: 1

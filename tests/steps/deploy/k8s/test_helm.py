@@ -24,4 +24,5 @@ class TestHelm:
                 to_service_chart(builder),
                 Path(tempdir),
                 to_chart_metadata("chart_name", test_data.RUN_PROPERTIES),
+                {},
             )

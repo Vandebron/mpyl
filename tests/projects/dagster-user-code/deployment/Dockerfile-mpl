@@ -1,0 +1,22 @@
+FROM python:3.10.10-slim-buster AS builder
+
+ENV PYTHONUNBUFFERED 1
+ENV ACCEPT_EULA=Y
+
+USER root
+
+ENV DAGSTER_VERSION="1.3.13"
+RUN pip install \
+    dagster==${DAGSTER_VERSION} \
+    # clean-up
+    &&  rm -rf /var \
+    &&  rm -rf /root/.cache  \
+    &&  rm -rf /usr/lib/python2.7 \
+    &&  rm -rf /usr/lib/x86_64-linux-gnu/guile
+
+COPY /tests/projects/dagster-user-code /tests/projects/dagster-user-code
+
+ARG MAINTAINER
+ENV MAINTAINER=${MAINTAINER}
+ARG TAG_NAME
+ENV TAG_NAME=${TAG_NAME}

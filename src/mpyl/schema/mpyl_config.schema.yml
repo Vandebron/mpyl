@@ -9,6 +9,8 @@ definitions:
         "$ref": "#/definitions/CVS"
       docker:
         "$ref": "#/definitions/Docker"
+      dagster:
+        "$ref": "#/definitions/Dagster"
       whiteLists:
         "$ref": "#/definitions/Whitelists"
       cypress:
@@ -366,3 +368,23 @@ definitions:
     dependencies:
       accessKeyId: [ secretAccessKey ]
       secretAccessKey: [ accessKeyId ]
+  Dagster:
+    title: Dagster
+    type: object
+    additionalProperties: false
+    properties:
+      baseNamespace:
+        description: "Namespace that contains dagster instances"
+        type: string
+      workspaceConfigMap:
+        description: "Configmap that contains the dagster workspace configuration"
+        type: string
+      workspaceFileKey:
+        description: "Key of the workspaceConfigMap entry that contains the list of servers that are hosted on the dagster instance"
+        type: string
+      daemon:
+        description: "Name of the kubernetes instance that runs the dagster daemon"
+        type: string
+      webserver:
+        description: "Name of the kubernetes instance that runs the dagster web UI, default"
+        type: string

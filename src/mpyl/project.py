@@ -20,7 +20,7 @@ import traceback
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Optional, TypeVar, Any, TextIO
+from typing import Optional, TypeVar, Any, TextIO, List
 
 import jsonschema
 from mypy.checker import Generic
@@ -334,6 +334,28 @@ class TraefikHost:
         )
 
 
+@dataclass
+class DagsterSecret:
+    name: str
+
+    @staticmethod
+    def from_config(values: dict):
+        return DagsterSecret(name=values.get("name", ""))
+
+
+@dataclass(frozen=True)
+class Dagster:
+    repo: str
+    secrets: List[DagsterSecret]
+
+    @staticmethod
+    def from_config(values: dict):
+        return Dagster(
+            repo=values.get("repo", ""),
+            secrets=[DagsterSecret.from_config(v) for v in values.get("secrets", [])],
+        )
+
+
 @dataclass(frozen=True)
 class Traefik:
     hosts: list[TraefikHost]
@@ -364,6 +386,7 @@ class Deployment:
     namespace: Optional[str]
     properties: Properties
     kubernetes: Optional[Kubernetes]
+    dagster: Optional[Dagster]
     traefik: Optional[Traefik]
     s3_bucket: Optional[S3Bucket]
 
@@ -371,6 +394,7 @@ class Deployment:
     def from_config(values: dict):
         props = values.get("properties")
         kubernetes = values.get("kubernetes")
+        dagster = values.get("dagster")
         traefik = values.get("traefik")
         s3_bucket = values.get("s3")
 
@@ -378,6 +402,7 @@ class Deployment:
             namespace=values.get("namespace"),
             properties=Properties.from_config(props) if props else None,
             kubernetes=Kubernetes.from_config(kubernetes) if kubernetes else None,
+            dagster=Dagster.from_config(dagster) if dagster else None,
             traefik=Traefik.from_config(traefik) if traefik else None,
             s3_bucket=S3Bucket.from_config(s3_bucket) if s3_bucket else None,
         )
@@ -430,6 +455,12 @@ class Project:
         if self.deployment is None or self.deployment.s3_bucket is None:
             raise KeyError(f"Project '{self.name}' does not have s3 configuration")
         return self.deployment.s3_bucket
+
+    @property
+    def dagster(self) -> Dagster:
+        if self.deployment is None or self.deployment.dagster is None:
+            raise KeyError(f"Project '{self.name}' does not have dagster configuration")
+        return self.deployment.dagster
 
     @property
     def resources(self) -> Resources:
