@@ -51,6 +51,7 @@ whiteLists:
 cypress:
   cypressSourceCodePath: 'test_resources/cypress'
 kubernetes:
+  deployAction: KubectlManifest
   rancher:
     cluster:
       test:

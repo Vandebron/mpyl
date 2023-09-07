@@ -139,9 +139,9 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
     run_properties = step_input.run_properties
     project = step_input.project
     deploy_config = DeployConfig.from_config(run_properties.config)
-    action = deploy_config.action
+    action = deploy_config.action.value
 
-    if action == DeployAction.KUBERNETES_MANIFEST:
+    if action == DeployAction.KUBERNETES_MANIFEST.value:
         output_path = Path(project.root_path, deploy_config.output_path)
         return _render_kubernetes_manifest(chart, output_path, release_name, step_input)
 
@@ -149,12 +149,12 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
         logger, chart, Path(project.target_path), run_properties, release_name
     )
 
-    if action == DeployAction.HELM_TEMPLATE:
+    if action == DeployAction.HELM_TEMPLATE.value:
         return _render_helm_chart(chart_path, logger, release_name, step_input)
 
     namespace = get_namespace(run_properties, project)
     rancher_config: ClusterConfig = cluster_config(target, run_properties)
-    dry_run = step_input.dry_run or action == DeployAction.HELM_DRY_RUN
+    dry_run = step_input.dry_run or action == DeployAction.HELM_DRY_RUN.value
     upsert_namespace(
         logger,
         namespace,
