@@ -94,18 +94,13 @@ class Repository:  # pylint: disable=too-many-public-methods
             return None
         return self._repo.active_branch.name
 
-    def _safe_ref_parse(self, branch: str) -> Optional[Commit]:
+    @property
+    def base_revision(self) -> Optional[Commit]:
         try:
-            return self._repo.rev_parse(branch)
+            return self._repo.rev_parse(self.main_origin_branch)
         except BadName as exc:
             logging.debug(f"Does not exist: {exc}")
             return None
-
-    @property
-    def base_revision(self) -> Optional[Commit]:
-        main = self.main_origin_branch
-        local_main = main.replace("origin/", "")
-        return self._safe_ref_parse(local_main) or self._safe_ref_parse(main)
 
     @property
     def get_tag(self) -> Optional[str]:
