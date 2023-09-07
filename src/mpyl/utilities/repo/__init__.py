@@ -103,13 +103,13 @@ class Repository:  # pylint: disable=too-many-public-methods
             return None
 
     @property
+    def root_commit_hex(self) -> str:
+        return self._repo.git.rev_list("--max-parents=0", "HEAD").splitlines()[-1]
+
+    @property
     def base_revision(self) -> Optional[Commit]:
         main = self.main_origin_branch
         return self._safe_ref_parse(main)
-
-    @property
-    def root_commit_hex(self) -> str:
-        return self._repo.git.rev_list("--max-parents=0", "HEAD").splitlines()[-1]
 
     @property
     def get_tag(self) -> Optional[str]:
