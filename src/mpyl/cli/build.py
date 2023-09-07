@@ -428,7 +428,9 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
     version,
 ):
     upgrade_check = None
+
     version = version
+
     try:
         upgrade_check = asyncio.wait_for(warn_if_update(ctx.obj.console), timeout=5)
         if "jenkins" not in ctx.obj.config:
@@ -465,7 +467,6 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
         )
 
         print("PIPELINE", pipeline_parameters)
-        print(os.environ["MPYL_RELEASE"])
         run_jenkins(run_argument)
     except asyncio.exceptions.TimeoutError:
         pass
