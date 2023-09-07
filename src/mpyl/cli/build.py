@@ -14,13 +14,15 @@ from github.GitRelease import GitRelease
 from questionary import Choice
 from rich.console import Console
 from rich.markdown import Markdown
+from importlib.metadata import version as version_meta
+import requests
+from distutils.version import LooseVersion
 
 from . import (
     CliContext,
     CONFIG_PATH_HELP,
     check_updates,
     get_meta_version,
-    get_version,
     parse_config_from_supplied_location,
 )
 from . import create_console_logger
@@ -44,6 +46,7 @@ from ..steps.run import RunResult
 from ..utilities.github import GithubConfig
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
+from ..cli import get_releases, get_latest_release
 
 
 async def warn_if_update(console: Console):
@@ -123,7 +126,7 @@ def build(ctx, config, properties, verbose):
 )
 @click.option("--tag", "-t", help="Tag to build", type=click.STRING, required=False)
 @click.pass_obj
-def run(obj: CliContext, ci, all_, dryrun_, tag):  # pylint: disable=invalid-name
+def run(obj: CliContext, ci, all_, dryrun_, tag, version):  # pylint: disable=invalid-name
     asyncio.run(warn_if_update(obj.console))
 
     parameters = MpylCliParameters(
@@ -133,6 +136,7 @@ def run(obj: CliContext, ci, all_, dryrun_, tag):  # pylint: disable=invalid-nam
         dryrun=dryrun_,
         verbose=obj.verbose,
         tag=tag,
+        version=version,
     )
     obj.console.log(parameters)
 
@@ -279,11 +283,45 @@ def ask_for_tag(ctx, _param, value) -> Optional[str]:
     return value
 
 
+def get_test_releases():
+    url = f"https://test.pypi.org/pypi/mpyl/json"
+    data = requests.get(url).json()
+    versions = list(data["releases"].keys())
+    versions.sort(key=LooseVersion, reverse=True)
+    return versions
+
+
+def select_version(ctx) -> str:
+    console = Console()
+    console.status("Fetching MPyL releases..")
+    try:
+        test_official = questionary.select(
+            "Do you want to install a test version or an official release?",
+            show_selected=True,
+            choices=["Official", "Test"],
+        ).ask()
+        if test_official == "Official":
+            get_choices = get_releases()
+        else:
+            get_choices = get_test_releases()
+
+        return questionary.select(
+            "Which version do you want to install?",
+            show_selected=True,
+            choices=get_choices,
+        ).ask()
+    except:
+        return f"MPyL releases not found! Using latest version: {get_latest_release()}"
+
+
 def ask_for_version(ctx, _param, value) -> Optional[str]:
+    if value != "prompt" and value not in get_test_releases() + get_releases():
+        print("MPyL version doesn't exist. Select another version:")
+        return select_version(ctx)
     if value == "not_set":
         return None
     if value == "prompt":
-        return get_version()
+        return select_version(ctx)
     return value
 
 
@@ -400,6 +438,9 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
 
         selected_pipeline = pipeline if pipeline else jenkins_config["defaultPipeline"]
         pipeline_parameters = {"TEST": "true", "VERSION": test} if test else {}
+        if version:
+            pipeline_parameters["CHANGE_ID"] = version
+
         pipeline_parameters["BUILD_PARAMS"] = ""
         if dryrun_:
             pipeline_parameters["BUILD_PARAMS"] += " --dryrun"
@@ -421,6 +462,8 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
             all=all_,
             version=version,
         )
+
+        print("PIPELINE", pipeline_parameters)
 
         run_jenkins(run_argument)
     except asyncio.exceptions.TimeoutError:
