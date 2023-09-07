@@ -39,10 +39,8 @@ pipeline {
                     writeFile(file: 'mpyl_config.yml', text: content)
                     withKubeConfig([credentialsId: 'jenkins-rancher-service-account-kubeconfig-test']) {
                         wrap([$class: 'BuildUser']) {
-                            echo 'mpyl==${params.MPYL_VERSION}'
-                            echo '${params.BUILD_PARAMS}'
 //                             sh "pipenv clean"
-//                             sh "pipenv install --ignore-pipfile --skip-lock --site-packages --index https://test.pypi.org/simple/ 'mpyl==$CHANGE_ID.*'"
+                             sh "pipenv install --ignore-pipfile --skip-lock --site-packages --index https://test.pypi.org/simple/ 'mpyl=={params.MPYL_VERSION}'"
 //                             sh "pipenv install -d --skip-lock"
 //                             sh "pipenv run mpyl projects lint --all"
 //                             sh "pipenv run mpyl health"
