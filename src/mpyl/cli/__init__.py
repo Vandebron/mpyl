@@ -40,7 +40,6 @@ class MpylCliParameters:
     verbose: bool = False
     all: bool = False
     dryrun: bool = False
-    version: Optional[str] = None
 
 
 async def fetch_latest_version() -> Optional[str]:

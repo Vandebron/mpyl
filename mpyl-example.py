@@ -74,7 +74,6 @@ def main(log: Logger, args: argparse.Namespace):
         verbose=args.verbose,
         all=args.all,
         dryrun=args.dryrun,
-        version=args.version,
     )
 
     print("CLI", cli_parameters)
