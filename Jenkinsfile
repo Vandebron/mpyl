@@ -10,7 +10,7 @@ pipeline {
                 script {
                     properties([parameters([
                         string(name: 'BUILD_PARAMS', defaultValue: '--all', description: 'Build parameters passed along with the run. Example: --help or --all'),
-                        string(name: 'MPYL_CONFIG_BRANCH', defaultValue: 'mafin', description: 'Branch to use for mpyl_config repository'),
+                        string(name: 'MPYL_CONFIG_BRANCH', defaultValue: 'main', description: 'Branch to use for mpyl_config repository'),
                         string(name: 'MPYL_VERSION', defaultValue: 'test')
                     ])])
                     currentBuild.result = 'NOT_BUILT'
