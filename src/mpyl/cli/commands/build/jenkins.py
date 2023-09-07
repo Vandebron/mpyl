@@ -125,7 +125,7 @@ def run_jenkins(run_config: JenkinsRunParameters):
                     verbose=run_config.verbose,
                 )
 
-                print("VERSION:", os.environ["MPYL_VERSION"])
+                print("VERSION:", os.environ["MPYL_RELEASE"])
 
                 runner.run(run_config.pipeline_parameters)
             except requests.ConnectionError:
