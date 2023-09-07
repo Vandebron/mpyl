@@ -67,11 +67,11 @@ class DeployKubernetes(Step):
             if hostname:
                 has_specific_routes_configured: bool = bool(
                     builder.deployment.traefik is not None
+                    and properties.target == Target.PRODUCTION
                 )
                 self._logger.info(
                     f"Service {step_input.project.name} reachable at: {hostname}"
                 )
-
                 endpoint = (
                     "/" if has_specific_routes_configured else "/swagger/index.html"
                 )
