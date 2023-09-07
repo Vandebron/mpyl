@@ -77,7 +77,7 @@ def main(log: Logger, args: argparse.Namespace):
         version=args.version,
     )
 
-    print(cli_parameters)
+    print("CLI", cli_parameters)
 
     run_result = run_mpyl(
         run_properties=run_properties,

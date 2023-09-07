@@ -1,5 +1,6 @@
 """Commands related to build"""
 import asyncio
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -425,6 +426,8 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
     dryrun_,
     version,
 ):
+    if version:
+        os.environ["CHANGE_ID"] = version
     upgrade_check = None
     try:
         upgrade_check = asyncio.wait_for(warn_if_update(ctx.obj.console), timeout=5)
