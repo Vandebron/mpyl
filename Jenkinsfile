@@ -40,7 +40,7 @@ pipeline {
                     withKubeConfig([credentialsId: 'jenkins-rancher-service-account-kubeconfig-test']) {
                         wrap([$class: 'BuildUser']) {
 //                             sh "pipenv clean"
-                             sh "pipenv install --ignore-pipfile --skip-lock --site-packages --index https://test.pypi.org/simple/ 'mpyl=={params.MPYL_VERSION}'"
+                             sh "pipenv install --ignore-pipfile --skip-lock --site-packages --index https://test.pypi.org/simple/ 'mpyl==${params.MPYL_VERSION}'"
 //                             sh "pipenv install -d --skip-lock"
 //                             sh "pipenv run mpyl projects lint --all"
 //                             sh "pipenv run mpyl health"
