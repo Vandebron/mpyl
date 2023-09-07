@@ -91,7 +91,7 @@ def run_jenkins(run_config: JenkinsRunParameters):
 
         with Repository(RepoConfig.from_config(config)) as git_repo:
             try:
-                print(run_config.version)
+                print("VERSION", run_config.version)
                 pipeline_info = (
                     Pipeline(
                         target=Target.ACCEPTANCE,
