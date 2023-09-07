@@ -32,7 +32,6 @@ pipeline {
                 MPYL_JIRA_TOKEN = credentials('MPYL_JIRA_TOKEN')
                 AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
                 AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
-                MPYL_VERSION = ${params.MPYL_VERSION}
             }
             steps {
                 script {
@@ -40,7 +39,7 @@ pipeline {
                     writeFile(file: 'mpyl_config.yml', text: content)
                     withKubeConfig([credentialsId: 'jenkins-rancher-service-account-kubeconfig-test']) {
                         wrap([$class: 'BuildUser']) {
-                             echo "params is ${MPYL_VERSION}"
+                             echo "params is ${params.BUILD_PARAMS}"
 //                             sh "pipenv clean"
 //                             sh "pipenv install --ignore-pipfile --skip-lock --site-packages --index https://test.pypi.org/simple/ 'mpyl==${params.MPYL_VERSION}'"
 //                             sh "pipenv install -d --skip-lock"
