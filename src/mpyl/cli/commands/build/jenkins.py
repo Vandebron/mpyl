@@ -1,4 +1,5 @@
 """Jenkins multibranch pipeline build tool"""
+import os
 import subprocess
 from dataclasses import dataclass
 from typing import Optional
@@ -123,6 +124,9 @@ def run_jenkins(run_config: JenkinsRunParameters):
                     follow=run_config.follow,
                     verbose=run_config.verbose,
                 )
+
+                print("VERSION:", os.environ["CHANGE_ID"])
+
                 runner.run(run_config.pipeline_parameters)
             except requests.ConnectionError:
                 play_sound(Sound.FAILURE)
