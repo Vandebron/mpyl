@@ -154,17 +154,16 @@ def status(obj: CliContext):
 
 def __print_status(obj: CliContext):
     run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
-    ci_branch = run_properties.versioning.branch
-
     branch = obj.repo.get_branch
     main_branch = obj.repo.main_branch
     tag = obj.repo.get_tag if not branch else None
+    console = obj.console
 
     if not tag:
-        if ci_branch and not obj.repo.get_branch:
-            obj.console.print("Current branch is detached.")
+        if run_properties.versioning.branch and not obj.repo.get_branch:
+            console.print("Current branch is detached.")
         else:
-            obj.console.log(
+            console.log(
                 Markdown(
                     f"Branch not specified at `build.versioning.branch` in _{DEFAULT_RUN_PROPERTIES_FILE_NAME}_, "
                     f"falling back to git: _{obj.repo.get_branch}_"
@@ -172,13 +171,13 @@ def __print_status(obj: CliContext):
             )
 
         if branch == main_branch:
-            obj.console.log(f"On main branch ({branch}), cannot determine build status")
+            console.log(f"On main branch ({branch}), cannot determine build status")
             return
 
     version = run_properties.versioning
     revision = version.revision or obj.repo.get_sha
     base_revision = obj.repo.base_revision
-    obj.console.print(
+    console.print(
         Markdown(
             f"**{'Tag' if tag else 'Branch'}:** `{branch or version.tag}` at `{revision}`. "
             f"Base `{main_branch}` {f'at `{base_revision}`' if base_revision else 'not present (grafted).'}"
@@ -187,7 +186,7 @@ def __print_status(obj: CliContext):
 
     if not base_revision and not tag:
         fetch = f"`git fetch origin {main_branch}:refs/remotes/origin/{main_branch}`"
-        obj.console.print(
+        console.print(
             Markdown(
                 f"Cannot determine what to build, since this branch has no base. "
                 f"Did you {fetch}?"
@@ -202,11 +201,11 @@ def __print_status(obj: CliContext):
         cli_parameters=MpylCliParameters(),
     )
     if result.run_plan:
-        obj.console.print(
+        console.print(
             Markdown("**Execution plan:**  \n" + execution_plan_as_markdown(result))
         )
     else:
-        obj.console.print("No changes detected, nothing to do.")
+        console.print("No changes detected, nothing to do.")
 
 
 class Pipeline(ParamType):
