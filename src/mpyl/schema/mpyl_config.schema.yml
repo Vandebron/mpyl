@@ -134,6 +134,7 @@ definitions:
         type: string
     required: [ clusterId, projectId, clusterEnv, context ]
   VCS:
+    description: "Version Control System"
     type: object
     additionalProperties: false
     properties:
@@ -142,6 +143,7 @@ definitions:
       github:
         "$ref": "#/definitions/Github"
       artifactRepository:
+        description: "The repository where the build artifacts are persisted"
         "$ref": "#/definitions/Git"
     required:
       - git
