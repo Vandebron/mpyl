@@ -169,3 +169,43 @@ jobs:
 
       - name: Report deployed pacakge
         run: echo '### New release! 🚀`${{ steps.findPr.outputs.pr }}.${{ github.run_number }}` deployed at [Test Pypi](https://test.pypi.org/project/mpyl/)' >> $GITHUB_STEP_SUMMARY
+
+  Integration_Test:
+    runs-on: ubuntu-latest
+    needs: [ Build_Package ]
+    steps:
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Find PR number
+        uses: jwalton/gh-find-current-pr@v1
+        id: findPr
+        if: github.ref_name != 'main'
+        with:
+          state: open
+
+      - name: Install MPyL 1
+        continue-on-error: true
+        run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ steps.findPr.outputs.pr }}.${{ github.run_number }}
+
+      - name: Install MPyL 2
+        run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ steps.findPr.outputs.pr }}.${{ github.run_number }}
+
+      - name: Show files
+        run: ls -latr
+
+      - name: Show path
+        run: pwd
+
+      - name: Clean workspace
+        run: rm -rf *
+
+      - name: Initialize repo
+        run: mpyl repo -c mpyl_config.example.yml init -b ${{ github.ref }} -u https://${{ env.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git -p
+
+      - name: Repo status
+        run: mpyl repo status
+
+      - name: Build status
+        run: mpyl build status

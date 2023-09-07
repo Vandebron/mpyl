@@ -144,10 +144,10 @@ def init(obj: RepoContext, url: str, pull: int, branch: str, pristine: bool):
 
     console.log("Preparing repository for a new run...")
 
-    with Repository(
-        config=RepoConfig.from_config(parse_config(obj.config))
-    ) if pristine else Repository.clone_from_branch(
+    with Repository.clone_from_branch(
         branch.replace("refs/heads/", ""), url, "main", obj.config, Path(".")
+    ) if pristine else Repository(
+        config=RepoConfig.from_config(parse_config(obj.config))
     ) as repo:
         config = parse_config(obj.config)
         if not repo.remote_url:
