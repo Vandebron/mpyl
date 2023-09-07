@@ -50,13 +50,14 @@ IDE [here](https://black.readthedocs.io/en/stable/integrations/editors.html).
 
 ## ..create a new release
 
-§§1. Check the latest [release number](https://github.com/Vandebron/mpyl/releases) 
-2. Add the new release number to [mpyl/cli/releases/releases.txt](src/mpyl/cli/releases/releases.txt)
-3. Create a new release notes file in [releases/notes/](releases/notes/) and name it `<version>.md`
-Noteworthy changes should be added to this file. Think: new cli commands, new features, breaking changes, upgrade 
+1. Check the latest [release number](https://github.com/Vandebron/mpyl/releases)
+2. Decide on the new release number. We use [semantic versioning](https://semver.org/).
+3. Add the new release number to [mpyl/cli/releases/releases.txt](src/mpyl/cli/releases/releases.txt)
+Create a new release notes file in [releases/notes/](releases/notes/) and name it `<version>.md`
+4. Noteworthy changes should be added to this file. Think: new cli commands, new features, breaking changes, upgrade 
 instructions, etc.
-4. For each PR that you want to include in the release, repeat step 3 and merge to `main`.
-5. Using the [Github cli](https://cli.github.com/), run: 
+5. For each PR that you want to include in the release, repeat step 3 and merge to `main`.
+6. Using the [Github cli](https://cli.github.com/), run: 
    ```shell
    gh release create <version> --generate-notes
    ```

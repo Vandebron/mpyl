@@ -318,7 +318,7 @@ class Kubernetes:
 
 
 @dataclass(frozen=True)
-class Host:
+class TraefikHost:
     host: TargetProperty[str]
     service_port: Optional[int]
     tls: TargetProperty[str]
@@ -326,7 +326,7 @@ class Host:
 
     @staticmethod
     def from_config(values: dict):
-        return Host(
+        return TraefikHost(
             host=TargetProperty.from_config(values.get("host", {})),
             service_port=values.get("servicePort"),
             tls=TargetProperty.from_config(values.get("tls", {})),
@@ -358,12 +358,14 @@ class Dagster:
 
 @dataclass(frozen=True)
 class Traefik:
-    hosts: list[Host]
+    hosts: list[TraefikHost]
 
     @staticmethod
     def from_config(values: dict):
         hosts = values.get("hosts")
-        return Traefik(hosts=(list(map(Host.from_config, hosts) if hosts else [])))
+        return Traefik(
+            hosts=(list(map(TraefikHost.from_config, hosts) if hosts else []))
+        )
 
 
 @dataclass(frozen=True)

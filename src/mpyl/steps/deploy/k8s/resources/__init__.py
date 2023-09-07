@@ -114,7 +114,7 @@ def to_dict(obj):
         elif hasattr(value, "to_dict"):
             result[key] = to_dict(value)
         elif isinstance(value, dict):
-            result[key] = dict(
+            result[key] = dict(  # type: ignore
                 map(
                     lambda item: (item[0], to_dict(item[1]))
                     if hasattr(item[1], "to_dict")

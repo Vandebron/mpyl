@@ -67,7 +67,7 @@ def _check_and_load_projects(
         console.print(
             f"Validated {len(projects)} projects. {len(valid_projects)} valid, {num_invalid} invalid"
         )
-    if num_invalid > 0:
+    if num_invalid > 0 and strict:
         click.get_current_context().exit(1)
     return valid_projects
 

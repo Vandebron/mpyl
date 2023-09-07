@@ -7,12 +7,12 @@ from typing import Optional
 from kubernetes.client import V1ObjectMeta
 
 from . import CustomResourceDefinition
-from .....project import Host, Target
+from .....project import TraefikHost, Target
 
 
 @dataclass(frozen=True)
 class HostWrapper:
-    host: Host
+    traefik_host: TraefikHost
     name: str
     index: int
     service_port: int
@@ -29,10 +29,12 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
         metadata: V1ObjectMeta,
         hosts: list[HostWrapper],
         target: Target,
+        namespace: str,
         pr_number: Optional[int],
     ):
         def _interpolate_names(host: str, name: str) -> str:
             host = host.replace("{SERVICE-NAME}", name)
+            host = host.replace("{namespace}", namespace)
             if pr_number:
                 return host.replace("{PR-NUMBER}", str(pr_number))
             return host
@@ -41,7 +43,8 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
             {
                 "kind": "Rule",
                 "match": _interpolate_names(
-                    host.host.host.get_value(target), host.name
+                    host=host.traefik_host.host.get_value(target),
+                    name=host.name,
                 ),
                 "services": [
                     {"name": host.name, "kind": "Service", "port": host.service_port}

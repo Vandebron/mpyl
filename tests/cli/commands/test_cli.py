@@ -35,14 +35,14 @@ class TestCli:
     def test_projects_lint_output(self):
         result = self.runner.invoke(
             main_group,
-            ["projects", "-c", self.config_path, "lint"],
+            ["projects", "-c", str(self.config_path), "lint"],
         )
         assert result  # Hard to assert details since it depends on the changes in the current branch
 
     def test_projects_lint_all_output(self):
         result = self.runner.invoke(
             main_group,
-            ["projects", "-c", self.config_path, "lint", "--all"],
+            ["projects", "-c", str(self.config_path), "lint", "--all"],
         )
         assert re.match(
             r"(.|\n)*Validated .* projects\. .* valid, .* invalid\n.*No duplicate project names found",
@@ -52,21 +52,21 @@ class TestCli:
     def test_show_project_not_found_output(self):
         result = self.runner.invoke(
             main_group,
-            ["projects", "-c", self.config_path, "show", "job"],
+            ["projects", "-c", str(self.config_path), "show", "job"],
         )
         assert re.match(r"Project .* not found", result.output)
 
     def test_show_project_output(self):
         result = self.runner.invoke(
             main_group,
-            ["projects", "-c", self.config_path, "show", "tests/projects/job"],
+            ["projects", "-c", str(self.config_path), "show", "tests/projects/job"],
         )
         assert_roundtrip(self.resource_path / "show_project_text.txt", result.output)
 
     def test_list_projects_output(self):
         result = self.runner.invoke(
             main_group,
-            ["projects", "-c", self.config_path, "list"],
+            ["projects", "-c", str(self.config_path), "list"],
         )
         assert_roundtrip(self.resource_path / "list_projects_text.txt", result.output)
 

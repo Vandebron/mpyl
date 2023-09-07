@@ -1,5 +1,6 @@
 """Commands related to build"""
 import asyncio
+import logging
 import shutil
 import sys
 from pathlib import Path
@@ -27,7 +28,7 @@ from .commands.build.jenkins import JenkinsRunParameters, run_jenkins, get_token
 from ..build import (
     run_mpyl,
     MpylCliParameters,
-    find_build_set,
+    get_build_plan,
 )
 from ..constants import (
     DEFAULT_CONFIG_FILE_NAME,
@@ -39,7 +40,6 @@ from ..reporting.formatting.markdown import (
     execution_plan_as_markdown,
 )
 from ..steps.models import RunProperties
-from ..steps.run import RunResult
 from ..utilities.github import GithubConfig
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
@@ -156,24 +156,25 @@ def __print_status(obj: CliContext):
     run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
     ci_branch = run_properties.versioning.branch
 
-    if ci_branch and not obj.repo.get_branch:
-        obj.console.print("Current branch is detached.")
-    else:
-        obj.console.log(
-            Markdown(
-                f"Branch not specified at `build.versioning.branch` in _{DEFAULT_RUN_PROPERTIES_FILE_NAME}_, "
-                f"falling back to git: _{obj.repo.get_branch}_"
-            )
-        )
-
     branch = obj.repo.get_branch
     main_branch = obj.repo.main_branch
-
-    if branch == main_branch:
-        obj.console.log(f"On main branch ({branch}), cannot determine build status")
-        return
-
     tag = obj.repo.get_tag if not branch else None
+
+    if not tag:
+        if ci_branch and not obj.repo.get_branch:
+            obj.console.print("Current branch is detached.")
+        else:
+            obj.console.log(
+                Markdown(
+                    f"Branch not specified at `build.versioning.branch` in _{DEFAULT_RUN_PROPERTIES_FILE_NAME}_, "
+                    f"falling back to git: _{obj.repo.get_branch}_"
+                )
+            )
+
+        if branch == main_branch:
+            obj.console.log(f"On main branch ({branch}), cannot determine build status")
+            return
+
     version = run_properties.versioning
     revision = version.revision or obj.repo.get_sha
     base_revision = obj.repo.base_revision
@@ -184,7 +185,7 @@ def __print_status(obj: CliContext):
         )
     )
 
-    if not base_revision:
+    if not base_revision and not tag:
         fetch = f"`git fetch origin {main_branch}:refs/remotes/origin/{main_branch}`"
         obj.console.print(
             Markdown(
@@ -194,15 +195,12 @@ def __print_status(obj: CliContext):
         )
         return
 
-    changes = (
-        obj.repo.changes_in_branch_including_local()
-        if ci_branch is None
-        else (
-            obj.repo.changes_in_merge_commit() if tag else obj.repo.changes_in_branch()
-        )
+    result = get_build_plan(
+        logger=logging.getLogger("mpyl"),
+        repo=obj.repo,
+        run_properties=run_properties,
+        cli_parameters=MpylCliParameters(),
     )
-    build_set = find_build_set(obj.repo, changes, False)
-    result = RunResult(run_properties=run_properties, run_plan=build_set)
     if result.run_plan:
         obj.console.print(
             Markdown("**Execution plan:**  \n" + execution_plan_as_markdown(result))
