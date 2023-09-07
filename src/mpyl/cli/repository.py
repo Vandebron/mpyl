@@ -122,13 +122,6 @@ def status(obj: RepoContext):
             )
 
 
-def _get_pristine_repo(obj: RepoContext, url: str, branch: str):
-    repo = Repository.clone_from_branch(
-        branch.replace("refs/heads/", ""), url, "main", obj.config, Path(".")
-    )
-    return repo
-
-
 def create_repo(config: dict) -> tuple[Repository, dict]:
     return Repository(config=RepoConfig.from_config(config)), config
 
