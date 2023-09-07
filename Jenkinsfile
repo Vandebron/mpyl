@@ -32,6 +32,7 @@ pipeline {
                 MPYL_JIRA_TOKEN = credentials('MPYL_JIRA_TOKEN')
                 AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
                 AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
+                MPYL_VERSION = 'test'
             }
             steps {
                 script {
@@ -41,7 +42,7 @@ pipeline {
                         wrap([$class: 'BuildUser']) {
                              echo "params is ${MPYL_VERSION}"
 //                             sh "pipenv clean"
-                             sh "pipenv install --ignore-pipfile --skip-lock --site-packages --index https://test.pypi.org/simple/ 'mpyl==${params.MPYL_VERSION}'"
+//                              sh "pipenv install --ignore-pipfile --skip-lock --site-packages --index https://test.pypi.org/simple/ 'mpyl==${params.MPYL_VERSION}'"
 //                             sh "pipenv install -d --skip-lock"
 //                             sh "pipenv run mpyl projects lint --all"
 //                             sh "pipenv run mpyl health"
