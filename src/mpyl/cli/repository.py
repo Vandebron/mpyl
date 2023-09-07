@@ -97,13 +97,15 @@ def status(obj: CliContext):
     if base_revision:
         console.log(
             Markdown(
-                f"Locally `{repo.main_origin_branch}` is at _{base_revision.hexsha}_ by _{base_revision.author}_ at "
+                f"Base revision is `{base_revision.name_rev}` by _{base_revision.author}_ at "
                 f"{base_revision.committed_datetime}"
             )
         )
         changes = obj.repo.changes_between(base_revision.hexsha, repo.get_sha)
         console.log(
-            f"{len(changes)} commits between `{repo.main_origin_branch}` and `{repo.get_branch}`"
+            Markdown(
+                f"{len(changes)} commits between `{repo.main_origin_branch}` and `{repo.get_branch}`"
+            )
         )
     else:
         console.log(
@@ -157,6 +159,8 @@ def init(obj: CliContext, url, pull, branch):
 
     if pr_number:
         console.log(Markdown(f"Initializing `{target_branch}`..."))
+        obj.repo.fetch_main_branch()
+
         if repo.get_branch != target_branch:
             with console.status(f"👷 Fetching PR #{pr_number}"):
                 if repo.does_local_branch_exist(target_branch):
@@ -172,16 +176,12 @@ def init(obj: CliContext, url, pull, branch):
                 console.log(Markdown(f"✅ Fetched PR #{pr_number} to `{target_branch}`"))
         else:
             console.log(Markdown(f"✅ HEAD is on `{target_branch}`"))
-        with console.status("Finding base"):
-            base_revision = repo.base_revision
-            if not base_revision:
-                obj.repo.fetch_main_branch()
 
-            console.log(
-                Markdown(
-                    f"✅ Found base `{repo.main_origin_branch}` at `{repo.base_revision}`"
-                )
+        console.log(
+            Markdown(
+                f"✅ Found base `{repo.main_origin_branch}` at `{repo.base_revision}`"
             )
+        )
     else:
         console.log(
             Markdown(
