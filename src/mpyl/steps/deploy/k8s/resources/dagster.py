@@ -3,9 +3,9 @@ This module contains the Dagster user-code-deployment values conversion
 """
 from dataclasses import dataclass
 
-from mpyl.project import Project, get_env_variables
-from mpyl.steps.models import RunProperties
-from mpyl.utilities.docker import DockerConfig
+from src.mpyl.project import Project, get_env_variables
+from src.mpyl.steps.models import RunProperties
+from src.mpyl.utilities.docker import DockerConfig
 
 
 @dataclass(frozen=True)

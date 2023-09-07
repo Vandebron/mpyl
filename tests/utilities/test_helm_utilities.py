@@ -1,4 +1,4 @@
-from mpyl.utilities.helm import convert_to_helm_release_name, shorten_name
+from src.mpyl.utilities.helm import convert_to_helm_release_name, shorten_name
 
 
 class TestHelm:
