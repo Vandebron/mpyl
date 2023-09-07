@@ -29,8 +29,8 @@ class RepoContext:
 @click.option(
     "--config",
     "-c",
-    required=True,
-    type=click.Path(exists=True),
+    required=False,
+    type=click.Path(exists=False),
     help=CONFIG_PATH_HELP,
     envvar="MPYL_CONFIG_PATH",
     default=DEFAULT_CONFIG_FILE_NAME,
@@ -121,18 +121,41 @@ def status(obj: RepoContext):
             )
 
 
+def _get_pristine_repo(obj: RepoContext, url: str, branch: str):
+    repo = Repository.clone_from_branch(
+        branch.replace("refs/heads/", ""), url, "main", obj.config, Path(".")
+    )
+    return repo
+
+
+def create_repo(config: dict) -> tuple[Repository, dict]:
+    return Repository(config=RepoConfig.from_config(config)), config
+
+
 @repository.command(help="Initialize the repository for a build run")
 @click.option("--url", "-u", type=click.STRING, help="URL to the remote repository")
 @click.option("--pull", "-pr", type=click.INT, help="PR number to fetch")
 @click.option("--branch", "-b", type=click.STRING, help="Branch to fetch")
+@click.option(
+    "--pristine",
+    "-p",
+    is_flag=True,
+    default=False,
+    help="When set, the local folder is assumed to be empty and a `git clone` "
+    "will be performed instead of pulling the latest changes from the remote.",
+)
 @click.pass_obj
-def init(obj: RepoContext, url, pull, branch):
-    config = parse_config(obj.config)
+def init(obj: RepoContext, url: str, pull: int, branch: str, pristine: bool):
     console = obj.console
 
     console.log("Preparing repository for a new run...")
 
-    with Repository(config=RepoConfig.from_config(config)) as repo:
+    with Repository(
+        config=RepoConfig.from_config(parse_config(obj.config))
+    ) if pristine else Repository.clone_from_branch(
+        branch.replace("refs/heads/", ""), url, "main", obj.config, Path(".")
+    ) as repo:
+        config = parse_config(obj.config)
         if not repo.remote_url:
             with console.status("👷 Initializing remote origin") as progress:
                 repo_config = RepoConfig.from_config(config).repo_credentials
