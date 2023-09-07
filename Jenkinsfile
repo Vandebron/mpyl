@@ -6,7 +6,6 @@ pipeline {
     stages {
         stage('Initialize Parameters') {
             when { expression { return params.BUILD_PARAMS == null || params.BUILD_PARAMS == ""  } }
-            when { expression { return params.MPYL_VERSION == null || params.BUILD_PARAMS == ""  } }
             steps {
                 script {
                     properties([parameters([
