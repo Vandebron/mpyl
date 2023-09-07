@@ -11,6 +11,7 @@ pipeline {
                     properties([parameters([
                         string(name: 'BUILD_PARAMS', defaultValue: '--all', description: 'Build parameters passed along with the run. Example: --help or --all'),
                         string(name: 'MPYL_CONFIG_BRANCH', defaultValue: 'main', description: 'Branch to use for mpyl_config repository')
+                        string(name: 'MPYL_VERSION', defaultValue: 'CHANGE_ID.*')
                     ])])
                     currentBuild.result = 'NOT_BUILT'
                     currentBuild.description = "Parameters can be set now"
@@ -38,15 +39,16 @@ pipeline {
                     writeFile(file: 'mpyl_config.yml', text: content)
                     withKubeConfig([credentialsId: 'jenkins-rancher-service-account-kubeconfig-test']) {
                         wrap([$class: 'BuildUser']) {
-                            sh "pipenv clean"
-                            sh "pipenv install --ignore-pipfile --skip-lock --site-packages --index https://test.pypi.org/simple/ 'mpyl==231.*'"
-                            sh "pipenv install -d --skip-lock"
-                            sh "pipenv run mpyl projects lint --all"
-                            sh "pipenv run mpyl health"
-                            sh "pipenv run mpyl repo status"
-                            sh "pipenv run mpyl repo init"
-                            sh "pipenv run mpyl build status"
-                            sh "pipenv run run-ci ${params.BUILD_PARAMS}"
+                            echo 'mpyl==MPYL_VERSION'
+//                             sh "pipenv clean"
+//                             sh "pipenv install --ignore-pipfile --skip-lock --site-packages --index https://test.pypi.org/simple/ 'mpyl==$CHANGE_ID.*'"
+//                             sh "pipenv install -d --skip-lock"
+//                             sh "pipenv run mpyl projects lint --all"
+//                             sh "pipenv run mpyl health"
+//                             sh "pipenv run mpyl repo status"
+//                             sh "pipenv run mpyl repo init"
+//                             sh "pipenv run mpyl build status"
+//                             sh "pipenv run run-ci ${params.BUILD_PARAMS}"
                         }
                     }
                 }
