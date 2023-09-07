@@ -34,7 +34,7 @@ class Pipeline:
     pipeline: str
     body: str
     jenkins_config: JenkinsConfig
-    version: [str]
+    version: str
 
     def _to_path(self):
         return f"PR-{self.tag}" if self.target == Target.PULL_REQUEST else self.tag

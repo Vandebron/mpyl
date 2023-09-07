@@ -64,6 +64,7 @@ class JenkinsRunner:
     status: Status
     follow: bool
     verbose: bool
+    version: str
 
     def get_job(self, name: str) -> Job:
         try:
