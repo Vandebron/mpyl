@@ -101,7 +101,6 @@ def run_jenkins(run_config: JenkinsRunParameters):
                         pipeline=run_config.pipeline,
                         body="",
                         jenkins_config=JenkinsConfig.from_config(config),
-                        version=run_config.version,
                     )
                     if run_config.tag
                     else __get_pr_pipeline(
