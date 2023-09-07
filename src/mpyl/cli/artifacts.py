@@ -55,7 +55,9 @@ def artifacts(ctx: click.Context, config: str, properties: str, verbose: bool):
 
 @artifacts.command(help="Pull build artifacts from remote artifact repository")
 @click.option("--tag", "-t", type=click.STRING, help="Tag to build", required=False)
-@click.option("--pr_number", type=click.INT, help="PR number to fetch", required=False)
+@click.option(
+    "--pr_number", "-pr", type=click.INT, help="PR number to fetch", required=False
+)
 @click.pass_obj
 def pull(obj: CliContext, tag: str, pr_number: int):
     run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
@@ -71,7 +73,9 @@ def pull(obj: CliContext, tag: str, pr_number: int):
 
 @artifacts.command(help="Push build artifacts to remote artifact repository")
 @click.option("--tag", "-t", type=click.STRING, help="Tag to build", required=False)
-@click.option("--pr_number", type=click.INT, help="PR number to fetch", required=False)
+@click.option(
+    "--pr_number", "-pr", type=click.INT, help="PR number to fetch", required=False
+)
 @click.pass_obj
 def push(obj: CliContext, tag: str, pr_number: int):
     run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
