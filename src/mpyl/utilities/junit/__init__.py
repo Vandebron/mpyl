@@ -14,6 +14,7 @@ TEST_RESULTS_URL_NAME_KEY = "test_results_url_name"
 
 @dataclass(frozen=True)
 class TestRunSummary:
+    __test__ = False
     tests: int
     failures: int
     errors: int
