@@ -113,7 +113,6 @@ jobs:
 
   Build_Package:
     runs-on: ubuntu-latest
-    needs: [Lint, TypeCheck, Test]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -172,7 +171,7 @@ jobs:
 
   Integration_Test:
     runs-on: ubuntu-latest
-    needs: [ Build_Package ]
+    needs: [ Lint, TypeCheck, Test, Build_Package ]
     steps:
       - uses: actions/setup-python@v4
         with:
