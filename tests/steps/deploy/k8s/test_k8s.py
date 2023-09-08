@@ -5,9 +5,8 @@ from kubernetes.client import V1Probe, V1ObjectMeta
 from pyaml_env import parse_config
 
 from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME
-from src.mpyl.steps.deploy.kubernetes import DeployKubernetes
 from src.mpyl.project import Target, Project
-from src.mpyl.steps.deploy.k8s import cluster_config
+from src.mpyl.steps.deploy.k8s import cluster_config, render_manifests
 from src.mpyl.steps.deploy.k8s.chart import (
     ChartBuilder,
     to_service_chart,
@@ -18,8 +17,9 @@ from src.mpyl.steps.deploy.k8s.chart import (
 )
 from src.mpyl.steps.deploy.k8s.resources import to_yaml, CustomResourceDefinition
 from src.mpyl.steps.deploy.k8s.resources.traefik import V1AlphaIngressRoute
+from src.mpyl.steps.deploy.kubernetes import DeployKubernetes
 from src.mpyl.steps.models import Input, Artifact, ArtifactType
-from src.mpyl.utilities.docker import DockerConfig
+from src.mpyl.utilities.docker import DockerConfig, DockerImageSpec
 from tests import root_test_path
 from tests.test_resources import test_data
 from tests.test_resources.test_data import (
@@ -34,7 +34,8 @@ from tests.test_resources.test_data import (
 
 class TestKubernetesChart:
     resource_path = root_test_path / "test_resources"
-    template_path = root_test_path / "steps" / "deploy" / "k8s" / "chart" / "templates"
+    k8s_resources_path = root_test_path / "steps" / "deploy" / "k8s"
+    template_path = k8s_resources_path / "chart" / "templates"
 
     config = parse_config(resource_path / DEFAULT_CONFIG_FILE_NAME)
     liveness_probe_defaults = config["project"]["deployment"]["kubernetes"][
@@ -58,7 +59,7 @@ class TestKubernetesChart:
             artifact_type=ArtifactType.DOCKER_IMAGE,
             revision="revision",
             producing_step="build_docker_Step",
-            spec={"image": "registry/image:123"},
+            spec=DockerImageSpec("registry/image:123"),
         )
         other_project = get_minimal_project()
         return ChartBuilder(
@@ -175,6 +176,14 @@ class TestKubernetesChart:
             "prometheus-rule",
             "service-monitor",
         }
+
+    def test_service_manifest_roundtrip(self):
+        builder = self._get_builder(get_project())
+        chart = to_service_chart(builder)
+        manifest = render_manifests(chart)
+        assert_roundtrip(
+            self.k8s_resources_path / "templates" / "manifest.yaml", manifest
+        )
 
     def test_default_ingress(self):
         project = get_minimal_project()

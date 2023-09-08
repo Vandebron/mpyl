@@ -1,11 +1,12 @@
 """
 Simple run result formatters
 """
+from typing import cast
 
 from ...project import Stage
-from ...steps.models import Artifact, ArtifactType
+from ...steps.models import ArtifactType
 from ...steps.run import RunResult
-from ...utilities.junit import to_test_suites, sum_suites
+from ...utilities.junit import to_test_suites, sum_suites, JunitTestSpec
 
 
 def to_string(run_result: RunResult) -> str:
@@ -18,12 +19,12 @@ def to_string(run_result: RunResult) -> str:
                 result += f"{res.timestamp} - {res.project.name} - {res.stage} - success: {res.output.success} \n"
                 artifact = res.output.produced_artifact
                 if artifact and artifact.artifact_type == ArtifactType.JUNIT_TESTS:
-                    result += to_test_report(artifact)
+                    result += to_test_report(cast(JunitTestSpec, artifact.spec))
 
     return result
 
 
-def to_test_report(artifact: Artifact) -> str:
+def to_test_report(artifact: JunitTestSpec) -> str:
     """Gather the first test suites and test cases. Output is truncated to around 200 lines to not overwhelm Github"""
     test_result = []
     suites = to_test_suites(artifact)

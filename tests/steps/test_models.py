@@ -2,7 +2,7 @@ import os
 
 import pytest
 from jsonschema import ValidationError
-from ruamel.yaml import YAML
+from ruamel.yaml import YAML  # type: ignore
 
 from src.mpyl.constants import (
     DEFAULT_CONFIG_FILE_NAME,

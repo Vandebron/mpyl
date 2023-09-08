@@ -76,14 +76,16 @@ def run_mpyl(
         color_system="256",
     )
     logging.raiseExceptions = False
+    log_level = "DEBUG" if cli_parameters.verbose else console_properties.log_level
     logging.basicConfig(
-        level="DEBUG" if cli_parameters.verbose else console_properties.log_level,
+        level=log_level,
         format=FORMAT,
         datefmt="[%X]",
         handlers=[
             RichHandler(markup=False, console=console, show_path=cli_parameters.local)
         ],
     )
+    print(f"Log level is set to {log_level}")
     logger = logging.getLogger("mpyl")
     try:
         with Repository(RepoConfig.from_config(run_properties.config)) as repo:

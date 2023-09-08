@@ -3,15 +3,18 @@ import re
 from logging import Logger
 from typing import Optional
 
-from .k8s import deploy_helm_chart, CustomResourceDefinition
+from .k8s import deploy_helm_chart, CustomResourceDefinition, DeployedHelmAppSpec
 from .k8s.chart import ChartBuilder, to_service_chart
 from .. import Step, Meta
-from ..models import Input, Output, ArtifactType, input_to_artifact
+from ..models import (
+    Input,
+    Output,
+    ArtifactType,
+    input_to_artifact,
+)
 from ...project import Stage, Target
 from ...stages.discovery import find_deploy_set
 from ...utilities.repo import RepoConfig
-
-DEPLOYED_SERVICE_KEY = "url"
 
 
 class DeployKubernetes(Step):
@@ -60,7 +63,7 @@ class DeployKubernetes(Step):
         )
         if deploy_result.success:
             hostname = self.try_extract_hostname(chart)
-            spec = {}
+            url = None
             if hostname:
                 has_specific_routes_configured: bool = bool(
                     builder.deployment.traefik is not None
@@ -72,9 +75,11 @@ class DeployKubernetes(Step):
                 endpoint = (
                     "/" if has_specific_routes_configured else "/swagger/index.html"
                 )
-                spec[DEPLOYED_SERVICE_KEY] = f"{hostname}{endpoint}"
+                url = f"{hostname}{endpoint}"
             artifact = input_to_artifact(
-                ArtifactType.DEPLOYED_HELM_APP, step_input, spec=spec
+                ArtifactType.DEPLOYED_HELM_APP,
+                step_input,
+                spec=DeployedHelmAppSpec(url=f"{url}"),
             )
             if properties.target == Target.PRODUCTION:
                 self._logger.info(

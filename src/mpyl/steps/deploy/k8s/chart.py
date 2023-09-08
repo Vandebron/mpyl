@@ -4,7 +4,7 @@ More info: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/c
 """
 import itertools
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, cast
 
 from kubernetes.client import (
     V1Deployment,
@@ -74,6 +74,7 @@ from ....project import (
     Metrics,
 )
 from ....stages.discovery import DeploySet
+from ....utilities.docker import DockerImageSpec
 
 yaml = YAML()
 
@@ -131,6 +132,7 @@ class DeploymentDefaults:
     job_defaults: dict
     traefik_defaults: dict
     white_lists: dict
+    image_pull_secrets: dict
 
     @staticmethod
     def from_config(config: dict):
@@ -145,6 +147,7 @@ class DeploymentDefaults:
             job_defaults=kubernetes.get("job", {}),
             traefik_defaults=deployment_values.get("traefik", {}),
             white_lists=config.get("whiteLists", {}),
+            image_pull_secrets=kubernetes.get("imagePullSecrets", {}),
         )
 
 
@@ -470,12 +473,25 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
             for host in hosts
         }
 
-    def to_service_account(self) -> V1ServiceAccount:
+    def to_service_account(
+        self,
+    ) -> V1ServiceAccount:
+        kubernetes = self._get_kubernetes()
+        image_pull_secrets_config = (
+            kubernetes.image_pull_secrets or self.config_defaults.image_pull_secrets
+        )
+        secrets = [
+            ChartBuilder._to_k8s_model(
+                secret,
+                V1LocalObjectReference,
+            )
+            for secret in image_pull_secrets_config
+        ]
         return V1ServiceAccount(
             api_version="v1",
             kind="ServiceAccount",
             metadata=self._to_object_meta(),
-            image_pull_secrets=[V1LocalObjectReference("bigdataregistry")],
+            image_pull_secrets=secrets,
         )
 
     def to_sealed_secrets(self) -> V1SealedSecret:
@@ -531,7 +547,8 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
                 # pylint: disable-next=no-member
                 f"Required artifact of type {ArtifactType.DOCKER_IMAGE.name} must be defined"
             )
-        return docker_image.spec["image"]
+        spec = cast(DockerImageSpec, docker_image.spec)
+        return spec.image
 
     def _get_resources(self):
         resources = self.project.kubernetes.resources

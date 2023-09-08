@@ -9,8 +9,7 @@ from src.mpyl.steps.models import Output, Artifact, ArtifactType
 from src.mpyl.steps.steps import StepResult, ExecutionException
 from src.mpyl.utilities.junit import (
     TestRunSummary,
-    TEST_OUTPUT_PATH_KEY,
-    TEST_RESULTS_URL_KEY,
+    JunitTestSpec,
 )
 from tests import root_test_path
 from tests.reporting import (
@@ -81,10 +80,9 @@ class TestMarkdownReporting:
                         artifact_type=ArtifactType.JUNIT_TESTS,
                         revision="revision",
                         producing_step="Jest",
-                        spec={
-                            TEST_OUTPUT_PATH_KEY: self.test_resource_path,
-                            TEST_RESULTS_URL_KEY: "http://localhost/tests",
-                        },
+                        spec=JunitTestSpec(
+                            str(self.test_resource_path), "http://localhost/tests"
+                        ),
                     ),
                 ),
                 timestamp=datetime.fromisoformat("2019-01-04T16:41:24+02:00"),
@@ -101,10 +99,9 @@ class TestMarkdownReporting:
                         artifact_type=ArtifactType.JUNIT_TESTS,
                         revision="revision",
                         producing_step="Cypress",
-                        spec={
-                            TEST_OUTPUT_PATH_KEY: self.test_resource_path,
-                            TEST_RESULTS_URL_KEY: "https://cypress.io",
-                        },
+                        spec=JunitTestSpec(
+                            str(self.test_resource_path), "https://cypress.io"
+                        ),
                     ),
                 ),
                 timestamp=datetime.fromisoformat("2019-01-04T16:41:24+02:00"),

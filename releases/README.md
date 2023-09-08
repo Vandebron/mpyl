@@ -1,5 +1,32 @@
 # Release notes
 
+## MPyL 1.2.0
+
+#### Highlights
+
+#### Kubernetes deploy actions
+In `mpyl_config.yaml` the deploy action now needs to be explicitly set.
+```yaml
+kubernetes:
+  deployAction: HelmDeploy
+```
+There are four deploy actions available:
+- `HelmDeploy` - deploys the helm chart
+- `HelmDryRun` - runs a helm dry run against the cluster
+- `HelmTemplate` - renders a helm chart on the file system to the folder specified in the `helmTemplateOutputPath` property
+- `KubectlManifest` - renders the deployment as manifest file specified in the `kubectlManifestOutputPath` property. This manifest can be deployed with a `kubectl -f <path>` command.
+
+#### Image pull secrets
+Default image pull secrets now need to be configured globally in `mpyl_config.yml`
+```yaml
+  deployment:
+    kubernetes:
+      imagePullSecrets:
+        - name: 'acme-registry'
+```
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.2.0)
+
 ## MPyL 1.1.0
 
 #### Highlights

@@ -1,22 +1,22 @@
 """
 Markdown run result formatters
 """
-import operator
 import itertools
+import operator
+from typing import cast, Optional
 
 from junitparser import TestSuite
 
 from ...project import Stage, Project
 from ...steps import Output, ArtifactType
-from ...steps.models import Artifact
+from ...steps.deploy.k8s import DeployedHelmAppSpec
 from ...steps.run import RunResult
 from ...steps.steps import StepResult
 from ...utilities.junit import (
     TestRunSummary,
     sum_suites,
-    TEST_RESULTS_URL_KEY,
-    TEST_RESULTS_URL_NAME_KEY,
     to_test_suites,
+    JunitTestSpec,
 )
 
 
@@ -32,7 +32,8 @@ def __add_link_if_service(name: str, output: Output) -> str:
         output.produced_artifact
         and output.produced_artifact.artifact_type == ArtifactType.DEPLOYED_HELM_APP
     ):
-        url = output.produced_artifact.spec.get("url")
+        app_spec = cast(DeployedHelmAppSpec, output.produced_artifact.spec)
+        url: Optional[str] = app_spec.url
         if url:
             return f"[{name}]({url})"
 
@@ -81,17 +82,20 @@ def markdown_for_stage(run_result: RunResult, stage: Stage):
         return ""
 
     result = f"{stage_to_icon(stage)} {__to_oneliner(step_results, plan)}  \n"
-    test_artifacts = _collect_test_artifacts(step_results)
-    test_results = _collect_test_results(test_artifacts)
+    test_artifacts: dict[str, JunitTestSpec] = _collect_test_specs(step_results)
+    test_results: dict[str, list[TestSuite]] = _collect_test_results(test_artifacts)
 
     if test_results:
-        result += to_markdown_test_report(test_results)
+        test_suites = list(
+            itertools.chain.from_iterable([value for _, value in test_results.items()])
+        )
+        result += to_markdown_test_report(test_suites)
         unique_artifacts = _collect_unique_test_artifacts_with_url(test_artifacts)
 
         for unique_artifact in unique_artifacts:
             result += (
-                f" [{unique_artifact.spec[TEST_RESULTS_URL_NAME_KEY]}]"
-                f"({unique_artifact.spec[TEST_RESULTS_URL_KEY]})"
+                f" [{unique_artifact.test_results_url_name}]"
+                f"({unique_artifact.test_results_url})"
             )
 
         result += "  \n"
@@ -124,47 +128,43 @@ def to_markdown_test_report(suites: list[TestSuite]):
     return f"{summary_to_markdown(total_tests)}"
 
 
-def _collect_test_artifacts(step_results: list[StepResult]) -> list[Artifact]:
-    return [
-        res.output.produced_artifact
+def _collect_test_specs(step_results: list[StepResult]) -> dict[str, JunitTestSpec]:
+    return {
+        res.output.produced_artifact.producing_step: cast(
+            JunitTestSpec, res.output.produced_artifact.spec
+        )
         for res in step_results
         if (
             res.output.produced_artifact
             and res.output.produced_artifact.artifact_type == ArtifactType.JUNIT_TESTS
         )
-    ]
+    }
 
 
-def _collect_test_results(test_artifacts: list[Artifact]) -> list[TestSuite]:
-    suites: list[list[TestSuite]] = list(map(to_test_suites, test_artifacts))
-
-    return list(itertools.chain(*suites))
+def _collect_test_results(
+    test_artifacts: dict[str, JunitTestSpec]
+) -> dict[str, list[TestSuite]]:
+    return {k: to_test_suites(v) for k, v in test_artifacts.items()}
 
 
 def _collect_unique_test_artifacts_with_url(
-    test_artifacts: list[Artifact],
-) -> list[Artifact]:
-    unique_artifacts: list[Artifact] = []
-    for test_artifact in test_artifacts:
-        if (
-            TEST_RESULTS_URL_KEY in test_artifact.spec
-            and test_artifact.spec[TEST_RESULTS_URL_KEY] != ""
-        ):
+    test_artifacts: dict[str, JunitTestSpec],
+) -> list[JunitTestSpec]:
+    unique_artifacts: list[JunitTestSpec] = []
+    for step_name, test_artifact in test_artifacts.items():
+        if test_artifact.test_results_url:
             duplicate_artifact = next(
                 (
                     x
                     for x in unique_artifacts
-                    if x.spec[TEST_RESULTS_URL_KEY]
-                    == test_artifact.spec[TEST_RESULTS_URL_KEY]
+                    if x.test_results_url == test_artifact.test_results_url
                 ),
                 None,
             )
             if not duplicate_artifact:
-                test_artifact.spec[
-                    TEST_RESULTS_URL_NAME_KEY
-                ] = test_artifact.producing_step
+                test_artifact.test_results_url_name = step_name
                 unique_artifacts.append(test_artifact)
             else:
-                duplicate_artifact.spec[TEST_RESULTS_URL_NAME_KEY] = "link"
+                duplicate_artifact.test_results_url_name = "link"
 
     return unique_artifacts

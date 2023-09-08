@@ -113,10 +113,12 @@ class TestBuildCommand:
             r".*You can upgrade.*", "", result.output
         ).rstrip()
         without_upgrade_suggestion = re.sub("git:.*", "", without_upgrade_suggestion)
-        first_line_only = without_upgrade_suggestion.split("\n")[0].rstrip()
+        first_lines_only = "\n".join(
+            without_upgrade_suggestion.split("\n")[0:2]
+        ).rstrip()
 
         self.maxDiff = None
-        assert_roundtrip(self.resource_path / "build_status.txt", first_line_only)
+        assert_roundtrip(self.resource_path / "build_status.txt", first_lines_only)
 
     def test_build_clean_output(self):
         result = self.runner.invoke(

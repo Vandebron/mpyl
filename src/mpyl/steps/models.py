@@ -166,8 +166,19 @@ class ArtifactType(Enum):
     JUNIT_TESTS = 2
     """A test suite in junit compatible `.xml` format"""
     DEPLOYED_HELM_APP = 3
-    """A helm chart deployed to kubernetes"""
+    """Null object"""
     NONE = 4
+    """A helm chart deployed to kubernetes"""
+    HELM_CHART = 5
+    """A helm chart written to a folder"""
+    KUBERNETES_MANIFEST = 6
+    """"A k8s manifest writen to a file"""
+
+
+@yaml_object(yaml)
+@dataclass
+class ArtifactSpec:
+    pass
 
 
 @yaml_object(yaml)
@@ -176,7 +187,7 @@ class Artifact:
     artifact_type: ArtifactType
     revision: str
     producing_step: str
-    spec: dict
+    spec: ArtifactSpec
 
 
 @yaml_object(yaml)
@@ -214,7 +225,9 @@ class Output:
         return None
 
 
-def input_to_artifact(artifact_type: ArtifactType, step_input: Input, spec: dict):
+def input_to_artifact(
+    artifact_type: ArtifactType, step_input: Input, spec: ArtifactSpec
+):
     return Artifact(
         artifact_type=artifact_type,
         revision=step_input.run_properties.versioning.revision,

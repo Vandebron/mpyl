@@ -67,6 +67,7 @@ whiteLists:
     - name: 'K8s-Test'
       values: [ '1.2.3.0', '1.2.3.1' ]
 kubernetes:
+  deployAction: HelmDeploy
   rancher:
     cluster:
       test:
@@ -85,9 +86,11 @@ kubernetes:
         clusterEnv: prd
         context: acme-k8s-prod
 project: # default values
-  allowedMaintainers: [ 'Team1', 'Team2' ]
+  allowedMaintainers: [ 'Team1', 'Team2', 'MPyL' ]
   deployment:
     kubernetes:
+      imagePullSecrets:
+        - name: 'acme-registry'
       job:
         ttlSecondsAfterFinished:
           all: 3600

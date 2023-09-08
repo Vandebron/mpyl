@@ -13,13 +13,20 @@ The test results need to be written to a folder named `$WORKDIR/target/test-repo
 
 """
 from logging import Logger
+from typing import cast
 
 from python_on_whales import Container
 
 from .after_test import IntegrationTestAfter
 from .before_test import IntegrationTestBefore
 from .. import Step, Meta
-from ..models import Input, Output, ArtifactType, input_to_artifact, Artifact
+from ..models import (
+    Input,
+    Output,
+    ArtifactType,
+    input_to_artifact,
+    Artifact,
+)
 from ...project import Stage, Project
 from ...utilities.docker import (
     DockerConfig,
@@ -33,8 +40,7 @@ from ...utilities.docker import (
 from ...utilities.junit import (
     to_test_suites,
     sum_suites,
-    TEST_OUTPUT_PATH_KEY,
-    TEST_RESULTS_URL_KEY,
+    JunitTestSpec,
 )
 
 
@@ -77,7 +83,7 @@ class TestDocker(Step):
                 self._logger, project, container, step_input
             )
 
-            suite = to_test_suites(artifact)
+            suite = to_test_suites(cast(JunitTestSpec, artifact.spec))
             summary = sum_suites(suite)
 
             output = Output(
@@ -111,8 +117,7 @@ class TestDocker(Step):
         return input_to_artifact(
             artifact_type=ArtifactType.JUNIT_TESTS,
             step_input=step_input,
-            spec={
-                TEST_OUTPUT_PATH_KEY: project.test_report_path,
-                TEST_RESULTS_URL_KEY: step_input.run_properties.details.tests_url,
-            },
+            spec=JunitTestSpec(
+                project.test_report_path, step_input.run_properties.details.tests_url
+            ),
         )

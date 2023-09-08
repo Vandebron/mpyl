@@ -23,10 +23,6 @@ class ClusterConfig:
         )
 
 
-def render_templates(run_properties: RunProperties) -> bool:
-    return run_properties.config["kubernetes"].get("renderTemplates", False)
-
-
 def cluster_config(target: Target, run_properties: RunProperties) -> ClusterConfig:
     kubernetes_config = run_properties.config["kubernetes"]
     cluster_configs = kubernetes_config["rancher"]["cluster"]

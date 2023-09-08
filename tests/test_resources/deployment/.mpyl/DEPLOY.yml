@@ -1,0 +1,9 @@
+!Output
+success: true
+message: deploy success  success
+produced_artifact: !Artifact
+  artifact_type: !ArtifactType KUBERNETES_MANIFEST-6
+  revision: '123'
+  producing_step: Producing Step
+  spec: !RenderedHelmChartSpec
+    chart_path: target/template.yml

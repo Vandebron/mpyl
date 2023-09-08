@@ -88,6 +88,8 @@ project: # default values
             all: [ "VPN" ]
           insecure: false
     kubernetes:
+      imagePullSecrets:
+        - name: 'acme-registry'
       job:
         ttlSecondsAfterFinished:
           all: 3600

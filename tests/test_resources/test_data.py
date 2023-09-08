@@ -2,6 +2,7 @@ import dataclasses
 import os
 from pathlib import Path
 
+from src.mpyl.utilities.docker import DockerImageSpec
 from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME
 from src.mpyl.utilities.pyaml_env import parse_config
 
@@ -79,7 +80,7 @@ def get_output() -> Output:
             artifact_type=ArtifactType.DOCKER_IMAGE,
             revision="123",
             producing_step="Producing Step",
-            spec={"image": "image:latest"},
+            spec=DockerImageSpec(image="image:latest"),
         ),
     )
 
@@ -121,6 +122,9 @@ def get_repo() -> Repository:
 
 def assert_roundtrip(file_path: Path, actual_contents: str, overwrite: bool = False):
     if overwrite:
+        if not file_path.exists():
+            os.makedirs(file_path.parent, exist_ok=True)
+
         with open(file_path, "w+", encoding="utf-8") as file:
             file.write(actual_contents)
             assert not overwrite, "Should not commit with overwrite"

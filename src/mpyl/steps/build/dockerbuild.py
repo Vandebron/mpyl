@@ -31,6 +31,7 @@ from ...utilities.docker import (
     docker_image_tag,
     docker_file_path,
     login,
+    DockerImageSpec,
 )
 
 DOCKER_IGNORE_DEFAULT = ["**/target/*", f"**/{BUILD_ARTIFACTS_FOLDER}/*"]
@@ -75,7 +76,7 @@ class BuildDocker(Step):
             docker_config=docker_config,
         )
         artifact = input_to_artifact(
-            ArtifactType.DOCKER_IMAGE, step_input, spec={"image": image_tag}
+            ArtifactType.DOCKER_IMAGE, step_input, spec=DockerImageSpec(image=image_tag)
         )
 
         with open(".dockerignore", "w+", encoding="utf-8") as ignore_file:

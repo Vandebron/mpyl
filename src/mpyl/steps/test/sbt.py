@@ -1,6 +1,6 @@
 """A step to compile and run tests for an SBT project"""
 from logging import Logger
-from typing import Callable
+from typing import Callable, cast
 
 from .after_test import IntegrationTestAfter
 from .before_test import IntegrationTestBefore
@@ -9,10 +9,9 @@ from ..models import Artifact, input_to_artifact
 from ...project import Stage, Project
 from ...steps import Meta, ArtifactType
 from ...utilities.junit import (
-    TEST_OUTPUT_PATH_KEY,
     to_test_suites,
     sum_suites,
-    TEST_RESULTS_URL_KEY,
+    JunitTestSpec,
 )
 from ...utilities.sbt import SbtConfig
 from ...utilities.subprocess import custom_check_output
@@ -88,7 +87,9 @@ class TestSbt(Step):
         )
 
         if test_result.produced_artifact:
-            suite = to_test_suites(test_result.produced_artifact)
+            suite = to_test_suites(
+                cast(JunitTestSpec, test_result.produced_artifact.spec)
+            )
             summary = sum_suites(suite)
             return Output(
                 success=summary.is_success,
@@ -121,8 +122,8 @@ class TestSbt(Step):
         return input_to_artifact(
             artifact_type=ArtifactType.JUNIT_TESTS,
             step_input=step_input,
-            spec={
-                TEST_OUTPUT_PATH_KEY: f"{project.test_report_path}",
-                TEST_RESULTS_URL_KEY: step_input.run_properties.details.tests_url,
-            },
+            spec=JunitTestSpec(
+                f"{project.test_report_path}",
+                step_input.run_properties.details.tests_url,
+            ),
         )
