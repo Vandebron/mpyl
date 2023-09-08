@@ -32,14 +32,6 @@ def get_build_plan(
 ) -> RunResult:
     branch = repo.get_branch or run_properties.versioning.branch
     if branch:
-        if repo.base_revision:
-            logger.info(
-                f"Branch `{repo.main_branch}` already present locally. Skipping pull."
-            )
-        else:
-            logger.info(f"Pulling `{repo.main_branch}` from {repo.remote_url}")
-            pull_result = repo.fetch_main_branch()
-            logger.info(f"Pulled `{pull_result[0].remote_ref_path.strip()}` to local")
         changes = (
             repo.changes_in_branch_including_local()
             if cli_parameters.local
