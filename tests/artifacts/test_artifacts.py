@@ -7,7 +7,6 @@ from unittest.mock import patch, PropertyMock
 
 from pyaml_env import parse_config
 
-from src.mpyl.utilities.github import clone_repository
 from src.mpyl.artifacts.build_artifacts import BuildArtifacts
 from src.mpyl.utilities.repo import RepoCredentials, Repository
 from src.mpyl import RepoConfig
@@ -56,12 +55,11 @@ class TestArtifacts:
                 src=self.test_build_artifacts, dst=self.tmp_build_artifacts
             )  # copy test files to temporary folder
             shutil.rmtree(repo_path, ignore_errors=True)
-            clone_repository(artifact_repo_config)
 
             logger = logging.getLogger()
-            config = parse_config(self.config_path)
-            codebase_repo = Repository(config=RepoConfig.from_config(config))
-            artifact_repo = Repository(config=artifact_repo_config)
+            mpyl_config = parse_config(self.config_path)
+            codebase_repo = Repository(config=RepoConfig.from_config(mpyl_config))
+            artifact_repo = Repository.from_clone(config=artifact_repo_config)
             build_artifacts = BuildArtifacts(
                 logger=logger,
                 codebase_repo=codebase_repo,

@@ -128,6 +128,22 @@ class Repository:  # pylint: disable=too-many-public-methods
             raise exc_val
         return self
 
+    @staticmethod
+    def from_clone(config: RepoConfig):
+        if not config.repo_credentials or not config.folder:
+            raise ValueError(
+                "Cannot clone repository without credentials or destination folder"
+            )
+
+        repo_path = Path(config.folder)
+        repo_path.mkdir(parents=True, exist_ok=True)
+        Repo.clone_from(
+            url=config.repo_credentials.ssh_url,
+            to_path=repo_path,
+        )
+
+        return Repository(config)
+
     @property
     def has_valid_head(self):
         return self._repo.head.is_valid()
