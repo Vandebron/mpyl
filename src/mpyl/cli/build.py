@@ -1,10 +1,11 @@
 """Commands related to build"""
 import asyncio
-import os
 import shutil
 import sys
 from pathlib import Path
 from typing import Optional
+from distutils.version import LooseVersion
+import requests
 
 import click
 import questionary
@@ -15,9 +16,6 @@ from github.GitRelease import GitRelease
 from questionary import Choice
 from rich.console import Console
 from rich.markdown import Markdown
-from importlib.metadata import version as version_meta
-import requests
-from distutils.version import LooseVersion
 
 from . import (
     CliContext,
@@ -47,7 +45,6 @@ from ..steps.run import RunResult
 from ..utilities.github import GithubConfig
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
-from ..cli import get_releases, get_latest_release
 
 
 async def warn_if_update(console: Console):
@@ -127,7 +124,7 @@ def build(ctx, config, properties, verbose):
 )
 @click.option("--tag", "-t", help="Tag to build", type=click.STRING, required=False)
 @click.pass_obj
-def run(obj: CliContext, ci, all_, dryrun_, tag, version):  # pylint: disable=invalid-name
+def run(obj: CliContext, ci, all_, dryrun_, tag):  # pylint: disable=invalid-name
     asyncio.run(warn_if_update(obj.console))
 
     parameters = MpylCliParameters(
@@ -137,7 +134,6 @@ def run(obj: CliContext, ci, all_, dryrun_, tag, version):  # pylint: disable=in
         dryrun=dryrun_,
         verbose=obj.verbose,
         tag=tag,
-        version=version,
     )
     obj.console.log(parameters)
 
@@ -285,8 +281,8 @@ def ask_for_tag(ctx, _param, value) -> Optional[str]:
 
 
 def get_test_releases():
-    url = f"https://test.pypi.org/pypi/mpyl/json"
-    data = requests.get(url).json()
+    url = "https://test.pypi.org/pypi/mpyl/json"
+    data = requests.get(url, timeout=30).json()
     versions = list(data["releases"].keys())
     versions.sort(key=LooseVersion, reverse=True)
     versions = [version[: -4] for version in versions[:100]]
@@ -295,27 +291,24 @@ def get_test_releases():
     return versions
 
 
-def select_version(ctx) -> str:
+def select_version() -> str:
     console = Console()
-    console.status("Fetching MPyL releases..")
-    try:
-        return questionary.select(
-            "Which version do you want to install?",
-            show_selected=True,
-            choices=get_test_releases(),
-        ).ask()
-    except:
-        return f"MPyL releases not found! Using latest version: {get_latest_release()}"
+    console.log("Fetching MPyL releases..")
+    return questionary.select(
+        "Which version do you want to install?",
+        show_selected=True,
+        choices=get_test_releases(),
+    ).ask()
 
 
 def ask_for_version(ctx, _param, value) -> Optional[str]:
-    if value == "not_set":
+    if value == "not_set" or ctx.resilient_parsing:
         return None
     if value != "prompt" and value not in get_test_releases():
         print("MPyL version doesn't exist. Select another version:")
-        return select_version(ctx)
+        return select_version()
     if value == "prompt":
-        return select_version(ctx)
+        return select_version()
     return value
 
 
@@ -458,7 +451,6 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
             tag=tag,
             dryrun=dryrun_,
             all=all_,
-            version=version,
         )
         run_jenkins(run_argument)
     except asyncio.exceptions.TimeoutError:

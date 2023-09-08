@@ -1,5 +1,4 @@
 """Jenkins multibranch pipeline build tool"""
-import os
 import subprocess
 from dataclasses import dataclass
 from typing import Optional
@@ -30,7 +29,6 @@ class JenkinsRunParameters:
     follow: bool
     dryrun: bool
     all: bool
-    version: Optional[str] = None
     tag: Optional[str] = None
 
 
