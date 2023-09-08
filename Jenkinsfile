@@ -42,7 +42,7 @@ pipeline {
                              echo "params is ${params.MPYL_RELEASE}"
                              echo "params is ${params.BUILD_PARAMS}"
 //                             sh "pipenv clean"
-//                             sh "pipenv install --ignore-pipfile --skip-lock --site-packages --index https://test.pypi.org/simple/ 'mpyl==${params.MPYL_RELEASE}'"
+                            sh "pipenv install --ignore-pipfile --skip-lock --site-packages --index https://test.pypi.org/simple/ 'mpyl==${params.MPYL_RELEASE}'"
 //                             sh "pipenv install -d --skip-lock"
 //                             sh "pipenv run mpyl projects lint --all"
 //                             sh "pipenv run mpyl health"
