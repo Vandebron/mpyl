@@ -383,6 +383,7 @@ def jenkins(  # pylint: disable=too-many-arguments
     background,
     silent,
     tag,
+    target,
 ):
     upgrade_check = None
     try:
@@ -411,6 +412,7 @@ def jenkins(  # pylint: disable=too-many-arguments
             verbose=not silent or ctx.obj.verbose,
             follow=not background,
             tag=tag,
+            tag_target=target,
         )
 
         run_jenkins(run_argument)
