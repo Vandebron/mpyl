@@ -206,3 +206,12 @@ jobs:
 
       - name: Build status
         run: mpyl build -c mpyl_config.example.yml status
+
+      - name: Force change
+        run: echo "To force a change " >> tests/projects/service/change.txt
+
+      - name: Build status with change
+        run: mpyl build -c mpyl_config.example.yml status
+
+      - name: Build run
+        run: mpyl build -c mpyl_config.example.yml run
