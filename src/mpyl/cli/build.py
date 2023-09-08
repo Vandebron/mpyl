@@ -277,7 +277,7 @@ def get_test_releases():
     data = requests.get(url, timeout=30).json()
     versions = list(data["releases"].keys())
     versions.sort(key=LooseVersion, reverse=True)
-    versions = [version[: -4] for version in versions[:100]]
+    versions = [version[:-4] for version in versions[:100]]
     versions = list(dict.fromkeys(versions))
     versions = [version + "*" for version in versions]
     return versions
