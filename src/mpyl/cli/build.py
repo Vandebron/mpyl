@@ -289,6 +289,9 @@ def get_test_releases():
     data = requests.get(url).json()
     versions = list(data["releases"].keys())
     versions.sort(key=LooseVersion, reverse=True)
+    versions = [version[: -4] for version in versions[:100]]
+    versions = list(dict.fromkeys(versions))
+    versions = [version + "*" for version in versions]
     return versions
 
 
@@ -305,7 +308,6 @@ def select_version(ctx) -> str:
             get_choices = get_releases()
         else:
             get_choices = get_test_releases()
-
         return questionary.select(
             "Which version do you want to install?",
             show_selected=True,
@@ -465,8 +467,6 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
             all=all_,
             version=version,
         )
-
-        print("PIPELINE", pipeline_parameters)
         run_jenkins(run_argument)
     except asyncio.exceptions.TimeoutError:
         pass
