@@ -2,14 +2,14 @@
 
 ## ..MPyL CLI
 
-Install MPyL
+#### 1. Install MPyL
 
 ```shell
 pip install mpyl
 mpyl --help
 ```
 
-#### Health check
+#### 2. Health check
 
 ⭐ It is recommended to run this before running any other commands.
 ```shell
@@ -17,7 +17,19 @@ mpyl health
 ```
 Will validate the configuration and check if all required tools are installed.
 
-##### Command structure
+#### 3. Create a PR with your changes
+
+```shell
+gh pr create --draft
+```
+
+#### 4. Trigger an MPyL build via the CLI
+
+```shell
+mpyl build jenkins
+```
+
+### Command structure
 
 ```
 .. include:: tests/cli/test_resources/main_help_text.txt
