@@ -18,6 +18,8 @@ from ...utilities.subprocess import custom_check_output
 
 
 class TestSbt(Step):
+    __test__ = False
+
     def __init__(self, logger: Logger) -> None:
         super().__init__(
             logger=logger,
