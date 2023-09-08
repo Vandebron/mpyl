@@ -106,9 +106,9 @@ def run_jenkins(run_config: JenkinsRunParameters):
                     return
 
                 if run_config.tag:
-                    run_config.pipeline_parameters["BUILD_PARAMS"] += {
-                        "DEPLOY_CHOICE": run_config.tag_target
-                    }
+                    run_config.pipeline_parameters[
+                        "DEPLOY_CHOICE"
+                    ] = run_config.tag_target
 
                 status.start()
                 status.update(
