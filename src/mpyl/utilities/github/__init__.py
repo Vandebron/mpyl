@@ -63,17 +63,3 @@ def get_pr_for_branch(repo: Repository, branch: str) -> PullRequest:
         )
 
     return pulls.pop()
-
-
-def clone_repository(artifact_repo_config: RepoConfig) -> None:
-    if not artifact_repo_config.repo_credentials or not artifact_repo_config.folder:
-        raise ValueError(
-            "Cannot clone repository without credentials or destination folder"
-        )
-
-    repo_path = Path(artifact_repo_config.folder)
-    repo_path.mkdir(parents=True, exist_ok=True)
-    custom_check_output(
-        logging.getLogger(),
-        f"git clone {artifact_repo_config.repo_credentials.ssh_url} {repo_path}",
-    )

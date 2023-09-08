@@ -12,7 +12,6 @@ from ..artifacts.build_artifacts import BuildArtifacts
 from ..cli import CliContext, create_console_logger, CONFIG_PATH_HELP
 from ..constants import DEFAULT_CONFIG_FILE_NAME, DEFAULT_RUN_PROPERTIES_FILE_NAME
 from ..steps.models import RunProperties
-from ..utilities.github import clone_repository
 from ..utilities.repo import Repository, RepoConfig
 
 
@@ -102,9 +101,8 @@ def _prepare_artifacts_repo(obj: CliContext) -> BuildArtifacts:
     if os.path.exists(repo_path):
         shutil.rmtree(repo_path, ignore_errors=True)
 
-    clone_repository(artifact_repo_config)
+    artifact_repo = Repository.from_clone(config=artifact_repo_config)
     logger = logging.getLogger("mpyl")
-    artifact_repo = Repository(config=artifact_repo_config)
     return BuildArtifacts(
         logger=logger,
         codebase_repo=obj.repo,
