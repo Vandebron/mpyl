@@ -187,7 +187,7 @@ jobs:
 
       - name: Install MPyL Attempt 1
         continue-on-error: true
-        run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ steps.findPr.outputs.pr }}.${{ github.run_number }}
+        run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ steps.findPr.outputs.pr }}.${{ github.run_number }} || true
 
       - name: Install MPyL Attempt 2
         run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ steps.findPr.outputs.pr }}.${{ github.run_number }}
