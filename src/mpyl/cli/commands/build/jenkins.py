@@ -27,8 +27,8 @@ class JenkinsRunParameters:
     pipeline_parameters: dict
     verbose: bool
     follow: bool
-    tag_target: Target = Target.ACCEPTANCE
     tag: Optional[str] = None
+    tag_target: Optional[Target] = None
 
 
 def get_token(github_config: GithubConfig):
@@ -108,7 +108,7 @@ def run_jenkins(run_config: JenkinsRunParameters):
                 if run_config.tag:
                     run_config.pipeline_parameters[
                         "DEPLOY_CHOICE"
-                    ] = run_config.tag_target
+                    ] = run_config.tag_target.name
 
                 status.start()
                 status.update(

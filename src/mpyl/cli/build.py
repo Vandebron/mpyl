@@ -268,9 +268,9 @@ def select_target():
         "Which environment do you want to deploy to?",
         show_selected=True,
         choices=[
-            Choice(title="Acceptance", value=Target.ACCEPTANCE.value),
-            Choice(title="PullRequestBase", value=Target.PULL_REQUEST_BASE.value),
-            Choice(title="Production", value=Target.PRODUCTION.value),
+            Choice(title="Acceptance", value=Target.ACCEPTANCE.name),
+            Choice(title="PullRequestBase", value=Target.PULL_REQUEST_BASE.name),
+            Choice(title="Production", value=Target.PRODUCTION.name),
         ],
     ).ask()
 
@@ -280,14 +280,6 @@ def ask_for_tag_input(ctx, _param, value) -> Optional[str]:
         return None
     if value == "prompt":
         return select_tag(ctx)
-    return value
-
-
-def ask_for_target_input(_, _param, value) -> Optional[str]:
-    if value == "not_set":
-        return None
-    if value == "prompt":
-        return select_target()
     return value
 
 
@@ -364,13 +356,6 @@ def ask_for_target_input(_, _param, value) -> Optional[str]:
     default="not_set",
     callback=ask_for_tag_input,
 )
-@click.option(
-    "--target",
-    is_flag=False,
-    flag_value="prompt",
-    default="not_set",
-    callback=ask_for_target_input,
-)
 @click.pass_context
 def jenkins(  # pylint: disable=too-many-arguments
     ctx,
@@ -383,7 +368,6 @@ def jenkins(  # pylint: disable=too-many-arguments
     background,
     silent,
     tag,
-    target,
 ):
     upgrade_check = None
     try:
@@ -412,7 +396,7 @@ def jenkins(  # pylint: disable=too-many-arguments
             verbose=not silent or ctx.obj.verbose,
             follow=not background,
             tag=tag,
-            tag_target=target,
+            tag_target=getattr(Target, select_target()) if tag else None,
         )
 
         run_jenkins(run_argument)
