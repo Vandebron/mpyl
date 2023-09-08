@@ -185,18 +185,15 @@ jobs:
         with:
           state: open
 
-      - name: Install MPyL 1
+      - name: Install MPyL Attempt 1
         continue-on-error: true
         run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ steps.findPr.outputs.pr }}.${{ github.run_number }}
 
-      - name: Install MPyL 2
+      - name: Install MPyL Attempt 2
         run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ steps.findPr.outputs.pr }}.${{ github.run_number }}
 
       - name: Show files
         run: ls -latr
-
-      - name: Show path
-        run: pwd
 
       - name: Clean workspace
         run: rm -rf *

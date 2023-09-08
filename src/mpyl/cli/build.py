@@ -192,16 +192,6 @@ def __print_status(obj: CliContext):
     )
     console.print(Markdown(f"Base `{main_branch}` {base_revision_specification}"))
 
-    if not base_revision and not tag:
-        fetch = f"`git fetch origin {main_branch}:refs/remotes/origin/{main_branch}`"
-        console.print(
-            Markdown(
-                f"Cannot determine what to build, since this branch has no base. "
-                f"Did you {fetch}?"
-            )
-        )
-        return
-
     result = get_build_plan(
         logger=logging.getLogger("mpyl"),
         repo=obj.repo,
