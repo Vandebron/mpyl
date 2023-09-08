@@ -136,7 +136,10 @@ def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
             obj.config, obj.repo.get_sha, obj.repo.get_branch, tag
         )
     )
-    run_mpyl(run_properties=run_properties, cli_parameters=parameters, reporter=None)
+    result = run_mpyl(
+        run_properties=run_properties, cli_parameters=parameters, reporter=None
+    )
+    sys.exit(0 if result.is_success else 1)
 
 
 @build.command(help="The status of the current local branch from MPyL's perspective")
