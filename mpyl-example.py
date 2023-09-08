@@ -73,6 +73,7 @@ def main(log: Logger, args: argparse.Namespace):
         pull_main=True,
         verbose=args.verbose,
         all=args.all,
+        dryrun=args.dryrun,
     )
     run_result = run_mpyl(
         run_properties=run_properties,
