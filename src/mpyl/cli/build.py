@@ -5,6 +5,8 @@ import shutil
 import sys
 from pathlib import Path
 from typing import Optional
+from distutils.version import LooseVersion
+import requests
 
 import click
 import questionary
@@ -270,11 +272,34 @@ def select_tag(ctx) -> str:
         return release.tag_name
 
 
+def get_test_releases():
+    url = "https://test.pypi.org/pypi/mpyl/json"
+    data = requests.get(url, timeout=30).json()
+    versions = list(data["releases"].keys())
+    versions.sort(key=LooseVersion, reverse=True)
+    versions = [version[: -4] for version in versions[:100]]
+    versions = list(dict.fromkeys(versions))
+    versions = [version + "*" for version in versions]
+    return versions
+
+
+def select_version() -> str:
+    console = Console()
+    console.log("Fetching MPyL releases..")
+    return questionary.select(
+        "Which version do you want to install?",
+        show_selected=True,
+        choices=get_test_releases(),
+    ).ask()
+
+
 def ask_for_input(ctx, _param, value) -> Optional[str]:
     if value == "not_set":
         return None
-    if value == "prompt":
+    if value == "prompt" and str(_param) == "<Option tag>":
         return select_tag(ctx)
+    if value == "prompt" and str(_param) == "<Option version>":
+        return select_version()
     return value
 
 
@@ -344,6 +369,17 @@ def ask_for_input(ctx, _param, value) -> Optional[str]:
     callback=ask_for_input,
 )
 @click.option(
+    "--version",
+    "-v",
+    is_flag=False,
+    flag_value="prompt",
+    default="not_set",
+    envvar="MPYL_RELEASE",
+    callback=ask_for_input,
+    required=False,
+    help="Set a specific test version to be installed. e.g. '235.*'",
+)
+@click.option(
     "--all",
     "all_",
     is_flag=True,
@@ -369,6 +405,7 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
     tag,
     all_,
     dryrun_,
+    version,
 ):
     upgrade_check = None
     try:
@@ -390,6 +427,8 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
             pipeline_parameters["BUILD_PARAMS"] += " --all"
         if arguments:
             pipeline_parameters["BUILD_PARAMS"] = " ".join(arguments)
+        if version:
+            pipeline_parameters["MPYL_RELEASE"] = version
 
         run_argument = JenkinsRunParameters(
             jenkins_user=user,
