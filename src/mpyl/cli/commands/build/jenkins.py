@@ -27,6 +27,7 @@ class JenkinsRunParameters:
     pipeline_parameters: dict
     verbose: bool
     follow: bool
+    tag_target: Target = Target.ACCEPTANCE
     tag: Optional[str] = None
 
 
@@ -89,7 +90,7 @@ def run_jenkins(run_config: JenkinsRunParameters):
             try:
                 pipeline_info = (
                     Pipeline(
-                        target=Target.ACCEPTANCE,
+                        target=run_config.tag_target,
                         tag=run_config.tag,
                         url="https://tag-url",
                         pipeline=run_config.pipeline,
@@ -103,6 +104,11 @@ def run_jenkins(run_config: JenkinsRunParameters):
                 )
                 if not pipeline_info:
                     return
+
+                if run_config.tag:
+                    run_config.pipeline_parameters["BUILD_PARAMS"] += {
+                        "DEPLOY_CHOICE": run_config.tag_target
+                    }
 
                 status.start()
                 status.update(
