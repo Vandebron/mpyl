@@ -28,7 +28,7 @@ class JenkinsRunParameters:
     verbose: bool
     follow: bool
     tag: Optional[str] = None
-    tag_target: Optional[Target] = None
+    tag_target: Target = Target.ACCEPTANCE
 
 
 def get_token(github_config: GithubConfig):
