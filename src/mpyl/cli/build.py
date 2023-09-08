@@ -283,7 +283,7 @@ def ask_for_tag_input(ctx, _param, value) -> Optional[str]:
     return value
 
 
-def ask_for_target_input(ctx, _param, value) -> Optional[str]:
+def ask_for_target_input(_, _param, value) -> Optional[str]:
     if value == "not_set":
         return None
     if value == "prompt":
