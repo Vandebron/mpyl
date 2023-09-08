@@ -299,19 +299,10 @@ def select_version(ctx) -> str:
     console = Console()
     console.status("Fetching MPyL releases..")
     try:
-        test_official = questionary.select(
-            "Do you want to install a test version or an official release?",
-            show_selected=True,
-            choices=["Official", "Test"],
-        ).ask()
-        if test_official == "Official":
-            get_choices = get_releases()
-        else:
-            get_choices = get_test_releases()
         return questionary.select(
             "Which version do you want to install?",
             show_selected=True,
-            choices=get_choices,
+            choices=get_test_releases(),
         ).ask()
     except:
         return f"MPyL releases not found! Using latest version: {get_latest_release()}"
@@ -320,7 +311,7 @@ def select_version(ctx) -> str:
 def ask_for_version(ctx, _param, value) -> Optional[str]:
     if value == "not_set":
         return None
-    if value != "prompt" and value not in get_test_releases() + get_releases():
+    if value != "prompt" and value not in get_test_releases():
         print("MPyL version doesn't exist. Select another version:")
         return select_version(ctx)
     if value == "prompt":
@@ -404,6 +395,7 @@ def ask_for_version(ctx, _param, value) -> Optional[str]:
     "dryrun_",
     is_flag=True,
     default=False,
+    help="Don't push or deploy images",
 )
 @click.option(
     "--version",
@@ -414,6 +406,7 @@ def ask_for_version(ctx, _param, value) -> Optional[str]:
     envvar="MPYL_RELEASE",
     callback=ask_for_version,
     required=False,
+    help="Set a specific test version to be installed. e.g. '235.*'",
 )
 @click.pass_context
 def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
