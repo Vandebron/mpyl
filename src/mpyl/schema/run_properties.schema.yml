@@ -91,6 +91,9 @@ properties:
           tag:
             description: reference that points to the MPyL version
             type: ["string", "null"]
+          version:
+            description: MPyL version to be installed
+            type: [ "string", "null" ]
   stages:
     description: defines stages in a run
     type: array
