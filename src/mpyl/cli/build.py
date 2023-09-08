@@ -316,11 +316,11 @@ def select_version(ctx) -> str:
 
 
 def ask_for_version(ctx, _param, value) -> Optional[str]:
+    if value == "not_set":
+        return None
     if value != "prompt" and value not in get_test_releases() + get_releases():
         print("MPyL version doesn't exist. Select another version:")
         return select_version(ctx)
-    if value == "not_set":
-        return None
     if value == "prompt":
         return select_version(ctx)
     return value
@@ -411,6 +411,7 @@ def ask_for_version(ctx, _param, value) -> Optional[str]:
     default="not_set",
     envvar="MPYL_RELEASE",
     callback=ask_for_version,
+    required=False,
 )
 @click.pass_context
 def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
@@ -428,9 +429,6 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
     version,
 ):
     upgrade_check = None
-
-    version = version
-
     try:
         upgrade_check = asyncio.wait_for(warn_if_update(ctx.obj.console), timeout=5)
         if "jenkins" not in ctx.obj.config:
@@ -444,9 +442,6 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
         selected_pipeline = pipeline if pipeline else jenkins_config["defaultPipeline"]
         pipeline_parameters = {"TEST": "true", "VERSION": test} if test else {}
 
-        if version:
-            pipeline_parameters["MPYL_RELEASE"] = version
-
         pipeline_parameters["BUILD_PARAMS"] = ""
         if dryrun_:
             pipeline_parameters["BUILD_PARAMS"] += " --dryrun"
@@ -454,6 +449,8 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
             pipeline_parameters["BUILD_PARAMS"] += " --all"
         if arguments:
             pipeline_parameters["BUILD_PARAMS"] = " ".join(arguments)
+        if version:
+            pipeline_parameters["MPYL_RELEASE"] = version
 
         run_argument = JenkinsRunParameters(
             jenkins_user=user,
