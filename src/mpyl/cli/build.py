@@ -158,14 +158,14 @@ def status(obj: CliContext):
 
 def __print_status(obj: CliContext):
     run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
-    obj.console.print(f"MPyL log level is set to {run_properties.console.log_level}")
+    console = obj.console
+    console.print(f"MPyL log level is set to {run_properties.console.log_level}")
 
     branch = obj.repo.get_branch
     main_branch = obj.repo.main_branch
-    tag = obj.repo.get_tag if not branch else None
-    console = obj.console
+    tag = run_properties.versioning.tag
 
-    if not tag:
+    if tag is None:
         if run_properties.versioning.branch and not obj.repo.get_branch:
             console.print("Current branch is detached.")
         else:

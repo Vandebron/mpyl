@@ -30,18 +30,18 @@ def get_build_plan(
     run_properties: RunProperties,
     cli_parameters: MpylCliParameters,
 ) -> RunResult:
-    branch = repo.get_branch or run_properties.versioning.branch
-    if branch:
+    tag = run_properties.versioning.tag
+    if tag:
+        changes = (
+            repo.changes_in_tagged_commit(tag)
+            if tag
+            else repo.changes_in_merge_commit()
+        )
+    else:
         changes = (
             repo.changes_in_branch_including_local()
             if cli_parameters.local
             else repo.changes_in_branch()
-        )
-    else:
-        changes = (
-            repo.changes_in_tagged_commit(run_properties.versioning.tag)
-            if run_properties.versioning.tag
-            else repo.changes_in_merge_commit()
         )
     logger.debug(f"Changes: {changes}")
 

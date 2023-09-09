@@ -258,7 +258,7 @@ jobs:
           git commit -a -m "A random change"
 
       - name: Switch to main
-        run: git checkout -b main $${{ steps.headRevision.outputs.headRevision }}
+        run: git checkout -b main ${{ steps.headRevision.outputs.headRevision }}
 
       - name: Merge branch
         run: git merge --no-ff -m "Merge PR ${{ github.ref }}" ${{ github.ref }}
