@@ -113,6 +113,8 @@ jobs:
 
   Build_Package:
     runs-on: ubuntu-latest
+    outputs:
+      mpylVersion: ${{ steps.version.outputs.mpylVersion }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -136,6 +138,11 @@ jobs:
         if: github.ref_name != 'main'
         with:
           state: open
+
+      - name: Create Version
+        id: version
+        run: |
+          echo "mpylVersion=${{ steps.findPr.outputs.pr }}.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
 
       - name: Build
         if: github.ref_name != 'main'
@@ -161,13 +168,13 @@ jobs:
             New release `${{ steps.findPr.outputs.pr }}.${{ github.run_number }}` deployed at [Test Pypi](https://test.pypi.org/project/mpyl/). 
             Install with 
             ```
-            pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ steps.findPr.outputs.pr }}.${{ github.run_number }}
+            pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ steps.version.outputs.mpylVersion }}
             ```
           reactions: rocket
           comment_tag: execution
 
       - name: Report deployed pacakge
-        run: echo '### New release! 🚀`${{ steps.findPr.outputs.pr }}.${{ github.run_number }}` deployed at [Test Pypi](https://test.pypi.org/project/mpyl/)' >> $GITHUB_STEP_SUMMARY
+        run: echo '### New release! 🚀`${{ steps.version.outputs.mpylVersion }}` deployed at [Test Pypi](https://test.pypi.org/project/mpyl/)' >> $GITHUB_STEP_SUMMARY
 
   Integration_Test:
     runs-on: ubuntu-latest
@@ -177,19 +184,12 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Find PR number
-        uses: jwalton/gh-find-current-pr@v1
-        id: findPr
-        if: github.ref_name != 'main'
-        with:
-          state: open
-
       - name: Install MPyL Attempt 1
         continue-on-error: true
-        run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ steps.findPr.outputs.pr }}.${{ github.run_number }} || true
+        run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_Package.outputs.mpylVersion }} || true
 
       - name: Install MPyL Attempt 2
-        run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ steps.findPr.outputs.pr }}.${{ github.run_number }}
+        run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_Package.outputs.mpylVersion }}
 
       - name: Show files
         run: ls -latr
