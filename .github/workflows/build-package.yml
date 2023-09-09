@@ -5,6 +5,7 @@ on:
 
 jobs:
   Lint:
+    name: 🧽Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -33,6 +34,7 @@ jobs:
         run: pipenv run lint-test
 
   TypeCheck:
+    name: 🧐Check types
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -58,6 +60,7 @@ jobs:
         run: pipenv run check-types-test
 
   Test:
+    name: 🧪Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -112,6 +115,7 @@ jobs:
           path: code-coverage-results.md
 
   Build_Package:
+    name: 🏗️Build package
     runs-on: ubuntu-latest
     outputs:
       mpylVersion: ${{ steps.version.outputs.mpylVersion }}
@@ -148,7 +152,7 @@ jobs:
         if: github.ref_name != 'main'
         env:
           PIPENV_DONT_LOAD_ENV: true
-          MPYL_VERSION: "${{ steps.findPr.outputs.pr }}.${{ github.run_number }}"
+          MPYL_VERSION: ${{ steps.version.outputs.mpylVersion }}
         run: pipenv run build
 
       - name: Publish package
@@ -181,9 +185,43 @@ jobs:
         run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_Package.outputs.mpylVersion }} || true
 
 
-  Integration_Test:
+  Integration_Test_PR:
+    name: Build PR v${{ needs.Build_Package.outputs.mpylVersion }}
     runs-on: ubuntu-latest
-    needs: [ Lint, TypeCheck, Test, Build_Package ]
+    needs: [ Build_Package ]
+    env:
+      MPYL_CONFIG_PATH: mpyl_config.example.yml
+    steps:
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install MPyL
+        continue-on-error: true
+        run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_Package.outputs.mpylVersion }} || true
+
+      - name: Initialize repo
+        run: mpyl repo init -b ${{ github.ref }} -u https://${{ env.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git -p
+
+      - name: Repo status
+        run: mpyl repo status
+
+      - name: Build status
+        run: mpyl build status
+
+      - name: Force change
+        run: echo "To force a change " >> tests/projects/service/change.txt
+
+      - name: Build status with change
+        run: mpyl build status
+
+      - name: Build run
+        run: mpyl build run
+
+  Integration_Test_Tag:
+    name: Build Tag v${{ needs.Build_Package.outputs.mpylVersion }}
+    runs-on: ubuntu-latest
+    needs: [ Build_Package ]
     env:
       MPYL_CONFIG_PATH: mpyl_config.example.yml
     steps:
