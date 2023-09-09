@@ -5,7 +5,7 @@ on:
 
 jobs:
   Lint:
-    name: 🧽Lint
+    name: 🧽 Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -34,7 +34,7 @@ jobs:
         run: pipenv run lint-test
 
   TypeCheck:
-    name: 🧐Check types
+    name: 🧐 Check types
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -60,7 +60,7 @@ jobs:
         run: pipenv run check-types-test
 
   Test:
-    name: 🧪Test
+    name: 🧪 Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -115,7 +115,7 @@ jobs:
           path: code-coverage-results.md
 
   Build_Package:
-    name: 🏗️Build package
+    name: 🏗️ Build package
     runs-on: ubuntu-latest
     outputs:
       mpylVersion: ${{ steps.version.outputs.mpylVersion }}
@@ -186,7 +186,7 @@ jobs:
 
 
   Integration_Test_PR:
-    name: Build PR v${{ needs.Build_Package.outputs.mpylVersion }}
+    name: Test PR v${{ needs.Build_Package.outputs.mpylVersion }}
     runs-on: ubuntu-latest
     needs: [ Build_Package ]
     env:
@@ -198,7 +198,7 @@ jobs:
 
       - name: Install MPyL
         continue-on-error: true
-        run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_Package.outputs.mpylVersion }} || true
+        run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_Package.outputs.mpylVersion }}
 
       - name: Initialize repo
         run: mpyl repo init -b ${{ github.ref }} -u https://${{ env.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git -p
@@ -219,7 +219,7 @@ jobs:
         run: mpyl build run
 
   Integration_Test_Tag:
-    name: Build Tag v${{ needs.Build_Package.outputs.mpylVersion }}
+    name: Test tag v${{ needs.Build_Package.outputs.mpylVersion }}
     runs-on: ubuntu-latest
     needs: [ Build_Package ]
     env:
@@ -231,10 +231,14 @@ jobs:
 
       - name: Install MPyL
         continue-on-error: true
-        run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_Package.outputs.mpylVersion }} || true
+        run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_Package.outputs.mpylVersion }}
 
       - name: Initialize repo
         run: mpyl repo init -b ${{ github.ref }} -u https://${{ env.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git -p
+
+      - name: Get head revision
+        id: headRevision
+        run: echo "headRevision=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Repo status
         run: mpyl repo status
@@ -243,10 +247,26 @@ jobs:
         run: mpyl build status
 
       - name: Force change
-        run: echo "To force a change " >> tests/projects/service/change.txt
+        run: |
+          echo "To force a change " >> tests/projects/service/change.txt
+          git add tests/projects/service/change.txt
 
-      - name: Build status with change
+      - name: Commit the change
+        run: |
+          git config --global user.email "somebody@somewhere.com"
+          git config --global user.name "Some Person"
+          git commit -a -m "A random change"
+
+      - name: Switch to main
+        run: git checkout -b main $${{ steps.headRevision.outputs.headRevision }}
+
+      - name: Merge branch
+        run: git merge --no-ff -m "Merge PR ${{ github.ref }}" ${{ github.ref }}
+
+      - name: Tag merge
+        run: git tag -a v${{ needs.Build_Package.outputs.mpylVersion }} -m "Tagging v${{ needs.Build_Package.outputs.mpylVersion }}"
+
+      - name: Show build status
+        env:
+          TAG_NAME: v${{ needs.Build_Package.outputs.mpylVersion }}
         run: mpyl build status
-
-      - name: Build run
-        run: mpyl build run
