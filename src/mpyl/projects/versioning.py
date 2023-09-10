@@ -1,4 +1,11 @@
-"""Versioning and upgrade utilities for mpyl projects."""
+"""Versioning and upgrade utilities for mpyl projects.
+### Writing an upgrade script
+
+To write an upgrade script, create a new class that inherits from `Upgrader` and
+implements the `upgrade` method. This class should then be added to the `UPGRADERS`
+list in this module.
+
+"""
 import pkgutil
 from io import StringIO
 from pathlib import Path
@@ -31,6 +38,8 @@ def yaml_to_string(serializable: object, yaml: YAML) -> str:
 
 
 class Upgrader:
+    """Base class for upgrade scripts"""
+
     target_version: str
 
     def upgrade(self, previous_dict: ordereddict) -> ordereddict:
