@@ -45,9 +45,6 @@ class Upgrader(ABC):
 class UpgraderOne11(Upgrader):
     target_version = "1.0.11"
 
-    def upgrade(self, previous_dict: ordereddict) -> ordereddict:
-        return previous_dict
-
 
 class UpgraderOne10(Upgrader):
     target_version = "1.0.10"
