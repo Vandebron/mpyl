@@ -25,6 +25,29 @@ class Revision:
     """Git hash for this revision"""
     files_touched: set[str]
     """Paths to files that were altered in this hash"""
+    BREAK_WORD = "hash "
+
+    @staticmethod
+    def from_output(text: str):
+        sections = []
+        current_section: list[str] = []
+        lines = text.splitlines()
+        for line in lines:
+            if line.startswith(Revision.BREAK_WORD):
+                if current_section:
+                    sections.append(current_section)
+                current_section = [line.replace(Revision.BREAK_WORD, "")]
+            else:
+                current_section.append(line)
+
+        if current_section:
+            sections.append(current_section)
+
+        revisions = [
+            Revision(index, section[0], set([line for line in section if line][1:]))
+            for index, section in enumerate(reversed(sections))
+        ]
+        return revisions
 
 
 @dataclass(frozen=True)
@@ -142,20 +165,6 @@ class Repository:  # pylint: disable=too-many-public-methods
     def __get_filter_patterns(self):
         return ["--"] + [f":!{pattern}" for pattern in self._config.ignore_patterns]
 
-    def __to_revision(
-        self, count: int, revision: Commit, files_touched_in_branch: set[str]
-    ) -> Revision:
-        files_in_revision = set(
-            self._repo.git.diff_tree(
-                self.__get_filter_patterns(),
-                no_commit_id=True,
-                name_only=True,
-                r=str(revision),
-            ).splitlines()
-        )
-        intersection = files_in_revision.intersection(files_touched_in_branch)
-        return Revision(count, str(revision), intersection)
-
     def changes_between(self, base_revision: str, head_revision: str) -> list[Commit]:
         return list(
             reversed(list(self._repo.iter_commits(f"{base_revision}..{head_revision}")))
@@ -166,34 +175,14 @@ class Repository:  # pylint: disable=too-many-public-methods
         base_hex = base_ref.hexsha if base_ref else self.root_commit_hex
 
         head_hex = self._repo.active_branch.commit.hexsha
-        logging.debug(
-            f"Base reference: [bright_blue]{base_ref or '(grafted)'}[/bright_blue] [italic]{base_hex}[/italic]"
-        )
 
-        revisions = self.changes_between(base_hex, head_hex)
-
-        logging.debug(
-            f"Found {len(revisions)} revisions in branch: {[r.hexsha for r in revisions]}"
-        )
-
-        if not revisions:
-            return []
-
-        changed_files = list(
-            itertools.chain.from_iterable(
-                [
-                    self._repo.git.diff_tree(
-                        rev, name_only=True, no_commit_id=True, r=True
-                    ).splitlines()
-                    for rev in revisions
-                ]
-            )
-        )
-
-        return [
-            self.__to_revision(count, rev, set(changed_files))
-            for count, rev in enumerate(revisions)
-        ]
+        revs = self._repo.git.log(
+            f'--pretty=format:"{Revision.BREAK_WORD}%H"',
+            "--name-only",
+            "--no-abbrev-commit",
+            f"{base_hex}..{head_hex}",
+        ).replace('"', "")
+        return Revision.from_output(revs)
 
     def changes_in_commit(self) -> set[str]:
         changed: set[str] = set(

@@ -2,14 +2,14 @@ import os
 
 import pytest
 
-from src.mpyl.utilities.repo import RepoConfig
+from src.mpyl.utilities.repo import RepoConfig, Revision
 from tests import root_test_path
 from tests.test_resources import test_data
 from tests.test_resources.test_data import get_config_values
 
 
 class TestRepo:
-    resource_path = root_test_path / "test_resources"
+    resource_path = root_test_path / "test_resources" / "repository"
 
     @pytest.mark.skipif(
         condition="GITHUB_JOB" in os.environ,
@@ -28,3 +28,15 @@ class TestRepo:
         repo_credentials = config.repo_credentials
         assert repo_credentials.url == "https://github.com/acme/repo.git"
         assert repo_credentials.to_url == "https://github.com/acme/repo.git"
+
+    def test_map_git_log_to_revisions(self):
+        text = (self.resource_path / "git_log.txt").read_text(encoding="utf-8")
+        revisions = Revision.from_output(text)
+
+        first_revision = revisions[0]
+        assert first_revision.ord == 0
+        assert first_revision.hash == "e9ff18931070de4803da2190274d5fccb0362824"
+        assert first_revision.files_touched == {"projects/service/src/sum.js"}
+
+        last_revision = revisions[-1]
+        assert last_revision.ord == 8
