@@ -1,5 +1,6 @@
 name: 'example-dagster-user-code'
 description: 'Example user-code deployment for dagster'
+mpylVersion: 1.0.9
 maintainer:
   - MPyL
 stages:
