@@ -129,6 +129,15 @@ def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
     )
     obj.console.log(parameters)
 
+    if tag and not obj.repo.fit_for_tag_build(tag):
+        obj.console.print(
+            Markdown(
+                f"Current state of repo is not fit for building tag `{tag}`."
+                f"Validate the status of the repo by running `mpyl repo status`."
+            )
+        )
+        sys.exit(1)
+
     run_properties = (
         RunProperties.from_configuration(obj.run_properties, obj.config, tag)
         if ci
