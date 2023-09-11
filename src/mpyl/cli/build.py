@@ -300,7 +300,8 @@ def select_version(value: str) -> str:
         return question("Which version do you want to install?")
     if value not in versions:
         return question(
-            "Version not recognized. Select one from the list .. Check --help for more info.")
+            "Version not recognized. Select one from the list .. Check --help for more info."
+        )
     return value
 
 
@@ -466,7 +467,6 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
             pipeline_parameters["MPYL_RELEASE"] = version
 
         run_argument = JenkinsRunParameters(
-
             jenkins_user=user,
             jenkins_password=password,
             config=ctx.obj.config,
