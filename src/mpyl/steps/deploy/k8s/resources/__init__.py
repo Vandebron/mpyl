@@ -3,7 +3,6 @@ Custom Resource Definitions, allow you to create custom k8s resources, besides t
 This is useful for example when you want to configure a specific operator, like Spark or sealed secrets.
 """
 import pkgutil
-from io import StringIO
 from typing import Optional
 
 import jsonschema
@@ -11,6 +10,8 @@ import six
 from jsonschema import ValidationError
 from kubernetes.client import Configuration, V1ObjectMeta
 from ruamel.yaml import YAML
+
+from .....projects.versioning import yaml_to_string
 
 yaml = YAML()
 
@@ -162,7 +163,4 @@ def to_yaml(resource: object) -> str:
                 f"Schema {resource.schema} defined but not found in package"
             )
 
-    stream = StringIO()
-    yaml.dump(yaml_values, stream)
-
-    return stream.getvalue()
+    return yaml_to_string(yaml_values, yaml)

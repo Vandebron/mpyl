@@ -1,7 +1,8 @@
 from pathlib import Path
 
-import yaml
+from ruamel.yaml import YAML
 
+from src.mpyl.utilities.yaml import yaml_to_string
 from src.mpyl import parse_config
 from src.mpyl.project import load_project
 from src.mpyl.steps import Input
@@ -10,6 +11,8 @@ from src.mpyl.utilities.docker import DockerConfig
 from tests import root_test_path
 from tests.test_resources import test_data
 from tests.test_resources.test_data import assert_roundtrip
+
+yaml = YAML()
 
 
 class TestDagster:
@@ -27,7 +30,7 @@ class TestDagster:
         overwrite: bool = False,
     ):
         name_chart = file_name / f"{chart}.yaml"
-        assert_roundtrip(name_chart, yaml.dump(actual_values), overwrite)
+        assert_roundtrip(name_chart, yaml_to_string(actual_values, yaml), overwrite)
 
     def test_generate_correct_values_yaml(self):
         step_input = Input(

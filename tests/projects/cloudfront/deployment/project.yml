@@ -3,7 +3,8 @@ description: 'This is a test container. For testing the MPyL pipelines, not to b
 stages:
   build: Docker Build
   deploy: CloudFront Kubernetes Deploy
-maintainer: [ 'MPyL' ]
+mpylVersion: 1.0.9
+maintainer: ['MPyL']
 build:
   args:
     plain:

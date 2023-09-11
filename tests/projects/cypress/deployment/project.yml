@@ -1,6 +1,7 @@
 name: cypress
-maintainer: [ 'MPyL' ]
+maintainer: ['MPyL']
 description: Running of cypress tests
+mpylVersion: 1.0.9
 stages:
   postdeploy: Cypress Test
 dependencies:

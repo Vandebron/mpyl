@@ -19,7 +19,7 @@ from ....utilities.repo import RepoConfig, Repository
 
 
 @dataclass(frozen=True)
-class JenkinsRunParameters:
+class JenkinsRunParameters:  # pylint: disable=too-many-instance-attributes
     jenkins_user: str
     jenkins_password: str
     config: dict
@@ -30,6 +30,7 @@ class JenkinsRunParameters:
     dryrun: bool
     all: bool
     tag: Optional[str] = None
+    tag_target: Target = Target.ACCEPTANCE
 
 
 def get_token(github_config: GithubConfig):
@@ -91,7 +92,7 @@ def run_jenkins(run_config: JenkinsRunParameters):
             try:
                 pipeline_info = (
                     Pipeline(
-                        target=Target.ACCEPTANCE,
+                        target=run_config.tag_target,
                         tag=run_config.tag,
                         url="https://tag-url",
                         pipeline=run_config.pipeline,
@@ -105,6 +106,11 @@ def run_jenkins(run_config: JenkinsRunParameters):
                 )
                 if not pipeline_info:
                     return
+
+                if run_config.tag:
+                    run_config.pipeline_parameters[
+                        "DEPLOY_CHOICE"
+                    ] = run_config.tag_target.value
 
                 status.start()
                 status.update(

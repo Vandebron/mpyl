@@ -7,11 +7,11 @@ deployments:
     LOGGING_LEVEL: DEBUG
   envSecrets: []
   image:
+    pullPolicy: Always
     imagePullSecrets:
     - name: bigdataregistry
-    pullPolicy: Always
-    repository: docker_host/example-dagster-user-code
     tag: pr-1234
+    repository: docker_host/example-dagster-user-code
   includeConfigInLaunchedRuns:
     enabled: true
   name: example-dagster-user-code-pr-1234

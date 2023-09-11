@@ -1,5 +1,4 @@
 import logging
-from io import StringIO
 from logging import Logger
 from typing import cast
 
@@ -8,10 +7,11 @@ from jsonschema import ValidationError
 from pyaml_env import parse_config
 from ruamel.yaml import YAML  # type: ignore
 
-from src.mpyl.steps.deploy.k8s import RenderedHelmChartSpec
 from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME, BUILD_ARTIFACTS_FOLDER
 from src.mpyl.project import Project, Stages, Stage, Target, Dependencies
+from src.mpyl.projects.versioning import yaml_to_string
 from src.mpyl.steps.collection import StepsCollection
+from src.mpyl.steps.deploy.k8s import RenderedHelmChartSpec
 from src.mpyl.steps.models import (
     Output,
     ArtifactType,
@@ -44,9 +44,7 @@ class TestSteps:
 
     @staticmethod
     def _roundtrip(output) -> Output:
-        stream = StringIO()
-        yaml.dump(output, stream)
-        output_string = stream.getvalue()
+        output_string = yaml_to_string(output, yaml)
         return yaml.load(output_string)
 
     def test_output_no_artifact_roundtrip(self):
@@ -64,16 +62,13 @@ class TestSteps:
         )
 
     def test_write_output(self):
-        stream = StringIO()
-        yaml.dump(self.docker_image, stream)
-        value = stream.getvalue()
+        build_yaml = yaml_to_string(self.docker_image, yaml)
         assert_roundtrip(
             test_resource_path / "deployment" / BUILD_ARTIFACTS_FOLDER / "BUILD.yml",
-            value,
+            build_yaml,
         )
 
     def test_write_deploy_output(self):
-        stream = StringIO()
         output = Output(
             success=True,
             message="deploy success  success",
@@ -84,10 +79,10 @@ class TestSteps:
                 spec=RenderedHelmChartSpec("target/template.yml"),
             ),
         )
-        yaml.dump(output, stream)
+
         assert_roundtrip(
             test_resource_path / "deployment" / BUILD_ARTIFACTS_FOLDER / "DEPLOY.yml",
-            stream.getvalue(),
+            yaml_to_string(output, yaml),
         )
 
     def test_find_required_output(self):

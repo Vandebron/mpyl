@@ -4,7 +4,8 @@ stages:
   build: Docker Build
   test: Docker Test
   deploy: Kubernetes Deploy
-maintainer: [ 'MPyL' ]
+mpylVersion: 1.0.10
+maintainer: ['MPyL']
 build:
   args:
     plain:
@@ -16,6 +17,7 @@ dependencies:
   build:
     - 'test/docker/'
 deployment:
+  namespace: 'nodeservice'
   properties:
     env:
       - key: SOME_ENV

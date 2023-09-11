@@ -1,4 +1,5 @@
 """Commands related to projects and how they relate"""
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -6,13 +7,8 @@ import click
 from click import ParamType, Argument
 from click.shell_completion import CompletionItem
 from rich.markdown import Markdown
+from rich.prompt import Confirm
 
-from ..cli.commands.projects.lint import (
-    _find_project_paths,
-    _check_and_load_projects,
-    _assert_unique_project_names,
-    _assert_correct_project_linkup,
-)
 from . import (
     CliContext,
     CONFIG_PATH_HELP,
@@ -20,8 +16,20 @@ from . import (
     parse_config_from_supplied_location,
 )
 from .commands.projects.formatting import print_project
+from ..cli.commands.projects.lint import (
+    _find_project_paths,
+    _check_and_load_projects,
+    _assert_unique_project_names,
+    _assert_correct_project_linkup,
+)
+from ..cli.commands.projects.upgrade import check_upgrade
 from ..constants import DEFAULT_CONFIG_FILE_NAME
 from ..project import load_project, Project, Target
+from ..projects.versioning import (
+    check_upgrades_needed,
+    upgrade_file,
+    UPGRADERS,
+)
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
 
@@ -53,7 +61,7 @@ class ProjectsContext:
 )
 @click.pass_context
 def projects(ctx, config, verbose, filter_):
-    """Commands related to projects"""
+    """Commands related to MPyL project configurations (project.yml)"""
     console = create_console_logger(show_path=False, verbose=verbose, max_width=0)
     parsed_config = parse_config(config)
     ctx.obj = ProjectsContext(
@@ -157,6 +165,49 @@ def lint(obj: ProjectsContext, all_, extended):
             all_projects=all_projects,
             pr_identifier=123,
         )
+
+
+@projects.command(help="Upgrade projects to conform with the latest schema")
+@click.option(
+    "--apply",
+    "-a",
+    is_flag=True,
+    help="Apply upgrade operations to the project files",
+)
+@click.pass_obj
+def upgrade(obj: ProjectsContext, apply: bool):
+    paths = map(Path, _find_project_paths(True, obj.cli.repo, ""))
+    candidates = check_upgrades_needed(list(paths))
+    if not apply:
+        upgradable = check_upgrade(obj.cli.console, candidates)
+        number_in_need_of_upgrade = len(upgradable)
+        if number_in_need_of_upgrade > 0:
+            obj.cli.console.print(
+                f"{number_in_need_of_upgrade} projects need to be upgraded"
+            )
+            sys.exit(1)
+
+    with obj.cli.console.status("Checking for upgrades...") as status:
+        materialized = list(candidates)
+        need_upgrade = [path for path, diff in materialized if diff is not None]
+        number_of_upgrades = len(need_upgrade)
+        status.console.print(
+            f"Found {len(materialized)} projects, of which {number_of_upgrades} need to be upgraded"
+        )
+        status.stop()
+        if number_of_upgrades > 0 and Confirm.ask("Upgrade all?"):
+            status.start()
+            for path in need_upgrade:
+                status.update(f"Upgrading {path}")
+                upgraded = upgrade_file(path, UPGRADERS)
+                if upgraded:
+                    path.write_text(upgraded)
+            status.stop()
+            status.console.print(
+                Markdown(
+                    f"Upgraded {number_of_upgrades} projects. Validate with `mpyl projects lint --extended`"
+                )
+            )
 
 
 if __name__ == "__main__":

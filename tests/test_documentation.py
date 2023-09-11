@@ -1,7 +1,7 @@
 import re
 from pathlib import Path
 
-from src.mpyl.cli import get_releases, get_latest_release
+from src.mpyl.projects.versioning import get_releases, get_latest_release
 from tests.test_resources.test_data import assert_roundtrip, root_test_path
 
 

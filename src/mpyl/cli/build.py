@@ -37,7 +37,7 @@ from ..constants import (
     DEFAULT_RUN_PROPERTIES_FILE_NAME,
     BUILD_ARTIFACTS_FOLDER,
 )
-from ..project import load_project
+from ..project import load_project, Target
 from ..reporting.formatting.markdown import (
     execution_plan_as_markdown,
 )
@@ -53,7 +53,8 @@ async def warn_if_update(console: Console):
     if update:
         console.print(
             Markdown(
-                f"⚠️  **You can upgrade from {version} to {update} :** `pip install -U mpyl=={update}`"
+                f"⚠️  **You can upgrade from {version} to {update} :** `pip install -U mpyl=={update}`. "
+                f"After upgrading, you may need to run `mpyl projects upgrade` to upgrade your projects."
             )
         )
 
@@ -285,7 +286,7 @@ def get_test_releases():
     return versions
 
 
-def select_version(value) -> str:
+def select_version(value: str) -> str:
     versions = get_test_releases()
 
     def question(message: str) -> str:
@@ -300,6 +301,17 @@ def select_version(value) -> str:
     if value not in versions:
         return question("Version not recognized. Select one from the list .. Check --help for more info.")
     return value
+
+
+def select_target():
+    return questionary.select(
+        "Which environment do you want to deploy to?",
+        show_selected=True,
+        choices=[
+            Choice(title=t.name, value=t.name)
+            for t in [Target.ACCEPTANCE, Target.PULL_REQUEST_BASE, Target.PRODUCTION]
+        ],
+    ).ask()
 
 
 def ask_for_input(ctx, _param, value) -> Optional[str]:
@@ -338,10 +350,19 @@ def ask_for_input(ctx, _param, value) -> Optional[str]:
     required=False,
 )
 @click.option(
+    "--version",
+    "-v",
+    help="A specific version on https://pypi.org/project/mpyl/ to use for the build.",
+    type=click.STRING,
+    required=False,
+)
+@click.option(
     "--test",
     "-t",
-    help="A specific test version on https://test.pypi.org/project/mpyl/ to use for the build.",
-    type=click.STRING,
+    help="The version supplied by `--version` should be considered from the Test PyPi mirror at"
+    " https://test.pypi.org/project/mpyl/.",
+    is_flag=True,
+    default=False,
     required=False,
 )
 @click.option(
@@ -371,7 +392,6 @@ def ask_for_input(ctx, _param, value) -> Optional[str]:
 )
 @click.option(
     "--tag",
-    "-tg",
     is_flag=False,
     flag_value="prompt",
     default="not_set",
@@ -407,6 +427,7 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
     user,
     password,
     pipeline,
+    version,
     test,
     arguments,
     background,
@@ -414,7 +435,6 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
     tag,
     all_,
     dryrun_,
-    version,
 ):
     upgrade_check = None
     try:
@@ -428,18 +448,24 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
         jenkins_config = ctx.obj.config["jenkins"]
 
         selected_pipeline = pipeline if pipeline else jenkins_config["defaultPipeline"]
+
         pipeline_parameters = {"TEST": "true", "VERSION": test} if test else {}
         pipeline_parameters["BUILD_PARAMS"] = ""
         if dryrun_:
             pipeline_parameters["BUILD_PARAMS"] += " --dryrun"
         if all_:
             pipeline_parameters["BUILD_PARAMS"] += " --all"
+
+        pipeline_parameters = (
+            {"TEST": "true" if test else "false", "VERSION": version} if version else {}
+        )
         if arguments:
             pipeline_parameters["BUILD_PARAMS"] = " ".join(arguments)
         if version:
             pipeline_parameters["MPYL_RELEASE"] = version
 
         run_argument = JenkinsRunParameters(
+
             jenkins_user=user,
             jenkins_password=password,
             config=ctx.obj.config,
@@ -450,6 +476,7 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
             tag=tag,
             dryrun=dryrun_,
             all=all_,
+            tag_target=getattr(Target, select_target()) if tag else None,
         )
 
         run_jenkins(run_argument)

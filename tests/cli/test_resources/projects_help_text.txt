@@ -1,6 +1,6 @@
 Usage: mpyl projects [OPTIONS] COMMAND [ARGS]...
 
-  Commands related to projects
+  Commands related to MPyL project configurations (project.yml)
 
 Options:
   -c, --config PATH  Path to the config.yml. Can be set via `MPYL_CONFIG_PATH`
@@ -10,6 +10,7 @@ Options:
   --help             Show this message and exit.
 
 Commands:
-  lint  Validate the yaml of changed projects against their schema
-  list  List found projects
-  show  Show details of a project
+  lint     Validate the yaml of changed projects against their schema
+  list     List found projects
+  show     Show details of a project
+  upgrade  Upgrade projects to conform with the latest schema

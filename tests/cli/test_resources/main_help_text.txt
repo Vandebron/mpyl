@@ -8,6 +8,6 @@ Options:
 Commands:
   build     Pipeline build commands
   health    Health check
-  projects  Commands related to projects
+  projects  Commands related to MPyL project configurations (project.yml)
   repo      Manage CVS (git) repositories
   version   Version information
