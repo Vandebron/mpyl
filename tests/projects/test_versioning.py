@@ -1,8 +1,8 @@
 from pathlib import Path
 
 from deepdiff import DeepDiff
-from ruamel.yaml import YAML
 
+from src.mpyl.utilities.yaml import yaml_to_string
 from src.mpyl.projects.versioning import (
     upgrade_file,
     get_entry_upgrader_index,
@@ -17,12 +17,11 @@ from src.mpyl.projects.versioning import (
 from tests.test_resources.test_data import assert_roundtrip
 from tests.test_resources.test_data import root_test_path
 
-yaml = YAML()
-
 
 class TestVersioning:
     test_resources_path = root_test_path / "test_resources"
     upgrades_path = test_resources_path / "upgrades"
+    diff_path = upgrades_path / "diff"
     latest_release_file = "test_project_1_0_11.yml"
 
     @staticmethod
@@ -64,10 +63,17 @@ class TestVersioning:
         )
 
     def test_diff_pretty_print(self):
-        diff_path = self.upgrades_path / "diff"
-        before, _ = load_for_roundtrip(diff_path / "before.yml")
-        after, _ = load_for_roundtrip(diff_path / "after.yml")
+        before, _ = load_for_roundtrip(self.diff_path / "before.yml")
+        after, _ = load_for_roundtrip(self.diff_path / "after.yml")
         diff = DeepDiff(before, after, view="_delta")
 
         pretty_diff = pretty_print(diff)
-        assert_roundtrip(diff_path / "diff.txt", pretty_diff)
+        assert_roundtrip(self.diff_path / "diff.txt", pretty_diff)
+
+    # Padding around lists is removed. list: [ 'MPyL', 'Next' ] becomes  list: ['MPyL', 'Next']
+    def test_formatting_roundtrip_removes(self):
+        formatted = self.diff_path / "formatting_before.yml"
+        formatting, yaml = load_for_roundtrip(formatted)
+        assert_roundtrip(
+            self.diff_path / "formatting_after.yml", yaml_to_string(formatting, yaml)
+        )
