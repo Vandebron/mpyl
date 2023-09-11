@@ -299,6 +299,7 @@ def select_version(value) -> str:
             show_selected=True,
             choices=versions,
         ).ask()
+    return value
 
 
 def ask_for_input(ctx, _param, value) -> Optional[str]:
