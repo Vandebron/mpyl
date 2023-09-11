@@ -321,7 +321,8 @@ def select_version(value) -> str:
         return question("Which version do you want to install?")
     if value not in versions:
         return question(
-            "Version not recognized. Select one from the list .. Check --help for more info.")
+            "Version not recognized. Select one from the list .. Check --help for more info."
+        )
     return value
 
 
