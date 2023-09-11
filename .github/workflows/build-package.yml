@@ -206,6 +206,15 @@ jobs:
       - name: Repo status
         run: mpyl repo status
 
+      - name: Check mpyl health
+        run: mpyl health --ci
+
+      - name: Lint projects
+        run: mpyl projects lint
+
+      - name: Validate upgrade status
+        run: mpyl projects upgrade
+
       - name: Build status
         run: mpyl build status
 
