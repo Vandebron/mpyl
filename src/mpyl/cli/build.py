@@ -268,9 +268,8 @@ def select_target():
         "Which environment do you want to deploy to?",
         show_selected=True,
         choices=[
-            Choice(title="Acceptance", value=Target.ACCEPTANCE.name),
-            Choice(title="PullRequestBase", value=Target.PULL_REQUEST_BASE.name),
-            Choice(title="Production", value=Target.PRODUCTION.name),
+            Choice(title=t.name, value=t.name)
+            for t in [Target.ACCEPTANCE, Target.PULL_REQUEST_BASE, Target.PRODUCTION]
         ],
     ).ask()
 
