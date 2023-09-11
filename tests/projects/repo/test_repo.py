@@ -30,8 +30,10 @@ class TestRepo:
         assert repo_credentials.to_url == "https://github.com/acme/repo.git"
 
     def test_map_git_log_to_revisions(self):
-        text = (self.resource_path / "git_log.txt").read_text(encoding="utf-8")
-        revisions = Revision.from_output(text)
+        log_text = (self.resource_path / "git_log.txt").read_text(encoding="utf-8")
+        diff_text = (self.resource_path / "git_diff.txt").read_text(encoding="utf-8")
+        revisions = Revision.from_git_output(log_text, diff_text)
+        print(revisions)
 
         first_revision = revisions[0]
         assert first_revision.ord == 0
@@ -40,3 +42,6 @@ class TestRepo:
 
         last_revision = revisions[-1]
         assert last_revision.ord == 8
+        assert (
+            last_revision.files_touched == set()
+        ), "Pipfile does not have a net change"
