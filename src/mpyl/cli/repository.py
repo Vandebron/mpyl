@@ -62,7 +62,8 @@ def status(obj: RepoContext):
     run_properties = RunProperties.from_configuration(
         parse_config(obj.run_properties), config
     )
-    ci_branch = run_properties.versioning.branch
+    versioning = run_properties.versioning
+    ci_branch = versioning.branch
     console = obj.console
     with Repository(config=RepoConfig.from_config(config)) as repo:
         console.print(
@@ -97,8 +98,21 @@ def status(obj: RepoContext):
         console.line(1)
         console.log(Markdown(f"Configured base branch: `{repo.main_origin_branch}`"))
         if repo.get_branch == repo.main_branch:
-            console.log(f"On main branch ({repo.main_branch})")
+            if versioning.tag:
+                if not repo.fit_for_tag_build(versioning.tag):
+                    console.log("❌ Repo not fit for tag build")
+                else:
+                    changes = repo.changes_in_tagged_commit(versioning.tag)
+                    files_changed = changes[0].files_touched
+                    console.log(
+                        Markdown(
+                            f"*{len(files_changed)}* files changed in merge commit `{versioning.tag}`"
+                        )
+                    )
+            else:
+                console.log(f"On main branch ({repo.main_branch}), no tag specified.")
             return
+
         if base_revision:
             console.log(
                 Markdown(

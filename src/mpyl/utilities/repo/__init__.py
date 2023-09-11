@@ -214,9 +214,7 @@ class Repository:  # pylint: disable=too-many-public-methods
         curr_rev_tag = self.get_tag
 
         if curr_rev_tag != current_tag:
-            logging.error(
-                f"HEAD is not at {curr_rev_tag} not at expected {current_tag}"
-            )
+            logging.error(f"HEAD is at {curr_rev_tag} not at expected `{current_tag}`")
             return []
 
         return self.changes_in_merge_commit()

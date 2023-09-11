@@ -275,7 +275,17 @@ jobs:
       - name: Tag merge
         run: git tag -a v${{ needs.Build_Package.outputs.mpylVersion }} -m "Tagging v${{ needs.Build_Package.outputs.mpylVersion }}"
 
+      - name: Repo status after merge
+        env:
+          TAG_NAME: v${{ needs.Build_Package.outputs.mpylVersion }}
+        run: mpyl repo status
+
       - name: Show build status
         env:
           TAG_NAME: v${{ needs.Build_Package.outputs.mpylVersion }}
         run: mpyl build status
+
+      - name: Run tag build
+        env:
+          TAG_NAME: v${{ needs.Build_Package.outputs.mpylVersion }}
+        run: mpyl build run

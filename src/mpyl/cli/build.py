@@ -107,7 +107,7 @@ def build(ctx, config, properties, verbose):
 @click.option(
     "--ci",
     is_flag=True,
-    help="Run as CI build instead of local. Ignores unversioned changes.",
+    help="Run as CI build instead of local. Ignores untracked changes.",
 )
 @click.option(
     "--all",
