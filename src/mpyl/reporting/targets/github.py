@@ -27,7 +27,7 @@ Checks can be referred to from branch protection rules, in order to prevent faul
  Github app to your repository.
  2. Go to your repository's *Setting* -> *Integrations* -> *Github Apps* and click **Configure** for*_MPyL Pipeline*
  3. In the app's settings page, scroll down and click **Generate a private key**
- 4. The private key needs to be made available at the location configured in `csv.targets.app.privateKeyPath` at
+ 4. The private key needs to be made available at the location configured in `vcs.targets.app.privateKeyPath` at
   runtime.
 
 """
