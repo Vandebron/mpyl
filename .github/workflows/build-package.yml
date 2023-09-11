@@ -182,10 +182,10 @@ jobs:
 
       - name: Ensure package is in pypi cache, attempt 1
         continue-on-error: true
-        run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_Package.outputs.mpylVersion }} || true
+        run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ steps.version.outputs.mpylVersion }} || true
 
       - name: Ensure package is in pypi cache, attempt 2
-        run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_Package.outputs.mpylVersion }}
+        run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ steps.version.outputs.mpylVersion }}
 
 
   Integration_Test_PR:
