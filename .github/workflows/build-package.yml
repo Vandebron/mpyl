@@ -180,9 +180,12 @@ jobs:
       - name: Report deployed pacakge
         run: echo '### New release! 🚀`${{ steps.version.outputs.mpylVersion }}` deployed at [Test Pypi](https://test.pypi.org/project/mpyl/)' >> $GITHUB_STEP_SUMMARY
 
-      - name: Ensure package is in pypi cache
+      - name: Ensure package is in pypi cache, attempt 1
         continue-on-error: true
         run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_Package.outputs.mpylVersion }} || true
+
+      - name: Ensure package is in pypi cache, attempt 2
+        run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_Package.outputs.mpylVersion }}
 
 
   Integration_Test_PR:

@@ -192,17 +192,17 @@ def __print_status(obj: CliContext):
     version = run_properties.versioning
     revision = version.revision or obj.repo.get_sha
     base_revision = obj.repo.base_revision
-    base_revision_specification = (
-        f"at `{base_revision}`"
-        if base_revision
-        else f"not present. Earliest revision: `{obj.repo.root_commit_hex}` (grafted)."
-    )
-    console.print(
-        Markdown(
-            f"**{'Tag' if tag else 'Branch'}:** `{branch or version.tag}` at `{revision}`. "
+    if tag:
+        console.print(Markdown(f"**Tag:** `{version.tag}` at `{revision}`. "))
+    else:
+        base_revision_specification = (
+            f"at `{base_revision}`"
+            if base_revision
+            else f"not present. Earliest revision: `{obj.repo.root_commit_hex}` (grafted)."
         )
-    )
-    console.print(Markdown(f"Base `{main_branch}` {base_revision_specification}"))
+        console.print(
+            Markdown(f"**Branch:** `{branch}`. Base {base_revision_specification}. ")
+        )
 
     result = get_build_plan(
         logger=logging.getLogger("mpyl"),
