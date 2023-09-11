@@ -34,7 +34,7 @@ class CliContext:
 
 @dataclass(frozen=True)
 class MpylCliParameters:
-    local: bool = True
+    local: bool = False
     tag: Optional[str] = None
     pull_main: bool = False
     verbose: bool = False

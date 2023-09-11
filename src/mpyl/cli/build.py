@@ -199,7 +199,7 @@ def __print_status(obj: CliContext):
         logger=logging.getLogger("mpyl"),
         repo=obj.repo,
         run_properties=run_properties,
-        cli_parameters=MpylCliParameters(),
+        cli_parameters=MpylCliParameters(local=sys.stdout.isatty()),
     )
     if result.run_plan:
         console.print(
