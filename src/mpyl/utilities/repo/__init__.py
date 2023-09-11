@@ -28,12 +28,18 @@ class Revision:
     BREAK_WORD = "hash "
 
     @staticmethod
-    def from_output(text: str):
-        """From the following command: `git log --pretty=format:"hash %H" --name-only
-        --no-abbrev-commit <from>..<until>`"""
+    def from_git_output(git_log_output: str, git_diff_output: str):
+        """
+        :param git_diff_output: output of `git log --pretty=format:"hash %H" --name-only
+        --no-abbrev-commit <from>..<until>`
+        :param git_log_output: output of `git diff --name-only <from>..<until>`
+        """
+
+        change_set = set(git_diff_output.splitlines())
+
         sections = []
         current_section: list[str] = []
-        lines = text.splitlines()
+        lines = git_log_output.splitlines()
         for line in lines:
             if line.startswith(Revision.BREAK_WORD):
                 if current_section:
@@ -46,7 +52,11 @@ class Revision:
             sections.append(current_section)
 
         revisions = [
-            Revision(index, section[0], set([line for line in section if line][1:]))
+            Revision(
+                index,
+                section[0],
+                {line for line in section[1:] if line in change_set},
+            )
             for index, section in enumerate(reversed(sections))
         ]
         return revisions
@@ -177,7 +187,10 @@ class Repository:  # pylint: disable=too-many-public-methods
         ]
 
         revs = self._repo.git.log(*command).replace('"', "")
-        return Revision.from_output(revs)
+        changed_files = self._repo.git.diff(
+            f"{base_revision}..{head_revision}", name_only=True
+        )
+        return Revision.from_git_output(revs, changed_files)
 
     def changes_in_branch(self) -> list[Revision]:
         base_ref = self.base_revision
