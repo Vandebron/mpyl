@@ -309,18 +309,18 @@ def get_test_releases():
 
 def select_version(value) -> str:
     versions = get_test_releases()
-    if value == 'prompt':
+
+    def question(message: str) -> str:
         return questionary.select(
-            "Which version do you want to install?",
+            message=message,
             show_selected=True,
             choices=versions,
         ).ask()
+
+    if value == "prompt":
+        return question("Which version do you want to install?")
     if value not in versions:
-        return questionary.select(
-            "Version not recognized. Select one from the list .. Check --help for more info.",
-            show_selected=True,
-            choices=versions,
-        ).ask()
+        return question("Version not recognized. Select one from the list .. Check --help for more info.")
     return value
 
 
