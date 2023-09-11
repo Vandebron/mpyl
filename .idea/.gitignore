@@ -10,3 +10,4 @@
 /libraries/
 watcherTasks.xml
 /scala_compiler.xml
+kubernetes-settings.xml

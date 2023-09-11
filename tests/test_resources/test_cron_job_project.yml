@@ -6,6 +6,7 @@ stages:
   test: "Echo Test"
   deploy: "Kubernetes Job Deploy"
 deployment:
+  namespace: "job"
   properties:
     env:
       - key: PROD_ONLY_ENV

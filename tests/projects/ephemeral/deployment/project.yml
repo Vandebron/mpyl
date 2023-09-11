@@ -1,10 +1,12 @@
 name: kong-sync
-maintainer: [ 'MPyL' ]
+maintainer: ['MPyL']
 description: 'Deployment of Kong config'
+mpylVersion: 1.0.10
 stages:
   build: Docker Build
   deploy: Deploy From Docker Container
 deployment:
+  namespace: kong-sync
   properties:
     env:
       - key: KONG_ADMIN_ADDRESS

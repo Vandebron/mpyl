@@ -73,6 +73,7 @@ def _check_and_load_projects(
 
 
 def _assert_unique_project_names(console: Console, all_projects: list[Project]):
+    console.print("")
     duplicates = [
         project.name for project in all_projects if all_projects.count(project) > 1
     ]
@@ -97,6 +98,7 @@ def _assert_correct_project_linkup(
     all_projects: list[Project],
     pr_identifier: Optional[int],
 ):
+    console.print("")
     wrong_substitutions = __get_wrong_substitutions_per_project(
         all_projects, projects, pr_identifier, target
     )

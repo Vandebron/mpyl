@@ -51,7 +51,8 @@ async def warn_if_update(console: Console):
     if update:
         console.print(
             Markdown(
-                f"⚠️  **You can upgrade from {version} to {update} :** `pip install -U mpyl=={update}`"
+                f"⚠️  **You can upgrade from {version} to {update} :** `pip install -U mpyl=={update}`. "
+                f"After upgrading, you may need to run `mpyl projects upgrade` to upgrade your projects."
             )
         )
 
