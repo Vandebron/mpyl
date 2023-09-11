@@ -48,14 +48,23 @@ class IntegrationTestBefore(Step):
         poll = 0
         while not goal_reached:
             proj: ComposeProject = docker_client.compose.ls()[0]
-            container = docker_client.compose.ps()[0]
+            state = docker_client.compose.ps()[0].state
             goal_reached = (
-                proj.created + proj.restarting + proj.exited + proj.paused + proj.dead
-            ) == 0 and container.state.health.status == "healthy"
+                (
+                    (proj.created or 0)
+                    + (proj.restarting or 0)
+                    + (proj.exited or 0)
+                    + (proj.paused or 0)
+                    + (proj.dead or 0)
+                )
+                == 0
+                and state.health
+                and state.health.status == "healthy"
+            )
             if not goal_reached:
                 self._logger.info("Waiting for container to be running and healthy..")
                 self._logger.debug(f"Project stats: {proj}")
-                self._logger.debug(f"Container state: {container.state}")
+                self._logger.debug(f"Container state: {state}")
 
             poll += 1
             if poll >= config.failure_threshold:
