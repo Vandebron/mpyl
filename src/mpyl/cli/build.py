@@ -35,7 +35,7 @@ from ..constants import (
     DEFAULT_RUN_PROPERTIES_FILE_NAME,
     BUILD_ARTIFACTS_FOLDER,
 )
-from ..project import load_project
+from ..project import load_project, Target
 from ..reporting.formatting.markdown import (
     execution_plan_as_markdown,
 )
@@ -263,7 +263,18 @@ def select_tag(ctx) -> str:
         return release.tag_name
 
 
-def ask_for_input(ctx, _param, value) -> Optional[str]:
+def select_target():
+    return questionary.select(
+        "Which environment do you want to deploy to?",
+        show_selected=True,
+        choices=[
+            Choice(title=t.name, value=t.name)
+            for t in [Target.ACCEPTANCE, Target.PULL_REQUEST_BASE, Target.PRODUCTION]
+        ],
+    ).ask()
+
+
+def ask_for_tag_input(ctx, _param, value) -> Optional[str]:
     if value == "not_set":
         return None
     if value == "prompt":
@@ -297,10 +308,19 @@ def ask_for_input(ctx, _param, value) -> Optional[str]:
     required=False,
 )
 @click.option(
+    "--version",
+    "-v",
+    help="A specific version on https://pypi.org/project/mpyl/ to use for the build.",
+    type=click.STRING,
+    required=False,
+)
+@click.option(
     "--test",
     "-t",
-    help="A specific test version on https://test.pypi.org/project/mpyl/ to use for the build.",
-    type=click.STRING,
+    help="The version supplied by `--version` should be considered from the Test PyPi mirror at"
+    " https://test.pypi.org/project/mpyl/.",
+    is_flag=True,
+    default=False,
     required=False,
 )
 @click.option(
@@ -330,11 +350,10 @@ def ask_for_input(ctx, _param, value) -> Optional[str]:
 )
 @click.option(
     "--tag",
-    "-tg",
     is_flag=False,
     flag_value="prompt",
     default="not_set",
-    callback=ask_for_input,
+    callback=ask_for_tag_input,
 )
 @click.pass_context
 def jenkins(  # pylint: disable=too-many-arguments
@@ -342,6 +361,7 @@ def jenkins(  # pylint: disable=too-many-arguments
     user,
     password,
     pipeline,
+    version,
     test,
     arguments,
     background,
@@ -360,7 +380,9 @@ def jenkins(  # pylint: disable=too-many-arguments
         jenkins_config = ctx.obj.config["jenkins"]
 
         selected_pipeline = pipeline if pipeline else jenkins_config["defaultPipeline"]
-        pipeline_parameters = {"TEST": "true", "VERSION": test} if test else {}
+        pipeline_parameters = (
+            {"TEST": "true" if test else "false", "VERSION": version} if version else {}
+        )
         if arguments:
             pipeline_parameters["BUILD_PARAMS"] = " ".join(arguments)
 
@@ -373,6 +395,7 @@ def jenkins(  # pylint: disable=too-many-arguments
             verbose=not silent or ctx.obj.verbose,
             follow=not background,
             tag=tag,
+            tag_target=getattr(Target, select_target()) if tag else None,
         )
 
         run_jenkins(run_argument)
