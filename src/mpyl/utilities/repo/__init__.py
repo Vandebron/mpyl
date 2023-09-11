@@ -29,6 +29,8 @@ class Revision:
 
     @staticmethod
     def from_output(text: str):
+        """From the following command: `git log --pretty=format:"hash %H" --name-only
+        --no-abbrev-commit <from>..<until>`"""
         sections = []
         current_section: list[str] = []
         lines = text.splitlines()
