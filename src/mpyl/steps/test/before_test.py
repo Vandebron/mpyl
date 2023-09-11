@@ -39,7 +39,7 @@ class IntegrationTestBefore(Step):
         docker_client.compose.build()
         docker_client.compose.up(detach=True, color=True, quiet=False)
 
-        goal_reached = False
+        goal_reached: bool = False
         logs = docker_client.compose.logs(stream=True)
         stream_docker_logging(
             logger=self._logger, generator=logs, task_name=f"Start {compose_file}"
@@ -49,18 +49,20 @@ class IntegrationTestBefore(Step):
         while not goal_reached:
             proj: ComposeProject = docker_client.compose.ls()[0]
             state = docker_client.compose.ps()[0].state
-            goal_reached = (
-                (
-                    (proj.created or 0)
-                    + (proj.restarting or 0)
-                    + (proj.exited or 0)
-                    + (proj.paused or 0)
-                    + (proj.dead or 0)
-                )
-                == 0
-                and state.health
+            total_not_running: int = (
+                (proj.created or 0)
+                + (proj.restarting or 0)
+                + (proj.exited or 0)
+                + (proj.paused or 0)
+                + (proj.dead or 0)
+            )
+            healthy: bool = (
+                state.health is not None
+                and state.health.status is not None
                 and state.health.status == "healthy"
             )
+            goal_reached = total_not_running == 0 and healthy
+
             if not goal_reached:
                 self._logger.info("Waiting for container to be running and healthy..")
                 self._logger.debug(f"Project stats: {proj}")
