@@ -165,10 +165,17 @@ class Repository:  # pylint: disable=too-many-public-methods
     def __get_filter_patterns(self):
         return ["--"] + [f":!{pattern}" for pattern in self._config.ignore_patterns]
 
-    def changes_between(self, base_revision: str, head_revision: str) -> list[Commit]:
-        return list(
-            reversed(list(self._repo.iter_commits(f"{base_revision}..{head_revision}")))
-        )
+    def changes_between(self, base_revision: str, head_revision: str) -> list[Revision]:
+        command = [
+            f'--pretty=format:"{Revision.BREAK_WORD}%H"',
+            "--name-only",
+            "--no-abbrev-commit",
+            f"{base_revision}..{head_revision}",
+            self.__get_filter_patterns(),
+        ]
+
+        revs = self._repo.git.log(*command).replace('"', "")
+        return Revision.from_output(revs)
 
     def changes_in_branch(self) -> list[Revision]:
         base_ref = self.base_revision
@@ -176,13 +183,7 @@ class Repository:  # pylint: disable=too-many-public-methods
 
         head_hex = self._repo.active_branch.commit.hexsha
 
-        revs = self._repo.git.log(
-            f'--pretty=format:"{Revision.BREAK_WORD}%H"',
-            "--name-only",
-            "--no-abbrev-commit",
-            f"{base_hex}..{head_hex}",
-        ).replace('"', "")
-        return Revision.from_output(revs)
+        return self.changes_between(base_hex, head_hex)
 
     def changes_in_commit(self) -> set[str]:
         changed: set[str] = set(

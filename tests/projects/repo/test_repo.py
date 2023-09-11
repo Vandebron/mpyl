@@ -29,6 +29,7 @@ class TestRepo:
         assert repo_credentials.url == "https://github.com/acme/repo.git"
         assert repo_credentials.to_url == "https://github.com/acme/repo.git"
 
+    # git log --pretty=format:"hash %H" --name-only --no-abbrev-commit from..until
     def test_map_git_log_to_revisions(self):
         text = (self.resource_path / "git_log.txt").read_text(encoding="utf-8")
         revisions = Revision.from_output(text)
