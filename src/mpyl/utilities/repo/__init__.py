@@ -28,14 +28,14 @@ class Revision:
     BREAK_WORD = "hash "
 
     @staticmethod
-    def from_git_output(git_log_output: str, git_dif_output: str = ""):
+    def from_git_output(git_log_output: str, git_diff_output: str):
         """
-        :param git_dif_output: output of `git log --pretty=format:"hash %H" --name-only
+        :param git_diff_output: output of `git log --pretty=format:"hash %H" --name-only
         --no-abbrev-commit <from>..<until>`
         :param git_log_output: output of `git diff --name-only <from>..<until>`
         """
 
-        change_set = set(git_dif_output.splitlines())
+        change_set = set(git_diff_output.splitlines())
 
         sections = []
         current_section: list[str] = []
