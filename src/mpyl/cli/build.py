@@ -273,6 +273,8 @@ def select_tag(ctx) -> str:
 
 
 def get_test_releases():
+    console = Console()
+    console.log("Fetching MPyL releases..")
     url = "https://test.pypi.org/pypi/mpyl/json"
     data = requests.get(url, timeout=30).json()
     versions = list(data["releases"].keys())
@@ -283,14 +285,20 @@ def get_test_releases():
     return versions
 
 
-def select_version() -> str:
-    console = Console()
-    console.log("Fetching MPyL releases..")
-    return questionary.select(
-        "Which version do you want to install?",
-        show_selected=True,
-        choices=get_test_releases(),
-    ).ask()
+def select_version(value) -> str:
+    versions = get_test_releases()
+    if value == 'prompt':
+        return questionary.select(
+            "Which version do you want to install?",
+            show_selected=True,
+            choices=versions,
+        ).ask()
+    if value not in versions:
+        return questionary.select(
+            "Version not recognized. Select one from the list .. Check --help for more info.",
+            show_selected=True,
+            choices=versions,
+        ).ask()
 
 
 def ask_for_input(ctx, _param, value) -> Optional[str]:
@@ -298,8 +306,8 @@ def ask_for_input(ctx, _param, value) -> Optional[str]:
         return None
     if value == "prompt" and str(_param) == "<Option tag>":
         return select_tag(ctx)
-    if value == "prompt" and str(_param) == "<Option version>":
-        return select_version()
+    if str(_param) == "<Option version>":
+        return select_version(value)
     return value
 
 
