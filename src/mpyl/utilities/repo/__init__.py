@@ -114,7 +114,7 @@ class Repository:  # pylint: disable=too-many-public-methods
     @property
     def get_tag(self) -> Optional[str]:
         current_revision = self._repo.head.commit
-        current_tag = self._repo.git.describe(current_revision, tags=True)
+        current_tag = self._repo.git.tag(current_revision, points_at=True)
         logging.debug(f"Current revision: {current_revision} tag: {current_tag}")
         return current_tag
 
