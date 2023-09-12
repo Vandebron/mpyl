@@ -2,6 +2,8 @@
 
 ## ..MPyL CLI
 
+### Suggested first time use
+
 #### 1. Install MPyL
 
 ```shell
@@ -17,14 +19,25 @@ mpyl health
 ```
 Will validate the configuration and check if all required tools are installed.
 
-#### 3. Create a PR with your changes
+#### 3. Run a local build via the CLI
 
+Find out which projects need to be built.
+```shell
+mpyl build status
+```
+Run a build.
+```shell
+mpyl build run
+```
+
+#### 4. Run a CI build on your Pull Request
+
+Create a pull request.
 ```shell
 gh pr create --draft
 ```
-
-#### 4. Trigger an MPyL build via the CLI
-
+If you use MPyL in a github action, a build will be triggered automatically and the results will be reported there.
+If you use jenkins as your CI tool, you can trigger a build on your pull request:
 ```shell
 mpyl build jenkins
 ```
