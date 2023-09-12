@@ -14,6 +14,7 @@ from git.objects import Commit
 from gitdb.exc import BadName
 
 from ...project import Project
+from ...utilities.pyaml_env import parse_config
 
 
 @dataclass(frozen=True)
@@ -102,15 +103,18 @@ class Repository:  # pylint: disable=too-many-public-methods
             return None
 
     @property
+    def root_commit_hex(self) -> str:
+        return self._repo.git.rev_list("--max-parents=0", "HEAD").splitlines()[-1]
+
+    @property
     def base_revision(self) -> Optional[Commit]:
         main = self.main_origin_branch
-        local_main = main.replace("origin/", "")
-        return self._safe_ref_parse(local_main) or self._safe_ref_parse(main)
+        return self._safe_ref_parse(main)
 
     @property
     def get_tag(self) -> Optional[str]:
         current_revision = self._repo.head.commit
-        current_tag = self._repo.git.describe(current_revision, tags=True)
+        current_tag = self._repo.git.tag(current_revision, points_at=True)
         logging.debug(f"Current revision: {current_revision} tag: {current_tag}")
         return current_tag
 
@@ -131,6 +135,9 @@ class Repository:  # pylint: disable=too-many-public-methods
     @property
     def main_origin_branch(self) -> str:
         return f"origin/{self.main_branch}"
+
+    def fit_for_tag_build(self, tag: str) -> bool:
+        return len(self.changes_in_tagged_commit(tag)) > 0
 
     def __get_filter_patterns(self):
         return ["--"] + [f":!{pattern}" for pattern in self._config.ignore_patterns]
@@ -156,9 +163,7 @@ class Repository:  # pylint: disable=too-many-public-methods
 
     def changes_in_branch(self) -> list[Revision]:
         base_ref = self.base_revision
-        base_hex = (
-            base_ref if base_ref else self._repo.git.rev_list("--max-parents=0", "HEAD")
-        )
+        base_hex = base_ref.hexsha if base_ref else self.root_commit_hex
 
         head_hex = self._repo.active_branch.commit.hexsha
         logging.debug(
@@ -209,9 +214,7 @@ class Repository:  # pylint: disable=too-many-public-methods
         curr_rev_tag = self.get_tag
 
         if curr_rev_tag != current_tag:
-            logging.error(
-                f"HEAD is not at {curr_rev_tag} not at expected {current_tag}"
-            )
+            logging.error(f"HEAD is at {curr_rev_tag} not at expected `{current_tag}`")
             return []
 
         return self.changes_in_merge_commit()
@@ -242,6 +245,21 @@ class Repository:  # pylint: disable=too-many-public-methods
 
     def fetch_pr(self, pr_number: int):
         return self._repo.remote().fetch(f"pull/{pr_number}/head:PR-{pr_number}")
+
+    @staticmethod
+    def clone_from_branch(
+        branch_name: str, url: str, base_branch: str, config_path: Path, path: Path
+    ):
+        Repo.clone_from(
+            url,
+            path,
+            allow_unsafe_protocols=True,
+            shallow_exclude=base_branch,
+            single_branch=True,
+            branch=branch_name,
+        )
+        parsed_config = parse_config(config_path)
+        return Repository(RepoConfig.from_config(parsed_config))
 
     def checkout_branch(self, branch_name: str):
         self._repo.git.switch(branch_name)

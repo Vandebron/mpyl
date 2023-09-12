@@ -23,6 +23,7 @@ class JunitTestSpec(ArtifactSpec):
 
 @dataclass(frozen=True)
 class TestRunSummary:
+    __test__ = False
     tests: int
     failures: int
     errors: int
