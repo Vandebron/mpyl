@@ -4,7 +4,6 @@ import shutil
 
 from pathlib import Path
 from unittest.mock import patch, PropertyMock
-
 from pyaml_env import parse_config
 
 from src.mpyl.artifacts.build_artifacts import BuildArtifacts

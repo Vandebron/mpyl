@@ -7,8 +7,8 @@ Options:
 
 Commands:
   artifacts  Manage remote build artifacts
-  build     Pipeline build commands
-  health    Health check
-  projects  Commands related to MPyL project configurations (project.yml)
-  repo      Manage CVS (git) repositories
-  version   Version information
+  build      Pipeline build commands
+  health     Health check
+  projects   Commands related to MPyL project configurations (project.yml)
+  repo       Manage CVS (git) repositories
+  version    Version information
