@@ -75,10 +75,11 @@ class TestDocker(Step):
             file_path=dockerfile,
             image_tag=tag,
             target=test_target,
+            docker_config=docker_config,
         )
-        container = create_container(self._logger, tag)
 
         if success:
+            container = create_container(self._logger, tag)
             artifact = self.extract_test_results(
                 self._logger, project, container, step_input
             )
@@ -91,14 +92,13 @@ class TestDocker(Step):
                 message=f"Tests results produced for {project.name} ({summary})",
                 produced_artifact=artifact,
             )
+            remove_container(self._logger, container)
         else:
             output = Output(
                 success=False,
                 message=f"Tests failed to run for {project.name}. No test results have been recorded.",
                 produced_artifact=None,
             )
-
-        remove_container(self._logger, container)
 
         return output
 
