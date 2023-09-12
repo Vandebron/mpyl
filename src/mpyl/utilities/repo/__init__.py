@@ -165,10 +165,13 @@ class Repository:  # pylint: disable=too-many-public-methods
 
     @property
     def main_branch(self) -> str:
-        return self._config.main_branch.replace("origin/", "")
+        return self._config.main_branch.split("/")[-1]
 
     @property
     def main_origin_branch(self) -> str:
+        parts = self._config.main_branch.split("/")
+        if len(parts) > 1:
+            return "/".join(parts)
         return f"origin/{self.main_branch}"
 
     def fit_for_tag_build(self, tag: str) -> bool:
