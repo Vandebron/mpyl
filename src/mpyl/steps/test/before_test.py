@@ -86,7 +86,10 @@ class IntegrationTestBefore(Step):
                 if c.status != "healthy"
             ]
             if not goal_reached:
-                self._logger.info("Waiting for container to be running and healthy..")
+                if poll == 0:
+                    self._logger.info(
+                        "Waiting for container to be running and healthy.."
+                    )
                 self._logger.debug(f"Project stats: {project_status}")
                 self._logger.debug(f"Container healths: {unhealthy}")
 
