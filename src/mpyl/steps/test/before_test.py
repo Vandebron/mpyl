@@ -1,15 +1,24 @@
 """ Before test step. Starts docker-compose if necessary."""
 import os
 import time
+from dataclasses import dataclass
 from logging import Logger
 
 from python_on_whales import DockerClient, Container
 from python_on_whales.components.compose.models import ComposeProject
+from python_on_whales.components.container.models import ContainerHealthcheckResult
 
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
 from ...project import Stage
 from ...utilities.docker import stream_docker_logging, DockerComposeConfig
+
+
+@dataclass(frozen=True)
+class ContainerHealth:
+    name: str
+    status: str
+    health_checks: list[ContainerHealthcheckResult]
 
 
 class IntegrationTestBefore(Step):
@@ -25,6 +34,17 @@ class IntegrationTestBefore(Step):
             produced_artifact=ArtifactType.NONE,
             required_artifact=ArtifactType.NONE,
         )
+
+    @staticmethod
+    def all_running(project_status: ComposeProject):
+        total_not_running: int = (
+            (project_status.created or 0)
+            + (project_status.restarting or 0)
+            + (project_status.exited or 0)
+            + (project_status.paused or 0)
+            + (project_status.dead or 0)
+        )
+        return total_not_running == 0
 
     def execute(self, step_input: Input) -> Output:
         compose_file = step_input.project.test_containers_path
@@ -47,29 +67,33 @@ class IntegrationTestBefore(Step):
 
         poll = 0
         while not goal_reached:
-            proj: ComposeProject = docker_client.compose.ls()[0]
-            state = docker_client.compose.ps()[0].state
-            total_not_running: int = (
-                (proj.created or 0)
-                + (proj.restarting or 0)
-                + (proj.exited or 0)
-                + (proj.paused or 0)
-                + (proj.dead or 0)
+            project_status: ComposeProject = docker_client.compose.ls()[0]
+            containers = docker_client.compose.ps()
+            container_healths = [
+                ContainerHealth(c.name, c.state.health.status, c.state.health.log or [])
+                for c in containers
+                if c.state.health is not None and c.state.health.status is not None
+            ]
+            all_healthy = all(
+                container.status == "healthy" for container in container_healths
             )
-            healthy: bool = (
-                state.health is not None
-                and state.health.status is not None
-                and state.health.status == "healthy"
-            )
-            goal_reached = total_not_running == 0 and healthy
 
+            goal_reached = self.all_running(project_status) and all_healthy
+
+            unhealthy = [
+                (c.name, c.status, c.health_checks)
+                for c in container_healths
+                if c.status != "healthy"
+            ]
             if not goal_reached:
                 self._logger.info("Waiting for container to be running and healthy..")
-                self._logger.debug(f"Project stats: {proj}")
-                self._logger.debug(f"Container state: {state}")
+                self._logger.debug(f"Project stats: {project_status}")
+                self._logger.debug(f"Container healths: {unhealthy}")
 
             poll += 1
             if poll >= config.failure_threshold:
+                if unhealthy:
+                    self._logger.info(f"Unhealthy containers: {unhealthy}")
                 return Output(
                     success=False,
                     message=f"Failed to start services in {compose_file} "
