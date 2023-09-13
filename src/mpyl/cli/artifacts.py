@@ -1,12 +1,10 @@
 """Commands to manage remotely cached artifacts"""
 
-import logging
-import os
-import shutil
 from pathlib import Path
-
-import click
+from tempfile import TemporaryDirectory
+import logging
 from pyaml_env import parse_config
+import click
 
 from ..artifacts.build_artifacts import BuildArtifacts
 from ..cli import CliContext, create_console_logger, CONFIG_PATH_HELP
@@ -66,8 +64,9 @@ def pull(obj: CliContext, tag: str, pr_number: int):
     if not target_branch:
         raise click.ClickException("Either --pr or --tag must be specified")
 
-    build_artifacts = _prepare_artifacts_repo(obj)
-    build_artifacts.pull(branch=target_branch)
+    with TemporaryDirectory(dir=".", prefix=".artifacts-") as tmp_dir:
+        build_artifacts = _prepare_artifacts_repo(obj=obj, repo_path=Path(tmp_dir))
+        build_artifacts.pull(branch=target_branch)
 
 
 @artifacts.command(help="Push build artifacts to remote artifact repository")
@@ -84,25 +83,21 @@ def push(obj: CliContext, tag: str, pr_number: int):
     if not target_branch:
         raise click.ClickException("Either --pr or --tag must be specified")
 
-    build_artifacts = _prepare_artifacts_repo(obj)
-    build_artifacts.push(branch=target_branch)
+    with TemporaryDirectory(dir=".", prefix=".artifacts-") as tmp_dir:
+        build_artifacts = _prepare_artifacts_repo(obj=obj, repo_path=Path(tmp_dir))
+        build_artifacts.push(branch=target_branch)
 
 
-def _prepare_artifacts_repo(obj: CliContext) -> BuildArtifacts:
+def _prepare_artifacts_repo(obj: CliContext, repo_path: Path) -> BuildArtifacts:
     git_config = obj.config["vcs"].get("artifactRepository", None)
     if not git_config:
         raise ValueError("No artifact repository configured")
     artifact_repo_config: RepoConfig = RepoConfig.from_git_config(git_config=git_config)
-
-    if not artifact_repo_config.folder:
-        raise ValueError("No artifact repository folder configured")
-
-    repo_path = Path(artifact_repo_config.folder)
-    if os.path.exists(repo_path):
-        shutil.rmtree(repo_path, ignore_errors=True)
-
-    artifact_repo = Repository.from_clone(config=artifact_repo_config)
+    artifact_repo = Repository.from_clone(
+        config=artifact_repo_config, repo_path=repo_path
+    )
     logger = logging.getLogger("mpyl")
+
     return BuildArtifacts(
         logger=logger,
         codebase_repo=obj.repo,
