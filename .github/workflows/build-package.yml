@@ -300,4 +300,4 @@ jobs:
           comment_tag: execution
 
       - name: Report deployed pacakge
-        run: echo '### New release! 🚀`${{ steps.version.outputs.mpylVersion }}` deployed at [Test Pypi](https://test.pypi.org/project/mpyl/)' >> $GITHUB_STEP_SUMMARY
+        run: echo '### New release! 🚀`${{ needs.Build_And_Upload.outputs.mpylVersion }}` deployed at [Test Pypi](https://test.pypi.org/project/mpyl/)' >> $GITHUB_STEP_SUMMARY

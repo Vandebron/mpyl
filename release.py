@@ -3,9 +3,11 @@ import time
 from typing import Optional
 
 import click
+import questionary
 import requests
 from requests import Response
 
+from src.mpyl.projects.versioning import Release, get_latest_release
 from src.mpyl.cli import get_release_url
 
 RELEASE_CHOICES = ["major", "minor", "patch", "rc"]
@@ -14,6 +16,28 @@ RELEASE_CHOICES = ["major", "minor", "patch", "rc"]
 @click.group()
 def cli():
     pass
+
+
+@cli.command()
+@click.option("--level", "-l", type=click.Choice(RELEASE_CHOICES))
+def create(level: Optional[str]):
+    latest: Release = get_latest_release()
+    if not level:
+        level = questionary.select(
+            f"Latest release is {latest}. What type of release do you want to create?",
+            choices=RELEASE_CHOICES,
+            instruction="Versions are identified by 'major.minor.patch(rcN)+'",
+        ).ask()
+    new_version = Release(
+        latest.major + (1 if level == "major" else 0),
+        latest.minor + (1 if level == "minor" else 0),
+        latest.patch + (1 if level == "patch" else 0),
+        (1 if latest.release_candidate is None else latest.release_candidate + 1)
+        if level == "rc"
+        else None,
+    )
+    confirmed = questionary.confirm(f"Create {level} release {new_version}").ask()
+    print(f"Confirmed: {confirmed}")
 
 
 @cli.command()
