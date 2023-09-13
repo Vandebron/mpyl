@@ -5,11 +5,11 @@ import setuptools
 import toml
 from setuptools import setup
 
-version_name = "MPYL_VERSION"
-version = os.environ.get(version_name, None)
+VERSION_NAME = "MPYL_VERSION"
+version = os.environ.get(VERSION_NAME, None)
 
 if not version:
-    print(f"Version needs to be specified via {version_name} environment variable")
+    print(f"Version needs to be specified via {VERSION_NAME} environment variable")
     sys.exit(1)
 
 with open("README.md", "r", encoding="utf-8") as readme_file:
