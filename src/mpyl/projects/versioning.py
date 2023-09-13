@@ -9,6 +9,7 @@ list in this module.
 import copy
 import pkgutil
 from abc import ABC
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Generator
 
@@ -21,16 +22,40 @@ VERSION_FIELD = "mpylVersion"
 BASE_RELEASE = "1.0.8"
 
 
-def get_releases() -> list[str]:
+@dataclass
+class Release:
+    major: int
+    minor: int
+    patch: int
+    release_candidate: Optional[int] = None
+
+    @staticmethod
+    def from_string(version: str):
+        parts = version.split(".")
+        minor_parts = parts[2].split("rc")
+        return Release(
+            int(parts[0]),
+            int(parts[1]),
+            int(minor_parts[0]),
+            int(minor_parts[1]) if len(minor_parts) > 1 else None,
+        )
+
+    def __str__(self):
+        return f"{self.major}.{self.minor}.{self.patch}" + (
+            f"rc{self.release_candidate}" if self.release_candidate else ""
+        )
+
+
+def get_releases() -> list[Release]:
     embedded_releases = pkgutil.get_data(__name__, "releases/releases.txt")
     if not embedded_releases:
         raise ValueError("File releases/releases.txt not found in package")
     releases = embedded_releases.decode("utf-8").strip().splitlines()
-    return list(reversed(releases))
+    return list(reversed(list(map(Release.from_string, releases))))
 
 
 def get_latest_release() -> str:
-    return get_releases()[0]
+    return str(get_releases()[0])
 
 
 class Upgrader(ABC):
