@@ -50,18 +50,14 @@ IDE [here](https://black.readthedocs.io/en/stable/integrations/editors.html).
 
 ## ..create a new release
 
-1. Check the latest [release number](https://github.com/Vandebron/mpyl/releases)
-2. Decide on the new release number. We use [semantic versioning](https://semver.org/).
-3. Add the new release number to [mpyl/cli/releases/releases.txt](src/mpyl/cli/releases/releases.txt)
-Create a new release notes file in [releases/notes/](releases/notes/) and name it `<version>.md`
-4. Noteworthy changes should be added to this file. Think: new cli commands, new features, breaking changes, upgrade 
-instructions, etc.
-5. For each PR that you want to include in the release, repeat step 3 and merge to `main`.
-6. Using the [Github cli](https://cli.github.com/), run: 
-   ```shell
-   gh release create <version> --generate-notes
-   ```
-   which will trigger a build and release to https://pypi.org/project/mpyl/
+1. Check out main and pull the latest changes
+2. Run `pipenv run release create`
+3. Choose what release type you want to create. We use [semantic versioning](https://semver.org/). The most important distinction is between regular releases and release candidates.
+   1. A *release candidate* does not require release notes and will be published to [test pypi](https://test.pypi.org/project/mpyl/).
+   2. A *regular release* requires does require and will be published to [pypi](https://pypi.org/project/mpyl/).
+      Create a new release notes file in [releases/notes/](releases/notes/) and name it `<version>.md`
+      Noteworthy changes should be added to this file. Think: new cli commands, new features, breaking changes, upgrade
+      instructions, etc.
 
 ## ..troubleshoot Python setup
 

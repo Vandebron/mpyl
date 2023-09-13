@@ -38,7 +38,7 @@ def cli():
     pass
 
 
-@cli.command()
+@cli.command(help="Publish the latest release")
 def publish():
     git = Git()
     switch_to_main(git)
@@ -56,7 +56,7 @@ def publish():
             sys.exit(1)
 
 
-@cli.command()
+@cli.command(help="Create a new release")
 @click.option("--level", "-l", type=click.Choice(RELEASE_CHOICES))
 def create(level: Optional[str]):
     git = Git()
@@ -107,7 +107,7 @@ def create(level: Optional[str]):
             click.echo("PR created. After merge, run `mpyl release publish`")
 
 
-@cli.command()
+@cli.command(help="Check if a release exists on the pypi registry")
 @click.argument("version")
 @click.option("--test", "-t", type=click.BOOL, default=False, is_flag=True)
 @click.option("--attempts", "-a", type=click.INT, default=1, is_flag=False)
