@@ -54,8 +54,8 @@ def get_releases() -> list[Release]:
     return list(reversed(list(map(Release.from_string, releases))))
 
 
-def get_latest_release() -> str:
-    return str(get_releases()[0])
+def get_latest_release() -> Release:
+    return get_releases()[0]
 
 
 class Upgrader(ABC):
