@@ -1,6 +1,7 @@
 """Command Line Interface parsing for MPyL"""
 import asyncio
 import importlib
+import json
 import logging
 from dataclasses import dataclass
 from importlib.metadata import version as version_meta
@@ -60,9 +61,12 @@ async def get_latest_publication(test: bool = False) -> Optional[str]:
     return body.get("info", {}).get("version", None)
 
 
-async def does_publication_exist(release: str, test: bool = False) -> bool:
+async def get_release_url(release: str, test: bool = False) -> Optional[str]:
     body = await get_publication_info(test)
-    return release in body.get("releases", {})
+    releases = body.get("releases", {})
+    if release in releases:
+        return releases[release][0].get("url", None)
+    return None
 
 
 def get_meta_version():
