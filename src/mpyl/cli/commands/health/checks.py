@@ -17,7 +17,7 @@ from ....constants import DEFAULT_CONFIG_FILE_NAME, DEFAULT_RUN_PROPERTIES_FILE_
 from ....utilities.github import GithubConfig
 from ....utilities.jenkins import JenkinsConfig
 from ....utilities.pyaml_env import parse_config
-from ....cli import fetch_latest_version, get_meta_version
+from ....cli import get_latest_publication, get_meta_version
 from ....validation import validate
 
 
@@ -122,7 +122,7 @@ def __check_jenkins(console: HealthConsole):
 
 
 def __check_version(console):
-    update = asyncio.get_event_loop().run_until_complete(fetch_latest_version())
+    update = asyncio.get_event_loop().run_until_complete(get_latest_publication())
     meta_version = get_meta_version()
     if update and meta_version:
         if meta_version == update:

@@ -11,7 +11,8 @@ import pkgutil
 from abc import ABC
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Generator
+from typing import Generator
+from typing import Optional
 
 from deepdiff import DeepDiff
 from ruamel.yaml.compat import ordereddict
