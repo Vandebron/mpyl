@@ -60,6 +60,11 @@ async def get_latest_publication(test: bool = False) -> Optional[str]:
     return body.get("info", {}).get("version", None)
 
 
+async def does_publication_exist(release: str, test: bool = False) -> bool:
+    body = await get_publication_info(test)
+    return release in body.get("releases", {})
+
+
 def get_meta_version():
     try:
         return version_meta("mpyl")

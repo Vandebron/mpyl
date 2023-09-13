@@ -68,6 +68,7 @@ check-types-test = "mypy --no-incremental --explicit-package-bases --check-untyp
 validate = "python validate.py"
 validate-config-example = "python validate-config-example.py"
 install-types = "mypy --install-types --non-interactive src/mpyl/  "
+release = "python release.py"
 run = "python mpyl-example.py --local --dryrun --all"
 run-ci = "python mpyl-example.py"
 run-dagster-ci = "python mpyl-dagster-example.py"

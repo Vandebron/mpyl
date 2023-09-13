@@ -168,12 +168,8 @@ jobs:
           TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
         run: pipenv run publish
 
-      - name: Ensure package is in pypi cache, attempt 1
-        continue-on-error: true
-        run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ steps.version.outputs.mpylVersion }} || true
-
-      - name: Ensure package is in pypi cache, attempt 2
-        run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ steps.version.outputs.mpylVersion }}
+      - name: Ensure package is in pypi cache
+        run: pipenv run release exists ${{ steps.version.outputs.mpylVersion }} --test --attempts 5
 
 
   Integration_Test_PR:
