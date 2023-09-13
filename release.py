@@ -22,15 +22,7 @@ from src.mpyl.utilities.subprocess import custom_check_output
 RELEASE_CHOICES = ["major", "minor", "patch", "rc"]
 
 
-@click.group()
-def cli():
-    pass
-
-
-@cli.command()
-@click.option("--level", "-l", type=click.Choice(RELEASE_CHOICES))
-def create(level: Optional[str]):
-    git = Git()
+def switch_to_main(git):
     current_branch = git.rev_parse("HEAD", abbrev_ref=True)
     if (
         current_branch != "main"
@@ -39,9 +31,39 @@ def create(level: Optional[str]):
         ).ask()
     ):
         git.checkout("main")
-        if git.is_dirty():
-            click.echo("Main branch is dirty, aborting")
-            sys.exit()
+
+
+@click.group()
+def cli():
+    pass
+
+
+@cli.command()
+def publish():
+    git = Git()
+    switch_to_main(git)
+    latest: Release = get_latest_release()
+    should_publish = questionary.confirm(f"Publish release {latest}").ask()
+    if should_publish:
+        output = custom_check_output(
+            logging.getLogger(), f"gh release create {latest} --generate-notes"
+        )
+        if output.success:
+            click.echo("Release published")
+        else:
+            click.echo("Release not published")
+            click.echo(output.message)
+            sys.exit(1)
+
+
+@cli.command()
+@click.option("--level", "-l", type=click.Choice(RELEASE_CHOICES))
+def create(level: Optional[str]):
+    git = Git()
+    switch_to_main(git)
+    if git.is_dirty():
+        click.echo("Main branch is dirty, aborting")
+        sys.exit()
 
     latest: Release = get_latest_release()
     if not level:
@@ -64,7 +86,7 @@ def create(level: Optional[str]):
     if confirmed:
         git.checkout("-b", f"release/{new_version}")
         add_release(new_version)
-        if level is not "rc":
+        if level != "rc":
             release_notes = get_release_notes_path(new_version)
             if (
                 not release_notes.exists()
@@ -80,7 +102,7 @@ def create(level: Optional[str]):
         )
         git.add(".")
         git.commit("-m", f"Release {new_version}")
-        output: Output = custom_check_output(logging.getLogger(), "gh pr create -f")
+        output = custom_check_output(logging.getLogger(), "gh pr create -f")
         if output.success:
             click.echo("PR created. After merge, run `mpyl release publish`")
 
