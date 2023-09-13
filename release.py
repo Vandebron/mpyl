@@ -45,8 +45,10 @@ def publish():
     latest: Release = get_latest_release()
     should_publish = questionary.confirm(f"Publish release {latest}").ask()
     if should_publish:
+        prerelease = "--prerelease" if latest.release_candidate else ""
         output = custom_check_output(
-            logging.getLogger(), f"gh release create {latest} --generate-notes"
+            logging.getLogger(),
+            f"gh release create {latest} --generate-notes {prerelease}",
         )
         if output.success:
             click.echo("Release published")
