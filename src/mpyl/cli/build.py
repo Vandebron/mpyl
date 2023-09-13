@@ -4,6 +4,7 @@ import logging
 import shutil
 import sys
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Optional
 
 import click
@@ -157,14 +158,16 @@ def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
     )
 
     branch = run_properties.versioning.branch or obj.repo.get_branch or obj.repo.get_tag
-    build_artifacts = _prepare_artifacts_repo(obj)
-    if obj.cached and branch:
-        build_artifacts.pull(branch=branch)
-    result = run_mpyl(
-        run_properties=run_properties, cli_parameters=parameters, reporter=None
-    )
-    if branch:
-        build_artifacts.push(branch=branch)
+
+    with TemporaryDirectory(dir=".", prefix=".artifacts-") as tmp_dir:
+        build_artifacts = _prepare_artifacts_repo(obj=obj, repo_path=Path(tmp_dir))
+        if obj.cached and branch:
+            build_artifacts.pull(branch=branch)
+        result = run_mpyl(
+            run_properties=run_properties, cli_parameters=parameters, reporter=None
+        )
+        if branch:
+            build_artifacts.push(branch=branch)
     sys.exit(0 if result.is_success else 1)
 
 
@@ -221,10 +224,11 @@ def __print_status(obj: CliContext):
             Markdown(f"**Branch:** `{branch}`. Base {base_revision_specification}. ")
         )
 
-    build_artifacts = _prepare_artifacts_repo(obj)
-    remote_branch = tag if tag else branch
-    if remote_branch:
-        build_artifacts.pull(branch=remote_branch)
+    with TemporaryDirectory(dir=".", prefix=".artifacts-") as tmp_dir:
+        build_artifacts = _prepare_artifacts_repo(obj=obj, repo_path=Path(tmp_dir))
+        remote_branch = tag if tag else branch
+        if remote_branch:
+            build_artifacts.pull(branch=remote_branch)
 
     result = get_build_plan(
         logger=logging.getLogger("mpyl"),

@@ -153,4 +153,4 @@ node_modules/
 mpyl_config.yml
 
 #Artifact caching
-.artifacts
+.artifacts*

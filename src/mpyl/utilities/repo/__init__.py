@@ -91,7 +91,6 @@ class RepoConfig:
     main_branch: str
     ignore_patterns: list[str]
     repo_credentials: Optional[RepoCredentials]
-    folder: Optional[str]
 
     @staticmethod
     def from_config(config: dict):
@@ -107,16 +106,15 @@ class RepoConfig:
             repo_credentials=RepoCredentials.from_config(maybe_remote_config)
             if maybe_remote_config
             else None,
-            folder=git_config.get("folder", None),
         )
 
 
 class Repository:  # pylint: disable=too-many-public-methods
-    def __init__(self, config: RepoConfig):
+    def __init__(self, config: RepoConfig, repo_path: Optional[Path] = None):
         self._config = config
-        self._root_dir = config.folder or Git().rev_parse("--show-toplevel")
+        self._root_dir = repo_path or Git().rev_parse("--show-toplevel")
         self._repo = Repo(
-            self._root_dir
+            path=self._root_dir
         )  # pylint: disable=attribute-defined-outside-init
 
     def __enter__(self):
@@ -129,20 +127,17 @@ class Repository:  # pylint: disable=too-many-public-methods
         return self
 
     @staticmethod
-    def from_clone(config: RepoConfig):
-        if not config.repo_credentials or not config.folder:
-            raise ValueError(
-                "Cannot clone repository without credentials or destination folder"
-            )
+    def from_clone(config: RepoConfig, repo_path: Path):
+        if not config.repo_credentials:
+            raise ValueError("Cannot clone repository without credentials")
 
-        repo_path = Path(config.folder)
         repo_path.mkdir(parents=True, exist_ok=True)
         Repo.clone_from(
             url=config.repo_credentials.ssh_url,
             to_path=repo_path,
         )
 
-        return Repository(config)
+        return Repository(config=config, repo_path=repo_path)
 
     @property
     def has_valid_head(self):

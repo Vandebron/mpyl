@@ -203,9 +203,6 @@ definitions:
         default: [ ".md", "*.svg" ]
         items:
           type: string
-      folder:
-        description: "Custom folder location of the git repository. Default is the current working directory"
-        type: string
     required:
       - mainBranch
     title: Git
