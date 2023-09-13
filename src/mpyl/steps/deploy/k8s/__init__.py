@@ -258,8 +258,9 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
     namespace = get_namespace(run_properties, project)
     rancher_config: ClusterConfig = cluster_config(target, run_properties)
     dry_run = (
-        step_input.dry_run or action == DeployAction.HELM_DRY_RUN.value
-    )  # pylint: disable=no-member
+        step_input.dry_run
+        or action == DeployAction.HELM_DRY_RUN.value  # pylint: disable=no-member
+    )
     upsert_namespace(
         logger,
         namespace,

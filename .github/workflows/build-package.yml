@@ -183,8 +183,11 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Install MPyL
+      - name: Prefetch MPyL
         continue-on-error: true
+        run: pip install --dry-run -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_And_Upload.outputs.mpylVersion }}
+
+      - name: Install MPyL
         run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_And_Upload.outputs.mpylVersion }}
 
       - name: Initialize repo
@@ -225,8 +228,11 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Install MPyL
+      - name: Prefetch MPyL Attempt
         continue-on-error: true
+        run: pip install --dry-run -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_And_Upload.outputs.mpylVersion }}
+
+      - name: Install MPyL
         run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_And_Upload.outputs.mpylVersion }}
 
       - name: Initialize repo
