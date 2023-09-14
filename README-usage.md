@@ -2,14 +2,16 @@
 
 ## ..MPyL CLI
 
-Install MPyL
+### Suggested first time use
+
+#### 1. Install MPyL
 
 ```shell
 pip install mpyl
 mpyl --help
 ```
 
-#### Health check
+#### 2. Health check
 
 ⭐ It is recommended to run this before running any other commands.
 ```shell
@@ -17,7 +19,30 @@ mpyl health
 ```
 Will validate the configuration and check if all required tools are installed.
 
-##### Command structure
+#### 3. Run a local build via the CLI
+
+Find out which projects need to be built.
+```shell
+mpyl build status
+```
+Run a build.
+```shell
+mpyl build run
+```
+
+#### 4. Run a CI build on your Pull Request
+
+Create a pull request.
+```shell
+gh pr create --draft
+```
+If you use MPyL in a github action, a build will be triggered automatically and the results will be reported there.
+If you use jenkins as your CI tool, you can trigger a build on your pull request:
+```shell
+mpyl build jenkins
+```
+
+### Command structure
 
 ```
 .. include:: tests/cli/test_resources/main_help_text.txt
@@ -143,6 +168,65 @@ The [schema](https://vandebron.github.io/mpyl/schema/project.schema.yml) for `pr
 documentation and
 can be used to enable on-the-fly validation and auto-completion in your IDE.
 
+## ..setting up a CI-CD flow
+
+MPyL is not a taskrunner nor is it a tool to define and run CI-CD flows. It does however provide a building blocks that can
+easily be plugged into any existing CI-CD platform.
+
+### Github actions
+
+Github actions are a natural fit for MPyL. To build a pull request, you can use the following workflow:
+```yaml
+name: Build pull request
+on:
+  push:
+    branches-ignore: [ 'main' ]
+
+jobs:
+  Build_PR:
+    name: Build and deploy the pull request
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install MPyL
+        run: pip install 'mpyl==<latest_version>'
+
+      - name: Initialize repo
+        run: mpyl repo init --branch ${{ github.ref }} --url https://${{ env.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git --pristine
+
+      - name: Print execution plan
+        run: mpyl build status
+
+      - name: Build run
+        run: mpyl build run
+```
+The `--pristine` flag in the `mpyl repo init` command will clone the repository into the current *empty* workspace, using
+```shell
+git clone --shallow-exclude main --single-branch --branch <branch_name> https://github.com/<org>/<repo>.git
+```
+This will result in a shallow clone of the repository, containing only the files that are relevant for the current
+pull request.
+
+### Dagster
+Although [dagster](https://dagster.io/)'s primary focus is data processing and lineage, it can be used as a runner for MPyL.
+It provides a nice UI to inspect the flow and logs. It supports concurrent execution of steps in a natural way.
+These features make it a convenient runner for local development and debugging.
+
+<details>
+  <summary>Dagster flow runner</summary>
+```python
+.. include:: mpyl-dagster-example.py
+```
+</details>
+
+It can be started from the command line with `dagit --workspace workspace.yml`.
+
+![Dagster flow](documentation_images/dagster-flow-min.png)
+![Dagster run](documentation_images/dagster-run-min.png)
+
 ## ..report the outcome of a pipeline run
 
 MPyL comes with built-in reporters for *Github*, *Jira* and *Slack*. See `mpyl.reporting.targets` how to configure
@@ -181,22 +265,3 @@ upgrades, with a real postgres database:
 
 Note: make sure to define a reliable `healthcheck` to prevent your tests from being run before the database is
 fully up and running.
-
-## ..create a custom CI-CD flow
-
-MPyL is not a task runner or a tool to define CI-CD flows. It does however provide a building blocks that can
-easily be plugged into your own CI-CD flow.
-Here's an example using [Dagster](https://dagster.io/) as a runner
-
-<details>
-  <summary>Dagster flow runner</summary>
-```python
-.. include:: mpyl-dagster-example.py
-```
-</details>
-
-It can be started from the command line with `dagit --workspace workspace.yml`.
-
-![Dagster flow](documentation_images/dagster-flow-min.png)
-![Dagster run](documentation_images/dagster-run-min.png)
-

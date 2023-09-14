@@ -1,8 +1,8 @@
 """Command Line Interface parsing for MPyL"""
 import asyncio
 import importlib
+import json
 import logging
-import pkgutil
 from dataclasses import dataclass
 from importlib.metadata import version as version_meta
 from pathlib import Path
@@ -13,7 +13,6 @@ import click
 import requests
 from aiohttp import ClientConnectorError, ClientTimeout
 from click import BadParameter
-
 from rich.console import Console
 from rich.logging import RichHandler
 
@@ -42,19 +41,33 @@ class MpylCliParameters:
     dryrun: bool = False
 
 
-async def fetch_latest_version() -> Optional[str]:
+async def get_publication_info(test: bool = False) -> dict:
     try:
         async with aiohttp.ClientSession(timeout=ClientTimeout(total=10)) as session:
-            async with session.get("https://pypi.org/pypi/mpyl/json") as response:
-                body = await response.json()
-                return body.get("info", {}).get("version")
+            async with session.get(
+                f"https://{'test.' if test else ''}pypi.org/pypi/mpyl/json"
+            ) as response:
+                return await response.json()
     except (
         asyncio.exceptions.TimeoutError,
         asyncio.exceptions.CancelledError,
         ClientConnectorError,
         requests.exceptions.RequestException,
     ):
-        return None
+        return {}
+
+
+async def get_latest_publication(test: bool = False) -> Optional[str]:
+    body = await get_publication_info(test)
+    return body.get("info", {}).get("version", None)
+
+
+async def get_release_url(release: str, test: bool = False) -> Optional[str]:
+    body = await get_publication_info(test)
+    releases = body.get("releases", {})
+    if release in releases:
+        return releases[release][0].get("url", None)
+    return None
 
 
 def get_meta_version():
@@ -65,7 +78,7 @@ def get_meta_version():
 
 
 async def check_updates(meta: str) -> Optional[str]:
-    latest = await fetch_latest_version()
+    latest = await get_latest_publication()
     if latest and meta != latest:
         return latest
     return None

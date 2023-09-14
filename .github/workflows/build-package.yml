@@ -5,6 +5,7 @@ on:
 
 jobs:
   Lint:
+    name: 🧽 Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -33,6 +34,7 @@ jobs:
         run: pipenv run lint-test
 
   TypeCheck:
+    name: 🧐 Check types
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -58,6 +60,7 @@ jobs:
         run: pipenv run check-types-test
 
   Test:
+    name: 🧪 Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -111,9 +114,11 @@ jobs:
           number: ${{ steps.findPr.outputs.pr }}
           path: code-coverage-results.md
 
-  Build_Package:
+  Build_And_Upload:
+    name: 🏗️ Build package
     runs-on: ubuntu-latest
-    needs: [Lint, TypeCheck, Test]
+    outputs:
+      mpylVersion: ${{ steps.version.outputs.mpylVersion }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -138,11 +143,21 @@ jobs:
         with:
           state: open
 
+      - name: Publish PR Number
+        id: pr
+        run: |
+          echo "pr=${{ steps.findPr.outputs.pr }}" >> "$GITHUB_OUTPUT"
+
+      - name: Create Version
+        id: version
+        run: |
+          echo "mpylVersion=${{ steps.findPr.outputs.pr }}.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+
       - name: Build
         if: github.ref_name != 'main'
         env:
           PIPENV_DONT_LOAD_ENV: true
-          MPYL_VERSION: "${{ steps.findPr.outputs.pr }}.${{ github.run_number }}"
+          MPYL_VERSION: ${{ steps.version.outputs.mpylVersion }}
         run: pipenv run build
 
       - name: Publish package
@@ -153,19 +168,142 @@ jobs:
           TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
         run: pipenv run publish
 
+      - name: Ensure package is in pypi cache
+        run: pipenv run release exists ${{ steps.version.outputs.mpylVersion }} --test --attempts 5
+
+
+  Integration_Test_PR:
+    name: Test PR
+    runs-on: ubuntu-latest
+    needs: [ Build_And_Upload ]
+    env:
+      MPYL_CONFIG_PATH: mpyl_config.example.yml
+    steps:
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Prefetch MPyL
+        continue-on-error: true
+        run: pip install --dry-run -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_And_Upload.outputs.mpylVersion }}
+
+      - name: Install MPyL
+        run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_And_Upload.outputs.mpylVersion }}
+
+      - name: Initialize repo
+        run: mpyl repo init -b ${{ github.ref }} -u https://${{ env.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git -p
+
+      - name: Repo status
+        run: mpyl repo status
+
+      - name: Check mpyl health
+        run: mpyl health --ci
+
+      - name: Lint projects
+        run: mpyl projects lint
+
+      - name: Validate upgrade status
+        run: mpyl projects upgrade
+
+      - name: Build status
+        run: mpyl build status
+
+      - name: Force change
+        run: echo "To force a change " >> tests/projects/service/change.txt
+
+      - name: Build status with change
+        run: mpyl build status
+
+      - name: Build run
+        run: mpyl build run
+
+  Integration_Test_Tag:
+    name: Test tag
+    runs-on: ubuntu-latest
+    needs: [ Build_And_Upload ]
+    env:
+      MPYL_CONFIG_PATH: mpyl_config.example.yml
+    steps:
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Prefetch MPyL Attempt
+        continue-on-error: true
+        run: pip install --dry-run -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_And_Upload.outputs.mpylVersion }}
+
+      - name: Install MPyL
+        run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_And_Upload.outputs.mpylVersion }}
+
+      - name: Initialize repo
+        run: mpyl repo init -b ${{ github.ref }} -u https://${{ env.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git -p
+
+      - name: Get head revision
+        id: headRevision
+        run: echo "headRevision=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Repo status
+        run: mpyl repo status
+
+      - name: Build status
+        run: mpyl build status
+
+      - name: Force change
+        run: |
+          echo "To force a change " >> tests/projects/service/change.txt
+          git add tests/projects/service/change.txt
+
+      - name: Commit the change
+        run: |
+          git config --global user.email "somebody@somewhere.com"
+          git config --global user.name "Some Person"
+          git commit -a -m "A random change"
+
+      - name: Switch to main
+        run: git checkout -b main ${{ steps.headRevision.outputs.headRevision }}
+
+      - name: Merge branch
+        run: git merge --no-ff -m "Merge PR ${{ github.ref }}" ${{ github.ref }}
+
+      - name: Tag merge
+        run: git tag -a v${{ needs.Build_And_Upload.outputs.mpylVersion }} -m "Tagging v${{ needs.Build_And_Upload.outputs.mpylVersion }}"
+
+      - name: Repo status after merge
+        env:
+          TAG_NAME: v${{ needs.Build_And_Upload.outputs.mpylVersion }}
+        run: mpyl repo status
+
+      - name: Show build status
+        env:
+          TAG_NAME: v${{ needs.Build_And_Upload.outputs.mpylVersion }}
+        run: mpyl build status
+
+      - name: Run tag build
+        env:
+          TAG_NAME: v${{ needs.Build_And_Upload.outputs.mpylVersion }}
+        run: mpyl build run
+
+  Build_Package:
+    # TODO: Rename this step and update the merge rule to match
+    # name: Publish v${{ needs.Build_And_Upload.outputs.mpylVersion }}
+    runs-on: ubuntu-latest
+    needs: [ Build_And_Upload, Lint, TypeCheck, Test, Integration_Test_PR, Integration_Test_Tag ]
+    env:
+      MPYL_CONFIG_PATH: mpyl_config.example.yml
+    steps:
       - name: Comment Published package
         uses: thollander/actions-comment-pull-request@v2
         if: success()
         with:
-          pr_number: ${{ steps.findPr.outputs.pr }}
+          pr_number: ${{ needs.Build_And_Upload.outputs.mpylVersion }}
           message: |
-            New release `${{ steps.findPr.outputs.pr }}.${{ github.run_number }}` deployed at [Test Pypi](https://test.pypi.org/project/mpyl/). 
+            New release `${{ needs.Build_And_Upload.outputs.mpylVersion }}` deployed at [Test Pypi](https://test.pypi.org/project/mpyl/). 
             Install with 
             ```
-            pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ steps.findPr.outputs.pr }}.${{ github.run_number }}
+            pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_And_Upload.outputs.mpylVersion }}
             ```
           reactions: rocket
           comment_tag: execution
 
       - name: Report deployed pacakge
-        run: echo '### New release! 🚀`${{ steps.findPr.outputs.pr }}.${{ github.run_number }}` deployed at [Test Pypi](https://test.pypi.org/project/mpyl/)' >> $GITHUB_STEP_SUMMARY
+        run: echo '### New release! 🚀`${{ needs.Build_And_Upload.outputs.mpylVersion }}` deployed at [Test Pypi](https://test.pypi.org/project/mpyl/)' >> $GITHUB_STEP_SUMMARY

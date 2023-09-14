@@ -109,7 +109,7 @@ def build(ctx, config, properties, verbose):
 @click.option(
     "--ci",
     is_flag=True,
-    help="Run as CI build instead of local. Ignores unversioned changes.",
+    help="Run as CI build instead of local. Ignores untracked changes.",
 )
 @click.option(
     "--all",
@@ -139,6 +139,15 @@ def run(obj: CliContext, ci, all_, dryrun_, tag):  # pylint: disable=invalid-nam
     )
     obj.console.log(parameters)
 
+    if tag and not obj.repo.fit_for_tag_build(tag):
+        obj.console.print(
+            Markdown(
+                f"Current state of repo is not fit for building tag `{tag}`."
+                f"Validate the status of the repo by running `mpyl repo status`."
+            )
+        )
+        sys.exit(1)
+
     run_properties = (
         RunProperties.from_configuration(obj.run_properties, obj.config, tag)
         if ci
@@ -146,7 +155,10 @@ def run(obj: CliContext, ci, all_, dryrun_, tag):  # pylint: disable=invalid-nam
             obj.config, obj.repo.get_sha, obj.repo.get_branch, tag
         )
     )
-    run_mpyl(run_properties=run_properties, cli_parameters=parameters, reporter=None)
+    result = run_mpyl(
+        run_properties=run_properties, cli_parameters=parameters, reporter=None
+    )
+    sys.exit(0 if result.is_success else 1)
 
 
 @build.command(help="The status of the current local branch from MPyL's perspective")
@@ -165,18 +177,18 @@ def status(obj: CliContext):
 
 def __print_status(obj: CliContext):
     run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
-    ci_branch = run_properties.versioning.branch
-    obj.console.print(f"MPyL log level is set to {run_properties.console.log_level}")
+    console = obj.console
+    console.print(f"MPyL log level is set to {run_properties.console.log_level}")
 
     branch = obj.repo.get_branch
     main_branch = obj.repo.main_branch
-    tag = obj.repo.get_tag if not branch else None
+    tag = run_properties.versioning.tag
 
-    if not tag:
-        if ci_branch and not obj.repo.get_branch:
-            obj.console.print("Current branch is detached.")
+    if tag is None:
+        if run_properties.versioning.branch and not obj.repo.get_branch:
+            console.print("Current branch is detached.")
         else:
-            obj.console.log(
+            console.log(
                 Markdown(
                     f"Branch not specified at `build.versioning.branch` in _{DEFAULT_RUN_PROPERTIES_FILE_NAME}_, "
                     f"falling back to git: _{obj.repo.get_branch}_"
@@ -184,41 +196,36 @@ def __print_status(obj: CliContext):
             )
 
         if branch == main_branch:
-            obj.console.log(f"On main branch ({branch}), cannot determine build status")
+            console.log(f"On main branch ({branch}), cannot determine build status")
             return
 
     version = run_properties.versioning
     revision = version.revision or obj.repo.get_sha
     base_revision = obj.repo.base_revision
-    obj.console.print(
-        Markdown(
-            f"**{'Tag' if tag else 'Branch'}:** `{branch or version.tag}` at `{revision}`. "
-            f"Base `{main_branch}` {f'at `{base_revision}`' if base_revision else 'not present (grafted).'}"
+    if tag:
+        console.print(Markdown(f"**Tag:** `{version.tag}` at `{revision}`. "))
+    else:
+        base_revision_specification = (
+            f"at `{base_revision}`"
+            if base_revision
+            else f"not present. Earliest revision: `{obj.repo.root_commit_hex}` (grafted)."
         )
-    )
-
-    if not base_revision and not tag:
-        fetch = f"`git fetch origin {main_branch}:refs/remotes/origin/{main_branch}`"
-        obj.console.print(
-            Markdown(
-                f"Cannot determine what to build, since this branch has no base. "
-                f"Did you {fetch}?"
-            )
+        console.print(
+            Markdown(f"**Branch:** `{branch}`. Base {base_revision_specification}. ")
         )
-        return
 
     result = get_build_plan(
         logger=logging.getLogger("mpyl"),
         repo=obj.repo,
         run_properties=run_properties,
-        cli_parameters=MpylCliParameters(),
+        cli_parameters=MpylCliParameters(local=sys.stdout.isatty()),
     )
     if result.run_plan:
-        obj.console.print(
+        console.print(
             Markdown("**Execution plan:**  \n" + execution_plan_as_markdown(result))
         )
     else:
-        obj.console.print("No changes detected, nothing to do.")
+        console.print("No changes detected, nothing to do.")
 
 
 class Pipeline(ParamType):
@@ -310,7 +317,7 @@ def select_target():
         "Which environment do you want to deploy to?",
         show_selected=True,
         choices=[
-            Choice(title=t.name, value=t.name)
+            Choice(title=t.name, value=t.name)  # pylint: disable=no-member
             for t in [Target.ACCEPTANCE, Target.PULL_REQUEST_BASE, Target.PRODUCTION]
         ],
     ).ask()

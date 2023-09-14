@@ -67,7 +67,7 @@ whiteLists:
     - name: 'K8s-Test'
       values: [ '1.2.3.0', '1.2.3.1' ]
 kubernetes:
-  deployAction: HelmDeploy
+  deployAction: KubectlManifest
   rancher:
     cluster:
       test:

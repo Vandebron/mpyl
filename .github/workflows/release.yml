@@ -18,16 +18,13 @@ jobs:
       - name: Install dependencies
         run: pipenv install -d --deploy
 
-      - name: Validate version
-        run: pipenv run check-version "${{ github.event.release.name }}"
-
       - name: Build
         env:
           PIPENV_DONT_LOAD_ENV: true
           MPYL_VERSION: "${{ github.event.release.name }}"
         run: pipenv run build
 
-      - name: Publish package
+      - name: Publish release
         env:
           TWINE_COMMENT: "${{ github.event.release.body }}"
           TWINE_USERNAME: __token__
