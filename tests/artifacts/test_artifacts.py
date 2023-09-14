@@ -4,7 +4,7 @@ import shutil
 
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from unittest.mock import patch, PropertyMock
+from unittest.mock import patch
 from pyaml_env import parse_config
 
 from src.mpyl.artifacts.build_artifacts import BuildArtifacts
@@ -22,8 +22,9 @@ class TestArtifacts:
     test_build_artifacts = Path("test_resources/deployment/.mpyl")
     tmp_build_artifacts = tmp_folder / test_build_artifacts
 
-    @patch(
-        target="src.mpyl.artifacts.build_artifacts.BuildArtifacts.get_build_artifacts_paths",
+    @patch.object(
+        target=BuildArtifacts,
+        attribute="get_build_artifacts_paths",
         return_value=[tmp_build_artifacts],
     )
     def test_push_pull_logic(self, _mock1):
@@ -42,33 +43,32 @@ class TestArtifacts:
                 password="",
             ),
         )
-        tmp_repo_dir = TemporaryDirectory(dir=".", prefix="artifacts-")
-        repo_path = Path(tmp_repo_dir.name)
-        artifact_repo = None
+        with TemporaryDirectory(dir=".", prefix="artifacts-") as tmp_repo_dir:
+            repo_path = Path(tmp_repo_dir)
+            artifact_repo = None
 
-        try:
-            shutil.copytree(
-                src=self.test_build_artifacts, dst=self.tmp_build_artifacts
-            )  # copy test files to temporary folder
-            logger = logging.getLogger()
-            mpyl_config = parse_config(self.config_path)
-            codebase_repo = Repository(config=RepoConfig.from_config(mpyl_config))
-            artifact_repo = Repository.from_clone(
-                config=artifact_repo_config, repo_path=repo_path
-            )
-            build_artifacts = BuildArtifacts(
-                logger=logger,
-                codebase_repo=codebase_repo,
-                artifact_repo=artifact_repo,
-            )
-            build_artifacts.push(branch=self.test_branch)
-            shutil.rmtree(self.tmp_folder, ignore_errors=True)
-            build_artifacts.pull(branch=self.test_branch)
+            try:
+                shutil.copytree(
+                    src=self.test_build_artifacts, dst=self.tmp_build_artifacts
+                )  # copy test files to temporary folder
+                logger = logging.getLogger()
+                mpyl_config = parse_config(self.config_path)
+                codebase_repo = Repository(config=RepoConfig.from_config(mpyl_config))
+                artifact_repo = Repository.from_clone(
+                    config=artifact_repo_config, repo_path=repo_path
+                )
+                build_artifacts = BuildArtifacts(
+                    logger=logger,
+                    codebase_repo=codebase_repo,
+                    artifact_repo=artifact_repo,
+                )
+                build_artifacts.push(branch=self.test_branch)
+                shutil.rmtree(self.tmp_folder, ignore_errors=True)
+                build_artifacts.pull(branch=self.test_branch)
 
-            assert self.tmp_build_artifacts.exists()
-        finally:  # cleanup
-            shutil.rmtree(self.tmp_folder, ignore_errors=True)
-            if artifact_repo:
-                artifact_repo.delete_remote_branch(branch_name=self.test_branch)
-            tmp_repo_dir.cleanup()
-            os.chdir(old_working_dir)
+                assert self.tmp_build_artifacts.exists()
+            finally:  # cleanup
+                shutil.rmtree(self.tmp_folder, ignore_errors=True)
+                if artifact_repo:
+                    artifact_repo.delete_remote_branch(branch_name=self.test_branch)
+                os.chdir(old_working_dir)
