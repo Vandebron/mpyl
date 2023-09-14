@@ -37,6 +37,6 @@ jobs:
         env:
           TWINE_COMMENT: "${{ github.event.release.body }}"
           TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_RELEASE_API_TOKEN }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
           TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
         run: pipenv run publish
