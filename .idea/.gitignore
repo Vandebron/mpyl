@@ -8,6 +8,7 @@
 /dataSources.local.xml
 /misc.xml
 /libraries/
+vcs.xml
 watcherTasks.xml
 /scala_compiler.xml
 kubernetes-settings.xml
