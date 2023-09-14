@@ -6,8 +6,11 @@ from typing import Optional
 
 import click
 import questionary
+import requests
 from git import Git
+from requests import Response
 
+from src.mpyl.cli import get_release_url
 from src.mpyl.projects.versioning import (
     Release,
     get_latest_release,
@@ -16,7 +19,6 @@ from src.mpyl.projects.versioning import (
     get_release_notes_readme_path,
     get_release_notes_path,
 )
-from src.mpyl.steps import Output
 from src.mpyl.utilities.subprocess import custom_check_output
 
 RELEASE_CHOICES = ["major", "minor", "patch", "rc"]
@@ -118,24 +120,36 @@ def create(level: Optional[str]):
 def exists(version, test, attempts):
     try:
         attempt = 0
-        output: Optional[Output] = None
         while attempt < attempts:
-            url = f"https://{'test.' if test else ''}pypi.org/simple/"
-            output: Output = custom_check_output(
-                logging.getLogger(),
-                f"pip install --dry-run -i {url} mpyl=={version}",
-                capture_stdout=False,
+            check_exists = asyncio.wait_for(get_release_url(version, test), timeout=10)
+            maybe_release_url = asyncio.get_event_loop().run_until_complete(
+                check_exists
             )
-            if output.success:
+            response: Optional[Response] = None
+
+            if maybe_release_url:
                 click.echo(f"Release {version} discovered")
-                sys.exit(0)
+                response = requests.get(maybe_release_url, timeout=10)
+                if response.status_code == 200:
+                    click.echo(
+                        f"Binary for {version} is present at {maybe_release_url}"
+                    )
+                    sys.exit()
 
             attempt += 1
-            click.echo(f"Attempt {attempt} out of {attempts}")
+            attempt_text = f"Attempt {attempt} out of {attempts}"
+            if response:
+                click.echo(
+                    f"Release {version} found, but binary gives {response.status_code}. {attempt_text}"
+                )
+            else:
+                click.echo(
+                    f"Release {version} not found. Attempt {attempt} out of {attempts}"
+                )
+
             time.sleep(2)
 
         click.echo(f"Release {version} not found")
-        click.echo(output.message)
         sys.exit(1)
     except asyncio.TimeoutError:
         click.echo("Gave up waiting, task canceled")
