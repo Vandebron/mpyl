@@ -1,34 +1,31 @@
-Usage: python -m mpyl build jenkins [OPTIONS]
+Usage: mpyl build jenkins [OPTIONS]
 
   Run a multi branch pipeline build on Jenkins
 
 Options:
   -u, --user TEXT           Authentication API user. Can be set via env var
                             JENKINS_USER  [required]
-  -p, --password TEXT       Authentication API password. Can be set via env
-                            var JENKINS_PASSWORD  [required]
+  -p, --password TEXT       Authentication API password. Can be set via env var
+                            JENKINS_PASSWORD  [required]
   -pl, --pipeline PIPELINE  The pipeline to run. Must be one of the pipelines
                             listed in `jenkins.pipelines`. Default value is
                             `jenkins.defaultPipeline`
-  -v, --version TEXT        A specific version on
-                            https://pypi.org/project/mpyl/ to use for the
-                            build.
+  -v, --version TEXT        A specific version on https://pypi.org/project/mpyl/
+                            to use for the build.
   -t, --test                The version supplied by `--version` should be
                             considered from the Test PyPi mirror at
                             https://test.pypi.org/project/mpyl/.
-  -a, --arguments TEXT      A series of arguments to pass to the pipeline.
-                            Note that will run within the pipenv in jenkins.
-                            To execute `mpyl build status`, pass `-a run -a
-                            mpyl -a build -a status`
-  -bg, --background         Starts Jenkins build in a 'fire and forget'
-                            fashion. Can be set via env var
-                            MPYL_JENKINS_BACKGROUND
+  -a, --arguments TEXT      A series of arguments to pass to the pipeline. Note
+                            that will run within the pipenv in jenkins. To
+                            execute `mpyl build status`, pass `-a run -a mpyl -a
+                            build -a status`
+  -bg, --background         Starts Jenkins build in a 'fire and forget' fashion.
+                            Can be set via env var MPYL_JENKINS_BACKGROUND
   -s, --silent              Indicates whether to show Jenkins' logging or not.
                             Can be set via env var MPYL_JENKINS_SILENT
   --tag TEXT
   -v, --version TEXT        Set a specific test version to be installed. e.g.
                             '235.*'
-  --all                     Build all projects, regardless of changes on
-                            branch
+  --all                     Build all projects, regardless of changes on branch
   --dryrun                  don't push or deploy images
   --help                    Show this message and exit.
