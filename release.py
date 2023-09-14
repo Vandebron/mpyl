@@ -69,22 +69,23 @@ def create(level: Optional[str]):
         sys.exit()
 
     latest: Release = get_latest_release()
-    if not level:
+    if level is None:
         level = questionary.select(
             f"Latest release is {latest}. What type of release do you want to create?",
             choices=RELEASE_CHOICES,
             instruction="Versions are identified by 'major.minor.patch(rcN)+'",
         ).ask()
-    new_version = Release(
-        latest.major + 1 if level == "major" else latest.major,
-        latest.minor + 1
-        if level == "minor" or level == "rc"
-        else (latest.minor if level == "patch" else 0),
-        latest.patch + 1 if level == "patch" else 0,
-        (1 if latest.release_candidate is None else latest.release_candidate + 1)
-        if level == "rc"
-        else None,
-    )
+
+    releases = {
+        "major": Release(latest.major + 1, 0, 0, None),
+        "minor": Release(latest.major, latest.minor + 1, 0, None),
+        "patch": Release(latest.major, latest.minor, latest.patch + 1, None),
+        "rc": Release(
+            latest.major, latest.minor, latest.patch, latest.release_candidate or 0 + 1
+        ),
+    }
+    new_version = releases[level]
+
     confirmed = questionary.confirm(f"Create {level} release {new_version}").ask()
     if confirmed:
         git.checkout("-b", f"release/{new_version}")
