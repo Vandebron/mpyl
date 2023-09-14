@@ -1,4 +1,5 @@
-tests/projects/cloudfront/deployment/project.yml [1;36;40mcloudfront-service[0m             
+
+tests/projects/cloudfront/deployment/project.yml [1;36;40mcloudfront-service[0m
 tests/projects/cypress/deployment/project.yml [1;36;40mcypress[0m                           
 tests/projects/dagster-user-code/deployment/project.yml                         
 [1;36;40mexample-dagster-user-code[0m                                                       
