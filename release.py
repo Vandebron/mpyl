@@ -84,9 +84,9 @@ def create(level: Optional[str]):
         "patch": Release(latest.major, latest.minor, latest.patch + 1, None),
         "rc": Release(
             latest.major,
-            latest.minor + 1,
+            latest.minor + (1 if latest.release_candidate is None else 0),
             latest.patch,
-            latest.release_candidate or 0 + 1,
+            (latest.release_candidate or 0) + 1,
         ),
     }
     new_version = releases[level]
