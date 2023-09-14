@@ -168,12 +168,8 @@ jobs:
           TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
         run: pipenv run publish
 
-      - name: Ensure package is in pypi cache, attempt 1
-        continue-on-error: true
-        run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ steps.version.outputs.mpylVersion }} || true
-
-      - name: Ensure package is in pypi cache, attempt 2
-        run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ steps.version.outputs.mpylVersion }}
+      - name: Ensure package is in pypi cache
+        run: pipenv run release exists ${{ steps.version.outputs.mpylVersion }} --test --attempts 5
 
 
   Integration_Test_PR:
@@ -187,8 +183,11 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Install MPyL
+      - name: Prefetch MPyL
         continue-on-error: true
+        run: pip install --dry-run -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_And_Upload.outputs.mpylVersion }}
+
+      - name: Install MPyL
         run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_And_Upload.outputs.mpylVersion }}
 
       - name: Initialize repo
@@ -229,8 +228,11 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Install MPyL
+      - name: Prefetch MPyL Attempt
         continue-on-error: true
+        run: pip install --dry-run -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_And_Upload.outputs.mpylVersion }}
+
+      - name: Install MPyL
         run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_And_Upload.outputs.mpylVersion }}
 
       - name: Initialize repo
@@ -304,4 +306,4 @@ jobs:
           comment_tag: execution
 
       - name: Report deployed pacakge
-        run: echo '### New release! 🚀`${{ steps.version.outputs.mpylVersion }}` deployed at [Test Pypi](https://test.pypi.org/project/mpyl/)' >> $GITHUB_STEP_SUMMARY
+        run: echo '### New release! 🚀`${{ needs.Build_And_Upload.outputs.mpylVersion }}` deployed at [Test Pypi](https://test.pypi.org/project/mpyl/)' >> $GITHUB_STEP_SUMMARY

@@ -275,7 +275,7 @@ def select_target():
         "Which environment do you want to deploy to?",
         show_selected=True,
         choices=[
-            Choice(title=t.name, value=t.name)
+            Choice(title=t.name, value=t.name)  # pylint: disable=no-member
             for t in [Target.ACCEPTANCE, Target.PULL_REQUEST_BASE, Target.PRODUCTION]
         ],
     ).ask()
