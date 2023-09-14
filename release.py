@@ -66,7 +66,7 @@ def publish():
 def create(level: Optional[str]):
     git = Git()
     switch_to_main(git)
-    if git.is_dirty():
+    if git.status("--short") != "":
         click.echo("Main branch is dirty, aborting")
         sys.exit()
 
@@ -83,14 +83,18 @@ def create(level: Optional[str]):
         "minor": Release(latest.major, latest.minor + 1, 0, None),
         "patch": Release(latest.major, latest.minor, latest.patch + 1, None),
         "rc": Release(
-            latest.major, latest.minor, latest.patch, latest.release_candidate or 0 + 1
+            latest.major,
+            latest.minor + 1,
+            latest.patch,
+            latest.release_candidate or 0 + 1,
         ),
     }
     new_version = releases[level]
 
     confirmed = questionary.confirm(f"Create {level} release {new_version}").ask()
     if confirmed:
-        git.checkout("-b", f"release/{new_version}")
+        branch_name = f"release/{new_version}"
+        git.checkout("-b", branch_name)
         add_release(new_version)
         if level != "rc":
             release_notes = get_release_notes_path(new_version)
@@ -108,6 +112,7 @@ def create(level: Optional[str]):
         )
         git.add(".")
         git.commit("-m", f"Release {new_version}")
+        git.push("--set-upstream", "origin", branch_name)
         output = custom_check_output(logging.getLogger(), "gh pr create -f")
         if output.success:
             click.echo("PR created. After merge, run `mpyl release publish`")
