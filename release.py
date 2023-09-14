@@ -24,13 +24,14 @@ RELEASE_CHOICES = ["major", "minor", "patch", "rc"]
 
 def switch_to_main(git):
     current_branch = git.rev_parse("HEAD", abbrev_ref=True)
-    if (
-        current_branch != "main"
-        and not questionary.confirm(
+    if current_branch != "main":
+        if questionary.confirm(
             f"Current branch: {current_branch}. Must be on main. Switch?"
-        ).ask()
-    ):
-        git.checkout("main")
+        ).ask():
+            git.checkout("main")
+        else:
+            click.echo("Aborting")
+            sys.exit()
 
 
 @click.group()
