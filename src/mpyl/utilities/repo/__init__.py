@@ -139,6 +139,21 @@ class Repository:  # pylint: disable=too-many-public-methods
 
         return Repository(config=config, repo_path=repo_path)
 
+    @staticmethod
+    def clone_from_branch(
+        branch_name: str, url: str, base_branch: str, config_path: Path, path: Path
+    ):
+        Repo.clone_from(
+            url,
+            path,
+            allow_unsafe_protocols=True,
+            shallow_exclude=base_branch,
+            single_branch=True,
+            branch=branch_name,
+        )
+        parsed_config = parse_config(config_path)
+        return Repository(RepoConfig.from_config(parsed_config))
+
     @property
     def has_valid_head(self):
         return self._repo.head.is_valid()
@@ -276,21 +291,6 @@ class Repository:  # pylint: disable=too-many-public-methods
 
     def fetch_pr(self, pr_number: int):
         return self._repo.remote().fetch(f"pull/{pr_number}/head:PR-{pr_number}")
-
-    @staticmethod
-    def clone_from_branch(
-        branch_name: str, url: str, base_branch: str, config_path: Path, path: Path
-    ):
-        Repo.clone_from(
-            url,
-            path,
-            allow_unsafe_protocols=True,
-            shallow_exclude=base_branch,
-            single_branch=True,
-            branch=branch_name,
-        )
-        parsed_config = parse_config(config_path)
-        return Repository(RepoConfig.from_config(parsed_config))
 
     def fetch_branch(self, branch_name: str):
         return self._repo.remote().fetch(branch_name)
