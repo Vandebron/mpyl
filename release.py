@@ -10,7 +10,7 @@ import requests
 from git import Git
 from requests import Response
 
-from src.mpyl.cli import get_release_url, create_console_logger
+from src.mpyl.cli import get_release_url
 from src.mpyl.projects.versioning import (
     Release,
     get_latest_release,
@@ -66,9 +66,9 @@ def publish():
 def create(level: Optional[str]):
     git = Git()
     switch_to_main(git)
-    # if git.is_dirty():
-    #     click.echo("Main branch is dirty, aborting")
-    #     sys.exit()
+    if git.status("--short") != "":
+        click.echo("Main branch is dirty, aborting")
+        sys.exit()
 
     latest: Release = get_latest_release()
     if level is None:
@@ -161,5 +161,4 @@ def exists(version, test, attempts):
 
 
 if __name__ == "__main__":
-    console = create_console_logger(False, True, None)
     cli()
