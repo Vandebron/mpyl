@@ -185,7 +185,7 @@ jobs:
 
       - name: Prefetch MPyL
         continue-on-error: true
-        run: pip install --dry-run -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_And_Upload.outputs.mpylVersion }}
+        run: pip install --dry-run -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_And_Upload.outputs.mpylVersion }} || true
 
       - name: Install MPyL
         run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_And_Upload.outputs.mpylVersion }}
@@ -230,7 +230,7 @@ jobs:
 
       - name: Prefetch MPyL Attempt
         continue-on-error: true
-        run: pip install --dry-run -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_And_Upload.outputs.mpylVersion }}
+        run: pip install --dry-run -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_And_Upload.outputs.mpylVersion }} || true
 
       - name: Install MPyL
         run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_And_Upload.outputs.mpylVersion }}
