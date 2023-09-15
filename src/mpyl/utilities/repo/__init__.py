@@ -2,7 +2,6 @@
 `mpyl.utilities.repo.Repository` is a facade for the Version Control System.
 At this moment Git is the only supported VCS.
 """
-import itertools
 import logging
 from dataclasses import dataclass
 from pathlib import Path
@@ -131,9 +130,8 @@ class Repository:  # pylint: disable=too-many-public-methods
         if not config.repo_credentials:
             raise ValueError("Cannot clone repository without credentials")
 
-        repo_path.mkdir(parents=True, exist_ok=True)
         Repo.clone_from(
-            url=config.repo_credentials.ssh_url,
+            url=config.repo_credentials.url,
             to_path=repo_path,
         )
 
@@ -315,15 +313,8 @@ class Repository:  # pylint: disable=too-many-public-methods
     def checkout_branch(self, branch_name: str):
         self._repo.git.switch(branch_name)
 
-    def does_branch_exist(self, branch_name: str, remote=False) -> bool:
-        self._repo.remote().fetch()
-        found_branches = [
-            branch.strip(" ").strip("*")
-            for branch in self._repo.git.branch(
-                "--list", "-r" if remote else None
-            ).splitlines()
-        ]
-        return (f"origin/{branch_name}" if remote else branch_name) in found_branches
+    def does_branch_exist(self, branch_name: str) -> bool:
+        return self._repo.git.ls_remote("origin", branch_name) != ""
 
     def delete_local_branch(self, branch_name: str):
         self._repo.git.branch("-D", branch_name)
