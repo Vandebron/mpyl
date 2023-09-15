@@ -5,6 +5,7 @@ from logging import Logger
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
 from ...project import Stage
+from ...utilities.docker import DockerImageSpec
 
 
 class DeployEcho(Step):
@@ -22,15 +23,10 @@ class DeployEcho(Step):
         )
 
     def execute(self, step_input: Input) -> Output:
-        artifact = step_input.required_artifact
-        if not artifact:
-            return Output(
-                success=False,
-                message=f"Step requires artifact of type {self.required_artifact}",
-            )
+        artifact = step_input.as_spec(DockerImageSpec)
 
         self._logger.info(
-            f"Deploying project {step_input.project.name} with artifact: {artifact.spec}"
+            f"Deploying project {step_input.project.name} with artifact: {artifact}"
         )
         return Output(
             success=True,

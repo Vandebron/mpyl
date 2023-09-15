@@ -2,7 +2,6 @@
 ArtifactType.DOCKER_IMAGE as `mpyl.steps.models.ArtifactType`."""
 
 from logging import Logger
-from typing import cast
 
 from python_on_whales import docker
 
@@ -32,15 +31,7 @@ class AfterBuildDocker(Step):
         )
 
     def execute(self, step_input: Input) -> Output:
-        built_image = step_input.required_artifact
-        if not built_image:
-            self._logger.warn("After docker has image required artifact")
-            return Output(
-                success=False,
-                message=f"After docker has image required artifact {step_input.project.name}",
-            )
-
-        image_name = cast(DockerImageSpec, built_image.spec).image
+        image_name = step_input.as_spec(DockerImageSpec).image
         self._logger.debug(f"Image to publish: {image_name}")
 
         docker_config = DockerConfig.from_dict(step_input.run_properties.config)

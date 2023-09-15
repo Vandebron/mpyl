@@ -4,7 +4,7 @@ import pkgutil
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast, Type
 
 from ruamel.yaml import YAML, yaml_object  # type: ignore
 
@@ -198,6 +198,12 @@ class Input:
     """Run specific properties"""
     required_artifact: Optional[Artifact] = None
     dry_run: bool = False
+
+    def as_spec(self, typ: Type[ArtifactSpec]):
+        """Returns the artifact spec as type :param typ:"""
+        if self.required_artifact is None:
+            raise ValueError(f"Artifact required for {self.project.name} not set")
+        return cast(typ, self.required_artifact.spec)  # type: ignore
 
 
 @yaml_object(yaml)
