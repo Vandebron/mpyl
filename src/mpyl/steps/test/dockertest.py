@@ -36,6 +36,7 @@ from ...utilities.docker import (
     docker_copy,
     remove_container,
     create_container,
+    push_to_registry,
 )
 from ...utilities.junit import (
     to_test_suites,
@@ -83,6 +84,8 @@ class TestDocker(Step):
             artifact = self.extract_test_results(
                 self._logger, project, container, step_input
             )
+            if not step_input.dry_run and docker_config.cache_from_registry:
+                push_to_registry(self._logger, docker_config, tag)
 
             suite = to_test_suites(cast(JunitTestSpec, artifact.spec))
             summary = sum_suites(suite)

@@ -152,6 +152,16 @@ def docker_registry_path(docker_config: DockerConfig, image_name: str) -> str:
     return "/".join([c for c in path_components if c]).lower()
 
 
+def push_to_registry(logger: Logger, docker_config: DockerConfig, image_name: str):
+    image = docker.image.inspect(image_name)
+    logger.debug(f"Found image {image}")
+
+    login(logger=logger, docker_config=docker_config)
+    full_image_path = docker_registry_path(docker_config, image_name)
+    docker.image.tag(image, full_image_path)
+    docker.image.push(full_image_path, quiet=False)
+
+
 def docker_file_path(project: Project, docker_config: DockerConfig):
     return f"{project.deployment_path}/{docker_config.docker_file_name}"
 

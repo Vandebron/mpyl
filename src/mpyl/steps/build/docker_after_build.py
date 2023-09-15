@@ -3,16 +3,14 @@ ArtifactType.DOCKER_IMAGE as `mpyl.steps.models.ArtifactType`."""
 
 from logging import Logger
 
-from python_on_whales import docker
-
 from .. import Step, Meta
 from ..models import Input, Output, Artifact, ArtifactType
 from ...project import Stage
 from ...utilities.docker import (
     DockerConfig,
-    login,
     docker_registry_path,
     DockerImageSpec,
+    push_to_registry,
 )
 
 
@@ -51,12 +49,7 @@ class AfterBuildDocker(Step):
                 produced_artifact=artifact,
             )
 
-        login(logger=self._logger, docker_config=docker_config)
-        image = docker.image.inspect(image_name)
-        self._logger.debug(f"Found image {image}")
-        docker.image.tag(image, full_image_path)
-
-        docker.image.push(full_image_path, quiet=False)
+        push_to_registry(self._logger, docker_config, image_name)
 
         return Output(
             success=True,
