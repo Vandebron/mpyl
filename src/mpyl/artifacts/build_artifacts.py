@@ -1,85 +1,62 @@
 """Class that handles remote caching of build artifacts"""
-
-import os
 import shutil
 from logging import Logger
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
-from ..project import load_project
-from ..utilities.repo import Repository
-
-
-CACHE_FOLDER_NAME = "cache"
+from ..utilities.repo import Repository, RepoConfig
 
 
-class BuildArtifacts:
+class ArtifactsRepository:
     logger: Logger
     codebase_repo: Repository
-    artifact_repo: Repository
-    cache_folder: Path
 
     def __init__(
         self,
         logger: Logger,
         codebase_repo: Repository,
-        artifact_repo: Repository,
+        artifact_repo_config: RepoConfig,
     ):
         self.logger = logger
         self.codebase_repo = codebase_repo
-        self.artifact_repo = artifact_repo
-        self.cache_folder = self.artifact_repo.root_dir / CACHE_FOLDER_NAME
-
-    def get_build_artifacts_paths(self) -> list[Path]:
-        found_projects: list[Path] = [
-            Path(
-                load_project(
-                    self.codebase_repo.root_dir, Path(project_path), strict=False
-                ).target_path
-            )
-            for project_path in self.codebase_repo.find_projects()
-        ]
-
-        return [path for path in found_projects if path.exists()]
+        self.artifact_repo_config = artifact_repo_config
 
     def pull(self, branch: str) -> None:
-        if self.artifact_repo.does_branch_exist(branch_name=branch, remote=True):
-            self.logger.info(f"Fetching branch '{branch}' from remote")
-            self.artifact_repo.fetch_branch(branch_name=branch)
-            self.artifact_repo.checkout_branch(branch_name=branch)
+        with TemporaryDirectory() as tmp_repo_dir:
+            with Repository.from_clone(
+                config=self.artifact_repo_config, repo_path=Path(tmp_repo_dir)
+            ) as artifact_repo:
+                if artifact_repo.does_branch_exist(branch_name=branch):
+                    self.logger.info(f"Fetching branch '{branch}' from remote")
+                    artifact_repo.checkout_branch(branch_name=branch)
+                self.logger.info(f"Branch {branch} does not exist in remote")
+                artifact_repo.
 
-            for artifact_path in os.listdir(self.cache_folder):
-                shutil.copytree(
-                    src=self.cache_folder / artifact_path,
-                    dst=artifact_path,
-                    dirs_exist_ok=True,
-                )
-        else:
-            self.logger.info(f"Branch '{branch}' has no remote to pull from")
+    def push(self, branch: str, file_paths: list[Path]) -> None:
+        with TemporaryDirectory() as tmp_repo_dir:
+            repo_path = Path(tmp_repo_dir)
+            with Repository.from_clone(
+                config=self.artifact_repo_config, repo_path=repo_path
+            ) as artifact_repo:
+                branch_exists = artifact_repo.does_branch_exist(branch_name=branch)
+                if branch_exists:
+                    self.logger.info(f"Fetching branch '{branch}' from remote")
+                    artifact_repo.checkout_branch(branch_name=branch)
+                else:
+                    artifact_repo.create_branch(branch_name=branch)
 
-    def push(self, branch: str) -> None:
-        if self.artifact_repo.does_branch_exist(branch_name=branch):
-            if self.artifact_repo.get_branch != branch:
-                self.artifact_repo.checkout_branch(branch_name=branch)
-        else:
-            if self.artifact_repo.does_branch_exist(branch_name=branch, remote=True):
-                self.logger.info(f"Fetching branch '{branch}' from remote")
-                self.artifact_repo.fetch_branch(branch_name=branch)
-                self.artifact_repo.checkout_branch(branch_name=branch)
-            else:
-                self.logger.info(f"Creating new branch '{branch}'")
-                self.artifact_repo.create_branch(branch_name=branch)
+                shutil.rmtree(repo_path, ignore_errors=True)
+                for file_path in file_paths:
+                    shutil.copytree(
+                        src=file_path,
+                        dst=repo_path / file_path.name,
+                        dirs_exist_ok=True,
+                    )
 
-        shutil.rmtree(self.cache_folder, ignore_errors=True)
-
-        for artifact_path in self.get_build_artifacts_paths():
-            shutil.copytree(
-                src=artifact_path,
-                dst=self.cache_folder / artifact_path,
-                dirs_exist_ok=True,
-            )
-
-        if self.artifact_repo.has_changes():
-            self.logger.info("Committing and pushing all artifacts")
-            self.artifact_repo.stage(CACHE_FOLDER_NAME)
-            self.artifact_repo.commit(f"Add artifacts for {branch}")
-            self.artifact_repo.push()
+                git = artifact_repo._repo.git
+                git.add(".")
+                git.commit("-m", "test")
+                git.push(
+                    "--set-upstream", "origin", branch
+                ) if not branch_exists else git.push()
+                self.logger.info(f"Pushed {branch} to {artifact_repo.remote_url}")

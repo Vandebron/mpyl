@@ -6,7 +6,7 @@ import logging
 from pyaml_env import parse_config
 import click
 
-from ..artifacts.build_artifacts import BuildArtifacts
+from ..artifacts.build_artifacts import ArtifactsRepository
 from ..cli import CliContext, create_console_logger, CONFIG_PATH_HELP
 from ..constants import DEFAULT_CONFIG_FILE_NAME, DEFAULT_RUN_PROPERTIES_FILE_NAME
 from ..steps.models import RunProperties
@@ -88,7 +88,7 @@ def push(obj: CliContext, tag: str, pr_number: int):
         build_artifacts.push(branch=target_branch)
 
 
-def _prepare_artifacts_repo(obj: CliContext, repo_path: Path) -> BuildArtifacts:
+def _prepare_artifacts_repo(obj: CliContext, repo_path: Path) -> ArtifactsRepository:
     git_config = obj.config["vcs"].get("artifactRepository", None)
     if not git_config:
         raise ValueError("No artifact repository configured")
@@ -98,7 +98,7 @@ def _prepare_artifacts_repo(obj: CliContext, repo_path: Path) -> BuildArtifacts:
     )
     logger = logging.getLogger("mpyl")
 
-    return BuildArtifacts(
+    return ArtifactsRepository(
         logger=logger,
         codebase_repo=obj.repo,
         artifact_repo=artifact_repo,
