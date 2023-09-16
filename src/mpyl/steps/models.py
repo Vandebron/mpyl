@@ -199,11 +199,11 @@ class Input:
     required_artifact: Optional[Artifact] = None
     dry_run: bool = False
 
-    def as_spec(self, typ: Type[ArtifactSpec]):
+    def as_spec(self, spec_type: Type[ArtifactSpec]):
         """Returns the artifact spec as type :param typ:"""
         if self.required_artifact is None:
             raise ValueError(f"Artifact required for {self.project.name} not set")
-        return cast(typ, self.required_artifact.spec)  # type: ignore
+        return cast(spec_type, self.required_artifact.spec)  # type: ignore
 
 
 @yaml_object(yaml)
