@@ -67,6 +67,19 @@ class Steps:
         artifact: Optional[Artifact],
         dry_run: bool = False,
     ) -> Output:
+        required = executor.required_artifact
+        if (
+            artifact is not None
+            and required.value != ArtifactType.NONE.value  # pylint: disable=no-member
+            and required.value  # pylint: disable=no-member
+            != artifact.artifact_type.value  # pylint: disable=no-member
+        ):
+            return Output(
+                success=False,
+                message=f"Required artifact of type {required.name} for {executor.meta.name} "
+                f"on {project.name} does not match {artifact.artifact_type.name}.",
+            )
+
         result = executor.execute(
             Input(project, properties, required_artifact=artifact, dry_run=dry_run)
         )
