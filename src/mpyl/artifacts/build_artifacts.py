@@ -10,16 +10,20 @@ from ..utilities.repo import Repository, RepoConfig
 class ArtifactsRepository:
     logger: Logger
     codebase_repo: Repository
+    artifact_repo_config: RepoConfig
+    path_within_artifact_repo: Path
 
     def __init__(
         self,
         logger: Logger,
         codebase_repo: Repository,
         artifact_repo_config: RepoConfig,
+        path_within_artifact_repo: Path = Path("."),
     ):
         self.logger = logger
         self.codebase_repo = codebase_repo
         self.artifact_repo_config = artifact_repo_config
+        self.path_within_artifact_repo = path_within_artifact_repo
 
     def pull(self, branch: str) -> None:
         with TemporaryDirectory() as tmp_repo_dir:
@@ -30,7 +34,6 @@ class ArtifactsRepository:
                     self.logger.info(f"Fetching branch '{branch}' from remote")
                     artifact_repo.checkout_branch(branch_name=branch)
                 self.logger.info(f"Branch {branch} does not exist in remote")
-                artifact_repo.
 
     def push(self, branch: str, file_paths: list[Path]) -> None:
         with TemporaryDirectory() as tmp_repo_dir:
@@ -49,7 +52,7 @@ class ArtifactsRepository:
                 for file_path in file_paths:
                     shutil.copytree(
                         src=file_path,
-                        dst=repo_path / file_path.name,
+                        dst=repo_path / self.path_within_artifact_repo / file_path.name,
                         dirs_exist_ok=True,
                     )
 
