@@ -1,10 +1,29 @@
 """Class that handles remote caching of build artifacts"""
+import abc
+import os
 import shutil
+from abc import ABC
 from logging import Logger
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from ..utilities.repo import Repository, RepoConfig
+
+
+class PathTransformer(ABC):
+    @abc.abstractmethod
+    def transform(self, path: Path) -> Path:
+        pass
+
+
+class IdentityPathTransformer(PathTransformer):
+    def transform(self, path: Path) -> Path:
+        return path
+
+
+class ManifestPathTransformer(PathTransformer):
+    def transform(self, path: Path) -> Path:
+        return Path(str(path).replace("target/kubernetes/", ""))
 
 
 class ArtifactsRepository:
@@ -35,7 +54,12 @@ class ArtifactsRepository:
                     artifact_repo.checkout_branch(branch_name=branch)
                 self.logger.info(f"Branch {branch} does not exist in remote")
 
-    def push(self, branch: str, file_paths: list[Path]) -> None:
+    def push(
+        self,
+        branch: str,
+        file_paths: list[Path],
+        path_transformer: PathTransformer = IdentityPathTransformer(),
+    ) -> None:
         with TemporaryDirectory() as tmp_repo_dir:
             repo_path = Path(tmp_repo_dir)
             with Repository.from_clone(
@@ -48,18 +72,26 @@ class ArtifactsRepository:
                 else:
                     artifact_repo.create_branch(branch_name=branch)
 
-                shutil.rmtree(repo_path, ignore_errors=True)
-                for file_path in file_paths:
-                    shutil.copytree(
-                        src=file_path,
-                        dst=repo_path / self.path_within_artifact_repo / file_path.name,
-                        dirs_exist_ok=True,
-                    )
+                self.copy_files(file_paths, repo_path, path_transformer)
 
-                git = artifact_repo._repo.git
-                git.add(".")
-                git.commit("-m", "test")
-                git.push(
-                    "--set-upstream", "origin", branch
-                ) if not branch_exists else git.push()
+                if not artifact_repo.has_changes:
+                    self.logger.info("No changes detected, nothing to push")
+                    return
+
+                artifact_repo.stage(".")
+                artifact_repo.commit("test")
+                artifact_repo.push(branch)
                 self.logger.info(f"Pushed {branch} to {artifact_repo.remote_url}")
+
+    def copy_files(
+        self, file_paths: list[Path], repo_path: Path, path_transformer: PathTransformer
+    ):
+        path_in_repo = repo_path / self.path_within_artifact_repo
+        shutil.rmtree(path_in_repo, ignore_errors=True)
+        for file_path in file_paths:
+            self.logger.debug(f"Copying {file_path} to {path_in_repo}")
+            os.makedirs((path_in_repo / file_path).parent, exist_ok=True)
+            shutil.copyfile(
+                src=self.codebase_repo.root_dir.absolute() / file_path,
+                dst=path_in_repo / path_transformer.transform(file_path),
+            )

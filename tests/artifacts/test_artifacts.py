@@ -2,18 +2,20 @@ import logging
 import os
 from pathlib import Path
 
+import pytest
+
 from src.mpyl.artifacts.build_artifacts import ArtifactsRepository
 from src.mpyl.utilities.repo import RepoConfig
 from src.mpyl.utilities.repo import RepoCredentials
-from test_data import get_repo
 from tests import test_resource_path
+from tests.test_resources.test_data import get_repo
 
 
 class TestArtifacts:
-    test_branch = "unittest-tmp"
     config_path = test_resource_path / "mpyl_config.yml"
     run_properties_path = test_resource_path / "run_properties.yml"
 
+    @pytest.mark.skip(reason="meant for local testing only")
     def test_clone_to_temp_dir(self):
         repository = get_repo()
         artifact_repo_config = RepoConfig(
@@ -33,5 +35,7 @@ class TestArtifacts:
             path_within_artifact_repo=Path("mpyl-cache"),
         )
 
-        # artifacts.pull(branch="test/build-artifacts")
-        artifacts.push(branch="test/build-artifacts", file_paths=[])
+        projects = repository.find_projects()
+        artifacts.push(
+            branch="test/build-artifacts", file_paths=list(map(Path, projects))
+        )
