@@ -4,7 +4,6 @@ import logging
 import shutil
 import sys
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from typing import Optional
 
 import click
@@ -17,7 +16,6 @@ from questionary import Choice
 from rich.console import Console
 from rich.markdown import Markdown
 
-from .artifacts import _prepare_artifacts_repo
 from . import (
     CliContext,
     CONFIG_PATH_HELP,
@@ -87,15 +85,8 @@ async def warn_if_update(console: Console):
     show_default=True,
     help="Verbose output",
 )
-@click.option(
-    "--cached",
-    help="Use cached build artifacts",
-    is_flag=True,
-    required=False,
-    default=True,
-)
 @click.pass_context
-def build(ctx, config, properties, verbose, cached):
+def build(ctx, config, properties, verbose):
     """Pipeline build commands"""
     parsed_properties = parse_config(properties)
     parsed_config = parse_config(config)
@@ -109,9 +100,7 @@ def build(ctx, config, properties, verbose, cached):
     )
 
     repo = ctx.with_resource(Repository(config=RepoConfig.from_config(parsed_config)))
-    ctx.obj = CliContext(
-        parsed_config, repo, console, verbose, parsed_properties, cached
-    )
+    ctx.obj = CliContext(parsed_config, repo, console, verbose, parsed_properties)
 
 
 @build.command(help="Run an MPyL build")
@@ -157,17 +146,10 @@ def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
         )
     )
 
-    branch = run_properties.versioning.branch or obj.repo.get_branch or obj.repo.get_tag
+    result = run_mpyl(
+        run_properties=run_properties, cli_parameters=parameters, reporter=None
+    )
 
-    with TemporaryDirectory(dir=".", prefix=".artifacts-") as tmp_dir:
-        build_artifacts = _prepare_artifacts_repo(obj=obj, repo_path=Path(tmp_dir))
-        if obj.cached and branch:
-            build_artifacts.pull(branch=branch)
-        result = run_mpyl(
-            run_properties=run_properties, cli_parameters=parameters, reporter=None
-        )
-        if branch:
-            build_artifacts.push(branch=branch)
     sys.exit(0 if result.is_success else 1)
 
 
@@ -223,12 +205,6 @@ def __print_status(obj: CliContext):
         console.print(
             Markdown(f"**Branch:** `{branch}`. Base {base_revision_specification}. ")
         )
-
-    with TemporaryDirectory(dir=".", prefix=".artifacts-") as tmp_dir:
-        build_artifacts = _prepare_artifacts_repo(obj=obj, repo_path=Path(tmp_dir))
-        remote_branch = tag if tag else branch
-        if remote_branch:
-            build_artifacts.pull(branch=remote_branch)
 
     result = get_build_plan(
         logger=logging.getLogger("mpyl"),

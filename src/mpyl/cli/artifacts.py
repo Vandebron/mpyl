@@ -1,10 +1,10 @@
 """Commands to manage remotely cached artifacts"""
 
-from pathlib import Path
-from tempfile import TemporaryDirectory
 import logging
-from pyaml_env import parse_config
+from pathlib import Path
+
 import click
+from pyaml_env import parse_config
 
 from ..artifacts.build_artifacts import ArtifactsRepository
 from ..cli import CliContext, create_console_logger, CONFIG_PATH_HELP
@@ -64,9 +64,8 @@ def pull(obj: CliContext, tag: str, pr_number: int):
     if not target_branch:
         raise click.ClickException("Either --pr or --tag must be specified")
 
-    with TemporaryDirectory(dir=".", prefix=".artifacts-") as tmp_dir:
-        build_artifacts = _prepare_artifacts_repo(obj=obj, repo_path=Path(tmp_dir))
-        build_artifacts.pull(branch=target_branch)
+    build_artifacts = _prepare_artifacts_repo(obj=obj, repo_path=Path("."))
+    build_artifacts.pull(branch=target_branch)
 
 
 @artifacts.command(help="Push build artifacts to remote artifact repository")
@@ -83,9 +82,8 @@ def push(obj: CliContext, tag: str, pr_number: int):
     if not target_branch:
         raise click.ClickException("Either --pr or --tag must be specified")
 
-    with TemporaryDirectory(dir=".", prefix=".artifacts-") as tmp_dir:
-        build_artifacts = _prepare_artifacts_repo(obj=obj, repo_path=Path(tmp_dir))
-        build_artifacts.push(branch=target_branch)
+    build_artifacts = _prepare_artifacts_repo(obj=obj, repo_path=Path("."))
+    build_artifacts.push(branch=target_branch, file_paths=[])
 
 
 def _prepare_artifacts_repo(obj: CliContext, repo_path: Path) -> ArtifactsRepository:
@@ -93,13 +91,11 @@ def _prepare_artifacts_repo(obj: CliContext, repo_path: Path) -> ArtifactsReposi
     if not git_config:
         raise ValueError("No artifact repository configured")
     artifact_repo_config: RepoConfig = RepoConfig.from_git_config(git_config=git_config)
-    artifact_repo = Repository.from_clone(
-        config=artifact_repo_config, repo_path=repo_path
-    )
     logger = logging.getLogger("mpyl")
 
     return ArtifactsRepository(
         logger=logger,
         codebase_repo=obj.repo,
-        artifact_repo=artifact_repo,
+        artifact_repo_config=artifact_repo_config,
+        path_within_artifact_repo=repo_path,
     )

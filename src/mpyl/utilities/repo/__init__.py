@@ -290,13 +290,11 @@ class Repository:  # pylint: disable=too-many-public-methods
     def fetch_pr(self, pr_number: int):
         return self._repo.remote().fetch(f"pull/{pr_number}/head:PR-{pr_number}")
 
-    def fetch_branch(self, branch_name: str):
-        return self._repo.remote().fetch(branch_name)
-
     def create_branch(self, branch_name: str):
         return self._repo.git.checkout("-b", f"{branch_name}")
 
-    def has_changes(self):
+    @property
+    def has_changes(self) -> bool:
         return self._repo.is_dirty(untracked_files=True)
 
     def stage(self, path: str):
@@ -306,9 +304,9 @@ class Repository:  # pylint: disable=too-many-public-methods
         logging.debug("Committing staged files")
         return self._repo.git.commit("-m", message)
 
-    def push(self):
+    def push(self, branch: str):
         logging.debug("Pushing to remote")
-        return self._repo.git.push("-u")
+        return self._repo.git.push("--set-upstream", "origin", branch)
 
     def checkout_branch(self, branch_name: str):
         self._repo.git.switch(branch_name)
@@ -318,9 +316,6 @@ class Repository:  # pylint: disable=too-many-public-methods
 
     def delete_local_branch(self, branch_name: str):
         self._repo.git.branch("-D", branch_name)
-
-    def delete_remote_branch(self, branch_name: str):
-        self._repo.git.push("-d", "origin", branch_name)
 
     def find_projects(self, folder_pattern: str = "") -> list[str]:
         """returns a set of all project.yml files
