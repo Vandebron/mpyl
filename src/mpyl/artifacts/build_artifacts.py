@@ -37,11 +37,13 @@ class ArtifactsRepository:
         logger: Logger,
         codebase_repo: Repository,
         artifact_repo_config: RepoConfig,
-        path_within_artifact_repo: Path = Path("."),
+        path_within_artifact_repo: Path,
     ):
         self.logger = logger
         self.codebase_repo = codebase_repo
         self.artifact_repo_config = artifact_repo_config
+        if path_within_artifact_repo is Path("."):
+            raise ValueError("Path within repo must not be root")
         self.path_within_artifact_repo = path_within_artifact_repo
 
     def pull(self, branch: str) -> None:
@@ -89,9 +91,11 @@ class ArtifactsRepository:
         path_in_repo = repo_path / self.path_within_artifact_repo
         shutil.rmtree(path_in_repo, ignore_errors=True)
         for file_path in file_paths:
-            self.logger.debug(f"Copying {file_path} to {path_in_repo}")
-            os.makedirs((path_in_repo / file_path).parent, exist_ok=True)
-            shutil.copyfile(
+            repo_transformed = path_in_repo / path_transformer.transform(file_path)
+            self.logger.debug(f"Copying {file_path} to {repo_transformed}")
+            os.makedirs(repo_transformed.parent, exist_ok=True)
+            shutil.copytree(
                 src=self.codebase_repo.root_dir.absolute() / file_path,
-                dst=path_in_repo / path_transformer.transform(file_path),
+                dst=repo_transformed,
+                dirs_exist_ok=True,
             )

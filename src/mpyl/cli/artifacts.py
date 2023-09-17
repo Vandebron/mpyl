@@ -6,9 +6,11 @@ from pathlib import Path
 import click
 from pyaml_env import parse_config
 
-from ..artifacts.build_artifacts import ArtifactsRepository
+from ..artifacts.build_artifacts import ArtifactsRepository, ManifestPathTransformer
 from ..cli import CliContext, create_console_logger, CONFIG_PATH_HELP
 from ..constants import DEFAULT_CONFIG_FILE_NAME, DEFAULT_RUN_PROPERTIES_FILE_NAME
+from ..project import Project
+from ..steps.deploy.k8s import DeployConfig
 from ..steps.models import RunProperties
 from ..utilities.repo import Repository, RepoConfig
 
@@ -73,8 +75,15 @@ def pull(obj: CliContext, tag: str, pr_number: int):
 @click.option(
     "--pr_number", "-pr", type=click.INT, help="PR number to fetch", required=False
 )
+@click.option(
+    "--path",
+    "-p",
+    type=click.Path(exists=False),
+    help="Path within repository to copy artifacts to",
+    required=True,
+)
 @click.pass_obj
-def push(obj: CliContext, tag: str, pr_number: int):
+def push(obj: CliContext, tag: str, pr_number: int, path: Path):
     run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
     target_branch = (
         tag if tag else f"PR-{pr_number or run_properties.versioning.pr_number}"
@@ -82,8 +91,18 @@ def push(obj: CliContext, tag: str, pr_number: int):
     if not target_branch:
         raise click.ClickException("Either --pr or --tag must be specified")
 
-    build_artifacts = _prepare_artifacts_repo(obj=obj, repo_path=Path("."))
-    build_artifacts.push(branch=target_branch, file_paths=[])
+    build_artifacts = _prepare_artifacts_repo(obj=obj, repo_path=path)
+    deploy_config = DeployConfig.from_config(obj.config)
+    manifest_paths = [
+        Path(project.replace(Project.project_yaml_path(), deploy_config.output_path))
+        for project in obj.repo.find_projects()
+    ]
+
+    build_artifacts.push(
+        branch=target_branch,
+        file_paths=[path for path in manifest_paths if path.exists()],
+        path_transformer=ManifestPathTransformer(),
+    )
 
 
 def _prepare_artifacts_repo(obj: CliContext, repo_path: Path) -> ArtifactsRepository:
