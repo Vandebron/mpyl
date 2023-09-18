@@ -73,6 +73,16 @@ class RepoCredentials:
         parsed = urlparse(self.url)
         return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
 
+    @property
+    def to_url_with_credentials(self):
+        parsed = urlparse(self.url)
+
+        repo = f"{parsed.netloc}{parsed.path}"
+        if not self.user_name:
+            return f"{parsed.scheme}://{repo}"
+
+        return f"{parsed.scheme}://{self.user_name or ''}{f':{self.password}' if self.password else ''}@{repo}"
+
     @staticmethod
     def from_config(config: dict):
         url = config["url"]
@@ -130,10 +140,14 @@ class Repository:  # pylint: disable=too-many-public-methods
         if not config.repo_credentials:
             raise ValueError("Cannot clone repository without credentials")
 
-        Repo.clone_from(
-            url=config.repo_credentials.url,
+        repo = Repo.clone_from(
+            url=config.repo_credentials.to_url_with_credentials,
             to_path=repo_path,
         )
+        user_name = config.repo_credentials.user_name
+        with repo.config_writer() as writer:
+            writer.set_value("user", "name", user_name)
+            writer.set_value("user", "email", f"{user_name}@somehwere.com")
 
         return Repository(config=config, repo_path=repo_path)
 
