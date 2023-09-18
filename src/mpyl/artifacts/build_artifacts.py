@@ -23,7 +23,7 @@ class IdentityPathTransformer(PathTransformer):
 
 class ManifestPathTransformer(PathTransformer):
     def transform(self, path: Path) -> Path:
-        return Path(str(path).replace("target/kubernetes/", ""))
+        return Path(str(path).replace("target/kubernetes", ""))
 
 
 class ArtifactsRepository:
