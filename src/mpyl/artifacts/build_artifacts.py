@@ -7,23 +7,47 @@ from logging import Logger
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from ..constants import BUILD_ARTIFACTS_FOLDER
+from ..project import Project
+from ..steps.deploy.k8s import DeployConfig
 from ..utilities.repo import Repository, RepoConfig
 
 
 class PathTransformer(ABC):
     @abc.abstractmethod
-    def transform(self, path: Path) -> Path:
+    def transform_for_read(self, project_path: str) -> Path:
+        pass
+
+    @abc.abstractmethod
+    def transform_for_write(self, artifact_path: str) -> Path:
         pass
 
 
-class IdentityPathTransformer(PathTransformer):
-    def transform(self, path: Path) -> Path:
-        return path
+class BuildCacheTransformer(PathTransformer):
+    def transform_for_read(self, project_path: str) -> Path:
+        return Path(
+            project_path.replace(Project.project_yaml_path(), BUILD_ARTIFACTS_FOLDER)
+        )
+
+    def transform_for_write(self, artifact_path: str) -> Path:
+        return Path(artifact_path)
 
 
 class ManifestPathTransformer(PathTransformer):
-    def transform(self, path: Path) -> Path:
-        return Path(str(path).replace("target/kubernetes", ""))
+    deploy_config: DeployConfig
+
+    def __init__(self, deploy_config: DeployConfig):
+        self.deploy_config = deploy_config
+
+    def transform_for_read(self, project_path: str) -> Path:
+        return Path(
+            project_path.replace(
+                Project.project_yaml_path(), self.deploy_config.output_path
+            )
+        )
+
+    def transform_for_write(self, artifact_path: str) -> Path:
+        return Path(artifact_path.replace(self.deploy_config.output_path, ""))
 
 
 class ArtifactsRepository:
@@ -59,8 +83,8 @@ class ArtifactsRepository:
     def push(
         self,
         branch: str,
-        file_paths: list[Path],
-        path_transformer: PathTransformer = IdentityPathTransformer(),
+        project_paths: list[str],
+        path_transformer: PathTransformer,
     ) -> None:
         with TemporaryDirectory() as tmp_repo_dir:
             repo_path = Path(tmp_repo_dir)
@@ -74,7 +98,9 @@ class ArtifactsRepository:
                 else:
                     artifact_repo.create_branch(branch_name=branch)
 
-                self.copy_files(file_paths, repo_path, path_transformer)
+                copied_paths = self.copy_files(
+                    project_paths, repo_path, path_transformer
+                )
 
                 if not artifact_repo.has_changes:
                     self.logger.info("No changes detected, nothing to push")
@@ -83,15 +109,25 @@ class ArtifactsRepository:
                 artifact_repo.stage(".")
                 artifact_repo.commit("test")
                 artifact_repo.push(branch)
-                self.logger.info(f"Pushed {branch} to {artifact_repo.remote_url}")
+                self.logger.info(
+                    f"Pushed {branch} with {copied_paths} copied paths to {artifact_repo.remote_url}"
+                )
 
     def copy_files(
-        self, file_paths: list[Path], repo_path: Path, path_transformer: PathTransformer
-    ):
+        self,
+        project_paths: list[str],
+        repo_path: Path,
+        transformer: PathTransformer,
+    ) -> int:
         path_in_repo = repo_path / self.path_within_artifact_repo
         shutil.rmtree(path_in_repo, ignore_errors=True)
-        for file_path in file_paths:
-            repo_transformed = path_in_repo / path_transformer.transform(file_path)
+
+        artifact_paths = list(map(transformer.transform_for_read, project_paths))
+        existing = [path for path in artifact_paths if path.exists() and path.is_dir()]
+        for file_path in existing:
+            repo_transformed = path_in_repo / transformer.transform_for_write(
+                str(file_path)
+            )
             self.logger.debug(f"Copying {file_path} to {repo_transformed}")
             os.makedirs(repo_transformed.parent, exist_ok=True)
             shutil.copytree(
@@ -99,3 +135,4 @@ class ArtifactsRepository:
                 dst=repo_transformed,
                 dirs_exist_ok=True,
             )
+        return len(existing)
