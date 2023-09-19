@@ -151,6 +151,3 @@ node_modules/
 
 #Customized locally
 mpyl_config.yml
-
-#Artifact caching
-.artifacts*
