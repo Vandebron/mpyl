@@ -6,10 +6,16 @@ from pathlib import Path
 import click
 from pyaml_env import parse_config
 
-from ..artifacts.build_artifacts import ArtifactsRepository, ManifestPathTransformer
+from ..artifacts.build_artifacts import (
+    ArtifactsRepository,
+    ManifestPathTransformer,
+    BuildCacheTransformer,
+)
 from ..cli import CliContext, create_console_logger, CONFIG_PATH_HELP
-from ..constants import DEFAULT_CONFIG_FILE_NAME, DEFAULT_RUN_PROPERTIES_FILE_NAME
-from ..project import Project
+from ..constants import (
+    DEFAULT_CONFIG_FILE_NAME,
+    DEFAULT_RUN_PROPERTIES_FILE_NAME,
+)
 from ..steps.deploy.k8s import DeployConfig
 from ..steps.models import RunProperties
 from ..utilities.repo import Repository, RepoConfig
@@ -82,8 +88,15 @@ def pull(obj: CliContext, tag: str, pr_number: int):
     help="Path within repository to copy artifacts to",
     required=True,
 )
+@click.option(
+    "--artifact-type",
+    "-a",
+    type=click.Choice(["cache", "manifests"]),
+    help="The type of artifact to store",
+    required=True,
+)
 @click.pass_obj
-def push(obj: CliContext, tag: str, pr_number: int, path: Path):
+def push(obj: CliContext, tag: str, pr_number: int, path: Path, artifact_type: str):
     run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
     target_branch = (
         tag if tag else f"PR-{pr_number or run_properties.versioning.pr_number}"
@@ -93,15 +106,17 @@ def push(obj: CliContext, tag: str, pr_number: int, path: Path):
 
     build_artifacts = _prepare_artifacts_repo(obj=obj, repo_path=path)
     deploy_config = DeployConfig.from_config(obj.config)
-    manifest_paths = [
-        Path(project.replace(Project.project_yaml_path(), deploy_config.output_path))
-        for project in obj.repo.find_projects()
-    ]
+
+    transformer = (
+        ManifestPathTransformer(deploy_config)
+        if artifact_type == "manifests"
+        else BuildCacheTransformer()
+    )
 
     build_artifacts.push(
         branch=target_branch,
-        file_paths=[path for path in manifest_paths if path.exists()],
-        path_transformer=ManifestPathTransformer(),
+        project_paths=obj.repo.find_projects(),
+        path_transformer=transformer,
     )
 
 
