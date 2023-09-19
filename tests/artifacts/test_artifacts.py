@@ -24,6 +24,7 @@ class TestArtifacts:
             repo_credentials=RepoCredentials(
                 url=f"https://{os.environ.get('GITHUB_CREDS')}@github.com/SamTheisens/mpyl-example-argocd.git",
                 ssh_url="git@github.com:Vandebron/mpyl-artifacts.git",
+                email=None,
                 user_name="",
                 password="",
             ),
