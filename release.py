@@ -66,9 +66,9 @@ def publish():
 def create(level: Optional[str]):
     git = Git()
     switch_to_main(git)
-    if git.status("--short") != "":
-        click.echo("Main branch is dirty, aborting")
-        sys.exit()
+    # if git.status("--short") != "":
+    #     click.echo("Main branch is dirty, aborting")
+    #     sys.exit()
 
     latest: Release = get_latest_release()
     if level is None:
@@ -80,7 +80,9 @@ def create(level: Optional[str]):
 
     releases = {
         "major": Release(latest.major + 1, 0, 0, None),
-        "minor": Release(latest.major, latest.minor + 1, 0, None),
+        "minor": Release(
+            latest.major, latest.minor + (0 if latest.release_candidate else 1), 0, None
+        ),
         "patch": Release(latest.major, latest.minor, latest.patch + 1, None),
         "rc": Release(
             latest.major,
