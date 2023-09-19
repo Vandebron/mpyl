@@ -1,5 +1,9 @@
 # Release notes
 
+## MPyL 1.2.1
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.2.1)
+
 ## MPyL 1.2.0
 
 #### Highlights
