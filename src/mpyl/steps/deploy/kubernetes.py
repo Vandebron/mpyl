@@ -67,11 +67,11 @@ class DeployKubernetes(Step):
             if hostname:
                 has_specific_routes_configured: bool = bool(
                     builder.deployment.traefik is not None
+                    and properties.target == Target.PRODUCTION
                 )
                 self._logger.info(
                     f"Service {step_input.project.name} reachable at: {hostname}"
                 )
-
                 endpoint = (
                     "/" if has_specific_routes_configured else "/swagger/index.html"
                 )
@@ -81,26 +81,6 @@ class DeployKubernetes(Step):
                 step_input,
                 spec=DeployedHelmAppSpec(url=f"{url}"),
             )
-            if properties.target == Target.PRODUCTION:
-                self._logger.info(
-                    f"Release to production successful, updating base images in {Target.PULL_REQUEST_BASE} "
-                    f"to make sure the Test environment is in sync with production"
-                )
-                deploy_to_prod_result = deploy_helm_chart(
-                    self._logger,
-                    chart,
-                    step_input,
-                    Target.PRODUCTION,
-                    builder.release_name,
-                )
-                return Output(
-                    success=True,
-                    message=deploy_result.message
-                    + "\n"
-                    + deploy_to_prod_result.message,
-                    produced_artifact=artifact,
-                )
-
             return Output(
                 success=True, message=deploy_result.message, produced_artifact=artifact
             )
