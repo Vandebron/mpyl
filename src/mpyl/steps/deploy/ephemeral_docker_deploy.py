@@ -7,7 +7,7 @@ from python_on_whales import docker
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
 from ...project import Stage, get_env_variables
-from ...utilities.docker import docker_image_tag
+from ...utilities.docker import DockerImageSpec
 
 
 class EphemeralDockerDeploy(Step):
@@ -29,7 +29,7 @@ class EphemeralDockerDeploy(Step):
         env_variables = get_env_variables(
             step_input.project, step_input.run_properties.target
         )
-        docker_image_name = docker_image_tag(step_input)
+        docker_image_name = step_input.as_spec(DockerImageSpec).image
         docker_run_result = docker.run(
             image=docker_image_name, remove=True, envs=env_variables
         )
