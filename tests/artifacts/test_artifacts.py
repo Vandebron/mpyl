@@ -57,10 +57,12 @@ class TestArtifacts:
     def test_build_cache_transformer(self):
         transformer = BuildCacheTransformer()
         assert transformer.transform_for_read("service/deployment/project.yml") == Path(
-            "service/.mpyl"
+            "service/deployment/.mpyl"
         )
 
-        assert transformer.transform_for_write("service/.mpyl") == Path("service/.mpyl")
+        assert transformer.transform_for_write("service/deployment/.mpyl") == Path(
+            "service/deployment/.mpyl"
+        )
 
     def test_manifest_transformer(self):
         deploy_config = DeployConfig.from_config(config_values)

@@ -21,6 +21,10 @@ from ..steps.models import RunProperties
 from ..utilities.repo import Repository, RepoConfig
 
 
+def branch_name(target: str, artifact_type: str) -> str:
+    return f"{target}-{artifact_type}"
+
+
 @click.group("artifacts")
 @click.option(
     "--config",
@@ -63,8 +67,15 @@ def artifacts(ctx: click.Context, config: str, properties: str, verbose: bool):
 @click.option(
     "--pr_number", "-pr", type=click.INT, help="PR number to fetch", required=False
 )
+@click.option(
+    "--path",
+    "-p",
+    type=click.Path(exists=False),
+    help="Path within repository to copy artifacts from",
+    required=True,
+)
 @click.pass_obj
-def pull(obj: CliContext, tag: str, pr_number: int):
+def pull(obj: CliContext, tag: str, pr_number: int, path: Path):
     run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
     target_branch = (
         tag if tag else f"PR-{pr_number or run_properties.versioning.pr_number}"
@@ -72,8 +83,8 @@ def pull(obj: CliContext, tag: str, pr_number: int):
     if not target_branch:
         raise click.ClickException("Either --pr or --tag must be specified")
 
-    build_artifacts = _prepare_artifacts_repo(obj=obj, repo_path=Path("."))
-    build_artifacts.pull(branch=target_branch)
+    build_artifacts = _prepare_artifacts_repo(obj=obj, repo_path=path)
+    build_artifacts.pull(branch=branch_name(target_branch, "cache"))
 
 
 @artifacts.command(help="Push build artifacts to remote artifact repository")
@@ -114,7 +125,7 @@ def push(obj: CliContext, tag: str, pr_number: int, path: Path, artifact_type: s
     )
 
     build_artifacts.push(
-        branch=target_branch,
+        branch=branch_name(target_branch, artifact_type),
         project_paths=obj.repo.find_projects(),
         path_transformer=transformer,
     )
