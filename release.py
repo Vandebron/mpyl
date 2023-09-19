@@ -66,9 +66,9 @@ def publish():
 def create(level: Optional[str]):
     git = Git()
     switch_to_main(git)
-    # if git.status("--short") != "":
-    #     click.echo("Main branch is dirty, aborting")
-    #     sys.exit()
+    if git.status("--short") != "":
+        click.echo("Main branch is dirty, aborting")
+        sys.exit()
 
     latest: Release = get_latest_release()
     if level is None:
@@ -109,6 +109,7 @@ def create(level: Optional[str]):
                 release_notes.write_text(f"### TODO: Release notes for {new_version}")
                 sys.exit()
 
+        click.echo("Creating release notes...")
         get_release_notes_readme_path().write_text(
             render_release_notes(), encoding="utf-8"
         )
