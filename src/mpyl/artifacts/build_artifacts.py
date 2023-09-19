@@ -26,7 +26,9 @@ class PathTransformer(ABC):
 class BuildCacheTransformer(PathTransformer):
     def transform_for_read(self, project_path: str) -> Path:
         return Path(
-            project_path.replace(Project.project_yaml_path(), BUILD_ARTIFACTS_FOLDER)
+            project_path.replace(
+                Project.project_yaml_path(), f"deployment/{BUILD_ARTIFACTS_FOLDER}"
+            )
         )
 
     def transform_for_write(self, artifact_path: str) -> Path:
@@ -72,13 +74,22 @@ class ArtifactsRepository:
 
     def pull(self, branch: str) -> None:
         with TemporaryDirectory() as tmp_repo_dir:
+            repo_path = Path(tmp_repo_dir)
             with Repository.from_clone(
                 config=self.artifact_repo_config, repo_path=Path(tmp_repo_dir)
             ) as artifact_repo:
-                if artifact_repo.does_branch_exist(branch_name=branch):
-                    self.logger.info(f"Fetching branch '{branch}' from remote")
-                    artifact_repo.checkout_branch(branch_name=branch)
-                self.logger.info(f"Branch {branch} does not exist in remote")
+                if not artifact_repo.does_branch_exist(branch_name=branch):
+                    self.logger.info(f"Branch {branch} does not exist in remote")
+                    return
+
+                self.logger.info(f"Fetching branch '{branch}' from remote")
+                artifact_repo.checkout_branch(branch_name=branch)
+                path_in_repo = repo_path / self.path_within_artifact_repo
+                shutil.copytree(
+                    src=path_in_repo,
+                    dst=self.codebase_repo.root_dir.absolute(),
+                    dirs_exist_ok=True,
+                )
 
     def push(
         self,
