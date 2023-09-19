@@ -87,7 +87,7 @@ def render_release_notes() -> str:
         file = f"{release}.md"
         notes = get_release_notes_path(release)
         if notes.exists():
-            combined += "#### Highlights\n\n"
+            combined += "\n"
             text = notes.read_text("utf-8")
 
             if (

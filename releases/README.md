@@ -6,7 +6,6 @@ Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.2.1)
 
 ## MPyL 1.2.0
 
-#### Highlights
 
 #### Automated project.yml upgrades
 
@@ -39,7 +38,6 @@ Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.2.0)
 
 ## MPyL 1.1.0
 
-#### Highlights
 
 #### Hotfix for mapping multiple ports to the same service
 
@@ -79,7 +77,6 @@ Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.1.0)
 
 ## MPyL 1.0.11
 
-#### Highlights
 
 #### Retraction note
 
@@ -90,7 +87,6 @@ Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.0.11)
 
 ## MPyL 1.0.10
 
-#### Highlights
 
 #### Support for service monitor
 The prometheus [ServiceMonitor](https://doc.crds.dev/github.com/prometheus-operator/kube-prometheus/monitoring.coreos.com/ServiceMonitor/v1@v0.7.0)
@@ -102,7 +98,6 @@ Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.0.10)
 
 ## MPyL 1.0.9
 
-#### Highlights
 
 ##### Support for reference environment variables
 Support for reference environment variables. All standard types: `secretkeyref`, `fieldRef` and `resourceFieldRef` are 
@@ -119,7 +114,6 @@ Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.0.9)
 
 ## MPyL 1.0.8
 
-#### Highlights
 
 Parallel execution of cypress tests is now supported, increasing performance on longer suites more than 2x.
 
@@ -128,7 +122,6 @@ Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.0.8)
 
 ## MPyL 1.0.7
 
-#### Highlights
 
 Step executors are discovered by a plugin mechanism. This allows for custom step executors to be added to the system 
 without having to modify the core codebase. See the 
@@ -147,7 +140,6 @@ Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.0.5)
 
 ## MPyL 1.0.4
 
-#### Highlights
 
 Upload assets to S3 deploy step
 
@@ -160,7 +152,6 @@ Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.0.3)
 
 ## MPyL 1.0.2
 
-#### Highlights
 
 Display build and ticket info in Github PR comment.
 
@@ -169,7 +160,6 @@ Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.0.2)
 
 ## MPyL 1.0.1
 
-#### Highlights
 
  - `mpyl build jenkins` uses `--follow` by default, as it it's more instructive for first time use
  - `mpyl build jenkins` has `--silent` mode, in which we block until the Jenkins build is finished but filter out the logs
@@ -180,7 +170,6 @@ Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.0.1)
 
 ## MPyL 1.0.0
 
-#### Highlights
 
 ##### First stable release
 This release supports both PR and release/tag builds.
