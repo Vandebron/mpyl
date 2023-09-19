@@ -192,6 +192,9 @@ definitions:
             type: [ string, null ]
           userName:
             type: [ string, null ]
+          email:
+            description: "The email address to use when committing changes"
+            type: [ string, null ]
           password:
             type: [ string, null ]
       mainBranch:

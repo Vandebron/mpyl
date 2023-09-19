@@ -18,6 +18,7 @@ vcs:
       url: 'https://github.com/acme/artifact-repo.git'
       userName: !ENV ${GIT_CREDENTIALS_USR}
       password: !ENV ${GIT_CREDENTIALS_PSW}
+      email: "employee@acme.com"
 slack:
   botToken: !ENV ${SLACK_TOKEN}
   icons:
