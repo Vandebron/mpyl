@@ -80,7 +80,9 @@ def create(level: Optional[str]):
 
     releases = {
         "major": Release(latest.major + 1, 0, 0, None),
-        "minor": Release(latest.major, latest.minor + 1, 0, None),
+        "minor": Release(
+            latest.major, latest.minor + (0 if latest.release_candidate else 1), 0, None
+        ),
         "patch": Release(latest.major, latest.minor, latest.patch + 1, None),
         "rc": Release(
             latest.major,
@@ -107,6 +109,7 @@ def create(level: Optional[str]):
                 release_notes.write_text(f"### TODO: Release notes for {new_version}")
                 sys.exit()
 
+        click.echo("Creating release notes...")
         get_release_notes_readme_path().write_text(
             render_release_notes(), encoding="utf-8"
         )
