@@ -29,7 +29,6 @@ class CliContext:
     console: Console
     verbose: bool
     run_properties: dict
-    cached: bool = False
 
 
 @dataclass(frozen=True)
