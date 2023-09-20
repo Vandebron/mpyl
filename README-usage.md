@@ -79,12 +79,12 @@ MPyL can be configured through a file that adheres to the `mpyl_config.yml`
 [schema](https://vandebron.github.io/mpyl/schema/mpyl_config.schema.yml).  
 Which configuration fields need to be set depends on your usecase. The error messages that you
 encounter while using the cli may guide you through the process.
-Note that the included `mpyl_config.example.yml` is just an example. 
+Note that the included `mpyl_config.example.yml` is just an example.
 
 Secrets can be injected
 through environment variable substitution via the
-[pyaml-env](https://github.com/mkaranasou/pyaml_env) library. 
-Note that values for which the ENV variable is not set, 
+[pyaml-env](https://github.com/mkaranasou/pyaml_env) library.
+Note that values for which the ENV variable is not set,
 will be absent in the resulting configuration dictionary.
 <details>
   <summary>Example config</summary>
@@ -99,7 +99,7 @@ Check the [schema](https://vandebron.github.io/mpyl/schema/run_properties.schema
 documentation and can be used to enable on-the-fly validation and auto-completion in your IDE.
 
 #### Auto completion
-Usability of the CLI is *greatly enhanced* by autocompletion. 
+Usability of the CLI is *greatly enhanced* by autocompletion.
 To enable autocompletion, depending on your terminal, do the following:
 
 ###### Bash
@@ -118,7 +118,7 @@ Add this to ``~/.config/fish/completions/foo-bar.fish``:
 eval (env _MPYL_COMPLETE=fish_source mpyl)
 ```
 
-#### YAML auto completion 
+#### YAML auto completion
 
 ![Schema based autocompletion](documentation_images/autocompletion.gif)
 
@@ -227,6 +227,72 @@ It can be started from the command line with `dagit --workspace workspace.yml`.
 ![Dagster flow](documentation_images/dagster-flow-min.png)
 ![Dagster run](documentation_images/dagster-run-min.png)
 
+## ..caching build artifacts
+
+#### Docker images
+
+Docker image layers built in previous runs can be used to as a cache for subsequent runs. An external cache source can
+be
+configured in `mpyl_config.yml` as follows:
+
+```yaml
+docker:
+  registry:
+    cache:
+      cacheFromRegistry: true
+      custom:
+        to: 'type=gha,mode=max'
+        from: 'type=gha'
+```
+
+The `to` and `from` fields map to `--cache-to` and `--cache-from`
+[buildx arguments](https://docs.docker.com/engine/reference/commandline/buildx_build/#cache-from).
+
+The docker cache can be used in both the `mpyl.steps.build.dockerbuild` and `mpyl.steps.test.dockertest` steps.
+
+#### Artifacts
+
+MPyL's artifact metadata is stored in hidden the `.mpyl` folders next to `project.yml`. 
+These folders are used to cache information about (intermediate) build results. 
+A typical `.mpyl` folder has a file for each executed stage. The `BUILD.yml` file contains the metadata for the
+build step. For example:
+```yaml
+message: Pushed ghcr.io/samtheisens/nodeservice:pr-6
+produced_artifact: !Artifact
+  artifact_type: !ArtifactType DOCKER_IMAGE-1
+  revision: b6c87b70c3c16174bdacac6c7dd4ef71b4bb0047
+  producing_step: After Docker Build
+  spec: !DockerImageSpec
+    image: ghcr.io/samtheisens/nodeservice:pr-6
+```
+These files speed up subsequent runs by preventing steps from being executed when their inputs have not changed.
+
+🧹 These `.mpyl` folders can be safely deleted to force a full rebuild via 
+```shell 
+mpyl build clean
+```
+##### Remote caching
+To preserve intermediate build results between runs, you can use the
+```shell
+mpyl build push
+```
+command at the end of a run. This will push the `.mpyl` folder to the remote repository configured in `mpyl_config.yml`
+```yaml
+vcs:
+  artifactRepository:
+      mainBranch: 'main'
+      remote:
+        url: 'https://github.com/acme/artifact-repo.git'
+        userName: !ENV ${GIT_CREDENTIALS_USR}
+        password: !ENV ${GIT_CREDENTIALS_PSW}
+        email: "employee@acme.com"
+```
+To pull the previously pushed artifacts, use
+```shell
+mpyl build pull
+```
+at the beginning of your run.
+
 ## ..report the outcome of a pipeline run
 
 MPyL comes with built-in reporters for *Github*, *Jira* and *Slack*. See `mpyl.reporting.targets` how to configure
@@ -241,18 +307,18 @@ See `mpyl.steps`.
 ### Building a docker image
 
 If the output of your build step is a docker image, you can use the `mpyl.steps.build.docker_after_build` step to
-make sure the resulting image is tagged, pushed to the registry and made available as an artifact for 
+make sure the resulting image is tagged, pushed to the registry and made available as an artifact for
 later (deploy) steps.
 
 ## ..create a test step
 
 ### Junit test results
 
-MPyL can parse Junit test results for reporting purposes. Your test step needs to produce a 
+MPyL can parse Junit test results for reporting purposes. Your test step needs to produce a
 `mpyl.steps.models.ArtifactType.JUNIT_TESTS` artifact.
 See `mpyl.steps.test.echo` for an example of how such an artifact can be created.
 
-### Integration tests 
+### Integration tests
 If your project includes "integration tests" that require a docker container to run during the test stage,
 you can define these containers in a file named `docker-compose-test.yml`. For example, to test your database schema
 upgrades, with a real postgres database:
