@@ -1,7 +1,6 @@
 """Command Line Interface parsing for MPyL"""
 import asyncio
 import importlib
-import json
 import logging
 from dataclasses import dataclass
 from importlib.metadata import version as version_meta

@@ -25,6 +25,11 @@ from . import (
 )
 from . import create_console_logger
 from .commands.build.jenkins import JenkinsRunParameters, run_jenkins, get_token
+from ..artifacts.build_artifacts import (
+    ArtifactsRepository,
+    ManifestPathTransformer,
+    BuildCacheTransformer,
+)
 from ..build import (
     run_mpyl,
     MpylCliParameters,
@@ -39,6 +44,7 @@ from ..project import load_project, Target
 from ..reporting.formatting.markdown import (
     execution_plan_as_markdown,
 )
+from ..steps.deploy.k8s import DeployConfig
 from ..steps.models import RunProperties
 from ..utilities.github import GithubConfig
 from ..utilities.pyaml_env import parse_config
@@ -442,6 +448,94 @@ def clean(obj: CliContext, filter_):
             obj.console.print(f"🧹 Cleaned up {target_path}")
     else:
         obj.console.print("Nothing to clean")
+
+
+@build.command(help="Pull build artifacts from remote artifact repository")
+@click.option("--tag", "-t", type=click.STRING, help="Tag to build", required=False)
+@click.option(
+    "--pr_number", "-pr", type=click.INT, help="PR number to fetch", required=False
+)
+@click.option(
+    "--path",
+    "-p",
+    type=click.Path(exists=False),
+    help="Path within repository to copy artifacts from",
+    required=True,
+)
+@click.pass_obj
+def pull(obj: CliContext, tag: str, pr_number: int, path: Path):
+    run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
+    target_branch = (
+        tag if tag else f"PR-{pr_number or run_properties.versioning.pr_number}"
+    )
+    if not target_branch:
+        raise click.ClickException("Either --pr or --tag must be specified")
+
+    build_artifacts = _prepare_artifacts_repo(obj=obj, repo_path=path)
+    build_artifacts.pull(branch=_branch_name(target_branch, "cache"))
+
+
+@build.command(help="Push build artifacts to remote artifact repository")
+@click.option("--tag", "-t", type=click.STRING, help="Tag to build", required=False)
+@click.option(
+    "--pr_number", "-pr", type=click.INT, help="PR number to fetch", required=False
+)
+@click.option(
+    "--path",
+    "-p",
+    type=click.Path(exists=False),
+    help="Path within repository to copy artifacts to",
+    required=True,
+)
+@click.option(
+    "--artifact-type",
+    "-a",
+    type=click.Choice(["cache", "manifests"]),
+    help="The type of artifact to store",
+    required=True,
+)
+@click.pass_obj
+def push(obj: CliContext, tag: str, pr_number: int, path: Path, artifact_type: str):
+    run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
+    target_branch = (
+        tag if tag else f"PR-{pr_number or run_properties.versioning.pr_number}"
+    )
+    if not target_branch:
+        raise click.ClickException("Either --pr or --tag must be specified")
+
+    build_artifacts = _prepare_artifacts_repo(obj=obj, repo_path=path)
+    deploy_config = DeployConfig.from_config(obj.config)
+
+    transformer = (
+        ManifestPathTransformer(deploy_config)
+        if artifact_type == "manifests"
+        else BuildCacheTransformer()
+    )
+
+    build_artifacts.push(
+        branch=_branch_name(target_branch, artifact_type),
+        project_paths=obj.repo.find_projects(),
+        path_transformer=transformer,
+    )
+
+
+def _branch_name(target: str, artifact_type: str) -> str:
+    return f"{target}-{artifact_type}"
+
+
+def _prepare_artifacts_repo(obj: CliContext, repo_path: Path) -> ArtifactsRepository:
+    git_config = obj.config["vcs"].get("artifactRepository", None)
+    if not git_config:
+        raise ValueError("No artifact repository configured")
+    artifact_repo_config: RepoConfig = RepoConfig.from_git_config(git_config=git_config)
+    logger = logging.getLogger("mpyl")
+
+    return ArtifactsRepository(
+        logger=logger,
+        codebase_repo=obj.repo,
+        artifact_repo_config=artifact_repo_config,
+        path_within_artifact_repo=repo_path,
+    )
 
 
 if __name__ == "__main__":
