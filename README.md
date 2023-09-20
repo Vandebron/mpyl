@@ -1,13 +1,16 @@
 # Modular Pypeline Library
-[![python](https://img.shields.io/badge/Python-3.9-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
 ![build-and-test-module](https://github.com/Vandebron/pympl/actions/workflows/build-package.yml/badge.svg?branch=main)
-![coverage](https://camo.githubusercontent.com/2cbb43d8fa7aae526e37e2528d7b084de2af1162440c1aec91e57dd399d65b45/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f436f6465253230436f7665726167652d37382532352d79656c6c6f773f7374796c653d666c6174)
+![coverage](https://camo.githubusercontent.com/359bec0496fb67fc3a3deeb1917cc403a23890fc54c2efc37d59251a80e004d9/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f436f6465253230436f7665726167652d38302532352d79656c6c6f773f7374796c653d666c6174)
 [![publish-documentation](https://github.com/Vandebron/mpyl/actions/workflows/docs.yml/badge.svg?branch=main)](https://vandebron.github.io/mpyl)
-[![version](https://img.shields.io/github/v/tag/Vandebron/pympl.svg?color=blue&include_prereleases=&sort=semver)](https://pypi.org/project/mpyl/)
-[![package downloads](https://img.shields.io/pypi/dw/mpyl.svg)](https://pypi.org/project/mpyl)
 [![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
+
 [![linting: pylint](https://img.shields.io/badge/linting-pylint-yellowgreen)](https://github.com/PyCQA/pylint)
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
+
+[![version](https://img.shields.io/github/v/tag/Vandebron/pympl.svg?color=blue&include_prereleases=&sort=semver)](https://pypi.org/project/mpyl/)
+[![python](https://img.shields.io/badge/Python-3.9-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
+[![package downloads](https://img.shields.io/pypi/dw/mpyl.svg)](https://pypi.org/project/mpyl)
+[![mpyl](https://snyk.io/advisor/python/mpyl/badge.svg)](https://snyk.io/advisor/python/mpyl)
 
 # What is MPyL?
 
