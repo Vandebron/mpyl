@@ -20,10 +20,6 @@ class TestCli:
         result = self.runner.invoke(main_group, ["--help"])
         assert_roundtrip(self.resource_path / "main_help_text.txt", result.output)
 
-    def test_artifacts_help_output(self):
-        result = self.runner.invoke(main_group, ["artifacts", "--help"])
-        assert_roundtrip(self.resource_path / "artifacts_help_text.txt", result.output)
-
     def test_build_projects_help_output(self):
         result = self.runner.invoke(main_group, ["build", "--help"])
         assert_roundtrip(self.resource_path / "build_help_text.txt", result.output)
