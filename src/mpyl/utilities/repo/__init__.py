@@ -70,11 +70,6 @@ class RepoCredentials:
     password: str
 
     @property
-    def to_url(self):
-        parsed = urlparse(self.url)
-        return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
-
-    @property
     def to_url_with_credentials(self):
         parsed = urlparse(self.url)
 
@@ -155,7 +150,7 @@ class Repository:  # pylint: disable=too-many-public-methods
         return Repository(config=config, repo_path=repo_path)
 
     @staticmethod
-    def clone_from_branch(
+    def from_shallow_diff_clone(
         branch_name: str, url: str, base_branch: str, config_path: Path, path: Path
     ):
         Repo.clone_from(
@@ -166,8 +161,7 @@ class Repository:  # pylint: disable=too-many-public-methods
             single_branch=True,
             branch=branch_name,
         )
-        parsed_config = parse_config(config_path)
-        return Repository(RepoConfig.from_config(parsed_config))
+        return Repository(RepoConfig.from_config(parse_config(config_path)))
 
     @property
     def has_valid_head(self):
@@ -318,17 +312,22 @@ class Repository:  # pylint: disable=too-many-public-methods
         return self._repo.git.add(path)
 
     def commit(self, message: str):
-        logging.debug("Committing staged files")
         return self._repo.git.commit("-m", message)
 
     def push(self, branch: str):
-        logging.debug("Pushing to remote")
         return self._repo.git.push("--set-upstream", "origin", branch)
 
     def checkout_branch(self, branch_name: str):
         self._repo.git.switch(branch_name)
 
-    def does_branch_exist(self, branch_name: str) -> bool:
+    def local_branch_exists(self, branch_name: str) -> bool:
+        local_branches = [
+            branch.strip(" ") for branch in self._repo.git.branch("--list").splitlines()
+        ]
+        logging.debug(f"Found local branches: {local_branches}")
+        return branch_name in local_branches
+
+    def remote_branch_exists(self, branch_name: str) -> bool:
         return self._repo.git.ls_remote("origin", branch_name) != ""
 
     def delete_local_branch(self, branch_name: str):

@@ -27,7 +27,10 @@ class TestRepo:
         assert config.main_branch == "main"
         repo_credentials = config.repo_credentials
         assert repo_credentials.url == "https://github.com/acme/repo.git"
-        assert repo_credentials.to_url == "https://github.com/acme/repo.git"
+        assert (
+            repo_credentials.to_url_with_credentials
+            == "https://git-user:git-password@github.com/acme/repo.git"
+        )
 
     def test_map_git_log_to_revisions(self):
         log_text = (self.resource_path / "git_log.txt").read_text(encoding="utf-8")

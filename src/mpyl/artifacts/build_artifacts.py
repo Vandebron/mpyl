@@ -78,7 +78,7 @@ class ArtifactsRepository:
             with Repository.from_clone(
                 config=self.artifact_repo_config, repo_path=Path(tmp_repo_dir)
             ) as artifact_repo:
-                if not artifact_repo.does_branch_exist(branch_name=branch):
+                if not artifact_repo.remote_branch_exists(branch_name=branch):
                     self.logger.info(f"Branch {branch} does not exist in remote")
                     return
 
@@ -102,7 +102,7 @@ class ArtifactsRepository:
             with Repository.from_clone(
                 config=self.artifact_repo_config, repo_path=repo_path
             ) as artifact_repo:
-                branch_exists = artifact_repo.does_branch_exist(branch_name=branch)
+                branch_exists = artifact_repo.remote_branch_exists(branch_name=branch)
                 if branch_exists:
                     self.logger.info(f"Fetching branch '{branch}' from remote")
                     artifact_repo.checkout_branch(branch_name=branch)
