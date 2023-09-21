@@ -30,7 +30,7 @@ class TestCli:
         assert_roundtrip(self.resource_path / "build_help_text.txt", result.output)
 
     def test_build_jenkins_help_output(self):
-        result = self.runner.invoke(main_group, ["build", "jenkins", "--help"])
+        result = self.runner.invoke(main_group, ["build", "-c", str(self.config_path), "jenkins", "--help"])
 
         assert_roundtrip(
             self.resource_path / "build_jenkins_help_text.txt", result.output
