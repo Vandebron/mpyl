@@ -28,7 +28,7 @@ from ..project import load_project, Project, Target
 from ..projects.versioning import (
     check_upgrades_needed,
     upgrade_file,
-    UPGRADERS,
+    PROJECT_UPGRADERS,
 )
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
@@ -177,7 +177,7 @@ def lint(obj: ProjectsContext, all_, extended):
 @click.pass_obj
 def upgrade(obj: ProjectsContext, apply: bool):
     paths = map(Path, _find_project_paths(True, obj.cli.repo, ""))
-    candidates = check_upgrades_needed(list(paths))
+    candidates = check_upgrades_needed(list(paths), PROJECT_UPGRADERS)
     if not apply:
         upgradable = check_upgrade(obj.cli.console, candidates)
         number_in_need_of_upgrade = len(upgradable)
@@ -199,7 +199,7 @@ def upgrade(obj: ProjectsContext, apply: bool):
             status.start()
             for path in need_upgrade:
                 status.update(f"Upgrading {path}")
-                upgraded = upgrade_file(path, UPGRADERS)
+                upgraded = upgrade_file(path, PROJECT_UPGRADERS)
                 if upgraded:
                     path.write_text(upgraded)
             status.stop()

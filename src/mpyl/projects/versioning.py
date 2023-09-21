@@ -18,7 +18,7 @@ from typing import Optional
 from deepdiff import DeepDiff
 from ruamel.yaml.compat import ordereddict
 
-from ..utilities.yaml import yaml_to_string, load_for_roundtrip
+from ..utilities.yaml import yaml_to_string, load_for_roundtrip, yaml_for_roundtrip
 
 VERSION_FIELD = "mpylVersion"
 BASE_RELEASE = "1.0.8"
@@ -112,11 +112,11 @@ class Upgrader(ABC):
         return previous_dict
 
 
-class UpgraderOne11(Upgrader):
+class ProjectUpgraderOne11(Upgrader):
     target_version = "1.0.11"
 
 
-class UpgraderOne10(Upgrader):
+class ProjectUpgraderOne10(Upgrader):
     target_version = "1.0.10"
 
     def upgrade(self, previous_dict: ordereddict) -> ordereddict:
@@ -130,7 +130,7 @@ class UpgraderOne10(Upgrader):
         return previous_dict
 
 
-class UpgraderOne9(Upgrader):
+class ProjectUpgraderOne9(Upgrader):
     target_version = "1.0.9"
 
     def upgrade(self, previous_dict: ordereddict) -> ordereddict:
@@ -138,14 +138,50 @@ class UpgraderOne9(Upgrader):
         return previous_dict
 
 
-class UpgraderOne8(Upgrader):
+class ProjectUpgraderOne8(Upgrader):
     target_version = BASE_RELEASE
 
     def upgrade(self, previous_dict: ordereddict) -> ordereddict:
         return previous_dict
 
 
-UPGRADERS = [UpgraderOne8(), UpgraderOne9(), UpgraderOne10(), UpgraderOne11()]
+PROJECT_UPGRADERS = [
+    ProjectUpgraderOne8(),
+    ProjectUpgraderOne9(),
+    ProjectUpgraderOne10(),
+    ProjectUpgraderOne11(),
+]
+
+
+class ConfigUpgraderOne12(Upgrader):
+    target_version = "1.0.12"
+
+    def upgrade(self, previous_dict: ordereddict) -> ordereddict:
+        if "cvs" not in previous_dict:
+            return previous_dict
+
+        index = list(previous_dict).index("cvs")
+        cvs = previous_dict.pop("cvs")
+        previous_dict.insert(index, "vcs", cvs)
+        return previous_dict
+
+
+class ConfigUpgraderOne9(Upgrader):
+    target_version = "1.0.9"
+
+    def upgrade(self, previous_dict: ordereddict) -> ordereddict:
+        previous_dict.insert(0, VERSION_FIELD, self.target_version)
+        return previous_dict
+
+
+class ConfigUpgraderOne8(Upgrader):
+    target_version = BASE_RELEASE
+
+    def upgrade(self, previous_dict: ordereddict) -> ordereddict:
+        return previous_dict
+
+
+CONFIG_UPGRADERS = [ConfigUpgraderOne8(), ConfigUpgraderOne9(), ConfigUpgraderOne12()]
 
 
 def get_entry_upgrader_index(
@@ -180,14 +216,21 @@ def upgrade_to_latest(
     return upgraded
 
 
+def pretty_print_value(value) -> str:
+    print_yaml = yaml_for_roundtrip()
+    if isinstance(value, dict):
+        return f"\n```\n{yaml_to_string(value, print_yaml)}```"
+    return f"`{value}`\n"
+
+
 def pretty_print(diff: DeepDiff) -> str:
     result = []
     if "dictionary_item_added" in diff:
         for key, value in diff["dictionary_item_added"].items():
-            result.append(f"+ {key} -> '{value}'")
+            result.append(f"➕ {key} -> {pretty_print_value(value)}")
     if "dictionary_item_removed" in diff:
         for key, value in diff["dictionary_item_removed"].items():
-            result.append(f"- {key} -> '{value}'")
+            result.append(f"➖ {key} -> {pretty_print_value(value)}")
     if "values_changed" in diff:
         for key, values in diff["values_changed"].items():
             new = values.get("new_value", None)
@@ -197,15 +240,17 @@ def pretty_print(diff: DeepDiff) -> str:
 
 
 def check_upgrades_needed(
-    file_path: list[Path],
+    file_path: list[Path], upgraders: list[Upgrader]
 ) -> Generator[tuple[Path, DeepDiff], None, None]:
     for path in file_path:
-        yield check_upgrade_needed(path)
+        yield check_upgrade_needed(path, upgraders)
 
 
-def check_upgrade_needed(file_path: Path) -> tuple[Path, Optional[DeepDiff]]:
+def check_upgrade_needed(
+    file_path: Path, upgraders: list[Upgrader]
+) -> tuple[Path, Optional[DeepDiff]]:
     loaded, _ = load_for_roundtrip(file_path)
-    upgraded = upgrade_to_latest(loaded, UPGRADERS)
+    upgraded = upgrade_to_latest(loaded, upgraders)
     diff = DeepDiff(loaded, upgraded, ignore_order=True, view="_delta")
     if diff:
         return file_path, diff

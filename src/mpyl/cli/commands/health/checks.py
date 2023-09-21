@@ -14,6 +14,12 @@ from rich.markdown import Markdown
 
 from ..build.jenkins import get_token
 from ....constants import DEFAULT_CONFIG_FILE_NAME, DEFAULT_RUN_PROPERTIES_FILE_NAME
+from ....projects.versioning import (
+    check_upgrade_needed,
+    CONFIG_UPGRADERS,
+    pretty_print,
+    Upgrader,
+)
 from ....utilities.github import GithubConfig
 from ....utilities.jenkins import JenkinsConfig
 from ....utilities.pyaml_env import parse_config
@@ -32,6 +38,9 @@ class HealthConsole:
         icon = "✅" if success else "❌"
         self.console.print(Markdown(f"&nbsp;&nbsp;{icon} {check}"))
 
+    def print(self, text: str):
+        self.console.print(Markdown(text))
+
 
 def perform_health_checks(bare_console: Console, is_ci: bool = False):
     console = HealthConsole(bare_console)
@@ -47,6 +56,7 @@ def perform_health_checks(bare_console: Console, is_ci: bool = False):
         default=DEFAULT_CONFIG_FILE_NAME,
         schema_path="../../../schema/mpyl_config.schema.yml",
         name="config",
+        upgraders=CONFIG_UPGRADERS,
     )
 
     console.title("Run configuration")
@@ -56,6 +66,7 @@ def perform_health_checks(bare_console: Console, is_ci: bool = False):
         default=DEFAULT_RUN_PROPERTIES_FILE_NAME,
         schema_path="../../../schema/run_properties.schema.yml",
         name="run properties",
+        upgraders=[],
     )
 
     if not is_ci:
@@ -135,7 +146,14 @@ def __check_version(console):
         console.check("Could not determine latest version", success=False)
 
 
-def __check_config(console, env_var, default, schema_path, name):
+def __check_config(
+    console: HealthConsole,
+    env_var: str,
+    default: str,
+    schema_path: str,
+    name: str,
+    upgraders: list[Upgrader],
+):
     path_env = os.environ.get(env_var)
     path = Path(path_env or default)
     location = (
@@ -145,6 +163,14 @@ def __check_config(console, env_var, default, schema_path, name):
     )
     if os.path.exists(path):
         console.check(f"Found {location}", success=True)
+
+        path, diff = check_upgrade_needed(path, upgraders)
+        if diff is None:
+            console.check("Upgrade not necessary", success=True)
+        else:
+            console.check("Upgrade required", success=False)
+            console.print("Expected changes:")
+            console.print(pretty_print(diff))
 
         if load_dotenv(Path(".env")):
             console.check("Set env variables via .env file", success=True)

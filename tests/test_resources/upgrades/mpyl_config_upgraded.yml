@@ -1,0 +1,136 @@
+mpylVersion: 1.0.12
+vcs:
+  git:
+    mainBranch: 'main'
+    remote:
+      url: 'https://github.com/acme/repo.git'
+      userName: !ENV ${GIT_CREDENTIALS_USR:git-user}
+      password: !ENV ${GIT_CREDENTIALS_PSW:git-password}
+  github:
+    repository: 'Vandebron/mpyl'
+    token: !ENV ${GITHUB_TOKEN}
+    app:
+      privateKeyPath: 'mpyl-pipeline.private-key.pem'
+      appId: '295700'
+slack:
+  botToken: !ENV ${SLACK_TOKEN}
+  icons:
+    building: '60fpsparrot'
+    success: 'thug-parrot'
+    failure: 'sadparrot'
+jira:
+  site: 'https://atlassian.net'
+  userName: !ENV ${JIRA_USER_PASSWORD_USR:jira_user}
+  password: !ENV ${JIRA_USER_PASSWORD_PSW:jira_password}
+  ticketPattern: '[A-Za-z]{2,}-\d+'
+docker:
+  registry:
+    hostName: !ENV ${DOCKER_HOST_NAME:docker_host}
+    userName: !ENV ${DOCKER_REGISTRY_USR:docker_user}
+    password: !ENV ${DOCKER_REGISTRY_PSW:docker_password}
+  build:
+    rootFolder: '.'
+    buildTarget: 'builder'
+    testTarget: 'tester'
+    dockerFileName: 'Dockerfile-mpl'
+sbt:
+  command: 'sbt'
+  clientCommand: 'sbtn'
+  testWithCoverage: !ENV ${SBT_RUN_WITH_COVERAGE:true}
+  verbose: true
+  javaOpts: '-Xmx4G -Xms4G -XX:+UseG1GC -XX:+CMSClassUnloadingEnabled -Xss2M'
+  sbtOpts: 'user.timezone=GMT jline.terminal=jline.UnixTerminal'
+whiteLists:
+  default: ["VPN"]
+  addresses:
+    - name: "VPN"
+      values: ["10.0.0.1"]
+    - name: 'Outside-World'
+      values: ['0.0.0.0/0']
+    - name: 'K8s-Test'
+      values: ['1.2.3.0', '1.2.3.1']
+cypress:
+  cypressSourceCodePath: 'test_resources/cypress'
+kubernetes:
+  rancher:
+    cluster:
+      test:
+        clusterId: c-xxxxx
+        projectId: p-11111
+        clusterEnv: test
+        context: digital-k8s-test
+      acceptance:
+        clusterId: c-zzzzz
+        projectId: p-22222
+        clusterEnv: acce
+        context: digital-k8s-acce
+      production:
+        clusterId: c-ccccc
+        projectId: p-33333
+        clusterEnv: prd
+        context: digital-k8s-prod
+s3:
+  accessKeyId: !ENV ${AWS_ACCESS_KEY_ID:aws_access_key_id}
+  secretAccessKey: !ENV ${AWS_SECRET_ACCESS_KEY:aws_secret_access_key}
+project: # default values
+  allowedMaintainers: ['Team1', 'Team2', 'MPyL']
+  deployment:
+    traefik:
+      enabled: true
+      hosts:
+        - host:
+            pr: "Host(`{SERVICE-NAME}-{PR-NUMBER}.test-backend.nl`)"
+            test: "Host(`{namespace}-{SERVICE-NAME}.test-backend.nl`)"
+            acceptance: "Host(`{namespace}-{SERVICE-NAME}.acce-backend.nl`)"
+            production: "Host(`{namespace}-{SERVICE-NAME}.prod-backend.nl`)"
+          tls:
+            all: "le-custom-prod-wildcard-cert"
+          whitelists:
+            all: ["VPN"]
+          insecure: false
+    kubernetes:
+      imagePullSecrets:
+        - name: 'acme-registry'
+      job:
+        ttlSecondsAfterFinished:
+          all: 3600
+        activeDeadlineSeconds:
+          pr: 10
+          test: 15
+          acceptance: 30
+          production: 50
+      resources:
+        instances:
+          pr: 1
+          test: 1
+          acceptance: 1
+          production: 3
+        limit:
+          cpus:
+            pr: 0.5
+            test: 0.5
+            acceptance: 0.5
+            production: 1.0
+          mem:
+            pr: 1024
+            test: 1024
+            acceptance: 1024
+            production: 2048
+      startupProbe:
+        path:
+          all: '/health'
+        initialDelaySeconds: 4  # 0 - We expect service to rarely be up within 4 secs.
+        periodSeconds: 2  # 10 - We want the service to become available as soon as possible
+        timeoutSeconds: 3  # 1 - If the app is very busy during the startup stage, 1 second might be too fast
+        successThreshold: 1  # 1 - We want the service to become available as soon as possible
+        failureThreshold: 60  # 3 - 4 + 60 * 2 = more than 2 minutes
+      livenessProbe:
+        path:
+          all: '/health'
+        periodSeconds: 30  # 10
+        timeoutSeconds: 20  # 1 - Busy apps may momentarily have long timeouts
+        successThreshold: 1  # 1
+        failureThreshold: 3  # 3
+      metrics:
+        path: '/metrics'
+        enabled: true

@@ -5,6 +5,11 @@ definitions:
     type: object
     additionalProperties: false
     properties:
+      mpylVersion:
+        description: >-
+          The MINIMAL version of MPyL that should be used to build this project. If not
+          specified, the latest version will be used.
+        type: string
       vcs:
         "$ref": "#/definitions/VCS"
       docker:
