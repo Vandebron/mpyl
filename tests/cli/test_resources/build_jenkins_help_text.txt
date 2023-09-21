@@ -28,4 +28,8 @@ Options:
                             '235.*'
   --all                     Build all projects, regardless of changes on branch
   --dryrun                  don't push or deploy images
+  -v, --version TEXT        Set a specific test version to be installed. e.g.
+                            '235.*'
+  --all                     Build all projects, regardless of changes on branch
+  --dryrun                  don't push or deploy images
   --help                    Show this message and exit.

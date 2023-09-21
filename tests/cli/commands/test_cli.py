@@ -34,6 +34,8 @@ class TestCli:
             main_group, ["build", "-c", str(self.config_path), "jenkins", "--help"]
         )
 
+        print(result.output)
+
         assert_roundtrip(
             self.resource_path / "build_jenkins_help_text.txt", result.output
         )
