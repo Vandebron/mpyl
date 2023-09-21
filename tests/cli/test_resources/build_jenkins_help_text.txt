@@ -1,10 +1,8 @@
-Usage: mpyl build [OPTIONS] COMMAND [ARGS]...
-  Try 'mpyl build --help' for help.
-    
-  Error: Invalid value for '--config' / '-c': Path 'mpyl_config.yml' does not exist.
+Usage: mpyl build jenkins [OPTIONS]
+
   Run a multi branch pipeline build on Jenkins
 
-  Options:
+Options:
   -u, --user TEXT           Authentication API user. Can be set via env var
                             JENKINS_USER  [required]
   -p, --password TEXT       Authentication API password. Can be set via env var
