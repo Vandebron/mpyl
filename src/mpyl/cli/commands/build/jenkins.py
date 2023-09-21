@@ -19,7 +19,7 @@ from ....utilities.repo import RepoConfig, Repository
 
 
 @dataclass(frozen=True)
-class JenkinsRunParameters:
+class JenkinsRunParameters:  # pylint: disable=too-many-instance-attributes
     jenkins_user: str
     jenkins_password: str
     config: dict
