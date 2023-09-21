@@ -312,7 +312,6 @@ def select_version(value: str) -> str:
     return value
 
 
-
 def select_target():
     return questionary.select(
         "Which environment do you want to deploy to?",
@@ -322,38 +321,6 @@ def select_target():
             for t in [Target.ACCEPTANCE, Target.PULL_REQUEST_BASE, Target.PRODUCTION]
         ],
     ).ask()
-
-
-def get_test_releases():
-    console = Console()
-    console.log("Fetching MPyL releases..")
-    url = "https://test.pypi.org/pypi/mpyl/json"
-    data = requests.get(url, timeout=30).json()
-    versions = list(data["releases"].keys())
-    versions.sort(key=LooseVersion, reverse=True)
-    versions = [version[:-4] for version in versions[:100]]
-    versions = list(dict.fromkeys(versions))
-    versions = [version + "*" for version in versions]
-    return versions
-
-
-def select_version(value) -> str:
-    versions = get_test_releases()
-
-    def question(message: str) -> str:
-        return questionary.select(
-            message=message,
-            show_selected=True,
-            choices=versions,
-        ).ask()
-
-    if value == "prompt":
-        return question("Which version do you want to install?")
-    if value not in versions:
-        return question(
-            "Version not recognized. Select one from the list .. Check --help for more info."
-        )
-    return value
 
 
 def ask_for_input(ctx, _param, value) -> Optional[str]:
