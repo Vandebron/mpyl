@@ -6,6 +6,7 @@ from click.testing import CliRunner
 
 from src.mpyl import main_group, add_commands
 from src.mpyl.cli import create_console_logger
+
 from tests import root_test_path
 from tests.test_resources.test_data import assert_roundtrip
 
@@ -27,6 +28,15 @@ class TestCli:
     def test_build_projects_help_output(self):
         result = self.runner.invoke(main_group, ["build", "--help"])
         assert_roundtrip(self.resource_path / "build_help_text.txt", result.output)
+
+    def test_build_jenkins_help_output(self):
+        result = self.runner.invoke(
+            main_group, ["build", "-c", str(self.config_path), "jenkins", "--help"]
+        )
+
+        assert_roundtrip(
+            self.resource_path / "build_jenkins_help_text.txt", result.output
+        )
 
     def test_build_projects_repo_output(self):
         result = self.runner.invoke(main_group, ["repo", "--help"])

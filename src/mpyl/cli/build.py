@@ -5,6 +5,8 @@ import shutil
 import sys
 from pathlib import Path
 from typing import Optional
+from distutils.version import LooseVersion
+import requests
 
 import click
 import questionary
@@ -115,15 +117,23 @@ def build(ctx, config, properties, verbose):
     is_flag=True,
     help="Build all projects, regardless of changes on branch",
 )
+@click.option(
+    "--dryrun",
+    "dryrun_",
+    is_flag=True,
+    default=False,
+    help="don't push or deploy images",
+)
 @click.option("--tag", "-t", help="Tag to build", type=click.STRING, required=False)
 @click.pass_obj
-def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
+def run(obj: CliContext, ci, all_, dryrun_, tag):  # pylint: disable=invalid-name
     asyncio.run(warn_if_update(obj.console))
 
     parameters = MpylCliParameters(
         local=not ci,
         pull_main=all_,
         all=all_,
+        dryrun=dryrun_,
         verbose=obj.verbose,
         tag=tag,
     )
@@ -270,6 +280,39 @@ def select_tag(ctx) -> str:
         return release.tag_name
 
 
+def get_test_releases():
+    console = Console()
+    console.log("Fetching MPyL releases..")
+    url = "https://test.pypi.org/pypi/mpyl/json"
+    data = requests.get(url, timeout=30).json()
+    versions = list(data["releases"].keys())
+    versions.sort(key=LooseVersion, reverse=True)
+    versions = [version[:-4] for version in versions[:100]]
+    versions = list(dict.fromkeys(versions))
+    versions = [version + "*" for version in versions]
+    return versions
+
+
+def select_version(value: str) -> str:
+    versions = get_test_releases()
+
+    def question(message: str) -> str:
+        return questionary.select(
+            message=message,
+            show_selected=True,
+            choices=versions,
+        ).ask()
+
+    if value == "prompt":
+        return question("Which version do you want to install?")
+    if value not in versions:
+        return question(
+            "Version not recognized. Select one from the list .. Check --help for more info."
+        )
+    return value
+
+
+
 def select_target():
     return questionary.select(
         "Which environment do you want to deploy to?",
@@ -281,11 +324,45 @@ def select_target():
     ).ask()
 
 
-def ask_for_tag_input(ctx, _param, value) -> Optional[str]:
+def get_test_releases():
+    console = Console()
+    console.log("Fetching MPyL releases..")
+    url = "https://test.pypi.org/pypi/mpyl/json"
+    data = requests.get(url, timeout=30).json()
+    versions = list(data["releases"].keys())
+    versions.sort(key=LooseVersion, reverse=True)
+    versions = [version[:-4] for version in versions[:100]]
+    versions = list(dict.fromkeys(versions))
+    versions = [version + "*" for version in versions]
+    return versions
+
+
+def select_version(value) -> str:
+    versions = get_test_releases()
+
+    def question(message: str) -> str:
+        return questionary.select(
+            message=message,
+            show_selected=True,
+            choices=versions,
+        ).ask()
+
+    if value == "prompt":
+        return question("Which version do you want to install?")
+    if value not in versions:
+        return question(
+            "Version not recognized. Select one from the list .. Check --help for more info."
+        )
+    return value
+
+
+def ask_for_input(ctx, _param, value) -> Optional[str]:
     if value == "not_set":
         return None
-    if value == "prompt":
+    if value == "prompt" and str(_param) == "<Option tag>":
         return select_tag(ctx)
+    if str(_param) == "<Option version>":
+        return select_version(value)
     return value
 
 
@@ -360,10 +437,58 @@ def ask_for_tag_input(ctx, _param, value) -> Optional[str]:
     is_flag=False,
     flag_value="prompt",
     default="not_set",
-    callback=ask_for_tag_input,
+    callback=ask_for_input,
+)
+@click.option(
+    "--version",
+    "-v",
+    is_flag=False,
+    flag_value="prompt",
+    default="not_set",
+    envvar="MPYL_RELEASE",
+    callback=ask_for_input,
+    required=False,
+    help="Set a specific test version to be installed. e.g. '235.*'",
+)
+@click.option(
+    "--all",
+    "all_",
+    is_flag=True,
+    help="Build all projects, regardless of changes on branch",
+)
+@click.option(
+    "--dryrun",
+    "dryrun_",
+    is_flag=True,
+    default=False,
+    help="don't push or deploy images",
+)
+@click.option(
+    "--version",
+    "-v",
+    is_flag=False,
+    flag_value="prompt",
+    default="not_set",
+    envvar="MPYL_RELEASE",
+    callback=ask_for_input,
+    required=False,
+    help="Set a specific test version to be installed. e.g. '235.*'",
+)
+@click.option(
+    "--all",
+    "all_",
+    is_flag=True,
+    help="Build all projects, regardless of changes on branch",
+)
+@click.option(
+    "--dryrun",
+    "dryrun_",
+    is_flag=True,
+    default=False,
+    help="don't push or deploy images",
 )
 @click.pass_context
-def jenkins(  # pylint: disable=too-many-arguments
+def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
     ctx,
     user,
     password,
@@ -374,6 +499,8 @@ def jenkins(  # pylint: disable=too-many-arguments
     background,
     silent,
     tag,
+    all_,
+    dryrun_,
 ):
     upgrade_check = None
     try:
@@ -387,11 +514,21 @@ def jenkins(  # pylint: disable=too-many-arguments
         jenkins_config = ctx.obj.config["jenkins"]
 
         selected_pipeline = pipeline if pipeline else jenkins_config["defaultPipeline"]
+
+        pipeline_parameters = {"TEST": "true", "VERSION": test} if test else {}
+        pipeline_parameters["BUILD_PARAMS"] = ""
+        if dryrun_:
+            pipeline_parameters["BUILD_PARAMS"] += " --dryrun"
+        if all_:
+            pipeline_parameters["BUILD_PARAMS"] += " --all"
+
         pipeline_parameters = (
             {"TEST": "true" if test else "false", "VERSION": version} if version else {}
         )
         if arguments:
             pipeline_parameters["BUILD_PARAMS"] = " ".join(arguments)
+        if version:
+            pipeline_parameters["MPYL_RELEASE"] = version
 
         run_argument = JenkinsRunParameters(
             jenkins_user=user,
@@ -402,6 +539,8 @@ def jenkins(  # pylint: disable=too-many-arguments
             verbose=not silent or ctx.obj.verbose,
             follow=not background,
             tag=tag,
+            dryrun=dryrun_,
+            all=all_,
             tag_target=getattr(Target, select_target()) if tag else None,
         )
 
