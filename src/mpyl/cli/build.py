@@ -430,30 +430,6 @@ def ask_for_input(ctx, _param, value) -> Optional[str]:
     default=False,
     help="don't push or deploy images",
 )
-@click.option(
-    "--version",
-    "-v",
-    is_flag=False,
-    flag_value="prompt",
-    default="not_set",
-    envvar="MPYL_RELEASE",
-    callback=ask_for_input,
-    required=False,
-    help="Set a specific test version to be installed. e.g. '235.*'",
-)
-@click.option(
-    "--all",
-    "all_",
-    is_flag=True,
-    help="Build all projects, regardless of changes on branch",
-)
-@click.option(
-    "--dryrun",
-    "dryrun_",
-    is_flag=True,
-    default=False,
-    help="don't push or deploy images",
-)
 @click.pass_context
 def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
     ctx,
