@@ -1,6 +1,6 @@
 """ Pushes the artifact created in the build stage to the docker registry for any build step that has
 ArtifactType.DOCKER_IMAGE as `mpyl.steps.models.ArtifactType`."""
-
+import os
 from logging import Logger
 
 from .. import Step, Meta
@@ -41,6 +41,8 @@ class AfterBuildDocker(Step):
             self.meta.name,
             DockerImageSpec(image=full_image_path),
         )
+
+        print("HIERO", os.environ["BUILD_PARAMS"])
 
         if step_input.dry_run:
             return Output(

@@ -115,6 +115,9 @@ def __execute_install_cmd(
     kube_context: str,
     additional_args: str = "",
 ) -> Output:
+
+    print("2HEREHERE", os.environ["BUILD_PARAMS"])
+
     cmd = f"helm upgrade -i {chart_name} -n {name_space} --kube-context {kube_context} {additional_args}"
     if dry_run:
         cmd = (

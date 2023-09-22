@@ -20,7 +20,8 @@ def custom_check_output(
         command = command.split(" ")
 
     command_argument = " ".join(command)
-    logger.info(f"Executing: '{command_argument}'")
+    logger.info(f"Executing: '{command_argument}' 3HEREHERE {os.environ['BUILD_PARAMS']}")
+
     try:
         if capture_stdout:
             out = subprocess.check_output(command, stderr=subprocess.STDOUT).decode(

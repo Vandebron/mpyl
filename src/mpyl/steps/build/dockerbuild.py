@@ -17,7 +17,7 @@ to a folder named `$WORKDIR/target/test-reports/`.
 .. include:: ../../../../tests/projects/service/deployment/Dockerfile-mpl
 ```
 """
-
+import os
 from logging import Logger
 
 from .docker_after_build import AfterBuildDocker
@@ -62,6 +62,8 @@ class BuildDocker(Step):
         dockerfile = docker_file_path(
             project=step_input.project, docker_config=docker_config
         )
+
+        print("HEREHERE", os.environ["BUILD_PARAMS"])
 
         if not step_input.dry_run:
             # log in to registry, because we may need to pull in a base image

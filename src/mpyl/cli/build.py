@@ -465,8 +465,6 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
         if version:
             pipeline_parameters["MPYL_RELEASE"] = version
 
-        print(pipeline_parameters)
-
         run_argument = JenkinsRunParameters(
             jenkins_user=user,
             jenkins_password=password,
