@@ -153,8 +153,8 @@ PROJECT_UPGRADERS = [
 ]
 
 
-class ConfigUpgraderOne12(Upgrader):
-    target_version = "1.0.12"
+class ConfigUpgraderOne30(Upgrader):
+    target_version = "1.3.0"
 
     def upgrade(self, previous_dict: ordereddict) -> ordereddict:
         if "cvs" not in previous_dict:
@@ -181,7 +181,7 @@ class ConfigUpgraderOne8(Upgrader):
         return previous_dict
 
 
-CONFIG_UPGRADERS = [ConfigUpgraderOne8(), ConfigUpgraderOne9(), ConfigUpgraderOne12()]
+CONFIG_UPGRADERS = [ConfigUpgraderOne8(), ConfigUpgraderOne9(), ConfigUpgraderOne30()]
 
 
 def get_entry_upgrader_index(
