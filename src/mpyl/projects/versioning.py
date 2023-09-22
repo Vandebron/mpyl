@@ -163,6 +163,13 @@ class ConfigUpgraderOne30(Upgrader):
         index = list(previous_dict).index("cvs")
         cvs = previous_dict.pop("cvs")
         previous_dict.insert(index, "vcs", cvs)
+
+        previous_docker_dict = previous_dict["docker"]
+        default_host_name = copy.deepcopy(previous_docker_dict["registry"]["hostName"])
+        previous_docker_dict.insert(0, "default_registry", default_host_name)
+        previous_docker_dict.insert(1, "registries", [previous_docker_dict["registry"]])
+        previous_docker_dict.pop("registry")
+        previous_dict["docker"] = previous_docker_dict
         return previous_dict
 
 
