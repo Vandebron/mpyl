@@ -33,8 +33,6 @@ class CloudFrontKubernetesDeploy(Step):
                 logger=self._logger, step_input=step_input, tmp_folder=tmp_folder
             )
 
-            print("1HERE", os.environ["BUILD_PARAMS"])
-
             if not step_input.dry_run:
                 self.__upload_to_s3(
                     logger=self._logger, step_input=step_input, tmp_folder=tmp_folder

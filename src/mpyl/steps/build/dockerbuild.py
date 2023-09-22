@@ -22,7 +22,6 @@ from logging import Logger
 
 from .docker_after_build import AfterBuildDocker
 from .. import Step, Meta
-from ..models import Input, Output, ArtifactType, input_to_artifact
 from ...constants import BUILD_ARTIFACTS_FOLDER
 from ...project import Stage
 from ...utilities.docker import (
@@ -62,8 +61,6 @@ class BuildDocker(Step):
         dockerfile = docker_file_path(
             project=step_input.project, docker_config=docker_config
         )
-
-        print("HEREHERE", os.environ["BUILD_PARAMS"])
 
         if not step_input.dry_run:
             # log in to registry, because we may need to pull in a base image

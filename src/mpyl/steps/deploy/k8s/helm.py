@@ -2,6 +2,7 @@
 step.
 """
 
+import os
 import shutil
 from logging import Logger
 from pathlib import Path
@@ -11,7 +12,9 @@ import yaml
 from .resources import to_yaml, CustomResourceDefinition
 from ...models import RunProperties, Output
 from ....cli import get_version
+from ....cli.commands.build.jenkins import JenkinsRunParameters
 from ....utilities.subprocess import custom_check_output
+
 
 
 def to_chart_metadata(chart_name: str, run_properties: RunProperties):
@@ -116,10 +119,8 @@ def __execute_install_cmd(
     additional_args: str = "",
 ) -> Output:
 
-    print("2HEREHERE", os.environ["BUILD_PARAMS"])
-
     cmd = f"helm upgrade -i {chart_name} -n {name_space} --kube-context {kube_context} {additional_args}"
-    if dry_run:
+    if dry_run or "--dryrun" in JenkinsRunParameters.pipeline_parameters["BUILD_PARAMS"]:
         cmd = (
             f"helm upgrade -i {chart_name} -n namespace --kube-context {kube_context} {additional_args} "
             f"--debug --dry-run"

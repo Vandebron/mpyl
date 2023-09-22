@@ -42,8 +42,6 @@ class AfterBuildDocker(Step):
             DockerImageSpec(image=full_image_path),
         )
 
-        print("HIERO", os.environ["BUILD_PARAMS"])
-
         if step_input.dry_run:
             return Output(
                 success=True,
