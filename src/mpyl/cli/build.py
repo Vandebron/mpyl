@@ -451,20 +451,21 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
 
         selected_pipeline = pipeline if pipeline else jenkins_config["defaultPipeline"]
 
-        pipeline_parameters = {"TEST": "true", "VERSION": test} if test else {}
+        pipeline_parameters = (
+            {"TEST": "true" if test else "false", "VERSION": version} if version else {}
+        )
         pipeline_parameters["BUILD_PARAMS"] = ""
+
         if dryrun_:
             pipeline_parameters["BUILD_PARAMS"] += " --dryrun"
         if all_:
             pipeline_parameters["BUILD_PARAMS"] += " --all"
-
-        pipeline_parameters = (
-            {"TEST": "true" if test else "false", "VERSION": version} if version else {}
-        )
         if arguments:
             pipeline_parameters["BUILD_PARAMS"] = " ".join(arguments)
         if version:
             pipeline_parameters["MPYL_RELEASE"] = version
+
+        print(pipeline_parameters)
 
         run_argument = JenkinsRunParameters(
             jenkins_user=user,
