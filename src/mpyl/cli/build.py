@@ -466,8 +466,6 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
             pipeline_parameters["BUILD_PARAMS"] = " ".join(arguments)
         if version:
             pipeline_parameters["MPYL_RELEASE"] = version
-        if not version:
-            pipeline_parameters["MPYL_RELEASE"] = os.environ["CHANGE_ID"]
 
         run_argument = JenkinsRunParameters(
             jenkins_user=user,
@@ -482,7 +480,6 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
             all=all_,
             tag_target=getattr(Target, select_target()) if tag else None,
         )
-
 
         run_jenkins(run_argument)
     except asyncio.exceptions.TimeoutError:

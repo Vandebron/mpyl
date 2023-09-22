@@ -103,6 +103,7 @@ def run_mpyl(
                     properties=run_properties,
                     steps_collection=StepsCollection(logger=logger),
                 )
+
                 run_result = run_build(run_plan, steps, reporter, cli_parameters.local)
             except ValidationError as exc:
                 console.log(
