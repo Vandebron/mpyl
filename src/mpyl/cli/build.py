@@ -1,5 +1,4 @@
 """Commands related to build"""
-import os
 import asyncio
 import logging
 import shutil
