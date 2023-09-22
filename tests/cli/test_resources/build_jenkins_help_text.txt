@@ -10,8 +10,6 @@ Options:
   -pl, --pipeline PIPELINE  The pipeline to run. Must be one of the pipelines
                             listed in `jenkins.pipelines`. Default value is
                             `jenkins.defaultPipeline`
-  -v, --version TEXT        A specific version on https://pypi.org/project/mpyl/
-                            to use for the build.
   -t, --test                The version supplied by `--version` should be
                             considered from the Test PyPi mirror at
                             https://test.pypi.org/project/mpyl/.
