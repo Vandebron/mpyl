@@ -4,6 +4,7 @@ import asyncio
 import os
 import pkgutil
 import shutil
+import sys
 from pathlib import Path
 from subprocess import CalledProcessError
 
@@ -11,6 +12,7 @@ import jsonschema
 from dotenv import load_dotenv
 from rich.console import Console
 from rich.markdown import Markdown
+from rich.prompt import Confirm
 
 from ..build.jenkins import get_token
 from ....constants import DEFAULT_CONFIG_FILE_NAME, DEFAULT_RUN_PROPERTIES_FILE_NAME
@@ -19,6 +21,7 @@ from ....projects.versioning import (
     CONFIG_UPGRADERS,
     pretty_print,
     Upgrader,
+    upgrade_file,
 )
 from ....utilities.github import GithubConfig
 from ....utilities.jenkins import JenkinsConfig
@@ -107,6 +110,10 @@ def __check_jenkins(console: HealthConsole):
         try:
             get_token(GithubConfig.from_config(parsed))
             console.check("Github token found", success=True)
+        except KeyError:
+            console.check(
+                "Config invalid, cannot determine github configuration", success=False
+            )
         except CalledProcessError:
             console.check(
                 "Github token not found. Log in with `gh auth login`", success=False
@@ -165,12 +172,23 @@ def __check_config(
         console.check(f"Found {location}", success=True)
 
         path, diff = check_upgrade_needed(path, upgraders)
-        if diff is None:
+        pretty_diff = pretty_print(diff) if diff else ""
+        if pretty_diff == "":
             console.check("Upgrade not necessary", success=True)
         else:
             console.check("Upgrade required", success=False)
             console.print("Expected changes:")
-            console.print(pretty_print(diff))
+            console.print(pretty_diff)
+            if sys.stdout.isatty() and Confirm.ask("Upgrade now?"):
+                upgraded = upgrade_file(path, upgraders)
+                if upgraded:
+                    path.write_text(upgraded, encoding="utf-8")
+                    console.check(
+                        "Upgrade successful. You may need to run `mpyl projects upgrade` still.",
+                        success=True,
+                    )
+                else:
+                    console.check("Could not upgrade", success=False)
 
         if load_dotenv(Path(".env")):
             console.check("Set env variables via .env file", success=True)
