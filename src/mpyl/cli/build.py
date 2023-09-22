@@ -324,13 +324,14 @@ def select_target():
 
 
 def ask_for_input(ctx, _param, value) -> Optional[str]:
-    if value == "not_set":
-        return None
-    if value == "prompt" and str(_param) == "<Option tag>":
-        return select_tag(ctx)
-    if str(_param) == "<Option version>":
-        return select_version(value)
-    return value
+    if sys.stdin.isatty():
+        if value == "not_set":
+            return None
+        if value == "prompt" and str(_param) == "<Option tag>":
+            return select_tag(ctx)
+        if str(_param) == "<Option version>":
+            return select_version(value)
+    return None
 
 
 @build.command(help="Run a multi branch pipeline build on Jenkins")
@@ -356,13 +357,6 @@ def ask_for_input(ctx, _param, value) -> Optional[str]:
     help="The pipeline to run. Must be one of the pipelines listed in `jenkins.pipelines`. "
     "Default value is `jenkins.defaultPipeline`",
     type=Pipeline(),
-    required=False,
-)
-@click.option(
-    "--version",
-    "-v",
-    help="A specific version on https://pypi.org/project/mpyl/ to use for the build.",
-    type=click.STRING,
     required=False,
 )
 @click.option(
@@ -412,7 +406,6 @@ def ask_for_input(ctx, _param, value) -> Optional[str]:
     is_flag=False,
     flag_value="prompt",
     default="not_set",
-    envvar="MPYL_RELEASE",
     callback=ask_for_input,
     required=False,
     help="Set a specific test version to be installed. e.g. '235.*'",
