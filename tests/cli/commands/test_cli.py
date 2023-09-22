@@ -1,8 +1,10 @@
 import os
 import re
+import requests
 
 import pytest
 from click.testing import CliRunner
+from packaging import version as packaging_version
 
 from src.mpyl import main_group, add_commands
 from src.mpyl.cli import create_console_logger
@@ -37,6 +39,13 @@ class TestCli:
         assert_roundtrip(
             self.resource_path / "build_jenkins_help_text.txt", result.output
         )
+
+    def test_get_test_releases(self):
+        response = requests.get("https://test.pypi.org/pypi/mpyl/json",  timeout=30)
+        data = response.json()
+
+        assert response.status_code == 200
+        assert data != {"message": "Not Found"}
 
     def test_build_projects_repo_output(self):
         result = self.runner.invoke(main_group, ["repo", "--help"])

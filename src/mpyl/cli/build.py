@@ -5,7 +5,7 @@ import shutil
 import sys
 from pathlib import Path
 from typing import Optional
-from distutils.version import LooseVersion
+from packaging import version as packaging_version
 import requests
 
 import click
@@ -286,7 +286,7 @@ def get_test_releases():
     url = "https://test.pypi.org/pypi/mpyl/json"
     data = requests.get(url, timeout=30).json()
     versions = list(data["releases"].keys())
-    versions.sort(key=LooseVersion, reverse=True)
+    versions.sort(key=packaging_version.Version, reverse=True)
     versions = [version[:-4] for version in versions[:100]]
     versions = list(dict.fromkeys(versions))
     versions = [version + "*" for version in versions]
@@ -327,9 +327,9 @@ def ask_for_input(ctx, _param, value) -> Optional[str]:
     if sys.stdin.isatty():
         if value == "not_set":
             return None
-        if value == "prompt" and str(_param) == "<Option tag>":
+        if value == "prompt" and _param == "tag":
             return select_tag(ctx)
-        if str(_param) == "<Option version>":
+        if _param.name == "version":
             return select_version(value)
     return None
 
