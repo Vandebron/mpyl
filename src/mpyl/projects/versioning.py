@@ -218,7 +218,7 @@ def upgrade_to_latest(
 
 def pretty_print_value(value) -> str:
     print_yaml = yaml_for_roundtrip()
-    if isinstance(value, dict):
+    if isinstance(value, (dict, list, set)):
         return f"\n```\n{yaml_to_string(value, print_yaml)}```"
     return f"`{value}`\n"
 
