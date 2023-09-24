@@ -66,18 +66,18 @@ class BuildDocker(Step):
             project=step_input.project, docker_config=docker_config
         )
 
+        docker_registry_config = registry_for_project(docker_config, step_input.project)
         if not step_input.dry_run:
             # log in to registry, because we may need to pull in a base image
-            login(logger=self._logger, registry_config=docker_config)
+            login(logger=self._logger, registry_config=docker_registry_config)
 
-        docker_registry_config = registry_for_project(docker_config, step_input.project)
         success = build(
             logger=self._logger,
             root_path=docker_config.root_folder,
             file_path=dockerfile,
             image_tag=image_tag,
             target=build_target,
-            docker_config=docker_registry_config,
+            registry_config=docker_registry_config,
         )
         artifact = input_to_artifact(
             ArtifactType.DOCKER_IMAGE, step_input, spec=DockerImageSpec(image=image_tag)

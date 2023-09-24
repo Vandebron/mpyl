@@ -233,7 +233,7 @@ def build(
     file_path: str,
     image_tag: str,
     target: str,
-    docker_config: Optional[DockerRegistryConfig] = None,
+    registry_config: Optional[DockerRegistryConfig] = None,
 ) -> bool:
     """
     :param logger: the logger
@@ -241,23 +241,23 @@ def build(
     :param file_path: path to the docker file to be built
     :param image_tag: the tag of the image
     :param target: the 'target' within the multi-stage docker image
-    :param docker_config: optional docker config, used what type of cache to use if any
+    :param registry_config: optional docker config, used what type of cache to use if any
     :return: True for success, False for failure
     """
     logger.info(f"Building docker image with {file_path} and target {target}")
 
-    if docker_config and docker_config.cache_from_registry:
-        registry_path = docker_registry_path(docker_config, image_tag)
+    if registry_config and registry_config.cache_from_registry:
+        registry_path = docker_registry_path(registry_config, image_tag)
         cache_from = f"type=registry,ref={registry_path}"
         cache_to = "type=inline"
-    elif docker_config and docker_config.custom_cache_config:
-        cache_from = docker_config.custom_cache_config.cache_from
-        cache_to = docker_config.custom_cache_config.cache_to
+    elif registry_config and registry_config.custom_cache_config:
+        cache_from = registry_config.custom_cache_config.cache_from
+        cache_to = registry_config.custom_cache_config.cache_to
     else:
         cache_from = None
         cache_to = None
 
-    logger.debug(f"Building with cache from: {cache_from} {docker_config}")
+    logger.debug(f"Building with cache from: {cache_from} {registry_config}")
 
     try:
         logs = docker.buildx.build(
