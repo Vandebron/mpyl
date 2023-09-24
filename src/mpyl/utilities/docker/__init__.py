@@ -183,13 +183,13 @@ def push_to_registry(
 def registry_for_project(
     docker_config: DockerConfig, project: Project
 ) -> DockerRegistryConfig:
-    if project.docker:
-        host_name = project.docker.host_name
-    else:
-        host_name = docker_config.default_registry
-    for registry in docker_config.registries:
-        if registry.host_name == host_name:
-            return registry
+    host_name = (
+        project.docker.host_name if project.docker else docker_config.default_registry
+    )
+    registry = next(r for r in docker_config.registries if r.host_name == host_name)
+    if registry:
+        return registry
+
     raise KeyError(f"Docker config has no registry with host name {host_name}")
 
 
