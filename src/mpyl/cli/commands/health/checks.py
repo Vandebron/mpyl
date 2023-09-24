@@ -46,7 +46,9 @@ class HealthConsole:
         self.console.print(Markdown(text))
 
 
-def perform_health_checks(bare_console: Console, is_ci: bool = False):
+def perform_health_checks(
+    bare_console: Console, is_ci: bool = False, perform_upgrade: bool = False
+):
     console = HealthConsole(bare_console)
     load_dotenv(Path(".env"))
 
@@ -65,6 +67,7 @@ def perform_health_checks(bare_console: Console, is_ci: bool = False):
             config_file_path=config_path,
             schema_path="../../../schema/mpyl_config.schema.yml",
             upgraders=CONFIG_UPGRADERS,
+            perform_upgrade=perform_upgrade,
         )
 
     console.title("Run configuration")
@@ -79,6 +82,7 @@ def perform_health_checks(bare_console: Console, is_ci: bool = False):
             config_file_path=properties_path,
             schema_path="../../../schema/run_properties.schema.yml",
             upgraders=[],
+            perform_upgrade=perform_upgrade,
         )
 
     if not is_ci:
@@ -188,6 +192,7 @@ def __validate_config(
     config_file_path: Path,
     schema_path: str,
     upgraders: list[Upgrader],
+    perform_upgrade: bool = False,
 ):
     path, diff = check_upgrade_needed(config_file_path, upgraders)
     pretty_diff = pretty_print(diff) if diff else ""
@@ -197,7 +202,7 @@ def __validate_config(
         console.check("Upgrade required", success=False)
         console.print("Expected changes:")
         console.print(pretty_diff)
-        if sys.stdout.isatty() and Confirm.ask("Upgrade now?"):
+        if perform_upgrade or (sys.stdout.isatty() and Confirm.ask("Upgrade now?")):
             upgraded = upgrade_file(path, upgraders)
             if upgraded:
                 path.write_text(upgraded, encoding="utf-8")
