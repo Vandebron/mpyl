@@ -33,7 +33,7 @@ def find_dependencies(
     ):
         dependent_projects = {}
         for dep in (
-            proj.project.dependencies.set_for_stage(Stage.TEST)
+            proj.project.dependencies.set_for_stage(Stage.TEST())
             if proj.project.dependencies
             else set()
         ):

@@ -29,7 +29,7 @@ class IntegrationTestBefore(Step):
                 name="Before Test",
                 description="Before test step",
                 version="0.0.1",
-                stage=Stage.TEST,
+                stage=Stage.TEST(),
             ),
             produced_artifact=ArtifactType.NONE,
             required_artifact=ArtifactType.NONE,

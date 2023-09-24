@@ -29,9 +29,9 @@ def create_test_result_with_plan() -> RunResult:
     return RunResult(
         run_properties=test_data.RUN_PROPERTIES,
         run_plan={
-            Stage.BUILD: set(build_projects),
-            Stage.TEST: set(test_projects),
-            Stage.DEPLOY: set(deploy_projects),
+            Stage.BUILD(): set(build_projects),
+            Stage.TEST(): set(test_projects),
+            Stage.DEPLOY(): set(deploy_projects),
         },
     )
 
@@ -40,7 +40,7 @@ def append_results(result: RunResult) -> None:
     other_project = __get_other_project()
     result.append(
         StepResult(
-            stage=Stage.BUILD,
+            stage=Stage.BUILD(),
             project=test_data.get_project(),
             output=Output(success=False, message="Build failed"),
             timestamp=datetime.fromisoformat("2019-01-04T16:41:24+02:00"),
@@ -48,7 +48,7 @@ def append_results(result: RunResult) -> None:
     )
     result.append(
         StepResult(
-            stage=Stage.BUILD,
+            stage=Stage.BUILD(),
             project=other_project,
             output=Output(success=True, message="Build successful"),
             timestamp=datetime.fromisoformat("2019-01-04T16:41:26+02:00"),
@@ -56,7 +56,7 @@ def append_results(result: RunResult) -> None:
     )
     result.append(
         StepResult(
-            stage=Stage.TEST,
+            stage=Stage.TEST(),
             project=other_project,
             output=Output(
                 success=True,
@@ -75,7 +75,7 @@ def append_results(result: RunResult) -> None:
     )
     result.append(
         StepResult(
-            stage=Stage.DEPLOY,
+            stage=Stage.DEPLOY(),
             project=other_project,
             output=Output(
                 success=True,

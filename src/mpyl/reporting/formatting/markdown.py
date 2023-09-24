@@ -64,15 +64,7 @@ def __to_oneliner(result: list[StepResult], plan: set[Project]) -> str:
 
 
 def stage_to_icon(stage: Stage):
-    if stage == Stage.BUILD:
-        return "🏗️"
-    if stage == Stage.TEST:
-        return "📋"
-    if stage == Stage.DEPLOY:
-        return "🚀"
-    if stage == Stage.POST_DEPLOY:
-        return "🦺"
-    return "➡️"
+    return stage.icon
 
 
 def markdown_for_stage(run_result: RunResult, stage: Stage):
@@ -108,17 +100,17 @@ def run_result_to_markdown(run_result: RunResult) -> str:
     return status_line + execution_plan_as_markdown(run_result)
 
 
-def execution_plan_as_markdown(run_result):
+def execution_plan_as_markdown(run_result: RunResult):
     result = ""
     exception = run_result.exception
     if exception:
-        result += f"For _{exception.executor}_ on _{exception.project_name}_ at _{exception.stage}_ \n"
+        result += f"For _{exception.executor}_ on _{exception.project_name}_ at stage _{exception.stage}_ \n"
         result += f"\n\n{exception}\n\n"
     elif run_result.failed_result:
         failed = run_result.failed_result
-        result += f"For _{failed.project.name}_ at _{failed.stage}_ \n"
+        result += f"For _{failed.project.name}_ at stage _{failed.stage.name}_ \n"
         result += f"\n\n{run_result.failed_result.output.message}\n\n"
-    for stage in Stage:
+    for stage in Stage.stages():
         result += markdown_for_stage(run_result, stage)
     return result
 

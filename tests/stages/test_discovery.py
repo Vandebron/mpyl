@@ -25,7 +25,9 @@ class TestDiscovery:
             assert (
                 len(
                     find_invalidated_projects_for_stage(
-                        projects, Stage.BUILD, [Revision(0, "revision", touched_files)]
+                        projects,
+                        Stage.BUILD(),
+                        [Revision(0, "revision", touched_files)],
                     )
                 )
                 == 1
@@ -33,7 +35,7 @@ class TestDiscovery:
             assert (
                 len(
                     find_invalidated_projects_for_stage(
-                        projects, Stage.TEST, [Revision(0, "revision", touched_files)]
+                        projects, Stage.TEST(), [Revision(0, "revision", touched_files)]
                     )
                 )
                 == 2
@@ -41,7 +43,9 @@ class TestDiscovery:
             assert (
                 len(
                     find_invalidated_projects_for_stage(
-                        projects, Stage.DEPLOY, [Revision(0, "revision", touched_files)]
+                        projects,
+                        Stage.DEPLOY(),
+                        [Revision(0, "revision", touched_files)],
                     )
                 )
                 == 1
@@ -56,7 +60,7 @@ class TestDiscovery:
         projects = set(load_projects(root_test_path, project_paths))
         invalidated = find_invalidated_projects_for_stage(
             projects,
-            Stage.BUILD,
+            Stage.BUILD(),
             [Revision(0, "hash", {"projects/job/file.py", "some_file.txt"})],
         )
         assert 1 == len(invalidated)

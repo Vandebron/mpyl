@@ -11,7 +11,7 @@ from ...utilities.junit import to_test_suites, sum_suites, JunitTestSpec
 
 def to_string(run_result: RunResult) -> str:
     result: str = ""
-    for stage in Stage:
+    for stage in Stage.stages():
         run_results = run_result.results_for_stage(stage)
         if run_results:
             result += f"Stage {stage.name}\n"

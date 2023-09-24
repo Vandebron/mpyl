@@ -49,7 +49,7 @@ def _to_relevant_changes(
     output: Output = Output.try_read(project.target_path, stage)
     relevant = set()
     for history in reversed(sorted(change_history, key=lambda c: c.ord)):
-        if stage == Stage.DEPLOY or output_invalidated(output, history.hash):
+        if stage == Stage.DEPLOY() or output_invalidated(output, history.hash):
             relevant.update(history.files_touched)
         else:
             return relevant
@@ -92,7 +92,7 @@ def find_deploy_set(repo_config: RepoConfig, tag: Optional[str]) -> DeploySet:
         return DeploySet(
             all_projects,
             find_invalidated_projects_for_stage(
-                all_projects, Stage.DEPLOY, changes_in_branch
+                all_projects, Stage.DEPLOY(), changes_in_branch
             ),
         )
 
@@ -101,7 +101,7 @@ def find_invalidated_projects_per_stage(
     all_projects: set[Project], change_history: list[Revision]
 ) -> dict[Stage, set[Project]]:
     projects_for_stage = {}
-    for stage in Stage:
+    for stage in Stage.stages():
         projects = find_invalidated_projects_for_stage(
             all_projects, stage, change_history
         )

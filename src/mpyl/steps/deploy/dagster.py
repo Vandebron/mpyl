@@ -35,7 +35,7 @@ class DeployDagster(Step):
                 name="Dagster Deploy",
                 description="Deploy a dagster user code repository to k8s",
                 version="0.0.1",
-                stage=Stage.DEPLOY,
+                stage=Stage.POST_DEPLOY(),
             ),
             produced_artifact=ArtifactType.NONE,
             required_artifact=ArtifactType.DOCKER_IMAGE,

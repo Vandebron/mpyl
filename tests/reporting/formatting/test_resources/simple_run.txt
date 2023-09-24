@@ -1,8 +1,8 @@
-Stage BUILD
-2019-01-04 16:41:24+02:00 - dockertest - Stage.BUILD - success: False 
-2019-01-04 16:41:26+02:00 - test - Stage.BUILD - success: True 
-Stage TEST
-2019-01-04 16:41:45+02:00 - test - Stage.TEST - success: True 
+Stage build
+2019-01-04 16:41:24+02:00 - dockertest - Stage(name='build', icon='🏗️') - success: False 
+2019-01-04 16:41:26+02:00 - test - Stage(name='build', icon='🏗️') - success: True 
+Stage test
+2019-01-04 16:41:45+02:00 - test - Stage(name='test', icon='📋') - success: True 
 TestRunSummary(tests=51, failures=1, errors=0, skipped=0) 
 
 Suite pytest
@@ -59,5 +59,5 @@ Suite nl.vandebron.api.invoices.routes.InvoiceRouteSpecs
   Case Invoice routes should refuse request without filter 
   Case Invoice routes should use proper headers when returning a PDF invoice 
   Case Invoice routes should GET '/api/v1/organizations/{customerReference}/invoices/{invoiceId}' should return a 200 with invoice details 
-Stage DEPLOY
-2019-01-04 16:41:45+02:00 - test - Stage.DEPLOY - success: True 
+Stage deploy
+2019-01-04 16:41:45+02:00 - test - Stage(name='deploy', icon='🚀') - success: True 

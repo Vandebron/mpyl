@@ -21,7 +21,7 @@ class DeployKubernetesSparkJob(Step):
                 name="Kubernetes Spark Job Deploy",
                 description="Deploy a Spark Job to the Spark Operator",
                 version="0.0.1",
-                stage=Stage.DEPLOY,
+                stage=Stage.DEPLOY(),
             ),
             produced_artifact=ArtifactType.NONE,
             required_artifact=ArtifactType.DOCKER_IMAGE,

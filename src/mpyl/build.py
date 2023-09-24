@@ -148,10 +148,10 @@ def find_build_set(
 
     if build_all:
         return {
-            Stage.BUILD: for_stage(all_projects, Stage.BUILD),
-            Stage.TEST: for_stage(all_projects, Stage.TEST),
-            Stage.DEPLOY: for_stage(all_projects, Stage.DEPLOY),
-            Stage.POST_DEPLOY: for_stage(all_projects, Stage.POST_DEPLOY),
+            Stage.BUILD(): for_stage(all_projects, Stage.BUILD()),
+            Stage.TEST(): for_stage(all_projects, Stage.TEST()),
+            Stage.DEPLOY(): for_stage(all_projects, Stage.DEPLOY()),
+            Stage.POST_DEPLOY(): for_stage(all_projects, Stage.POST_DEPLOY()),
         }
 
     return find_invalidated_projects_per_stage(all_projects, changes_in_branch)
@@ -171,7 +171,7 @@ def run_build(
                 if reporter:
                     reporter.send_report(accumulator)
 
-                if not result.output.success and stage == Stage.DEPLOY:
+                if not result.output.success and stage == Stage.DEPLOY():
                     logging.warning(f"Deployment failed for {proj.name}")
                     return accumulator
 

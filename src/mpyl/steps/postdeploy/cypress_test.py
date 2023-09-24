@@ -23,7 +23,7 @@ class CypressTest(Step):
                 name="Cypress Test",
                 description="Step to run cypress tests",
                 version="0.0.1",
-                stage=Stage.POST_DEPLOY,
+                stage=Stage.POST_DEPLOY(),
             ),
             produced_artifact=ArtifactType.JUNIT_TESTS,
             required_artifact=ArtifactType.NONE,

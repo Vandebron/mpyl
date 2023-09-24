@@ -16,7 +16,7 @@ class DeployEcho(Step):
                 name="Echo Deploy",
                 description="Dummy deploy step to test the framework",
                 version="0.0.1",
-                stage=Stage.DEPLOY,
+                stage=Stage.DEPLOY(),
             ),
             ArtifactType.NONE,
             ArtifactType.DOCKER_IMAGE,

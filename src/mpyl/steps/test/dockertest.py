@@ -54,7 +54,7 @@ class TestDocker(Step):
                 name="Docker Test",
                 description="Test docker image",
                 version="0.0.1",
-                stage=Stage.TEST,
+                stage=Stage.TEST(),
             ),
             produced_artifact=ArtifactType.JUNIT_TESTS,
             required_artifact=ArtifactType.NONE,

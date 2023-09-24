@@ -23,7 +23,7 @@ class AfterBuildDocker(Step):
                 name="After Docker Build",
                 description="Push docker image to registry",
                 version="0.0.1",
-                stage=Stage.BUILD,
+                stage=Stage.BUILD(),
             ),
             produced_artifact=ArtifactType.DOCKER_IMAGE,
             required_artifact=ArtifactType.DOCKER_IMAGE,

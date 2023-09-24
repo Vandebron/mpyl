@@ -101,7 +101,7 @@ class Steps:
         if not required_artifact or required_artifact == ArtifactType.NONE:
             return None
 
-        for stage in Stage:
+        for stage in Stage.stages():
             output: Optional[Output] = Output.try_read(project.target_path, stage)
             if (
                 output
@@ -159,7 +159,7 @@ class Steps:
         if step_name is None:
             return Output(
                 success=False,
-                message=f"Stage '{stage.value}' not defined on project '{project.name}'",
+                message=f"Stage '{stage.name}' not defined on project '{project.name}'",
             )
 
         invalid_maintainers = self._validate_project_against_config(project)
@@ -172,7 +172,7 @@ class Steps:
 
             return Output(
                 success=False,
-                message=f"Executor '{step_name}' for '{stage.value}' not known or registered",
+                message=f"Executor '{step_name}' for '{stage.name}' not known or registered",
             )
 
         try:

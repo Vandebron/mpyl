@@ -57,7 +57,7 @@ class TestMarkdownReporting:
         assert result.progress_fraction == 0.0, "Should start at zero progress"
         result.append(
             StepResult(
-                stage=Stage.BUILD,
+                stage=Stage.BUILD(),
                 project=test_data.get_project(),
                 output=Output(success=False, message="Build failed"),
                 timestamp=datetime.fromisoformat("2019-01-04T16:41:24+02:00"),
@@ -71,7 +71,7 @@ class TestMarkdownReporting:
         run_result = create_test_result()
         run_result.append(
             StepResult(
-                stage=Stage.TEST,
+                stage=Stage.TEST(),
                 project=test_data.get_project(),
                 output=Output(
                     success=True,
@@ -90,7 +90,7 @@ class TestMarkdownReporting:
         )
         run_result.append(
             StepResult(
-                stage=Stage.TEST,
+                stage=Stage.TEST(),
                 project=test_data.get_project(),
                 output=Output(
                     success=True,

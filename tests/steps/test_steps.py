@@ -140,7 +140,7 @@ class TestSteps:
 
     def test_should_succeed_if_executor_is_known(self):
         project = test_data.get_project_with_stages({"build": "Echo Build"})
-        result = self.executor.execute(stage=Stage.BUILD, project=project)
+        result = self.executor.execute(stage=Stage.BUILD(), project=project)
         assert result.output.success
         assert result.output.message == "Built test"
         assert result.output.produced_artifact is not None
@@ -150,7 +150,7 @@ class TestSteps:
 
     def test_should_fail_if_executor_is_not_known(self):
         project = test_data.get_project_with_stages({"build": "Unknown Build"})
-        result = self.executor.execute(stage=Stage.BUILD, project=project)
+        result = self.executor.execute(stage=Stage.BUILD(), project=project)
         assert not result.output.success
         assert (
             result.output.message
@@ -162,7 +162,7 @@ class TestSteps:
             stage_config={"build": "Echo Build"}, path="", maintainers=["Unknown Team"]
         )
 
-        result = self.executor.execute(stage=Stage.BUILD, project=project)
+        result = self.executor.execute(stage=Stage.BUILD(), project=project)
         assert not result.output.success
         assert (
             result.output.message
@@ -171,7 +171,7 @@ class TestSteps:
 
     def test_should_succeed_if_stage_is_not_known(self):
         project = test_data.get_project_with_stages(stage_config={"test": "Some Test"})
-        result = self.executor.execute(stage=Stage.BUILD, project=project)
+        result = self.executor.execute(stage=Stage.BUILD(), project=project)
         assert not result.output.success
         assert result.output.message == "Stage 'build' not defined on project 'test'"
 
@@ -189,5 +189,5 @@ class TestSteps:
             None,
             Dependencies.from_config({"postdeploy": ["specs/*.js"]}),
         )
-        result = self.executor.execute(stage=Stage.POST_DEPLOY, project=project)
+        result = self.executor.execute(stage=Stage.POST_DEPLOY(), project=project)
         assert result.output.success

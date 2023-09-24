@@ -21,7 +21,7 @@ class CloudFrontKubernetesDeploy(Step):
                 name="CloudFront Kubernetes Deploy",
                 description="uploads the build output to an s3 bucket",
                 version="0.0.1",
-                stage=Stage.DEPLOY,
+                stage=Stage.DEPLOY(),
             ),
             produced_artifact=ArtifactType.NONE,
             required_artifact=ArtifactType.DOCKER_IMAGE,

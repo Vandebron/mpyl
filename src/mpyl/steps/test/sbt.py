@@ -27,7 +27,7 @@ class TestSbt(Step):
                 name="Sbt Test",
                 description="Run sbt tests",
                 version="0.0.1",
-                stage=Stage.TEST,
+                stage=Stage.TEST(),
             ),
             produced_artifact=ArtifactType.JUNIT_TESTS,
             required_artifact=ArtifactType.NONE,

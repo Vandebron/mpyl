@@ -18,7 +18,7 @@ class IntegrationTestAfter(Step):
                 name="After Test",
                 description="After test step",
                 version="0.0.1",
-                stage=Stage.TEST,
+                stage=Stage.TEST(),
             ),
             produced_artifact=ArtifactType.NONE,
             required_artifact=ArtifactType.NONE,

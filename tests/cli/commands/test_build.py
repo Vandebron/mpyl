@@ -27,7 +27,7 @@ class ThrowingStep(Step):
                 name="Throwing Build",
                 description="Throwing build step to validate error handling",
                 version="0.0.1",
-                stage=Stage.BUILD,
+                stage=Stage.BUILD(),
             ),
             produced_artifact=ArtifactType.NONE,
             required_artifact=ArtifactType.NONE,
@@ -61,7 +61,11 @@ class TestBuildCommand:
         run_properties = RUN_PROPERTIES
 
         projects = [get_minimal_project()]
-        run_plan = {Stage.BUILD: projects, Stage.TEST: projects, Stage.DEPLOY: projects}
+        run_plan = {
+            Stage.BUILD(): projects,
+            Stage.TEST(): projects,
+            Stage.DEPLOY(): projects,
+        }
         accumulator = RunResult(run_properties=run_properties, run_plan=run_plan)
         executor = Steps(
             logging.getLogger(),
@@ -79,7 +83,7 @@ class TestBuildCommand:
         run_properties = RUN_PROPERTIES
 
         projects = [get_project_with_stages({"build": "Throwing Build"})]
-        run_plan = {Stage.BUILD: projects}
+        run_plan = {Stage.BUILD(): projects}
         accumulator = RunResult(run_properties=run_properties, run_plan=run_plan)
         logger = logging.getLogger()
         collection = StepsCollection(logger)
@@ -90,7 +94,7 @@ class TestBuildCommand:
         assert result.status_line == "❗ Failed with exception"
 
         assert result.exception.message == "this is not good"
-        assert result.exception.stage == Stage.BUILD.name
+        assert result.exception.stage == Stage.BUILD().name
         assert result.exception.project_name == "test"
         assert result.exception.executor == "Throwing Build"
 

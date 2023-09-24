@@ -51,14 +51,29 @@ class Target(Enum):
 
 
 @dataclass(frozen=True)
-class Stage(Enum):
-    def __eq__(self, other):
-        return self.value == other.value
+class Stage:
+    name: str
+    icon: str
 
-    BUILD = "build"
-    TEST = "test"
-    DEPLOY = "deploy"
-    POST_DEPLOY = "postdeploy"
+    @staticmethod
+    def BUILD():  # pylint: disable=invalid-name
+        return Stage(name="build", icon="🏗️")
+
+    @staticmethod
+    def TEST():  # pylint: disable=invalid-name
+        return Stage(name="test", icon="📋")
+
+    @staticmethod
+    def DEPLOY():  # pylint: disable=invalid-name
+        return Stage(name="deploy", icon="🚀")
+
+    @staticmethod
+    def POST_DEPLOY():  # pylint: disable=invalid-name
+        return Stage(name="postdeploy", icon="🦺️")
+
+    @staticmethod
+    def stages() -> list["Stage"]:
+        return [Stage.BUILD(), Stage.TEST(), Stage.DEPLOY(), Stage.POST_DEPLOY()]
 
 
 @dataclass(frozen=True)
@@ -149,11 +164,11 @@ class StageSpecificProperty(Generic[T]):
     postdeploy: Optional[T]
 
     def for_stage(self, stage: Stage) -> Optional[T]:
-        if stage == Stage.BUILD:
+        if stage == Stage.BUILD():
             return self.build
-        if stage == Stage.TEST:
+        if stage == Stage.TEST():
             return self.test
-        if stage == Stage.DEPLOY:
+        if stage == Stage.DEPLOY():
             return self.deploy
         return self.postdeploy
 
