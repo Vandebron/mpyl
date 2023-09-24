@@ -64,7 +64,7 @@ class TestSteps:
     def test_write_output(self):
         build_yaml = yaml_to_string(self.docker_image, yaml)
         assert_roundtrip(
-            test_resource_path / "deployment" / BUILD_ARTIFACTS_FOLDER / "BUILD.yml",
+            test_resource_path / "deployment" / BUILD_ARTIFACTS_FOLDER / "build.yml",
             build_yaml,
         )
 
@@ -81,7 +81,7 @@ class TestSteps:
         )
 
         assert_roundtrip(
-            test_resource_path / "deployment" / BUILD_ARTIFACTS_FOLDER / "DEPLOY.yml",
+            test_resource_path / "deployment" / BUILD_ARTIFACTS_FOLDER / "deploy.yml",
             yaml_to_string(output, yaml),
         )
 
