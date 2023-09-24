@@ -101,11 +101,12 @@ properties:
     properties:
       credentialsId:
         description: credentialsId for the docker repository (deprecated)
+        deprecationMessage: Use hostName instead
         examples:
           - exampleRegistry
         type: string
       hostName:
-        description: host name which refers to the docker registry used by this project
+        description: host name which refers to the docker registry, as defined in the mpyl config, used by this project
         examples:
           - example.azurecr.io
         type: string
