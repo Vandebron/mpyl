@@ -33,13 +33,14 @@ class AfterBuildDocker(Step):
         image_name = step_input.as_spec(DockerImageSpec).image
         self._logger.debug(f"Image to publish: {image_name}")
 
-        docker_config = DockerConfig.from_dict(step_input.run_properties.config)
+        properties = step_input.run_properties
+        docker_config: DockerConfig = DockerConfig.from_dict(properties.config)
         docker_registry = registry_for_project(docker_config, step_input.project)
 
         full_image_path = docker_registry_path(docker_registry, image_name)
         artifact = Artifact(
             ArtifactType.DOCKER_IMAGE,
-            step_input.run_properties.versioning.revision,
+            properties.versioning.revision,
             self.meta.name,
             DockerImageSpec(image=full_image_path),
         )
@@ -51,7 +52,7 @@ class AfterBuildDocker(Step):
                 produced_artifact=artifact,
             )
 
-        push_to_registry(self._logger, docker_config, image_name)
+        push_to_registry(self._logger, docker_registry, image_name)
 
         return Output(
             success=True,

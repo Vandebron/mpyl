@@ -174,7 +174,7 @@ def push_to_registry(
     image = docker.image.inspect(image_name)
     logger.debug(f"Found image {image}")
 
-    login(logger=logger, docker_config=docker_config)
+    login(logger=logger, registry_config=docker_config)
     full_image_path = docker_registry_path(docker_config, image_name)
     docker.image.tag(image, full_image_path)
     docker.image.push(full_image_path, quiet=False)
@@ -288,14 +288,14 @@ def build(
         return False
 
 
-def login(logger: Logger, docker_config: DockerRegistryConfig) -> None:
-    logger.info(f"Logging in with user '{docker_config.user_name}'")
+def login(logger: Logger, registry_config: DockerRegistryConfig) -> None:
+    logger.info(f"Logging in with user '{registry_config.user_name}'")
     docker.login(
-        server=f"https://{docker_config.host_name}",
-        username=docker_config.user_name,
-        password=docker_config.password,
+        server=f"https://{registry_config.host_name}",
+        username=registry_config.user_name,
+        password=registry_config.password,
     )
-    logger.debug(f"Logged in as '{docker_config.user_name}'")
+    logger.debug(f"Logged in as '{registry_config.user_name}'")
 
 
 def create_container(logger: Logger, image_name: str) -> Container:

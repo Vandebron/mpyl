@@ -64,10 +64,9 @@ class DeployDagster(Step):
         """
         Deploys the docker image produced in the build stage as a Dagster user-code-deployment
         """
-        context = cluster_config(
-            step_input.run_properties.target, step_input.run_properties
-        ).context
-        dagster_config = DagsterConfig.from_dict(step_input.run_properties.config)
+        properties = step_input.run_properties
+        context = cluster_config(properties.target, properties).context
+        dagster_config: DagsterConfig = DagsterConfig.from_dict(properties.config)
         dagster_deploy_results = []
 
         config.load_kube_config(context=context)
@@ -95,18 +94,16 @@ class DeployDagster(Step):
             return self.__evaluate_results(dagster_deploy_results)
 
         name_suffix = (
-            f"-{step_input.run_properties.versioning.identifier}"
-            if step_input.run_properties.target == Target.PULL_REQUEST
+            f"-{properties.versioning.identifier}"
+            if properties.target == Target.PULL_REQUEST
             else ""
         )
 
         user_code_deployment = to_user_code_values(
             project=step_input.project,
             name_suffix=name_suffix,
-            run_properties=step_input.run_properties,
-            docker_config=DockerRegistryConfig.from_dict(
-                step_input.run_properties.config
-            ),
+            run_properties=properties,
+            docker_config=DockerRegistryConfig.from_dict(properties.config),
         )
 
         self._logger.debug(f"Deploying user code with values: {user_code_deployment}")

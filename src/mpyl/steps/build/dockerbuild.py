@@ -54,7 +54,9 @@ class BuildDocker(Step):
         )
 
     def execute(self, step_input: Input) -> Output:
-        docker_config = DockerConfig.from_dict(step_input.run_properties.config)
+        docker_config: DockerConfig = DockerConfig.from_dict(
+            step_input.run_properties.config
+        )
         build_target = docker_config.build_target
         if not build_target:
             raise ValueError("docker.buildTarget must be specified")
@@ -66,7 +68,7 @@ class BuildDocker(Step):
 
         if not step_input.dry_run:
             # log in to registry, because we may need to pull in a base image
-            login(logger=self._logger, docker_config=docker_config)
+            login(logger=self._logger, registry_config=docker_config)
 
         docker_registry_config = registry_for_project(docker_config, step_input.project)
         success = build(
