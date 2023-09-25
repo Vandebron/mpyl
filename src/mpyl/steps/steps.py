@@ -96,12 +96,12 @@ class Steps:
 
     @staticmethod
     def _find_required_artifact(
-        project: Project, required_artifact: Optional[ArtifactType]
+        project: Project, stages: list[Stage], required_artifact: Optional[ArtifactType]
     ) -> Optional[Artifact]:
         if not required_artifact or required_artifact == ArtifactType.NONE:
             return None
 
-        for stage in Stage.stages():
+        for stage in stages:
             output: Optional[Output] = Output.try_read(project.target_path, stage)
             if (
                 output
@@ -178,7 +178,7 @@ class Steps:
         try:
             self._logger.info(f"Executing {stage} for {project.name}")
             artifact: Optional[Artifact] = self._find_required_artifact(
-                project, executor.required_artifact
+                project, self._properties.stages, executor.required_artifact
             )
             if executor.before:
                 before_result = self._execute(
@@ -186,7 +186,9 @@ class Steps:
                     project,
                     self._properties,
                     self._find_required_artifact(
-                        project, executor.before.required_artifact
+                        project,
+                        self._properties.stages,
+                        executor.before.required_artifact,
                     ),
                     dry_run,
                 )

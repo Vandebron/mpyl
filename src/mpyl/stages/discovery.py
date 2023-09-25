@@ -98,10 +98,10 @@ def find_deploy_set(repo_config: RepoConfig, tag: Optional[str]) -> DeploySet:
 
 
 def find_invalidated_projects_per_stage(
-    all_projects: set[Project], change_history: list[Revision]
+    all_projects: set[Project], change_history: list[Revision], stages: list[Stage]
 ) -> dict[Stage, set[Project]]:
     projects_for_stage = {}
-    for stage in Stage.stages():
+    for stage in stages:
         projects = find_invalidated_projects_for_stage(
             all_projects, stage, change_history
         )

@@ -87,7 +87,7 @@ class TestSteps:
 
     def test_find_required_output(self):
         found_artifact = Steps._find_required_artifact(
-            self.build_project, ArtifactType.DOCKER_IMAGE
+            self.build_project, RUN_PROPERTIES.stages, ArtifactType.DOCKER_IMAGE
         )
         assert found_artifact is not None
         assert self.docker_image.produced_artifact is not None
@@ -99,7 +99,9 @@ class TestSteps:
     def test_find_not_required_output(self):
         with pytest.raises(ValueError) as exc_info:
             Steps._find_required_artifact(
-                self.build_project, ArtifactType.DEPLOYED_HELM_APP
+                self.build_project,
+                RUN_PROPERTIES.stages,
+                ArtifactType.DEPLOYED_HELM_APP,
             )
         assert (
             str(exc_info.value)
@@ -107,7 +109,12 @@ class TestSteps:
         )
 
     def test_find_required_output_should_handle_none(self):
-        assert Steps._find_required_artifact(self.build_project, None) is None
+        assert (
+            Steps._find_required_artifact(
+                self.build_project, RUN_PROPERTIES.stages, None
+            )
+            is None
+        )
 
     def test_should_return_error_if_stage_not_defined(self):
         steps = Steps(

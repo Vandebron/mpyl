@@ -104,6 +104,10 @@ class RunProperties:
             console=ConsoleProperties("INFO", True, 130),
         )
 
+    @property
+    def stages(self) -> list[Stage]:
+        return [Stage.BUILD(), Stage.TEST(), Stage.DEPLOY(), Stage.POST_DEPLOY()]
+
     @staticmethod
     def from_configuration(
         run_properties: dict,

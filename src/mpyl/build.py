@@ -41,7 +41,7 @@ def get_build_plan(
     logger.debug(f"Changes: {changes}")
 
     projects_per_stage: dict[Stage, set[Project]] = find_build_set(
-        repo, changes, cli_parameters.all, safe_load_projects
+        repo, changes, run_properties.stages, cli_parameters.all, safe_load_projects
     )
     return RunResult(
         run_properties=run_properties,
@@ -123,6 +123,7 @@ def run_mpyl(
 def find_build_set(
     repo: Repository,
     changes_in_branch: list[Revision],
+    stages: list[Stage],
     build_all: bool,
     safe_load_projects: bool,
 ) -> dict[Stage, set[Project]]:
@@ -141,14 +142,9 @@ def find_build_set(
     )
 
     if build_all:
-        return {
-            Stage.BUILD(): for_stage(all_projects, Stage.BUILD()),
-            Stage.TEST(): for_stage(all_projects, Stage.TEST()),
-            Stage.DEPLOY(): for_stage(all_projects, Stage.DEPLOY()),
-            Stage.POST_DEPLOY(): for_stage(all_projects, Stage.POST_DEPLOY()),
-        }
+        return {stage: for_stage(all_projects, stage) for stage in stages}
 
-    return find_invalidated_projects_per_stage(all_projects, changes_in_branch)
+    return find_invalidated_projects_per_stage(all_projects, changes_in_branch, stages)
 
 
 def run_build(

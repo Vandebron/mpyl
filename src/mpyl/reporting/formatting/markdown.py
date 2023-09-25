@@ -110,7 +110,7 @@ def execution_plan_as_markdown(run_result: RunResult):
         failed = run_result.failed_result
         result += f"For _{failed.project.name}_ at stage _{failed.stage.name}_ \n"
         result += f"\n\n{run_result.failed_result.output.message}\n\n"
-    for stage in Stage.stages():
+    for stage in run_result.run_properties.stages:
         result += markdown_for_stage(run_result, stage)
     return result
 

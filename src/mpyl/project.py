@@ -71,10 +71,6 @@ class Stage:
     def POST_DEPLOY():  # pylint: disable=invalid-name
         return Stage(name="postdeploy", icon="🦺️")
 
-    @staticmethod
-    def stages() -> list["Stage"]:
-        return [Stage.BUILD(), Stage.TEST(), Stage.DEPLOY(), Stage.POST_DEPLOY()]
-
 
 @dataclass(frozen=True)
 class TargetProperty(Generic[T]):

@@ -3,7 +3,6 @@ Simple run result formatters
 """
 from typing import cast
 
-from ...project import Stage
 from ...steps.models import ArtifactType
 from ...steps.run import RunResult
 from ...utilities.junit import to_test_suites, sum_suites, JunitTestSpec
@@ -11,7 +10,7 @@ from ...utilities.junit import to_test_suites, sum_suites, JunitTestSpec
 
 def to_string(run_result: RunResult) -> str:
     result: str = ""
-    for stage in Stage.stages():
+    for stage in run_result.run_properties.stages:
         run_results = run_result.results_for_stage(stage)
         if run_results:
             result += f"Stage {stage.name}\n"
