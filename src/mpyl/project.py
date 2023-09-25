@@ -544,14 +544,18 @@ def validate_project(file: TextIO) -> dict:
     return yaml_values
 
 
-def load_project(root_dir: Path, project_path: Path, strict: bool = True) -> Project:
+def load_project(
+    root_dir: Path, project_path: Path, strict: bool = True, log: bool = True
+) -> Project:
     """
     Load a `project.yml` to `Project` data class
     :param root_dir: root source directory
     :param project_path: relative path from `root_dir` to the `project.yml`
     :param strict: indicates whether the schema should be validated
+    :param log: indicates whether problems should be logged as warning
     :return: `Project` data class
     """
+    log_level = logging.WARNING if log else logging.DEBUG
     with open(root_dir / project_path, encoding="utf-8") as file:
         try:
             start = time.time()
@@ -564,16 +568,16 @@ def load_project(root_dir: Path, project_path: Path, strict: bool = True) -> Pro
             )
             return project
         except jsonschema.exceptions.ValidationError as exc:
-            logging.warning(
-                f"{project_path} does not comply with schema: {exc.message}"
+            logging.log(
+                log_level, f"{project_path} does not comply with schema: {exc.message}"
             )
             raise
         except TypeError:
             traceback.print_exc()
-            logging.warning("Type error", exc_info=True)
+            logging.log(log_level, "Type error", exc_info=True)
             raise
         except Exception:
-            logging.warning(f"Failed to load {project_path}", exc_info=True)
+            logging.log(log_level, f"Failed to load {project_path}", exc_info=True)
             raise
 
 

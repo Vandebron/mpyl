@@ -7,29 +7,20 @@ import click
 import jsonschema
 from rich.console import Console
 
+from ....project import Project, load_project, Target
 from ....steps.deploy.k8s import substitute_namespaces
 from ....steps.deploy.k8s.chart import ChartBuilder
 from ....utilities.repo import Repository
-from ....build import find_build_set
-from ....project import Project, load_project, Target
 
 
-def _find_project_paths(all_: bool, repo: Repository, filter_: str):
-    project_paths: list[str] = []
-    if all_:
-        project_paths = repo.find_projects(filter_)
-    else:
-        branch = repo.get_branch
-        changes = (
-            repo.changes_in_branch_including_local()
-            if branch
-            else repo.changes_in_merge_commit()
-        )
-        build_set = find_build_set(repo, changes, False)
-        for all_projects in build_set.values():
-            for project in all_projects:
-                project_paths.append(project.path)
-    return project_paths
+def __is_override_base(project_path: str) -> bool:
+    folder = Path(project_path).parent
+    return len(list(folder.glob("project-override*.yml"))) > 0
+
+
+def _find_project_paths(repo: Repository, path_filter: str) -> list[str]:
+    project_paths = repo.find_projects(path_filter)
+    return [path for path in project_paths if not __is_override_base(path)]
 
 
 def __load_project(
@@ -40,7 +31,7 @@ def __load_project(
     strict: bool = True,
 ) -> Optional[Project]:
     try:
-        project = load_project(root_dir, Path(project_path), strict)
+        project = load_project(root_dir, Path(project_path), strict, False)
     except jsonschema.exceptions.ValidationError as exc:
         if console:
             console.print(f"❌ {project_path}: {exc.message}")
@@ -59,7 +50,7 @@ def _check_and_load_projects(
 ) -> list[Project]:
     projects = [
         __load_project(console, repo.root_dir, project_path, strict)
-        for project_path in set(project_paths)
+        for project_path in project_paths
     ]
     valid_projects = [project for project in projects if project]
     num_invalid = len(projects) - len(valid_projects)
