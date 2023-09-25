@@ -17,7 +17,6 @@ from . import (
 )
 from .commands.projects.formatting import print_project
 from ..cli.commands.projects.lint import (
-    _find_project_paths,
     _check_and_load_projects,
     _assert_unique_project_names,
     _assert_correct_project_linkup,
@@ -138,14 +137,18 @@ def lint(obj: ProjectsContext, extended):
     loaded_projects = _check_and_load_projects(
         console=obj.cli.console,
         repo=obj.cli.repo,
-        project_paths=_find_project_paths(obj.cli.repo, obj.filter),
+        project_paths=obj.cli.repo.find_projects(obj.filter),
         strict=True,
     )
-    all_projects = _check_and_load_projects(
-        console=None,
-        repo=obj.cli.repo,
-        project_paths=_find_project_paths(obj.cli.repo, ""),
-        strict=False,
+    all_projects = (
+        _check_and_load_projects(
+            console=None,
+            repo=obj.cli.repo,
+            project_paths=obj.cli.repo.find_projects(""),
+            strict=False,
+        )
+        if obj.filter != ""
+        else loaded_projects
     )
     _assert_unique_project_names(
         console=obj.cli.console,
@@ -170,8 +173,9 @@ def lint(obj: ProjectsContext, extended):
 )
 @click.pass_obj
 def upgrade(obj: ProjectsContext, apply: bool):
-    paths = map(Path, _find_project_paths(obj.cli.repo, ""))
+    paths = map(Path, obj.cli.repo.find_projects(""))
     candidates = check_upgrades_needed(list(paths), PROJECT_UPGRADERS)
+    console = obj.cli.console
     if not apply:
         upgradable = check_upgrade(console, candidates)
         number_in_need_of_upgrade = len(upgradable)

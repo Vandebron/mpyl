@@ -13,16 +13,6 @@ from ....steps.deploy.k8s.chart import ChartBuilder
 from ....utilities.repo import Repository
 
 
-def __is_override_base(project_path: str) -> bool:
-    folder = Path(project_path).parent
-    return len(list(folder.glob("project-override*.yml"))) > 0
-
-
-def _find_project_paths(repo: Repository, path_filter: str) -> list[str]:
-    project_paths = repo.find_projects(path_filter)
-    return [path for path in project_paths if not __is_override_base(path)]
-
-
 def __load_project(
     console: Optional[Console],
     root_dir: Path,
