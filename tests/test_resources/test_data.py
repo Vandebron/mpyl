@@ -3,41 +3,27 @@ import os
 from pathlib import Path
 
 from src.mpyl.utilities.docker import DockerImageSpec
-from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME
+from src.mpyl.constants import (
+    DEFAULT_CONFIG_FILE_NAME,
+    DEFAULT_RUN_PROPERTIES_FILE_NAME,
+)
 from src.mpyl.utilities.pyaml_env import parse_config
 
 from src.mpyl.project import load_project, Target, Project, Stages
 from src.mpyl.steps.models import (
     RunProperties,
-    VersioningProperties,
-    RunContext,
     Output,
     ArtifactType,
     Artifact,
-    ConsoleProperties,
 )
 from src.mpyl.utilities.repo import Repository, RepoConfig
 from tests import root_test_path
 
 resource_path = root_test_path / "test_resources"
 config_values = parse_config(resource_path / DEFAULT_CONFIG_FILE_NAME)
+properties_values = parse_config(resource_path / DEFAULT_RUN_PROPERTIES_FILE_NAME)
 
-RUN_PROPERTIES = RunProperties(
-    RunContext(
-        "id",
-        "http://localhost/run",
-        "http://localhost/changes",
-        "http://localhost/tests",
-        "somebody",
-        "sam@vandebron.nl",
-    ),
-    Target.PULL_REQUEST,
-    VersioningProperties(
-        "2ad3293a7675d08bc037ef0846ef55897f38ec8f", "feature/ARC-123-branch", 1234, None
-    ),
-    config_values,
-    ConsoleProperties("INFO", True, 130),
-)
+RUN_PROPERTIES = RunProperties.from_configuration(properties_values, config_values)
 
 RUN_PROPERTIES_PROD = dataclasses.replace(
     RUN_PROPERTIES,
