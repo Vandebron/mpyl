@@ -32,18 +32,12 @@ def get_build_plan(
     safe_load_projects: bool,
 ) -> RunResult:
     tag = run_properties.versioning.tag
-    if tag:
-        changes = (
-            repo.changes_in_tagged_commit(tag)
-            if tag
-            else repo.changes_in_merge_commit()
-        )
-    else:
-        changes = (
-            repo.changes_in_branch_including_local()
-            if cli_parameters.local
-            else repo.changes_in_branch()
-        )
+
+    changes = (
+        repo.changes_in_branch_including_local()
+        if cli_parameters.local
+        else (repo.changes_in_tagged_commit(tag) if tag else repo.changes_in_branch())
+    )
     logger.debug(f"Changes: {changes}")
 
     projects_per_stage: dict[Stage, set[Project]] = find_build_set(
