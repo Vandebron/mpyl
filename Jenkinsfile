@@ -43,7 +43,7 @@ pipeline {
                             sh "pipenv install -d --skip-lock"
                             sh "pipenv run mpyl version"
                             sh "pipenv run mpyl health --ci --upgrade"
-                            sh "pipenv run mpyl projects lint --all"
+                            sh "pipenv run mpyl projects lint"
                             sh "pipenv run mpyl projects upgrade"
                             sh "pipenv run mpyl repo status"
                             sh "pipenv run mpyl repo init"
