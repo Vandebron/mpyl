@@ -34,7 +34,7 @@ pipeline {
             }
             steps {
                 script {
-                    def content = sh(script: "curl -s https://api.github.com/repos/Vandebron/mpyl_config/contents/mpyl_config.yml -H 'Authorization: token $GIT_CREDENTIALS_PSW' -H 'Accept: application/vnd.github.v3.raw'", returnStdout: true)
+                    def content = sh(script: "curl -s https://api.github.com/repos/Vandebron/mpyl_config/contents/mpyl_config.yml?ref=$MPYL_CONFIG_BRANCH -H 'Authorization: token $GIT_CREDENTIALS_PSW' -H 'Accept: application/vnd.github.v3.raw'", returnStdout: true)
                     writeFile(file: 'mpyl_config.yml', text: content)
                     withKubeConfig([credentialsId: 'jenkins-rancher-service-account-kubeconfig-test']) {
                         wrap([$class: 'BuildUser']) {
@@ -42,9 +42,9 @@ pipeline {
                             sh "pipenv install --ignore-pipfile --skip-lock --site-packages --index https://test.pypi.org/simple/ 'mpyl==$CHANGE_ID.*'"
                             sh "pipenv install -d --skip-lock"
                             sh "pipenv run mpyl version"
+                            sh "pipenv run mpyl health --ci --upgrade"
                             sh "pipenv run mpyl projects lint --all"
                             sh "pipenv run mpyl projects upgrade"
-                            sh "pipenv run mpyl health --ci"
                             sh "pipenv run mpyl repo status"
                             sh "pipenv run mpyl repo init"
                             sh "pipenv run mpyl build status"

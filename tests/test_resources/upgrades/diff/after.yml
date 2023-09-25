@@ -3,7 +3,7 @@ description: 'This is a test container. For testing the MPL pipelines, not to be
 stages:
   build: Docker Build
   test: Docker Test
-  deploy: Kubernetes Deploy
+  deploy: 'Kubernetes Deploy'
   postdeploy: Cypress Test
 maintainer: [ 'MPyL']
 deployment:

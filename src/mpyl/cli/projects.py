@@ -28,7 +28,7 @@ from ..project import load_project, Project, Target
 from ..projects.versioning import (
     check_upgrades_needed,
     upgrade_file,
-    UPGRADERS,
+    PROJECT_UPGRADERS,
 )
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
@@ -177,17 +177,16 @@ def lint(obj: ProjectsContext, all_, extended):
 @click.pass_obj
 def upgrade(obj: ProjectsContext, apply: bool):
     paths = map(Path, _find_project_paths(True, obj.cli.repo, ""))
-    candidates = check_upgrades_needed(list(paths))
+    candidates = check_upgrades_needed(list(paths), PROJECT_UPGRADERS)
+    console = obj.cli.console
     if not apply:
-        upgradable = check_upgrade(obj.cli.console, candidates)
+        upgradable = check_upgrade(console, candidates)
         number_in_need_of_upgrade = len(upgradable)
         if number_in_need_of_upgrade > 0:
-            obj.cli.console.print(
-                f"{number_in_need_of_upgrade} projects need to be upgraded"
-            )
+            console.print(f"{number_in_need_of_upgrade} projects need to be upgraded")
             sys.exit(1)
 
-    with obj.cli.console.status("Checking for upgrades...") as status:
+    with console.status("Checking for upgrades...") as status:
         materialized = list(candidates)
         need_upgrade = [path for path, diff in materialized if diff is not None]
         number_of_upgrades = len(need_upgrade)
@@ -199,7 +198,7 @@ def upgrade(obj: ProjectsContext, apply: bool):
             status.start()
             for path in need_upgrade:
                 status.update(f"Upgrading {path}")
-                upgraded = upgrade_file(path, UPGRADERS)
+                upgraded = upgrade_file(path, PROJECT_UPGRADERS)
                 if upgraded:
                     path.write_text(upgraded)
             status.stop()

@@ -1,5 +1,0 @@
-+ root['stages']['deploy'] -> 'Kubernetes Deploy'
-+ root['stages']['postdeploy'] -> 'Cypress Test'
-- root['deployment']['namespace'] -> 'namespace'
-  root['stages']['test']: Docker Test
-  root['deployment']['traefik']['hosts'][0]['whitelists']['test'][1]: VPN
