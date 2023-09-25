@@ -102,7 +102,7 @@ class Steps:
             return None
 
         for stage in stages:
-            output: Optional[Output] = Output.try_read(project.target_path, stage)
+            output: Optional[Output] = Output.try_read(project.target_path, stage.name)
             if (
                 output
                 and output.produced_artifact
@@ -130,7 +130,7 @@ class Steps:
             after_result.produced_artifact
             and after_result.produced_artifact.artifact_type != ArtifactType.NONE
         ):
-            after_result.write(project.target_path, stage)
+            after_result.write(project.target_path, stage.name)
         else:
             after_result.produced_artifact = main_step_artifact
 
@@ -155,7 +155,7 @@ class Steps:
     def _execute_stage(
         self, stage: Stage, project: Project, dry_run: bool = False
     ) -> Output:
-        step_name = project.stages.for_stage(stage)
+        step_name = project.stages.for_stage(stage.name)
         if step_name is None:
             return Output(
                 success=False,
@@ -198,7 +198,7 @@ class Steps:
             result = self._execute(
                 executor, project, self._properties, artifact, dry_run
             )
-            result.write(project.target_path, stage)
+            result.write(project.target_path, stage.name)
 
             if executor.after:
                 return self._execute_after_(
@@ -218,7 +218,7 @@ class Steps:
             ) from exc
 
     def execute(
-        self, stage: Stage, project: Project, dry_run: bool = False
+        self, stage: str, project: Project, dry_run: bool = False
     ) -> StepResult:
         """
         :param stage: the stage to execute
@@ -227,5 +227,6 @@ class Steps:
         :return: StepResult
         :raise ExecutionException
         """
-        step_output = self._execute_stage(stage, project, dry_run)
-        return StepResult(stage=stage, project=project, output=step_output)
+        stage_object = self._properties.stage_for(stage)
+        step_output = self._execute_stage(stage_object, project, dry_run)
+        return StepResult(stage=stage_object, project=project, output=step_output)

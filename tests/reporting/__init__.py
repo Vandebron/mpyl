@@ -1,8 +1,7 @@
 from datetime import datetime
 
+from src.mpyl.project import Stages, Project
 from src.mpyl.steps.deploy.k8s import DeployedHelmAppSpec
-from src.mpyl.utilities.junit import JunitTestSpec
-from src.mpyl.project import Stages, Project, Stage
 from src.mpyl.steps.models import (
     Output,
     Artifact,
@@ -10,8 +9,10 @@ from src.mpyl.steps.models import (
 )
 from src.mpyl.steps.run import RunResult
 from src.mpyl.steps.steps import StepResult
+from src.mpyl.utilities.junit import JunitTestSpec
 from tests import root_test_path
 from tests.test_resources import test_data
+from tests.test_resources.test_data import TestStage
 
 test_resource_path = root_test_path / "reporting" / "formatting" / "test_resources"
 
@@ -29,9 +30,9 @@ def create_test_result_with_plan() -> RunResult:
     return RunResult(
         run_properties=test_data.RUN_PROPERTIES,
         run_plan={
-            Stage.BUILD(): set(build_projects),
-            Stage.TEST(): set(test_projects),
-            Stage.DEPLOY(): set(deploy_projects),
+            TestStage.build(): set(build_projects),
+            TestStage.test(): set(test_projects),
+            TestStage.deploy(): set(deploy_projects),
         },
     )
 
@@ -40,7 +41,7 @@ def append_results(result: RunResult) -> None:
     other_project = __get_other_project()
     result.append(
         StepResult(
-            stage=Stage.BUILD(),
+            stage=TestStage.build(),
             project=test_data.get_project(),
             output=Output(success=False, message="Build failed"),
             timestamp=datetime.fromisoformat("2019-01-04T16:41:24+02:00"),
@@ -48,7 +49,7 @@ def append_results(result: RunResult) -> None:
     )
     result.append(
         StepResult(
-            stage=Stage.BUILD(),
+            stage=TestStage.build(),
             project=other_project,
             output=Output(success=True, message="Build successful"),
             timestamp=datetime.fromisoformat("2019-01-04T16:41:26+02:00"),
@@ -56,7 +57,7 @@ def append_results(result: RunResult) -> None:
     )
     result.append(
         StepResult(
-            stage=Stage.TEST(),
+            stage=TestStage.test(),
             project=other_project,
             output=Output(
                 success=True,
@@ -75,7 +76,7 @@ def append_results(result: RunResult) -> None:
     )
     result.append(
         StepResult(
-            stage=Stage.DEPLOY(),
+            stage=TestStage.deploy(),
             project=other_project,
             output=Output(
                 success=True,

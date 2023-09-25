@@ -4,7 +4,7 @@ from logging import Logger
 
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType, input_to_artifact
-from ...project import Stage
+from . import STAGE_NAME
 from ...utilities.docker import docker_image_tag, DockerImageSpec
 
 
@@ -16,7 +16,7 @@ class BuildEcho(Step):
                 name="Echo Build",
                 description="Dummy build step to test the framework",
                 version="0.0.1",
-                stage=Stage.BUILD(),
+                stage=STAGE_NAME,
             ),
             produced_artifact=ArtifactType.NONE,
             required_artifact=ArtifactType.NONE,

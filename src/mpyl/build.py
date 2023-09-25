@@ -14,12 +14,12 @@ from .project import load_project, Stage, Project
 from .reporting.formatting.markdown import run_result_to_markdown
 from .reporting.targets import Reporter
 from .stages.discovery import for_stage, find_invalidated_projects_per_stage
+from .steps import deploy
 from .steps.collection import StepsCollection
 from .steps.models import RunProperties
 from .steps.run import RunResult
 from .steps.steps import Steps, ExecutionException
 from .utilities.repo import Repository, RepoConfig, Revision
-
 
 FORMAT = "%(name)s  %(message)s"
 
@@ -156,12 +156,12 @@ def run_build(
     try:
         for stage, projects in accumulator.run_plan.items():
             for proj in projects:
-                result = executor.execute(stage, proj, dry_run)
+                result = executor.execute(stage.name, proj, dry_run)
                 accumulator.append(result)
                 if reporter:
                     reporter.send_report(accumulator)
 
-                if not result.output.success and stage == Stage.DEPLOY():
+                if not result.output.success and stage.name == deploy.STAGE_NAME:
                     logging.warning(f"Deployment failed for {proj.name}")
                     return accumulator
 

@@ -4,9 +4,9 @@ from logging import Logger
 
 from python_on_whales import DockerClient
 
+from . import STAGE_NAME
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
-from ...project import Stage
 from ...utilities.docker import stream_docker_logging
 
 
@@ -18,7 +18,7 @@ class IntegrationTestAfter(Step):
                 name="After Test",
                 description="After test step",
                 version="0.0.1",
-                stage=Stage.TEST(),
+                stage=STAGE_NAME,
             ),
             produced_artifact=ArtifactType.NONE,
             required_artifact=ArtifactType.NONE,

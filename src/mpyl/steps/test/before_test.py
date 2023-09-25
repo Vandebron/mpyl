@@ -8,9 +8,9 @@ from python_on_whales import DockerClient, Container
 from python_on_whales.components.compose.models import ComposeProject
 from python_on_whales.components.container.models import ContainerHealthcheckResult
 
+from . import STAGE_NAME
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
-from ...project import Stage
 from ...utilities.docker import stream_docker_logging, DockerComposeConfig
 
 
@@ -29,7 +29,7 @@ class IntegrationTestBefore(Step):
                 name="Before Test",
                 description="Before test step",
                 version="0.0.1",
-                stage=Stage.TEST(),
+                stage=STAGE_NAME,
             ),
             produced_artifact=ArtifactType.NONE,
             required_artifact=ArtifactType.NONE,

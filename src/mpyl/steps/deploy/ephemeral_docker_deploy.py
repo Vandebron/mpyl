@@ -4,9 +4,10 @@ from logging import Logger
 
 from python_on_whales import docker
 
+from . import STAGE_NAME
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
-from ...project import Stage, get_env_variables
+from ...project import get_env_variables
 from ...utilities.docker import docker_image_tag
 
 
@@ -19,7 +20,7 @@ class EphemeralDockerDeploy(Step):
                 description="Runs and removes the docker container built during the build stage. "
                 "Useful for custom deploy steps depending on technology not bundled with MPyL",
                 version="0.0.1",
-                stage=Stage.DEPLOY(),
+                stage=STAGE_NAME,
             ),
             produced_artifact=ArtifactType.NONE,
             required_artifact=ArtifactType.DOCKER_IMAGE,

@@ -2,7 +2,8 @@ import logging
 
 import pytest
 
-from src.mpyl.project import Project, Stages, Stage, Dependencies
+from src.mpyl.project import Project, Stages, Dependencies
+from src.mpyl.steps import postdeploy
 from src.mpyl.steps.collection import StepsCollection
 from src.mpyl.steps.steps import Steps, ExecutionException
 from tests.test_resources import test_data
@@ -29,7 +30,7 @@ class TestCypress:
             dependencies=Dependencies.from_config({"postdeploy": []}),
         )
         with pytest.raises(ExecutionException) as exc_info:
-            self.executor.execute(stage=Stage.POST_DEPLOY(), project=project)
+            self.executor.execute(stage=postdeploy.STAGE_NAME, project=project)
 
         assert "No cypress specs are defined in the project dependencies" in str(
             exc_info.value

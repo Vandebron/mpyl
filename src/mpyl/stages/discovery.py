@@ -8,6 +8,7 @@ from typing import Optional
 
 from ..project import Project, load_project
 from ..project import Stage
+from ..steps import deploy
 from ..steps.models import Output
 from ..utilities.repo import Revision, RepoConfig, Repository
 
@@ -18,7 +19,7 @@ class DeploySet:
     projects_to_deploy: set[Project]
 
 
-def is_invalidated(project: Project, stage: Stage, path: str) -> bool:
+def is_invalidated(project: Project, stage: str, path: str) -> bool:
     deps = project.dependencies
     deps_for_stage = deps.set_for_stage(stage) if deps else {}
 
@@ -44,12 +45,12 @@ def output_invalidated(output: Optional[Output], revision_hash: str) -> bool:
 
 
 def _to_relevant_changes(
-    project: Project, stage: Stage, change_history: list[Revision]
+    project: Project, stage: str, change_history: list[Revision]
 ) -> set[str]:
     output: Output = Output.try_read(project.target_path, stage)
     relevant = set()
     for history in reversed(sorted(change_history, key=lambda c: c.ord)):
-        if stage == Stage.DEPLOY() or output_invalidated(output, history.hash):
+        if stage == deploy.STAGE_NAME or output_invalidated(output, history.hash):
             relevant.update(history.files_touched)
         else:
             return relevant
@@ -58,7 +59,7 @@ def _to_relevant_changes(
 
 
 def _are_invalidated(
-    project: Project, stage: Stage, change_history: list[Revision]
+    project: Project, stage: str, change_history: list[Revision]
 ) -> bool:
     if project.stages.for_stage(stage) is None:
         return False
@@ -71,7 +72,7 @@ def _are_invalidated(
 
 
 def find_invalidated_projects_for_stage(
-    all_projects: set[Project], stage: Stage, change_history: list[Revision]
+    all_projects: set[Project], stage: str, change_history: list[Revision]
 ) -> set[Project]:
     return set(
         filter(lambda p: _are_invalidated(p, stage, change_history), all_projects)
@@ -92,7 +93,7 @@ def find_deploy_set(repo_config: RepoConfig, tag: Optional[str]) -> DeploySet:
         return DeploySet(
             all_projects,
             find_invalidated_projects_for_stage(
-                all_projects, Stage.DEPLOY(), changes_in_branch
+                all_projects, deploy.STAGE_NAME, changes_in_branch
             ),
         )
 
@@ -103,7 +104,7 @@ def find_invalidated_projects_per_stage(
     projects_for_stage = {}
     for stage in stages:
         projects = find_invalidated_projects_for_stage(
-            all_projects, stage, change_history
+            all_projects, stage.name, change_history
         )
         if projects:
             projects_for_stage[stage] = set(
@@ -113,4 +114,4 @@ def find_invalidated_projects_per_stage(
 
 
 def for_stage(projects: set[Project], stage: Stage) -> set[Project]:
-    return set(filter(lambda p: p.stages.for_stage(stage), projects))
+    return set(filter(lambda p: p.stages.for_stage(stage.name), projects))

@@ -3,16 +3,17 @@ from pathlib import Path
 from ruamel.yaml import YAML  # type: ignore
 
 from src.mpyl.constants import BUILD_ARTIFACTS_FOLDER
-from src.mpyl.steps import Output
-from src.mpyl.project import Stage
 from src.mpyl.projects.find import load_projects
 from src.mpyl.stages.discovery import (
     find_invalidated_projects_for_stage,
     output_invalidated,
 )
+from src.mpyl.steps import Output
+from src.mpyl.steps import build, test, deploy
 from src.mpyl.utilities.repo import Revision
 from tests import root_test_path, test_resource_path
 from tests.test_resources import test_data
+from tests.test_resources.test_data import TestStage
 
 yaml = YAML()
 
@@ -26,7 +27,7 @@ class TestDiscovery:
                 len(
                     find_invalidated_projects_for_stage(
                         projects,
-                        Stage.BUILD(),
+                        build.STAGE_NAME,
                         [Revision(0, "revision", touched_files)],
                     )
                 )
@@ -35,7 +36,9 @@ class TestDiscovery:
             assert (
                 len(
                     find_invalidated_projects_for_stage(
-                        projects, Stage.TEST(), [Revision(0, "revision", touched_files)]
+                        projects,
+                        test.STAGE_NAME,
+                        [Revision(0, "revision", touched_files)],
                     )
                 )
                 == 2
@@ -44,7 +47,7 @@ class TestDiscovery:
                 len(
                     find_invalidated_projects_for_stage(
                         projects,
-                        Stage.DEPLOY(),
+                        deploy.STAGE_NAME,
                         [Revision(0, "revision", touched_files)],
                     )
                 )
@@ -60,7 +63,7 @@ class TestDiscovery:
         projects = set(load_projects(root_test_path, project_paths))
         invalidated = find_invalidated_projects_for_stage(
             projects,
-            Stage.BUILD(),
+            TestStage.build().name,
             [Revision(0, "hash", {"projects/job/file.py", "some_file.txt"})],
         )
         assert 1 == len(invalidated)

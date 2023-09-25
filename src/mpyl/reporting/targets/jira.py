@@ -34,7 +34,7 @@ from atlassian import Jira
 from . import Reporter, ReportOutcome
 from ..formatting.markdown import markdown_for_stage
 from ...constants import DEFAULT_CONFIG_FILE_NAME
-from ...project import Stage
+from ...steps import deploy
 from ...steps.run import RunResult
 
 
@@ -168,11 +168,15 @@ def to_markdown_summary(ticket: JiraTicket, run_result: RunResult) -> str:
     if len(lines) > max_message_length:
         description_markdown = "\n".join(lines[:max_message_length]) + "\n..."
 
-    details = run_result.run_properties.details
+    properties = run_result.run_properties
+    details = properties.details
 
+    stage_markdown = markdown_for_stage(
+        run_result, properties.stage_for(deploy.STAGE_NAME)
+    )
     build_status = (
         f"🏗️ Build [{details.build_id}]({details.run_url}) {run_result.status_line}, "
-        f"started by _{details.user}_  \n{markdown_for_stage(run_result, Stage.DEPLOY())}"
+        f"started by _{details.user}_  \n{stage_markdown}"
     )
     return (
         f"### 📕 [{ticket.ticket_id}]({ticket.ticket_url}) {ticket.summary} "

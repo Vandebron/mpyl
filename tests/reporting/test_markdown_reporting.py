@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from src.mpyl.project import Stage
 from src.mpyl.reporting.formatting.markdown import (
     summary_to_markdown,
     run_result_to_markdown,
@@ -18,7 +17,7 @@ from tests.reporting import (
     append_results,
 )
 from tests.test_resources import test_data
-from tests.test_resources.test_data import assert_roundtrip
+from tests.test_resources.test_data import assert_roundtrip, TestStage
 
 
 class TestMarkdownReporting:
@@ -57,7 +56,7 @@ class TestMarkdownReporting:
         assert result.progress_fraction == 0.0, "Should start at zero progress"
         result.append(
             StepResult(
-                stage=Stage.BUILD(),
+                stage=TestStage.build(),
                 project=test_data.get_project(),
                 output=Output(success=False, message="Build failed"),
                 timestamp=datetime.fromisoformat("2019-01-04T16:41:24+02:00"),
@@ -71,7 +70,7 @@ class TestMarkdownReporting:
         run_result = create_test_result()
         run_result.append(
             StepResult(
-                stage=Stage.TEST(),
+                stage=TestStage.test(),
                 project=test_data.get_project(),
                 output=Output(
                     success=True,
@@ -90,7 +89,7 @@ class TestMarkdownReporting:
         )
         run_result.append(
             StepResult(
-                stage=Stage.TEST(),
+                stage=TestStage.test(),
                 project=test_data.get_project(),
                 output=Output(
                     success=True,

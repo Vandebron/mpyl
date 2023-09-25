@@ -2,6 +2,8 @@ import dataclasses
 import os
 from pathlib import Path
 
+from attr import dataclass
+
 from src.mpyl.utilities.docker import DockerImageSpec
 from src.mpyl.constants import (
     DEFAULT_CONFIG_FILE_NAME,
@@ -9,7 +11,7 @@ from src.mpyl.constants import (
 )
 from src.mpyl.utilities.pyaml_env import parse_config
 
-from src.mpyl.project import load_project, Target, Project, Stages
+from src.mpyl.project import load_project, Target, Project, Stages, Stage
 from src.mpyl.steps.models import (
     RunProperties,
     Output,
@@ -32,6 +34,21 @@ RUN_PROPERTIES_PROD = dataclasses.replace(
         RUN_PROPERTIES.versioning, tag="20230829-1234", pr_number=None
     ),
 )
+
+
+@dataclass(frozen=True)
+class TestStage:
+    @staticmethod
+    def build():
+        return Stage(name="build", icon="🏗️")
+
+    @staticmethod
+    def test():
+        return Stage(name="test", icon="📋")
+
+    @staticmethod
+    def deploy():
+        return Stage(name="deploy", icon="🚀")
 
 
 def get_config_values() -> dict:

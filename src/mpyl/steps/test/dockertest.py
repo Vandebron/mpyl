@@ -17,6 +17,7 @@ from typing import cast
 
 from python_on_whales import Container
 
+from . import STAGE_NAME
 from .after_test import IntegrationTestAfter
 from .before_test import IntegrationTestBefore
 from .. import Step, Meta
@@ -27,7 +28,7 @@ from ..models import (
     input_to_artifact,
     Artifact,
 )
-from ...project import Stage, Project
+from ...project import Project
 from ...utilities.docker import (
     DockerConfig,
     build,
@@ -54,7 +55,7 @@ class TestDocker(Step):
                 name="Docker Test",
                 description="Test docker image",
                 version="0.0.1",
-                stage=Stage.TEST(),
+                stage=STAGE_NAME,
             ),
             produced_artifact=ArtifactType.JUNIT_TESTS,
             required_artifact=ArtifactType.NONE,

@@ -9,6 +9,7 @@ from typing import List
 import yaml
 from kubernetes import config, client
 
+from . import STAGE_NAME
 from .k8s import (
     helm,
     get_config_map,
@@ -21,7 +22,7 @@ from .k8s import (
 from .k8s.helm import write_chart
 from .k8s.resources.dagster import to_user_code_values, to_grpc_server_entry, Constants
 from .. import Step, Meta, ArtifactType, Input, Output
-from ...project import Stage, Target
+from ...project import Target
 from ...utilities.dagster import DagsterConfig
 from ...utilities.docker import DockerRegistryConfig
 from ...utilities.helm import convert_to_helm_release_name, shorten_name
@@ -35,7 +36,7 @@ class DeployDagster(Step):
                 name="Dagster Deploy",
                 description="Deploy a dagster user code repository to k8s",
                 version="0.0.1",
-                stage=Stage.POST_DEPLOY(),
+                stage=STAGE_NAME,
             ),
             produced_artifact=ArtifactType.NONE,
             required_artifact=ArtifactType.DOCKER_IMAGE,

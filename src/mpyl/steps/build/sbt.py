@@ -7,7 +7,8 @@ from typing import Optional
 
 from .post_docker_build import AfterBuildDocker
 from .. import Step, Meta
-from ...project import Stage, Target
+from . import STAGE_NAME
+from ...project import Target
 from ...steps.models import (
     ArtifactType,
     Input,
@@ -28,7 +29,7 @@ class BuildSbt(Step):
                 name="Sbt Build",
                 description="Build sbt project",
                 version="0.0.1",
-                stage=Stage.BUILD(),
+                stage=STAGE_NAME,
             ),
             produced_artifact=ArtifactType.DOCKER_IMAGE,
             required_artifact=ArtifactType.NONE,

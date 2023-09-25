@@ -2,11 +2,11 @@
 
 from logging import Logger
 
+from . import STAGE_NAME
 from .k8s import deploy_helm_chart
 from .k8s.chart import ChartBuilder, to_cron_job_chart, to_job_chart
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
-from ...project import Stage
 from ...stages.discovery import find_deploy_set
 from ...utilities.repo import RepoConfig
 
@@ -19,7 +19,7 @@ class DeployKubernetesJob(Step):
                 name="Kubernetes Job Deploy",
                 description="Deploy a job to k8s",
                 version="0.0.1",
-                stage=Stage.DEPLOY(),
+                stage=STAGE_NAME,
             ),
             produced_artifact=ArtifactType.NONE,
             required_artifact=ArtifactType.DOCKER_IMAGE,

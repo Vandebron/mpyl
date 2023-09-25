@@ -15,3 +15,12 @@ build:
   console:
     width: 0
     logLevel: INFO
+stages:
+  - name: 'build'
+    icon: '🏗️'
+  - name: 'test'
+    icon: '📋'
+  - name : 'deploy'
+    icon: '🚀'
+  - name: 'postdeploy'
+    icon: '🦺️'
