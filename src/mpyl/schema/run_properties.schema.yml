@@ -4,6 +4,11 @@ required:
   - build
 additionalProperties: false
 properties:
+  mpylVersion:
+    description: >-
+      The MINIMAL version of MPyL that should be used to build this project. If not
+      specified, the latest version will be used.
+    type: string
   build:
     description: defines the build parameters
     type: object

@@ -2,7 +2,6 @@ from pathlib import Path
 
 from deepdiff import DeepDiff
 
-from src.mpyl.utilities.yaml import yaml_to_string
 from src.mpyl.projects.versioning import (
     upgrade_file,
     get_entry_upgrader_index,
@@ -14,7 +13,9 @@ from src.mpyl.projects.versioning import (
     pretty_print,
     Upgrader,
     CONFIG_UPGRADERS,
+    PROPERTIES_UPGRADERS,
 )
+from src.mpyl.utilities.yaml import yaml_to_string
 from tests.test_resources.test_data import assert_roundtrip
 from tests.test_resources.test_data import root_test_path
 
@@ -70,6 +71,13 @@ class TestVersioning:
             self.upgrades_path / "mpyl_config_base.yml",
             self.upgrades_path / "mpyl_config_upgraded.yml",
             CONFIG_UPGRADERS,
+        )
+
+    def test_full_properties_upgrade(self):
+        self.__roundtrip(
+            self.upgrades_path / "run_properties_base.yml",
+            self.upgrades_path / "run_properties_upgraded.yml",
+            PROPERTIES_UPGRADERS,
         )
 
     def test_diff_pretty_print(self):

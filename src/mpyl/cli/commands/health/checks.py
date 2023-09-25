@@ -24,6 +24,7 @@ from ....projects.versioning import (
     pretty_print,
     Upgrader,
     upgrade_file,
+    PROJECT_UPGRADERS,
 )
 from ....utilities.github import GithubConfig
 from ....utilities.jenkins import JenkinsConfig
@@ -81,7 +82,7 @@ def perform_health_checks(
             console,
             config_file_path=properties_path,
             schema_path="../../../schema/run_properties.schema.yml",
-            upgraders=[],
+            upgraders=PROJECT_UPGRADERS,
             perform_upgrade=perform_upgrade,
         )
 
