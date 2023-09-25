@@ -29,7 +29,7 @@ class TestModels:
                 self.config_values,
             )
 
-        assert "'user' is a required property" in excinfo.value.message
+        assert "'stages' is a required property" in excinfo.value.message
 
     def test_should_pass_validation(self):
         os.environ["CHANGE_ID"] = "123"

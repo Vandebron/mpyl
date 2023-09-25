@@ -2,6 +2,7 @@ $schema: http://json-schema.org/draft-07/schema#
 $id: schema/run_properties.schema.yml
 required:
   - build
+  - stages
 additionalProperties: false
 properties:
   mpylVersion:
