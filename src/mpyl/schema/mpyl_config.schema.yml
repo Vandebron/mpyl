@@ -206,7 +206,7 @@ definitions:
     type: object
     additionalProperties: false
     properties:
-      default_registry:
+      defaultRegistry:
         type: string
       registries:
         type: array
@@ -229,7 +229,7 @@ definitions:
         required: [ 'periodSeconds', 'failureThreshold' ]
     required:
       - registries
-      - default_registry
+      - defaultRegistry
     title: Docker
   Build:
     type: object

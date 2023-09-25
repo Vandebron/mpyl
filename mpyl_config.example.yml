@@ -24,7 +24,7 @@ jira:
   password: !ENV ${MPYL_JIRA_TOKEN_PSW:jira_password}
   ticketPattern: '[A-Za-z]{2,}-\d+'
 docker:
-  default_registry: 'acme.docker.com'
+  defaultRegistry: 'acme.docker.com'
   registries:
     - hostName: 'acme.docker.com'
       userName: !ENV ${DOCKER_REGISTRY_USR:docker_user}

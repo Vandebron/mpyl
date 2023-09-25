@@ -97,7 +97,7 @@ class DockerConfig:
             registries: dict = config["docker"]["registries"]
             build_config: dict = config["docker"]["build"]
             return DockerConfig(
-                default_registry=config["docker"]["default_registry"],
+                default_registry=config["docker"]["defaultRegistry"],
                 registries=[DockerRegistryConfig.from_dict(r) for r in registries],
                 root_folder=build_config["rootFolder"],
                 build_target=build_config.get("buildTarget", None),
