@@ -184,6 +184,49 @@ class ConfigUpgraderOne8(Upgrader):
 CONFIG_UPGRADERS = [ConfigUpgraderOne8(), ConfigUpgraderOne9(), ConfigUpgraderOne30()]
 
 
+class PropertiesUpgraderOne30(Upgrader):
+    target_version = "1.3.0"
+
+    def upgrade(self, previous_dict: ordereddict) -> ordereddict:
+        if "stages" in previous_dict:
+            return previous_dict
+
+        previous_dict.insert(
+            0,
+            "stages",
+            [
+                {"name": "build", "icon": "🏗️"},
+                {"name": "test", "icon": "📋"},
+                {"name": "deploy", "icon": "🚀"},
+                {"name": "postdeploy", "icon": "🦺"},
+            ],
+        )
+        previous_dict.move_to_end("stages", last=True)
+        return previous_dict
+
+
+class PropertiesUpgraderOne9(Upgrader):
+    target_version = "1.0.9"
+
+    def upgrade(self, previous_dict: ordereddict) -> ordereddict:
+        previous_dict.insert(0, VERSION_FIELD, self.target_version)
+        return previous_dict
+
+
+class PropertiesUpgraderOne8(Upgrader):
+    target_version = BASE_RELEASE
+
+    def upgrade(self, previous_dict: ordereddict) -> ordereddict:
+        return previous_dict
+
+
+PROPERTIES_UPGRADERS = [
+    PropertiesUpgraderOne8(),
+    PropertiesUpgraderOne9(),
+    PropertiesUpgraderOne30(),
+]
+
+
 def get_entry_upgrader_index(
     current_version: str, upgraders: list[Upgrader]
 ) -> Optional[int]:
