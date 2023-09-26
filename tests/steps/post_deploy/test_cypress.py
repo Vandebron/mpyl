@@ -23,6 +23,7 @@ class TestCypress:
             path="",
             stages=stages,
             maintainer=[],
+            docker=None,
             deployment=None,
             dependencies=Dependencies.from_config({"postdeploy": []}),
         )

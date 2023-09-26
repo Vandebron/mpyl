@@ -32,6 +32,7 @@ from ...utilities.docker import (
     docker_file_path,
     login,
     DockerImageSpec,
+    registry_for_project,
 )
 
 DOCKER_IGNORE_DEFAULT = ["**/target/*", f"**/{BUILD_ARTIFACTS_FOLDER}/*"]
@@ -53,7 +54,9 @@ class BuildDocker(Step):
         )
 
     def execute(self, step_input: Input) -> Output:
-        docker_config = DockerConfig.from_dict(step_input.run_properties.config)
+        docker_config: DockerConfig = DockerConfig.from_dict(
+            step_input.run_properties.config
+        )
         build_target = docker_config.build_target
         if not build_target:
             raise ValueError("docker.buildTarget must be specified")
@@ -63,9 +66,10 @@ class BuildDocker(Step):
             project=step_input.project, docker_config=docker_config
         )
 
+        docker_registry_config = registry_for_project(docker_config, step_input.project)
         if not step_input.dry_run:
             # log in to registry, because we may need to pull in a base image
-            login(logger=self._logger, docker_config=docker_config)
+            login(logger=self._logger, registry_config=docker_registry_config)
 
         success = build(
             logger=self._logger,
@@ -73,7 +77,7 @@ class BuildDocker(Step):
             file_path=dockerfile,
             image_tag=image_tag,
             target=build_target,
-            docker_config=docker_config,
+            registry_config=docker_registry_config,
         )
         artifact = input_to_artifact(
             ArtifactType.DOCKER_IMAGE, step_input, spec=DockerImageSpec(image=image_tag)

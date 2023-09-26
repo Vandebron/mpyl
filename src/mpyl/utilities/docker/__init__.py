@@ -12,7 +12,7 @@ from python_on_whales.exceptions import NoSuchContainer
 from ruamel.yaml import yaml_object, YAML
 
 from ..logging import try_parse_ansi
-from ...project import Project
+from ...project import Project, Docker
 from ...steps.models import Input, ArtifactSpec
 
 yaml = YAML()
@@ -56,13 +56,36 @@ class DockerCacheConfig:
 
 
 @dataclass(frozen=True)
-class DockerConfig:
+class DockerRegistryConfig:
     host_name: str
     organization: Optional[str]
     user_name: str
     password: str
     cache_from_registry: bool
     custom_cache_config: Optional[DockerCacheConfig]
+
+    @staticmethod
+    def from_dict(config: dict):
+        try:
+            cache_config = config.get("cache", {})
+            return DockerRegistryConfig(
+                host_name=config["hostName"],
+                user_name=config["userName"],
+                organization=config.get("organization", None),
+                password=config["password"],
+                cache_from_registry=cache_config.get("cacheFromRegistry", False),
+                custom_cache_config=DockerCacheConfig.from_dict(cache_config["custom"])
+                if "custom" in cache_config
+                else None,
+            )
+        except KeyError as exc:
+            raise KeyError(f"Docker config could not be loaded from {config}") from exc
+
+
+@dataclass(frozen=True)
+class DockerConfig:
+    default_registry: str
+    registries: list[DockerRegistryConfig]
     root_folder: str
     build_target: Optional[str]
     test_target: Optional[str]
@@ -71,18 +94,11 @@ class DockerConfig:
     @staticmethod
     def from_dict(config: dict):
         try:
-            registry: dict = config["docker"]["registry"]
+            registries: dict = config["docker"]["registries"]
             build_config: dict = config["docker"]["build"]
-            cache_config = registry.get("cache", {})
             return DockerConfig(
-                host_name=registry["hostName"],
-                user_name=registry["userName"],
-                organization=registry.get("organization", None),
-                cache_from_registry=cache_config.get("cacheFromRegistry", False),
-                custom_cache_config=DockerCacheConfig.from_dict(cache_config["custom"])
-                if "custom" in cache_config
-                else None,
-                password=registry["password"],
+                default_registry=config["docker"]["defaultRegistry"],
+                registries=[DockerRegistryConfig.from_dict(r) for r in registries],
                 root_folder=build_config["rootFolder"],
                 build_target=build_config.get("buildTarget", None),
                 test_target=build_config.get("testTarget", None),
@@ -143,7 +159,7 @@ def docker_image_tag(step_input: Input) -> str:
     return f"{step_input.project.name.lower()}:{tag}".replace("/", "_")
 
 
-def docker_registry_path(docker_config: DockerConfig, image_name: str) -> str:
+def docker_registry_path(docker_config: DockerRegistryConfig, image_name: str) -> str:
     path_components = [
         docker_config.host_name,
         docker_config.organization,
@@ -152,14 +168,29 @@ def docker_registry_path(docker_config: DockerConfig, image_name: str) -> str:
     return "/".join([c for c in path_components if c]).lower()
 
 
-def push_to_registry(logger: Logger, docker_config: DockerConfig, image_name: str):
+def push_to_registry(
+    logger: Logger, docker_config: DockerRegistryConfig, image_name: str
+):
     image = docker.image.inspect(image_name)
     logger.debug(f"Found image {image}")
 
-    login(logger=logger, docker_config=docker_config)
+    login(logger=logger, registry_config=docker_config)
     full_image_path = docker_registry_path(docker_config, image_name)
     docker.image.tag(image, full_image_path)
     docker.image.push(full_image_path, quiet=False)
+
+
+def registry_for_project(
+    docker_config: DockerConfig, project: Project
+) -> DockerRegistryConfig:
+    host_name = (
+        project.docker.host_name if project.docker else docker_config.default_registry
+    )
+    registry = next(r for r in docker_config.registries if r.host_name == host_name)
+    if registry:
+        return registry
+
+    raise KeyError(f"Docker config has no registry with host name {host_name}")
 
 
 def docker_file_path(project: Project, docker_config: DockerConfig):
@@ -202,7 +233,7 @@ def build(
     file_path: str,
     image_tag: str,
     target: str,
-    docker_config: Optional[DockerConfig] = None,
+    registry_config: Optional[DockerRegistryConfig] = None,
 ) -> bool:
     """
     :param logger: the logger
@@ -210,23 +241,23 @@ def build(
     :param file_path: path to the docker file to be built
     :param image_tag: the tag of the image
     :param target: the 'target' within the multi-stage docker image
-    :param docker_config: optional docker config, used what type of cache to use if any
+    :param registry_config: optional docker config, used what type of cache to use if any
     :return: True for success, False for failure
     """
     logger.info(f"Building docker image with {file_path} and target {target}")
 
-    if docker_config and docker_config.cache_from_registry:
-        registry_path = docker_registry_path(docker_config, image_tag)
+    if registry_config and registry_config.cache_from_registry:
+        registry_path = docker_registry_path(registry_config, image_tag)
         cache_from = f"type=registry,ref={registry_path}"
         cache_to = "type=inline"
-    elif docker_config and docker_config.custom_cache_config:
-        cache_from = docker_config.custom_cache_config.cache_from
-        cache_to = docker_config.custom_cache_config.cache_to
+    elif registry_config and registry_config.custom_cache_config:
+        cache_from = registry_config.custom_cache_config.cache_from
+        cache_to = registry_config.custom_cache_config.cache_to
     else:
         cache_from = None
         cache_to = None
 
-    logger.debug(f"Building with cache from: {cache_from} {docker_config}")
+    logger.debug(f"Building with cache from: {cache_from} {registry_config}")
 
     try:
         logs = docker.buildx.build(
@@ -257,14 +288,14 @@ def build(
         return False
 
 
-def login(logger: Logger, docker_config: DockerConfig) -> None:
-    logger.info(f"Logging in with user '{docker_config.user_name}'")
+def login(logger: Logger, registry_config: DockerRegistryConfig) -> None:
+    logger.info(f"Logging in with user '{registry_config.user_name}'")
     docker.login(
-        server=f"https://{docker_config.host_name}",
-        username=docker_config.user_name,
-        password=docker_config.password,
+        server=f"https://{registry_config.host_name}",
+        username=registry_config.user_name,
+        password=registry_config.password,
     )
-    logger.debug(f"Logged in as '{docker_config.user_name}'")
+    logger.debug(f"Logged in as '{registry_config.user_name}'")
 
 
 def create_container(logger: Logger, image_name: str) -> Container:

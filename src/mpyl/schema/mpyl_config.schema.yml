@@ -206,8 +206,13 @@ definitions:
     type: object
     additionalProperties: false
     properties:
-      registry:
-        "$ref": "#/definitions/Registry"
+      defaultRegistry:
+        type: string
+      registries:
+        type: array
+        minItems: 1
+        items:
+          "$ref": "#/definitions/Registry"
       build:
         "$ref": "#/definitions/Build"
       compose:
@@ -223,7 +228,8 @@ definitions:
             default: 20
         required: [ 'periodSeconds', 'failureThreshold' ]
     required:
-      - registry
+      - registries
+      - defaultRegistry
     title: Docker
   Build:
     type: object

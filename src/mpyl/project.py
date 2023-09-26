@@ -384,6 +384,15 @@ class S3Bucket:
 
 
 @dataclass(frozen=True)
+class Docker:
+    host_name: str
+
+    @staticmethod
+    def from_config(values: dict):
+        return Docker(host_name=values["hostName"])
+
+
+@dataclass(frozen=True)
 class Deployment:
     namespace: Optional[str]
     properties: Properties
@@ -423,6 +432,7 @@ class Project:
     path: str
     stages: Stages
     maintainer: list[str]
+    docker: Optional[Docker]
     deployment: Optional[Deployment]
     dependencies: Optional[Dependencies]
 
@@ -502,6 +512,7 @@ class Project:
 
     @staticmethod
     def from_config(values: dict, project_path: Path):
+        docker_config = values.get("docker")
         deployment = values.get("deployment")
         dependencies = values.get("dependencies")
         return Project(
@@ -510,6 +521,7 @@ class Project:
             path=str(project_path),
             stages=Stages.from_config(values.get("stages", {})),
             maintainer=values.get("maintainer", []),
+            docker=Docker.from_config(docker_config) if docker_config else None,
             deployment=Deployment.from_config(deployment) if deployment else None,
             dependencies=Dependencies.from_config(dependencies)
             if dependencies

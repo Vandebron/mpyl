@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from .....project import Project, get_env_variables
 from .....steps.models import RunProperties
-from .....utilities.docker import DockerConfig
+from .....utilities.docker import DockerConfig, registry_for_project
 
 
 @dataclass(frozen=True)
@@ -20,6 +20,7 @@ def to_user_code_values(
     run_properties: RunProperties,
     docker_config: DockerConfig,
 ) -> dict:
+    docker_registry = registry_for_project(docker_config, project)
     return {
         "deployments": [
             {
@@ -30,7 +31,7 @@ def to_user_code_values(
                     "pullPolicy": "Always",
                     "imagePullSecrets": [{"name": "bigdataregistry"}],
                     "tag": run_properties.versioning.identifier,
-                    "repository": f"{docker_config.host_name}/{project.name}",
+                    "repository": f"{docker_registry.host_name}/{project.name}",
                 },
                 "includeConfigInLaunchedRuns": {"enabled": True},
                 "name": f"{project.name}{name_suffix}",

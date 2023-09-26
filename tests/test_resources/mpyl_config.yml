@@ -23,10 +23,11 @@ jira:
   password: !ENV ${JIRA_USER_PASSWORD_PSW:jira_password}
   ticketPattern: '[A-Za-z]{2,}-\d+'
 docker:
-  registry:
-    hostName: !ENV ${DOCKER_HOST_NAME:docker_host}
-    userName: !ENV ${DOCKER_REGISTRY_USR:docker_user}
-    password: !ENV ${DOCKER_REGISTRY_PSW:docker_password}
+  defaultRegistry: !ENV ${DOCKER_HOST_NAME:docker_host}
+  registries:
+    - hostName: !ENV ${DOCKER_HOST_NAME:docker_host}
+      userName: !ENV ${DOCKER_REGISTRY_USR:docker_user}
+      password: !ENV ${DOCKER_REGISTRY_PSW:docker_password}
   build:
     rootFolder: '.'
     buildTarget: 'builder'

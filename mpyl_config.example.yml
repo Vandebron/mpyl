@@ -24,15 +24,16 @@ jira:
   password: !ENV ${MPYL_JIRA_TOKEN_PSW:jira_password}
   ticketPattern: '[A-Za-z]{2,}-\d+'
 docker:
-  registry:
-    hostName: 'acme.docker.com'
-    userName: !ENV ${DOCKER_REGISTRY_USR:docker_user}
-    password: !ENV ${DOCKER_REGISTRY_PSW:docker_password}
-    cache:
-      cacheFromRegistry: false
-      custom:
-        to: 'type=gha,mode=max'
-        from: 'type=gha'
+  defaultRegistry: 'acme.docker.com'
+  registries:
+    - hostName: 'acme.docker.com'
+      userName: !ENV ${DOCKER_REGISTRY_USR:docker_user}
+      password: !ENV ${DOCKER_REGISTRY_PSW:docker_password}
+      cache:
+        cacheFromRegistry: false
+        custom:
+          to: 'type=gha,mode=max'
+          from: 'type=gha'
   build:
     rootFolder: '.'
     buildTarget: 'builder'
