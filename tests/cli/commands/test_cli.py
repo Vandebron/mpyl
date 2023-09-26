@@ -42,7 +42,7 @@ class TestCli:
     def test_projects_lint_all_output(self):
         result = self.runner.invoke(
             main_group,
-            ["projects", "-c", str(self.config_path), "lint", "--all"],
+            ["projects", "-c", str(self.config_path), "lint"],
         )
         assert re.match(
             r"(.|\n)*Validated .* projects\. .* valid, .* invalid\n\n.*No duplicate project names found",

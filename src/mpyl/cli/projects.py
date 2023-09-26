@@ -17,7 +17,6 @@ from . import (
 )
 from .commands.projects.formatting import print_project
 from ..cli.commands.projects.lint import (
-    _find_project_paths,
     _check_and_load_projects,
     _assert_unique_project_names,
     _assert_correct_project_linkup,
@@ -127,12 +126,6 @@ def show_project(ctx, name):
 
 @projects.command(help="Validate the yaml of changed projects against their schema")
 @click.option(
-    "--all",
-    "all_",
-    is_flag=True,
-    help="Validate all project yaml's, regardless of changes on branch",
-)
-@click.option(
     "--extended",
     "-e",
     "extended",
@@ -140,18 +133,22 @@ def show_project(ctx, name):
     help="Enable extra validations like PR namespace linkup",
 )
 @click.pass_obj
-def lint(obj: ProjectsContext, all_, extended):
+def lint(obj: ProjectsContext, extended):
     loaded_projects = _check_and_load_projects(
         console=obj.cli.console,
         repo=obj.cli.repo,
-        project_paths=_find_project_paths(all_, obj.cli.repo, obj.filter),
+        project_paths=obj.cli.repo.find_projects(obj.filter),
         strict=True,
     )
-    all_projects = _check_and_load_projects(
-        console=None,
-        repo=obj.cli.repo,
-        project_paths=_find_project_paths(True, obj.cli.repo, ""),
-        strict=False,
+    all_projects = (
+        _check_and_load_projects(
+            console=None,
+            repo=obj.cli.repo,
+            project_paths=obj.cli.repo.find_projects(""),
+            strict=False,
+        )
+        if obj.filter != ""
+        else loaded_projects
     )
     _assert_unique_project_names(
         console=obj.cli.console,
@@ -161,7 +158,7 @@ def lint(obj: ProjectsContext, all_, extended):
         _assert_correct_project_linkup(
             console=obj.cli.console,
             target=Target.PULL_REQUEST,
-            projects=all_projects if all_ else loaded_projects,
+            projects=loaded_projects,
             all_projects=all_projects,
             pr_identifier=123,
         )
@@ -176,7 +173,7 @@ def lint(obj: ProjectsContext, all_, extended):
 )
 @click.pass_obj
 def upgrade(obj: ProjectsContext, apply: bool):
-    paths = map(Path, _find_project_paths(True, obj.cli.repo, ""))
+    paths = map(Path, obj.cli.repo.find_projects(""))
     candidates = check_upgrades_needed(list(paths), PROJECT_UPGRADERS)
     console = obj.cli.console
     if not apply:
