@@ -261,7 +261,7 @@ spec:
     - pr-1234
   selector:
     matchLabels:
-      app.kubernetes.io/name: dockertest-service-monitor
+      app.kubernetes.io/name: dockertest
 ---
 # dockertest-ingress-0-whitelist
 apiVersion: traefik.containo.us/v1alpha1
