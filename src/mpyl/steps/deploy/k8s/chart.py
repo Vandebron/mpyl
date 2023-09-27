@@ -397,6 +397,7 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
             metrics=metrics,
             default_port=self.__find_default_port(),
             namespace=self.namespace,
+            target_service=self.project.name.lower(),
         )
 
     def __find_default_port(self) -> int:
