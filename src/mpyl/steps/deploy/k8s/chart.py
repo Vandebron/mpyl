@@ -391,10 +391,13 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
 
     def to_service_monitor(self, metrics: Metrics) -> V1ServiceMonitor:
         return V1ServiceMonitor(
-            metadata=self._to_object_meta(),
+            metadata=self._to_object_meta(
+                name=f"{self.project.name.lower()}-service-monitor"
+            ),
             metrics=metrics,
             default_port=self.__find_default_port(),
             namespace=self.namespace,
+            release_name=self.release_name,
         )
 
     def __find_default_port(self) -> int:
