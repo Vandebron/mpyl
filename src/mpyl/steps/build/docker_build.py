@@ -78,7 +78,7 @@ class BuildDocker(Step):
 
         build_args: Optional[dict[str, str]] = (
             {
-                arg: arg.get_value(step_input.run_properties.target)
+                arg.key: arg.get_value(step_input.run_properties.target)
                 for arg in step_input.project.build.args.plain
             }
             if step_input.project.build
