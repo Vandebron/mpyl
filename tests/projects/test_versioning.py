@@ -62,8 +62,8 @@ class TestVersioning:
 
     def test_upgraded_should_match_test_config(self):
         assert_roundtrip(
-            self.test_resources_path / "test_project.yml",
-            (self.upgrades_path / self.latest_release_file).read_text("utf-8"),
+            self.upgrades_path / self.latest_release_file,
+            (self.test_resources_path / "test_project.yml").read_text("utf-8"),
         )
 
     def test_full_config_upgrade(self):
