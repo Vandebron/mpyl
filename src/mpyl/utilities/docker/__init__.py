@@ -90,6 +90,7 @@ class DockerConfig:
     build_target: Optional[str]
     test_target: Optional[str]
     docker_file_name: str
+    build_env_file_name: str
 
     @staticmethod
     def from_dict(config: dict):
@@ -103,6 +104,7 @@ class DockerConfig:
                 build_target=build_config.get("buildTarget", None),
                 test_target=build_config.get("testTarget", None),
                 docker_file_name=build_config["dockerFileName"],
+                build_env_file_name=build_config.get("buildEnvFileName", ".buildenv"),
             )
         except KeyError as exc:
             raise KeyError(f"Docker config could not be loaded from {config}") from exc
@@ -234,6 +236,7 @@ def build(
     image_tag: str,
     target: str,
     registry_config: Optional[DockerRegistryConfig] = None,
+    build_args: Optional[dict[str, str]] = None,
 ) -> bool:
     """
     :param logger: the logger
@@ -242,6 +245,7 @@ def build(
     :param image_tag: the tag of the image
     :param target: the 'target' within the multi-stage docker image
     :param registry_config: optional docker config, used what type of cache to use if any
+    :param build_args: build arguments to supply to docker build
     :return: True for success, False for failure
     """
     logger.info(f"Building docker image with {file_path} and target {target}")
@@ -268,6 +272,7 @@ def build(
             stream_logs=True,
             cache_from=cache_from,
             cache_to=cache_to,
+            build_args=build_args if build_args else {},
         )
         if logs is not None and not isinstance(logs, Image):
             stream_docker_logging(
