@@ -14,6 +14,7 @@ from src.mpyl.projects.versioning import (
     Upgrader,
     CONFIG_UPGRADERS,
     PROPERTIES_UPGRADERS,
+    ProjectUpgraderOne31,
 )
 from src.mpyl.utilities.yaml import yaml_to_string
 from tests.test_resources.test_data import assert_roundtrip
@@ -51,6 +52,13 @@ class TestVersioning:
             self.upgrades_path / "test_project_1_0_9.yml",
             self.upgrades_path / "test_project_1_0_10.yml",
             [ProjectUpgraderOne9(), ProjectUpgraderOne10()],
+        )
+
+    def test_cmd_replace(self):
+        self.__roundtrip(
+            self.upgrades_path / "test_project_1_0_11.yml",
+            self.upgrades_path / "test_project_1_3_1.yml",
+            [ProjectUpgraderOne10(), ProjectUpgraderOne31()],
         )
 
     def test_full_upgrade(self):
