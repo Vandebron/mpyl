@@ -754,7 +754,7 @@ definitions:
           network request inside the container. Containers that fail the
           check are restarted.
         $ref: '#/definitions/livenessProbe'
-      cmd:
+      command:
         $ref: '#/definitions/dtapValue'
       args:
         type: object
