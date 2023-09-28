@@ -450,7 +450,15 @@ def clean(obj: CliContext, filter_):
         obj.console.print("Nothing to clean")
 
 
-@build.command(help="Pull build artifacts from remote artifact repository")
+@build.group(
+    "artifacts",
+    help="Commands related to artifacts like build cache and k8s manifests",
+)
+def artifacts():
+    pass
+
+
+@artifacts.command(help="Pull build artifacts from remote artifact repository")
 @click.option("--tag", "-t", type=click.STRING, help="Tag to build", required=False)
 @click.option(
     "--pr_number", "-pr", type=click.INT, help="PR number to fetch", required=False
@@ -475,7 +483,7 @@ def pull(obj: CliContext, tag: str, pr_number: int, path: Path):
     build_artifacts.pull(branch=_branch_name(target_branch, "cache"))
 
 
-@build.command(help="Push build artifacts to remote artifact repository")
+@artifacts.command(help="Push build artifacts to remote artifact repository")
 @click.option("--tag", "-t", type=click.STRING, help="Tag to build", required=False)
 @click.option(
     "--pr_number", "-pr", type=click.INT, help="PR number to fetch", required=False
