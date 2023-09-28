@@ -199,7 +199,7 @@ class ChartBuilder:
         self.namespace = get_namespace(
             run_properties=step_input.run_properties, project=project
         )
-        self.role = project.deployment.kubernetes.role
+        self.role = project.kubernetes.role
 
     def _to_labels(self) -> dict:
         run_properties = self.step_input.run_properties
