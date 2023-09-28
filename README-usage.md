@@ -274,7 +274,7 @@ mpyl build clean
 ##### Remote caching
 To preserve intermediate build results between runs, you can use the
 ```shell
-mpyl build push
+mpyl build artifacts push
 ```
 command at the end of a run. This will push the `.mpyl` folder to the remote repository configured in `mpyl_config.yml`
 ```yaml
@@ -289,7 +289,7 @@ vcs:
 ```
 To pull the previously pushed artifacts, use
 ```shell
-mpyl build pull
+mpyl build artifacts pull
 ```
 at the beginning of your run.
 
