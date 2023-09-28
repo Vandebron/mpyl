@@ -76,13 +76,13 @@ class BuildDocker(Step):
             contents = "\n".join(DOCKER_IGNORE_DEFAULT)
             ignore_file.write(contents)
 
-        build_args: Optional[dict[str, str]] = (
+        build_args: dict[str, str] = (
             {
                 arg.key: arg.get_value(step_input.run_properties.target)
                 for arg in step_input.project.build.args.plain
             }
             if step_input.project.build
-            else None
+            else {}
         )
 
         success = build(

@@ -235,8 +235,8 @@ def build(
     file_path: str,
     image_tag: str,
     target: str,
+    build_args: dict[str, str],
     registry_config: Optional[DockerRegistryConfig] = None,
-    build_args: Optional[dict[str, str]] = None,
 ) -> bool:
     """
     :param logger: the logger
