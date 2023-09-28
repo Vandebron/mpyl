@@ -54,6 +54,14 @@ deployment:
             divisor: 0.5
             resource: limits.memory
   kubernetes:
+    role:
+      resources:
+        - "pods"
+      verbs:
+        - "list"
+        - "get"
+    cmd:
+      all: "script.sh --opt"
     livenessProbe:
       path:
         all: /health
