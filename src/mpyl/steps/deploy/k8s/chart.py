@@ -685,6 +685,11 @@ class ChartBuilder:
             ),
             liveness_probe=liveness_probe,
             startup_probe=startup_probe,
+            command=(
+                self.project.kubernetes.cmd.get_value(self.target).split(" ")
+                if self.project.kubernetes.cmd
+                else None
+            ),
         )
 
         instances = resources.instances if resources.instances else defaults.instances

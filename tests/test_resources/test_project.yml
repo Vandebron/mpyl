@@ -62,6 +62,8 @@ deployment:
       verbs:
         - "list"
         - "get"
+    cmd:
+      all: "script.sh --opt"
     livenessProbe:
       path:
         all: /health
