@@ -297,22 +297,6 @@ class Job:
 
 
 @dataclass(frozen=True)
-class Role:
-    resources: list[str]
-    verbs: list[str]
-
-    @staticmethod
-    def from_config(values: dict):
-        if not values:
-            return None
-        resources = values.get("resources")
-        verbs = values.get("verbs")
-        if not resources or not verbs:
-            raise KeyError("Role must have resources and verbs set.")
-        return Role(resources, verbs)
-
-
-@dataclass(frozen=True)
 class Kubernetes:
     port_mappings: dict[int, int]
     liveness_probe: Optional[Probe]
@@ -321,7 +305,7 @@ class Kubernetes:
     resources: Resources
     job: Optional[Job]
     image_pull_secrets: dict
-    role: Optional[Role]
+    role: Optional[dict]
     cmd: Optional[TargetProperty[str]]
     args: Optional[TargetProperty[str]]
     labels: Optional[list[KeyValueProperty]]
@@ -336,7 +320,7 @@ class Kubernetes:
             resources=Resources.from_config(values.get("resources", {})),
             job=Job.from_config(values.get("job", {})),
             image_pull_secrets=values.get("imagePullSecrets", {}),
-            role=Role.from_config(values.get("role", {})),
+            role=values.get("role"),
             cmd=TargetProperty.from_config(values.get("cmd", {})),
             args=TargetProperty.from_config(values.get("args", {})),
             labels=list(map(KeyValueProperty.from_config, values.get("labels", []))),

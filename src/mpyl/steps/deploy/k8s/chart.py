@@ -77,7 +77,6 @@ from ....project import (
     Alert,
     KeyValueRef,
     Metrics,
-    Role,
 )
 from ....stages.discovery import DeploySet
 from ....utilities.docker import DockerImageSpec
@@ -170,7 +169,7 @@ class ChartBuilder:
     config_defaults: DeploymentDefaults
     deploy_set: Optional[DeploySet]
     namespace: str
-    role: Optional[Role]
+    role: Optional[dict]
 
     def __init__(self, step_input: Input, deploy_set: Optional[DeploySet] = None):
         self.step_input = step_input
@@ -503,12 +502,12 @@ class ChartBuilder:
             image_pull_secrets=secrets,
         )
 
-    def to_role(self, role: Role) -> V1Role:
+    def to_role(self, role: dict) -> V1Role:
         return V1Role(
             api_version="rbac.authorization.k8s.io/v1",
             kind="Role",
             metadata=self._to_object_meta(),
-            rules=[V1PolicyRule(resources=role.resources, verbs=role.verbs)],
+            rules=[ChartBuilder._to_k8s_model(role, V1PolicyRule)],
         )
 
     def to_role_binding(self) -> V1RoleBinding:

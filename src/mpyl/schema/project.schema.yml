@@ -868,31 +868,7 @@ definitions:
                 description: 'MainFile is the path to a bundled JAR, Python, or R file of the application.'
                 type: string
       role:
-        type: object
-        additionalProperties: false
-        required:
-          - resources
-          - verbs
-        properties:
-          resources:
-            description: >-
-              A list of Kubernetes resources that the verbs will be applied
-              on. See
-              https://kubernetes.io/docs/reference/kubectl/overview/#resource-types
-            type: array
-            minItems: 1
-            items:
-              type: string
-          verbs:
-            description: >-
-              A list of Kubernetes Request Verbs that will be granted to a
-              Role that will be bound to the ServiceAccount of this service.
-              See
-              https://kubernetes.io/docs/reference/access-authn-authz/authorization/#determine-the-request-verb
-            type: array
-            minItems: 1
-            items:
-              type: string
+        $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.rbac.v1.PolicyRule'
       metrics:
         description: >-
           Prometheus metrics. Requires prometheus operator to be installed.
