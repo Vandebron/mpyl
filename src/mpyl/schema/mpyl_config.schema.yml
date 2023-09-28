@@ -187,9 +187,10 @@ definitions:
       remote:
         type: object
         additionalProperties: false
+        required: [ 'url', 'userName', 'password', 'email']
         properties:
           url:
-            type: [ string, null ]
+            type: [ string ]
           userName:
             type: [ string, null ]
           email:
