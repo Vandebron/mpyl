@@ -168,7 +168,9 @@ class Steps:
 
         executor: Optional[Step] = self._steps_collection.get_executor(stage, step_name)
         if not executor:
-            self._logger.error(f"No executor found for {step_name} in stage {stage}")
+            self._logger.error(
+                f"No executor found for {step_name} in stage {stage.name}"
+            )
 
             return Output(
                 success=False,
@@ -176,7 +178,7 @@ class Steps:
             )
 
         try:
-            self._logger.info(f"Executing {stage} for {project.name}")
+            self._logger.info(f"Executing {stage.name} {stage.icon} for {project.name}")
             artifact: Optional[Artifact] = self._find_required_artifact(
                 project, self._properties.stages, executor.required_artifact
             )
@@ -209,7 +211,7 @@ class Steps:
         except Exception as exc:
             message = str(exc)
             self._logger.warning(
-                f"Execution of '{executor.meta.name}' for project '{project.name}' in stage {stage} "
+                f"Execution of '{executor.meta.name}' for project '{project.name}' in stage {stage.name} "
                 f"failed with exception: {message}",
                 exc_info=True,
             )
