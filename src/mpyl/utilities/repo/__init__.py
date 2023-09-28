@@ -88,7 +88,7 @@ class RepoConfig:
 
     @staticmethod
     def from_config(config: dict):
-        git_config = config["vcs"]["git"]
+        git_config = config["cvs"]["git"]
         maybe_remote_config = git_config.get("remote", None)
         return RepoConfig(
             main_branch=git_config["mainBranch"],
