@@ -689,6 +689,11 @@ class ChartBuilder:
                 if self.project.kubernetes.cmd
                 else None
             ),
+            args=(
+                self.project.kubernetes.cmd.get_value(self.target).split(" ")
+                if self.project.kubernetes.args
+                else None
+            ),
         )
 
         instances = resources.instances if resources.instances else defaults.instances
