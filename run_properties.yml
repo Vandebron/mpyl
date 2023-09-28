@@ -1,3 +1,4 @@
+mpylVersion: 1.0.9
 build:
   run:
     id: !ENV ${BUILD_ID:1}
@@ -21,8 +22,7 @@ stages:
     icon: '🏗️'
   - name: 'test'
     icon: '📋'
-  - name : 'deploy'
+  - name: 'deploy'
     icon: '🚀'
   - name: 'postdeploy'
     icon: '🦺️'
-
