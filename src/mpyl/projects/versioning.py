@@ -116,11 +116,9 @@ class ProjectUpgraderOne31(Upgrader):
     target_version = "1.3.1"
 
     def upgrade(self, previous_dict: ordereddict) -> ordereddict:
-        if deployment := previous_dict.get("deployment", {}):
-            if kubernetes := deployment.get("kubernetes", {}):
-                if kubernetes.get("cmd", None):
-                    kubernetes["command"] = kubernetes.pop("cmd")
-
+        if kubernetes := previous_dict.get("deployment", {}).get("kubernetes", {}):
+            if "cmd" in kubernetes:
+                kubernetes["command"] = kubernetes.pop("cmd")
         return previous_dict
 
 
