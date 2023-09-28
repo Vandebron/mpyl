@@ -1,6 +1,7 @@
 """Simple MPyL build runner"""
 
 import logging
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -9,16 +10,73 @@ from rich.console import Console
 from rich.logging import RichHandler
 from rich.markdown import Markdown
 
-from .cli import MpylCliParameters
-from .project import load_project, Stage, Project
-from .reporting.formatting.markdown import run_result_to_markdown
-from .reporting.targets import Reporter
-from .stages.discovery import for_stage, find_invalidated_projects_per_stage
-from .steps.collection import StepsCollection
-from .steps.models import RunProperties
-from .steps.run import RunResult
-from .steps.steps import Steps, ExecutionException
-from .utilities.repo import Repository, RepoConfig, Revision
+from ....cli import CliContext, MpylCliParameters
+from ....constants import DEFAULT_RUN_PROPERTIES_FILE_NAME
+from ....project import Stage, Project, load_project
+from ....reporting.formatting.markdown import (
+    execution_plan_as_markdown,
+    run_result_to_markdown,
+)
+from ....reporting.targets import Reporter
+from ....stages.discovery import for_stage, find_invalidated_projects_per_stage
+from ....steps.collection import StepsCollection
+from ....steps.models import RunProperties
+from ....steps.run import RunResult
+from ....steps.steps import Steps, ExecutionException
+from ....utilities.repo import Revision, Repository, RepoConfig
+
+
+def print_status(obj: CliContext):
+    run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
+    console = obj.console
+    console.print(f"MPyL log level is set to {run_properties.console.log_level}")
+
+    branch = obj.repo.get_branch
+    main_branch = obj.repo.main_branch
+    tag = run_properties.versioning.tag
+
+    if tag is None:
+        if run_properties.versioning.branch and not obj.repo.get_branch:
+            console.print("Current branch is detached.")
+        else:
+            console.log(
+                Markdown(
+                    f"Branch not specified at `build.versioning.branch` in _{DEFAULT_RUN_PROPERTIES_FILE_NAME}_, "
+                    f"falling back to git: _{obj.repo.get_branch}_"
+                )
+            )
+
+        if branch == main_branch:
+            console.log(f"On main branch ({branch}), cannot determine build status")
+            return
+
+    version = run_properties.versioning
+    revision = version.revision or obj.repo.get_sha
+    base_revision = obj.repo.base_revision
+    if tag:
+        console.print(Markdown(f"**Tag:** `{version.tag}` at `{revision}`. "))
+    else:
+        base_revision_specification = (
+            f"at `{base_revision}`"
+            if base_revision
+            else f"not present. Earliest revision: `{obj.repo.root_commit_hex}` (grafted)."
+        )
+        console.print(
+            Markdown(f"**Branch:** `{branch}`. Base {base_revision_specification}. ")
+        )
+
+    result = get_build_plan(
+        logger=logging.getLogger("mpyl"),
+        repo=obj.repo,
+        run_properties=run_properties,
+        cli_parameters=MpylCliParameters(local=sys.stdout.isatty()),
+    )
+    if result.run_plan:
+        console.print(
+            Markdown("**Execution plan:**  \n" + execution_plan_as_markdown(result))
+        )
+    else:
+        console.print("No changes detected, nothing to do.")
 
 
 FORMAT = "%(name)s  %(message)s"

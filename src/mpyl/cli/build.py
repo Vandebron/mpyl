@@ -1,6 +1,5 @@
 """Commands related to build"""
 import asyncio
-import logging
 import shutil
 import sys
 from pathlib import Path
@@ -22,18 +21,15 @@ from . import (
     check_updates,
     get_meta_version,
     parse_config_from_supplied_location,
+    MpylCliParameters,
 )
 from . import create_console_logger
+from .commands.build.artifacts import prepare_artifacts_repo, branch_name
+from .commands.build.build import print_status, run_mpyl
 from .commands.build.jenkins import JenkinsRunParameters, run_jenkins, get_token
 from ..artifacts.build_artifacts import (
-    ArtifactsRepository,
     ManifestPathTransformer,
     BuildCacheTransformer,
-)
-from ..build import (
-    run_mpyl,
-    MpylCliParameters,
-    get_build_plan,
 )
 from ..constants import (
     DEFAULT_CONFIG_FILE_NAME,
@@ -41,9 +37,6 @@ from ..constants import (
     BUILD_ARTIFACTS_FOLDER,
 )
 from ..project import load_project, Target
-from ..reporting.formatting.markdown import (
-    execution_plan_as_markdown,
-)
 from ..steps.deploy.k8s import DeployConfig
 from ..steps.models import RunProperties
 from ..utilities.github import GithubConfig
@@ -165,65 +158,12 @@ def status(obj: CliContext):
     upgrade_check = None
     try:
         upgrade_check = asyncio.wait_for(warn_if_update(obj.console), timeout=3)
-        __print_status(obj)
+        print_status(obj)
     except asyncio.exceptions.TimeoutError:
         pass
     finally:
         if upgrade_check:
             asyncio.get_event_loop().run_until_complete(upgrade_check)
-
-
-def __print_status(obj: CliContext):
-    run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
-    console = obj.console
-    console.print(f"MPyL log level is set to {run_properties.console.log_level}")
-
-    branch = obj.repo.get_branch
-    main_branch = obj.repo.main_branch
-    tag = run_properties.versioning.tag
-
-    if tag is None:
-        if run_properties.versioning.branch and not obj.repo.get_branch:
-            console.print("Current branch is detached.")
-        else:
-            console.log(
-                Markdown(
-                    f"Branch not specified at `build.versioning.branch` in _{DEFAULT_RUN_PROPERTIES_FILE_NAME}_, "
-                    f"falling back to git: _{obj.repo.get_branch}_"
-                )
-            )
-
-        if branch == main_branch:
-            console.log(f"On main branch ({branch}), cannot determine build status")
-            return
-
-    version = run_properties.versioning
-    revision = version.revision or obj.repo.get_sha
-    base_revision = obj.repo.base_revision
-    if tag:
-        console.print(Markdown(f"**Tag:** `{version.tag}` at `{revision}`. "))
-    else:
-        base_revision_specification = (
-            f"at `{base_revision}`"
-            if base_revision
-            else f"not present. Earliest revision: `{obj.repo.root_commit_hex}` (grafted)."
-        )
-        console.print(
-            Markdown(f"**Branch:** `{branch}`. Base {base_revision_specification}. ")
-        )
-
-    result = get_build_plan(
-        logger=logging.getLogger("mpyl"),
-        repo=obj.repo,
-        run_properties=run_properties,
-        cli_parameters=MpylCliParameters(local=sys.stdout.isatty()),
-    )
-    if result.run_plan:
-        console.print(
-            Markdown("**Execution plan:**  \n" + execution_plan_as_markdown(result))
-        )
-    else:
-        console.print("No changes detected, nothing to do.")
 
 
 class Pipeline(ParamType):
@@ -479,8 +419,8 @@ def pull(obj: CliContext, tag: str, pr_number: int, path: Path):
     if not target_branch:
         raise click.ClickException("Either --pr or --tag must be specified")
 
-    build_artifacts = _prepare_artifacts_repo(obj=obj, repo_path=path)
-    build_artifacts.pull(branch=_branch_name(target_branch, "cache"))
+    build_artifacts = prepare_artifacts_repo(obj=obj, repo_path=path)
+    build_artifacts.pull(branch=branch_name(target_branch, "cache"))
 
 
 @artifacts.command(help="Push build artifacts to remote artifact repository")
@@ -511,7 +451,7 @@ def push(obj: CliContext, tag: str, pr_number: int, path: Path, artifact_type: s
     if not target_branch:
         raise click.ClickException("Either --pr or --tag must be specified")
 
-    build_artifacts = _prepare_artifacts_repo(obj=obj, repo_path=path)
+    build_artifacts = prepare_artifacts_repo(obj=obj, repo_path=path)
     deploy_config = DeployConfig.from_config(obj.config)
 
     transformer = (
@@ -521,28 +461,9 @@ def push(obj: CliContext, tag: str, pr_number: int, path: Path, artifact_type: s
     )
 
     build_artifacts.push(
-        branch=_branch_name(target_branch, artifact_type),
+        branch=branch_name(target_branch, artifact_type),
         project_paths=obj.repo.find_projects(),
         path_transformer=transformer,
-    )
-
-
-def _branch_name(target: str, artifact_type: str) -> str:
-    return f"{target}-{artifact_type}"
-
-
-def _prepare_artifacts_repo(obj: CliContext, repo_path: Path) -> ArtifactsRepository:
-    git_config = obj.config["vcs"].get("artifactRepository", None)
-    if not git_config:
-        raise ValueError("No artifact repository configured")
-    artifact_repo_config: RepoConfig = RepoConfig.from_git_config(git_config=git_config)
-    logger = logging.getLogger("mpyl")
-
-    return ArtifactsRepository(
-        logger=logger,
-        codebase_repo=obj.repo,
-        artifact_repo_config=artifact_repo_config,
-        path_within_artifact_repo=repo_path,
     )
 
 
