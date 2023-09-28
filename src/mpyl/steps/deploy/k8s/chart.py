@@ -157,7 +157,7 @@ class DeploymentDefaults:
         )
 
 
-class ChartBuilder:  # pylint: disable = too-many-instance-attributes
+class ChartBuilder:
     step_input: Input
     project: Project
     mappings: dict[int, int]

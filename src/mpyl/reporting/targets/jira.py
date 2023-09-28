@@ -39,7 +39,7 @@ from ...steps.run import RunResult
 
 
 @dataclass(frozen=True)
-class JiraTicket:  # pylint: disable = too-many-instance-attributes
+class JiraTicket:
     jira_url: str
     ticket_id: str
     ticket_url: str

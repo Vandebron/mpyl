@@ -419,7 +419,8 @@ disable=raw-checker-failed,
         too-few-public-methods,
         logging-fstring-interpolation,
         missing-class-docstring,
-        missing-function-docstring
+        missing-function-docstring,
+        too-many-instance-attributes
 # TODO: re-enable documentation related lint checks
 
 
