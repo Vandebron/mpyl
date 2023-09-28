@@ -159,6 +159,8 @@ class TestKubernetesChart:
             "dockertest-ingress-1-whitelist",
             "prometheus-rule",
             "service-monitor",
+            "role",
+            "rolebinding",
         ],
     )
     def test_service_chart_roundtrip(self, template):
@@ -175,6 +177,8 @@ class TestKubernetesChart:
             "dockertest-ingress-1-whitelist",
             "prometheus-rule",
             "service-monitor",
+            "role",
+            "rolebinding",
         }
 
     def test_service_manifest_roundtrip(self):

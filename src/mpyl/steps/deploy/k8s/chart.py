@@ -725,7 +725,7 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
 
         if self.role:
             chart["role"] = self.to_role(self.role)
-            chart["role-binding"] = self.to_role_binding()
+            chart["rolebinding"] = self.to_role_binding()
 
         return chart
 
