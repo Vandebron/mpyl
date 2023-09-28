@@ -35,6 +35,11 @@ from kubernetes.client import (
     V1CronJobSpec,
     V1JobTemplateSpec,
     V1ConfigMap,
+    V1Role,
+    V1RoleBinding,
+    V1PolicyRule,
+    V1RoleRef,
+    V1Subject,
 )
 from ruamel.yaml import YAML
 
@@ -72,6 +77,7 @@ from ....project import (
     Alert,
     KeyValueRef,
     Metrics,
+    Role,
 )
 from ....stages.discovery import DeploySet
 from ....utilities.docker import DockerImageSpec
@@ -164,6 +170,7 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
     config_defaults: DeploymentDefaults
     deploy_set: Optional[DeploySet]
     namespace: str
+    role: Optional[Role]
 
     def __init__(self, step_input: Input, deploy_set: Optional[DeploySet] = None):
         self.step_input = step_input
@@ -192,6 +199,7 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
         self.namespace = get_namespace(
             run_properties=step_input.run_properties, project=project
         )
+        self.role = project.deployment.kubernetes.role
 
     def _to_labels(self) -> dict:
         run_properties = self.step_input.run_properties
@@ -495,6 +503,33 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
             image_pull_secrets=secrets,
         )
 
+    def to_role(self, role: Role) -> V1Role:
+        return V1Role(
+            api_version="rbac.authorization.k8s.io/v1",
+            kind="Role",
+            metadata=self._to_object_meta(),
+            rules=[V1PolicyRule(resources=role.resources, verbs=role.verbs)],
+        )
+
+    def to_role_binding(self) -> V1RoleBinding:
+        return V1RoleBinding(
+            api_version="rbac.authorization.k8s.io/v1",
+            kind="RoleBinding",
+            metadata=self._to_object_meta(),
+            role_ref=V1RoleRef(
+                api_group="rbac.authorization.k8s.io",
+                kind="Role",
+                name=self.release_name,
+            ),
+            subjects=[
+                V1Subject(
+                    kind="ServiceAccount",
+                    name=self.release_name,
+                    namespace=self.namespace,
+                )
+            ],
+        )
+
     def to_sealed_secrets(self) -> V1SealedSecret:
         secrets: dict[str, str] = {}
         for secret in self.sealed_secrets:
@@ -687,6 +722,10 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
 
         if self.sealed_secrets:
             chart["sealed-secrets"] = self.to_sealed_secrets()
+
+        if self.role:
+            chart["role"] = self.to_role(self.role)
+            chart["role-binding"] = self.to_role_binding()
 
         return chart
 
