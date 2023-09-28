@@ -25,7 +25,7 @@ class TestVersioning:
     test_resources_path = root_test_path / "test_resources"
     upgrades_path = test_resources_path / "upgrades"
     diff_path = upgrades_path / "diff"
-    latest_release_file = "test_project_1_0_11.yml"
+    latest_release_file = "test_project_1_3_1.yml"
 
     @staticmethod
     def __roundtrip(
@@ -68,7 +68,7 @@ class TestVersioning:
             PROJECT_UPGRADERS,
         )
 
-    def test_upgraded_should_match_test_config(self):
+    def test_upgraded_should_match_test_project(self):
         assert_roundtrip(
             self.upgrades_path / self.latest_release_file,
             (self.test_resources_path / "test_project.yml").read_text("utf-8"),
