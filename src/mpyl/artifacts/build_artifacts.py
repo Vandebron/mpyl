@@ -79,7 +79,9 @@ class ArtifactsRepository:
                 config=self.artifact_repo_config, repo_path=Path(tmp_repo_dir)
             ) as artifact_repo:
                 if not artifact_repo.remote_branch_exists(branch_name=branch):
-                    self.logger.info(f"Branch {branch} does not exist in remote")
+                    self.logger.info(
+                        f"Not pulling artifacts since branch {branch} does not exist in remote"
+                    )
                     return
 
                 self.logger.info(f"Fetching branch '{branch}' from remote")

@@ -66,7 +66,7 @@ class RepoCredentials:
     url: str
     ssh_url: str
     user_name: str
-    email: Optional[str]
+    email: str
     password: str
 
     @property
@@ -87,7 +87,7 @@ class RepoCredentials:
             url=url,
             ssh_url=ssh_url,
             user_name=config["userName"],
-            email=config.get("email"),
+            email=config["email"],
             password=config["password"],
         )
 
