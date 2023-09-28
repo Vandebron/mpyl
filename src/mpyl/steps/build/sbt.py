@@ -5,7 +5,7 @@
 from logging import Logger
 from typing import Optional
 
-from .docker_after_build import AfterBuildDocker
+from .post_docker_build import AfterBuildDocker
 from .. import Step, Meta
 from ...project import Stage, Target
 from ...steps.models import (
