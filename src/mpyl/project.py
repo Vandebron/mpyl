@@ -306,7 +306,7 @@ class Kubernetes:
     job: Optional[Job]
     image_pull_secrets: dict
     role: Optional[dict]
-    cmd: Optional[TargetProperty[str]]
+    command: Optional[TargetProperty[str]]
     args: Optional[TargetProperty[str]]
     labels: Optional[list[KeyValueProperty]]
 
@@ -321,7 +321,7 @@ class Kubernetes:
             job=Job.from_config(values.get("job", {})),
             image_pull_secrets=values.get("imagePullSecrets", {}),
             role=values.get("role"),
-            cmd=TargetProperty.from_config(values.get("cmd", {})),
+            command=TargetProperty.from_config(values.get("cmd", {})),
             args=TargetProperty.from_config(values.get("args", {})),
             labels=list(map(KeyValueProperty.from_config, values.get("labels", []))),
         )
