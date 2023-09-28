@@ -90,7 +90,6 @@ class DockerConfig:
     build_target: Optional[str]
     test_target: Optional[str]
     docker_file_name: str
-    build_env_file_name: str
 
     @staticmethod
     def from_dict(config: dict):
@@ -104,7 +103,6 @@ class DockerConfig:
                 build_target=build_config.get("buildTarget", None),
                 test_target=build_config.get("testTarget", None),
                 docker_file_name=build_config["dockerFileName"],
-                build_env_file_name=build_config.get("buildEnvFileName", ".buildenv"),
             )
         except KeyError as exc:
             raise KeyError(f"Docker config could not be loaded from {config}") from exc
