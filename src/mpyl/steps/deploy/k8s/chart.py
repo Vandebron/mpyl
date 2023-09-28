@@ -690,7 +690,7 @@ class ChartBuilder:
                 else None
             ),
             args=(
-                self.project.kubernetes.cmd.get_value(self.target).split(" ")
+                self.project.kubernetes.args.get_value(self.target).split(" ")
                 if self.project.kubernetes.args
                 else None
             ),
