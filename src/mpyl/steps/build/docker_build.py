@@ -19,7 +19,6 @@ to a folder named `$WORKDIR/target/test-reports/`.
 """
 
 from logging import Logger
-from typing import Optional
 
 from .post_docker_build import AfterBuildDocker
 from .. import Step, Meta
