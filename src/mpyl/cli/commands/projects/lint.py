@@ -1,4 +1,5 @@
 """Helper methods for linting projects for correctnessare can be found here"""
+import itertools
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -55,15 +56,16 @@ def _check_and_load_projects(
 
 def _assert_unique_project_names(console: Console, all_projects: list[Project]):
     console.print("")
+    console.print("Checking for duplicate project names: ")
     duplicates = [
         project.name for project in all_projects if all_projects.count(project) > 1
     ]
     if duplicates:
         console.print(
-            f"❌ Found {len(duplicates)} duplicate project names: {duplicates}"
+            f"  ❌ Found {len(duplicates)} duplicate project names: {duplicates}"
         )
         click.get_current_context().exit(1)
-    console.print("✅ No duplicate project names found")
+    console.print("  ✅ No duplicate project names found")
 
 
 @dataclass
@@ -80,11 +82,12 @@ def _assert_correct_project_linkup(
     pr_identifier: Optional[int],
 ):
     console.print("")
+    console.print("Checking namespace substitution: ")
     wrong_substitutions = __get_wrong_substitutions_per_project(
         all_projects, projects, pr_identifier, target
     )
     if len(wrong_substitutions) == 0:
-        console.print("✅ No wrong namespace substitutions found")
+        console.print("  ✅ No wrong namespace substitutions found")
     else:
         __detail_wrong_substitutions(console, all_projects, wrong_substitutions)
 
@@ -124,11 +127,50 @@ def __detail_wrong_substitutions(
         project.name.lower(): project.name for project in all_projects
     }
     for project in wrong_substitutions_per_project:
-        console.print(f"❌ Project {project.name} has wrong namespace substitutions:")
+        console.print(f"  ❌ Project {project.name} has wrong namespace substitutions:")
         for env, url in project.wrong_substitutions:
             unrecognized_project_name = url.split(".{namespace}")[0].split("/")[-1]
             suggestion = all_project_names.get(unrecognized_project_name.lower())
             console.print(
                 f"  {env} references unrecognized project {unrecognized_project_name}"
                 + (f" (did you mean {suggestion}?)" if suggestion else "")
+            )
+
+
+def _lint_whitelisting_rules(
+    console: Console,
+    projects: list[Project],
+    config: dict,
+    target: Target,
+):
+    console.print("")
+    console.print("Checking whitelisting rules: ")
+    defined_whitelists: set[str] = set(
+        map(lambda rule: rule["name"], config["whiteLists"]["addresses"])
+    )
+    wrong_whitelists: list[tuple[Project, set]] = []
+    for project in projects:
+        if project.deployment:
+            if traefik := project.deployment.traefik:
+                whitelists: set[str] = set(
+                    itertools.chain.from_iterable(
+                        [
+                            whitelist_property.get_value(target)
+                            for whitelist_property in [
+                                host.whitelists
+                                for host in traefik.hosts
+                                if host.whitelists is not None
+                            ]
+                            if whitelist_property.get_value(target) is not None
+                        ]
+                    )
+                )
+                if diff := whitelists.difference(defined_whitelists):
+                    wrong_whitelists.append((project, diff))
+    if len(wrong_whitelists) == 0:
+        console.print("  ✅ No undefined whitelists found")
+    else:
+        for project, diff in wrong_whitelists:
+            console.log(
+                f'  ❌ Project "{project.name}" has undefined whitelists: {diff}'
             )
