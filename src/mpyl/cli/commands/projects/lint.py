@@ -171,6 +171,4 @@ def _lint_whitelisting_rules(
         console.print("  ✅ No undefined whitelists found")
     else:
         for project, diff in wrong_whitelists:
-            console.log(
-                f'  ❌ Project "{project.name}" has undefined whitelists: {diff}'
-            )
+            console.log(f"  ❌ Project {project.name} has undefined whitelists: {diff}")
