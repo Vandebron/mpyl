@@ -213,8 +213,6 @@ class ChartBuilder:
             step_input.run_properties.config
         )
 
-        print(self.config_defaults.white_lists)
-
         self.deployment = project.deployment
         properties = self.deployment.properties
         self.env = properties.env if properties and properties.env else []
@@ -463,7 +461,6 @@ class ChartBuilder:
             address.name: address.host.get_value(self.target)
             for address in configured_addresses
         }
-        print(address_dictionary)
 
         def to_white_list(
             configured: Optional[TargetProperty[list[str]]],
