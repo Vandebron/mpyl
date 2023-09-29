@@ -22,4 +22,4 @@ spec:
     - pr-1234
   selector:
     matchLabels:
-      app.kubernetes.io/name: dockertest-service-monitor
+      app.kubernetes.io/name: dockertest

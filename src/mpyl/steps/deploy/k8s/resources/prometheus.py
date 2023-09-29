@@ -51,6 +51,7 @@ class V1ServiceMonitor(CustomResourceDefinition):
         metrics: Metrics,
         default_port: int,
         namespace: str,
+        release_name: str,
     ):
         super().__init__(
             api_version="monitoring.coreos.com/v1",
@@ -66,6 +67,6 @@ class V1ServiceMonitor(CustomResourceDefinition):
                     }
                 ],
                 "namespaceSelector": {"matchNames": [namespace]},
-                "selector": {"matchLabels": {"app.kubernetes.io/name": metadata.name}},
+                "selector": {"matchLabels": {"app.kubernetes.io/name": release_name}},
             },
         )
