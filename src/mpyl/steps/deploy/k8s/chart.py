@@ -454,12 +454,9 @@ class ChartBuilder:
             self.deployment.traefik.hosts if self.deployment.traefik else []
         )
 
-        configured_addresses = [
-            address for address in self.config_defaults.white_lists.addresses
-        ]
         address_dictionary = {
             address.name: address.host.get_value(self.target)
-            for address in configured_addresses
+            for address in self.config_defaults.white_lists.addresses
         }
 
         def to_white_list(
