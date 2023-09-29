@@ -94,4 +94,4 @@ def append_results(result: RunResult) -> None:
 
 def __get_other_project():
     stages = Stages(build=None, test=None, deploy=None, postdeploy=None)
-    return Project("test", "Test project", "", stages, [], None, None, None, None)
+    return Project("test", "Test project", "", stages, [], None, None, None)

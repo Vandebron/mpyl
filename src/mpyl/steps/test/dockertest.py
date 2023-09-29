@@ -79,7 +79,6 @@ class TestDocker(Step):
             image_tag=tag,
             target=test_target,
             registry_config=docker_registry_config,
-            build_args={},
         )
 
         if success:

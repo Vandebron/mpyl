@@ -393,26 +393,6 @@ class Docker:
 
 
 @dataclass(frozen=True)
-class BuildArgs:
-    plain: list[KeyValueProperty]
-
-    @staticmethod
-    def from_config(values: dict):
-        return BuildArgs(
-            plain=list(map(KeyValueProperty.from_config, values.get("plain", [])))
-        )
-
-
-@dataclass(frozen=True)
-class Build:
-    args: BuildArgs
-
-    @staticmethod
-    def from_config(values: dict):
-        return Build(args=BuildArgs.from_config(values.get("args", {})))
-
-
-@dataclass(frozen=True)
 class Deployment:
     namespace: Optional[str]
     properties: Properties
@@ -453,7 +433,6 @@ class Project:
     stages: Stages
     maintainer: list[str]
     docker: Optional[Docker]
-    build: Optional[Build]
     deployment: Optional[Deployment]
     dependencies: Optional[Dependencies]
 
@@ -543,7 +522,6 @@ class Project:
             stages=Stages.from_config(values.get("stages", {})),
             maintainer=values.get("maintainer", []),
             docker=Docker.from_config(docker_config) if docker_config else None,
-            build=Build.from_config(values.get("build", {})),
             deployment=Deployment.from_config(deployment) if deployment else None,
             dependencies=Dependencies.from_config(dependencies)
             if dependencies

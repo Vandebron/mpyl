@@ -233,7 +233,6 @@ def build(
     file_path: str,
     image_tag: str,
     target: str,
-    build_args: dict[str, str],
     registry_config: Optional[DockerRegistryConfig] = None,
 ) -> bool:
     """
@@ -243,7 +242,6 @@ def build(
     :param image_tag: the tag of the image
     :param target: the 'target' within the multi-stage docker image
     :param registry_config: optional docker config, used what type of cache to use if any
-    :param build_args: build arguments to supply to docker build
     :return: True for success, False for failure
     """
     logger.info(f"Building docker image with {file_path} and target {target}")
@@ -270,7 +268,6 @@ def build(
             stream_logs=True,
             cache_from=cache_from,
             cache_to=cache_to,
-            build_args=build_args if build_args else {},
         )
         if logs is not None and not isinstance(logs, Image):
             stream_docker_logging(
