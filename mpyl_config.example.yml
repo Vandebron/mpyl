@@ -62,11 +62,16 @@ whiteLists:
   default: [ "VPN" ]
   addresses:
     - name: "VPN"
-      values: [ "10.0.0.1" ]
+      all: [ "10.0.0.1" ]
     - name: 'Outside-World'
-      values: [ '0.0.0.0/0' ]
+      all: [ '0.0.0.0/0' ]
     - name: 'K8s-Test'
-      values: [ '1.2.3.0', '1.2.3.1' ]
+      all: [ '1.2.3.0', '1.2.3.1' ]
+    - name: 'TargetSpecificWhitelist'
+      pr: ['1.2.3.4']
+      test: ['1.2.3.4']
+      acceptance: ['2.3.4.5']
+      production: ['3.4.5.6']
 kubernetes:
   deployAction: KubectlManifest
   rancher:

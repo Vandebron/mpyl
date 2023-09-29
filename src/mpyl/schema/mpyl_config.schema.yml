@@ -58,11 +58,38 @@ definitions:
           additionalProperties: false
           required:
             - name
-            - values
+          oneOf:
+            - required:
+                - pr
+                - test
+                - acceptance
+                - production
+            - required:
+                - all
           properties:
             name:
               type: string
-            values:
+            pr:
+              type: array
+              items:
+                minItems: 1
+                type: string
+            test:
+              type: array
+              items:
+                minItems: 1
+                type: string
+            acceptance:
+              type: array
+              items:
+                minItems: 1
+                type: string
+            production:
+              type: array
+              items:
+                minItems: 1
+                type: string
+            all:
               type: array
               items:
                 minItems: 1
