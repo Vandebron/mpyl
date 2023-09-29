@@ -169,7 +169,7 @@ def lint(obj: ProjectsContext, extended):
             console=obj.cli.console,
             projects=loaded_projects,
             config=obj.cli.config,
-            target=Target.PULL_REQUEST,  # TODO: lint all targets?
+            target=Target.PULL_REQUEST,  # lint all targets?
         )
 
 
