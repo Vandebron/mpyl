@@ -507,7 +507,9 @@ class ChartBuilder:
             api_version="rbac.authorization.k8s.io/v1",
             kind="Role",
             metadata=self._to_object_meta(),
-            rules=[ChartBuilder._to_k8s_model(role, V1PolicyRule)],
+            rules=[
+                ChartBuilder._to_k8s_model({"apiGroups": [""]} | role, V1PolicyRule)
+            ],
         )
 
     def to_role_binding(self) -> V1RoleBinding:
