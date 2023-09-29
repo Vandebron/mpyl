@@ -115,6 +115,7 @@ deployment:
           pr:
             - "K8s-Test"
             - "VPN"
+            - "TargetSpecificWhitelist"
           test:
             - "K8s-Test"
             - "VPN"
