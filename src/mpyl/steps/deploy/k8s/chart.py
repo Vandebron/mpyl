@@ -377,6 +377,7 @@ class ChartBuilder:
                 project_name=self.release_name,
                 env_vars=get_env_variables(self.project, self.target),
                 spark=self._get_job().spark,
+                image=self._get_image(),
             ),
         )
 
