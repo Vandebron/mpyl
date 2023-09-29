@@ -89,7 +89,9 @@ def get_project_with_stages(stage_config: dict, path: str = "", maintainers=None
     if maintainers is None:
         maintainers = ["Team1", "Team2"]
     stages = Stages.from_config(stage_config)
-    return Project("test", "Test project", path, stages, maintainers, None, None, None)
+    return Project(
+        "test", "Test project", path, stages, maintainers, None, None, None, None
+    )
 
 
 class MockRepository(Repository):

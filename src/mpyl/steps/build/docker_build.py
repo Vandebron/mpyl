@@ -20,7 +20,7 @@ to a folder named `$WORKDIR/target/test-reports/`.
 
 from logging import Logger
 
-from .docker_after_build import AfterBuildDocker
+from .post_docker_build import AfterBuildDocker
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType, input_to_artifact
 from ...constants import BUILD_ARTIFACTS_FOLDER
@@ -71,6 +71,19 @@ class BuildDocker(Step):
             # log in to registry, because we may need to pull in a base image
             login(logger=self._logger, registry_config=docker_registry_config)
 
+        with open(".dockerignore", "w+", encoding="utf-8") as ignore_file:
+            contents = "\n".join(DOCKER_IGNORE_DEFAULT)
+            ignore_file.write(contents)
+
+        build_args: dict[str, str] = (
+            {
+                arg.key: arg.get_value(step_input.run_properties.target)
+                for arg in step_input.project.build.args.plain
+            }
+            if step_input.project.build
+            else {}
+        )
+
         success = build(
             logger=self._logger,
             root_path=docker_config.root_folder,
@@ -78,14 +91,11 @@ class BuildDocker(Step):
             image_tag=image_tag,
             target=build_target,
             registry_config=docker_registry_config,
+            build_args=build_args,
         )
         artifact = input_to_artifact(
             ArtifactType.DOCKER_IMAGE, step_input, spec=DockerImageSpec(image=image_tag)
         )
-
-        with open(".dockerignore", "w+", encoding="utf-8") as ignore_file:
-            contents = "\n".join(DOCKER_IGNORE_DEFAULT)
-            ignore_file.write(contents)
 
         if success:
             return Output(

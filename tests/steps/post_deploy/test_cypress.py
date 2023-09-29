@@ -24,10 +24,10 @@ class TestCypress:
             stages=stages,
             maintainer=[],
             docker=None,
+            build=None,
             deployment=None,
             dependencies=Dependencies.from_config({"postdeploy": []}),
         )
-
         with pytest.raises(ExecutionException) as exc_info:
             self.executor.execute(stage=Stage.POST_DEPLOY, project=project)
 
