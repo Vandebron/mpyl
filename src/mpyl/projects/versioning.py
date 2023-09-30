@@ -164,6 +164,24 @@ PROJECT_UPGRADERS = [
 ]
 
 
+class ConfigUpgraderOne31(Upgrader):
+    target_version = "1.3.0"
+
+    def upgrade(self, previous_dict: ordereddict) -> ordereddict:
+        whitelists = previous_dict.get("whiteLists", {})
+        existing_addresses = whitelists.get("addresses")
+        if existing_addresses:
+            whitelists.pop("addresses")
+            new_addresses = list(
+                address
+                if address.get("values") is None
+                else {"name": address["name"], "all": address["values"]}
+                for address in existing_addresses
+            )
+            previous_dict["whiteLists"].insert(1, "addresses", new_addresses)
+        return previous_dict
+
+
 class ConfigUpgraderOne30(Upgrader):
     target_version = "1.3.0"
 
@@ -199,7 +217,12 @@ class ConfigUpgraderOne8(Upgrader):
         return previous_dict
 
 
-CONFIG_UPGRADERS = [ConfigUpgraderOne8(), ConfigUpgraderOne9(), ConfigUpgraderOne30()]
+CONFIG_UPGRADERS = [
+    ConfigUpgraderOne8(),
+    ConfigUpgraderOne9(),
+    ConfigUpgraderOne30(),
+    ConfigUpgraderOne31(),
+]
 
 
 class PropertiesUpgraderOne30(Upgrader):
