@@ -231,9 +231,8 @@ It can be started from the command line with `dagit --workspace workspace.yml`.
 
 #### Docker images
 
-Docker image layers built in previous runs can be used to as a cache for subsequent runs. An external cache source can
-be
-configured in `mpyl_config.yml` as follows:
+Docker image layers built in previous runs can be used as a cache for subsequent runs. An external cache source can
+be configured in `mpyl_config.yml` as follows:
 
 ```yaml
 docker:
@@ -252,7 +251,7 @@ The docker cache can be used in both the `mpyl.steps.build.dockerbuild` and `mpy
 
 #### Artifacts
 
-MPyL's artifact metadata is stored in hidden the `.mpyl` folders next to `project.yml`. 
+MPyL's artifact metadata is stored in the hidden `.mpyl` folders next to `project.yml`. 
 These folders are used to cache information about (intermediate) build results. 
 A typical `.mpyl` folder has a file for each executed stage. The `BUILD.yml` file contains the metadata for the
 build step. For example:
