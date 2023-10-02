@@ -12,7 +12,7 @@ spec:
     restartPolicy:
       type: Never
     sparkConfigMap: sparkjob
-    image: bigdataregistry.azurecr.io/send-slack-notification:PR-1231
+    image: registry/image:123
     arguments:
     - python
     - -m

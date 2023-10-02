@@ -112,6 +112,16 @@ class Upgrader(ABC):
         return previous_dict
 
 
+class ProjectUpgraderOne31(Upgrader):
+    target_version = "1.3.1"
+
+    def upgrade(self, previous_dict: ordereddict) -> ordereddict:
+        if kubernetes := previous_dict.get("deployment", {}).get("kubernetes", {}):
+            if "cmd" in kubernetes:
+                kubernetes["command"] = kubernetes.pop("cmd")
+        return previous_dict
+
+
 class ProjectUpgraderOne11(Upgrader):
     target_version = "1.0.11"
 
@@ -150,6 +160,7 @@ PROJECT_UPGRADERS = [
     ProjectUpgraderOne9(),
     ProjectUpgraderOne10(),
     ProjectUpgraderOne11(),
+    ProjectUpgraderOne31(),
 ]
 
 

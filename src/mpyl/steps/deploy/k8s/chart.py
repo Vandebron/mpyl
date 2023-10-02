@@ -35,6 +35,11 @@ from kubernetes.client import (
     V1CronJobSpec,
     V1JobTemplateSpec,
     V1ConfigMap,
+    V1Role,
+    V1RoleBinding,
+    V1PolicyRule,
+    V1RoleRef,
+    V1Subject,
 )
 from ruamel.yaml import YAML
 
@@ -151,7 +156,7 @@ class DeploymentDefaults:
         )
 
 
-class ChartBuilder:  # pylint: disable = too-many-instance-attributes
+class ChartBuilder:
     step_input: Input
     project: Project
     mappings: dict[int, int]
@@ -164,6 +169,7 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
     config_defaults: DeploymentDefaults
     deploy_set: Optional[DeploySet]
     namespace: str
+    role: Optional[dict]
 
     def __init__(self, step_input: Input, deploy_set: Optional[DeploySet] = None):
         self.step_input = step_input
@@ -192,6 +198,7 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
         self.namespace = get_namespace(
             run_properties=step_input.run_properties, project=project
         )
+        self.role = project.kubernetes.role
 
     def _to_labels(self) -> dict:
         run_properties = self.step_input.run_properties
@@ -370,6 +377,7 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
                 project_name=self.release_name,
                 env_vars=get_env_variables(self.project, self.target),
                 spark=self._get_job().spark,
+                image=self._get_image(),
             ),
         )
 
@@ -493,6 +501,35 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
             kind="ServiceAccount",
             metadata=self._to_object_meta(),
             image_pull_secrets=secrets,
+        )
+
+    def to_role(self, role: dict) -> V1Role:
+        return V1Role(
+            api_version="rbac.authorization.k8s.io/v1",
+            kind="Role",
+            metadata=self._to_object_meta(),
+            rules=[
+                ChartBuilder._to_k8s_model({"apiGroups": [""]} | role, V1PolicyRule)
+            ],
+        )
+
+    def to_role_binding(self) -> V1RoleBinding:
+        return V1RoleBinding(
+            api_version="rbac.authorization.k8s.io/v1",
+            kind="RoleBinding",
+            metadata=self._to_object_meta(),
+            role_ref=V1RoleRef(
+                api_group="rbac.authorization.k8s.io",
+                kind="Role",
+                name=self.release_name,
+            ),
+            subjects=[
+                V1Subject(
+                    kind="ServiceAccount",
+                    name=self.release_name,
+                    namespace=self.namespace,
+                )
+            ],
         )
 
     def to_sealed_secrets(self) -> V1SealedSecret:
@@ -650,6 +687,16 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
             ),
             liveness_probe=liveness_probe,
             startup_probe=startup_probe,
+            command=(
+                self.project.kubernetes.command.get_value(self.target).split(" ")
+                if self.project.kubernetes.command
+                else None
+            ),
+            args=(
+                self.project.kubernetes.args.get_value(self.target).split(" ")
+                if self.project.kubernetes.args
+                else None
+            ),
         )
 
         instances = resources.instances if resources.instances else defaults.instances
@@ -687,6 +734,10 @@ class ChartBuilder:  # pylint: disable = too-many-instance-attributes
 
         if self.sealed_secrets:
             chart["sealed-secrets"] = self.to_sealed_secrets()
+
+        if self.role:
+            chart["role"] = self.to_role(self.role)
+            chart["rolebinding"] = self.to_role_binding()
 
         return chart
 

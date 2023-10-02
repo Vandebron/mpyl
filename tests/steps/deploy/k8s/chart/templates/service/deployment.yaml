@@ -41,7 +41,10 @@ spec:
       name: dockertest
     spec:
       containers:
-      - env:
+      - command:
+        - script.sh
+        - --opt
+        env:
         - name: SOME_ENV
           value: PullRequest
         - name: WITH_NAMESPACE

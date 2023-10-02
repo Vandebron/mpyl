@@ -305,6 +305,10 @@ class Kubernetes:
     resources: Resources
     job: Optional[Job]
     image_pull_secrets: dict
+    role: Optional[dict]
+    command: Optional[TargetProperty[str]]
+    args: Optional[TargetProperty[str]]
+    labels: Optional[list[KeyValueProperty]]
 
     @staticmethod
     def from_config(values: dict):
@@ -316,6 +320,10 @@ class Kubernetes:
             resources=Resources.from_config(values.get("resources", {})),
             job=Job.from_config(values.get("job", {})),
             image_pull_secrets=values.get("imagePullSecrets", {}),
+            role=values.get("role"),
+            command=TargetProperty.from_config(values.get("command", {})),
+            args=TargetProperty.from_config(values.get("args", {})),
+            labels=list(map(KeyValueProperty.from_config, values.get("labels", []))),
         )
 
 

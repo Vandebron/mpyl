@@ -159,6 +159,8 @@ class TestKubernetesChart:
             "dockertest-ingress-1-whitelist",
             "prometheus-rule",
             "service-monitor",
+            "role",
+            "rolebinding",
         ],
     )
     def test_service_chart_roundtrip(self, template):
@@ -175,6 +177,8 @@ class TestKubernetesChart:
             "dockertest-ingress-1-whitelist",
             "prometheus-rule",
             "service-monitor",
+            "role",
+            "rolebinding",
         }
 
     def test_service_manifest_roundtrip(self):
@@ -232,7 +236,10 @@ class TestKubernetesChart:
         chart = to_cron_job_chart(builder)
         self._roundtrip(self.template_path / "cronjob", "cronjob", chart)
 
-    @pytest.mark.parametrize("template", ["spark", "service-account", "config-map"])
+    @pytest.mark.parametrize(
+        "template",
+        ["spark", "service-account", "config-map", "role", "rolebinding"],
+    )
     def test_spark_chart_roundtrip(self, template):
         builder = self._get_builder(get_spark_project())
         chart = to_spark_job_chart(builder)
