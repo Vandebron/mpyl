@@ -165,12 +165,13 @@ def lint(obj: ProjectsContext, extended):
             all_projects=all_projects,
             pr_identifier=123,
         )
-        _lint_whitelisting_rules(
-            console=obj.cli.console,
-            projects=loaded_projects,
-            config=obj.cli.config,
-            target=Target.PULL_REQUEST,  # lint all targets?
-        )
+        for target in Target:
+            _lint_whitelisting_rules(
+                console=obj.cli.console,
+                projects=loaded_projects,
+                config=obj.cli.config,
+                target=target,
+            )
 
 
 @projects.command(help="Upgrade projects to conform with the latest schema")

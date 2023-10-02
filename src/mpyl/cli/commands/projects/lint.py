@@ -144,7 +144,7 @@ def _lint_whitelisting_rules(
     target: Target,
 ):
     console.print("")
-    console.print("Checking whitelisting rules: ")
+    console.print(f"Checking whitelisting rules for target {target}: ")
     defined_whitelists: set[str] = set(
         map(lambda rule: rule["name"], config["whiteLists"]["addresses"])
     )
