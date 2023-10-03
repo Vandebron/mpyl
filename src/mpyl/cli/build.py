@@ -439,7 +439,7 @@ def pull(obj: CliContext, tag: str, pr_number: int, path: Path):
     "--artifact-type",
     "-a",
     type=click.Choice(["cache", "manifests"]),
-    help="The type of artifact to store",
+    help="The type of artifact to store. Either build metadata from `.mpyl` folders or k8s manifests",
     required=True,
 )
 @click.pass_obj
