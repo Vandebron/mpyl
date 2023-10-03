@@ -6,7 +6,7 @@ from click.testing import CliRunner
 
 from mpyl.steps.build import STAGE_NAME
 from src.mpyl import main_group, add_commands
-from src.mpyl.cli.commands.build.build import run_build
+from src.mpyl.build import run_build
 from src.mpyl.project import Stage
 from src.mpyl.steps import Step, Meta, ArtifactType, Input, Output
 from src.mpyl.steps.run import RunResult
