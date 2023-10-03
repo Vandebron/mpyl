@@ -130,13 +130,44 @@ class ResourceDefaults:
 
 
 @dataclass(frozen=True)
+class DefaultWhitelistAddress:
+    name: str
+    host: TargetProperty[list[str]]
+
+    @staticmethod
+    def from_config(values: dict):
+        return DefaultWhitelistAddress(
+            name=values["name"],
+            host=TargetProperty.from_config(values),
+        )
+
+
+@dataclass(frozen=True)
+class DefaultWhitelists:
+    default: list[str]
+    addresses: list[DefaultWhitelistAddress]
+
+    @staticmethod
+    def from_config(values: dict):
+        if values is None:
+            return None
+        return DefaultWhitelists(
+            default=values["default"],
+            addresses=[
+                DefaultWhitelistAddress.from_config(address)
+                for address in values["addresses"]
+            ],
+        )
+
+
+@dataclass(frozen=True)
 class DeploymentDefaults:
     resources_defaults: ResourceDefaults
     liveness_probe_defaults: dict
     startup_probe_defaults: dict
     job_defaults: dict
     traefik_defaults: dict
-    white_lists: dict
+    white_lists: DefaultWhitelists
     image_pull_secrets: dict
 
     @staticmethod
@@ -151,7 +182,7 @@ class DeploymentDefaults:
             startup_probe_defaults=kubernetes["startupProbe"],
             job_defaults=kubernetes.get("job", {}),
             traefik_defaults=deployment_values.get("traefik", {}),
-            white_lists=config.get("whiteLists", {}),
+            white_lists=DefaultWhitelists.from_config(config.get("whiteLists", {})),
             image_pull_secrets=kubernetes.get("imagePullSecrets", {}),
         )
 
@@ -423,15 +454,15 @@ class ChartBuilder:
             self.deployment.traefik.hosts if self.deployment.traefik else []
         )
 
-        configured_addresses = self.config_defaults.white_lists["addresses"]
         address_dictionary = {
-            address["name"]: address["values"] for address in configured_addresses
+            address.name: address.host.get_value(self.target)
+            for address in self.config_defaults.white_lists.addresses
         }
 
         def to_white_list(
             configured: Optional[TargetProperty[list[str]]],
         ) -> dict[str, list[str]]:
-            white_lists = self.config_defaults.white_lists["default"].copy()
+            white_lists = self.config_defaults.white_lists.default
             if configured and configured.get_value(self.target):
                 white_lists.extend(configured.get_value(self.target))
 
