@@ -1,14 +1,9 @@
-"""Github related utility methods"""
-import logging
+"""GitHub related utility methods"""
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Optional
 
 from github.PullRequest import PullRequest
 from github.Repository import Repository
-
-from ..repo import RepoConfig
-from ..subprocess import custom_check_output
 
 
 @dataclass
