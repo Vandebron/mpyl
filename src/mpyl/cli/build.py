@@ -460,8 +460,11 @@ def push(obj: CliContext, tag: str, pr_number: int, path: Path, artifact_type: s
         else BuildCacheTransformer()
     )
 
+    message = f"Revision {obj.repo.get_sha} {f'at {obj.repo.remote_url}' if obj.repo.remote_url else ''}"
+
     build_artifacts.push(
         branch=branch_name(target_branch, artifact_type),
+        message=message,
         project_paths=obj.repo.find_projects(),
         path_transformer=transformer,
     )

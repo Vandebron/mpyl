@@ -15,6 +15,10 @@ from ..utilities.repo import Repository, RepoConfig
 
 class PathTransformer(ABC):
     @abc.abstractmethod
+    def artifact_type(self) -> str:
+        pass
+
+    @abc.abstractmethod
     def transform_for_read(self, project_path: str) -> Path:
         pass
 
@@ -24,6 +28,9 @@ class PathTransformer(ABC):
 
 
 class BuildCacheTransformer(PathTransformer):
+    def artifact_type(self) -> str:
+        return "build_artifacts"
+
     def transform_for_read(self, project_path: str) -> Path:
         return Path(
             project_path.replace(
@@ -37,6 +44,9 @@ class BuildCacheTransformer(PathTransformer):
 
 class ManifestPathTransformer(PathTransformer):
     deploy_config: DeployConfig
+
+    def artifact_type(self) -> str:
+        return "manifests"
 
     def __init__(self, deploy_config: DeployConfig):
         self.deploy_config = deploy_config
@@ -96,6 +106,7 @@ class ArtifactsRepository:
     def push(
         self,
         branch: str,
+        message: str,
         project_paths: list[str],
         path_transformer: PathTransformer,
     ) -> None:
@@ -120,7 +131,7 @@ class ArtifactsRepository:
                     return
 
                 artifact_repo.stage(".")
-                artifact_repo.commit("test")
+                artifact_repo.commit(message)
                 artifact_repo.push(branch)
                 self.logger.info(
                     f"Pushed {branch} with {copied_paths} copied paths to {artifact_repo.remote_url}"

@@ -25,6 +25,9 @@ class TestTransformer(PathTransformer):
     def __init__(self, root_folder):
         self.root_folder = root_folder
 
+    def artifact_type(self) -> str:
+        return "test_type"
+
     def transform_for_read(self, project_path: str) -> Path:
         return Path(self.root_folder, project_path).parent
 
@@ -95,6 +98,7 @@ class TestArtifacts:
         projects = repository.find_projects()
         self.artifacts.push(
             branch="test/build-artifacts",
+            message="test message",
             project_paths=projects,
             path_transformer=BuildCacheTransformer(),
         )
