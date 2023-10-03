@@ -148,26 +148,25 @@ def _lint_whitelisting_rules(
     defined_whitelists: set[str] = set(
         map(lambda rule: rule["name"], config["whiteLists"]["addresses"])
     )
-    projects_with_traefik_config = [
-        p for p in projects if p.deployment and p.deployment.traefik
-    ]
     wrong_whitelists: list[tuple[Project, set]] = []
-    for project in projects_with_traefik_config:
-        whitelists: set[str] = set(
-            itertools.chain.from_iterable(
-                [
-                    whitelist_property.get_value(target)
-                    for whitelist_property in [
-                        host.whitelists
-                        for host in project.deployment.traefik.hosts
-                        if host.whitelists is not None
-                    ]
-                    if whitelist_property.get_value(target) is not None
-                ]
-            )
-        )
-        if diff := whitelists.difference(defined_whitelists):
-            wrong_whitelists.append((project, diff))
+    for project in projects:
+        if project.deployment:
+            if traefik := project.deployment.traefik:
+                whitelists: set[str] = set(
+                    itertools.chain.from_iterable(
+                        [
+                            whitelist_property.get_value(target)
+                            for whitelist_property in [
+                                host.whitelists
+                                for host in traefik.hosts
+                                if host.whitelists is not None
+                            ]
+                            if whitelist_property.get_value(target) is not None
+                        ]
+                    )
+                )
+                if diff := whitelists.difference(defined_whitelists):
+                    wrong_whitelists.append((project, diff))
     if len(wrong_whitelists) == 0:
         console.print("  ✅ No undefined whitelists found")
     else:
