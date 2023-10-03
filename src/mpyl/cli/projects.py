@@ -20,6 +20,7 @@ from ..cli.commands.projects.lint import (
     _check_and_load_projects,
     _assert_unique_project_names,
     _assert_correct_project_linkup,
+    _lint_whitelisting_rules,
 )
 from ..cli.commands.projects.upgrade import check_upgrade
 from ..constants import DEFAULT_CONFIG_FILE_NAME
@@ -130,7 +131,7 @@ def show_project(ctx, name):
     "-e",
     "extended",
     is_flag=True,
-    help="Enable extra validations like PR namespace linkup",
+    help="Enable extra validations like PR namespace linkup or whitelisting rules check",
 )
 @click.pass_obj
 def lint(obj: ProjectsContext, extended):
@@ -155,6 +156,8 @@ def lint(obj: ProjectsContext, extended):
         all_projects=all_projects,
     )
     if extended:
+        obj.cli.console.print("")
+        obj.cli.console.print("Running extended checks...")
         _assert_correct_project_linkup(
             console=obj.cli.console,
             target=Target.PULL_REQUEST,
@@ -162,6 +165,13 @@ def lint(obj: ProjectsContext, extended):
             all_projects=all_projects,
             pr_identifier=123,
         )
+        for target in Target:
+            _lint_whitelisting_rules(
+                console=obj.cli.console,
+                projects=loaded_projects,
+                config=obj.cli.config,
+                target=target,
+            )
 
 
 @projects.command(help="Upgrade projects to conform with the latest schema")
