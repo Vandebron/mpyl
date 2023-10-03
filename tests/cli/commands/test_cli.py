@@ -1,4 +1,4 @@
-import os
+import platform
 import re
 
 import pytest
@@ -75,14 +75,16 @@ class TestCli:
             main_group,
             ["version"],
         )
-        regex = r"MPyL \d+\.\d+\.\d+"
-        if "GITHUB_JOB" in os.environ:
+
+        if platform.system() == "Darwin":
+            regex = r"MPyL \d+\.\d+\.\d+"
+        else:
             regex = r"MPyL \(local\)"
 
         assert re.match(regex, result.output)
 
     @pytest.mark.skipif(
-        condition="GITHUB_JOB" in os.environ,
+        condition=platform.system() != "Darwin",
         reason="mpyl distribution is not available in github action",
     )
     def test_verbose_version_print(self):
