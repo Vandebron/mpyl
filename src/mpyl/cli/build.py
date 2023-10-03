@@ -25,12 +25,12 @@ from . import (
 )
 from . import create_console_logger
 from .commands.build.artifacts import prepare_artifacts_repo, branch_name
-from .commands.build.build import print_status, run_mpyl
 from .commands.build.jenkins import JenkinsRunParameters, run_jenkins, get_token
 from ..artifacts.build_artifacts import (
     ManifestPathTransformer,
     BuildCacheTransformer,
 )
+from ..build import print_status, run_mpyl
 from ..constants import (
     DEFAULT_CONFIG_FILE_NAME,
     DEFAULT_RUN_PROPERTIES_FILE_NAME,

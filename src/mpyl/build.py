@@ -10,20 +10,20 @@ from rich.console import Console
 from rich.logging import RichHandler
 from rich.markdown import Markdown
 
-from ....cli import CliContext, MpylCliParameters
-from ....constants import DEFAULT_RUN_PROPERTIES_FILE_NAME
-from ....project import Stage, Project, load_project
-from ....reporting.formatting.markdown import (
+from .cli import CliContext, MpylCliParameters
+from .constants import DEFAULT_RUN_PROPERTIES_FILE_NAME
+from .project import Stage, Project, load_project
+from .reporting.formatting.markdown import (
     execution_plan_as_markdown,
     run_result_to_markdown,
 )
-from ....reporting.targets import Reporter
-from ....stages.discovery import for_stage, find_invalidated_projects_per_stage
-from ....steps.collection import StepsCollection
-from ....steps.models import RunProperties
-from ....steps.run import RunResult
-from ....steps.steps import Steps, ExecutionException
-from ....utilities.repo import Revision, Repository, RepoConfig
+from .reporting.targets import Reporter
+from .stages.discovery import for_stage, find_invalidated_projects_per_stage
+from .steps.collection import StepsCollection
+from .steps.models import RunProperties
+from .steps.run import RunResult
+from .steps.steps import Steps, ExecutionException
+from .utilities.repo import Revision, Repository, RepoConfig
 
 
 def print_status(obj: CliContext):
