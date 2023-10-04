@@ -3,6 +3,7 @@ import itertools
 import os
 from concurrent.futures import ProcessPoolExecutor, Future
 from logging import Logger
+from tempfile import TemporaryDirectory
 
 from python_on_whales import docker, Container, DockerException
 
@@ -12,6 +13,7 @@ from ...project import Stage, Target
 from ...utilities.cypress import CypressConfig
 from ...utilities.docker import execute_with_stream
 from ...utilities.junit import JunitTestSpec
+from ...utilities.subprocess import custom_check_output
 
 
 class CypressTest(Step):
@@ -48,85 +50,90 @@ class CypressTest(Step):
         else:
             raise ValueError("No cypress specs are defined in the project dependencies")
 
-        docker_container = self._get_docker_container(volume_path, cypress_config)
-        reports_folder = f"reports/{step_input.project.name}"
-        artifact = input_to_artifact(
-            artifact_type=ArtifactType.JUNIT_TESTS,
-            step_input=step_input,
-            spec=JunitTestSpec(test_output_path=f"{volume_path}/{reports_folder}"),
-        )
-        try:
-            self._run_container_preparation_steps(
-                docker_container, step_input, reports_folder
+        with TemporaryDirectory(prefix=os.path.expanduser("~/.kube/")) as tmp_dir:
+            docker_container = self._get_docker_container(volume_path, tmp_dir)
+            reports_folder = f"reports/{step_input.project.name}"
+            artifact = input_to_artifact(
+                artifact_type=ArtifactType.JUNIT_TESTS,
+                step_input=step_input,
+                spec=JunitTestSpec(test_output_path=f"{volume_path}/{reports_folder}"),
             )
-            record_key = cypress_config.record_key
-            run_command = ""
+            try:
+                self._run_container_preparation_steps(
+                    docker_container, step_input, reports_folder
+                )
+                record_key = cypress_config.record_key
+                run_command = ""
 
-            if record_key:
-                ci_build_id = f"{cypress_config.ci_build_id}-{step_input.project.name}"
-                machines = [1, 2, 3, 4]
-                threads: list[Future] = []
-
-                for machine in machines:
-                    run_command = (
-                        f'bash -c "Xvfb :10{machine} & XDG_CONFIG_HOME=/tmp/cyhome{machine} '
-                        f"DISPLAY=:10{machine}  yarn cypress run --spec {specs_string} --ci-build-id "
-                        f"{ci_build_id} --parallel --reporter-options "
-                        f'"mochaFile={reports_folder}/[hash].xml" --record --key '
-                        'b6a2aab1-0b80-4ca0-a56c-1c8d98a8189c || true "'
+                if record_key:
+                    ci_build_id = (
+                        f"{cypress_config.ci_build_id}-{step_input.project.name}"
                     )
-                    executor = ProcessPoolExecutor(max_workers=len(machines))
-                    threads.append(
-                        executor.submit(
-                            execute_with_stream,
-                            logger=self._logger,
-                            container=docker_container,
-                            command=run_command,
-                            task_name="Running cypress tests parallel",
-                            multiprocess=True,
+                    machines = [1, 2, 3, 4]
+                    threads: list[Future] = []
+
+                    for machine in machines:
+                        run_command = (
+                            f'bash -c "Xvfb :10{machine} & XDG_CONFIG_HOME=/tmp/cyhome{machine} '
+                            f"DISPLAY=:10{machine}  yarn cypress run --spec {specs_string} --ci-build-id "
+                            f"{ci_build_id} --parallel --reporter-options "
+                            f'"mochaFile={reports_folder}/[hash].xml" --record --key '
+                            'b6a2aab1-0b80-4ca0-a56c-1c8d98a8189c || true "'
+                        )
+                        executor = ProcessPoolExecutor(max_workers=len(machines))
+                        threads.append(
+                            executor.submit(
+                                execute_with_stream,
+                                logger=self._logger,
+                                container=docker_container,
+                                command=run_command,
+                                task_name="Running cypress tests parallel",
+                                multiprocess=True,
+                            )
+                        )
+
+                    result: list[str] = list(
+                        itertools.chain.from_iterable(
+                            [thread.result() for thread in threads]
                         )
                     )
-
-                result: list[str] = list(
-                    itertools.chain.from_iterable(
-                        [thread.result() for thread in threads]
+                else:
+                    run_command = (
+                        f'bash -c "yarn cypress run --spec {specs_string} --reporter-options '
+                        f'mochaFile="{reports_folder}/[hash].xml" || true"'
                     )
-                )
-            else:
-                run_command = (
-                    f'bash -c "yarn cypress run --spec {specs_string} --reporter-options '
-                    f'mochaFile="{reports_folder}/[hash].xml" || true"'
-                )
-                result = execute_with_stream(
-                    logger=self._logger,
-                    container=docker_container,
-                    command=run_command,
-                    task_name="Running cypress tests",
-                )
-
-            for stdout in result:
-                if record_key and "Recorded Run" in stdout:
-                    artifact = input_to_artifact(
-                        artifact_type=ArtifactType.JUNIT_TESTS,
-                        step_input=step_input,
-                        spec=JunitTestSpec(
-                            test_output_path=f"{volume_path}/{reports_folder}",
-                            test_results_url=stdout.rstrip().rsplit(
-                                "Recorded Run: ", 1
-                            )[1],
-                        ),
+                    result = execute_with_stream(
+                        logger=self._logger,
+                        container=docker_container,
+                        command=run_command,
+                        task_name="Running cypress tests",
                     )
-                if "error Command failed with exit code" in stdout:
-                    raise DockerException(command_launched=[run_command], return_code=1)
-        except DockerException:
-            return Output(
-                success=False,
-                message=f"Cypress tests for project {step_input.project.name} have one or more failures",
-                produced_artifact=artifact,
-            )
-        finally:
-            docker_container.stop()
-            docker_container.remove()
+
+                for stdout in result:
+                    if record_key and "Recorded Run" in stdout:
+                        artifact = input_to_artifact(
+                            artifact_type=ArtifactType.JUNIT_TESTS,
+                            step_input=step_input,
+                            spec=JunitTestSpec(
+                                test_output_path=f"{volume_path}/{reports_folder}",
+                                test_results_url=stdout.rstrip().rsplit(
+                                    "Recorded Run: ", 1
+                                )[1],
+                            ),
+                        )
+                    if "error Command failed with exit code" in stdout:
+                        raise DockerException(
+                            command_launched=[run_command], return_code=1
+                        )
+            except DockerException:
+                return Output(
+                    success=False,
+                    message=f"Cypress tests for project {step_input.project.name} have one or more failures",
+                    produced_artifact=artifact,
+                )
+            finally:
+                docker_container.stop()
+                docker_container.remove()
 
         return Output(
             success=True,
@@ -134,16 +141,22 @@ class CypressTest(Step):
             produced_artifact=artifact,
         )
 
-    @staticmethod
-    def _get_docker_container(
-        volume_path: str, cypress_config: CypressConfig
-    ) -> Container:
+    def _get_docker_container(self, volume_path: str, tmp_dir: str) -> Container:
         custom_image_tag = "mpyl/cypress"
         docker.build(
             context_path=volume_path,
             tags=[custom_image_tag],
             file=f"{volume_path}/Dockerfile-mpyl",
         )
+        merged_config = custom_check_output(
+            self._logger,
+            ["kubectl", "config", "view", "--flatten"],
+            capture_stdout=True,
+        )
+        tmp_config_file = os.path.join(tmp_dir, "config")
+        with open(file=tmp_config_file, mode="w+", encoding="utf-8") as config_file:
+            config_file.write(merged_config.message)
+
         docker_container = docker.run(
             image=custom_image_tag,
             interactive=True,
@@ -151,7 +164,7 @@ class CypressTest(Step):
             volumes=[
                 (volume_path, "/cypress"),
                 (
-                    os.path.expanduser(cypress_config.kubectl_config_path),
+                    os.path.expanduser(tmp_config_file),
                     "/root/.kube/config",
                 ),
             ],
