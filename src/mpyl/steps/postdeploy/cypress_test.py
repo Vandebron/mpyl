@@ -153,10 +153,11 @@ class CypressTest(Step):
             ["kubectl", "config", "view", "--flatten"],
             capture_stdout=True,
         )
-        tmp_config_file = os.path.join(tmp_dir, "config")
+        tmp_config_file = os.path.join(tmp_dir, "config.yaml")
         with open(file=tmp_config_file, mode="w+", encoding="utf-8") as config_file:
             config_file.write(merged_config.message)
 
+        config_location = "/root/.kube/config.yaml"
         docker_container = docker.run(
             image=custom_image_tag,
             interactive=True,
@@ -165,9 +166,10 @@ class CypressTest(Step):
                 (volume_path, "/cypress"),
                 (
                     os.path.expanduser(tmp_config_file),
-                    "/root/.kube/config.yaml",
+                    config_location,
                 ),
             ],
+            envs={"KUBECONFIG": config_location},
             workdir="/cypress",
         )
         if not isinstance(docker_container, Container):
