@@ -120,7 +120,10 @@ def __execute_install_cmd(
     print("PRINTING HERE", dry_run, JenkinsRunParameters.pipeline_parameters["BUILD_PARAMS"])
 
     cmd = f"helm upgrade -i {chart_name} -n {name_space} --kube-context {kube_context} {additional_args}"
-    if dry_run or "--dryrun" in JenkinsRunParameters.pipeline_parameters["BUILD_PARAMS"]:
+    if (
+            dry_run
+            or "--dryrun" in JenkinsRunParameters.pipeline_parameters["BUILD_PARAMS"]
+    ):
         cmd = (
             f"helm upgrade -i {chart_name} -n namespace --kube-context {kube_context} {additional_args} "
             f"--debug --dry-run"

@@ -45,6 +45,7 @@ class TestCli:
 
         assert response.status_code == 200
         assert data != {"message": "Not Found"}
+
     def test_build_projects_repo_output(self):
         result = self.runner.invoke(main_group, ["repo", "--help"])
         assert_roundtrip(self.resource_path / "repo_help_text.txt", result.output)

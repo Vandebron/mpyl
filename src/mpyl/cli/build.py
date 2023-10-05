@@ -311,6 +311,7 @@ def select_version(value: str) -> str:
         )
     return value
 
+
 def select_target():
     return questionary.select(
         "Which environment do you want to deploy to?",
