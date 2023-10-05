@@ -105,9 +105,6 @@ def run_mpyl(
                     steps_collection=StepsCollection(logger=logger),
                 )
                 run_result = run_build(run_plan, steps, reporter, cli_parameters.local)
-
-                print("CLI!!!", cli_parameters)
-
                 if cli_parameters.dryrun:
                     run_result = run_build(
                         run_plan, steps, reporter, cli_parameters.dryrun
