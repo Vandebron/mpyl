@@ -130,4 +130,5 @@ deployment:
             - "VPN"
           production:
             - "Outside-World"
-
+        tls:
+          all: "le-other-prod-wildcard-cert"
