@@ -31,6 +31,8 @@ whiteLists:
 - Add support for `Role` and `RoleBinding` resources
 - Be able to specify `command` and `args` in `Container` resources
 
+#### Fix bug in the Cypress tests
+
 Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.3.1)
 
 ## MPyL 1.3.0
