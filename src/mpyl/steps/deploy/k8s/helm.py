@@ -11,7 +11,6 @@ import yaml
 from .resources import to_yaml, CustomResourceDefinition
 from ...models import RunProperties, Output
 from ....cli import get_version
-from ....cli.commands.build.jenkins import JenkinsRunParameters
 from ....utilities.subprocess import custom_check_output
 
 
@@ -116,14 +115,8 @@ def __execute_install_cmd(
     kube_context: str,
     additional_args: str = "",
 ) -> Output:
-
-    print("PRINTING HERE", dry_run, JenkinsRunParameters.pipeline_parameters["BUILD_PARAMS"])
-
     cmd = f"helm upgrade -i {chart_name} -n {name_space} --kube-context {kube_context} {additional_args}"
-    if (
-            dry_run
-            or "--dryrun" in JenkinsRunParameters.pipeline_parameters["BUILD_PARAMS"]
-    ):
+    if dry_run:
         cmd = (
             f"helm upgrade -i {chart_name} -n namespace --kube-context {kube_context} {additional_args} "
             f"--debug --dry-run"
