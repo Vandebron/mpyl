@@ -33,6 +33,8 @@ whiteLists:
 
 #### Fix bug in the Cypress tests
 
+- Account for multiple config files being passed in the KUBECONFIG env var
+
 Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.3.1)
 
 ## MPyL 1.3.0
