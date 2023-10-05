@@ -5,8 +5,13 @@ definitions:
     type: object
     additionalProperties: false
     properties:
-      cvs:
-        "$ref": "#/definitions/CVS"
+      mpylVersion:
+        description: >-
+          The MINIMAL version of MPyL that should be used to build this project. If not
+          specified, the latest version will be used.
+        type: string
+      vcs:
+        "$ref": "#/definitions/VCS"
       docker:
         "$ref": "#/definitions/Docker"
       dagster:
@@ -30,7 +35,7 @@ definitions:
       s3:
         "$ref": "#/definitions/s3"
     required:
-      - cvs
+      - vcs
       - docker
     title: MPyL global configuration
   Whitelists:
@@ -53,11 +58,38 @@ definitions:
           additionalProperties: false
           required:
             - name
-            - values
+          oneOf:
+            - required:
+                - pr
+                - test
+                - acceptance
+                - production
+            - required:
+                - all
           properties:
             name:
               type: string
-            values:
+            pr:
+              type: array
+              items:
+                minItems: 1
+                type: string
+            test:
+              type: array
+              items:
+                minItems: 1
+                type: string
+            acceptance:
+              type: array
+              items:
+                minItems: 1
+                type: string
+            production:
+              type: array
+              items:
+                minItems: 1
+                type: string
+            all:
               type: array
               items:
                 minItems: 1
@@ -133,7 +165,7 @@ definitions:
       context:
         type: string
     required: [ clusterId, projectId, clusterEnv, context ]
-  CVS:
+  VCS:
     type: object
     additionalProperties: false
     properties:
@@ -144,7 +176,7 @@ definitions:
     required:
       - git
       - github
-    title: CVS
+    title: VCS
   Git:
     type: object
     additionalProperties: false
@@ -201,8 +233,13 @@ definitions:
     type: object
     additionalProperties: false
     properties:
-      registry:
-        "$ref": "#/definitions/Registry"
+      defaultRegistry:
+        type: string
+      registries:
+        type: array
+        minItems: 1
+        items:
+          "$ref": "#/definitions/Registry"
       build:
         "$ref": "#/definitions/Build"
       compose:
@@ -218,7 +255,8 @@ definitions:
             default: 20
         required: [ 'periodSeconds', 'failureThreshold' ]
     required:
-      - registry
+      - registries
+      - defaultRegistry
     title: Docker
   Build:
     type: object

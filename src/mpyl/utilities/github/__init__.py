@@ -34,7 +34,7 @@ class GithubConfig:
 
     @staticmethod
     def from_config(config: dict):
-        github = config["cvs"]["github"]
+        github = config["vcs"]["github"]
         repo_parts = github["repository"].split("/")
         return GithubConfig(
             repository=(github["repository"]),
