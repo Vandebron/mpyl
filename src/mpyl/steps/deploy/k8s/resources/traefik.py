@@ -17,7 +17,7 @@ class HostWrapper:
     index: int
     service_port: int
     white_lists: dict[str, list[str]]
-    tls: str
+    tls: Optional[str]
 
     @property
     def full_name(self) -> str:
@@ -62,7 +62,9 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
             spec={
                 "routes": [route],
                 "entryPoints": ["websecure"],
-                "tls": {"secretName": host.tls},
+                "tls": {
+                    "secretName": host.tls if host.tls else "le-prod-wildcard-cert"
+                },
             },
             schema="traefik.ingress.schema.yml",
         )
