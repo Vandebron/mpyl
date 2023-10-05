@@ -17,6 +17,7 @@ class HostWrapper:
     index: int
     service_port: int
     white_lists: dict[str, list[str]]
+    tls: str
 
     @property
     def full_name(self) -> str:
@@ -27,7 +28,7 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
     def __init__(
         self,
         metadata: V1ObjectMeta,
-        hosts: list[HostWrapper],
+        host: HostWrapper,
         target: Target,
         namespace: str,
         pr_number: Optional[int],
@@ -39,32 +40,29 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
                 return host.replace("{PR-NUMBER}", str(pr_number))
             return host
 
-        routes = [
-            {
-                "kind": "Rule",
-                "match": _interpolate_names(
-                    host=host.traefik_host.host.get_value(target),
-                    name=host.name,
-                ),
-                "services": [
-                    {"name": host.name, "kind": "Service", "port": host.service_port}
-                ],
-                "middlewares": [
-                    {"name": host.full_name},
-                    {"name": "traefik-https-redirect@kubernetescrd"},
-                ],
-            }
-            for host in hosts
-        ]
+        route = {
+            "kind": "Rule",
+            "match": _interpolate_names(
+                host=host.traefik_host.host.get_value(target),
+                name=host.name,
+            ),
+            "services": [
+                {"name": host.name, "kind": "Service", "port": host.service_port}
+            ],
+            "middlewares": [
+                {"name": host.full_name},
+                {"name": "traefik-https-redirect@kubernetescrd"},
+            ],
+        }
 
         super().__init__(
             api_version="traefik.containo.us/v1alpha1",
             kind="IngressRoute",
             metadata=metadata,
             spec={
-                "routes": routes,
+                "routes": [route],
                 "entryPoints": ["websecure"],
-                "tls": {"secretName": "le-prod-wildcard-cert"},
+                "tls": {"secretName": host.tls},
             },
             schema="traefik.ingress.schema.yml",
         )

@@ -479,20 +479,23 @@ class ChartBuilder:
                 if host.service_port
                 else self.__find_default_port(),
                 white_lists=to_white_list(host.whitelists),
+                tls=host.tls.get_value(self.target),
             )
             for idx, host in enumerate(hosts if hosts else default_hosts)
         ]
 
-    def to_ingress_routes(self) -> V1AlphaIngressRoute:
+    def to_ingress_routes(self) -> list[V1AlphaIngressRoute]:
         hosts = self.create_host_wrappers()
-
-        return V1AlphaIngressRoute(
-            metadata=self._to_object_meta(),
-            hosts=hosts,
-            target=self.target,
-            namespace=get_namespace(self.step_input.run_properties, self.project),
-            pr_number=self.step_input.run_properties.versioning.pr_number,
-        )
+        return [
+            V1AlphaIngressRoute(
+                metadata=self._to_object_meta(),
+                host=host,
+                target=self.target,
+                namespace=get_namespace(self.step_input.run_properties, self.project),
+                pr_number=self.step_input.run_properties.versioning.pr_number,
+            )
+            for host in hosts
+        ]
 
     def to_middlewares(self) -> dict[str, V1AlphaMiddleware]:
         hosts: list[HostWrapper] = self.create_host_wrappers()
@@ -785,7 +788,6 @@ def _to_service_components_chart(builder):
     common_chart = {
         "deployment": builder.to_deployment(),
         "service": builder.to_service(),
-        "ingress-https-route": builder.to_ingress_routes(),
     }
     metrics = builder.project.kubernetes.metrics
     prometheus_chart = (
@@ -798,7 +800,11 @@ def _to_service_components_chart(builder):
         if metrics and metrics.enabled
         else {}
     )
-    return common_chart | prometheus_chart
+    ingress = {
+        f"ingress-https-route-{i}": route
+        for i, route in enumerate(builder.to_ingress_routes())
+    }
+    return common_chart | prometheus_chart | ingress
 
 
 def to_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
