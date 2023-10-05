@@ -165,7 +165,7 @@ class CypressTest(Step):
                 (volume_path, "/cypress"),
                 (
                     os.path.expanduser(tmp_config_file),
-                    "/root/.kube/config",
+                    "/root/.kube/config.yaml",
                 ),
             ],
             workdir="/cypress",
@@ -188,10 +188,10 @@ class CypressTest(Step):
             logger=self._logger,
             container=docker_container,
             command='bash -c "cp cypress.env.json.example cypress.env.json && '
-            f"sed -i 's/acceptance/"
+            f"sed -n 's/acceptance/"
             f"{CypressTest._target_to_test_target(step_input.run_properties.target)}"
             f"/' cypress.env.json && "
-            f"sed -i 's/{{PR_NUMBER}}/{step_input.run_properties.versioning.pr_number}/' "
+            f"sed -n 's/{{PR_NUMBER}}/{step_input.run_properties.versioning.pr_number}/' "
             'cypress.env.json"',
             task_name="Preparing env file",
         )
