@@ -342,7 +342,7 @@ class Kubernetes:
 class TraefikHost:
     host: TargetProperty[str]
     service_port: Optional[int]
-    tls: TargetProperty[str]
+    tls: Optional[TargetProperty[str]]
     whitelists: TargetProperty[list[str]]
 
     @staticmethod
