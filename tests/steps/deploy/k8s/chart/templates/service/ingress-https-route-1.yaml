@@ -15,15 +15,6 @@ metadata:
 spec:
   routes:
   - kind: Rule
-    match: Host(`payments-1234.test.nl`)
-    services:
-    - name: dockertest
-      kind: Service
-      port: 8080
-    middlewares:
-    - name: dockertest-ingress-0-whitelist
-    - name: traefik-https-redirect@kubernetescrd
-  - kind: Rule
     match: Host(`some.other.host.com`)
     services:
     - name: dockertest
@@ -35,4 +26,4 @@ spec:
   entryPoints:
   - websecure
   tls:
-    secretName: le-prod-wildcard-cert
+    secretName: le-other-prod-wildcard-cert
