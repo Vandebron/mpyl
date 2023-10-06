@@ -80,15 +80,14 @@ class BuildDocker(Step):
                 arg.key: arg.get_value(step_input.run_properties.target)
                 for arg in step_input.project.build.args.plain
             }
-            | dict(
-                filter(
-                    lambda v: v[1] is not None,
-                    {
-                        arg.key: os.getenv(arg.secret_id)
-                        for arg in step_input.project.build.args.credentials
-                    }.items(),
-                )
-            )
+            | {
+                k: v
+                for (k, v) in {
+                    arg.key: os.getenv(arg.secret_id)
+                    for arg in step_input.project.build.args.credentials
+                }.items()
+                if v is not None
+            }
             if step_input.project.build
             else {}
         )
