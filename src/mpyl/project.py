@@ -130,15 +130,15 @@ class KeyValueRef:
 @dataclass(frozen=True)
 class KeyId:
     key: str
-    id: str
+    secret_id: str
 
     @staticmethod
     def from_config(values: dict):
         key = values.get("key")
-        id = values.get("id")
-        if not key or not id:
-            raise KeyError("Credental must have a key and id set.")
-        return KeyId(key, id)
+        secret_id = values.get("id")
+        if not key or not secret_id:
+            raise KeyError("Credential must have a key and id set.")
+        return KeyId(key, secret_id)
 
 
 @dataclass(frozen=True)
