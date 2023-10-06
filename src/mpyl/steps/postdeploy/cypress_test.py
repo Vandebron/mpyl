@@ -71,7 +71,7 @@ class CypressTest(Step):
                 for machine in machines:
                     run_command = (
                         f'bash -c "Xvfb :10{machine} & XDG_CONFIG_HOME=/tmp/cyhome{machine} '
-                        f"DISPLAY=:10{machine}  yarn cypress run --spec {specs_string} --ci-build-id "
+                        f"DISPLAY=:10{machine}  yarn cypress run --spec '{specs_string}' --ci-build-id "
                         f"{ci_build_id} --parallel --reporter-options "
                         f'"mochaFile={reports_folder}/[hash].xml" --record --key '
                         'b6a2aab1-0b80-4ca0-a56c-1c8d98a8189c || true "'
@@ -95,7 +95,7 @@ class CypressTest(Step):
                 )
             else:
                 run_command = (
-                    f'bash -c "yarn cypress run --spec {specs_string} --reporter-options '
+                    f'bash -c "yarn cypress run --spec "{specs_string}" --reporter-options '
                     f'mochaFile="{reports_folder}/[hash].xml" || true"'
                 )
                 result = execute_with_stream(
