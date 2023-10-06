@@ -128,7 +128,7 @@ class KeyValueRef:
 
 
 @dataclass(frozen=True)
-class KeyId:
+class EnvCredential:
     key: str
     secret_id: str
 
@@ -138,7 +138,7 @@ class KeyId:
         secret_id = values.get("id")
         if not key or not secret_id:
             raise KeyError("Credential must have a key and id set.")
-        return KeyId(key, secret_id)
+        return EnvCredential(key, secret_id)
 
 
 @dataclass(frozen=True)
@@ -417,13 +417,15 @@ class Docker:
 @dataclass(frozen=True)
 class BuildArgs:
     plain: list[KeyValueProperty]
-    credentials: list[KeyId]
+    credentials: list[EnvCredential]
 
     @staticmethod
     def from_config(values: dict):
         return BuildArgs(
             plain=list(map(KeyValueProperty.from_config, values.get("plain", []))),
-            credentials=list(map(KeyId.from_config, values.get("credentials", []))),
+            credentials=list(
+                map(EnvCredential.from_config, values.get("credentials", []))
+            ),
         )
 
 
