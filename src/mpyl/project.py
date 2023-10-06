@@ -128,6 +128,20 @@ class KeyValueRef:
 
 
 @dataclass(frozen=True)
+class KeyId:
+    key: str
+    id: str
+
+    @staticmethod
+    def from_config(values: dict):
+        key = values.get("key")
+        id = values.get("id")
+        if not key or not id:
+            raise KeyError("Credental must have a key and id set.")
+        return KeyId(key, id)
+
+
+@dataclass(frozen=True)
 class StageSpecificProperty(Generic[T]):
     build: Optional[T]
     test: Optional[T]
@@ -403,11 +417,13 @@ class Docker:
 @dataclass(frozen=True)
 class BuildArgs:
     plain: list[KeyValueProperty]
+    credentials: list[KeyId]
 
     @staticmethod
     def from_config(values: dict):
         return BuildArgs(
-            plain=list(map(KeyValueProperty.from_config, values.get("plain", [])))
+            plain=list(map(KeyValueProperty.from_config, values.get("plain", []))),
+            credentials=list(map(KeyId.from_config, values.get("credentials", []))),
         )
 
 

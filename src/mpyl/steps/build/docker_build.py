@@ -17,7 +17,7 @@ to a folder named `$WORKDIR/target/test-reports/`.
 .. include:: ../../../../tests/projects/service/deployment/Dockerfile-mpl
 ```
 """
-
+import os
 from logging import Logger
 
 from .post_docker_build import AfterBuildDocker
@@ -79,6 +79,10 @@ class BuildDocker(Step):
             {
                 arg.key: arg.get_value(step_input.run_properties.target)
                 for arg in step_input.project.build.args.plain
+            }
+            | {
+                arg.key: os.getenv(arg.id)
+                for arg in step_input.project.build.args.credentials
             }
             if step_input.project.build
             else {}
