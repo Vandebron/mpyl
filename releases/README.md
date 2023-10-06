@@ -1,5 +1,14 @@
 # Release notes
 
+## MPyL 1.3.2
+
+
+#### Bug Fixes
+
+- Fix the cypress kubectl config merging and passing to docker for linux environments
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.3.2)
+
 ## MPyL 1.3.1
 
 
