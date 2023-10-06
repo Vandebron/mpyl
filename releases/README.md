@@ -7,6 +7,7 @@
 
 - Fix the cypress kubectl config merging and passing to docker for linux environments
 
+
 Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.3.2)
 
 ## MPyL 1.3.1
@@ -14,7 +15,7 @@ Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.3.2)
 
 #### Target specific whitelists
 
-Now have the possiblity to specify target specific whitelisting rules.
+Now have the possibility to specify target specific whitelisting rules.
 This means that for the same rule, we can apply different lists of IPs, depending on the target environment:
 Change in the `mpyl_config.yaml` file:
 
@@ -43,6 +44,7 @@ whiteLists:
 #### Fix bug in the Cypress tests
 
 - Account for multiple config files being passed in the KUBECONFIG env var
+
 
 Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.3.1)
 
