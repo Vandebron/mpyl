@@ -249,10 +249,7 @@ class JiraReporter(Reporter):
                 self._jira.assign_issue(self._ticket, account_id=account_id)
 
     def __move_ticket_forward(self, ticket: JiraTicket):
-        transitions = self._jira.get_issue_transitions(self._ticket)
-        for idx, transition in enumerate(transitions):
-            if transition["name"] == ticket.status_name:
-                if idx == 0:
-                    target_state = transitions[idx + 1]["name"]
-                    self._logger.info(f"Moving {ticket.ticket_id} to {target_state}")
-                    self._jira.issue_transition(self._ticket, target_state)
+        if ticket.status_name == "To Do":
+            target_state = "In Progress"
+            self._logger.info(f"Moving {ticket.ticket_id} to {target_state}")
+            self._jira.issue_transition(self._ticket, target_state)
