@@ -6,6 +6,7 @@
 #### Bug Fixes
 
 - Fix the cypress kubectl config merging and passing to docker for linux environments
+- Fix jira ticket state switching to only switch from 'to do' to 'in progress'
 
 
 Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.3.2)
