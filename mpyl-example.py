@@ -66,6 +66,7 @@ def main(log: Logger, args: argparse.Namespace):
         pull_main=True,
         verbose=args.verbose,
         all=args.all,
+        stage=args.stage,
     )
     run_result = run_mpyl(
         run_properties=run_properties,
@@ -127,6 +128,11 @@ if __name__ == "__main__":
         help="switch to DEBUG level logging",
         default=False,
         action="store_true",
+    )
+    parser.add_argument(
+        "--stage",
+        help="Stage up to which to run. Prerequisite stages are also run, unless they're cached",
+        default=None,
     )
     FORMAT = "%(name)s  %(message)s"
 
