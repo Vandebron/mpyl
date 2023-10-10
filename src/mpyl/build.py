@@ -144,6 +144,9 @@ def find_build_set(
     build_set = {}
 
     for stage in __get_stages_in_order():
+        if selected_stage and selected_stage != stage.value:
+            continue
+
         if build_all:
             projects = for_stage(all_projects, stage)
         else:
@@ -152,8 +155,6 @@ def find_build_set(
             )
 
         build_set.update({stage: projects})
-        if selected_stage and selected_stage == stage.value:
-            break
 
     return build_set
 
