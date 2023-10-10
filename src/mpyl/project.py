@@ -565,7 +565,7 @@ def validate_project(file: TextIO) -> dict:
     :return: the validated schema
     :raises `jsonschema.exceptions.ValidationError` when validation fails
     """
-    yaml_values = YAML(typ="unsafe").load(file)
+    yaml_values = YAML().load(file)
     template = pkgutil.get_data(__name__, "schema/project.schema.yml")
     if not template:
         raise ValueError("Schema project.schema.yml not found in package")
@@ -589,9 +589,7 @@ def load_project(
     with open(root_dir / project_path, encoding="utf-8") as file:
         try:
             start = time.time()
-            yaml_values = (
-                validate_project(file) if strict else YAML(typ="unsafe").load(file)
-            )
+            yaml_values = validate_project(file) if strict else YAML().load(file)
             project = Project.from_config(yaml_values, project_path)
             logging.debug(
                 f"Loaded project {project.path} in {(time.time() - start) * 1000} ms"
