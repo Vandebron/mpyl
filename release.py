@@ -51,7 +51,7 @@ def publish():
         prerelease = "--prerelease" if latest.release_candidate else ""
         output = custom_check_output(
             logging.getLogger(),
-            f"gh release create {latest} --generate-notes {prerelease}",
+            f"gh release create {latest} --generate-notes {prerelease}".strip(),
         )
         if output.success:
             click.echo("Release published")
