@@ -28,7 +28,6 @@ def main(log: Logger, args: argparse.Namespace):
     slack_channel = None
     slack_personal = None
     jira = None
-    github_comment = None
     accumulator = None
 
     if not args.local:

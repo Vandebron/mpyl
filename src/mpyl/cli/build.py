@@ -35,7 +35,7 @@ from ..constants import (
     DEFAULT_RUN_PROPERTIES_FILE_NAME,
     BUILD_ARTIFACTS_FOLDER,
 )
-from ..project import load_project, Target
+from ..project import load_project, Target, Stage
 from ..reporting.formatting.markdown import (
     execution_plan_as_markdown,
 )
@@ -116,8 +116,14 @@ def build(ctx, config, properties, verbose):
     help="Build all projects, regardless of changes on branch",
 )
 @click.option("--tag", "-t", help="Tag to build", type=click.STRING, required=False)
+@click.option(
+    "--stage",
+    help="Stage up to which to run. Prerequisite stages are also run, unless they're cached",
+    type=click.Choice([stage.value for stage in Stage]),
+    required=False,
+)
 @click.pass_obj
-def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
+def run(obj: CliContext, ci, all_, tag, stage):  # pylint: disable=invalid-name
     asyncio.run(warn_if_update(obj.console))
 
     parameters = MpylCliParameters(
@@ -126,6 +132,7 @@ def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
         all=all_,
         verbose=obj.verbose,
         tag=tag,
+        stage=stage,
     )
     obj.console.log(parameters)
 
