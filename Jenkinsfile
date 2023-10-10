@@ -3,6 +3,17 @@ pipeline {
     options {
         ansiColor('xterm')
     }
+    environment {
+        DOCKER_REGISTRY = credentials('91751de6-20aa-4b12-8459-6e16094a233a')
+        GIT_CREDENTIALS = credentials('e8bc2c24-e461-4dae-9122-e8ae8bd7ec07')
+        GITHUB_TOKEN = credentials('github-pat-mpyl-vandebronjenkins')
+        MPYL_GITHUB_APP_PRIVATE_KEY = credentials('mpyl_pipeline_github_app_private_key')
+        SLACK_TOKEN = credentials('JENKINS_MPYL_APP_OAUTH_TOKEN')
+        MPYL_JIRA_TOKEN = credentials('MPYL_JIRA_TOKEN')
+        AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
+        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
+        SOME_CREDENTIAL = 'some-credential'
+    }
     stages {
         stage('Initialize Parameters') {
             when { expression { return params.BUILD_PARAMS == null || params.BUILD_PARAMS == ""  } }
@@ -21,18 +32,7 @@ pipeline {
                 }
             }
         }
-        stage('Build') {
-           environment {
-                DOCKER_REGISTRY = credentials('91751de6-20aa-4b12-8459-6e16094a233a')
-                GIT_CREDENTIALS = credentials('e8bc2c24-e461-4dae-9122-e8ae8bd7ec07')
-                GITHUB_TOKEN = credentials('github-pat-mpyl-vandebronjenkins')
-                MPYL_GITHUB_APP_PRIVATE_KEY = credentials('mpyl_pipeline_github_app_private_key')
-                SLACK_TOKEN = credentials('JENKINS_MPYL_APP_OAUTH_TOKEN')
-                MPYL_JIRA_TOKEN = credentials('MPYL_JIRA_TOKEN')
-                AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
-                AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
-                SOME_CREDENTIAL = 'some-credential'
-            }
+        stage('Initialize MPyL') {
             steps {
                 script {
                     def content = sh(script: "curl -s https://api.github.com/repos/Vandebron/mpyl_config/contents/mpyl_config.yml?ref=$MPYL_CONFIG_BRANCH -H 'Authorization: token $GIT_CREDENTIALS_PSW' -H 'Accept: application/vnd.github.v3.raw'", returnStdout: true)
@@ -49,8 +49,43 @@ pipeline {
                             sh "pipenv run mpyl repo status"
                             sh "pipenv run mpyl repo init"
                             sh "pipenv run mpyl build status"
-                            sh "pipenv run run-ci ${params.BUILD_PARAMS}"
                         }
+                    }
+                }
+            }
+        }
+        stage('Build') {
+            steps {
+                withKubeConfig([credentialsId: 'jenkins-rancher-service-account-kubeconfig-test']) {
+                    wrap([$class: 'BuildUser']) {
+                        sh "pipenv run run-ci ${params.BUILD_PARAMS} --stage build"
+                    }
+                }
+            }
+        }
+        stage('Test') {
+            steps {
+                withKubeConfig([credentialsId: 'jenkins-rancher-service-account-kubeconfig-test']) {
+                    wrap([$class: 'BuildUser']) {
+                        sh "pipenv run run-ci ${params.BUILD_PARAMS} --stage test"
+                    }
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                withKubeConfig([credentialsId: 'jenkins-rancher-service-account-kubeconfig-test']) {
+                    wrap([$class: 'BuildUser']) {
+                        sh "pipenv run run-ci ${params.BUILD_PARAMS} --stage deploy"
+                    }
+                }
+            }
+        }
+        stage('Post deploy') {
+            steps {
+                withKubeConfig([credentialsId: 'jenkins-rancher-service-account-kubeconfig-test']) {
+                    wrap([$class: 'BuildUser']) {
+                        sh "pipenv run run-ci ${params.BUILD_PARAMS} --stage postdeploy"
                     }
                 }
             }
