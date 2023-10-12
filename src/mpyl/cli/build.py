@@ -1,7 +1,6 @@
 """Commands related to build"""
 import asyncio
 import logging
-import os.path
 import shutil
 import sys
 import pickle
@@ -17,8 +16,6 @@ from github.GitRelease import GitRelease
 from questionary import Choice
 from rich.console import Console
 from rich.markdown import Markdown
-
-from mpyl.steps.run import RunResult
 from . import (
     CliContext,
     CONFIG_PATH_HELP,
@@ -39,11 +36,9 @@ from ..constants import (
     BUILD_ARTIFACTS_FOLDER,
 )
 from ..project import load_project, Target, Stage
-from ..reporting.formatting.markdown import (
-    execution_plan_as_markdown,
-    run_result_to_markdown,
-)
+from ..reporting.formatting.markdown import execution_plan_as_markdown
 from ..steps.models import RunProperties
+from ..steps.run import RunResult
 from ..utilities.github import GithubConfig
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
