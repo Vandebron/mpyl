@@ -143,7 +143,7 @@ def find_build_set(
 
     build_set = {}
 
-    for stage in __get_stages_in_order():
+    for stage in list(Stage):
         if selected_stage and selected_stage != stage.value:
             continue
 
@@ -157,15 +157,6 @@ def find_build_set(
         build_set.update({stage: projects})
 
     return build_set
-
-
-def __get_stages_in_order() -> list[Stage]:
-    return [
-        Stage.BUILD,
-        Stage.TEST,
-        Stage.DEPLOY,
-        Stage.POST_DEPLOY,
-    ]
 
 
 def run_build(
