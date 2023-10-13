@@ -142,8 +142,9 @@ def find_build_set(
     )
 
     build_set = {}
+    stages: list[Stage] = list(Stage)  # to ensure stages is typed
 
-    for stage in list(Stage):
+    for stage in stages:
         if selected_stage and selected_stage != stage.value:
             continue
 
