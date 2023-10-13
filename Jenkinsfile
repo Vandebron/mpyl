@@ -31,6 +31,7 @@ pipeline {
                 MPYL_JIRA_TOKEN = credentials('MPYL_JIRA_TOKEN')
                 AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
                 AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
+                SOME_CREDENTIAL = 'some-credential'
             }
             steps {
                 script {
