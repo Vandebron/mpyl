@@ -2,7 +2,8 @@
 omit =
     tests/*
     src/mpyl/reporting/targets/*
-    src/mpyl/cli/*
+    src/mpyl/cli/commands/*
+    src/mpyl/cli/build.py
     src/mpyl/utilities/jenkins/runner.py
     src/mpyl/utilities/docker/__init__.py
     src/mpyl/steps/test/before_test.py

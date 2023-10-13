@@ -6,7 +6,7 @@ import pytest
 from click.testing import CliRunner
 
 from src.mpyl import main_group, add_commands
-from src.mpyl.cli import create_console_logger, MpylCliParameters
+from src.mpyl.cli import create_console_logger
 from tests import root_test_path
 from tests.test_resources.test_data import assert_roundtrip
 
