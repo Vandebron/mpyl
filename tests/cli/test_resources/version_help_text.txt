@@ -1,0 +1,7 @@
+Usage: python -m mpyl version [OPTIONS]
+
+  Version information
+
+Options:
+  -v, --verbose  Print more output.
+  --help         Show this message and exit.

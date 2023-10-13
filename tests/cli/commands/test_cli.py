@@ -114,6 +114,13 @@ class TestCli:
             re.sub(r"Version: .*", "Version: {version}", result.output, re.M),
         )
 
+    def test_version_help(self):
+        result = self.runner.invoke(
+            main_group,
+            ["version", "--help"],
+        )
+        assert_roundtrip(self.resource_path / "version_help_text.txt", result.output)
+
     def test_health_help(self):
         result = self.runner.invoke(
             main_group,
