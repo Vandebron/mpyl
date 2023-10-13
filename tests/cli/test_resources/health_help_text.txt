@@ -1,0 +1,8 @@
+Usage: mpyl health [OPTIONS]
+
+  Health check
+
+Options:
+  --ci           Run health checks relevant only for CI builds.
+  -u, --upgrade  Perform config upgrades if necessary
+  --help         Show this message and exit.

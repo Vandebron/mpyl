@@ -4,10 +4,9 @@ import requests
 
 import pytest
 from click.testing import CliRunner
-from packaging import version as packaging_version
 
 from src.mpyl import main_group, add_commands
-from src.mpyl.cli import create_console_logger
+from src.mpyl.cli import create_console_logger, MpylCliParameters
 from tests import root_test_path
 from tests.test_resources.test_data import assert_roundtrip
 
@@ -114,6 +113,13 @@ class TestCli:
             self.resource_path / "metadata_text.txt",
             re.sub(r"Version: .*", "Version: {version}", result.output, re.M),
         )
+
+    def test_health_help(self):
+        result = self.runner.invoke(
+            main_group,
+            ["health", "--help"],
+        )
+        assert_roundtrip(self.resource_path / "health_help_text.txt", result.output)
 
     def test_create_console(self):
         console = create_console_logger(show_path=False, verbose=True, max_width=135)
