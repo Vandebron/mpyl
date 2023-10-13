@@ -17,34 +17,6 @@ from mpyl.utilities.pyaml_env import parse_config
 
 
 def main(logger: Logger):
-    config = parse_config("mpyl_config.yml")
-    properties = parse_config("run_properties.yml")
-    run_properties = RunProperties.from_configuration(
-        run_properties=properties, config=config
-    )
-    slack_personal = None
-
-    check = CommitCheck(config=config, logger=logger)
-    accumulator = ReportAccumulator()
-    slack_channel = SlackReporter(
-        config=config,
-        channel="#project-mpyl-notifications",
-        versioning_identifier=run_properties.versioning.identifier,
-        target=run_properties.target,
-    )
-
-    if run_properties.details.user_email:
-        slack_personal = SlackReporter(
-            config=config,
-            channel=None,
-            versioning_identifier=run_properties.versioning.identifier,
-            target=run_properties.target,
-        )
-
-    jira = JiraReporter(
-        config=config, branch=run_properties.versioning.branch, logger=logger
-    )
-
     run_result_file = Path(BUILD_ARTIFACTS_FOLDER) / "run_result"
 
     if not run_result_file.is_file():
@@ -53,10 +25,37 @@ def main(logger: Logger):
 
     with open(run_result_file, "rb") as file:
         run_result: RunResult = pickle.load(file)
-        accumulator.add(check.send_report(run_result))
+
+        accumulator = ReportAccumulator()
+        config = parse_config("mpyl_config.yml")
+        properties = parse_config("run_properties.yml")
+        run_properties = RunProperties.from_configuration(
+            run_properties=properties, config=config
+        )
+
+        commit_check = CommitCheck(config=config, logger=logger)
+        accumulator.add(commit_check.send_report(run_result))
+
+        slack_channel = SlackReporter(
+            config=config,
+            channel="#project-mpyl-notifications",
+            versioning_identifier=run_properties.versioning.identifier,
+            target=run_properties.target,
+        )
         accumulator.add(slack_channel.send_report(run_result))
-        if slack_personal:
+
+        if run_properties.details.user_email:
+            slack_personal = SlackReporter(
+                config=config,
+                channel=None,
+                versioning_identifier=run_properties.versioning.identifier,
+                target=run_properties.target,
+            )
             slack_personal.send_report(run_result)
+
+        jira = JiraReporter(
+            config=config, branch=run_properties.versioning.branch, logger=logger
+        )
         accumulator.add(jira.send_report(run_result))
 
         github_comment = PullRequestReporter(
@@ -64,6 +63,7 @@ def main(logger: Logger):
             compose_function=compose_build_status,
         )
         accumulator.add(github_comment.send_report(run_result))
+
         if accumulator.failures:
             logger.warning(
                 f'Failed to send the following report(s): {", ".join(accumulator.failures)}'

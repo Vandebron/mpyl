@@ -58,7 +58,7 @@ pipeline {
             steps {
                 withKubeConfig([credentialsId: 'jenkins-rancher-service-account-kubeconfig-test']) {
                     wrap([$class: 'BuildUser']) {
-                        sh "pipenv run mpyl build run --stage build ${params.BUILD_PARAMS}"
+                        sh "pipenv run mpyl build run --ci --stage build ${params.BUILD_PARAMS}"
                     }
                 }
             }
@@ -67,7 +67,7 @@ pipeline {
             steps {
                 withKubeConfig([credentialsId: 'jenkins-rancher-service-account-kubeconfig-test']) {
                     wrap([$class: 'BuildUser']) {
-                        sh "pipenv run mpyl build run --stage test --sequential ${params.BUILD_PARAMS}"
+                        sh "pipenv run mpyl build run --ci --stage test --sequential ${params.BUILD_PARAMS}"
                     }
                 }
             }
@@ -76,16 +76,16 @@ pipeline {
             steps {
                 withKubeConfig([credentialsId: 'jenkins-rancher-service-account-kubeconfig-test']) {
                     wrap([$class: 'BuildUser']) {
-                        sh "pipenv run mpyl build run --stage deploy --sequential ${params.BUILD_PARAMS}"
+                        sh "pipenv run mpyl build run --ci --stage deploy --sequential ${params.BUILD_PARAMS}"
                     }
                 }
             }
         }
-        stage('Post deploy') {
+        stage('Post Deploy') {
             steps {
                 withKubeConfig([credentialsId: 'jenkins-rancher-service-account-kubeconfig-test']) {
                     wrap([$class: 'BuildUser']) {
-                        sh "pipenv run mpyl build run --stage postdeploy --sequential ${params.BUILD_PARAMS}"
+                        sh "pipenv run mpyl build run --ci --stage postdeploy --sequential ${params.BUILD_PARAMS}"
                     }
                 }
             }
