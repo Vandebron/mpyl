@@ -13,6 +13,9 @@ build:
         test: "Test"
         acceptance: "Acceptance"
         production: "Production"
+    credentials:
+      - key: SOME_CREDENTIAL
+        id: SOME_CREDENTIAL
 dependencies:
   build:
     - 'test/docker/'

@@ -17,7 +17,7 @@ to a folder named `$WORKDIR/target/test-reports/`.
 .. include:: ../../../../tests/projects/service/deployment/Dockerfile-mpl
 ```
 """
-
+import os
 from logging import Logger
 
 from .post_docker_build import AfterBuildDocker
@@ -75,14 +75,30 @@ class BuildDocker(Step):
             contents = "\n".join(DOCKER_IGNORE_DEFAULT)
             ignore_file.write(contents)
 
-        build_args: dict[str, str] = (
-            {
+        build_args: dict[str, str] = {}
+        if build_config := step_input.project.build:
+            build_args |= {
                 arg.key: arg.get_value(step_input.run_properties.target)
-                for arg in step_input.project.build.args.plain
+                for arg in build_config.args.plain
             }
-            if step_input.project.build
-            else {}
-        )
+
+            env_vars: set[str] = {
+                arg.secret_id for arg in build_config.args.credentials
+            }
+            if missing := env_vars.difference(set(os.environ)):
+                self._logger.error(
+                    f"Project {step_input.project.name} requires {missing} environment variable(s) to be set"
+                )
+                return Output(
+                    success=False,
+                    message=f"Failed to build docker image for {step_input.project.name}",
+                    produced_artifact=None,
+                )
+
+            build_args |= {
+                arg.key: os.environ[arg.secret_id]
+                for arg in build_config.args.credentials
+            }
 
         success = build(
             logger=self._logger,
