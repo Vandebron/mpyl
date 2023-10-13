@@ -119,6 +119,8 @@ class TestCli:
             main_group,
             ["version", "--help"],
         )
+        print(result.output)
+
         assert_roundtrip(self.resource_path / "version_help_text.txt", result.output)
 
     def test_health_help(self):

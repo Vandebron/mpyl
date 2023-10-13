@@ -1,4 +1,4 @@
-Usage: python -m mpyl version [OPTIONS]
+Usage: mpyl version [OPTIONS]
 
   Version information
 
