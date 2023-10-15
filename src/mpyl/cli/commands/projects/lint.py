@@ -1,4 +1,4 @@
-"""Helper methods for linting projects for correctness are can be found here"""
+"""Helper methods for linting projects for correctness are found here"""
 import itertools
 from dataclasses import dataclass
 from pathlib import Path
