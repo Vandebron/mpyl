@@ -150,7 +150,9 @@ class StageSpecificProperty(Generic[T]):
             return self.test
         if stage == "deploy":
             return self.deploy
-        return self.postdeploy
+        if stage == "postdeploy":
+            return self.deploy
+        raise KeyError(f"Unknown stage: {stage}")
 
 
 @dataclass(frozen=True)
