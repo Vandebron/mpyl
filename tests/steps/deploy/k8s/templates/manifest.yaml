@@ -286,6 +286,16 @@ spec:
       labels:
         alertname: ServiceError
         severity: warning
+    - alert: the name of the alert
+      annotations:
+        description: |-
+          **{{ "{{" }} $value }}** new signup failures with reason `{{ "{{" }} $labels.reason }}`.
+          You can find more details in: <unrelated link>
+      expr: a prometheus expression
+      for: 0m
+      labels:
+        alertname: the name of the alert
+        severity: signup_alerting_once
 ---
 # service-monitor
 apiVersion: monitoring.coreos.com/v1

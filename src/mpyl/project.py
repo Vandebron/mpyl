@@ -20,7 +20,7 @@ import traceback
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Optional, TypeVar, Any, TextIO, List
+from typing import Optional, TypeVar, Any, List
 
 import jsonschema
 from mypy.checker import Generic
@@ -559,13 +559,12 @@ class Project:
         )
 
 
-def validate_project(file: TextIO) -> dict:
+def validate_project(yaml_values: dict) -> dict:
     """
     :file the file to validate
     :return: the validated schema
     :raises `jsonschema.exceptions.ValidationError` when validation fails
     """
-    yaml_values = YAML().load(file)
     template = pkgutil.get_data(__name__, "schema/project.schema.yml")
     if not template:
         raise ValueError("Schema project.schema.yml not found in package")
@@ -575,7 +574,11 @@ def validate_project(file: TextIO) -> dict:
 
 
 def load_project(
-    root_dir: Path, project_path: Path, strict: bool = True, log: bool = True
+    root_dir: Path,
+    project_path: Path,
+    strict: bool = True,
+    log: bool = True,
+    safe: bool = False,
 ) -> Project:
     """
     Load a `project.yml` to `Project` data class
@@ -583,13 +586,17 @@ def load_project(
     :param project_path: relative path from `root_dir` to the `project.yml`
     :param strict: indicates whether the schema should be validated
     :param log: indicates whether problems should be logged as warning
+    :param safe: indicates that correctness should be prioritized over speed. Safe loading is important
+    when the values possibly end up in artifacts
     :return: `Project` data class
     """
     log_level = logging.WARNING if log else logging.DEBUG
     with open(root_dir / project_path, encoding="utf-8") as file:
         try:
             start = time.time()
-            yaml_values = validate_project(file) if strict else YAML().load(file)
+            yaml_values = YAML(typ=None if safe else "unsafe").load(file)
+            if strict:
+                validate_project(yaml_values)
             project = Project.from_config(yaml_values, project_path)
             logging.debug(
                 f"Loaded project {project.path} in {(time.time() - start) * 1000} ms"

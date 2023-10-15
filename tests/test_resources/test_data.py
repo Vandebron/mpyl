@@ -53,23 +53,27 @@ def get_config_values() -> dict:
 
 
 def get_project() -> Project:
-    return load_project(resource_path, Path("test_project.yml"), True)
+    return safe_load_project("test_project.yml")
 
 
 def get_minimal_project() -> Project:
-    return load_project(resource_path, Path("test_minimal_project.yml"), True)
+    return safe_load_project("test_minimal_project.yml")
 
 
 def get_job_project() -> Project:
-    return load_project(resource_path, Path("test_job_project.yml"), True)
+    return safe_load_project("test_job_project.yml")
 
 
 def get_cron_job_project() -> Project:
-    return load_project(resource_path, Path("test_cron_job_project.yml"), True)
+    return safe_load_project("test_cron_job_project.yml")
 
 
 def get_spark_project() -> Project:
-    return load_project(resource_path, Path("test_spark_project.yml"), True)
+    return safe_load_project("test_spark_project.yml")
+
+
+def safe_load_project(name: str) -> Project:
+    return load_project(resource_path, Path(name), True, False, True)
 
 
 def get_output() -> Output:

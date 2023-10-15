@@ -29,6 +29,7 @@ def get_build_plan(
     repo: Repository,
     run_properties: RunProperties,
     cli_parameters: MpylCliParameters,
+    safe_load_projects: bool,
 ) -> RunResult:
     tag = run_properties.versioning.tag
     if tag:
@@ -46,7 +47,7 @@ def get_build_plan(
     logger.debug(f"Changes: {changes}")
 
     projects_per_stage: dict[Stage, set[Project]] = find_build_set(
-        repo, changes, cli_parameters.all
+        repo, changes, cli_parameters.all, safe_load_projects
     )
     return RunResult(
         run_properties=run_properties,
@@ -86,6 +87,7 @@ def run_mpyl(
                 repo=repo,
                 run_properties=run_properties,
                 cli_parameters=cli_parameters,
+                safe_load_projects=True,
             )
 
             if not run_plan.run_plan.items():
@@ -125,11 +127,23 @@ def run_mpyl(
 
 
 def find_build_set(
-    repo: Repository, changes_in_branch: list[Revision], build_all: bool
+    repo: Repository,
+    changes_in_branch: list[Revision],
+    build_all: bool,
+    safe_load_projects: bool,
 ) -> dict[Stage, set[Project]]:
     project_paths = repo.find_projects()
     all_projects = set(
-        map(lambda p: load_project(Path(""), Path(p), False), project_paths)
+        map(
+            lambda p: load_project(
+                root_dir=Path(""),
+                project_path=Path(p),
+                strict=False,
+                log=True,
+                safe=safe_load_projects,
+            ),
+            project_paths,
+        )
     )
 
     if build_all:
