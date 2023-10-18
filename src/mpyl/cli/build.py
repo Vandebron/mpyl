@@ -209,6 +209,7 @@ def __print_status(obj: CliContext):
         repo=obj.repo,
         run_properties=run_properties,
         cli_parameters=MpylCliParameters(local=sys.stdout.isatty()),
+        safe_load_projects=False,
     )
     if result.run_plan:
         console.print(
