@@ -285,8 +285,8 @@ def get_test_releases():
     url = "https://test.pypi.org/pypi/mpyl/json"
     data = requests.get(url, timeout=30).json()
     versions = list(data["releases"].keys())
+    versions = list(dict.fromkeys([version[:-4] + "*" for version in versions[-100:]]))
     versions.sort(reverse=True)
-    versions = list(dict.fromkeys([version[:-4] + "*" for version in versions[:100]]))
     return versions
 
 
