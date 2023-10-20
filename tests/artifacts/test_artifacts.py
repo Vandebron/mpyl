@@ -12,7 +12,7 @@ from src.mpyl.artifacts.build_artifacts import (
     ManifestPathTransformer,
     PathTransformer,
 )
-from src.mpyl.steps.deploy.k8s import DeployConfig
+from src.mpyl.steps.deploy.k8s.deploy_config import DeployConfig
 from src.mpyl.utilities.repo import RepoConfig
 from src.mpyl.utilities.repo import RepoCredentials
 from tests import test_resource_path, root_test_path

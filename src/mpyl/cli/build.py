@@ -37,7 +37,7 @@ from ..constants import (
     BUILD_ARTIFACTS_FOLDER,
 )
 from ..project import load_project, Target
-from ..steps.deploy.k8s import DeployConfig
+from ..steps.deploy.k8s.deploy_config import DeployConfig
 from ..steps.models import RunProperties
 from ..utilities.github import GithubConfig
 from ..utilities.pyaml_env import parse_config

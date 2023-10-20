@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 
 from ..constants import BUILD_ARTIFACTS_FOLDER
 from ..project import Project
-from ..steps.deploy.k8s import DeployConfig
+from ..steps.deploy.k8s.deploy_config import DeployConfig
 from ..utilities.repo import Repository, RepoConfig
 
 
