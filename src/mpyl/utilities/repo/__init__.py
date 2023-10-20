@@ -139,7 +139,7 @@ class Repository:  # pylint: disable=too-many-public-methods
             raise ValueError("Cannot clone repository without credentials")
 
         repo = Repo.clone_from(
-            url=creds.to_url_with_credentials,
+            url=creds.ssh_url,
             to_path=repo_path,
         )
         user_name = creds.user_name
