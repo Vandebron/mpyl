@@ -1,3 +1,4 @@
+"""Configuration dataclasses for the deploy step."""
 from dataclasses import dataclass
 from enum import Enum
 
