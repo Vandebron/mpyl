@@ -5,7 +5,7 @@ from logging import Logger
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from . import ClusterConfig
+from .rancher import ClusterConfig
 from ....project import Target
 from ....utilities.repo import RepoConfig, Repository
 from ....steps import Input, Output
@@ -18,7 +18,7 @@ def push_manifest_to_repo(
     rancher_config: ClusterConfig,
     manifest_path: Path,
 ) -> Output:
-    git_config = step_input.run_properties.config.get("vcs").get("argoRepository")
+    git_config = step_input.run_properties.config["vcs"]["argoRepository"]
     if not git_config:
         raise ValueError("No argocd repository configured")
     argocd_repo_config = RepoConfig.from_git_config(git_config=git_config)
