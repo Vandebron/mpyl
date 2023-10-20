@@ -2,7 +2,6 @@
 import datetime
 import os
 from dataclasses import dataclass
-from enum import Enum
 from logging import Logger
 from pathlib import Path
 from typing import Optional
@@ -12,7 +11,9 @@ from kubernetes.client import V1ConfigMap, ApiException, V1Deployment
 from ruamel.yaml import yaml_object, YAML
 import yaml as dict_to_yaml_str
 
+from .deploy_config import DeployConfig, DeployAction
 from .helm import write_helm_chart, GENERATED_WARNING
+from .kubectl import push_manifest_to_repo
 from ...deploy.k8s.resources import CustomResourceDefinition
 from ...models import RunProperties, input_to_artifact, ArtifactType, ArtifactSpec
 from ....project import Project, Target, ProjectName
@@ -47,27 +48,6 @@ class RenderedHelmChartSpec(ArtifactSpec):
 class KubernetesManifestSpec(ArtifactSpec):
     yaml_tag = "!KubernetesManifestSpec"
     manifest_file_path: str
-
-
-@dataclass(frozen=True)
-class DeployAction(Enum):
-    HELM_DEPLOY = "HelmDeploy"
-    HELM_DRY_RUN = "HelmDryRun"
-    HELM_TEMPLATE = "HelmTemplate"
-    KUBERNETES_MANIFEST = "KubectlManifest"
-
-
-@dataclass(frozen=True)
-class DeployConfig:
-    action: DeployAction
-    output_path: str
-
-    @staticmethod
-    def from_config(values: dict):
-        kube_config = values["kubernetes"]
-        action: str = kube_config.get("deployAction", "HelmDeploy")
-        output_path = kube_config.get("outputPath", "target/kubernetes")
-        return DeployConfig(action=DeployAction(action), output_path=output_path)  # type: ignore
 
 
 def get_namespace(run_properties: RunProperties, project: Project) -> str:
@@ -224,6 +204,7 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
     project = step_input.project
 
     deploy_config = DeployConfig.from_config(run_properties.config)
+    rancher_config: ClusterConfig = cluster_config(target, run_properties)
 
     action = deploy_config.action.value
     if action == DeployAction.KUBERNETES_MANIFEST.value:  # pylint: disable=no-member
@@ -235,6 +216,16 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
             step_input,
             spec=KubernetesManifestSpec(str(file_path)),
         )
+
+        if not step_input.dry_run:
+            output = push_manifest_to_repo(
+                logger=logger,
+                step_input=step_input,
+                rancher_config=rancher_config,
+                manifest_path=file_path,
+            )
+            output.produced_artifact = artifact
+            return output
 
         return Output(
             success=True,
@@ -260,7 +251,6 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
         )
 
     namespace = get_namespace(run_properties, project)
-    rancher_config: ClusterConfig = cluster_config(target, run_properties)
     dry_run = (
         step_input.dry_run
         or action == DeployAction.HELM_DRY_RUN.value  # pylint: disable=no-member
