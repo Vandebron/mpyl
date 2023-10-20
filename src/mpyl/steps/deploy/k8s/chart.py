@@ -241,10 +241,11 @@ class ChartBuilder:
             "app.kubernetes.io/instance": self.release_name,
         }
 
-        if len(self.project.maintainer) > 0:
+        if len(self.project.maintainer) > 1:
             app_labels["maintainers"] = ".".join(self.project.maintainer).replace(
                 " ", "_"
             )
+        elif len(self.project.maintainer) > 0:
             app_labels["maintainer"] = self.project.maintainer[0].replace(" ", "_")
 
         app_labels["version"] = run_properties.versioning.identifier
@@ -488,13 +489,15 @@ class ChartBuilder:
         hosts = self.create_host_wrappers()
         return [
             V1AlphaIngressRoute(
-                metadata=self._to_object_meta(),
+                metadata=self._to_object_meta(
+                    name=f"{self.release_name}-ingress-{i}-https"
+                ),
                 host=host,
                 target=self.target,
                 namespace=get_namespace(self.step_input.run_properties, self.project),
                 pr_number=self.step_input.run_properties.versioning.pr_number,
             )
-            for host in hosts
+            for i, host in enumerate(hosts)
         ]
 
     def to_middlewares(self) -> dict[str, V1AlphaMiddleware]:

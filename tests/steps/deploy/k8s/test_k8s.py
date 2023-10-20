@@ -190,6 +190,7 @@ class TestKubernetesChart:
         assert_roundtrip(
             self.k8s_resources_path / "templates" / "manifest.yaml",
             manifest,
+            overwrite=False,
         )
 
     def test_default_ingress(self):
