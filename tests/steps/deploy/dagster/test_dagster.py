@@ -35,7 +35,9 @@ class TestDagster:
 
     def test_generate_correct_values_yaml_with_service_account_override(self):
         step_input = Input(
-            load_project(self.resource_path, Path("project.yml"), True),
+            load_project(
+                self.config_resource_path, self.resource_path / "project.yml", True
+            ),
             test_data.RUN_PROPERTIES,
             None,
         )

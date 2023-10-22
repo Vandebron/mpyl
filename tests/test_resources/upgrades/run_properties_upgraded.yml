@@ -16,6 +16,12 @@ definitions:
       postdeploy:
         type: array
         minItems: 1
+    stageNames:
+      enum:
+        - build
+        - test
+        - deploy
+        - postdeploy
 mpylVersion: 1.4.0
 build:
   run:

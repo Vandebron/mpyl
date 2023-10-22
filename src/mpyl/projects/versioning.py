@@ -243,7 +243,8 @@ class PropertiesUpgraderOne40(Upgrader):
                         "deploy": {"type": "array", "minItems": 1},
                         "postdeploy": {"type": "array", "minItems": 1},
                     },
-                }
+                    "stageNames": {"enum": ["build", "test", "deploy", "postdeploy"]},
+                },
             },
         )
 

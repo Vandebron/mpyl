@@ -39,7 +39,9 @@ properties:
     $id: '#/properties/stages'
     description: Defines which steps should be executed at each stage
     type: object
-    additionalProperties: false
+    additionalProperties: true
+    propertyNames:
+      $ref: 'run_properties.yml#/definitions/stageNames'
     properties:
       build:
         description: Output needs to be a docker image
