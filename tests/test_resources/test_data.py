@@ -27,7 +27,11 @@ config_values = parse_config(resource_path / DEFAULT_CONFIG_FILE_NAME)
 properties_values = parse_config(resource_path / DEFAULT_RUN_PROPERTIES_FILE_NAME)
 
 RUN_PROPERTIES = initiate_run_properties(
-    config=config_values, properties=properties_values, run_plan={}, all_projects=set()
+    config=config_values,
+    properties=properties_values,
+    run_plan={},
+    all_projects=set(),
+    root_dir=resource_path,
 )
 
 RUN_PROPERTIES_PROD = dataclasses.replace(
