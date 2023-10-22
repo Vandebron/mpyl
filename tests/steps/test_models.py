@@ -27,6 +27,8 @@ class TestModels:
             RunProperties.from_configuration(
                 parse_config(self.resource_path / "run_properties_invalid.yml"),
                 self.config_values,
+                None,
+                self.resource_path,
             )
 
         assert "'stages' is a required property" in excinfo.value.message
@@ -37,7 +39,7 @@ class TestModels:
             root_test_path / "../run_properties.yml"
         )
         run_properties = RunProperties.from_configuration(
-            valid_run_properties_values, self.config_values
+            valid_run_properties_values, self.config_values, None, self.resource_path
         )
 
         assert run_properties
