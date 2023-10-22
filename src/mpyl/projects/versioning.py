@@ -225,6 +225,31 @@ CONFIG_UPGRADERS = [
 ]
 
 
+class PropertiesUpgraderOne40(Upgrader):
+    target_version = "1.4.0"
+
+    def upgrade(self, previous_dict: ordereddict) -> ordereddict:
+        previous_dict.insert(0, "$schema", "http://json-schema.org/draft-07/schema#")
+        previous_dict.insert(1, "$id", "run_properties.yml")
+        previous_dict.insert(
+            2,
+            "definitions",
+            {
+                "dependencies": {
+                    "type": "object",
+                    "properties": {
+                        "build": {"type": "array", "minItems": 1},
+                        "test": {"type": "array", "minItems": 1},
+                        "deploy": {"type": "array", "minItems": 1},
+                        "postdeploy": {"type": "array", "minItems": 1},
+                    },
+                }
+            },
+        )
+
+        return previous_dict
+
+
 class PropertiesUpgraderOne30(Upgrader):
     target_version = "1.3.0"
 
@@ -265,6 +290,7 @@ PROPERTIES_UPGRADERS = [
     PropertiesUpgraderOne8(),
     PropertiesUpgraderOne9(),
     PropertiesUpgraderOne30(),
+    PropertiesUpgraderOne40(),
 ]
 
 

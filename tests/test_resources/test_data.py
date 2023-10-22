@@ -25,7 +25,9 @@ resource_path = root_test_path / "test_resources"
 config_values = parse_config(resource_path / DEFAULT_CONFIG_FILE_NAME)
 properties_values = parse_config(resource_path / DEFAULT_RUN_PROPERTIES_FILE_NAME)
 
-RUN_PROPERTIES = RunProperties.from_configuration(properties_values, config_values)
+RUN_PROPERTIES = RunProperties.from_configuration(
+    properties_values, config_values, None, resource_path
+)
 
 RUN_PROPERTIES_PROD = dataclasses.replace(
     RUN_PROPERTIES,
