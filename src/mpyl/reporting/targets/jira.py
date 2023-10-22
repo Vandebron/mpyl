@@ -172,7 +172,7 @@ def to_markdown_summary(ticket: JiraTicket, run_result: RunResult) -> str:
     details = properties.details
 
     stage_markdown = markdown_for_stage(
-        run_result, properties.stage_for(deploy.STAGE_NAME)
+        run_result, properties.to_stage(deploy.STAGE_NAME)
     )
     build_status = (
         f"🏗️ Build [{details.build_id}]({details.run_url}) {run_result.status_line}, "

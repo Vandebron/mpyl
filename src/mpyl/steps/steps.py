@@ -229,6 +229,6 @@ class Steps:
         :return: StepResult
         :raise ExecutionException
         """
-        stage_object = self._properties.stage_for(stage)
+        stage_object = self._properties.to_stage(stage)
         step_output = self._execute_stage(stage_object, project, dry_run)
         return StepResult(stage=stage_object, project=project, output=step_output)

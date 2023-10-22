@@ -107,7 +107,7 @@ class RunProperties:
             stages=[],
         )
 
-    def stage_for(self, stage_name: str) -> Stage:
+    def to_stage(self, stage_name: str) -> Stage:
         stage_by_name = next(stage for stage in self.stages if stage.name == stage_name)
         if stage_by_name:
             return stage_by_name
