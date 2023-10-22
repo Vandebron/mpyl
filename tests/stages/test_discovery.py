@@ -80,8 +80,11 @@ class TestDiscovery:
     def test_should_correctly_check_root_path(self):
         assert not is_invalidated(
             self.logger,
-            project=load_project(
-                root_test_path, Path("projects/sbt-service/deployment/project.yml")
+            project=(
+                load_project(
+                    test_resource_path,
+                    Path("../projects/sbt-service/deployment/project.yml"),
+                )
             ),
             stage="build",
             path="projects/sbt-service-other/file.py",

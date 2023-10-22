@@ -10,7 +10,7 @@ from src.mpyl.steps import Input
 from src.mpyl.steps.deploy.k8s.chart import ChartBuilder
 from src.mpyl.steps.deploy.k8s.resources.dagster import to_user_code_values
 from src.mpyl.utilities.docker import DockerConfig
-from tests import root_test_path
+from tests import root_test_path, test_resource_path
 from tests.test_resources import test_data
 from tests.test_resources.test_data import assert_roundtrip
 
@@ -36,7 +36,7 @@ class TestDagster:
 
     def test_generate_correct_values_yaml_with_service_account_override(self):
         step_input = Input(
-            load_project(self.resource_path, Path("project.yml"), True),
+            load_project(test_resource_path, self.resource_path / "project.yml", True),
             test_data.RUN_PROPERTIES,
             None,
         )
@@ -58,7 +58,9 @@ class TestDagster:
 
     def test_generate_correct_values_yaml_with_production_target(self):
         step_input = Input(
-            load_project(self.resource_path, Path("project.yml"), True),
+            load_project(
+                test_resource_path, Path(self.resource_path, "project.yml"), True
+            ),
             test_data.RUN_PROPERTIES_PROD,
             None,
         )
@@ -78,7 +80,9 @@ class TestDagster:
 
     def test_generate_correct_values_yaml_without_service_account_override(self):
         step_input = Input(
-            load_project(self.resource_path, Path("project.yml"), True),
+            load_project(
+                test_resource_path, Path(self.resource_path, "project.yml"), True
+            ),
             test_data.RUN_PROPERTIES,
             None,
         )

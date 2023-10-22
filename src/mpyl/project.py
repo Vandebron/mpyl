@@ -600,7 +600,7 @@ class Project:
         )
 
 
-def validate_project(yaml_values: dict) -> dict:
+def validate_project(yaml_values: dict, root_dir: Path) -> dict:
     """
     :file the file to validate
     :return: the validated schema
@@ -609,7 +609,7 @@ def validate_project(yaml_values: dict) -> dict:
     template = pkgutil.get_data(__name__, "schema/project.schema.yml")
     if not template:
         raise ValueError("Schema project.schema.yml not found in package")
-    validate(yaml_values, template.decode("utf-8"))
+    validate(yaml_values, template.decode("utf-8"), root_dir)
 
     return yaml_values
 
@@ -663,7 +663,7 @@ def load_project(
             parent_yaml_values: Optional[dict] = load_possible_parent(full_path, safe)
             yaml_values = merge_dicts(yaml_values, parent_yaml_values, True)
             if strict:
-                validate_project(yaml_values)
+                validate_project(yaml_values, root_dir=root_dir)
             project = Project.from_config(yaml_values, project_path)
             logging.debug(
                 f"Loaded project {project.path} in {(time.time() - start) * 1000} ms"
