@@ -58,7 +58,7 @@ class StepsCollection:
 
     def get_executor(self, stage: Stage, step_name: str) -> Optional[Step]:
         executors = filter(
-            lambda e: step_name == e.meta.name and e.meta.stage == stage,
+            lambda e: step_name == e.meta.name and e.meta.stage == stage.name,
             self._step_executors,
         )
         return next(executors, None)

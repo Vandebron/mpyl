@@ -96,13 +96,13 @@ class Steps:
 
     @staticmethod
     def _find_required_artifact(
-        project: Project, required_artifact: Optional[ArtifactType]
+        project: Project, stages: list[Stage], required_artifact: Optional[ArtifactType]
     ) -> Optional[Artifact]:
         if not required_artifact or required_artifact == ArtifactType.NONE:
             return None
 
-        for stage in Stage:
-            output: Optional[Output] = Output.try_read(project.target_path, stage)
+        for stage in stages:
+            output: Optional[Output] = Output.try_read(project.target_path, stage.name)
             if (
                 output
                 and output.produced_artifact
@@ -130,7 +130,7 @@ class Steps:
             after_result.produced_artifact
             and after_result.produced_artifact.artifact_type != ArtifactType.NONE
         ):
-            after_result.write(project.target_path, stage)
+            after_result.write(project.target_path, stage.name)
         else:
             after_result.produced_artifact = main_step_artifact
 
@@ -155,11 +155,11 @@ class Steps:
     def _execute_stage(
         self, stage: Stage, project: Project, dry_run: bool = False
     ) -> Output:
-        step_name = project.stages.for_stage(stage)
+        step_name = project.stages.for_stage(stage.name)
         if step_name is None:
             return Output(
                 success=False,
-                message=f"Stage '{stage.value}' not defined on project '{project.name}'",
+                message=f"Stage '{stage.name}' not defined on project '{project.name}'",
             )
 
         invalid_maintainers = self._validate_project_against_config(project)
@@ -168,17 +168,19 @@ class Steps:
 
         executor: Optional[Step] = self._steps_collection.get_executor(stage, step_name)
         if not executor:
-            self._logger.error(f"No executor found for {step_name} in stage {stage}")
+            self._logger.error(
+                f"No executor found for {step_name} in stage {stage.name}"
+            )
 
             return Output(
                 success=False,
-                message=f"Executor '{step_name}' for '{stage.value}' not known or registered",
+                message=f"Executor '{step_name}' for '{stage.name}' not known or registered",
             )
 
         try:
-            self._logger.info(f"Executing {stage} for {project.name}")
+            self._logger.info(f"Executing {stage.name} {stage.icon} for {project.name}")
             artifact: Optional[Artifact] = self._find_required_artifact(
-                project, executor.required_artifact
+                project, self._properties.stages, executor.required_artifact
             )
             if executor.before:
                 before_result = self._execute(
@@ -186,7 +188,9 @@ class Steps:
                     project,
                     self._properties,
                     self._find_required_artifact(
-                        project, executor.before.required_artifact
+                        project,
+                        self._properties.stages,
+                        executor.before.required_artifact,
                     ),
                     dry_run,
                 )
@@ -196,7 +200,7 @@ class Steps:
             result = self._execute(
                 executor, project, self._properties, artifact, dry_run
             )
-            result.write(project.target_path, stage)
+            result.write(project.target_path, stage.name)
 
             if executor.after:
                 return self._execute_after_(
@@ -207,7 +211,7 @@ class Steps:
         except Exception as exc:
             message = str(exc)
             self._logger.warning(
-                f"Execution of '{executor.meta.name}' for project '{project.name}' in stage {stage} "
+                f"Execution of '{executor.meta.name}' for project '{project.name}' in stage {stage.name} "
                 f"failed with exception: {message}",
                 exc_info=True,
             )
@@ -216,7 +220,7 @@ class Steps:
             ) from exc
 
     def execute(
-        self, stage: Stage, project: Project, dry_run: bool = False
+        self, stage: str, project: Project, dry_run: bool = False
     ) -> StepResult:
         """
         :param stage: the stage to execute
@@ -225,5 +229,6 @@ class Steps:
         :return: StepResult
         :raise ExecutionException
         """
-        step_output = self._execute_stage(stage, project, dry_run)
-        return StepResult(stage=stage, project=project, output=step_output)
+        stage_object = self._properties.to_stage(stage)
+        step_output = self._execute_stage(stage_object, project, dry_run)
+        return StepResult(stage=stage_object, project=project, output=step_output)

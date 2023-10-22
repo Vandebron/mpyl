@@ -91,6 +91,8 @@ class RunProperties:
      """
     console: ConsoleProperties
     """Settings for the console output"""
+    stages: list[Stage]
+    """Stage definitions"""
 
     @staticmethod
     def for_local_run(
@@ -102,7 +104,14 @@ class RunProperties:
             versioning=VersioningProperties(revision, branch, 123, tag),
             config=config,
             console=ConsoleProperties("INFO", True, 130),
+            stages=[],
         )
+
+    def to_stage(self, stage_name: str) -> Stage:
+        stage_by_name = next(stage for stage in self.stages if stage.name == stage_name)
+        if stage_by_name:
+            return stage_by_name
+        raise ValueError(f"Stage {stage_name} not found")
 
     @staticmethod
     def from_configuration(
@@ -141,6 +150,10 @@ class RunProperties:
             versioning=versioning,
             config=config,
             console=console,
+            stages=[
+                Stage(stage["name"], stage["icon"])
+                for stage in run_properties["stages"]
+            ],
         )
 
 
@@ -214,16 +227,16 @@ class Output:
     produced_artifact: Optional[Artifact] = None
 
     @staticmethod
-    def path(target_path: str, stage: Stage):
-        return Path(target_path, f"{stage.name}.yml")
+    def path(target_path: str, stage: str):
+        return Path(target_path, f"{stage}.yml")
 
-    def write(self, target_path: str, stage: Stage):
+    def write(self, target_path: str, stage: str):
         Path(target_path).mkdir(parents=True, exist_ok=True)
         with Output.path(target_path, stage).open(mode="w+", encoding="utf-8") as file:
             yaml.dump(self, file)
 
     @staticmethod
-    def try_read(target_path: str, stage: Stage):
+    def try_read(target_path: str, stage: str):
         path = Output.path(target_path, stage)
         if path.exists():
             with open(path, encoding="utf-8") as file:

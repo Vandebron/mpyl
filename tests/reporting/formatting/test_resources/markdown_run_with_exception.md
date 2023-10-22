@@ -1,5 +1,5 @@
 ❗ Failed with exception  
-For _Build SBT_ on _sbtProject_ at _Build_ 
+For _Build SBT_ on _sbtProject_ at stage _Build_ 
 
 
 Something went wrong

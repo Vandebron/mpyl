@@ -7,9 +7,10 @@ from logging import Logger
 from kubernetes.config.kube_config import KubeConfigMerger
 from python_on_whales import docker, Container, DockerException
 
+from . import STAGE_NAME
 from .. import Step, Meta
 from ..models import ArtifactType, Input, Output, input_to_artifact
-from ...project import Stage, Target
+from ...project import Target
 from ...utilities.cypress import CypressConfig
 from ...utilities.docker import execute_with_stream
 from ...utilities.junit import JunitTestSpec
@@ -23,7 +24,7 @@ class CypressTest(Step):
                 name="Cypress Test",
                 description="Step to run cypress tests",
                 version="0.0.1",
-                stage=Stage.POST_DEPLOY,
+                stage=STAGE_NAME,
             ),
             produced_artifact=ArtifactType.JUNIT_TESTS,
             required_artifact=ArtifactType.NONE,

@@ -23,8 +23,8 @@ from logging import Logger
 from .post_docker_build import AfterBuildDocker
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType, input_to_artifact
+from . import STAGE_NAME
 from ...constants import BUILD_ARTIFACTS_FOLDER
-from ...project import Stage
 from ...utilities.docker import (
     DockerConfig,
     build,
@@ -46,7 +46,7 @@ class BuildDocker(Step):
                 name="Docker Build",
                 description="Build docker image",
                 version="0.0.1",
-                stage=Stage.BUILD,
+                stage=STAGE_NAME,
             ),
             produced_artifact=ArtifactType.DOCKER_IMAGE,
             required_artifact=ArtifactType.NONE,

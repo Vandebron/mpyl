@@ -51,14 +51,9 @@ class Target(Enum):
 
 
 @dataclass(frozen=True)
-class Stage(Enum):
-    def __eq__(self, other):
-        return self.value == other.value
-
-    BUILD = "build"
-    TEST = "test"
-    DEPLOY = "deploy"
-    POST_DEPLOY = "postdeploy"
+class Stage:
+    name: str
+    icon: str
 
 
 @dataclass(frozen=True)
@@ -148,14 +143,16 @@ class StageSpecificProperty(Generic[T]):
     deploy: Optional[T]
     postdeploy: Optional[T]
 
-    def for_stage(self, stage: Stage) -> Optional[T]:
-        if stage == Stage.BUILD:
+    def for_stage(self, stage: str) -> Optional[T]:
+        if stage == "build":
             return self.build
-        if stage == Stage.TEST:
+        if stage == "test":
             return self.test
-        if stage == Stage.DEPLOY:
+        if stage == "deploy":
             return self.deploy
-        return self.postdeploy
+        if stage == "postdeploy":
+            return self.postdeploy
+        raise KeyError(f"Unknown stage: {stage}")
 
 
 @dataclass(frozen=True)
@@ -172,7 +169,7 @@ class Stages(StageSpecificProperty[str]):
 
 @dataclass(frozen=True)
 class Dependencies(StageSpecificProperty[set[str]]):
-    def set_for_stage(self, stage: Stage) -> set[str]:
+    def set_for_stage(self, stage: str) -> set[str]:
         deps_for_stage = self.for_stage(stage)
         return deps_for_stage if deps_for_stage else set()
 
