@@ -151,7 +151,7 @@ class StageSpecificProperty(Generic[T]):
         if stage == "deploy":
             return self.deploy
         if stage == "postdeploy":
-            return self.deploy
+            return self.postdeploy
         raise KeyError(f"Unknown stage: {stage}")
 
 
