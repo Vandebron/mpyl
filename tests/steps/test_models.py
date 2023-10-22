@@ -32,6 +32,7 @@ class TestModels:
                 ),
                 run_plan={},
                 all_projects=set(),
+                root_dir=self.resource_path,
             )
 
         assert "'stages' is a required property" in excinfo.value.message
@@ -46,6 +47,7 @@ class TestModels:
             properties=valid_run_properties_values,
             run_plan={},
             all_projects=set(),
+            root_dir=self.resource_path,
         )
 
         assert run_properties

@@ -16,6 +16,7 @@ def initiate_run_properties(
     cli_parameters: MpylCliParameters = MpylCliParameters(),
     run_plan: Optional[dict[Stage, set[Project]]] = None,
     all_projects: Optional[set[Project]] = None,
+    root_dir: Path = Path(""),
 ) -> RunProperties:
     tag = cli_parameters.tag or properties["build"]["versioning"].get("tag")
     if all_projects is None or run_plan is None:
@@ -25,7 +26,7 @@ def initiate_run_properties(
                 all_projects = set(
                     map(
                         lambda p: load_project(
-                            root_dir=Path(""),
+                            root_dir=root_dir,
                             project_path=Path(p),
                             strict=False,
                             log=True,
