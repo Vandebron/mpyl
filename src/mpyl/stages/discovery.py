@@ -1,7 +1,6 @@
 """ Discovery of projects that are relevant to a specific `mpyl.stage.Stage` . Determine which of the
 discovered projects have been invalidated due to changes in the source code since the last build of the project's
 output artifact."""
-import operator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -96,21 +95,6 @@ def find_deploy_set(repo_config: RepoConfig, tag: Optional[str]) -> DeploySet:
                 all_projects, deploy.STAGE_NAME, changes_in_branch
             ),
         )
-
-
-def find_invalidated_projects_per_stage(
-    all_projects: set[Project], change_history: list[Revision], stages: list[Stage]
-) -> dict[Stage, set[Project]]:
-    projects_for_stage = {}
-    for stage in stages:
-        projects = find_invalidated_projects_for_stage(
-            all_projects, stage.name, change_history
-        )
-        if projects:
-            projects_for_stage[stage] = set(
-                sorted(projects, key=operator.attrgetter("name"))
-            )
-    return projects_for_stage
 
 
 def for_stage(projects: set[Project], stage: Stage) -> set[Project]:

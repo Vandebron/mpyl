@@ -77,11 +77,18 @@ class RunResult:
     def run_plan(self) -> dict[Stage, set[Project]]:
         return self._run_plan
 
+    @property
+    def results(self) -> list[StepResult]:
+        return self._results
+
     def append(self, result: StepResult):
         self._results.append(result)
 
     def extend(self, results: list[StepResult]):
         self._results.extend(results)
+
+    def update_run_plan(self, run_plan: dict[Stage, set[Project]]):
+        self._run_plan.update(run_plan)
 
     @property
     def is_success(self):

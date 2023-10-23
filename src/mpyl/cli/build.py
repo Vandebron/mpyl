@@ -3,6 +3,7 @@ import asyncio
 import logging
 import shutil
 import sys
+import pickle
 from pathlib import Path
 from typing import Optional
 
@@ -15,7 +16,6 @@ from github.GitRelease import GitRelease
 from questionary import Choice
 from rich.console import Console
 from rich.markdown import Markdown
-
 from . import (
     CliContext,
     CONFIG_PATH_HELP,
@@ -36,10 +36,9 @@ from ..constants import (
     BUILD_ARTIFACTS_FOLDER,
 )
 from ..project import load_project, Target
-from ..reporting.formatting.markdown import (
-    execution_plan_as_markdown,
-)
+from ..reporting.formatting.markdown import execution_plan_as_markdown
 from ..steps.models import RunProperties
+from ..steps.run import RunResult
 from ..utilities.github import GithubConfig
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
@@ -103,7 +102,25 @@ def build(ctx, config, properties, verbose):
     ctx.obj = CliContext(parsed_config, repo, console, verbose, parsed_properties)
 
 
-@build.command(help="Run an MPyL build")
+class CustomValidation(click.Command):
+    def invoke(self, ctx):
+        selected_stage = ctx.params.get("stage")
+        stages = [stage["name"] for stage in ctx.obj.run_properties["stages"]]
+
+        if selected_stage is None and ctx.params.get("sequential") is True:
+            raise click.ClickException(
+                message="A run can only be sequential if a stage is specified."
+            )
+
+        if selected_stage and selected_stage not in stages:
+            raise click.ClickException(
+                message=f"Stage {ctx.params.get('stage')} is not defined in the configuration."
+            )
+
+        super().invoke(ctx)
+
+
+@build.command(help="Run an MPyL build", cls=CustomValidation)
 @click.option(
     "--ci",
     is_flag=True,
@@ -116,8 +133,24 @@ def build(ctx, config, properties, verbose):
     help="Build all projects, regardless of changes on branch",
 )
 @click.option("--tag", "-t", help="Tag to build", type=click.STRING, required=False)
+@click.option(
+    "--stage",
+    default=None,
+    type=str,
+    required=False,
+    help="Stage to run",
+)
+@click.option(
+    "--sequential",
+    is_flag=True,
+    default=False,
+    required=False,
+    help="Combine results with previous run(s)",
+)
 @click.pass_obj
-def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
+def run(
+    obj: CliContext, ci, all_, tag, stage, sequential
+):  # pylint: disable=invalid-name
     asyncio.run(warn_if_update(obj.console))
 
     parameters = MpylCliParameters(
@@ -126,6 +159,7 @@ def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
         all=all_,
         verbose=obj.verbose,
         tag=tag,
+        stage=stage,
     )
     obj.console.log(parameters)
 
@@ -142,13 +176,30 @@ def run(obj: CliContext, ci, all_, tag):  # pylint: disable=invalid-name
         RunProperties.from_configuration(obj.run_properties, obj.config, tag)
         if ci
         else RunProperties.for_local_run(
-            obj.config, obj.repo.get_sha, obj.repo.get_branch, tag
+            obj.config,
+            obj.repo.get_sha,
+            obj.repo.get_branch,
+            tag,
+            obj.run_properties["stages"],
         )
     )
-    result = run_mpyl(
+    run_result = run_mpyl(
         run_properties=run_properties, cli_parameters=parameters, reporter=None
     )
-    sys.exit(0 if result.is_success else 1)
+
+    Path(BUILD_ARTIFACTS_FOLDER).mkdir(parents=True, exist_ok=True)
+    run_result_file = Path(BUILD_ARTIFACTS_FOLDER) / "run_result"
+
+    if sequential and run_result_file.is_file():
+        with open(run_result_file, "rb") as file:
+            previous_result: RunResult = pickle.load(file)
+            run_result.update_run_plan(previous_result.run_plan)
+            run_result.extend(previous_result.results)
+
+    with open(run_result_file, "wb") as file:
+        pickle.dump(run_result, file, pickle.HIGHEST_PROTOCOL)
+
+    sys.exit(0 if run_result.is_success else 1)
 
 
 @build.command(help="The status of the current local branch from MPyL's perspective")

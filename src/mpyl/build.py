@@ -13,7 +13,7 @@ from .cli import MpylCliParameters
 from .project import load_project, Stage, Project
 from .reporting.formatting.markdown import run_result_to_markdown
 from .reporting.targets import Reporter
-from .stages.discovery import for_stage, find_invalidated_projects_per_stage
+from .stages.discovery import for_stage, find_invalidated_projects_for_stage
 from .steps import deploy
 from .steps.collection import StepsCollection
 from .steps.models import RunProperties
@@ -41,7 +41,12 @@ def get_build_plan(
     logger.debug(f"Changes: {changes}")
 
     projects_per_stage: dict[Stage, set[Project]] = find_build_set(
-        repo, changes, run_properties.stages, cli_parameters.all, safe_load_projects
+        repo,
+        changes,
+        run_properties.stages,
+        cli_parameters.all,
+        safe_load_projects,
+        cli_parameters.stage,
     )
     return RunResult(
         run_properties=run_properties,
@@ -126,6 +131,7 @@ def find_build_set(
     stages: list[Stage],
     build_all: bool,
     safe_load_projects: bool,
+    selected_stage: Optional[str] = None,
 ) -> dict[Stage, set[Project]]:
     project_paths = repo.find_projects()
     all_projects = set(
@@ -141,10 +147,22 @@ def find_build_set(
         )
     )
 
-    if build_all:
-        return {stage: for_stage(all_projects, stage) for stage in stages}
+    build_set = {}
 
-    return find_invalidated_projects_per_stage(all_projects, changes_in_branch, stages)
+    for stage in stages:
+        if selected_stage and selected_stage != stage.name:
+            continue
+
+        if build_all:
+            projects = for_stage(all_projects, stage)
+        else:
+            projects = find_invalidated_projects_for_stage(
+                all_projects, stage.name, changes_in_branch
+            )
+
+        build_set.update({stage: projects})
+
+    return build_set
 
 
 def run_build(
