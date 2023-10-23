@@ -35,7 +35,7 @@ from ..constants import (
     DEFAULT_RUN_PROPERTIES_FILE_NAME,
     BUILD_ARTIFACTS_FOLDER,
 )
-from ..project import load_project, Target, Stage
+from ..project import load_project, Target
 from ..reporting.formatting.markdown import execution_plan_as_markdown
 from ..steps.models import RunProperties
 from ..steps.run import RunResult
@@ -104,9 +104,17 @@ def build(ctx, config, properties, verbose):
 
 class CustomValidation(click.Command):
     def invoke(self, ctx):
-        if ctx.params.get("stage") is None and ctx.params.get("sequential") is True:
+        selected_stage = ctx.params.get("stage")
+        stages = [stage["name"] for stage in ctx.obj.run_properties["stages"]]
+
+        if selected_stage is None and ctx.params.get("sequential") is True:
             raise click.ClickException(
                 message="A run can only be sequential if a stage is specified."
+            )
+
+        if selected_stage and selected_stage not in stages:
+            raise click.ClickException(
+                message=f"Stage {ctx.params.get('stage')} is not defined in the configuration."
             )
 
         super().invoke(ctx)
@@ -128,7 +136,7 @@ class CustomValidation(click.Command):
 @click.option(
     "--stage",
     default=None,
-    type=click.Choice([stage.value for stage in Stage]),
+    type=str,
     required=False,
     help="Stage to run",
 )
@@ -168,7 +176,11 @@ def run(
         RunProperties.from_configuration(obj.run_properties, obj.config, tag)
         if ci
         else RunProperties.for_local_run(
-            obj.config, obj.repo.get_sha, obj.repo.get_branch, tag
+            obj.config,
+            obj.repo.get_sha,
+            obj.repo.get_branch,
+            tag,
+            obj.run_properties["stages"],
         )
     )
     run_result = run_mpyl(

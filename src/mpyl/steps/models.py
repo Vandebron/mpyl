@@ -96,7 +96,11 @@ class RunProperties:
 
     @staticmethod
     def for_local_run(
-        config: dict, revision: str, branch: Optional[str], tag: Optional[str]
+        config: dict,
+        revision: str,
+        branch: Optional[str],
+        tag: Optional[str],
+        stages: list[dict],
     ):
         return RunProperties(
             details=RunContext("", "", "", "", "", None),
@@ -104,7 +108,7 @@ class RunProperties:
             versioning=VersioningProperties(revision, branch, 123, tag),
             config=config,
             console=ConsoleProperties("INFO", True, 130),
-            stages=[],
+            stages=[Stage(stage["name"], stage["icon"]) for stage in stages],
         )
 
     def to_stage(self, stage_name: str) -> Stage:
