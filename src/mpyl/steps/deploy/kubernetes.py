@@ -40,7 +40,7 @@ class DeployKubernetes(Step):
     def try_extract_hostname(
         chart: dict[str, CustomResourceDefinition]
     ) -> Optional[str]:
-        ingress = chart.get("ingress-https-route")
+        ingress = chart.get("ingress-https-route-0")
         if ingress:
             routes = ingress.spec.get("routes", {})
             if routes:

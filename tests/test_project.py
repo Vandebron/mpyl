@@ -59,6 +59,7 @@ class TestMplSchema:
             host.host.get_value(Target.PULL_REQUEST)
             == "Host(`payments-{PR-NUMBER}.test.nl`)"
         )
+        assert host.tls
         assert (
             host.tls.get_value(Target.PULL_REQUEST_BASE)
             == "le-custom-prod-wildcard-cert"

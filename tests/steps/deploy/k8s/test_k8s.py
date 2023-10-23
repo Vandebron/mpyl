@@ -127,7 +127,7 @@ class TestKubernetesChart:
         wrappers = builder.create_host_wrappers()
         route = V1AlphaIngressRoute(
             metadata=V1ObjectMeta(),
-            hosts=wrappers,
+            host=wrappers[0],
             target=Target.PRODUCTION,
             pr_number=1234,
             namespace="pr-1234",
@@ -154,7 +154,8 @@ class TestKubernetesChart:
             "service",
             "service-account",
             "sealed-secrets",
-            "ingress-https-route",
+            "ingress-https-route-0",
+            "ingress-https-route-1",
             "dockertest-ingress-0-whitelist",
             "dockertest-ingress-1-whitelist",
             "prometheus-rule",
@@ -172,7 +173,8 @@ class TestKubernetesChart:
             "sealed-secrets",
             "deployment",
             "service",
-            "ingress-https-route",
+            "ingress-https-route-0",
+            "ingress-https-route-1",
             "dockertest-ingress-0-whitelist",
             "dockertest-ingress-1-whitelist",
             "prometheus-rule",
@@ -186,21 +188,23 @@ class TestKubernetesChart:
         chart = to_service_chart(builder)
         manifest = render_manifests(chart)
         assert_roundtrip(
-            self.k8s_resources_path / "templates" / "manifest.yaml", manifest
+            self.k8s_resources_path / "templates" / "manifest.yaml",
+            manifest,
+            overwrite=False,
         )
 
     def test_default_ingress(self):
         project = get_minimal_project()
         builder = self._get_builder(project)
         chart = to_service_chart(builder)
-        self._roundtrip(self.template_path / "ingress", "ingress-https-route", chart)
+        self._roundtrip(self.template_path / "ingress", "ingress-https-route-0", chart)
 
     def test_production_ingress(self):
         project = get_minimal_project()
         builder = self._get_builder(project, test_data.RUN_PROPERTIES_PROD)
         chart = to_service_chart(builder)
         self._roundtrip(
-            self.template_path / "ingress-prod", "ingress-https-route", chart
+            self.template_path / "ingress-prod", "ingress-https-route-0", chart
         )
 
     def test_ingress_to_urls(self):

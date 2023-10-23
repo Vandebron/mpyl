@@ -29,7 +29,7 @@ def get_build_plan(
     repo: Repository,
     run_properties: RunProperties,
     cli_parameters: MpylCliParameters,
-    safe_load_projects: bool,
+    safe_load_projects: bool = False,
 ) -> RunResult:
     tag = run_properties.versioning.tag
 

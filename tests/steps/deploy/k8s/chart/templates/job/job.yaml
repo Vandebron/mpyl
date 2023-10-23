@@ -7,7 +7,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: job
     app.kubernetes.io/instance: job
-    maintainers: MPyL
     maintainer: MPyL
     version: pr-1234
     revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
@@ -24,7 +23,6 @@ spec:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: job
         app.kubernetes.io/instance: job
-        maintainers: MPyL
         maintainer: MPyL
         version: pr-1234
         revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f

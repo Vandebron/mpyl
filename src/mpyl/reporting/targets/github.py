@@ -102,8 +102,11 @@ class PullRequestReporter(Reporter):
         return self._change_pr_body
 
     def _extract_pr_header(self, current_body: Optional[str]) -> str:
-        body_header = current_body.split(self.body_separator)[0] if current_body else ""
-        return body_header.rstrip("\n") + f"\n\n{self.body_separator}\n"
+        body_header = current_body.split(self.body_separator) if current_body else [""]
+        body_header_extracted = (
+            body_header[0] if len(body_header) > 1 else body_header[-1]
+        )
+        return body_header_extracted.rstrip("\n") + f"\n\n{self.body_separator}\n"
 
     def _change_pr_body(self, pull_request: PullRequest, results: RunResult):
         pull_request.edit(

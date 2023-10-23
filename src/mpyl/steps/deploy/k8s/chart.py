@@ -241,10 +241,11 @@ class ChartBuilder:
             "app.kubernetes.io/instance": self.release_name,
         }
 
-        if len(self.project.maintainer) > 0:
+        if len(self.project.maintainer) > 1:
             app_labels["maintainers"] = ".".join(self.project.maintainer).replace(
                 " ", "_"
             )
+        elif len(self.project.maintainer) > 0:
             app_labels["maintainer"] = self.project.maintainer[0].replace(" ", "_")
 
         app_labels["version"] = run_properties.versioning.identifier
@@ -479,20 +480,25 @@ class ChartBuilder:
                 if host.service_port
                 else self.__find_default_port(),
                 white_lists=to_white_list(host.whitelists),
+                tls=host.tls.get_value(self.target) if host.tls else None,
             )
             for idx, host in enumerate(hosts if hosts else default_hosts)
         ]
 
-    def to_ingress_routes(self) -> V1AlphaIngressRoute:
+    def to_ingress_routes(self) -> list[V1AlphaIngressRoute]:
         hosts = self.create_host_wrappers()
-
-        return V1AlphaIngressRoute(
-            metadata=self._to_object_meta(),
-            hosts=hosts,
-            target=self.target,
-            namespace=get_namespace(self.step_input.run_properties, self.project),
-            pr_number=self.step_input.run_properties.versioning.pr_number,
-        )
+        return [
+            V1AlphaIngressRoute(
+                metadata=self._to_object_meta(
+                    name=f"{self.release_name}-ingress-{i}-https"
+                ),
+                host=host,
+                target=self.target,
+                namespace=get_namespace(self.step_input.run_properties, self.project),
+                pr_number=self.step_input.run_properties.versioning.pr_number,
+            )
+            for i, host in enumerate(hosts)
+        ]
 
     def to_middlewares(self) -> dict[str, V1AlphaMiddleware]:
         hosts: list[HostWrapper] = self.create_host_wrappers()
@@ -785,7 +791,6 @@ def _to_service_components_chart(builder):
     common_chart = {
         "deployment": builder.to_deployment(),
         "service": builder.to_service(),
-        "ingress-https-route": builder.to_ingress_routes(),
     }
     metrics = builder.project.kubernetes.metrics
     prometheus_chart = (
@@ -798,7 +803,11 @@ def _to_service_components_chart(builder):
         if metrics and metrics.enabled
         else {}
     )
-    return common_chart | prometheus_chart
+    ingress = {
+        f"ingress-https-route-{i}": route
+        for i, route in enumerate(builder.to_ingress_routes())
+    }
+    return common_chart | prometheus_chart | ingress
 
 
 def to_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
