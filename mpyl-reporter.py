@@ -37,9 +37,7 @@ def main(logger: Logger):
         )
 
         commit_check = CommitCheck(config=config, logger=logger)
-        outcome = commit_check.send_report(run_result)
-        print("outcome: ", outcome)
-        accumulator.add(outcome)
+        accumulator.add(commit_check.send_report(run_result))
 
         slack_channel = SlackReporter(
             config=config,
@@ -94,7 +92,7 @@ if __name__ == "__main__":
     )
 
     mpyl_logger = logging.getLogger("mpyl")
-    mpyl_logger.info("Starting reporting.....")
+    mpyl_logger.info("Starting reporting...")
     try:
         main(mpyl_logger)
     except Exception as e:

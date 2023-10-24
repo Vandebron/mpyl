@@ -3,7 +3,7 @@ import logging
 import sys
 from logging import Logger
 
-from rich import Console
+from rich.console import Console
 from rich.logging import RichHandler
 
 
@@ -36,7 +36,6 @@ def main(log: Logger, args: argparse.Namespace):
     if not args.local:
         from mpyl.reporting.targets.github import CommitCheck
         from mpyl.reporting.targets.slack import SlackReporter
-        from mpyl.steps.run import RunResult
         from mpyl.reporting.targets import ReportAccumulator
 
         check = CommitCheck(config=config, logger=log)
@@ -59,9 +58,7 @@ def main(log: Logger, args: argparse.Namespace):
         jira = JiraReporter(
             config=config, branch=run_properties.versioning.branch, logger=log
         )
-        accumulator.add(
-            check.send_report(RunResult(run_properties=run_properties, run_plan={}))
-        )
+        accumulator.add(check.start_report())
 
     cli_parameters = MpylCliParameters(
         local=args.local,
@@ -152,7 +149,7 @@ if __name__ == "__main__":
     )
 
     mpyl_logger = logging.getLogger("mpyl")
-    mpyl_logger.info("Starting run.....")
+    mpyl_logger.info("Starting run...")
     try:
         main(mpyl_logger, parsed_args)
     except Exception as e:
