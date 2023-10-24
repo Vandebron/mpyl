@@ -1,8 +1,8 @@
 """Commands related to build"""
 import asyncio
+import pickle
 import shutil
 import sys
-import pickle
 from pathlib import Path
 from typing import Optional
 
@@ -15,6 +15,7 @@ from github.GitRelease import GitRelease
 from questionary import Choice
 from rich.console import Console
 from rich.markdown import Markdown
+
 from . import (
     CliContext,
     CONFIG_PATH_HELP,
@@ -38,7 +39,6 @@ from ..constants import (
 )
 from ..project import load_project, Target
 from ..steps.deploy.k8s import DeployConfig
-from ..reporting.formatting.markdown import execution_plan_as_markdown
 from ..steps.models import RunProperties
 from ..steps.run import RunResult
 from ..utilities.github import GithubConfig

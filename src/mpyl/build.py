@@ -79,6 +79,7 @@ def print_status(obj: CliContext):
     else:
         console.print("No changes detected, nothing to do.")
 
+
 FORMAT = "%(name)s  %(message)s"
 
 
