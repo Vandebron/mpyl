@@ -4,7 +4,7 @@ from logging import Logger
 
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
-from ...project import Stage
+from . import STAGE_NAME
 
 
 class TestSkip(Step):
@@ -15,7 +15,7 @@ class TestSkip(Step):
                 name="Skip Test",
                 description="Skip test step",
                 version="0.0.1",
-                stage=Stage.TEST,
+                stage=STAGE_NAME,
             ),
             produced_artifact=ArtifactType.NONE,
             required_artifact=ArtifactType.NONE,
