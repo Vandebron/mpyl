@@ -1,4 +1,4 @@
-""" Skip test step. """
+""" Skip build step. """
 
 from logging import Logger
 
