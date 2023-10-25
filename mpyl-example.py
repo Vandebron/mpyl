@@ -3,6 +3,9 @@ import logging
 import sys
 from logging import Logger
 
+from rich.console import Console
+from rich.logging import RichHandler
+
 
 def main(log: Logger, args: argparse.Namespace):
     if args.local:
@@ -33,7 +36,6 @@ def main(log: Logger, args: argparse.Namespace):
     if not args.local:
         from mpyl.reporting.targets.github import CommitCheck
         from mpyl.reporting.targets.slack import SlackReporter
-        from mpyl.steps.run import RunResult
         from mpyl.reporting.targets import ReportAccumulator
 
         check = CommitCheck(config=config, logger=log)
@@ -56,9 +58,7 @@ def main(log: Logger, args: argparse.Namespace):
         jira = JiraReporter(
             config=config, branch=run_properties.versioning.branch, logger=log
         )
-        accumulator.add(
-            check.send_report(RunResult(run_properties=run_properties, run_plan={}))
-        )
+        accumulator.add(check.start_check())
 
     cli_parameters = MpylCliParameters(
         local=args.local,
@@ -131,10 +131,27 @@ if __name__ == "__main__":
     FORMAT = "%(name)s  %(message)s"
 
     parsed_args = parser.parse_args()
-    mpl_logger = logging.getLogger("mpyl")
-    mpl_logger.info("Starting run.....")
+    console = Console(
+        markup=False,
+        width=None if parsed_args.local else 200,
+        no_color=False,
+        log_path=False,
+        color_system="256",
+    )
+    logging.raiseExceptions = False
+    logging.basicConfig(
+        level="DEBUG" if parsed_args.verbose else "INFO",
+        format=FORMAT,
+        datefmt="[%X]",
+        handlers=[
+            RichHandler(markup=False, console=console, show_path=parsed_args.local)
+        ],
+    )
+
+    mpyl_logger = logging.getLogger("mpyl")
+    mpyl_logger.info("Starting run...")
     try:
-        main(mpl_logger, parsed_args)
+        main(mpyl_logger, parsed_args)
     except Exception as e:
-        mpl_logger.warning(f"Unexpected exception: {e}", exc_info=True)
+        mpyl_logger.warning(f"Unexpected exception: {e}", exc_info=True)
         sys.exit(1)
