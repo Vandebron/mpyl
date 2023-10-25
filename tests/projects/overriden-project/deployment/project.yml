@@ -9,5 +9,8 @@ deployment:
   namespace: ocpp
   properties:
     env:
-      - key: INSTANCE
-        all: 'default'
+      - key: DEPLOY_ENV
+        pr: "Test"
+        test: "Test"
+        acceptance: "Acceptance"
+        production: "Production"

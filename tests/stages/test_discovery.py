@@ -104,6 +104,6 @@ class TestDiscovery:
             assert (len(projects_for_build) == 1)
             assert (len(projects_for_test) == 1)
             assert (len(projects_for_deploy) == 2)
-            # as the env variables are key value pair, they are a bit tricky to merge
+            # as the env variables are not key value pair, they are a bit tricky to merge
             # 1 in overriden-project and 1 in parent project
             # assert(len(projects_for_deploy.pop().deployment.properties.env) == 2)
