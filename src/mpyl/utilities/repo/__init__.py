@@ -290,5 +290,9 @@ class Repository:  # pylint: disable=too-many-public-methods
             self._repo.git.ls_files(
                 f"*{folder_pattern}*/{Project.project_yaml_path()}"
             ).splitlines()
+        ) | set(
+            self._repo.git.ls_files(
+                f"*{folder_pattern}*/{Project.project_overrides_yml_pattern()}"
+            ).splitlines()
         )
         return sorted(projects)

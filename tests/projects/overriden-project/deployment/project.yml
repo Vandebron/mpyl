@@ -1,0 +1,13 @@
+name: ocpp
+maintainer: ['MPyL']
+description: 'Deployment of ocpp'
+mpylVersion: 1.0.10
+stages:
+  build: Docker Build
+  test: Docker Test
+deployment:
+  namespace: ocpp
+  properties:
+    env:
+      - key: INSTANCE
+        all: 'default'

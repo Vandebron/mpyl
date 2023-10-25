@@ -42,10 +42,10 @@ class TestMplSchema:
         assert project.deployment.kubernetes.port_mappings == {8080: 80}
         assert project.deployment.kubernetes.liveness_probe is not None
         assert (
-            project.deployment.kubernetes.liveness_probe.path.get_value(
-                Target.ACCEPTANCE
-            )
-            == "/health"
+                project.deployment.kubernetes.liveness_probe.path.get_value(
+                    Target.ACCEPTANCE
+                )
+                == "/health"
         )
         assert project.deployment.kubernetes.metrics is not None
         assert project.deployment.kubernetes.metrics.enabled
@@ -53,21 +53,21 @@ class TestMplSchema:
         assert project.deployment.traefik is not None
         host = project.deployment.traefik.hosts[0]
         assert (
-            host.host.get_value(Target.PULL_REQUEST_BASE) == "Host(`payments.test.nl`)"
+                host.host.get_value(Target.PULL_REQUEST_BASE) == "Host(`payments.test.nl`)"
         )
         assert (
-            host.host.get_value(Target.PULL_REQUEST)
-            == "Host(`payments-{PR-NUMBER}.test.nl`)"
+                host.host.get_value(Target.PULL_REQUEST)
+                == "Host(`payments-{PR-NUMBER}.test.nl`)"
         )
         assert host.tls
         assert (
-            host.tls.get_value(Target.PULL_REQUEST_BASE)
-            == "le-custom-prod-wildcard-cert"
+                host.tls.get_value(Target.PULL_REQUEST_BASE)
+                == "le-custom-prod-wildcard-cert"
         )
 
         assert (
-            project.deployment.properties.env[2].all
-            == "minimalService.{namespace}.svc.cluster.local"
+                project.deployment.properties.env[2].all
+                == "minimalService.{namespace}.svc.cluster.local"
         )
 
     def test_schema_load_validation(self):
@@ -78,3 +78,7 @@ class TestMplSchema:
     def test_target_by_value(self):
         target = Target(Target.PULL_REQUEST)
         assert target == Target.PULL_REQUEST
+
+    def test_root_path(self):
+        project = load_project(Path("/test"), self.resource_path / "test_project.yml")
+        assert project.path == str(Path(project.root_path) / self.resource_path / "test_project.yml")

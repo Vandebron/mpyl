@@ -98,7 +98,7 @@ class ProjectPath(ParamType):
         )
         found_projects = repo.find_projects(incomplete)
         return [
-            CompletionItem(value=proj.replace(f"/{Project.project_yaml_path()}", ""))
+            CompletionItem(value=str(Path(proj).parents[1]))
             for proj in found_projects
         ]
 

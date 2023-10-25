@@ -1,0 +1,10 @@
+name: ocpp-first
+maintainer: ['MPyL']
+stages:
+  deploy: Deploy From Docker Container
+deployment:
+  namespace: ocpp
+  properties:
+    env:
+      - key: INSTANCE
+        all: 'one'

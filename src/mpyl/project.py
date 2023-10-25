@@ -534,9 +534,19 @@ class Project:
     def project_yaml_path() -> str:
         return "deployment/project.yml"
 
+    @staticmethod
+    def project_overrides_yml_pattern() -> str:
+        return "deployment/project-override-*.yml"
+
     @property
     def root_path(self) -> str:
-        return self.path.replace(Project.project_yaml_path(), "")
+        if self.path.endswith(".yml"):
+            try:
+                return str(Path(self.path).parents[1])
+            except IndexError:
+                return self.path
+        else:
+            return self.path
 
     @property
     def deployment_path(self) -> str:
@@ -588,12 +598,28 @@ def validate_project(yaml_values: dict) -> dict:
     return yaml_values
 
 
+def load_possible_parent(root_dir: Path,
+                         project_path: Path,
+                         safe: bool = False,
+                         ) -> Optional[dict]:
+    full_path = root_dir / project_path
+    if str(full_path).endswith(Project.project_yaml_path()):
+        return None
+    else:
+        parent_project_path = full_path.parents[1] / Project.project_yaml_path()
+        if not parent_project_path.exists():
+            return None
+        else:
+            with open(parent_project_path, encoding="utf-8") as file:
+                return YAML(typ=None if safe else "unsafe").load(file)
+
+
 def load_project(
-    root_dir: Path,
-    project_path: Path,
-    strict: bool = True,
-    log: bool = True,
-    safe: bool = False,
+        root_dir: Path,
+        project_path: Path,
+        strict: bool = True,
+        log: bool = True,
+        safe: bool = False,
 ) -> Project:
     """
     Load a `project.yml` to `Project` data class
@@ -609,7 +635,11 @@ def load_project(
     with open(root_dir / project_path, encoding="utf-8") as file:
         try:
             start = time.time()
-            yaml_values = YAML(typ=None if safe else "unsafe").load(file)
+            child_yaml_values = YAML(typ=None if safe else "unsafe").load(file)
+            parent_yaml_values = load_possible_parent(root_dir, project_path, safe)
+            # TODO use YAML for merging
+            yaml_values = child_yaml_values if parent_yaml_values is None else {**parent_yaml_values,
+                                                                                **child_yaml_values}
             if strict:
                 validate_project(yaml_values)
             project = Project.from_config(yaml_values, project_path)
