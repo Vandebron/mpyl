@@ -193,22 +193,28 @@ class CommitCheck(Reporter):
 
         return github.get_repo(self._github_config.repository)
 
-    def start_report(self):
-        repo = self._create_github_repo_instance()
+    def start_check(self):
+        try:
+            repo = self._create_github_repo_instance()
 
-        with Repository(RepoConfig.from_config(self._config)) as git_repository:
-            self._check_run_id = repo.create_check_run(
-                name="Pipeline build",
-                head_sha=git_repository.get_sha,
-                status="in_progress",
-            ).id
+            with Repository(RepoConfig.from_config(self._config)) as git_repository:
+                self._check_run_id = repo.create_check_run(
+                    name="Pipeline build",
+                    head_sha=git_repository.get_sha,
+                    status="in_progress",
+                ).id
+
+            return GithubOutcome(success=True)
+        except GithubException as exc:
+            self._logger.warning(f"Unexpected exception: {exc}", exc_info=True)
+            return GithubOutcome(success=False, exception=exc)
 
     def send_report(
         self, results: RunResult, text: Optional[str] = None
     ) -> GithubOutcome:
         try:
             repo = self._create_github_repo_instance()
-            self.start_report()
+            self.start_check()
 
             if self._check_run_id and results.has_results:
                 run = repo.get_check_run(self._check_run_id)

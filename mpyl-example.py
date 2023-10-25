@@ -58,7 +58,7 @@ def main(log: Logger, args: argparse.Namespace):
         jira = JiraReporter(
             config=config, branch=run_properties.versioning.branch, logger=log
         )
-        accumulator.add(check.start_report())
+        accumulator.add(check.start_check())
 
     cli_parameters = MpylCliParameters(
         local=args.local,

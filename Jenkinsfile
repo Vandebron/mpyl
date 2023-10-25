@@ -49,6 +49,7 @@ pipeline {
                             sh "pipenv run mpyl repo status"
                             sh "pipenv run mpyl repo init"
                             sh "pipenv run mpyl build status"
+                            sh "pipenv run start-github-status-check"
                         }
                     }
                 }
