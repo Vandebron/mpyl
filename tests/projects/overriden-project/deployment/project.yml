@@ -3,8 +3,8 @@ maintainer: ['MPyL']
 description: 'Deployment of ocpp'
 mpylVersion: 1.0.10
 stages:
-  build: Docker Build
-  test: Docker Test
+  build: Echo Build
+  test: Echo Test
 deployment:
   namespace: ocpp
   properties:

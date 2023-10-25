@@ -1,7 +1,8 @@
 name: ocpp-first
 maintainer: ['MPyL']
+mpylVersion: 1.4.0
 stages:
-  deploy: Deploy From Docker Container
+  deploy: Echo Deploy
 deployment:
   namespace: ocpp
   properties:
