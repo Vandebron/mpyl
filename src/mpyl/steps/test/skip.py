@@ -17,7 +17,7 @@ class TestSkip(Step):
                 version="0.0.1",
                 stage=Stage.TEST,
             ),
-            produced_artifact=ArtifactType.JUNIT_TESTS,
+            produced_artifact=ArtifactType.NONE,
             required_artifact=ArtifactType.NONE,
         )
 
