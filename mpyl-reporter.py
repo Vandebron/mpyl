@@ -4,6 +4,9 @@ import sys
 from logging import Logger
 from pathlib import Path
 
+from rich.console import Console
+from rich.logging import RichHandler
+
 from mpyl.constants import BUILD_ARTIFACTS_FOLDER
 from mpyl.reporting.targets.github import CommitCheck
 from mpyl.reporting.targets.slack import SlackReporter
@@ -73,10 +76,25 @@ def main(logger: Logger):
 if __name__ == "__main__":
     FORMAT = "%(name)s  %(message)s"
 
-    mpl_logger = logging.getLogger("mpyl")
-    mpl_logger.info("Starting reporting.....")
+    console = Console(
+        markup=False,
+        width=200,
+        no_color=False,
+        log_path=False,
+        color_system="256",
+    )
+    logging.raiseExceptions = False
+    logging.basicConfig(
+        level="INFO",
+        format=FORMAT,
+        datefmt="[%X]",
+        handlers=[RichHandler(markup=False, console=console, show_path=False)],
+    )
+
+    mpyl_logger = logging.getLogger("mpyl")
+    mpyl_logger.info("Starting reporting...")
     try:
-        main(mpl_logger)
+        main(mpyl_logger)
     except Exception as e:
-        mpl_logger.warning(f"Unexpected exception: {e}", exc_info=True)
+        mpyl_logger.warning(f"Unexpected exception: {e}", exc_info=True)
         sys.exit(1)

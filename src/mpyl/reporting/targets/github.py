@@ -170,33 +170,53 @@ class CommitCheck(Reporter):
             "text": to_string(results),
         }
 
+    def _create_github_repo_instance(self) -> GithubRepository:
+        config: GithubAppConfig = self._github_config.get_app_config
+        if not config:
+            raise KeyError("github.app config needs to be defined")
+
+        private_key = (
+            Path(config.private_app_key_path or "").read_text(encoding="utf-8")
+            if config.private_app_key_path
+            else base64.b64decode(config.private_key_base_64_encoded or "").decode(
+                "utf-8"
+            )
+        )
+        integration = GithubIntegration(
+            integration_id=config.app_key, private_key=private_key
+        )
+        install = integration.get_installation(
+            self._github_config.owner, self._github_config.repo_name
+        )
+        access_token = integration.get_access_token(install.id)
+        github = Github(login_or_token=access_token.token)
+
+        return github.get_repo(self._github_config.repository)
+
+    def start_check(self):
+        try:
+            repo = self._create_github_repo_instance()
+
+            with Repository(RepoConfig.from_config(self._config)) as git_repository:
+                self._check_run_id = repo.create_check_run(
+                    name="Pipeline build",
+                    head_sha=git_repository.get_sha,
+                    status="in_progress",
+                ).id
+
+            return GithubOutcome(success=True)
+        except GithubException as exc:
+            self._logger.warning(f"Unexpected exception: {exc}", exc_info=True)
+            return GithubOutcome(success=False, exception=exc)
+
     def send_report(
         self, results: RunResult, text: Optional[str] = None
     ) -> GithubOutcome:
         try:
-            config: GithubAppConfig = self._github_config.get_app_config
-            if not config:
-                raise KeyError("github.app config needs to be defined")
+            repo = self._create_github_repo_instance()
+            self.start_check()
 
-            private_key = (
-                Path(config.private_app_key_path or "").read_text(encoding="utf-8")
-                if config.private_app_key_path
-                else base64.b64decode(config.private_key_base_64_encoded or "").decode(
-                    "utf-8"
-                )
-            )
-
-            integration = GithubIntegration(
-                integration_id=config.app_key, private_key=private_key
-            )
-
-            install = integration.get_installation(
-                self._github_config.owner, self._github_config.repo_name
-            )
-            access_token = integration.get_access_token(install.id)
-            github = Github(login_or_token=access_token.token)
-            repo = github.get_repo(self._github_config.repository)
-            if self._check_run_id and results:
+            if self._check_run_id and results.has_results:
                 run = repo.get_check_run(self._check_run_id)
                 conclusion = (
                     "success" if results is None or results.is_success else "failure"
@@ -207,14 +227,11 @@ class CommitCheck(Reporter):
                     conclusion=conclusion,
                     output=self._to_output(results),
                 )
-            else:
-                with Repository(RepoConfig.from_config(self._config)) as git_repository:
-                    self._check_run_id = repo.create_check_run(
-                        name="Pipeline build",
-                        head_sha=git_repository.get_sha,
-                        status="in_progress",
-                    ).id
+
+                return GithubOutcome(success=results.is_success)
+
             return GithubOutcome(success=True)
+
         except GithubException as exc:
             self._logger.warning(f"Unexpected exception: {exc}", exc_info=True)
             return GithubOutcome(success=False, exception=exc)
