@@ -637,9 +637,7 @@ def load_project(
             start = time.time()
             child_yaml_values = YAML(typ=None if safe else "unsafe").load(file)
             parent_yaml_values = load_possible_parent(root_dir, project_path, safe)
-            # TODO use YAML for merging
-            yaml_values = child_yaml_values if parent_yaml_values is None else {**parent_yaml_values,
-                                                                                **child_yaml_values}
+            yaml_values = merge_dicts(child_yaml_values, parent_yaml_values)
             if strict:
                 validate_project(yaml_values)
             project = Project.from_config(yaml_values, project_path)
@@ -659,6 +657,20 @@ def load_project(
         except Exception:
             logging.log(log_level, f"Failed to load {project_path}", exc_info=True)
             raise
+
+
+def merge_dicts(child_yaml_values, parent_yaml_values):
+    if parent_yaml_values is None:
+        return child_yaml_values
+    else:
+        merged = parent_yaml_values.copy()
+        for key, value in child_yaml_values.items():
+            # overriden project does not inherit stages
+            if key != "stages" and key in merged and isinstance(merged[key], dict) and isinstance(value, dict):
+                merged[key] = merge_dicts(merged[key], value)
+            else:
+                merged[key] = value
+        return merged
 
 
 def get_env_variables(project: Project, target: Target) -> dict[str, str]:

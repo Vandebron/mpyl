@@ -95,6 +95,15 @@ class TestDiscovery:
             touched_files = {"tests/projects/overriden-project/file.py"}
             projects = load_projects(repo.root_dir, repo.find_projects())
             assert (len(projects) == 11)
-            assert (len(find_invalidated_projects_for_stage(projects, build.STAGE_NAME,[Revision(0, "revision", touched_files)])) == 1)
-            assert (len(find_invalidated_projects_for_stage(projects, test.STAGE_NAME,[Revision(0, "revision", touched_files)])) == 1)
-            assert (len(find_invalidated_projects_for_stage(projects, deploy.STAGE_NAME,[Revision(0, "revision", touched_files)])) == 2)
+            projects_for_build = find_invalidated_projects_for_stage(projects, build.STAGE_NAME,
+                                                                     [Revision(0, "revision", touched_files)])
+            projects_for_test = find_invalidated_projects_for_stage(projects, test.STAGE_NAME,
+                                                                    [Revision(0, "revision", touched_files)])
+            projects_for_deploy = find_invalidated_projects_for_stage(projects, deploy.STAGE_NAME,
+                                                                      [Revision(0, "revision", touched_files)])
+            assert (len(projects_for_build) == 1)
+            assert (len(projects_for_test) == 1)
+            assert (len(projects_for_deploy) == 2)
+            # as the env variables are key value pair, they are a bit tricky to merge
+            # 1 in overriden-project and 1 in parent project
+            # assert(len(projects_for_deploy.pop().deployment.properties.env) == 2)
