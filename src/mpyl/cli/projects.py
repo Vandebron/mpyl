@@ -98,8 +98,7 @@ class ProjectPath(ParamType):
         )
         found_projects = repo.find_projects(incomplete)
         return [
-            CompletionItem(value=str(Path(proj).parents[1]))
-            for proj in found_projects
+            CompletionItem(value=str(Path(proj).parents[1])) for proj in found_projects
         ]
 
 

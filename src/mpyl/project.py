@@ -598,28 +598,27 @@ def validate_project(yaml_values: dict) -> dict:
     return yaml_values
 
 
-def load_possible_parent(root_dir: Path,
-                         project_path: Path,
-                         safe: bool = False,
-                         ) -> Optional[dict]:
+def load_possible_parent(
+    root_dir: Path,
+    project_path: Path,
+    safe: bool = False,
+) -> Optional[dict]:
     full_path = root_dir / project_path
     if str(full_path).endswith(Project.project_yaml_path()):
         return None
-    else:
-        parent_project_path = full_path.parents[1] / Project.project_yaml_path()
-        if not parent_project_path.exists():
-            return None
-        else:
-            with open(parent_project_path, encoding="utf-8") as file:
-                return YAML(typ=None if safe else "unsafe").load(file)
+    parent_project_path = full_path.parents[1] / Project.project_yaml_path()
+    if not parent_project_path.exists():
+        return None
+    with open(parent_project_path, encoding="utf-8") as file:
+        return YAML(typ=None if safe else "unsafe").load(file)
 
 
 def load_project(
-        root_dir: Path,
-        project_path: Path,
-        strict: bool = True,
-        log: bool = True,
-        safe: bool = False,
+    root_dir: Path,
+    project_path: Path,
+    strict: bool = True,
+    log: bool = True,
+    safe: bool = False,
 ) -> Project:
     """
     Load a `project.yml` to `Project` data class
@@ -662,15 +661,19 @@ def load_project(
 def merge_dicts(child_yaml_values, parent_yaml_values):
     if parent_yaml_values is None:
         return child_yaml_values
-    else:
-        merged = parent_yaml_values.copy()
-        for key, value in child_yaml_values.items():
-            # overriden project does not inherit stages
-            if key != "stages" and key in merged and isinstance(merged[key], dict) and isinstance(value, dict):
-                merged[key] = merge_dicts(merged[key], value)
-            else:
-                merged[key] = value
-        return merged
+    merged = parent_yaml_values.copy()
+    for key, value in child_yaml_values.items():
+        # overriden project does not inherit stages
+        if (
+            key != "stages"
+            and key in merged
+            and isinstance(merged[key], dict)
+            and isinstance(value, dict)
+        ):
+            merged[key] = merge_dicts(merged[key], value)
+        else:
+            merged[key] = value
+    return merged
 
 
 def get_env_variables(project: Project, target: Target) -> dict[str, str]:
