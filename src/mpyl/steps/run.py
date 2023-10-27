@@ -78,6 +78,10 @@ class RunResult:
         return self._run_plan
 
     @property
+    def has_run_plan_projects(self) -> bool:
+        return not all(len(projects) == 0 for stage, projects in self._run_plan.items())
+
+    @property
     def results(self) -> list[StepResult]:
         return self._results
 

@@ -72,7 +72,7 @@ def print_status(obj: CliContext):
         run_properties=run_properties,
         cli_parameters=MpylCliParameters(local=sys.stdout.isatty()),
     )
-    if result.run_plan:
+    if result.has_run_plan_projects:
         console.print(
             Markdown("**Execution plan:**  \n" + execution_plan_as_markdown(result))
         )
@@ -148,7 +148,7 @@ def run_mpyl(
                 safe_load_projects=True,
             )
 
-            if not run_plan.run_plan.items():
+            if not run_plan.has_run_plan_projects:
                 logger.info("Nothing to do. Exiting..")
                 return run_plan
 
