@@ -36,8 +36,8 @@ class TestMpylSchema:
 
         assert project.dependencies is not None
         assert project.dependencies.build == {"test/docker/"}
-        assert project.dependencies.test == {"test/docker/"}
-        assert project.dependencies.deploy == {"test/docker/", "deploy/docker/"}
+        assert project.dependencies.test == {"test/docker/", "test2/docker/"}
+        assert project.dependencies.deploy == {"test/docker/"}
         assert project.dependencies.postdeploy == {"specs/*.js"}
 
         assert project.deployment.kubernetes is not None
