@@ -30,7 +30,7 @@ class RunResult:
             return "❗ Failed with exception"
         if self.is_in_progress:
             return "🏗️ Building"
-        if not self.has_run_plan_projects:
+        if not self.has_results:
             return "🦥 Nothing to do"
         if self._results_success():
             return "✅ Successful"
@@ -110,9 +110,7 @@ class RunResult:
 
     @property
     def is_in_progress(self):
-        return (
-            len(self.run_plan.items()) > 0 and self.is_success and not self.is_finished
-        )
+        return self.has_run_plan_projects and self.is_success and not self.is_finished
 
     def _results_success(self):
         return not self.has_results or all(r.output.success for r in self._results)
