@@ -30,7 +30,7 @@ class RunResult:
             return "❗ Failed with exception"
         if self.is_in_progress:
             return "🏗️ Building"
-        if not self.has_results:
+        if not self.has_run_plan_projects:
             return "🦥 Nothing to do"
         if self._results_success():
             return "✅ Successful"
