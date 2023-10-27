@@ -452,15 +452,14 @@ def artifacts():
 
 @artifacts.command(help="Pull build artifacts from remote artifact repository")
 @click.option("--tag", "-t", type=click.STRING, help="Tag to build", required=False)
-@click.option(
-    "--pr_number", "-pr", type=click.INT, help="PR number to fetch", required=False
-)
+@click.option("--pr", type=click.INT, help="PR number to fetch", required=False)
 @click.option(
     "--path",
     "-p",
     type=click.Path(exists=False),
     help="Path within repository to copy artifacts from",
-    required=True,
+    default=Path("."),
+    required=False,
 )
 @click.pass_obj
 def pull(obj: CliContext, tag: str, pr_number: int, path: Path):
@@ -477,15 +476,14 @@ def pull(obj: CliContext, tag: str, pr_number: int, path: Path):
 
 @artifacts.command(help="Push build artifacts to remote artifact repository")
 @click.option("--tag", "-t", type=click.STRING, help="Tag to build", required=False)
-@click.option(
-    "--pr_number", "-pr", type=click.INT, help="PR number to fetch", required=False
-)
+@click.option("--pr", type=click.INT, help="PR number to fetch", required=False)
 @click.option(
     "--path",
     "-p",
     type=click.Path(exists=False),
     help="Path within repository to copy artifacts to",
-    required=True,
+    default=Path("."),
+    required=False,
 )
 @click.option(
     "--artifact-type",
