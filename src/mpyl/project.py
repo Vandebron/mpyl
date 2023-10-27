@@ -544,9 +544,8 @@ class Project:
             try:
                 return str(Path(self.path).parents[1])
             except IndexError:
-                return self.path
-        else:
-            return self.path
+                pass
+        return self.path
 
     @property
     def deployment_path(self) -> str:
