@@ -540,12 +540,7 @@ class Project:
 
     @property
     def root_path(self) -> str:
-        if self.path.endswith(".yml"):
-            try:
-                return str(Path(self.path).parents[1])
-            except IndexError:
-                pass
-        return self.path
+        return get_project_root_dir(self.path)
 
     @property
     def deployment_path(self) -> str:
@@ -597,12 +592,19 @@ def validate_project(yaml_values: dict) -> dict:
     return yaml_values
 
 
+def get_project_root_dir(project_path: str) -> str:
+    if project_path.endswith(".yml"):
+        try:
+            return str(Path(project_path).parents[1])
+        except IndexError:
+            pass
+    return project_path
+
+
 def load_possible_parent(
-    root_dir: Path,
-    project_path: Path,
+    full_path: Path,
     safe: bool = False,
 ) -> Optional[dict]:
-    full_path = root_dir / project_path
     if str(full_path).endswith(Project.project_yaml_path()):
         return None
     parent_project_path = full_path.parents[1] / Project.project_yaml_path()
@@ -630,12 +632,13 @@ def load_project(
     :return: `Project` data class
     """
     log_level = logging.WARNING if log else logging.DEBUG
-    with open(root_dir / project_path, encoding="utf-8") as file:
+    full_path = root_dir / project_path
+    with open(full_path, encoding="utf-8") as file:
         try:
             start = time.time()
-            child_yaml_values = YAML(typ=None if safe else "unsafe").load(file)
-            parent_yaml_values = load_possible_parent(root_dir, project_path, safe)
-            yaml_values = merge_dicts(child_yaml_values, parent_yaml_values)
+            yaml_values: dict = YAML(typ=None if safe else "unsafe").load(file)
+            parent_yaml_values: Optional[dict] = load_possible_parent(full_path, safe)
+            yaml_values = merge_dicts(yaml_values, parent_yaml_values)
             if strict:
                 validate_project(yaml_values)
             project = Project.from_config(yaml_values, project_path)
@@ -657,7 +660,14 @@ def load_project(
             raise
 
 
-def merge_dicts(child_yaml_values, parent_yaml_values):
+def merge_dicts(child_yaml_values: dict, parent_yaml_values: Optional[dict]) -> dict:
+    """
+    Merge child and parent yaml values. Child values take precedence over parent values.
+    stages are not merged, but overridden.
+    :param child_yaml_values: the child values
+    :param parent_yaml_values: the possible parent, if None, the child values are returned
+    :return: the merged values.
+    """
     if parent_yaml_values is None:
         return child_yaml_values
     merged = parent_yaml_values.copy()
