@@ -78,7 +78,7 @@ class ArtifactsRepository:
         self.logger = logger
         self.codebase_repo = codebase_repo
         self.artifact_repo_config = artifact_repo_config
-        if path_within_artifact_repo is Path("."):
+        if path_within_artifact_repo == Path("."):
             raise ValueError("Path within repo must not be root")
         self.path_within_artifact_repo = path_within_artifact_repo
 

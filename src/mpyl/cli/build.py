@@ -458,7 +458,7 @@ def artifacts():
     "-p",
     type=click.Path(exists=False),
     help="Path within repository to copy artifacts from",
-    default=Path("."),
+    default=Path("tmp"),
     required=False,
 )
 @click.pass_obj
@@ -480,7 +480,7 @@ def pull(obj: CliContext, tag: str, pr: int, path: Path):
     "-p",
     type=click.Path(exists=False),
     help="Path within repository to copy artifacts to",
-    default=Path("."),
+    default=Path("tmp"),
     required=False,
 )
 @click.option(
