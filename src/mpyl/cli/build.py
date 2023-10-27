@@ -462,11 +462,9 @@ def artifacts():
     required=False,
 )
 @click.pass_obj
-def pull(obj: CliContext, tag: str, pr_number: int, path: Path):
+def pull(obj: CliContext, tag: str, pr: int, path: Path):
     run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
-    target_branch = (
-        tag if tag else f"PR-{pr_number or run_properties.versioning.pr_number}"
-    )
+    target_branch = tag if tag else f"PR-{pr or run_properties.versioning.pr_number}"
     if not target_branch:
         raise click.ClickException("Either --pr or --tag must be specified")
 
@@ -493,11 +491,9 @@ def pull(obj: CliContext, tag: str, pr_number: int, path: Path):
     required=True,
 )
 @click.pass_obj
-def push(obj: CliContext, tag: str, pr_number: int, path: Path, artifact_type: str):
+def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: str):
     run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
-    target_branch = (
-        tag if tag else f"PR-{pr_number or run_properties.versioning.pr_number}"
-    )
+    target_branch = tag if tag else f"PR-{pr or run_properties.versioning.pr_number}"
     if not target_branch:
         raise click.ClickException("Either --pr or --tag must be specified")
 
