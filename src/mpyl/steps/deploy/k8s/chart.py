@@ -60,6 +60,7 @@ from .resources.traefik import (
     V1AlphaMiddleware,
     HostWrapper,
 )  # pylint: disable = no-name-in-module
+from .. import DeploySet
 from ...models import Input
 from ....project import (
     Project,
@@ -78,7 +79,6 @@ from ....project import (
     KeyValueRef,
     Metrics,
 )
-from ....stages.discovery import DeploySet
 from ....utilities.docker import DockerImageSpec
 
 yaml = YAML()

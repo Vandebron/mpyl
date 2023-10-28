@@ -5,9 +5,9 @@
 from logging import Logger
 from typing import Optional
 
+from . import STAGE_NAME
 from .post_docker_build import AfterBuildDocker
 from .. import Step, Meta
-from . import STAGE_NAME
 from ...project import Target
 from ...steps.models import (
     ArtifactType,

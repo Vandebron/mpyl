@@ -1,21 +1,12 @@
 """ Discovery of projects that are relevant to a specific `mpyl.stage.Stage` . Determine which of the
 discovered projects have been invalidated due to changes in the source code since the last build of the project's
 output artifact."""
-from dataclasses import dataclass
-from pathlib import Path
 from typing import Optional
 
-from ..project import Project, load_project
+from ..project import Project
 from ..project import Stage
-from ..steps import deploy
 from ..steps.models import Output
-from ..utilities.repo import Revision, RepoConfig, Repository
-
-
-@dataclass(frozen=True)
-class DeploySet:
-    all_projects: set[Project]
-    projects_to_deploy: set[Project]
+from ..utilities.repo import Revision
 
 
 def is_invalidated(project: Project, stage: str, path: str) -> bool:
@@ -49,7 +40,7 @@ def _to_relevant_changes(
     output: Output = Output.try_read(project.target_path, stage)
     relevant = set()
     for history in reversed(sorted(change_history, key=lambda c: c.ord)):
-        if stage == deploy.STAGE_NAME or output_invalidated(output, history.hash):
+        if stage == "deploy" or output_invalidated(output, history.hash):
             relevant.update(history.files_touched)
         else:
             return relevant
@@ -76,25 +67,6 @@ def find_invalidated_projects_for_stage(
     return set(
         filter(lambda p: _are_invalidated(p, stage, change_history), all_projects)
     )
-
-
-def find_deploy_set(repo_config: RepoConfig, tag: Optional[str]) -> DeploySet:
-    with Repository(repo_config) as repo:
-        changes_in_branch = (
-            repo.changes_in_tagged_commit(tag)
-            if tag
-            else repo.changes_in_branch_including_local()
-        )
-        project_paths = repo.find_projects()
-        all_projects = set(
-            map(lambda p: load_project(Path(""), Path(p), False), project_paths)
-        )
-        return DeploySet(
-            all_projects,
-            find_invalidated_projects_for_stage(
-                all_projects, deploy.STAGE_NAME, changes_in_branch
-            ),
-        )
 
 
 def for_stage(projects: set[Project], stage: Stage) -> set[Project]:
