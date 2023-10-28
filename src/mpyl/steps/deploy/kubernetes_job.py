@@ -2,12 +2,11 @@
 
 from logging import Logger
 
-from . import STAGE_NAME
+from . import STAGE_NAME, find_deploy_set
 from .k8s import deploy_helm_chart
 from .k8s.chart import ChartBuilder, to_cron_job_chart, to_job_chart
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
-from ...stages.discovery import find_deploy_set
 from ...utilities.repo import RepoConfig
 
 

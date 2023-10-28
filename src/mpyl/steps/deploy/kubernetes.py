@@ -3,7 +3,7 @@ import re
 from logging import Logger
 from typing import Optional
 
-from . import STAGE_NAME
+from . import STAGE_NAME, find_deploy_set
 from .k8s import deploy_helm_chart, CustomResourceDefinition, DeployedHelmAppSpec
 from .k8s.chart import ChartBuilder, to_service_chart
 from .. import Step, Meta
@@ -14,7 +14,6 @@ from ..models import (
     input_to_artifact,
 )
 from ...project import Target
-from ...stages.discovery import find_deploy_set
 from ...utilities.repo import RepoConfig
 
 
