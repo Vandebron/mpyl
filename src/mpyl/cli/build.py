@@ -247,7 +247,7 @@ def __print_status(obj: CliContext):
         console.print(Markdown(f"**Tag:** `{version.tag}` at `{revision}`. "))
     else:
         base_revision_specification = (
-            f"at `{base_revision}`"
+            f"`{obj.repo.main_origin_branch}` at `{base_revision}`"
             if base_revision
             else f"not present. Earliest revision: `{obj.repo.root_commit_hex}` (grafted)."
         )
