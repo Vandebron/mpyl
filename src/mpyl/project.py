@@ -138,33 +138,22 @@ class EnvCredential:
 
 @dataclass(frozen=True)
 class StageSpecificProperty(Generic[T]):
-    build: Optional[T]
-    test: Optional[T]
-    deploy: Optional[T]
-    postdeploy: Optional[T]
+    stages: dict[str, Optional[T]]
+
+    def getattr(self, stage: str) -> Optional[T]:
+        return self.for_stage(stage)
 
     def for_stage(self, stage: str) -> Optional[T]:
-        if stage == "build":
-            return self.build
-        if stage == "test":
-            return self.test
-        if stage == "deploy":
-            return self.deploy
-        if stage == "postdeploy":
-            return self.postdeploy
-        raise KeyError(f"Unknown stage: {stage}")
+        if stage not in self.stages.keys():
+            return None
+        return self.stages[stage]
 
 
 @dataclass(frozen=True)
 class Stages(StageSpecificProperty[str]):
     @staticmethod
     def from_config(values: dict):
-        return Stages(
-            build=values.get("build"),
-            test=values.get("test"),
-            deploy=values.get("deploy"),
-            postdeploy=values.get("postdeploy"),
-        )
+        return Stages(values)
 
 
 @dataclass(frozen=True)
@@ -175,13 +164,7 @@ class Dependencies(StageSpecificProperty[set[str]]):
 
     @staticmethod
     def from_config(values: dict):
-        build_deps = set(values.get("build", []))
-        return Dependencies(
-            build=build_deps,
-            test=build_deps | set(values.get("test", [])),
-            deploy=build_deps | set(values.get("deploy", [])),
-            postdeploy=set(values.get("postdeploy", [])),
-        )
+        return Dependencies(values)
 
 
 @dataclass(frozen=True)

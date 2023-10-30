@@ -6,6 +6,7 @@ from src.mpyl.project import Project, Stages, Dependencies
 from src.mpyl.steps import postdeploy
 from src.mpyl.steps.collection import StepsCollection
 from src.mpyl.steps.steps import Steps, ExecutionException
+from tests.test_resources.test_data import resource_path
 from tests.test_resources import test_data
 
 
@@ -14,6 +15,7 @@ class TestCypress:
         logger=logging.getLogger(),
         properties=test_data.RUN_PROPERTIES,
         steps_collection=StepsCollection(logging.getLogger()),
+        root_dir=resource_path,
     )
 
     def test_should_check_defined_specs(self):
