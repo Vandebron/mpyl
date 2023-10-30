@@ -4,8 +4,8 @@
 │ Path               │ tests/projects/job/deployment/project.yml               │
 │ Description        │ A job                                                   │
 │ Maintainer         │ ['MPyL']                                                │
-│ Stages             │ Stages(build='Docker Build', test='Echo Test',          │
-│                    │ deploy='Kubernetes Job Deploy', postdeploy=None)        │
+│ Stages             │ Stages(stages={'build': 'Docker Build', 'test': 'Echo   │
+│                    │ Test', 'deploy': 'Kubernetes Job Deploy'})              │
 │ Dependent projects │ {'nodeservice'}                                         │
 └────────────────────┴─────────────────────────────────────────────────────────┘
 [3;35mNone[0m
