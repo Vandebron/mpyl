@@ -1,12 +1,15 @@
 """ Discovery of projects that are relevant to a specific `mpyl.stage.Stage` . Determine which of the
 discovered projects have been invalidated due to changes in the source code since the last build of the project's
 output artifact."""
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
 from ..project import Project, load_project
 from ..project import Stage
+from ..steps import ArtifactType
+from ..steps.collection import StepsCollection
 from ..steps import deploy
 from ..steps.models import Output
 from ..utilities.repo import Revision, RepoConfig, Repository
@@ -18,15 +21,38 @@ class DeploySet:
     projects_to_deploy: set[Project]
 
 
-def is_invalidated(project: Project, stage: str, path: str) -> bool:
+def is_invalidated(
+    project: Project, stage: str, path: str, steps: StepsCollection
+) -> bool:
     deps = project.dependencies
     deps_for_stage = deps.set_for_stage(stage) if deps else {}
 
-    touched_dependency = (
+    touched_dependency_path = (
         next(filter(path.startswith, deps_for_stage), None) if deps else None
     )
     startswith: bool = path.startswith(project.root_path)
-    return startswith or touched_dependency is not None
+
+    step_name = project.stages.for_stage(stage)
+
+    touched = False
+    if deps is not None:
+        for all_deps in deps.all():
+            if path.startswith(all_deps):
+                touched = True
+                break
+
+    if touched and step_name is not None:
+        executor = steps.get_executor(Stage(stage, "icon"), step_name)
+        if executor is not None:
+            required_artifact = executor.required_artifact
+            if required_artifact != ArtifactType.NONE:
+                producing_stage = steps.get_stage_for_producing_artifact(
+                    project, required_artifact
+                )
+                if producing_stage is not None:
+                    return True
+
+    return startswith or touched_dependency_path is not None
 
 
 def output_invalidated(output: Optional[Output], revision_hash: str) -> bool:
@@ -49,7 +75,7 @@ def _to_relevant_changes(
     output: Output = Output.try_read(project.target_path, stage)
     relevant = set()
     for history in reversed(sorted(change_history, key=lambda c: c.ord)):
-        if stage == deploy.STAGE_NAME or output_invalidated(output, history.hash):
+        if output_invalidated(output, history.hash):
             relevant.update(history.files_touched)
         else:
             return relevant
@@ -58,23 +84,29 @@ def _to_relevant_changes(
 
 
 def _are_invalidated(
-    project: Project, stage: str, change_history: list[Revision]
+    project: Project,
+    stage: str,
+    change_history: list[Revision],
+    steps: StepsCollection,
 ) -> bool:
     if project.stages.for_stage(stage) is None:
         return False
 
     relevant_changes = _to_relevant_changes(project, stage, change_history)
-    return (
-        len(set(filter(lambda c: is_invalidated(project, stage, c), relevant_changes)))
-        > 0
+    changes = set(
+        filter(lambda c: is_invalidated(project, stage, c, steps), relevant_changes)
     )
+    return len(changes) > 0
 
 
 def find_invalidated_projects_for_stage(
     all_projects: set[Project], stage: str, change_history: list[Revision]
 ) -> set[Project]:
+    steps = StepsCollection(logger=logging.getLogger())
     return set(
-        filter(lambda p: _are_invalidated(p, stage, change_history), all_projects)
+        filter(
+            lambda p: _are_invalidated(p, stage, change_history, steps), all_projects
+        )
     )
 
 

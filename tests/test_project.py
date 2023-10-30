@@ -37,12 +37,9 @@ class TestMpylSchema:
 
         assert project.dependencies is not None
         assert project.dependencies.for_stage("build") == ["test/docker/"]
-        assert project.dependencies.for_stage("test") == [
-            "test/docker/",
-            "test2/docker/",
-        ]
-        assert project.dependencies.for_stage("deploy") == {"test/docker/"}
-        assert project.dependencies.for_stage("postdeploy") == {"specs/*.js"}
+        assert project.dependencies.for_stage("test") == ["test2/docker/"]
+        assert project.dependencies.for_stage("deploy") is None
+        assert project.dependencies.for_stage("postdeploy") == ["specs/*.js"]
 
         assert project.deployment.kubernetes is not None
         assert project.deployment.kubernetes.port_mappings == {8080: 80}

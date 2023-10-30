@@ -51,7 +51,7 @@ class TestDiscovery:
                         [Revision(0, "revision", touched_files)],
                     )
                 )
-                == 1
+                == 2
             )
 
     def test_should_find_invalidated_dependencies(self):
