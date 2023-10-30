@@ -134,13 +134,18 @@ class Repository:  # pylint: disable=too-many-public-methods
 
     @staticmethod
     def from_clone(config: RepoConfig, repo_path: Path):
-        if not config.repo_credentials:
+        creds = config.repo_credentials
+        if not creds:
             raise ValueError("Cannot clone repository without credentials")
 
-        Repo.clone_from(
-            url=config.repo_credentials.ssh_url,
+        repo = Repo.clone_from(
+            url=creds.to_url_with_credentials,
             to_path=repo_path,
         )
+        user_name = creds.user_name
+        with repo.config_writer() as writer:
+            writer.set_value("user", "name", user_name)
+            writer.set_value("user", "email", creds.email or "somebody@somwhere.com")
 
         return Repository(config=config, repo_path=repo_path)
 
