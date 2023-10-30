@@ -605,10 +605,11 @@ def load_possible_parent(
     full_path: Path,
     safe: bool = False,
 ) -> Optional[dict]:
-    if str(full_path).endswith(Project.project_yaml_path()):
-        return None
     parent_project_path = full_path.parents[1] / Project.project_yaml_path()
-    if not parent_project_path.exists():
+    if (
+        str(full_path).endswith(Project.project_yaml_path())
+        or not parent_project_path.exists()
+    ):
         return None
     with open(parent_project_path, encoding="utf-8") as file:
         return YAML(typ=None if safe else "unsafe").load(file)
@@ -660,18 +661,18 @@ def load_project(
             raise
 
 
-def merge_dicts(child_yaml_values: dict, parent_yaml_values: Optional[dict]) -> dict:
+def merge_dicts(yaml_values: dict, parent_yaml_values: Optional[dict]) -> dict:
     """
-    Merge child and parent yaml values. Child values take precedence over parent values.
+    Merge yml values and possible parent yaml values. YML values take precedence over parent values.
     stages are not merged, but overridden.
-    :param child_yaml_values: the child values
-    :param parent_yaml_values: the possible parent, if None, the child values are returned
+    :param yaml_values: the original yml values
+    :param parent_yaml_values: the possible parent, if None, the original values are returned
     :return: the merged values.
     """
     if parent_yaml_values is None:
-        return child_yaml_values
+        return yaml_values
     merged = parent_yaml_values.copy()
-    for key, value in child_yaml_values.items():
+    for key, value in yaml_values.items():
         # overriden project does not inherit stages
         if (
             key != "stages"
