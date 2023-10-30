@@ -108,6 +108,8 @@ def execution_plan_as_markdown(run_result: RunResult):
         result += f"\n\n{run_result.failed_result.output.message}\n\n"
     for stage in run_result.run_properties.stages:
         result += markdown_for_stage(run_result, stage)
+    if result == "":
+        return "🤷 Nothing to do"
     return result
 
 
