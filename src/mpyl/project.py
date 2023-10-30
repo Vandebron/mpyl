@@ -673,6 +673,14 @@ def merge_dicts(yaml_values: dict, parent_yaml_values: Optional[dict]) -> dict:
         return yaml_values
     merged = parent_yaml_values.copy()
     for key, value in yaml_values.items():
+        # ignore all keys that are not allowed to be overridden
+        if (
+            key != "stages"
+            and key != "deployment"
+            and key != "name"
+            and key != "description"
+        ):
+            continue
         # overriden project does not inherit stages
         if (
             key != "stages"
