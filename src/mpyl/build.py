@@ -243,7 +243,7 @@ def run_build(
                     return accumulator
 
             if accumulator.failed_result:
-                logging.warning(f"One of the builds failed at {stage}")
+                logging.warning(f"One of the builds failed at Stage {stage.name}")
                 return accumulator
         return accumulator
     except ExecutionException as exc:
