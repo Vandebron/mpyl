@@ -140,9 +140,6 @@ class EnvCredential:
 class StageSpecificProperty(Generic[T]):
     stages: dict[str, Optional[T]]
 
-    def getattr(self, stage: str) -> Optional[T]:
-        return self.for_stage(stage)
-
     def for_stage(self, stage: str) -> Optional[T]:
         if stage not in self.stages.keys():
             return None
