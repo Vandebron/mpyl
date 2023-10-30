@@ -3,6 +3,7 @@ from pathlib import Path
 
 from ruamel.yaml import YAML  # type: ignore
 
+from src.mpyl.steps.collection import StepsCollection
 from src.mpyl.project import load_project
 from src.mpyl.constants import BUILD_ARTIFACTS_FOLDER
 from src.mpyl.projects.find import load_projects
@@ -59,7 +60,7 @@ class TestDiscovery:
                         [Revision(0, "revision", touched_files)],
                     )
                 )
-                == 1
+                == 2
             )
 
     def test_should_find_invalidated_dependencies(self):
@@ -88,6 +89,7 @@ class TestDiscovery:
             ),
             stage="build",
             path="projects/sbt-service-other/file.py",
+            steps=StepsCollection(logger=logging.getLogger()),
         )
 
     def test_invalidation_logic(self):
