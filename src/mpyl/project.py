@@ -175,10 +175,11 @@ class Dependencies(StageSpecificProperty[set[str]]):
 
     @staticmethod
     def from_config(values: dict):
+        build_deps = set(values.get("build", []))
         return Dependencies(
-            build=set(values.get("build", [])),
-            test=set(values.get("test", [])),
-            deploy=set(values.get("deploy", [])),
+            build=build_deps,
+            test=build_deps | set(values.get("test", [])),
+            deploy=build_deps | set(values.get("deploy", [])),
             postdeploy=set(values.get("postdeploy", [])),
         )
 

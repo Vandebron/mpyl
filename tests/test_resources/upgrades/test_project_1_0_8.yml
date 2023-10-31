@@ -16,6 +16,8 @@ build:
 dependencies:
   build:
     - 'test/docker/'
+  test:
+    - 'test2/docker/'
   postdeploy:
     - 'specs/*.js'
 deployment:

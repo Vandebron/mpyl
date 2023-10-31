@@ -8,7 +8,7 @@ from src.mpyl.project import load_project, Target
 from tests import root_test_path
 
 
-class TestMplSchema:
+class TestMpylSchema:
     resource_path = root_test_path / "test_resources"
 
     def test_schema_load(self):
@@ -36,7 +36,9 @@ class TestMplSchema:
 
         assert project.dependencies is not None
         assert project.dependencies.build == {"test/docker/"}
-        assert project.dependencies.test == set()
+        assert project.dependencies.test == {"test/docker/", "test2/docker/"}
+        assert project.dependencies.deploy == {"test/docker/"}
+        assert project.dependencies.postdeploy == {"specs/*.js"}
 
         assert project.deployment.kubernetes is not None
         assert project.deployment.kubernetes.port_mappings == {8080: 80}
