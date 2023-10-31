@@ -57,10 +57,3 @@ def find_dependencies(
     return recursively_find(
         ProjectWithDependents(project=project, dependent_projects={}), mapped, []
     )
-
-
-def find_all_dependencies(
-    root_dir: Path, paths: list[str]
-) -> list[ProjectWithDependents]:
-    projects = load_projects(root_dir, paths)
-    return list(map(lambda p: find_dependencies(p, projects), projects))

@@ -24,7 +24,7 @@ from ..cli.commands.projects.lint import (
 )
 from ..cli.commands.projects.upgrade import check_upgrade
 from ..constants import DEFAULT_CONFIG_FILE_NAME
-from ..project import load_project, Project, Target
+from ..project import load_project, Project, Target, get_project_root_dir
 from ..projects.versioning import (
     check_upgrades_needed,
     upgrade_file,
@@ -98,8 +98,7 @@ class ProjectPath(ParamType):
         )
         found_projects = repo.find_projects(incomplete)
         return [
-            CompletionItem(value=proj.replace(f"/{Project.project_yaml_path()}", ""))
-            for proj in found_projects
+            CompletionItem(value=get_project_root_dir(proj)) for proj in found_projects
         ]
 
 

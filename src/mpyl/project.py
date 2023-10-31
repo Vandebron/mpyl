@@ -535,9 +535,13 @@ class Project:
     def project_yaml_path() -> str:
         return "deployment/project.yml"
 
+    @staticmethod
+    def project_overrides_yml_pattern() -> str:
+        return "deployment/project-override-*.yml"
+
     @property
     def root_path(self) -> str:
-        return self.path.replace(Project.project_yaml_path(), "")
+        return get_project_root_dir(self.path)
 
     @property
     def deployment_path(self) -> str:
@@ -589,6 +593,29 @@ def validate_project(yaml_values: dict) -> dict:
     return yaml_values
 
 
+def get_project_root_dir(project_path: str) -> str:
+    if project_path.endswith(".yml"):
+        try:
+            return str(Path(project_path).parents[1])
+        except IndexError:
+            pass
+    return project_path
+
+
+def load_possible_parent(
+    full_path: Path,
+    safe: bool = False,
+) -> Optional[dict]:
+    parent_project_path = full_path.parents[1] / Project.project_yaml_path()
+    if (
+        str(full_path).endswith(Project.project_yaml_path())
+        or not parent_project_path.exists()
+    ):
+        return None
+    with open(parent_project_path, encoding="utf-8") as file:
+        return YAML(typ=None if safe else "unsafe").load(file)
+
+
 def load_project(
     root_dir: Path,
     project_path: Path,
@@ -607,10 +634,13 @@ def load_project(
     :return: `Project` data class
     """
     log_level = logging.WARNING if log else logging.DEBUG
-    with open(root_dir / project_path, encoding="utf-8") as file:
+    full_path = root_dir / project_path
+    with open(full_path, encoding="utf-8") as file:
         try:
             start = time.time()
-            yaml_values = YAML(typ=None if safe else "unsafe").load(file)
+            yaml_values: dict = YAML(typ=None if safe else "unsafe").load(file)
+            parent_yaml_values: Optional[dict] = load_possible_parent(full_path, safe)
+            yaml_values = merge_dicts(yaml_values, parent_yaml_values)
             if strict:
                 validate_project(yaml_values)
             project = Project.from_config(yaml_values, project_path)
@@ -630,6 +660,34 @@ def load_project(
         except Exception:
             logging.log(log_level, f"Failed to load {project_path}", exc_info=True)
             raise
+
+
+def merge_dicts(yaml_values: dict, parent_yaml_values: Optional[dict]) -> dict:
+    """
+    Merge yml values and possible parent yaml values. YML values take precedence over parent values.
+    stages are not merged, but overridden.
+    :param yaml_values: the original yml values
+    :param parent_yaml_values: the possible parent, if None, the original values are returned
+    :return: the merged values.
+    """
+    if parent_yaml_values is None:
+        return yaml_values
+    merged = parent_yaml_values.copy()
+    for key, value in yaml_values.items():
+        # ignore all keys that are not allowed to be overridden
+        if key not in ("stages", "deployment", "name", "description"):
+            continue
+        # overriden project does not inherit stages
+        if (
+            key != "stages"
+            and key in merged
+            and isinstance(merged[key], dict)
+            and isinstance(value, dict)
+        ):
+            merged[key] = merge_dicts(merged[key], value)
+        else:
+            merged[key] = value
+    return merged
 
 
 def get_env_variables(project: Project, target: Target) -> dict[str, str]:

@@ -1,0 +1,16 @@
+name: ocpp
+maintainer: ['MPyL']
+description: 'Deployment of ocpp'
+mpylVersion: 1.0.10
+stages:
+  build: Echo Build
+  test: Echo Test
+deployment:
+  namespace: ocpp
+  properties:
+    env:
+      - key: DEPLOY_ENV
+        pr: "Test"
+        test: "Test"
+        acceptance: "Acceptance"
+        production: "Production"
