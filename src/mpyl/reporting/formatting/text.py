@@ -31,6 +31,7 @@ def to_test_report(artifact: JunitTestSpec) -> str:
     test_result.append(f"{total_tests} \n\n")
     for suite in suites:
         test_result.append(
-            f"Suite {suite.name}: ${suite.tests} tests, ${suite.failures} failures, ${suite.skipped} skipped\n"
+            f"Suite {suite.name}: tests={suite.tests}, failures={suite.failures}, "
+            f"errors={suite.errors}, skipped={suite.skipped}\n"
         )
     return "".join(test_result)
