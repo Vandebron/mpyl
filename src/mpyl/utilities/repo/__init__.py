@@ -2,7 +2,6 @@
 `mpyl.utilities.repo.Repository` is a facade for the Version Control System.
 At this moment Git is the only supported VCS.
 """
-import itertools
 import logging
 from dataclasses import dataclass
 from pathlib import Path
@@ -65,18 +64,31 @@ class Revision:
 @dataclass(frozen=True)
 class RepoCredentials:
     url: str
+    ssh_url: str
     user_name: str
+    email: str
     password: str
 
     @property
-    def to_url(self):
+    def to_url_with_credentials(self):
         parsed = urlparse(self.url)
-        return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+
+        repo = f"{parsed.netloc}{parsed.path}"
+        if not self.user_name:
+            return f"{parsed.scheme}://{repo}"
+
+        return f"{parsed.scheme}://{self.user_name or ''}{f':{self.password}' if self.password else ''}@{repo}"
 
     @staticmethod
     def from_config(config: dict):
+        url = config["url"]
+        ssh_url = f"{url.replace('https://', 'git@').replace('.com/', '.com:')}"
         return RepoCredentials(
-            url=config["url"], user_name=config["userName"], password=config["password"]
+            url=url,
+            ssh_url=ssh_url,
+            user_name=config["userName"],
+            email=config["email"],
+            password=config["password"],
         )
 
 
@@ -89,6 +101,10 @@ class RepoConfig:
     @staticmethod
     def from_config(config: dict):
         git_config = config["vcs"]["git"]
+        return RepoConfig.from_git_config(git_config=git_config)
+
+    @staticmethod
+    def from_git_config(git_config: dict):
         maybe_remote_config = git_config.get("remote", None)
         return RepoConfig(
             main_branch=git_config["mainBranch"],
@@ -100,11 +116,11 @@ class RepoConfig:
 
 
 class Repository:  # pylint: disable=too-many-public-methods
-    def __init__(self, config: RepoConfig):
+    def __init__(self, config: RepoConfig, repo_path: Optional[Path] = None):
         self._config = config
-        self._root_dir = Git().rev_parse("--show-toplevel")
+        self._root_dir = repo_path or Git().rev_parse("--show-toplevel")
         self._repo = Repo(
-            self._root_dir
+            path=self._root_dir
         )  # pylint: disable=attribute-defined-outside-init
 
     def __enter__(self):
@@ -115,6 +131,37 @@ class Repository:  # pylint: disable=too-many-public-methods
         if exc_val:
             raise exc_val
         return self
+
+    @staticmethod
+    def from_clone(config: RepoConfig, repo_path: Path):
+        creds = config.repo_credentials
+        if not creds:
+            raise ValueError("Cannot clone repository without credentials")
+
+        repo = Repo.clone_from(
+            url=creds.to_url_with_credentials,
+            to_path=repo_path,
+        )
+        user_name = creds.user_name
+        with repo.config_writer() as writer:
+            writer.set_value("user", "name", user_name)
+            writer.set_value("user", "email", creds.email or "somebody@somwhere.com")
+
+        return Repository(config=config, repo_path=repo_path)
+
+    @staticmethod
+    def from_shallow_diff_clone(
+        branch_name: str, url: str, base_branch: str, config_path: Path, path: Path
+    ):
+        Repo.clone_from(
+            url,
+            path,
+            allow_unsafe_protocols=True,
+            shallow_exclude=base_branch,
+            single_branch=True,
+            branch=branch_name,
+        )
+        return Repository(RepoConfig.from_config(parse_config(config_path)))
 
     @property
     def has_valid_head(self):
@@ -254,32 +301,36 @@ class Repository:  # pylint: disable=too-many-public-methods
     def fetch_pr(self, pr_number: int):
         return self._repo.remote().fetch(f"pull/{pr_number}/head:PR-{pr_number}")
 
-    @staticmethod
-    def clone_from_branch(
-        branch_name: str, url: str, base_branch: str, config_path: Path, path: Path
-    ):
-        Repo.clone_from(
-            url,
-            path,
-            allow_unsafe_protocols=True,
-            shallow_exclude=base_branch,
-            single_branch=True,
-            branch=branch_name,
-        )
-        parsed_config = parse_config(config_path)
-        return Repository(RepoConfig.from_config(parsed_config))
+    def create_branch(self, branch_name: str):
+        return self._repo.git.checkout("-b", f"{branch_name}")
+
+    @property
+    def has_changes(self) -> bool:
+        return self._repo.is_dirty(untracked_files=True)
+
+    def stage(self, path: str):
+        return self._repo.git.add(path)
+
+    def commit(self, message: str):
+        return self._repo.git.commit("-m", message)
+
+    def push(self, branch: str):
+        return self._repo.git.push("--set-upstream", "origin", branch)
 
     def checkout_branch(self, branch_name: str):
         self._repo.git.switch(branch_name)
 
-    def does_local_branch_exist(self, branch_name: str) -> bool:
+    def local_branch_exists(self, branch_name: str) -> bool:
         local_branches = [
             branch.strip(" ") for branch in self._repo.git.branch("--list").splitlines()
         ]
         logging.debug(f"Found local branches: {local_branches}")
         return branch_name in local_branches
 
-    def delete_branch(self, branch_name: str):
+    def remote_branch_exists(self, branch_name: str) -> bool:
+        return self._repo.git.ls_remote("origin", branch_name) != ""
+
+    def delete_local_branch(self, branch_name: str):
         self._repo.git.branch("-D", branch_name)
 
     def find_projects(self, folder_pattern: str = "") -> list[str]:

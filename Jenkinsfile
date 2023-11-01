@@ -89,7 +89,9 @@ pipeline {
         }
         stage("Report") {
             steps {
-                sh "pipenv run report"
+                wrap([$class: 'BuildUser']) {
+                    sh "pipenv run report"
+                }
             }
         }
     }

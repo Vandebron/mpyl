@@ -158,7 +158,7 @@ def init(obj: RepoContext, url: str, pull: int, branch: str, pristine: bool):
 
     console.log("Preparing repository for a new run...")
 
-    with Repository.clone_from_branch(
+    with Repository.from_shallow_diff_clone(
         branch.replace("refs/heads/", ""), url, "main", obj.config, Path(".")
     ) if pristine else Repository(
         config=RepoConfig.from_config(parse_config(obj.config))
@@ -167,7 +167,7 @@ def init(obj: RepoContext, url: str, pull: int, branch: str, pristine: bool):
         if not repo.remote_url:
             with console.status("👷 Initializing remote origin") as progress:
                 repo_config = RepoConfig.from_config(config).repo_credentials
-                url = url or (repo_config and repo_config.to_url)
+                url = url or (repo_config and repo_config.to_url_with_credentials)
                 remote = repo.init_remote(url)
                 progress.console.log(f"👷 Remote initialized at {remote.url}")
 
@@ -189,13 +189,13 @@ def init(obj: RepoContext, url: str, pull: int, branch: str, pristine: bool):
 
             if repo.get_branch != target_branch:
                 with console.status(f"👷 Fetching PR #{pr_number}"):
-                    if repo.does_local_branch_exist(target_branch):
+                    if repo.local_branch_exists(target_branch):
                         console.log(
                             Markdown(
                                 f"👷 Deleting local branch to prevent conflicts `{target_branch}`"
                             )
                         )
-                        repo.delete_branch(target_branch)
+                        repo.delete_local_branch(target_branch)
 
                     repo.fetch_pr(pr_number)
                     repo.checkout_branch(target_branch)

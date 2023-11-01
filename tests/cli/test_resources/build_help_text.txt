@@ -10,7 +10,8 @@ Options:
   --help                 Show this message and exit.
 
 Commands:
-  clean    Clean MPyL metadata in `.mpyl` folders
-  jenkins  Run a multi branch pipeline build on Jenkins
-  run      Run an MPyL build
-  status   The status of the current local branch from MPyL's perspective
+  artifacts  Commands related to artifacts like build cache and k8s manifests
+  clean      Clean MPyL metadata in `.mpyl` folders
+  jenkins    Run a multi branch pipeline build on Jenkins
+  run        Run an MPyL build
+  status     The status of the current local branch from MPyL's perspective

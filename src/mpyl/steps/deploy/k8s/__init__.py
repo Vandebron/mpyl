@@ -141,7 +141,7 @@ def upsert_namespace(
 
 def render_manifests(chart: dict[str, CustomResourceDefinition]):
     result = f"{GENERATED_WARNING}\n"
-    for name, template_content in chart.items():
+    for name, template_content in sorted(chart.items()):
         manifest = render_crd(name, template_content)
         result += manifest
     return result

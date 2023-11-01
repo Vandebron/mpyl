@@ -13,7 +13,7 @@ def main(log: Logger, args: argparse.Namespace):
         from src.mpyl.steps.models import RunProperties
         from src.mpyl.utilities.pyaml_env import parse_config
         from src.mpyl.cli import MpylCliParameters
-        from src.mpyl.build import run_mpyl
+        from mpyl.build import run_mpyl
 
     else:
         from mpyl.reporting.targets.jira import JiraReporter
