@@ -177,11 +177,12 @@ def run_mpyl(
 
             try:
                 console.print(Markdown(run_result_to_markdown(run_result)))
-            except Exception as exc:
+            except Exception as exc:  # pylint: disable=broad-except
                 console.log(
                     f"Exception during generating markdown for run_result: {exc}"
                 )
                 console.print_exception()
+
             return run_result
 
     except Exception as exc:
