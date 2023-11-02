@@ -38,9 +38,14 @@ def push_manifest_to_repo(
                 artifact_repo.create_branch(branch_name=branch)
 
             folder_name = __get_folder_name(step_input=step_input)
+            namespace = (
+                step_input.project.deployment.namespace
+                if step_input.project.deployment
+                else None
+            )
             new_file_path = Path(
                 tmp_repo_dir,
-                step_input.project.deployment.namespace,
+                namespace or "",
                 step_input.project.name,
                 folder_name,
                 manifest_path.name,

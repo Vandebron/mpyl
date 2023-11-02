@@ -136,7 +136,7 @@ def render_crd(name: str, crd: CustomResourceDefinition):
 
 
 def write_manifest(
-    release_name: str, target_path: Path, chart: dict[str, CustomResourceDefinition]
+    target_path: Path, chart: dict[str, CustomResourceDefinition]
 ) -> Path:
     if not target_path.exists():
         os.makedirs(target_path, exist_ok=True)
@@ -209,7 +209,7 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
     action = deploy_config.action.value
     if action == DeployAction.KUBERNETES_MANIFEST.value:  # pylint: disable=no-member
         path = Path(project.root_path, deploy_config.output_path)
-        file_path = write_manifest(release_name, path, chart)
+        file_path = write_manifest(path, chart)
 
         artifact = input_to_artifact(
             ArtifactType.KUBERNETES_MANIFEST,
