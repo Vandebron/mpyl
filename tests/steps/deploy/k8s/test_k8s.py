@@ -47,7 +47,7 @@ class TestKubernetesChart:
         file_name: Path,
         chart: str,
         resources: dict[str, CustomResourceDefinition],
-        overwrite: bool = True,
+        overwrite: bool = False,
     ):
         name_chart = file_name / f"{chart}.yaml"
         resource = resources[chart]
@@ -194,7 +194,7 @@ class TestKubernetesChart:
         assert_roundtrip(
             self.k8s_resources_path / "templates" / "manifest.yaml",
             manifest,
-            overwrite=True,
+            overwrite=False,
         )
 
     def test_default_ingress(self):
