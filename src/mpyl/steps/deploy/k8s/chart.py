@@ -441,8 +441,6 @@ class ChartBuilder:
         )
 
     def __find_default_port(self) -> int:
-        print("-------------------self.mappings-------------------")
-        print(self.mappings)
         found = next(iter(self.mappings.keys()))
         if found:
             return int(found)
