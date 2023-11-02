@@ -2,7 +2,6 @@ from pathlib import Path
 
 from ruamel.yaml import YAML  # type: ignore
 
-from mpyl.project import Project
 from src.mpyl.constants import BUILD_ARTIFACTS_FOLDER
 from src.mpyl.projects.find import load_projects
 from src.mpyl.stages.discovery import (
@@ -102,7 +101,7 @@ class TestDiscovery:
             projects_for_test = find_invalidated_projects_for_stage(
                 projects, test.STAGE_NAME, [Revision(0, "revision", touched_files)]
             )
-            projects_for_deploy: set[Project] = find_invalidated_projects_for_stage(
+            projects_for_deploy = find_invalidated_projects_for_stage(
                 projects, deploy.STAGE_NAME, [Revision(0, "revision", touched_files)]
             )
             assert len(projects_for_build) == 1
