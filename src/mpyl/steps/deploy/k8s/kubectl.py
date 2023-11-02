@@ -26,15 +26,21 @@ def push_manifest_to_repo(
         with Repository.from_clone(
             config=argocd_repo_config, repo_path=Path(tmp_repo_dir)
         ) as artifact_repo:
-            branch = "feature/TECH-610-test-argo-push"  # This can be main later
+            branch = "feature/TECH-610-implement-argocd-2"  # This can be main later
             if artifact_repo.local_branch_exists(branch_name=branch):
                 artifact_repo.delete_local_branch(
                     branch_name=branch
                 )  # To enforce latest version of branch
-            artifact_repo.checkout_branch(branch_name=branch)
+            branch_exists = artifact_repo.remote_branch_exists(branch_name=branch)
+            if branch_exists:
+                artifact_repo.checkout_branch(branch_name=branch)
+            else:
+                artifact_repo.create_branch(branch_name=branch)
+
             folder_name = __get_folder_name(step_input=step_input)
             new_file_path = Path(
                 tmp_repo_dir,
+                step_input.project.deployment.namespace,
                 step_input.project.name,
                 folder_name,
                 manifest_path.name,
