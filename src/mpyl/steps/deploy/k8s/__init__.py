@@ -141,7 +141,7 @@ def write_manifest(
     if not target_path.exists():
         os.makedirs(target_path, exist_ok=True)
     manifests = render_manifests(chart)
-    manifest_file = target_path / f"{release_name}-manifest.yml"
+    manifest_file = target_path / "manifest.yml"
     manifest_file.write_text(manifests, "utf-8")
     return manifest_file
 
