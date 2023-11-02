@@ -498,6 +498,18 @@ class ChartBuilder:
                 pr_number=self.step_input.run_properties.versioning.pr_number,
             )
             for i, host in enumerate(hosts)
+        ] + [
+            V1AlphaIngressRoute(
+                metadata=self._to_object_meta(
+                    name=f"{self.release_name}-ingress-{i}-http"
+                ),
+                host=host,
+                target=self.target,
+                namespace=get_namespace(self.step_input.run_properties, self.project),
+                pr_number=self.step_input.run_properties.versioning.pr_number,
+                https=False,
+            )
+            for i, host in enumerate(hosts)
         ]
 
     def to_middlewares(self) -> dict[str, V1AlphaMiddleware]:
@@ -803,11 +815,15 @@ def _to_service_components_chart(builder):
         if metrics and metrics.enabled
         else {}
     )
-    ingress = {
+    ingress_https = {
         f"ingress-https-route-{i}": route
         for i, route in enumerate(builder.to_ingress_routes())
     }
-    return common_chart | prometheus_chart | ingress
+    ingress_http = {
+        f"ingress-https-route-{i}": route
+        for i, route in enumerate(builder.to_ingress_routes())
+    }
+    return common_chart | prometheus_chart | ingress_https
 
 
 def to_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:

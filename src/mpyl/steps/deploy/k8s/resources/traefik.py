@@ -32,6 +32,7 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
         target: Target,
         namespace: str,
         pr_number: Optional[int],
+        https: bool = True,
     ):
         def _interpolate_names(host: str, name: str) -> str:
             host = host.replace("{SERVICE-NAME}", name)
@@ -50,8 +51,8 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
                 {"name": host.name, "kind": "Service", "port": host.service_port}
             ],
             "middlewares": [
+                {"name": "traefik-https-redirect@kubernetescrd"} if not https else None,
                 {"name": host.full_name},
-                {"name": "traefik-https-redirect@kubernetescrd"},
             ],
         }
 
@@ -61,10 +62,10 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
             metadata=metadata,
             spec={
                 "routes": [route],
-                "entryPoints": ["websecure"],
-                "tls": {
-                    "secretName": host.tls if host.tls else "le-prod-wildcard-cert"
-                },
+                "entryPoints": ["websecure" if https else "web"],
+                "tls": {"secretName": host.tls if host.tls else "le-prod-wildcard-cert"}
+                if https
+                else None,
             },
             schema="traefik.ingress.schema.yml",
         )
