@@ -1,5 +1,15 @@
 # Release notes
 
+## MPyL 1.4.2
+
+
+#### Bugfixes
+
+- Fix on how the selected DockerRegistry is being opened when writing the values of a dagster user code helm chart
+- Fix ruamel.yaml.YAML() name overshadowing with the yaml package in the k8s module
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.2)
+
 ## MPyL 1.4.1
 
 
