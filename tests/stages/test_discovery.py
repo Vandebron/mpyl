@@ -107,6 +107,10 @@ class TestDiscovery:
             assert len(projects_for_build) == 1
             assert len(projects_for_test) == 1
             assert len(projects_for_deploy) == 2
+            assert projects_for_deploy.pop().kubernetes.port_mappings == {
+                8088: 8088,
+                8089: 8089,
+            }
             # as the env variables are not key value pair, they are a bit tricky to merge
             # 1 in overriden-project and 1 in parent project
             # assert(len(projects_for_deploy.pop().deployment.properties.env) == 2)

@@ -640,7 +640,7 @@ def load_project(
             start = time.time()
             yaml_values: dict = YAML(typ=None if safe else "unsafe").load(file)
             parent_yaml_values: Optional[dict] = load_possible_parent(full_path, safe)
-            yaml_values = merge_dicts(yaml_values, parent_yaml_values)
+            yaml_values = merge_dicts(yaml_values, parent_yaml_values, True)
             if strict:
                 validate_project(yaml_values)
             project = Project.from_config(yaml_values, project_path)
@@ -662,10 +662,13 @@ def load_project(
             raise
 
 
-def merge_dicts(yaml_values: dict, parent_yaml_values: Optional[dict]) -> dict:
+def merge_dicts(
+    yaml_values: dict, parent_yaml_values: Optional[dict], root_level=False
+) -> dict:
     """
     Merge yml values and possible parent yaml values. YML values take precedence over parent values.
     stages are not merged, but overridden.
+    :param root_level: The current level is the root level, false for nested levels
     :param yaml_values: the original yml values
     :param parent_yaml_values: the possible parent, if None, the original values are returned
     :return: the merged values.
@@ -675,14 +678,13 @@ def merge_dicts(yaml_values: dict, parent_yaml_values: Optional[dict]) -> dict:
     merged = parent_yaml_values.copy()
     for key, value in yaml_values.items():
         # ignore all keys that are not allowed to be overridden
-        if key not in ("stages", "deployment", "name", "description"):
+        if root_level and key not in ("stages", "deployment", "name", "description"):
             continue
         # overriden project does not inherit stages
-        if (
-            key != "stages"
-            and key in merged
-            and isinstance(merged[key], dict)
-            and isinstance(value, dict)
+        if root_level and key == "stages":
+            merged[key] = value
+        elif (
+            key in merged and isinstance(merged[key], dict) and isinstance(value, dict)
         ):
             merged[key] = merge_dicts(merged[key], value)
         else:

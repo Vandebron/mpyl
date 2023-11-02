@@ -1,5 +1,5 @@
 name: ocpp
-maintainer: ['MPyL']
+maintainer: [ 'MPyL' ]
 description: 'Deployment of ocpp'
 mpylVersion: 1.0.10
 stages:
@@ -14,3 +14,9 @@ deployment:
         test: "Test"
         acceptance: "Acceptance"
         production: "Production"
+  kubernetes:
+    portMappings:
+      8088: 8088
+      8089: 8089
+    metrics:
+      enabled: true
