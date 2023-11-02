@@ -485,29 +485,19 @@ class ChartBuilder:
             for idx, host in enumerate(hosts if hosts else default_hosts)
         ]
 
-    def to_ingress_routes(self) -> list[V1AlphaIngressRoute]:
+    def to_ingress_routes(self, https: bool) -> list[V1AlphaIngressRoute]:
         hosts = self.create_host_wrappers()
         return [
             V1AlphaIngressRoute(
                 metadata=self._to_object_meta(
-                    name=f"{self.release_name}-ingress-{i}-https"
-                ),
-                host=host,
-                target=self.target,
-                namespace=get_namespace(self.step_input.run_properties, self.project),
-                pr_number=self.step_input.run_properties.versioning.pr_number,
-            )
-            for i, host in enumerate(hosts)
-        ] + [
-            V1AlphaIngressRoute(
-                metadata=self._to_object_meta(
                     name=f"{self.release_name}-ingress-{i}-http"
+                    + ("s" if https else "")
                 ),
                 host=host,
                 target=self.target,
                 namespace=get_namespace(self.step_input.run_properties, self.project),
                 pr_number=self.step_input.run_properties.versioning.pr_number,
-                https=False,
+                https=https,
             )
             for i, host in enumerate(hosts)
         ]
@@ -816,14 +806,14 @@ def _to_service_components_chart(builder):
         else {}
     )
     ingress_https = {
-        f"ingress-https-route-{i}": route
-        for i, route in enumerate(builder.to_ingress_routes())
+        f"{builder.project.name}-ingress-{i}-https": route
+        for i, route in enumerate(builder.to_ingress_routes(https=True))
     }
     ingress_http = {
-        f"ingress-https-route-{i}": route
-        for i, route in enumerate(builder.to_ingress_routes())
+        f"{builder.project.name}-ingress-{i}-http": route
+        for i, route in enumerate(builder.to_ingress_routes(https=False))
     }
-    return common_chart | prometheus_chart | ingress_https
+    return common_chart | prometheus_chart | ingress_https | ingress_http
 
 
 def to_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:

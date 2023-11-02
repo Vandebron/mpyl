@@ -47,7 +47,7 @@ class TestKubernetesChart:
         file_name: Path,
         chart: str,
         resources: dict[str, CustomResourceDefinition],
-        overwrite: bool = False,
+        overwrite: bool = True,
     ):
         name_chart = file_name / f"{chart}.yaml"
         resource = resources[chart]
@@ -154,8 +154,10 @@ class TestKubernetesChart:
             "service",
             "service-account",
             "sealed-secrets",
-            "ingress-https-route-0",
-            "ingress-https-route-1",
+            "dockertest-ingress-0-https",
+            "dockertest-ingress-0-http",
+            "dockertest-ingress-1-https",
+            "dockertest-ingress-1-http",
             "dockertest-ingress-0-whitelist",
             "dockertest-ingress-1-whitelist",
             "prometheus-rule",
@@ -173,8 +175,10 @@ class TestKubernetesChart:
             "sealed-secrets",
             "deployment",
             "service",
-            "ingress-https-route-0",
-            "ingress-https-route-1",
+            "dockertest-ingress-0-https",
+            "dockertest-ingress-0-http",
+            "dockertest-ingress-1-https",
+            "dockertest-ingress-1-http",
             "dockertest-ingress-0-whitelist",
             "dockertest-ingress-1-whitelist",
             "prometheus-rule",
@@ -190,21 +194,23 @@ class TestKubernetesChart:
         assert_roundtrip(
             self.k8s_resources_path / "templates" / "manifest.yaml",
             manifest,
-            overwrite=False,
+            overwrite=True,
         )
 
     def test_default_ingress(self):
         project = get_minimal_project()
         builder = self._get_builder(project)
         chart = to_service_chart(builder)
-        self._roundtrip(self.template_path / "ingress", "ingress-https-route-0", chart)
+        self._roundtrip(
+            self.template_path / "ingress", "minimalService-ingress-0-https", chart
+        )
 
     def test_production_ingress(self):
         project = get_minimal_project()
         builder = self._get_builder(project, test_data.RUN_PROPERTIES_PROD)
         chart = to_service_chart(builder)
         self._roundtrip(
-            self.template_path / "ingress-prod", "ingress-https-route-0", chart
+            self.template_path / "ingress-prod", "minimalService-ingress-0-https", chart
         )
 
     def test_ingress_to_urls(self):

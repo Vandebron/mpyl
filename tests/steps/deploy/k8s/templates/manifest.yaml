@@ -109,6 +109,64 @@ spec:
       serviceAccount: dockertest
       serviceAccountName: dockertest
 ---
+# dockertest-ingress-0-http
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  labels:
+    name: dockertest
+    app.kubernetes.io/version: pr-1234
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: dockertest
+    app.kubernetes.io/instance: dockertest
+    maintainer: MPyL
+    version: pr-1234
+    revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
+  name: dockertest-ingress-0-http
+spec:
+  routes:
+  - kind: Rule
+    match: Host(`payments-1234.test.nl`)
+    services:
+    - name: dockertest
+      kind: Service
+      port: 8080
+    middlewares:
+    - name: traefik-https-redirect@kubernetescrd
+    - name: dockertest-ingress-0-whitelist
+  entryPoints:
+  - web
+---
+# dockertest-ingress-0-https
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  labels:
+    name: dockertest
+    app.kubernetes.io/version: pr-1234
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: dockertest
+    app.kubernetes.io/instance: dockertest
+    maintainer: MPyL
+    version: pr-1234
+    revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
+  name: dockertest-ingress-0-https
+spec:
+  routes:
+  - kind: Rule
+    match: Host(`payments-1234.test.nl`)
+    services:
+    - name: dockertest
+      kind: Service
+      port: 8080
+    middlewares:
+    - name: traefik-https-redirect@kubernetescrd
+    - name: dockertest-ingress-0-whitelist
+  entryPoints:
+  - websecure
+  tls:
+    secretName: le-custom-prod-wildcard-cert
+---
 # dockertest-ingress-0-whitelist
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
@@ -135,6 +193,64 @@ spec:
     - 1.2.3.1
     - 1.2.3.4
 ---
+# dockertest-ingress-1-http
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  labels:
+    name: dockertest
+    app.kubernetes.io/version: pr-1234
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: dockertest
+    app.kubernetes.io/instance: dockertest
+    maintainer: MPyL
+    version: pr-1234
+    revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
+  name: dockertest-ingress-1-http
+spec:
+  routes:
+  - kind: Rule
+    match: Host(`some.other.host.com`)
+    services:
+    - name: dockertest
+      kind: Service
+      port: 4091
+    middlewares:
+    - name: traefik-https-redirect@kubernetescrd
+    - name: dockertest-ingress-1-whitelist
+  entryPoints:
+  - web
+---
+# dockertest-ingress-1-https
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  labels:
+    name: dockertest
+    app.kubernetes.io/version: pr-1234
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: dockertest
+    app.kubernetes.io/instance: dockertest
+    maintainer: MPyL
+    version: pr-1234
+    revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
+  name: dockertest-ingress-1-https
+spec:
+  routes:
+  - kind: Rule
+    match: Host(`some.other.host.com`)
+    services:
+    - name: dockertest
+      kind: Service
+      port: 4091
+    middlewares:
+    - name: traefik-https-redirect@kubernetescrd
+    - name: dockertest-ingress-1-whitelist
+  entryPoints:
+  - websecure
+  tls:
+    secretName: le-other-prod-wildcard-cert
+---
 # dockertest-ingress-1-whitelist
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
@@ -160,66 +276,6 @@ spec:
     - 1.2.3.0
     - 1.2.3.1
     - 1.2.3.4
----
-# ingress-https-route-0
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
-metadata:
-  labels:
-    name: dockertest
-    app.kubernetes.io/version: pr-1234
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: dockertest
-    app.kubernetes.io/instance: dockertest
-    maintainer: MPyL
-    version: pr-1234
-    revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
-  name: dockertest-ingress-0-https
-spec:
-  routes:
-  - kind: Rule
-    match: Host(`payments-1234.test.nl`)
-    services:
-    - name: dockertest
-      kind: Service
-      port: 8080
-    middlewares:
-    - name: dockertest-ingress-0-whitelist
-    - name: traefik-https-redirect@kubernetescrd
-  entryPoints:
-  - websecure
-  tls:
-    secretName: le-custom-prod-wildcard-cert
----
-# ingress-https-route-1
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
-metadata:
-  labels:
-    name: dockertest
-    app.kubernetes.io/version: pr-1234
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: dockertest
-    app.kubernetes.io/instance: dockertest
-    maintainer: MPyL
-    version: pr-1234
-    revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
-  name: dockertest-ingress-1-https
-spec:
-  routes:
-  - kind: Rule
-    match: Host(`some.other.host.com`)
-    services:
-    - name: dockertest
-      kind: Service
-      port: 4091
-    middlewares:
-    - name: dockertest-ingress-1-whitelist
-    - name: traefik-https-redirect@kubernetescrd
-  entryPoints:
-  - websecure
-  tls:
-    secretName: le-other-prod-wildcard-cert
 ---
 # prometheus-rule
 apiVersion: monitoring.coreos.com/v1

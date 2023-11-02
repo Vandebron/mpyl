@@ -20,8 +20,8 @@ spec:
       kind: Service
       port: 4091
     middlewares:
-    - name: dockertest-ingress-1-whitelist
     - name: traefik-https-redirect@kubernetescrd
+    - name: dockertest-ingress-1-whitelist
   entryPoints:
   - websecure
   tls:
