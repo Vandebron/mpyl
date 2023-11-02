@@ -175,7 +175,13 @@ def run_mpyl(
                 console.log(f"Exception during build execution: {exc}")
                 console.print_exception()
 
-            console.print(Markdown(run_result_to_markdown(run_result)))
+            try:
+                console.print(Markdown(run_result_to_markdown(run_result)))
+            except Exception as exc:
+                console.log(
+                    f"Exception during generating markdown for run_result: {exc}"
+                )
+                console.print_exception()
             return run_result
 
     except Exception as exc:
