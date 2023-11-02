@@ -1,5 +1,17 @@
 # Release notes
 
+## MPyL 1.4.1
+
+
+#### Bugfixes
+
+- Fix project overlays (merging children projects with their parent)
+- Github Check output only shows test summary, not the full test output
+- Get target branch in cache repo from the run properties
+- Only transition non-Epic Jira tickets to 'To Do'
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.1)
+
 ## MPyL 1.4.0
 
 
