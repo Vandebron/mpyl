@@ -175,14 +175,7 @@ def run_mpyl(
                 console.log(f"Exception during build execution: {exc}")
                 console.print_exception()
 
-            try:
-                console.print(Markdown(run_result_to_markdown(run_result)))
-            except Exception as exc:  # pylint: disable=broad-except
-                console.log(
-                    f"Exception during generating markdown for run_result: {exc}"
-                )
-                console.print_exception()
-
+            console.print(Markdown(run_result_to_markdown(run_result)))
             return run_result
 
     except Exception as exc:
