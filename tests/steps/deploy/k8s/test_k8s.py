@@ -219,7 +219,7 @@ class TestKubernetesChart:
 
         route = to_service_chart(builder)
         assert (
-            DeployKubernetes.try_extract_hostname(route)
+            DeployKubernetes.try_extract_hostname(route, project.name)
             == "https://minimalservice-1234.test-backend.nl"
         )
 
