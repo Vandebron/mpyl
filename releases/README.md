@@ -56,6 +56,9 @@ directory.
 Using this functionality, you can define different deployments for the same project.
 For example, you can deploy the same project with different settings to different environments.
 
+#### Bugfixes
+
+- Fix TLS creation in ingress routes
 
 Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.0)
 

@@ -464,9 +464,7 @@ def artifacts():
 @click.pass_obj
 def pull(obj: CliContext, tag: str, pr: int, path: Path):
     run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
-    target_branch = tag if tag else f"PR-{pr or run_properties.versioning.pr_number}"
-    if not target_branch:
-        raise click.ClickException("Either --pr or --tag must be specified")
+    target_branch = __get_target_branch(run_properties, tag, pr)
 
     build_artifacts = prepare_artifacts_repo(obj=obj, repo_path=path)
     build_artifacts.pull(branch=branch_name(target_branch, "cache"))
@@ -493,9 +491,7 @@ def pull(obj: CliContext, tag: str, pr: int, path: Path):
 @click.pass_obj
 def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: str):
     run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
-    target_branch = tag if tag else f"PR-{pr or run_properties.versioning.pr_number}"
-    if not target_branch:
-        raise click.ClickException("Either --pr or --tag must be specified")
+    target_branch = __get_target_branch(run_properties, tag, pr)
 
     build_artifacts = prepare_artifacts_repo(obj=obj, repo_path=path)
     deploy_config = DeployConfig.from_config(obj.config)
@@ -514,6 +510,23 @@ def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: str):
         project_paths=obj.repo.find_projects(),
         path_transformer=transformer,
     )
+
+
+def __get_target_branch(run_properties: RunProperties, tag: str, pr: int) -> str:
+    target_branch = (
+        tag
+        if tag
+        else (
+            run_properties.versioning.tag
+            if run_properties.versioning.tag
+            else f"PR-{pr or run_properties.versioning.pr_number}"
+        )
+    )
+    if not target_branch:
+        raise click.ClickException(
+            "Either pr or tag must be specified, either as a flag or in the run properties"
+        )
+    return target_branch
 
 
 if __name__ == "__main__":
