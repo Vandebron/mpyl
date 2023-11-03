@@ -11,12 +11,12 @@ from kubernetes.client import V1ConfigMap, ApiException, V1Deployment
 from ruamel.yaml import yaml_object, YAML
 import yaml as dict_to_yaml_str
 
-from .deploy_config import DeployConfig, DeployAction
+from .deploy_config import DeployConfig, DeployAction, get_namespace
 from .helm import write_helm_chart, GENERATED_WARNING
 from .kubectl import push_manifest_to_repo
 from ...deploy.k8s.resources import CustomResourceDefinition
 from ...models import RunProperties, input_to_artifact, ArtifactType, ArtifactSpec
-from ....project import Project, Target, ProjectName
+from ....project import Target, ProjectName
 from ....steps import Input, Output
 from ....steps.deploy.k8s import helm
 from ....steps.deploy.k8s.rancher import (
@@ -50,13 +50,6 @@ class KubernetesManifestSpec(ArtifactSpec):
     manifest_file_path: str
 
 
-def get_namespace(run_properties: RunProperties, project: Project) -> str:
-    if run_properties.target == Target.PULL_REQUEST:
-        return run_properties.versioning.identifier
-
-    return get_namespace_from_project(project) or project.name
-
-
 def rollout_restart_deployment(
     logger: Logger, apps_api: client.AppsV1Api, namespace: str, deployment: str
 ) -> Output:
@@ -87,13 +80,6 @@ def rollout_restart_deployment(
             message=f"Exception when calling AppsV1Api -> patch_namespaced_deployment: {api_exception}\n"
             f"{deployment} was NOT restarted",
         )
-
-
-def get_namespace_from_project(project: Project) -> Optional[str]:
-    if project.deployment and project.deployment.namespace:
-        return project.deployment.namespace
-
-    return None
 
 
 def upsert_namespace(
@@ -141,7 +127,7 @@ def write_manifest(
     if not target_path.exists():
         os.makedirs(target_path, exist_ok=True)
     manifests = render_manifests(chart)
-    manifest_file = target_path / "manifest.yml"
+    manifest_file = target_path / "manifest.yaml"
     manifest_file.write_text(manifests, "utf-8")
     return manifest_file
 
