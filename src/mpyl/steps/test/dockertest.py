@@ -80,7 +80,11 @@ class TestDocker(Step):
             image_tag=tag,
             target=test_target,
             registry_config=docker_registry_config,
-            build_args={},
+            build_args={
+                "DOCKER_IMAGE": tag,
+                "MAINTAINER": ",".join(step_input.project.maintainer),
+                "TAG_NAME": step_input.run_properties.versioning.identifier,
+            },
         )
 
         if success:
