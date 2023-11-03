@@ -205,9 +205,7 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
 
         if not step_input.dry_run:
             output = push_manifest_to_repo(
-                logger=logger,
                 step_input=step_input,
-                rancher_config=rancher_config,
                 manifest_path=file_path,
             )
             output.produced_artifact = artifact

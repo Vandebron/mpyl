@@ -1,22 +1,17 @@
 """ This module is called on to push your kubernetes manifest to a(n) (argo) repo during the `mpyl.steps.deploy step."""
 
 import shutil
-from logging import Logger
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from .deploy_config import get_namespace
-from .rancher import ClusterConfig
 from ....project import Target
 from ....steps import Input, Output
 from ....utilities.repo import RepoConfig, Repository
-from ....utilities.subprocess import custom_check_output
 
 
 def push_manifest_to_repo(
-    logger: Logger,
     step_input: Input,
-    rancher_config: ClusterConfig,
     manifest_path: Path,
 ) -> Output:
     git_config = step_input.run_properties.config["vcs"]["argoRepository"]
@@ -27,7 +22,7 @@ def push_manifest_to_repo(
         with Repository.from_clone(
             config=argocd_repo_config, repo_path=Path(tmp_repo_dir)
         ) as argo_repo:
-            branch = "feature/TECH-610-implement-argocd-2"  # This can be main later
+            branch = "main"
             if argo_repo.local_branch_exists(branch_name=branch):
                 argo_repo.delete_local_branch(
                     branch_name=branch
@@ -51,16 +46,6 @@ def push_manifest_to_repo(
                 dst=new_file_path.parent,
                 dirs_exist_ok=True,
             )
-
-            #  validate manifest
-            validate_command = (
-                f"kubectl apply -f {manifest_path} --context {rancher_config.context} "
-                f"--dry-run=server"
-            )
-            validation_result = custom_check_output(logger, validate_command)
-
-            if not validation_result.success:
-                return validation_result
 
             if argo_repo.has_changes:
                 argo_repo.stage(".")
