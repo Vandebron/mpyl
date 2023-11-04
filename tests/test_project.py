@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import pytest
 from jsonschema import ValidationError
@@ -85,7 +86,5 @@ class TestMpylSchema:
         assert target == Target.PULL_REQUEST
 
     def test_root_path(self):
-        project = load_project(Path("/test"), self.resource_path / "test_project.yml")
-        assert project.path == str(
-            Path(project.root_path) / self.resource_path / "test_project.yml"
-        )
+        project = load_project(self.resource_path, Path("test_project.yml"))
+        assert project.path == "test_project.yml"

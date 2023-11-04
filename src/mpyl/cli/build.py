@@ -248,60 +248,6 @@ def status(obj: CliContext, all_, projects):
             asyncio.get_event_loop().run_until_complete(upgrade_check)
 
 
-def __print_status(obj: CliContext):
-    run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
-    console = obj.console
-    console.print(f"MPyL log level is set to {run_properties.console.log_level}")
-
-    branch = obj.repo.get_branch
-    main_branch = obj.repo.main_branch
-    tag = run_properties.versioning.tag
-
-    if tag is None:
-        if run_properties.versioning.branch and not obj.repo.get_branch:
-            console.print("Current branch is detached.")
-        else:
-            console.log(
-                Markdown(
-                    f"Branch not specified at `build.versioning.branch` in _{DEFAULT_RUN_PROPERTIES_FILE_NAME}_, "
-                    f"falling back to git: _{obj.repo.get_branch}_"
-                )
-            )
-
-        if branch == main_branch:
-            console.log(f"On main branch ({branch}), cannot determine build status")
-            return
-
-    version = run_properties.versioning
-    revision = version.revision or obj.repo.get_sha
-    base_revision = obj.repo.base_revision
-    if tag:
-        console.print(Markdown(f"**Tag:** `{version.tag}` at `{revision}`. "))
-    else:
-        base_revision_specification = (
-            f"`{obj.repo.main_origin_branch}` at `{base_revision}`"
-            if base_revision
-            else f"not present. Earliest revision: `{obj.repo.root_commit_hex}` (grafted)."
-        )
-        console.print(
-            Markdown(f"**Branch:** `{branch}`. Base {base_revision_specification}. ")
-        )
-
-    result = get_build_plan(
-        logger=logging.getLogger("mpyl"),
-        repo=obj.repo,
-        run_properties=run_properties,
-        cli_parameters=MpylCliParameters(local=sys.stdout.isatty()),
-        safe_load_projects=False,
-    )
-    if result.run_plan:
-        console.print(
-            Markdown("**Execution plan:**  \n" + execution_plan_as_markdown(result))
-        )
-    else:
-        console.print("No changes detected, nothing to do.")
-
-
 class Pipeline(ParamType):
     name = "pipeline"
 
