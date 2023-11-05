@@ -210,6 +210,7 @@ def find_build_set(
         projects_list = selected_projects.split(",")
 
     build_set = {}
+    steps = StepsCollection(logger=logging.getLogger())
 
     for stage in stages:
         if selected_stage and selected_stage != stage.name:
@@ -223,7 +224,7 @@ def find_build_set(
             projects = for_stage(all_projects, stage)
         else:
             projects = find_invalidated_projects_for_stage(
-                all_projects, stage.name, changes_in_branch
+                all_projects, stage.name, changes_in_branch, steps
             )
 
         build_set.update({stage: projects})

@@ -32,6 +32,6 @@ def find_deploy_set(repo_config: RepoConfig, tag: Optional[str]) -> DeploySet:
         return DeploySet(
             all_projects,
             find_invalidated_projects_for_stage(
-                all_projects, STAGE_NAME, changes_in_branch
+                all_projects, STAGE_NAME, changes_in_branch, None
             ),
         )

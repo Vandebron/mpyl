@@ -1,7 +1,6 @@
 """ Discovery of projects that are relevant to a specific `mpyl.stage.Stage` . Determine which of the
 discovered projects have been invalidated due to changes in the source code since the last build of the project's
 output artifact."""
-import logging
 from typing import Optional
 
 from ..project import Project
@@ -13,7 +12,7 @@ from ..utilities.repo import Revision
 
 
 def is_invalidated(
-    project: Project, stage: str, path: str, steps: StepsCollection
+    project: Project, stage: str, path: str, steps: Optional[StepsCollection]
 ) -> bool:
     deps = project.dependencies
     deps_for_stage = deps.set_for_stage(stage) if deps else {}
@@ -32,7 +31,7 @@ def is_invalidated(
                 touched = True
                 break
 
-    if touched and step_name is not None:
+    if touched and steps and step_name is not None:
         executor = steps.get_executor(Stage(stage, "icon"), step_name)
         if executor is not None:
             required_artifact = executor.required_artifact
@@ -78,7 +77,7 @@ def _are_invalidated(
     project: Project,
     stage: str,
     change_history: list[Revision],
-    steps: StepsCollection,
+    steps: Optional[StepsCollection],
 ) -> bool:
     if project.stages.for_stage(stage) is None:
         return False
@@ -91,9 +90,11 @@ def _are_invalidated(
 
 
 def find_invalidated_projects_for_stage(
-    all_projects: set[Project], stage: str, change_history: list[Revision]
+    all_projects: set[Project],
+    stage: str,
+    change_history: list[Revision],
+    steps: Optional[StepsCollection],
 ) -> set[Project]:
-    steps = StepsCollection(logger=logging.getLogger())
     return set(
         filter(
             lambda p: _are_invalidated(p, stage, change_history, steps), all_projects
