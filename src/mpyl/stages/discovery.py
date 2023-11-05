@@ -20,7 +20,11 @@ def is_invalidated(
     touched_dependency_path = (
         next(filter(path.startswith, deps_for_stage), None) if deps else None
     )
-    startswith: bool = path.startswith(project.root_path)
+    if touched_dependency_path is not None:
+        return True
+
+    if path.startswith(project.root_path):
+        return True
 
     step_name = project.stages.for_stage(stage)
 
@@ -45,7 +49,7 @@ def is_invalidated(
                 if producing_stage is not None:
                     return True
 
-    return startswith or touched_dependency_path is not None
+    return False
 
 
 def output_invalidated(output: Optional[Output], revision_hash: str) -> bool:
