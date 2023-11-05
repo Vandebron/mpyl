@@ -3,7 +3,7 @@ from pathlib import Path
 
 from ruamel.yaml import YAML  # type: ignore
 
-from mpyl.project import Project
+from src.mpyl.project import Project
 from src.mpyl.constants import BUILD_ARTIFACTS_FOLDER
 from src.mpyl.projects.find import load_projects
 from src.mpyl.stages.discovery import (
@@ -49,23 +49,27 @@ class TestDiscovery:
         }
         assert self.find(deploy.STAGE_NAME, projects, touched_files) == {
             "nodeservice",
-            "job",
         }
 
-    def test_should_find_invalidated_test_dependencies2(self):
-        touched_files = {"tests/projects/service/file.py"}
+    def test_should_find_invalidated_build_dependencies(self):
+        touched_files = {
+            "tests/projects/sbt-service/src/main/scala/vandebron/mpyl/Main.scala",
+        }
         projects = set(
             load_projects(
                 test_data.get_repo().root_dir, test_data.get_repo().find_projects()
             )
         )
-        assert self.find(build.STAGE_NAME, projects, touched_files) == {"nodeservice"}
-        assert self.find(test.STAGE_NAME, projects, touched_files) == {
+        assert self.find(build.STAGE_NAME, projects, touched_files) == {
             "job",
-            "nodeservice",
+            "sbtservice",
+        }
+        assert self.find(test.STAGE_NAME, projects, touched_files) == {
+            "sbtservice",
         }
         assert self.find(deploy.STAGE_NAME, projects, touched_files) == {
-            "nodeservice",
+            "job",
+            "sbtservice",
         }
 
     def test_should_find_invalidated_dependencies(self):

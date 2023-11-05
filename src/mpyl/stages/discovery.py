@@ -1,9 +1,10 @@
 """ Discovery of projects that are relevant to a specific `mpyl.stage.Stage` . Determine which of the
 discovered projects have been invalidated due to changes in the source code since the last build of the project's
 output artifact."""
+import logging
 from typing import Optional
 
-from ..project import Project
+from ..project import Project, Dependencies
 from ..project import Stage
 from ..steps import ArtifactType
 from ..steps.collection import StepsCollection
@@ -11,45 +12,65 @@ from ..steps.models import Output
 from ..utilities.repo import Revision
 
 
-def is_invalidated(
-    project: Project, stage: str, path: str, steps: Optional[StepsCollection]
-) -> bool:
-    deps = project.dependencies
-    deps_for_stage = deps.set_for_stage(stage) if deps else {}
-
-    touched_dependency_path = (
-        next(filter(path.startswith, deps_for_stage), None) if deps else None
+def __log_invalidation(project: Project, stage: str, path: str, message: str) -> None:
+    logging.debug(
+        f"Invalidated '{project.name}' for '{stage}' by '{path}' because {message} "
     )
-    if touched_dependency_path is not None:
-        return True
 
-    if path.startswith(project.root_path):
+
+def __has_invalidated_dependencies(
+    deps: Dependencies,
+    project: Project,
+    stage: str,
+    path: str,
+    steps: Optional[StepsCollection],
+) -> bool:
+    touched_stages: set[str] = {
+        dep_stage
+        for dep_stage, dependencies in deps.all().items()
+        if len([d for d in dependencies if path.startswith(d)]) > 0
+    }
+
+    if stage in touched_stages:
+        __log_invalidation(project, stage, path, "directly touched dependency")
         return True
 
     step_name = project.stages.for_stage(stage)
+    if step_name is None or steps is None:
+        return False
 
-    touched = False
-    if deps is not None:
-        for dep_stage, all_deps in deps.all().items():
-            if dep_stage != stage:
-                continue
-            for dep in all_deps:
-                if path.startswith(dep):
-                    touched = True
-                    break
+    executor = steps.get_executor(Stage(stage, "icon"), step_name)
+    if executor is None:
+        return False
 
-    if touched and steps and step_name is not None:
-        executor = steps.get_executor(Stage(stage, "icon"), step_name)
-        if executor is not None:
-            required_artifact = executor.required_artifact
-            if required_artifact != ArtifactType.NONE:
-                producing_stage = steps.get_stage_for_producing_artifact(
-                    project, required_artifact
-                )
-                if producing_stage is not None:
-                    return True
+    required_artifact = executor.required_artifact
+    if required_artifact != ArtifactType.NONE:
+        producing_stage = steps.get_stage_for_producing_artifact(
+            project, required_artifact
+        )
+        if producing_stage is not None and producing_stage in touched_stages:
+            __log_invalidation(
+                project,
+                stage,
+                path,
+                f"producing stage {producing_stage} for `{required_artifact}` ",
+            )
+            return True
 
     return False
+
+
+def is_invalidated(
+    project: Project, stage: str, path: str, steps: Optional[StepsCollection]
+) -> bool:
+    if path.startswith(project.root_path):
+        __log_invalidation(project, stage, path, "is in project root")
+        return True
+
+    deps: Optional[Dependencies] = project.dependencies
+    if deps is None:
+        return False
+    return __has_invalidated_dependencies(deps, project, stage, path, steps)
 
 
 def output_invalidated(output: Optional[Output], revision_hash: str) -> bool:
