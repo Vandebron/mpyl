@@ -46,10 +46,13 @@ def is_invalidated(
 
     touched = False
     if deps is not None:
-        for all_deps in deps.all():
-            if path.startswith(all_deps):
-                touched = True
-                break
+        for dep_stage, all_deps in deps.all().items():
+            if dep_stage != stage:
+                continue
+            for dep in all_deps:
+                if path.startswith(dep):
+                    touched = True
+                    break
 
     if touched and step_name is not None:
         executor = steps.get_executor(Stage(stage, "icon"), step_name)

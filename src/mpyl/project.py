@@ -12,7 +12,6 @@ in the `deployment/project.yml`. It defines how the source code to which it rela
 
 .. include:: ../../README-dev.md
 """
-import itertools
 import logging
 import pkgutil
 import time
@@ -162,9 +161,8 @@ class Dependencies(StageSpecificProperty[set[str]]):
         deps_for_stage = self.for_stage(stage)
         return deps_for_stage if deps_for_stage else set()
 
-    def all(self) -> set[str]:
-        set_of_sets = [self.set_for_stage(key) for key in self.stages.keys()]
-        return set(itertools.chain.from_iterable(set_of_sets))
+    def all(self) -> dict[str, set[str]]:
+        return {key: self.set_for_stage(key) for key in self.stages.keys()}
 
     @staticmethod
     def from_config(values: dict):
