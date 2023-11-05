@@ -1,7 +1,9 @@
+import logging
 from pathlib import Path
 
 from ruamel.yaml import YAML  # type: ignore
 
+from mpyl.project import Project
 from src.mpyl.constants import BUILD_ARTIFACTS_FOLDER
 from src.mpyl.projects.find import load_projects
 from src.mpyl.stages.discovery import (
@@ -10,6 +12,7 @@ from src.mpyl.stages.discovery import (
 )
 from src.mpyl.steps import Output
 from src.mpyl.steps import build, test, deploy
+from src.mpyl.steps.collection import StepsCollection
 from src.mpyl.utilities.repo import Revision
 from tests import root_test_path, test_resource_path
 from tests.test_resources import test_data
@@ -19,40 +22,51 @@ yaml = YAML()
 
 
 class TestDiscovery:
+    steps = StepsCollection(logger=logging.getLogger())
+
+    def find(self, stage: str, projects: set[Project], touched_files: set[str]):
+        return {
+            project.name
+            for project in find_invalidated_projects_for_stage(
+                projects,
+                stage,
+                [Revision(0, "revision", touched_files)],
+                self.steps,
+            )
+        }
+
     def test_should_find_invalidated_test_dependencies(self):
-        with test_data.get_repo() as repo:
-            touched_files = {"tests/projects/service/file.py", "tests/some_file.txt"}
-            projects = set(load_projects(repo.root_dir, repo.find_projects()))
-            assert (
-                len(
-                    find_invalidated_projects_for_stage(
-                        projects,
-                        build.STAGE_NAME,
-                        [Revision(0, "revision", touched_files)],
-                    )
-                )
-                == 1
+        touched_files = {"tests/projects/service/file.py", "tests/some_file.txt"}
+        projects = set(
+            load_projects(
+                test_data.get_repo().root_dir, test_data.get_repo().find_projects()
             )
-            assert (
-                len(
-                    find_invalidated_projects_for_stage(
-                        projects,
-                        test.STAGE_NAME,
-                        [Revision(0, "revision", touched_files)],
-                    )
-                )
-                == 2
+        )
+        assert self.find(build.STAGE_NAME, projects, touched_files) == {"nodeservice"}
+        assert self.find(test.STAGE_NAME, projects, touched_files) == {
+            "nodeservice",
+            "job",
+        }
+        assert self.find(deploy.STAGE_NAME, projects, touched_files) == {
+            "nodeservice",
+            "job",
+        }
+
+    def test_should_find_invalidated_test_dependencies2(self):
+        touched_files = {"tests/projects/service/file.py"}
+        projects = set(
+            load_projects(
+                test_data.get_repo().root_dir, test_data.get_repo().find_projects()
             )
-            assert (
-                len(
-                    find_invalidated_projects_for_stage(
-                        projects,
-                        deploy.STAGE_NAME,
-                        [Revision(0, "revision", touched_files)],
-                    )
-                )
-                == 2
-            )
+        )
+        assert self.find(build.STAGE_NAME, projects, touched_files) == {"nodeservice"}
+        assert self.find(test.STAGE_NAME, projects, touched_files) == {
+            "job",
+            "nodeservice",
+        }
+        assert self.find(deploy.STAGE_NAME, projects, touched_files) == {
+            "nodeservice",
+        }
 
     def test_should_find_invalidated_dependencies(self):
         project_paths = [
@@ -65,6 +79,7 @@ class TestDiscovery:
             projects,
             TestStage.build().name,
             [Revision(0, "hash", {"projects/job/file.py", "some_file.txt"})],
+            self.steps,
         )
         assert 1 == len(invalidated)
 
@@ -95,14 +110,14 @@ class TestDiscovery:
             touched_files = {"tests/projects/overriden-project/file.py"}
             projects = load_projects(repo.root_dir, repo.find_projects())
             assert len(projects) == 13
-            projects_for_build = find_invalidated_projects_for_stage(
-                projects, build.STAGE_NAME, [Revision(0, "revision", touched_files)]
-            )
-            projects_for_test = find_invalidated_projects_for_stage(
-                projects, test.STAGE_NAME, [Revision(0, "revision", touched_files)]
-            )
+            projects_for_build = self.find(build.STAGE_NAME, projects, touched_files)
+            projects_for_test = self.find(test.STAGE_NAME, projects, touched_files)
+
             projects_for_deploy = find_invalidated_projects_for_stage(
-                projects, deploy.STAGE_NAME, [Revision(0, "revision", touched_files)]
+                projects,
+                deploy.STAGE_NAME,
+                [Revision(0, "revision", touched_files)],
+                self.steps,
             )
             assert len(projects_for_build) == 1
             assert len(projects_for_test) == 1
