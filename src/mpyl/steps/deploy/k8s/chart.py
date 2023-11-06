@@ -241,11 +241,10 @@ class ChartBuilder:
             "app.kubernetes.io/instance": self.release_name,
         }
 
-        if len(self.project.maintainer) > 1:
+        if len(self.project.maintainer) > 0:
             app_labels["maintainers"] = ".".join(self.project.maintainer).replace(
                 " ", "_"
             )
-        elif len(self.project.maintainer) > 0:
             app_labels["maintainer"] = self.project.maintainer[0].replace(" ", "_")
 
         app_labels["version"] = run_properties.versioning.identifier
