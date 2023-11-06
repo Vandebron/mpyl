@@ -5,7 +5,6 @@ mpylVersion: 1.0.9
 stages:
   build: Sbt Build
   test: Sbt Test
-  deploy: Kubernetes Spark Job Deploy
 deployment:
   namespace: 'jobs'
   properties:
