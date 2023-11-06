@@ -166,6 +166,9 @@ spec:
   - websecure
   tls:
     secretName: le-custom-prod-wildcard-cert
+    options:
+      name: insecure-ciphers
+      namespace: traefik
 ---
 # dockertest-ingress-0-whitelist
 apiVersion: traefik.containo.us/v1alpha1
@@ -218,6 +221,7 @@ spec:
     middlewares:
     - name: traefik-https-redirect@kubernetescrd
     - name: dockertest-ingress-1-whitelist
+    priority: 1000
   entryPoints:
   - web
 ---
@@ -246,6 +250,7 @@ spec:
     middlewares:
     - name: traefik-https-redirect@kubernetescrd
     - name: dockertest-ingress-1-whitelist
+    priority: 1000
   entryPoints:
   - websecure
   tls:

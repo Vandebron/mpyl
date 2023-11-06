@@ -481,6 +481,7 @@ class ChartBuilder:
                 else self.__find_default_port(),
                 white_lists=to_white_list(host.whitelists),
                 tls=host.tls.get_value(self.target) if host.tls else None,
+                insecure=host.insecure,
             )
             for idx, host in enumerate(hosts if hosts else default_hosts)
         ]

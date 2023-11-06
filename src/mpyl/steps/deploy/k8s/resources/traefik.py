@@ -18,6 +18,7 @@ class HostWrapper:
     service_port: int
     white_lists: dict[str, list[str]]
     tls: Optional[str]
+    insecure: bool = False
 
     @property
     def full_name(self) -> str:
@@ -56,6 +57,13 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
             ],
         }
 
+        if host.traefik_host.priority:
+            route |= {"priority": host.traefik_host.priority}
+
+        tls = {"secretName": host.tls if host.tls else "le-prod-wildcard-cert"}
+        if host.insecure:
+            tls |= {"options": {"name": "insecure-ciphers", "namespace": "traefik"}}
+
         super().__init__(
             api_version="traefik.containo.us/v1alpha1",
             kind="IngressRoute",
@@ -63,9 +71,7 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
             spec={
                 "routes": [route],
                 "entryPoints": ["websecure" if https else "web"],
-                "tls": {"secretName": host.tls if host.tls else "le-prod-wildcard-cert"}
-                if https
-                else None,
+                "tls": tls if https else None,
             },
             schema="traefik.ingress.schema.yml",
         )

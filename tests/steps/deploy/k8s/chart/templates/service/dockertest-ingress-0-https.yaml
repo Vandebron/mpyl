@@ -26,3 +26,6 @@ spec:
   - websecure
   tls:
     secretName: le-custom-prod-wildcard-cert
+    options:
+      name: insecure-ciphers
+      namespace: traefik

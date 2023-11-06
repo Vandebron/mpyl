@@ -22,5 +22,6 @@ spec:
     middlewares:
     - name: traefik-https-redirect@kubernetescrd
     - name: dockertest-ingress-1-whitelist
+    priority: 1000
   entryPoints:
   - web
