@@ -2,7 +2,7 @@
 This module contains the traefik ingress route CRD.
 """
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Union
 
 from kubernetes.client import V1ObjectMeta
 
@@ -58,9 +58,11 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
         }
 
         if host.traefik_host.priority:
-            route |= {"priority": host.traefik_host.priority}
+            route |= {"priority": str(host.traefik_host.priority)}
 
-        tls = {"secretName": host.tls if host.tls else "le-prod-wildcard-cert"}
+        tls: dict[str, Union[str, dict]] = {
+            "secretName": host.tls if host.tls else "le-prod-wildcard-cert"
+        }
         if host.insecure:
             tls |= {"options": {"name": "insecure-ciphers", "namespace": "traefik"}}
 
