@@ -346,7 +346,7 @@ class TraefikHost:
     tls: Optional[TargetProperty[str]]
     whitelists: TargetProperty[list[str]]
     priority: Optional[int]
-    insecure: bool = False
+    insecure: bool
 
     @staticmethod
     def from_config(values: dict):
