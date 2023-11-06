@@ -52,7 +52,7 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
                 {"name": host.name, "kind": "Service", "port": host.service_port}
             ],
             "middlewares": [
-                {"name": "traefik-https-redirect@kubernetescrd"},
+                {"name": "traefik-https-redirect@kubernetescrd"} if not https else None,
                 {"name": host.full_name},
             ],
         }

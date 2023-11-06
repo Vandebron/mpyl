@@ -21,7 +21,6 @@ spec:
       kind: Service
       port: 8080
     middlewares:
-    - name: traefik-https-redirect@kubernetescrd
     - name: minimalservice-ingress-0-whitelist
   entryPoints:
   - websecure
