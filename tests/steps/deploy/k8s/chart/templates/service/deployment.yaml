@@ -84,7 +84,7 @@ spec:
           periodSeconds: 30
           successThreshold: 0
           timeoutSeconds: 20
-        name: dockertest
+        name: service
         ports:
         - containerPort: 80
           name: port-0

@@ -716,7 +716,7 @@ class ChartBuilder:
         liveness_probe, startup_probe = self._construct_probes()
 
         container = V1Container(
-            name=self.release_name,
+            name="service",
             image=self._get_image(),
             env=self._get_env_vars(),
             ports=ports,
