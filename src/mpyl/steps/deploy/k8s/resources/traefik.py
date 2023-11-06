@@ -2,7 +2,7 @@
 This module contains the traefik ingress route CRD.
 """
 from dataclasses import dataclass
-from typing import Optional, Union
+from typing import Optional, Union, Any
 
 from kubernetes.client import V1ObjectMeta
 
@@ -42,7 +42,7 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
                 return host.replace("{PR-NUMBER}", str(pr_number))
             return host
 
-        route = {
+        route: dict[str, Any] = {
             "kind": "Rule",
             "match": _interpolate_names(
                 host=host.traefik_host.host.get_value(target),
@@ -58,7 +58,7 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
         }
 
         if host.traefik_host.priority:
-            route |= {"priority": str(host.traefik_host.priority)}
+            route |= {"priority": host.traefik_host.priority}
 
         tls: dict[str, Union[str, dict]] = {
             "secretName": host.tls if host.tls else "le-prod-wildcard-cert"
