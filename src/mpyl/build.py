@@ -106,6 +106,7 @@ def get_build_plan(
         cli_parameters.all,
         safe_load_projects,
         cli_parameters.stage,
+        cli_parameters.projects,
     )
     return RunResult(
         run_properties=run_properties,
@@ -191,6 +192,7 @@ def find_build_set(
     build_all: bool,
     safe_load_projects: bool,
     selected_stage: Optional[str] = None,
+    selected_projects: Optional[str] = None,
 ) -> dict[Stage, set[Project]]:
     project_paths = repo.find_projects()
     all_projects = set(
@@ -205,6 +207,8 @@ def find_build_set(
             project_paths,
         )
     )
+    if selected_projects:
+        projects_list = selected_projects.split(",")
 
     build_set = {}
 
@@ -212,7 +216,11 @@ def find_build_set(
         if selected_stage and selected_stage != stage.name:
             continue
 
-        if build_all:
+        if build_all or selected_projects:
+            if selected_projects:
+                all_projects = set(
+                    filter(lambda p: p.name in projects_list, all_projects)
+                )
             projects = for_stage(all_projects, stage)
         else:
             projects = find_invalidated_projects_for_stage(

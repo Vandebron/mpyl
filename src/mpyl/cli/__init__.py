@@ -38,6 +38,7 @@ class MpylCliParameters:
     verbose: bool = False
     all: bool = False
     stage: Optional[str] = None
+    projects: Optional[str] = None
 
 
 async def get_publication_info(test: bool = False) -> dict:
