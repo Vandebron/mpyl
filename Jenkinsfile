@@ -49,7 +49,6 @@ pipeline {
                             sh "pipenv run mpyl projects upgrade"
                             sh "pipenv run mpyl repo status"
                             sh "pipenv run mpyl repo init"
-                            sh "pipenv run mpyl build status"
                             if (params.MANUAL_BUILD) {
                                 def projects = sh(script: "pipenv run mpyl projects names", returnStdout: true)
                                 def boolParams = projects.split('\n').collect { project ->
@@ -59,6 +58,7 @@ pipeline {
                                 def selectedProjectsString = selectedProjects.findAll { key, value -> value }.keySet().join(',')
                                 env.SELECTED_PROJECTS = "--projects " + selectedProjectsString
                             }
+                            sh "pipenv run mpyl build status ${env.SELECTED_PROJECTS} ${(env.BUILD_PARAMS.contains("--all")) ? "--all" : ""}"
                             sh "pipenv run start-github-status-check"
                         }
                     }
