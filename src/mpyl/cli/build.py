@@ -453,12 +453,13 @@ def jenkins(  # pylint: disable=too-many-locals, too-many-arguments
 
         pipeline_parameters["BUILD_PARAMS"] = ""
 
+        if arguments:
+            pipeline_parameters["BUILD_PARAMS"] = " ".join(arguments)
         if dryrun_:
             pipeline_parameters["BUILD_PARAMS"] += " --dryrun"
         if all_:
             pipeline_parameters["BUILD_PARAMS"] += " --all"
-        if arguments:
-            pipeline_parameters["BUILD_PARAMS"] = " ".join(arguments)
+
         if version:
             pipeline_parameters["MPYL_RELEASE"] = version
 
