@@ -213,12 +213,30 @@ def run(
 
 
 @build.command(help="The status of the current local branch from MPyL's perspective")
+@click.option(
+    "--all",
+    "all_",
+    is_flag=True,
+    help="Build all projects, regardless of changes on branch",
+)
+@click.option(
+    "--projects",
+    "--p",
+    type=str,
+    required=False,
+    help="Comma separated list of the projects to build",
+)
 @click.pass_obj
-def status(obj: CliContext):
+def status(obj: CliContext, all_, projects):
     upgrade_check = None
     try:
         upgrade_check = asyncio.wait_for(warn_if_update(obj.console), timeout=3)
-        print_status(obj)
+        parameters = MpylCliParameters(
+            local=sys.stdout.isatty(),
+            all=all_,
+            projects=projects,
+        )
+        print_status(obj, parameters)
     except asyncio.exceptions.TimeoutError:
         pass
     finally:

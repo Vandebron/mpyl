@@ -1,7 +1,6 @@
 """Simple MPyL build runner"""
 
 import logging
-import sys
 from pathlib import Path
 from typing import Optional
 
@@ -27,7 +26,7 @@ from .steps.steps import Steps, ExecutionException
 from .utilities.repo import Revision, Repository, RepoConfig
 
 
-def print_status(obj: CliContext):
+def print_status(obj: CliContext, cli_params: MpylCliParameters):
     run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
     console = obj.console
     console.print(f"MPyL log level is set to {run_properties.console.log_level}")
@@ -70,7 +69,7 @@ def print_status(obj: CliContext):
         logger=logging.getLogger("mpyl"),
         repo=obj.repo,
         run_properties=run_properties,
-        cli_parameters=MpylCliParameters(local=sys.stdout.isatty()),
+        cli_parameters=cli_params,
     )
     if result.has_run_plan_projects:
         console.print(
