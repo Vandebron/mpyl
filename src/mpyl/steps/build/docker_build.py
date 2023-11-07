@@ -33,6 +33,7 @@ from ...utilities.docker import (
     login,
     DockerImageSpec,
     registry_for_project,
+    get_default_build_args,
 )
 
 DOCKER_IGNORE_DEFAULT = ["**/target/*", f"**/{BUILD_ARTIFACTS_FOLDER}/*"]
@@ -75,11 +76,11 @@ class BuildDocker(Step):
             contents = "\n".join(DOCKER_IGNORE_DEFAULT)
             ignore_file.write(contents)
 
-        build_args: dict[str, str] = {
-            "DOCKER_IMAGE": image_tag,
-            "MAINTAINER": ",".join(step_input.project.maintainer),
-            "TAG_NAME": step_input.run_properties.versioning.identifier,
-        }
+        build_args: dict[str, str] = get_default_build_args(
+            image_tag,
+            step_input.project.maintainer,
+            step_input.run_properties.versioning.identifier,
+        )
         if build_config := step_input.project.build:
             build_args |= {
                 arg.key: arg.get_value(step_input.run_properties.target)
@@ -89,7 +90,9 @@ class BuildDocker(Step):
             env_vars: set[str] = {
                 arg.secret_id for arg in build_config.args.credentials
             }
-            if missing := env_vars.difference(set(os.environ).union(set(build_args.keys()))):
+            if missing := env_vars.difference(
+                set(os.environ).union(set(build_args.keys()))
+            ):
                 self._logger.error(
                     f"Project {step_input.project.name} requires {missing} environment variable(s) to be set"
                 )
