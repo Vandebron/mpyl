@@ -89,7 +89,7 @@ class BuildDocker(Step):
             env_vars: set[str] = {
                 arg.secret_id for arg in build_config.args.credentials
             }
-            if missing := env_vars.difference(set(os.environ)):
+            if missing := env_vars.difference(set(os.environ).union(set(build_args.keys()))):
                 self._logger.error(
                     f"Project {step_input.project.name} requires {missing} environment variable(s) to be set"
                 )
