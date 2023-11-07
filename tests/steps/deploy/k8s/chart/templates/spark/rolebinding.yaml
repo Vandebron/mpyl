@@ -7,6 +7,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: sparkjob
     app.kubernetes.io/instance: sparkjob
+    maintainers: MPyL
     maintainer: MPyL
     version: pr-1234
     revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f

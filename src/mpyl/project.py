@@ -345,6 +345,8 @@ class TraefikHost:
     service_port: Optional[int]
     tls: Optional[TargetProperty[str]]
     whitelists: TargetProperty[list[str]]
+    priority: Optional[int]
+    insecure: bool
 
     @staticmethod
     def from_config(values: dict):
@@ -353,6 +355,8 @@ class TraefikHost:
             service_port=values.get("servicePort"),
             tls=TargetProperty.from_config(values.get("tls", {})),
             whitelists=TargetProperty.from_config(values.get("whitelists", {})),
+            priority=values.get("priority"),
+            insecure=values.get("insecure", False),
         )
 
 

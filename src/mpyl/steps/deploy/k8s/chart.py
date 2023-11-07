@@ -241,11 +241,10 @@ class ChartBuilder:
             "app.kubernetes.io/instance": self.release_name,
         }
 
-        if len(self.project.maintainer) > 1:
+        if len(self.project.maintainer) > 0:
             app_labels["maintainers"] = ".".join(self.project.maintainer).replace(
                 " ", "_"
             )
-        elif len(self.project.maintainer) > 0:
             app_labels["maintainer"] = self.project.maintainer[0].replace(" ", "_")
 
         app_labels["version"] = run_properties.versioning.identifier
@@ -481,21 +480,24 @@ class ChartBuilder:
                 else self.__find_default_port(),
                 white_lists=to_white_list(host.whitelists),
                 tls=host.tls.get_value(self.target) if host.tls else None,
+                insecure=host.insecure,
             )
             for idx, host in enumerate(hosts if hosts else default_hosts)
         ]
 
-    def to_ingress_routes(self) -> list[V1AlphaIngressRoute]:
+    def to_ingress_routes(self, https: bool) -> list[V1AlphaIngressRoute]:
         hosts = self.create_host_wrappers()
         return [
             V1AlphaIngressRoute(
                 metadata=self._to_object_meta(
-                    name=f"{self.release_name}-ingress-{i}-https"
+                    name=f"{self.release_name}-ingress-{i}-http"
+                    + ("s" if https else "")
                 ),
                 host=host,
                 target=self.target,
                 namespace=get_namespace(self.step_input.run_properties, self.project),
                 pr_number=self.step_input.run_properties.versioning.pr_number,
+                https=https,
             )
             for i, host in enumerate(hosts)
         ]
@@ -714,7 +716,7 @@ class ChartBuilder:
         liveness_probe, startup_probe = self._construct_probes()
 
         container = V1Container(
-            name=self.release_name,
+            name="service",
             image=self._get_image(),
             env=self._get_env_vars(),
             ports=ports,
@@ -803,11 +805,15 @@ def _to_service_components_chart(builder):
         if metrics and metrics.enabled
         else {}
     )
-    ingress = {
-        f"ingress-https-route-{i}": route
-        for i, route in enumerate(builder.to_ingress_routes())
+    ingress_https = {
+        f"{builder.project.name}-ingress-{i}-https": route
+        for i, route in enumerate(builder.to_ingress_routes(https=True))
     }
-    return common_chart | prometheus_chart | ingress
+    ingress_http = {
+        f"{builder.project.name}-ingress-{i}-http": route
+        for i, route in enumerate(builder.to_ingress_routes(https=False))
+    }
+    return common_chart | prometheus_chart | ingress_https | ingress_http
 
 
 def to_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:

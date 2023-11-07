@@ -38,9 +38,9 @@ class DeployKubernetes(Step):
 
     @staticmethod
     def try_extract_hostname(
-        chart: dict[str, CustomResourceDefinition]
+        chart: dict[str, CustomResourceDefinition], service_name: str
     ) -> Optional[str]:
-        ingress = chart.get("ingress-https-route-0")
+        ingress = chart.get(f"{service_name}-ingress-0-https")
         if ingress:
             routes = ingress.spec.get("routes", {})
             if routes:
@@ -63,7 +63,7 @@ class DeployKubernetes(Step):
             self._logger, chart, step_input, properties.target, builder.release_name
         )
         if deploy_result.success:
-            hostname = self.try_extract_hostname(chart)
+            hostname = self.try_extract_hostname(chart, builder.project.name)
             url = None
             if hostname:
                 has_specific_routes_configured: bool = bool(

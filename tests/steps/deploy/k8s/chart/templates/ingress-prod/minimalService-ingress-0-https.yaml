@@ -7,6 +7,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: minimalservice
     app.kubernetes.io/instance: minimalservice
+    maintainers: MPyL
     maintainer: MPyL
     version: 20230829-1234
     revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
@@ -21,7 +22,6 @@ spec:
       port: 8080
     middlewares:
     - name: minimalservice-ingress-0-whitelist
-    - name: traefik-https-redirect@kubernetescrd
   entryPoints:
   - websecure
   tls:

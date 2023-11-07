@@ -7,22 +7,23 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dockertest
     app.kubernetes.io/instance: dockertest
+    maintainers: MPyL
     maintainer: MPyL
     version: pr-1234
     revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
-  name: dockertest-ingress-0-https
+  name: dockertest-ingress-1-https
 spec:
   routes:
   - kind: Rule
-    match: Host(`payments-1234.test.nl`)
+    match: Host(`some.other.host.com`)
     services:
     - name: dockertest
       kind: Service
-      port: 8080
+      port: 4091
     middlewares:
-    - name: dockertest-ingress-0-whitelist
-    - name: traefik-https-redirect@kubernetescrd
+    - name: dockertest-ingress-1-whitelist
+    priority: 1000
   entryPoints:
   - websecure
   tls:
-    secretName: le-custom-prod-wildcard-cert
+    secretName: le-other-prod-wildcard-cert

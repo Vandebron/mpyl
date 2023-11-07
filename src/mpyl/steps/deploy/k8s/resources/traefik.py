@@ -2,7 +2,7 @@
 This module contains the traefik ingress route CRD.
 """
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Union, Any
 
 from kubernetes.client import V1ObjectMeta
 
@@ -18,6 +18,7 @@ class HostWrapper:
     service_port: int
     white_lists: dict[str, list[str]]
     tls: Optional[str]
+    insecure: bool = False
 
     @property
     def full_name(self) -> str:
@@ -32,6 +33,7 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
         target: Target,
         namespace: str,
         pr_number: Optional[int],
+        https: bool = True,
     ):
         def _interpolate_names(host: str, name: str) -> str:
             host = host.replace("{SERVICE-NAME}", name)
@@ -40,7 +42,7 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
                 return host.replace("{PR-NUMBER}", str(pr_number))
             return host
 
-        route = {
+        route: dict[str, Any] = {
             "kind": "Rule",
             "match": _interpolate_names(
                 host=host.traefik_host.host.get_value(target),
@@ -50,10 +52,19 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
                 {"name": host.name, "kind": "Service", "port": host.service_port}
             ],
             "middlewares": [
+                {"name": "traefik-https-redirect@kubernetescrd"} if not https else None,
                 {"name": host.full_name},
-                {"name": "traefik-https-redirect@kubernetescrd"},
             ],
         }
+
+        if host.traefik_host.priority:
+            route |= {"priority": host.traefik_host.priority}
+
+        tls: dict[str, Union[str, dict]] = {
+            "secretName": host.tls if host.tls else "le-prod-wildcard-cert"
+        }
+        if host.insecure:
+            tls |= {"options": {"name": "insecure-ciphers", "namespace": "traefik"}}
 
         super().__init__(
             api_version="traefik.containo.us/v1alpha1",
@@ -61,10 +72,8 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
             metadata=metadata,
             spec={
                 "routes": [route],
-                "entryPoints": ["websecure"],
-                "tls": {
-                    "secretName": host.tls if host.tls else "le-prod-wildcard-cert"
-                },
+                "entryPoints": ["websecure" if https else "web"],
+                "tls": tls if https else None,
             },
             schema="traefik.ingress.schema.yml",
         )
