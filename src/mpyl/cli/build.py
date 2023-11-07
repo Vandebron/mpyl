@@ -221,7 +221,7 @@ def run(
 )
 @click.option(
     "--projects",
-    "--p",
+    "-p",
     type=str,
     required=False,
     help="Comma separated list of the projects to build",

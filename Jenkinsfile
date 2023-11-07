@@ -49,6 +49,7 @@ pipeline {
                             sh "pipenv run mpyl projects upgrade"
                             sh "pipenv run mpyl repo status"
                             sh "pipenv run mpyl repo init"
+                            env.SELECTED_PROJECTS = ""
                             if (params.MANUAL_BUILD) {
                                 def projects = sh(script: "pipenv run mpyl projects names", returnStdout: true)
                                 def boolParams = projects.split('\n').collect { project ->
