@@ -75,7 +75,11 @@ class BuildDocker(Step):
             contents = "\n".join(DOCKER_IGNORE_DEFAULT)
             ignore_file.write(contents)
 
-        build_args: dict[str, str] = {}
+        build_args: dict[str, str] = {
+            "DOCKER_IMAGE": image_tag,
+            "MAINTAINER": ",".join(step_input.project.maintainer),
+            "TAG_NAME": step_input.run_properties.versioning.identifier,
+        }
         if build_config := step_input.project.build:
             build_args |= {
                 arg.key: arg.get_value(step_input.run_properties.target)
