@@ -6,14 +6,14 @@ from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
 from traceback import print_exc
-from typing import Dict, Optional, Iterator, cast, Union, List
+from typing import Dict, Optional, Iterator, cast, Union
 from python_on_whales import docker, Image, Container, DockerException
 from python_on_whales.exceptions import NoSuchContainer
 from ruamel.yaml import yaml_object, YAML
 
 from ..logging import try_parse_ansi
-from ...project import Project, Docker
-from ...steps.models import Input, ArtifactSpec, RunProperties
+from ...project import Project
+from ...steps.models import Input, ArtifactSpec
 
 yaml = YAML()
 
