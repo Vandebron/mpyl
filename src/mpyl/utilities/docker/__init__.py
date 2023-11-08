@@ -169,7 +169,9 @@ def docker_registry_path(docker_config: DockerRegistryConfig, image_name: str) -
 
 
 def full_image_path_for_project(step_input: Input) -> str:
-    docker_config: DockerConfig = DockerConfig.from_dict(step_input.properties.config)
+    docker_config: DockerConfig = DockerConfig.from_dict(
+        step_input.run_properties.config
+    )
     docker_registry = registry_for_project(docker_config, step_input.project)
 
     image_name = docker_image_tag(step_input)
