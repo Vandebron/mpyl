@@ -8,12 +8,8 @@ from .kubernetes import DeployKubernetes
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
 from ...utilities.docker import (
-    docker_image_tag,
     docker_copy,
     create_container,
-    docker_registry_path,
-    DockerConfig,
-    registry_for_project,
     full_image_path_for_project,
 )
 from ...utilities.s3 import S3Client, S3ClientConfig
