@@ -1,7 +1,17 @@
 apiVersion: sparkoperator.k8s.io/v1beta2
 kind: ScheduledSparkApplication
 metadata:
-  name: sparkapplications.sparkoperator.k8s.io
+  labels:
+    name: sparkjob
+    app.kubernetes.io/version: pr-1234
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: sparkjob
+    app.kubernetes.io/instance: sparkjob
+    maintainers: MPyL
+    maintainer: MPyL
+    version: pr-1234
+    revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
+  name: sparkjob
 spec:
   schedule: 0 7 * * *
   template:

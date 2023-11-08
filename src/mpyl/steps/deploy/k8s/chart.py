@@ -262,7 +262,7 @@ class ChartBuilder:
 
     def _to_object_meta(
         self, name: Optional[str] = None, annotations: Optional[dict] = None
-    ):
+    ) -> V1ObjectMeta:
         return V1ObjectMeta(
             name=name if name else self.release_name,
             labels=self._to_labels(),
@@ -403,6 +403,7 @@ class ChartBuilder:
 
     def to_spark_application(self) -> V1SparkApplication:
         return V1SparkApplication(
+            metadata=self._to_object_meta(),
             schedule=self._get_job().cron["schedule"],
             body=to_spark_body(
                 project_name=self.release_name,

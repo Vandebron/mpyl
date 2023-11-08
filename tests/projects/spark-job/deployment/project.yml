@@ -1,7 +1,7 @@
 name: 'sparkJob'
 description: 'Job to enrich charge session with total amount earned'
 maintainer: ['MPyL']
-mpylVersion: 1.0.9
+mpylVersion: 1.4.0
 stages:
   build: Sbt Build
   test: Sbt Test
@@ -41,8 +41,6 @@ deployment:
           all: 1.0
         mem:
           all: 2048
-    policies:
-      - 'star-readonly'
     role:
       resources:
         - 'pods'

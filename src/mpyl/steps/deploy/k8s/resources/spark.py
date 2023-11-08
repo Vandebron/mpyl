@@ -111,12 +111,12 @@ def get_spark_config_map_data() -> dict:
 
 
 class V1SparkApplication(CustomResourceDefinition):
-    def __init__(self, schedule: Optional[str], body: dict):
+    def __init__(self, metadata: V1ObjectMeta, schedule: Optional[str], body: dict):
         if schedule:
             super().__init__(
                 api_version="sparkoperator.k8s.io/v1beta2",
                 kind="ScheduledSparkApplication",
-                metadata=V1ObjectMeta(name="sparkapplications.sparkoperator.k8s.io"),
+                metadata=metadata,
                 schema="sparkoperator.k8s.io_scheduledsparkapplications.schema.yml",
                 spec={"schedule": schedule, "template": body},
             )
@@ -124,7 +124,7 @@ class V1SparkApplication(CustomResourceDefinition):
             super().__init__(
                 api_version="sparkoperator.k8s.io/v1beta2",
                 kind="SparkApplication",
-                metadata=V1ObjectMeta(name="sparkapplications.sparkoperator.k8s.io"),
+                metadata=metadata,
                 schema="sparkoperator.k8s.io_sparkapplications.schema.yml",
                 spec={"spec": body},
             )
