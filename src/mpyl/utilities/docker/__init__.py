@@ -13,7 +13,7 @@ from ruamel.yaml import yaml_object, YAML
 
 from ..logging import try_parse_ansi
 from ...project import Project, Docker
-from ...steps.models import Input, ArtifactSpec
+from ...steps.models import Input, ArtifactSpec, RunProperties
 
 yaml = YAML()
 
@@ -166,6 +166,14 @@ def docker_registry_path(docker_config: DockerRegistryConfig, image_name: str) -
         image_name,
     ]
     return "/".join([c for c in path_components if c]).lower()
+
+
+def full_image_path_for_project(step_input: Input) -> str:
+    docker_config: DockerConfig = DockerConfig.from_dict(step_input.properties.config)
+    docker_registry = registry_for_project(docker_config, step_input.project)
+
+    image_name = docker_image_tag(step_input)
+    return docker_registry_path(docker_registry, image_name)
 
 
 def push_to_registry(

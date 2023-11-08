@@ -14,6 +14,7 @@ from ...utilities.docker import (
     docker_registry_path,
     DockerConfig,
     registry_for_project,
+    full_image_path_for_project,
 )
 from ...utilities.s3 import S3Client, S3ClientConfig
 
@@ -52,12 +53,7 @@ class CloudFrontKubernetesDeploy(Step):
         """
         Copies the static assets from the docker image to a temp folder
         """
-        properties = step_input.run_properties
-        docker_config: DockerConfig = DockerConfig.from_dict(properties.config)
-        docker_registry = registry_for_project(docker_config, step_input.project)
-
-        image_name = docker_image_tag(step_input)
-        full_image_path = docker_registry_path(docker_registry, image_name)
+        full_image_path = full_image_path_for_project(step_input)
 
         container_path = f"{step_input.project.name}/{STATIC_FOLDER}"
         container = create_container(logger, full_image_path)
