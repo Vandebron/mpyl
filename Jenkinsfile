@@ -21,7 +21,8 @@ pipeline {
                 script {
                     properties([parameters([
                         string(name: 'BUILD_PARAMS', defaultValue: '--all', description: 'Build parameters passed along with the run. Example: --help or --all'),
-                        string(name: 'MPYL_CONFIG_BRANCH', defaultValue: 'main', description: 'Branch to use for mpyl_config repository')
+                        string(name: 'MPYL_CONFIG_BRANCH', defaultValue: 'main', description: 'Branch to use for mpyl_config repository'),
+                        booleanParam(name: 'MANUAL_BUILD', defaultValue: false, description: 'Enable manual project selection in the initialize phase'),
                     ])])
                     currentBuild.result = 'NOT_BUILT'
                     currentBuild.description = "Parameters can be set now"
@@ -48,7 +49,17 @@ pipeline {
                             sh "pipenv run mpyl projects upgrade"
                             sh "pipenv run mpyl repo status"
                             sh "pipenv run mpyl repo init"
-                            sh "pipenv run mpyl build status"
+                            env.SELECTED_PROJECTS = ""
+                            if (params.MANUAL_BUILD) {
+                                def projects = sh(script: "pipenv run mpyl projects names", returnStdout: true)
+                                def boolParams = projects.split('\n').collect { project ->
+                                    booleanParam(name: project, defaultValue: false)
+                                }
+                                def selectedProjects = input(id: 'userInput', message: 'Select project(s)', parameters: boolParams)
+                                def selectedProjectsString = selectedProjects.findAll { key, value -> value }.keySet().join(',')
+                                env.SELECTED_PROJECTS = "--projects " + selectedProjectsString
+                            }
+                            sh "pipenv run mpyl build status ${env.SELECTED_PROJECTS} ${(env.BUILD_PARAMS.contains("--all")) ? "--all" : ""}"
                             sh "pipenv run start-github-status-check"
                         }
                     }
@@ -58,14 +69,14 @@ pipeline {
         stage('Build') {
             steps {
                 wrap([$class: 'BuildUser']) {
-                    sh "pipenv run mpyl build run --ci --stage build ${params.BUILD_PARAMS}"
+                    sh "pipenv run mpyl build run --ci --stage build ${params.BUILD_PARAMS} ${env.SELECTED_PROJECTS}"
                 }
             }
         }
         stage('Test') {
             steps {
                 wrap([$class: 'BuildUser']) {
-                    sh "pipenv run mpyl build run --ci --stage test --sequential ${params.BUILD_PARAMS}"
+                    sh "pipenv run mpyl build run --ci --stage test --sequential ${params.BUILD_PARAMS} ${env.SELECTED_PROJECTS}"
                 }
             }
         }
@@ -73,7 +84,7 @@ pipeline {
             steps {
                 withKubeConfig([credentialsId: 'jenkins-rancher-service-account-kubeconfig-test']) {
                     wrap([$class: 'BuildUser']) {
-                        sh "pipenv run mpyl build run --ci --stage deploy --sequential ${params.BUILD_PARAMS}"
+                        sh "pipenv run mpyl build run --ci --stage deploy --sequential ${params.BUILD_PARAMS} ${env.SELECTED_PROJECTS}"
                     }
                 }
             }
@@ -82,7 +93,7 @@ pipeline {
             steps {
                 withKubeConfig([credentialsId: 'jenkins-rancher-service-account-kubeconfig-test']) {
                     wrap([$class: 'BuildUser']) {
-                        sh "pipenv run mpyl build run --ci --stage postdeploy --sequential ${params.BUILD_PARAMS}"
+                        sh "pipenv run mpyl build run --ci --stage postdeploy --sequential ${params.BUILD_PARAMS} ${env.SELECTED_PROJECTS}"
                     }
                 }
             }

@@ -1,7 +1,6 @@
 """Simple MPyL build runner"""
 
 import logging
-import sys
 from pathlib import Path
 from typing import Optional
 
@@ -27,7 +26,7 @@ from .steps.steps import Steps, ExecutionException
 from .utilities.repo import Revision, Repository, RepoConfig
 
 
-def print_status(obj: CliContext):
+def print_status(obj: CliContext, cli_params: MpylCliParameters):
     run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
     console = obj.console
     console.print(f"MPyL log level is set to {run_properties.console.log_level}")
@@ -70,7 +69,7 @@ def print_status(obj: CliContext):
         logger=logging.getLogger("mpyl"),
         repo=obj.repo,
         run_properties=run_properties,
-        cli_parameters=MpylCliParameters(local=sys.stdout.isatty()),
+        cli_parameters=cli_params,
     )
     if result.has_run_plan_projects:
         console.print(
@@ -106,6 +105,7 @@ def get_build_plan(
         cli_parameters.all,
         safe_load_projects,
         cli_parameters.stage,
+        cli_parameters.projects,
     )
     return RunResult(
         run_properties=run_properties,
@@ -191,6 +191,7 @@ def find_build_set(
     build_all: bool,
     safe_load_projects: bool,
     selected_stage: Optional[str] = None,
+    selected_projects: Optional[str] = None,
 ) -> dict[Stage, set[Project]]:
     project_paths = repo.find_projects()
     all_projects = set(
@@ -205,6 +206,8 @@ def find_build_set(
             project_paths,
         )
     )
+    if selected_projects:
+        projects_list = selected_projects.split(",")
 
     build_set = {}
 
@@ -212,7 +215,11 @@ def find_build_set(
         if selected_stage and selected_stage != stage.name:
             continue
 
-        if build_all:
+        if build_all or selected_projects:
+            if selected_projects:
+                all_projects = set(
+                    filter(lambda p: p.name in projects_list, all_projects)
+                )
             projects = for_stage(all_projects, stage)
         else:
             projects = find_invalidated_projects_for_stage(
