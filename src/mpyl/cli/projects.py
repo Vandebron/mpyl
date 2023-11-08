@@ -78,14 +78,18 @@ def projects(ctx, config, verbose, filter_):
     )
 
 
+OVERRIDE_PATTERN = "project-override"
+
+
 @projects.command(name="list", help="List found projects")
 @click.pass_obj
 def list_projects(obj: ProjectsContext):
     found_projects = obj.cli.repo.find_projects(obj.filter)
 
     for proj in found_projects:
-        name = load_project(obj.cli.repo.root_dir, Path(proj), False).name
-        obj.cli.console.print(Markdown(f"{proj} `{name}`"))
+        if OVERRIDE_PATTERN not in proj:
+            project = load_project(obj.cli.repo.root_dir, Path(proj), False)
+            obj.cli.console.print(Markdown(f"{proj} `{project.name}`"))
 
 
 @projects.command(name="names", help="List found project names")
@@ -93,8 +97,15 @@ def list_projects(obj: ProjectsContext):
 def list_project_names(obj: ProjectsContext):
     found_projects = obj.cli.repo.find_projects(obj.filter)
 
-    for proj in found_projects:
-        name = load_project(obj.cli.repo.root_dir, Path(proj), False).name
+    names = sorted(
+        [
+            load_project(obj.cli.repo.root_dir, Path(proj), False).name
+            for proj in found_projects
+            if OVERRIDE_PATTERN not in proj
+        ]
+    )
+
+    for name in names:
         obj.cli.console.print(name)
 
 
