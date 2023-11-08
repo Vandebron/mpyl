@@ -421,7 +421,8 @@ disable=raw-checker-failed,
         logging-fstring-interpolation,
         missing-class-docstring,
         missing-function-docstring,
-        too-many-instance-attributes
+        too-many-instance-attributes,
+        duplicate-code
 # TODO: re-enable documentation related lint checks
 
 
