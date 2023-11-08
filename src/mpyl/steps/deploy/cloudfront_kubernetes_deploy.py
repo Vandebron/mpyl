@@ -7,7 +7,14 @@ from . import STAGE_NAME
 from .kubernetes import DeployKubernetes
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
-from ...utilities.docker import docker_image_tag, docker_copy, create_container
+from ...utilities.docker import (
+    docker_image_tag,
+    docker_copy,
+    create_container,
+    docker_registry_path,
+    DockerConfig,
+    registry_for_project,
+)
 from ...utilities.s3 import S3Client, S3ClientConfig
 
 STATIC_FOLDER = "static"
@@ -45,9 +52,15 @@ class CloudFrontKubernetesDeploy(Step):
         """
         Copies the static assets from the docker image to a temp folder
         """
+        properties = step_input.run_properties
+        docker_config: DockerConfig = DockerConfig.from_dict(properties.config)
+        docker_registry = registry_for_project(docker_config, step_input.project)
+
         image_name = docker_image_tag(step_input)
+        full_image_path = docker_registry_path(docker_registry, image_name)
+
         container_path = f"{step_input.project.name}/{STATIC_FOLDER}"
-        container = create_container(logger, image_name)
+        container = create_container(logger, full_image_path)
         docker_copy(
             logger=logger,
             container_path=container_path,
