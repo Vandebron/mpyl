@@ -10,7 +10,6 @@ metadata:
   labels:
     name: dockertest
     app.kubernetes.io/version: pr-1234
-    app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dockertest
     app.kubernetes.io/instance: dockertest
     maintainers: MPyL
@@ -34,7 +33,6 @@ spec:
       labels:
         name: dockertest
         app.kubernetes.io/version: pr-1234
-        app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: dockertest
         app.kubernetes.io/instance: dockertest
         maintainers: MPyL
@@ -118,7 +116,6 @@ metadata:
   labels:
     name: dockertest
     app.kubernetes.io/version: pr-1234
-    app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dockertest
     app.kubernetes.io/instance: dockertest
     maintainers: MPyL
@@ -147,7 +144,6 @@ metadata:
   labels:
     name: dockertest
     app.kubernetes.io/version: pr-1234
-    app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dockertest
     app.kubernetes.io/instance: dockertest
     maintainers: MPyL
@@ -182,7 +178,6 @@ metadata:
   labels:
     name: dockertest
     app.kubernetes.io/version: pr-1234
-    app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dockertest
     app.kubernetes.io/instance: dockertest
     maintainers: MPyL
@@ -202,7 +197,6 @@ metadata:
   labels:
     name: dockertest
     app.kubernetes.io/version: pr-1234
-    app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dockertest
     app.kubernetes.io/instance: dockertest
     maintainers: MPyL
@@ -232,7 +226,6 @@ metadata:
   labels:
     name: dockertest
     app.kubernetes.io/version: pr-1234
-    app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dockertest
     app.kubernetes.io/instance: dockertest
     maintainers: MPyL
@@ -267,7 +260,6 @@ metadata:
   labels:
     name: dockertest
     app.kubernetes.io/version: pr-1234
-    app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dockertest
     app.kubernetes.io/instance: dockertest
     maintainers: MPyL
@@ -290,7 +282,6 @@ metadata:
   labels:
     name: dockertest
     app.kubernetes.io/version: pr-1234
-    app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dockertest
     app.kubernetes.io/instance: dockertest
     maintainers: MPyL
@@ -328,7 +319,6 @@ metadata:
   labels:
     name: dockertest
     app.kubernetes.io/version: pr-1234
-    app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dockertest
     app.kubernetes.io/instance: dockertest
     maintainers: MPyL
@@ -352,7 +342,6 @@ metadata:
   labels:
     name: dockertest
     app.kubernetes.io/version: pr-1234
-    app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dockertest
     app.kubernetes.io/instance: dockertest
     maintainers: MPyL
@@ -392,7 +381,6 @@ metadata:
   labels:
     name: dockertest
     app.kubernetes.io/version: pr-1234
-    app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dockertest
     app.kubernetes.io/instance: dockertest
     maintainers: MPyL
@@ -420,7 +408,6 @@ metadata:
   labels:
     name: dockertest
     app.kubernetes.io/version: pr-1234
-    app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dockertest
     app.kubernetes.io/instance: dockertest
     maintainers: MPyL
@@ -436,7 +423,6 @@ metadata:
   labels:
     name: dockertest
     app.kubernetes.io/version: pr-1234
-    app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dockertest
     app.kubernetes.io/instance: dockertest
     maintainers: MPyL

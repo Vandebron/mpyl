@@ -147,7 +147,7 @@ class Repository:  # pylint: disable=too-many-public-methods
             with repo.config_writer() as writer:
                 writer.set_value("user", "name", user_name)
                 writer.set_value(
-                    "user", "email", creds.email or "somebody@somwhere.com"
+                    "user", "email", creds.email or "somebody@somewhere.com"
                 )
 
         return Repository(config=config, repo_path=repo_path)

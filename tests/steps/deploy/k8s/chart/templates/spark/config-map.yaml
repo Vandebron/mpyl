@@ -35,7 +35,6 @@ metadata:
   labels:
     name: sparkjob
     app.kubernetes.io/version: pr-1234
-    app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: sparkjob
     app.kubernetes.io/instance: sparkjob
     maintainers: MPyL
