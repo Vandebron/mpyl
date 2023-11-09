@@ -160,6 +160,10 @@ class CustomValidation(click.Command):
 def run(
     obj: CliContext, ci, all_, tag, stage, sequential, projects
 ):  # pylint: disable=invalid-name
+    run_result_file = Path(BUILD_ARTIFACTS_FOLDER) / "run_result"
+    if not sequential and run_result_file.is_file():
+        run_result_file.unlink()
+
     asyncio.run(warn_if_update(obj.console))
 
     parameters = MpylCliParameters(
@@ -193,12 +197,12 @@ def run(
             obj.run_properties["stages"],
         )
     )
+
     run_result = run_mpyl(
         run_properties=run_properties, cli_parameters=parameters, reporter=None
     )
 
     Path(BUILD_ARTIFACTS_FOLDER).mkdir(parents=True, exist_ok=True)
-    run_result_file = Path(BUILD_ARTIFACTS_FOLDER) / "run_result"
 
     if sequential and run_result_file.is_file():
         with open(run_result_file, "rb") as file:
