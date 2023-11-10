@@ -13,7 +13,7 @@ def to_spark_body(
     env_vars: dict,
     spark: dict,
     image: str,
-    command: list[str],
+    command: Optional[list[str]],
     env_secret_key_refs: dict,
 ) -> dict:
     static_body = {
@@ -24,7 +24,6 @@ def to_spark_body(
         "restartPolicy": {"type": "Never"},
         "sparkConfigMap": project_name,
         "image": image,
-        "arguments": command,
         "driver": {
             "cores": 1,
             "coreLimit": "1200m",
@@ -56,7 +55,7 @@ def to_spark_body(
             "spark.sql.legacy.timeParserPolicy": "LEGACY",
             "spark.sql.broadcastTimeout": "600",
         },
-    }
+    } | ({"arguments": command} if command else {})
 
     return static_body | spark
 

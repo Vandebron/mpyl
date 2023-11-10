@@ -412,7 +412,9 @@ class ChartBuilder:
                 image=self._get_image(),
                 command=self.project.kubernetes.command.get_value(self.target).split(
                     " "
-                ),
+                )
+                if self.project.kubernetes.command
+                else None,
                 env_secret_key_refs={
                     s.key: {"key": s.key, "name": self.release_name}
                     for s in self.sealed_secrets

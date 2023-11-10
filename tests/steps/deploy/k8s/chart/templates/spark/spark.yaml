@@ -24,9 +24,6 @@ spec:
       type: Never
     sparkConfigMap: sparkjob
     image: registry/image:123
-    arguments:
-    - run
-    - command
     driver:
       cores: 1
       coreLimit: 1200m
@@ -72,5 +69,8 @@ spec:
       spark.executor.extraClassPath: mssql-jdbc-11.2.1.jre8.jar
       spark.sql.legacy.timeParserPolicy: LEGACY
       spark.sql.broadcastTimeout: '600'
+    arguments:
+    - run
+    - command
     mainClass: sparkjob.sparkJobMain
     mainApplicationFile: local:///app/sparkjob-assembly-1.0.jar
