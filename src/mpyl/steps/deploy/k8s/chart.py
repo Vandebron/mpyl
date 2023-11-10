@@ -413,6 +413,10 @@ class ChartBuilder:
                 command=self.project.kubernetes.command.get_value(self.target).split(
                     " "
                 ),
+                env_secret_key_refs={
+                    s.key: {"key": s.key, "name": self.release_name}
+                    for s in self.sealed_secrets
+                },
             ),
         )
 

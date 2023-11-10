@@ -9,7 +9,12 @@ from .. import CustomResourceDefinition
 
 
 def to_spark_body(
-    project_name: str, env_vars: dict, spark: dict, image: str, command: list[str]
+    project_name: str,
+    env_vars: dict,
+    spark: dict,
+    image: str,
+    command: list[str],
+    env_secret_key_refs: dict,
 ) -> dict:
     static_body = {
         "type": "Scala",
@@ -28,7 +33,7 @@ def to_spark_body(
             "labels": {"version": "3.1.1"},
             "serviceAccount": project_name,
             "envVars": env_vars,
-            "envSecretKeyRefs": None,
+            "envSecretKeyRefs": env_secret_key_refs,
         },
         "executor": {
             "cores": 1,
@@ -37,7 +42,7 @@ def to_spark_body(
             "memoryOverhead": "2048",
             "labels": {"version": "3.1.1"},
             "envVars": env_vars,
-            "envSecretKeyRefs": None,
+            "envSecretKeyRefs": env_secret_key_refs,
         },
         "deps": {
             "jars": [

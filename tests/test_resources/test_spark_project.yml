@@ -24,6 +24,9 @@ deployment:
         all: "cluster"
       - key: ELASTICSEARCH_HOST
         all: "elastic-es-http.elastic"
+    sealedSecret:
+      - key: SEALED_SECRET
+        all: "hash"
   kubernetes:
     job:
       activeDeadlineSeconds:

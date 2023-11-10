@@ -42,6 +42,10 @@ spec:
         VAULT_ENABLED: 'true'
         DEPLOY_MODE: cluster
         ELASTICSEARCH_HOST: elastic-es-http.elastic
+      envSecretKeyRefs:
+        SEALED_SECRET:
+          key: SEALED_SECRET
+          name: sparkjob
     executor:
       cores: 1
       instances: 1
@@ -56,6 +60,10 @@ spec:
         VAULT_ENABLED: 'true'
         DEPLOY_MODE: cluster
         ELASTICSEARCH_HOST: elastic-es-http.elastic
+      envSecretKeyRefs:
+        SEALED_SECRET:
+          key: SEALED_SECRET
+          name: sparkjob
     deps:
       jars:
       - https://repo1.maven.org/maven2/com/microsoft/sqlserver/mssql-jdbc/11.2.1.jre8/mssql-jdbc-11.2.1.jre8.jar
