@@ -39,6 +39,7 @@ from ...utilities.docker import (
     create_container,
     push_to_registry,
     registry_for_project,
+    get_default_build_args,
 )
 from ...utilities.junit import (
     to_test_suites,
@@ -80,7 +81,11 @@ class TestDocker(Step):
             image_tag=tag,
             target=test_target,
             registry_config=docker_registry_config,
-            build_args={},
+            build_args=get_default_build_args(
+                tag,
+                step_input.project.maintainer,
+                step_input.run_properties.versioning.identifier,
+            ),
         )
 
         if success:

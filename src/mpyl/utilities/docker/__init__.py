@@ -159,6 +159,16 @@ def docker_image_tag(step_input: Input) -> str:
     return f"{step_input.project.name.lower()}:{tag}".replace("/", "_")
 
 
+def get_default_build_args(
+    image_tag: str, maintainers: list[str], tag_name: str
+) -> dict[str, str]:
+    return {
+        "DOCKER_IMAGE": image_tag,
+        "MAINTAINER": ",".join(maintainers),
+        "TAG_NAME": tag_name,
+    }
+
+
 def docker_registry_path(docker_config: DockerRegistryConfig, image_name: str) -> str:
     path_components = [
         docker_config.host_name,
