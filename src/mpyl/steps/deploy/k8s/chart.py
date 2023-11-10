@@ -410,6 +410,9 @@ class ChartBuilder:
                 env_vars=get_env_variables(self.project, self.target),
                 spark=self._get_job().spark,
                 image=self._get_image(),
+                command=self.project.kubernetes.command.get_value(self.target).split(
+                    " "
+                ),
             ),
         )
 

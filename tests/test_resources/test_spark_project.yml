@@ -33,6 +33,8 @@ deployment:
       spark:
         mainClass: "sparkjob.sparkJobMain"
         mainApplicationFile: "local:///app/sparkjob-assembly-1.0.jar"
+    command:
+      all: 'run command'
     resources:
       instances:
         all: 2

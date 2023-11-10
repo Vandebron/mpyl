@@ -8,7 +8,9 @@ from kubernetes.client import V1ObjectMeta
 from .. import CustomResourceDefinition
 
 
-def to_spark_body(project_name: str, env_vars: dict, spark: dict, image: str) -> dict:
+def to_spark_body(
+    project_name: str, env_vars: dict, spark: dict, image: str, command: list[str]
+) -> dict:
     static_body = {
         "type": "Scala",
         "mode": "cluster",
@@ -17,11 +19,7 @@ def to_spark_body(project_name: str, env_vars: dict, spark: dict, image: str) ->
         "restartPolicy": {"type": "Never"},
         "sparkConfigMap": project_name,
         "image": image,
-        "arguments": [
-            "python",
-            "-m",
-            "job_testing_mpl_k8s.main_send_slack_notification",
-        ],
+        "arguments": command,
         "driver": {
             "cores": 1,
             "coreLimit": "1200m",
