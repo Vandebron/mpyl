@@ -1,5 +1,17 @@
 # Release notes
 
+## MPyL 1.4.4
+
+
+#### Bugfixes
+
+- Filter out override projects from the `projects` cli commands
+- Sort the `projects names` results alphabetically
+- Fix the fact that whitelists are being cached between charts/projects, thus subsequent charts/projects contain the whitelists from previous ones
+- Add default build_args for DockerBuild and DockerTest stages
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.4)
+
 ## MPyL 1.4.3
 
 
