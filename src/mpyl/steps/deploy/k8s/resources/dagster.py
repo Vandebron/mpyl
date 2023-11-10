@@ -22,6 +22,9 @@ def to_user_code_values(
 ) -> dict:
     docker_registry = registry_for_project(docker_config, project)
     return {
+        "global": {
+            "serviceAccountName": "user-code-dagster-user-deployments-user-deployments"
+        },
         "deployments": [
             {
                 "dagsterApiGrpcArgs": ["--python-file", project.dagster.repo],
@@ -38,6 +41,7 @@ def to_user_code_values(
                 "port": 3030,
             },
         ],
+        "serviceAccount": {"create": False},
         "nameOverride": "ucd",  # short for user-code-deployment
     }
 
