@@ -118,7 +118,11 @@ class V1SparkApplication(CustomResourceDefinition):
                 kind="ScheduledSparkApplication",
                 metadata=metadata,
                 schema="sparkoperator.k8s.io_scheduledsparkapplications.schema.yml",
-                spec={"schedule": schedule, "template": body},
+                spec={
+                    "concurrencyPolicy": "Forbid",
+                    "schedule": schedule,
+                    "template": body,
+                },
             )
         else:
             super().__init__(
