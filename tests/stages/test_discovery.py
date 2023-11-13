@@ -3,12 +3,15 @@ from pathlib import Path
 
 from ruamel.yaml import YAML  # type: ignore
 
-from src.mpyl.project import Project
 from src.mpyl.constants import BUILD_ARTIFACTS_FOLDER
+from src.mpyl.project import Project
 from src.mpyl.projects.find import load_projects
 from src.mpyl.stages.discovery import (
     find_invalidated_projects_for_stage,
-    output_invalidated,
+    _to_changed_files,
+    ChangedFile,
+    _is_newer_than_artifact,
+    _is_output_invalid,
 )
 from src.mpyl.steps import Output
 from src.mpyl.steps import build, test, deploy
@@ -23,6 +26,11 @@ yaml = YAML()
 
 class TestDiscovery:
     steps = StepsCollection(logger=logging.getLogger())
+    revisions = [
+        Revision(0, "hash1", {"projects/job/file.py", "some_file.txt"}),
+        Revision(1, "hash2", {"projects/job/file.py"}),
+        Revision(2, "hash3", {"other_file.txt"}),
+    ]
 
     def find(self, stage: str, projects: set[Project], touched_files: set[str]):
         return {
@@ -33,6 +41,20 @@ class TestDiscovery:
                 [Revision(0, "revision", touched_files)],
                 self.steps,
             )
+        }
+
+    def test_should_check_if_newer_than_artifact(self):
+        assert _is_newer_than_artifact("hash1", "hash3", self.revisions) is True
+        assert _is_newer_than_artifact("hash3", "hash1", self.revisions) is False
+        assert _is_newer_than_artifact("nonexistent", "hash1", self.revisions) is True
+        assert _is_newer_than_artifact("hash2", "nonexistent", self.revisions) is True
+
+    def test_should_take_latest_revision_per_path(self):
+        changed = _to_changed_files(self.revisions)
+        assert changed == {
+            ChangedFile(path="other_file.txt", revision="hash3"),
+            ChangedFile(path="projects/job/file.py", revision="hash2"),
+            ChangedFile(path="some_file.txt", revision="hash1"),
         }
 
     def test_should_find_invalidated_test_dependencies(self):
@@ -93,20 +115,25 @@ class TestDiscovery:
         ).read_text(encoding="utf-8")
         output = yaml.load(test_output)
         assert not output.success, "output should not be successful"
-        assert output_invalidated(None, "hash"), "should be invalidated if no output"
-        assert output_invalidated(
-            output, "hash"
+        assert _is_output_invalid(
+            None, [], "revision"
+        ), "should be invalidated if no output"
+        assert _is_output_invalid(
+            output, [], "hash"
         ), "should be invalidated if output is not successful"
-        assert output_invalidated(
-            Output(success=True, message="No artifact produced"), "hash"
+        assert _is_output_invalid(
+            Output(success=True, message="No artifact produced"), [], "hash"
         ), "should be invalidated if no artifact produced"
 
         output.success = True
-        assert output_invalidated(
-            output, "hash"
+        assert _is_output_invalid(
+            output, [], "hash"
         ), "should be invalidated if hash doesn't match"
-        assert not output_invalidated(
-            output, "a2fcde18082e14a260195b26f7f5bfed9dc8fbb4"
+
+        file_revision = "a2fcde18082e14a260195b26f7f5bfed9dc8fbb4"
+        revisions = [Revision(0, file_revision, {"some_file.txt"})]
+        assert not _is_output_invalid(
+            output, revisions, file_revision
         ), "should be valid if hash matches"
 
     def test_listing_override_files(self):
