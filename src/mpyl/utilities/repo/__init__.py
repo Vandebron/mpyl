@@ -219,7 +219,7 @@ class Repository:  # pylint: disable=too-many-public-methods
         parts = self._config.main_branch.split("/")
         if len(parts) > 1:
             return "/".join(parts)
-        return f"{self.main_branch}"
+        return f"origin/{self.main_branch}"
 
     def fit_for_tag_build(self, tag: str) -> bool:
         return len(self.changes_in_tagged_commit(tag)) > 0
@@ -261,7 +261,7 @@ class Repository:  # pylint: disable=too-many-public-methods
     def changes_in_branch_including_local(self) -> list[Revision]:
         in_branch = self.changes_in_branch()
         in_branch.append(
-            Revision(len(in_branch), "uncommitted", self.changes_in_commit())
+            Revision(len(in_branch), self.get_sha, self.changes_in_commit())
         )
         return in_branch
 

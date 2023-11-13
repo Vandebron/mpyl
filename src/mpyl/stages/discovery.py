@@ -76,8 +76,11 @@ def is_invalidated(
 ) -> bool:
     invalidated_by_file = is_invalidated_by_file(project, stage, changed_file, steps)
     if invalidated_by_file:
-        output = Output.try_read(project.target_path, stage)
-        return _is_output_invalid(output, change_history, changed_file.revision)
+        output: Optional[Output] = Output.try_read(project.target_path, stage)
+        output_invalid = _is_output_invalid(
+            output, change_history, changed_file.revision
+        )
+        return output_invalid
     return False
 
 
@@ -93,9 +96,16 @@ def _is_output_invalid(
     if artifact is None:
         return True
 
-    return _is_newer_than_artifact(
+    is_newer = _is_newer_than_artifact(
         artifact.revision, changed_file_revision, change_history
     )
+    message = f"Revision {changed_file_revision} compared to {artifact.revision} from {artifact.producing_step}"
+    if is_newer:
+        logging.debug(f"{message} is newer, invalidating")
+    else:
+        logging.debug(f"{message} is older, cached artifact still valid")
+
+    return is_newer
 
 
 def is_invalidated_by_file(
