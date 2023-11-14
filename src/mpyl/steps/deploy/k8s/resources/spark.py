@@ -8,7 +8,14 @@ from kubernetes.client import V1ObjectMeta
 from .. import CustomResourceDefinition
 
 
-def to_spark_body(project_name: str, env_vars: dict, spark: dict, image: str) -> dict:
+def to_spark_body(
+    project_name: str,
+    env_vars: dict,
+    spark: dict,
+    image: str,
+    command: Optional[list[str]],
+    env_secret_key_refs: dict,
+) -> dict:
     static_body = {
         "type": "Scala",
         "mode": "cluster",
@@ -17,11 +24,6 @@ def to_spark_body(project_name: str, env_vars: dict, spark: dict, image: str) ->
         "restartPolicy": {"type": "Never"},
         "sparkConfigMap": project_name,
         "image": image,
-        "arguments": [
-            "python",
-            "-m",
-            "job_testing_mpl_k8s.main_send_slack_notification",
-        ],
         "driver": {
             "cores": 1,
             "coreLimit": "1200m",
@@ -30,7 +32,7 @@ def to_spark_body(project_name: str, env_vars: dict, spark: dict, image: str) ->
             "labels": {"version": "3.1.1"},
             "serviceAccount": project_name,
             "envVars": env_vars,
-            "envSecretKeyRefs": None,
+            "envSecretKeyRefs": env_secret_key_refs,
         },
         "executor": {
             "cores": 1,
@@ -39,7 +41,7 @@ def to_spark_body(project_name: str, env_vars: dict, spark: dict, image: str) ->
             "memoryOverhead": "2048",
             "labels": {"version": "3.1.1"},
             "envVars": env_vars,
-            "envSecretKeyRefs": None,
+            "envSecretKeyRefs": env_secret_key_refs,
         },
         "deps": {
             "jars": [
@@ -53,7 +55,7 @@ def to_spark_body(project_name: str, env_vars: dict, spark: dict, image: str) ->
             "spark.sql.legacy.timeParserPolicy": "LEGACY",
             "spark.sql.broadcastTimeout": "600",
         },
-    }
+    } | ({"arguments": command} if command else {})
 
     return static_body | spark
 
@@ -111,20 +113,24 @@ def get_spark_config_map_data() -> dict:
 
 
 class V1SparkApplication(CustomResourceDefinition):
-    def __init__(self, schedule: Optional[str], body: dict):
+    def __init__(self, metadata: V1ObjectMeta, schedule: Optional[str], body: dict):
         if schedule:
             super().__init__(
                 api_version="sparkoperator.k8s.io/v1beta2",
                 kind="ScheduledSparkApplication",
-                metadata=V1ObjectMeta(name="sparkapplications.sparkoperator.k8s.io"),
+                metadata=metadata,
                 schema="sparkoperator.k8s.io_scheduledsparkapplications.schema.yml",
-                spec={"schedule": schedule, "template": body},
+                spec={
+                    "concurrencyPolicy": "Forbid",
+                    "schedule": schedule,
+                    "template": body,
+                },
             )
         else:
             super().__init__(
                 api_version="sparkoperator.k8s.io/v1beta2",
                 kind="SparkApplication",
-                metadata=V1ObjectMeta(name="sparkapplications.sparkoperator.k8s.io"),
+                metadata=metadata,
                 schema="sparkoperator.k8s.io_sparkapplications.schema.yml",
                 spec={"spec": body},
             )

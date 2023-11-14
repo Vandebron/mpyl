@@ -248,7 +248,14 @@ class TestKubernetesChart:
 
     @pytest.mark.parametrize(
         "template",
-        ["spark", "service-account", "config-map", "role", "rolebinding"],
+        [
+            "spark",
+            "service-account",
+            "config-map",
+            "role",
+            "rolebinding",
+            "sealed-secrets",
+        ],
     )
     def test_spark_chart_roundtrip(self, template):
         builder = self._get_builder(get_spark_project())

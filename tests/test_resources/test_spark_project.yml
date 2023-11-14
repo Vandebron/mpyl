@@ -24,6 +24,9 @@ deployment:
         all: "cluster"
       - key: ELASTICSEARCH_HOST
         all: "elastic-es-http.elastic"
+    sealedSecret:
+      - key: SEALED_SECRET
+        all: "hash"
   kubernetes:
     job:
       activeDeadlineSeconds:
@@ -33,6 +36,8 @@ deployment:
       spark:
         mainClass: "sparkjob.sparkJobMain"
         mainApplicationFile: "local:///app/sparkjob-assembly-1.0.jar"
+    command:
+      all: 'run command'
     resources:
       instances:
         all: 2
