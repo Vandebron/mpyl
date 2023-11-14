@@ -32,7 +32,7 @@ class TestDagster:
         name_chart = file_name / f"{chart}.yaml"
         assert_roundtrip(name_chart, yaml_to_string(actual_values, yaml), overwrite)
 
-    def test_generate_correct_values_yaml(self):
+    def test_generate_correct_values_yaml_with_service_account_override(self):
         step_input = Input(
             load_project(self.resource_path, Path("project.yml"), True),
             test_data.RUN_PROPERTIES,
@@ -43,9 +43,33 @@ class TestDagster:
             project=step_input.project,
             name_suffix="-pr-1234",
             run_properties=test_data.RUN_PROPERTIES,
+            service_account_override="global_service_account",
             docker_config=DockerConfig.from_dict(
                 parse_config(Path(f"{self.config_resource_path}/mpyl_config.yml"))
             ),
         )
 
-        self._roundtrip(self.generated_values_path, "values", values)
+        self._roundtrip(
+            self.generated_values_path, "values_with_global_service_account", values
+        )
+
+    def test_generate_correct_values_yaml_without_service_account_override(self):
+        step_input = Input(
+            load_project(self.resource_path, Path("project.yml"), True),
+            test_data.RUN_PROPERTIES,
+            None,
+        )
+
+        values = to_user_code_values(
+            project=step_input.project,
+            name_suffix="-pr-1234",
+            run_properties=test_data.RUN_PROPERTIES,
+            service_account_override=None,
+            docker_config=DockerConfig.from_dict(
+                parse_config(Path(f"{self.config_resource_path}/mpyl_config.yml"))
+            ),
+        )
+
+        self._roundtrip(
+            self.generated_values_path, "values_without_global_service_account", values
+        )
