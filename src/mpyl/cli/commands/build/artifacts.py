@@ -11,8 +11,14 @@ def branch_name(target: str, artifact_type: str) -> str:
     return f"{target}-{artifact_type}"
 
 
-def prepare_artifacts_repo(obj: CliContext, repo_path: Path) -> ArtifactsRepository:
-    git_config = obj.config["vcs"].get("artifactRepository", None)
+def prepare_artifacts_repo(
+    obj: CliContext, repo_path: Path, artifact_type: str = "cache"
+) -> ArtifactsRepository:
+    git_config = (
+        obj.config["vcs"].get("artifactRepository", None)
+        if artifact_type == "cache"
+        else obj.config["vcs"].get("argoRepository", None)
+    )
     if not git_config:
         raise ValueError("No artifact repository configured")
     artifact_repo_config: RepoConfig = RepoConfig.from_git_config(git_config=git_config)

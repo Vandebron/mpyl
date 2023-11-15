@@ -62,7 +62,7 @@ class ManifestPathTransformer(PathTransformer):
         )
 
     def transform_for_write(self, artifact_path: str) -> Path:
-        return Path(artifact_path.replace(self.deploy_config.output_path, ""))
+        return Path(".")
 
 
 class ArtifactsRepository:
@@ -81,8 +81,6 @@ class ArtifactsRepository:
         self.logger = logger
         self.codebase_repo = codebase_repo
         self.artifact_repo_config = artifact_repo_config
-        if path_within_artifact_repo == Path("."):
-            raise ValueError("Path within repo must not be root")
         self.path_within_artifact_repo = path_within_artifact_repo
 
     def pull(self, branch: str) -> None:
@@ -151,6 +149,10 @@ class ArtifactsRepository:
                     f"Pushed {branch} with {copied_paths} copied paths to {artifact_repo.remote_url}"
                 )
 
+                if path_transformer.artifact_type() == "manifests":
+                    # create pr with pygithub?
+                    pass
+
     def copy_files(
         self,
         project_paths: list[str],
@@ -158,8 +160,6 @@ class ArtifactsRepository:
         transformer: PathTransformer,
     ) -> int:
         path_in_repo = repo_path / self.path_within_artifact_repo
-        shutil.rmtree(path_in_repo, ignore_errors=True)
-
         artifact_paths = list(map(transformer.transform_for_read, project_paths))
         existing = [path for path in artifact_paths if path.exists() and path.is_dir()]
         for file_path in existing:

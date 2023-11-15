@@ -521,7 +521,6 @@ def pull(obj: CliContext, tag: str, pr: int, path: Path):
     "-p",
     type=click.Path(exists=False),
     help="Path within repository to copy artifacts to",
-    default=Path("tmp"),
     required=False,
 )
 @click.option(
@@ -540,8 +539,12 @@ def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: str):
         all_projects=set(),
     )
     target_branch = __get_target_branch(run_properties, tag, pr)
+    if path is None:
+        path = Path("tmp") if artifact_type == "cache" else Path(".")
 
-    build_artifacts = prepare_artifacts_repo(obj=obj, repo_path=path)
+    build_artifacts = prepare_artifacts_repo(
+        obj=obj, repo_path=path, artifact_type=artifact_type
+    )
     deploy_config = DeployConfig.from_config(obj.config)
 
     transformer = (

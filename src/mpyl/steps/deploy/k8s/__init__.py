@@ -13,7 +13,6 @@ import yaml as dict_to_yaml_str
 
 from .deploy_config import DeployConfig, DeployAction, get_namespace
 from .helm import write_helm_chart, GENERATED_WARNING
-from .kubectl import push_manifest_to_repo
 from ...deploy.k8s.resources import CustomResourceDefinition
 from ...models import RunProperties, input_to_artifact, ArtifactType, ArtifactSpec
 from ....project import Target, ProjectName
@@ -194,7 +193,18 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
 
     action = deploy_config.action.value
     if action == DeployAction.KUBERNETES_MANIFEST.value:  # pylint: disable=no-member
-        path = Path(project.root_path, deploy_config.output_path)
+        argo_folder_name = __get_argo_folder_name(target=target)
+        namespace = get_namespace(
+            run_properties=run_properties, project=step_input.project
+        )
+        path = Path(
+            project.root_path,
+            deploy_config.output_path,
+            "k8s-manifests",
+            project.name,
+            argo_folder_name,
+            namespace,
+        )
         file_path = write_manifest(path, chart)
 
         artifact = input_to_artifact(
@@ -202,14 +212,6 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
             step_input,
             spec=KubernetesManifestSpec(str(file_path)),
         )
-
-        if not step_input.dry_run:
-            output = push_manifest_to_repo(
-                step_input=step_input,
-                manifest_path=file_path,
-            )
-            output.produced_artifact = artifact
-            return output
 
         return Output(
             success=True,
@@ -266,6 +268,15 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
         rancher_config.context,
         delete_existing,
     )
+
+
+def __get_argo_folder_name(target: Target) -> str:
+    if target in (
+        Target.PULL_REQUEST_BASE,
+        Target.PULL_REQUEST,
+    ):
+        return "test"
+    return target.name.lower()
 
 
 def substitute_namespaces(

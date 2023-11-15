@@ -74,9 +74,7 @@ class TestArtifacts:
             "service/target/kubernetes"
         )
 
-        assert transformer.transform_for_write("service/target/kubernetes") == Path(
-            "service"
-        )
+        assert transformer.transform_for_write("service/target/kubernetes") == Path(".")
 
     def test_copy_folders(self):
         with TemporaryDirectory() as tmp_repo_dir:
