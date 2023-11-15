@@ -22,9 +22,9 @@ from .k8s import (
 from .k8s.helm import write_chart
 from .k8s.resources.dagster import to_user_code_values, to_grpc_server_entry, Constants
 from .. import Step, Meta, ArtifactType, Input, Output
-from ...utilities.dagster import DagsterConfig, get_name_suffix
+from ...utilities.dagster import DagsterConfig
 from ...utilities.docker import DockerConfig
-from ...utilities.helm import convert_to_helm_release_name
+from ...utilities.helm import convert_to_helm_release_name, get_name_suffix
 
 
 class DeployDagster(Step):

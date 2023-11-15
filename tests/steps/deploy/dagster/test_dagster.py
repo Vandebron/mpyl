@@ -2,7 +2,7 @@ from pathlib import Path
 
 from ruamel.yaml import YAML
 
-from src.mpyl.utilities.dagster import get_name_suffix
+from src.mpyl.utilities.helm import get_name_suffix
 from src.mpyl.utilities.yaml import yaml_to_string
 from src.mpyl import parse_config
 from src.mpyl.project import load_project
@@ -82,7 +82,7 @@ class TestDagster:
 
         values = to_user_code_values(
             project=step_input.project,
-            name_suffix="-pr-1234",
+            name_suffix=get_name_suffix(test_data.RUN_PROPERTIES),
             run_properties=test_data.RUN_PROPERTIES,
             service_account_override=None,
             docker_config=DockerConfig.from_dict(
