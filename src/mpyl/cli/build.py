@@ -555,11 +555,17 @@ def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: str):
 
     message = f"Revision {obj.repo.get_sha} {f'at {obj.repo.remote_url}' if obj.repo.remote_url else ''}"
 
+    github_config = None
+    if artifact_type == "manifests":
+        github = obj.config["vcs"]["argoGithub"]
+        github_config = GithubConfig.from_github_config(github=github)
+
     build_artifacts.push(
         branch=branch_name(target_branch, artifact_type),
         message=message,
         project_paths=obj.repo.find_projects(),
         path_transformer=transformer,
+        github_config=github_config,
     )
 
 

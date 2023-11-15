@@ -7,12 +7,16 @@ from abc import ABC
 from logging import Logger
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Optional
 
 from git import GitCommandError
+from github import Github
 
+from ..cli.commands.build.jenkins import get_token
 from ..constants import BUILD_ARTIFACTS_FOLDER
 from ..project import Project
 from ..steps.deploy.k8s.deploy_config import DeployConfig
+from ..utilities.github import GithubConfig
 from ..utilities.repo import Repository, RepoConfig
 
 
@@ -110,6 +114,7 @@ class ArtifactsRepository:
         message: str,
         project_paths: list[str],
         path_transformer: PathTransformer,
+        github_config: Optional[GithubConfig] = None,
     ) -> None:
         with TemporaryDirectory() as tmp_repo_dir:
             repo_path = Path(tmp_repo_dir)
@@ -149,9 +154,10 @@ class ArtifactsRepository:
                     f"Pushed {branch} with {copied_paths} copied paths to {artifact_repo.remote_url}"
                 )
 
-                if path_transformer.artifact_type() == "manifests":
-                    # create pr with pygithub?
-                    pass
+                if path_transformer.artifact_type() == "manifests" and github_config:
+                    github = Github(login_or_token=get_token(github_config))
+                    repo = github.get_repo(github_config.repository)
+                    repo.create_pull(title=branch, body="", head=branch, base="main")
 
     def copy_files(
         self,

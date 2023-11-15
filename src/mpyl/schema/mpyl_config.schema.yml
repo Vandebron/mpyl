@@ -180,6 +180,8 @@ definitions:
       argoRepository:
         description: "The argocd repository that contains the kubernetes manifests"
         "$ref": "#/definitions/Git"
+      argoGithub:
+        "$ref": "#/definitions/Github"
     required:
       - git
       - github
