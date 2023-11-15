@@ -21,6 +21,7 @@ from ..cli.commands.projects.lint import (
     _assert_unique_project_names,
     _assert_correct_project_linkup,
     _lint_whitelisting_rules,
+    __detail_wrong_substitutions,
 )
 from ..cli.commands.projects.upgrade import check_upgrade
 from ..constants import DEFAULT_CONFIG_FILE_NAME
@@ -172,21 +173,36 @@ def lint(obj: ProjectsContext):
     obj.cli.console.print("")
     obj.cli.console.print("Running extended checks...")
 
-    failed = _assert_correct_project_linkup(
+    failed = False
+    wrong_substitutions = _assert_correct_project_linkup(
         console=obj.cli.console,
         target=Target.PULL_REQUEST,
         projects=loaded_projects,
         all_projects=all_projects,
         pr_identifier=123,
     )
+    if len(wrong_substitutions) == 0:
+        obj.cli.console.print("  ✅ No wrong namespace substitutions found")
+    else:
+        failed = True
+        __detail_wrong_substitutions(obj.cli.console, all_projects, wrong_substitutions)
+
     for target in Target:
-        res = _lint_whitelisting_rules(
+        wrong_whitelists = _lint_whitelisting_rules(
             console=obj.cli.console,
             projects=loaded_projects,
             config=obj.cli.config,
             target=target,
         )
-        failed = failed or res
+        if len(wrong_whitelists) == 0:
+            obj.cli.console.print("  ✅ No undefined whitelists found")
+        else:
+            for project, diff in wrong_whitelists:
+                obj.cli.console.log(
+                    f"  ❌ Project {project.name} has undefined whitelists: {diff}"
+                )
+                failed = True
+
     if failed:
         click.get_current_context().exit(1)
 
