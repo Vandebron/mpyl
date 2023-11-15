@@ -15,9 +15,9 @@ def prepare_artifacts_repo(
     obj: CliContext, repo_path: Path, artifact_type: str = "cache"
 ) -> ArtifactsRepository:
     git_config = (
-        obj.config["vcs"].get("artifactRepository", None)
+        obj.config["vcs"].get("cachingRepository", None)
         if artifact_type == "cache"
-        else obj.config["vcs"].get("argoRepository", None)
+        else obj.config["vcs"].get("artifactRepository", None)
     )
     if not git_config:
         raise ValueError("No artifact repository configured")

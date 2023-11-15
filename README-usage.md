@@ -279,7 +279,7 @@ mpyl build artifacts push
 command at the end of a run. This will push the `.mpyl` folder to the remote repository configured in `mpyl_config.yml`
 ```yaml
 vcs:
-  artifactRepository:
+  cachingRepository:
       mainBranch: 'main'
       remote:
         url: 'https://github.com/acme/artifact-repo.git'

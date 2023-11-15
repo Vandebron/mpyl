@@ -13,7 +13,7 @@ vcs:
     app:
       privateKeyBase64Encoded: !ENV ${MPYL_GITHUB_APP_PRIVATE_KEY}
       appId: '295700'
-  artifactRepository:
+  cachingRepository:
     mainBranch: 'main'
     remote:
       url: 'https://github.com/acme/artifact-repo.git'

@@ -174,10 +174,10 @@ definitions:
         "$ref": "#/definitions/Git"
       github:
         "$ref": "#/definitions/Github"
-      artifactRepository:
+      cachingRepository:
         description: "The repository where the build artifacts are persisted"
         "$ref": "#/definitions/Git"
-      argoRepository:
+      artifactRepository:
         description: "The argocd repository that contains the kubernetes manifests"
         "$ref": "#/definitions/Git"
       argoGithub:
