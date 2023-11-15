@@ -4,6 +4,15 @@ Dagster-related utility methods
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+from mpyl.project import Target
+from mpyl.steps.models import RunProperties
+
+
+def get_name_suffix(properties: RunProperties) -> str:
+    if properties.target == Target.PULL_REQUEST:
+        return f"-{properties.versioning.identifier}"
+    return ""
+
 
 @dataclass(frozen=True)
 class DagsterConfig:

@@ -22,8 +22,7 @@ from .k8s import (
 from .k8s.helm import write_chart
 from .k8s.resources.dagster import to_user_code_values, to_grpc_server_entry, Constants
 from .. import Step, Meta, ArtifactType, Input, Output
-from ...project import Target
-from ...utilities.dagster import DagsterConfig
+from ...utilities.dagster import DagsterConfig, get_name_suffix
 from ...utilities.docker import DockerConfig
 from ...utilities.helm import convert_to_helm_release_name, shorten_name
 
@@ -94,11 +93,7 @@ class DeployDagster(Step):
         if not result.success:
             return self.__evaluate_results(dagster_deploy_results)
 
-        name_suffix = (
-            f"-{properties.versioning.identifier}"
-            if properties.target == Target.PULL_REQUEST
-            else ""
-        )
+        name_suffix = get_name_suffix(properties)
 
         user_code_deployment = to_user_code_values(
             project=step_input.project,
