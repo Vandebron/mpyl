@@ -31,7 +31,7 @@ def to_user_code_values(
 
     return global_override | {
         "serviceAccount": {"create": create_local_service_account},
-        "nameOverride": "ucd",  # short for user-code-deployment
+        "fullnameOverride": "ucd",  # short for user-code-deployment
         "deployments": [
             {
                 "dagsterApiGrpcArgs": ["--python-file", project.dagster.repo],
