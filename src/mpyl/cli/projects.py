@@ -146,15 +146,8 @@ def show_project(ctx, name):
 
 
 @projects.command(help="Validate the yaml of changed projects against their schema")
-@click.option(
-    "--extended",
-    "-e",
-    "extended",
-    is_flag=True,
-    help="Enable extra validations like PR namespace linkup or whitelisting rules check",
-)
 @click.pass_obj
-def lint(obj: ProjectsContext, extended):
+def lint(obj: ProjectsContext):
     loaded_projects = _check_and_load_projects(
         console=obj.cli.console,
         repo=obj.cli.repo,
@@ -175,23 +168,27 @@ def lint(obj: ProjectsContext, extended):
         console=obj.cli.console,
         all_projects=all_projects,
     )
-    if extended:
-        obj.cli.console.print("")
-        obj.cli.console.print("Running extended checks...")
-        _assert_correct_project_linkup(
+
+    obj.cli.console.print("")
+    obj.cli.console.print("Running extended checks...")
+
+    failed = _assert_correct_project_linkup(
+        console=obj.cli.console,
+        target=Target.PULL_REQUEST,
+        projects=loaded_projects,
+        all_projects=all_projects,
+        pr_identifier=123,
+    )
+    for target in Target:
+        res = _lint_whitelisting_rules(
             console=obj.cli.console,
-            target=Target.PULL_REQUEST,
             projects=loaded_projects,
-            all_projects=all_projects,
-            pr_identifier=123,
+            config=obj.cli.config,
+            target=target,
         )
-        for target in Target:
-            _lint_whitelisting_rules(
-                console=obj.cli.console,
-                projects=loaded_projects,
-                config=obj.cli.config,
-                target=target,
-            )
+        failed = failed or res
+    if failed:
+        click.get_current_context().exit(1)
 
 
 @projects.command(help="Upgrade projects to conform with the latest schema")
