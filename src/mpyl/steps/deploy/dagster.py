@@ -104,6 +104,7 @@ class DeployDagster(Step):
             project=step_input.project,
             name_suffix=name_suffix,
             run_properties=properties,
+            service_account_override=dagster_config.global_service_account_override,
             docker_config=DockerConfig.from_dict(properties.config),
         )
 

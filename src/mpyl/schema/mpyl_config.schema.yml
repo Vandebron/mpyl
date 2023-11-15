@@ -449,3 +449,6 @@ definitions:
       webserver:
         description: "Name of the kubernetes instance that runs the dagster web UI, default"
         type: string
+      globalServiceAccountOverride:
+        description: "Name of an (external) serviceAccount that will be assigned to a dagster user-deployment in favor of creating a new one"
+        type: string
