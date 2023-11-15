@@ -1,5 +1,17 @@
 # Release notes
 
+## MPyL 1.4.5
+
+
+#### Override option for dagster user deployments' helm charts
+
+- Enable users to override the serviceAccount in the user deployment helm chart of dagster with a global serviceAccount
+
+#### Bugfixes
+- Fix Spark Deploy Step: inject sealed secrets, set job argument correctly
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.5)
+
 ## MPyL 1.4.4
 
 
