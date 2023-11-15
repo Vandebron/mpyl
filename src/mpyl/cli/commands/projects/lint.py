@@ -89,9 +89,9 @@ def _assert_correct_project_linkup(
     if len(wrong_substitutions) == 0:
         console.print("  ✅ No wrong namespace substitutions found")
         return False
-    else:
-        __detail_wrong_substitutions(console, all_projects, wrong_substitutions)
-        return True
+
+    __detail_wrong_substitutions(console, all_projects, wrong_substitutions)
+    return True
 
 
 def __get_wrong_substitutions_per_project(
@@ -172,7 +172,7 @@ def _lint_whitelisting_rules(
     if len(wrong_whitelists) == 0:
         console.print("  ✅ No undefined whitelists found")
         return False
-    else:
-        for project, diff in wrong_whitelists:
-            console.log(f"  ❌ Project {project.name} has undefined whitelists: {diff}")
-        return True
+
+    for project, diff in wrong_whitelists:
+        console.log(f"  ❌ Project {project.name} has undefined whitelists: {diff}")
+    return True
