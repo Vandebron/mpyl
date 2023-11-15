@@ -24,7 +24,7 @@ from .k8s.resources.dagster import to_user_code_values, to_grpc_server_entry, Co
 from .. import Step, Meta, ArtifactType, Input, Output
 from ...utilities.dagster import DagsterConfig, get_name_suffix
 from ...utilities.docker import DockerConfig
-from ...utilities.helm import convert_to_helm_release_name, shorten_name
+from ...utilities.helm import convert_to_helm_release_name
 
 
 class DeployDagster(Step):
@@ -118,7 +118,9 @@ class DeployDagster(Step):
             logger=self._logger,
             dry_run=step_input.dry_run,
             values_path=values_path / Path("values.yaml"),
-            release_name=convert_to_helm_release_name(step_input.project.name, name_suffix),
+            release_name=convert_to_helm_release_name(
+                step_input.project.name, name_suffix
+            ),
             chart_version=dagster_version,
             chart_name=Constants.CHART_NAME,
             namespace=dagster_config.base_namespace,
