@@ -94,7 +94,7 @@ class TestDiscovery:
         with test_data.get_repo() as repo:
             touched_files = {"tests/projects/overriden-project/file.py"}
             projects = load_projects(repo.root_dir, repo.find_projects())
-            assert len(projects) == 11
+            assert len(projects) == 13
             projects_for_build = find_invalidated_projects_for_stage(
                 projects, build.STAGE_NAME, [Revision(0, "revision", touched_files)]
             )
