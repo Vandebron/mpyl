@@ -27,3 +27,12 @@ def get_name_suffix(properties: RunProperties) -> str:
     if properties.target == Target.PULL_REQUEST:
         return f"-{properties.versioning.identifier}"
     return ""
+
+
+def shorten_name(name: str) -> str:
+    """
+    Shortens name by taking the first letter of each hyphened sequence
+    """
+    if len(name) <= 3:
+        return name
+    return "".join([word[0] for word in name.split("-")])

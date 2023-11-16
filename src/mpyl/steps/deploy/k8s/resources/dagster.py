@@ -7,6 +7,7 @@ from typing import Optional
 from .....project import Project, get_env_variables
 from .....steps.models import RunProperties
 from .....utilities.docker import DockerConfig, registry_for_project
+from .....utilities.helm import shorten_name
 
 
 @dataclass(frozen=True)
@@ -31,7 +32,7 @@ def to_user_code_values(
 
     return global_override | {
         "serviceAccount": {"create": create_local_service_account},
-        "fullnameOverride": "ucd",  # short for user-code-deployment
+        "fullnameOverride": f"ucd-{shorten_name(project.name)}{name_suffix}",  # short for user-code-deployment
         "deployments": [
             {
                 "dagsterApiGrpcArgs": ["--python-file", project.dagster.repo],
