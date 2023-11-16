@@ -9,6 +9,7 @@ build:
   args:
     plain:
       - key: SOME_ENV
+        pr: "Pr"
         test: "Test"
         acceptance: "Acceptance"
         production: "Production"
@@ -20,6 +21,7 @@ deployment:
   properties:
     env:
       - key: SOME_ENV
+        pr: "Pr"
         test: "Test"
         acceptance: "Acceptance"
         production: "Production"
