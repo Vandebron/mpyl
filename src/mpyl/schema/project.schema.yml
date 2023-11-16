@@ -529,6 +529,14 @@ definitions:
     minProperties: 2
     required:
       - key
+    oneOf:
+      - required:
+          - pr
+          - test
+          - acceptance
+          - production
+      - required:
+          - all
     properties:
       key:
         type: string
