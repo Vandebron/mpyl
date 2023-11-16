@@ -1,5 +1,20 @@
 # Release notes
 
+## MPyL 1.4.6
+
+
+#### Enhancement
+- Shorten helm release names for dagster user deployment helm charts by using fullnameOverride
+- Cover more special cases for dagster user deployment helm charts by unittests
+
+#### Linting
+
+- Enable extended checks by default
+- Fail command if one of the extended checks fail
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.6)
+
 ## MPyL 1.4.5
 
 
