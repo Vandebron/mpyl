@@ -22,10 +22,9 @@ from .k8s import (
 from .k8s.helm import write_chart
 from .k8s.resources.dagster import to_user_code_values, to_grpc_server_entry, Constants
 from .. import Step, Meta, ArtifactType, Input, Output
-from ...project import Target
 from ...utilities.dagster import DagsterConfig
 from ...utilities.docker import DockerConfig
-from ...utilities.helm import convert_to_helm_release_name, shorten_name
+from ...utilities.helm import convert_to_helm_release_name, get_name_suffix
 
 
 class DeployDagster(Step):
@@ -94,11 +93,7 @@ class DeployDagster(Step):
         if not result.success:
             return self.__evaluate_results(dagster_deploy_results)
 
-        name_suffix = (
-            f"-{properties.versioning.identifier}"
-            if properties.target == Target.PULL_REQUEST
-            else ""
-        )
+        name_suffix = get_name_suffix(properties)
 
         user_code_deployment = to_user_code_values(
             project=step_input.project,
@@ -124,7 +119,7 @@ class DeployDagster(Step):
             dry_run=step_input.dry_run,
             values_path=values_path / Path("values.yaml"),
             release_name=convert_to_helm_release_name(
-                shorten_name(step_input.project.name), name_suffix
+                step_input.project.name, name_suffix
             ),
             chart_version=dagster_version,
             chart_name=Constants.CHART_NAME,

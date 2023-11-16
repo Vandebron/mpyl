@@ -7,7 +7,7 @@ class TestProjectLoad:
     def test_load_all_projects(self):
         with test_data.get_repo() as repo:
             projects = load_projects(repo.root_dir, repo.find_projects(), True)
-            assert len(projects) == 11
+            assert len(projects) == 13
 
     def test_load_all_project_dependencies(self):
         with test_data.get_repo() as repo:
@@ -17,6 +17,6 @@ class TestProjectLoad:
                 map(lambda d: (d.name, d), dependencies)
             )
 
-            assert len(dependencies) == 11
+            assert len(dependencies) == 13
             assert len(deps["job"].dependent_projects) == 1
             assert len(deps["sbtservice"].dependent_projects) == 0
