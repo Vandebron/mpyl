@@ -494,6 +494,14 @@ definitions:
     additionalProperties: false
     required:
       - key
+    oneOf:
+      - required:
+          - pr
+          - test
+          - acceptance
+          - production
+      - required:
+          - all
     properties:
       key:
         type: string
