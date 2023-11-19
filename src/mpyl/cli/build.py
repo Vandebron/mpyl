@@ -509,7 +509,9 @@ def pull(obj: CliContext, tag: str, pr: int, path: Path):
     )
     target_branch = __get_target_branch(run_properties, tag, pr)
 
-    build_artifacts = prepare_artifacts_repo(obj=obj, repo_path=path)
+    build_artifacts = prepare_artifacts_repo(
+        obj=obj, repo_path=path, artifact_type="cache"
+    )
     build_artifacts.pull(branch=branch_name(target_branch, "cache"))
 
 
