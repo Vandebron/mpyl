@@ -116,12 +116,9 @@ class RepoConfig:
 
 
 class Repository:  # pylint: disable=too-many-public-methods
-    def __init__(self, config: RepoConfig, repo_path: Optional[Path] = None):
+    def __init__(self, config: RepoConfig, repo: Optional[Repo] = None):
         self._config = config
-        self._root_dir = repo_path or Git().rev_parse("--show-toplevel")
-        self._repo = Repo(
-            path=self._root_dir
-        )  # pylint: disable=attribute-defined-outside-init
+        self._repo = repo or Repo(path=Git().rev_parse("--show-toplevel"))
 
     def __enter__(self):
         return self
@@ -138,19 +135,21 @@ class Repository:  # pylint: disable=too-many-public-methods
         if not creds:
             raise ValueError("Cannot clone repository without credentials")
 
-        user_name = creds.user_name
+        if user_name := creds.user_name is None:
+            return Repository(
+                config=config,
+                repo=Repo.clone_from(url=creds.ssh_url, to_path=repo_path),
+            )
+
         repo = Repo.clone_from(
-            url=creds.to_url_with_credentials if user_name else creds.ssh_url,
+            url=creds.to_url_with_credentials,
             to_path=repo_path,
         )
-        if user_name:
-            with repo.config_writer() as writer:
-                writer.set_value("user", "name", user_name)
-                writer.set_value(
-                    "user", "email", creds.email or "somebody@somewhere.com"
-                )
+        with repo.config_writer() as writer:
+            writer.set_value("user", "name", user_name)
+            writer.set_value("user", "email", creds.email or "somebody@somewhere.com")
 
-        return Repository(config=config, repo_path=repo_path)
+        return Repository(config=config, repo=repo)
 
     @staticmethod
     def from_shallow_diff_clone(
@@ -211,7 +210,7 @@ class Repository:  # pylint: disable=too-many-public-methods
 
     @property
     def root_dir(self) -> Path:
-        return Path(self._root_dir)
+        return Path(self._repo.git_dir).parent
 
     @property
     def main_branch(self) -> str:

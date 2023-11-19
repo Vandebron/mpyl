@@ -1,8 +1,10 @@
 import dataclasses
 import os
 from pathlib import Path
+from typing import Optional
 
 from attr import dataclass
+from git import Repo
 
 from src.mpyl.constants import (
     DEFAULT_CONFIG_FILE_NAME,
@@ -142,7 +144,7 @@ def get_project_with_stages(stage_config: dict, path: str = "", maintainers=None
 class MockRepository(Repository):
     def __init__(self, config: RepoConfig):
         self._config = config
-        self._root_dir = "."
+        self._repo = Repo(Path("."))
 
     def __enter__(self):
         return self
