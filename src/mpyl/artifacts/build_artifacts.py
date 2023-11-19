@@ -111,7 +111,8 @@ class ArtifactsRepository:
     def push(
         self,
         branch: str,
-        message: str,
+        revision: str,
+        repository_url: str,
         project_paths: list[str],
         path_transformer: PathTransformer,
         github_config: Optional[GithubConfig] = None,
@@ -139,7 +140,7 @@ class ArtifactsRepository:
                     return
 
                 artifact_repo.stage(".")
-                artifact_repo.commit(message)
+                artifact_repo.commit(f"Revision {revision} at {repository_url}")
 
                 try:  # to prevent issues with parallel runs pushing to the same branch
                     self.logger.info("Pushing changes to remote")
@@ -157,7 +158,12 @@ class ArtifactsRepository:
                 if path_transformer.artifact_type() == "manifests" and github_config:
                     github = Github(login_or_token=get_token(github_config))
                     repo = github.get_repo(github_config.repository)
-                    repo.create_pull(title=branch, body="", head=branch, base="main")
+                    repo.create_pull(
+                        title=branch,
+                        body=f"Manifests from {branch} at {repository_url}",
+                        head=branch,
+                        base="main",
+                    )
 
     def copy_files(
         self,

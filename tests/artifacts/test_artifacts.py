@@ -96,7 +96,8 @@ class TestArtifacts:
         projects = repository.find_projects()
         self.artifacts.push(
             branch="test/build-artifacts",
-            message="test message",
+            revision="revision",
+            repository_url="https://@github.com/SamTheisens/mpyl-example-gha.git",
             project_paths=projects,
             path_transformer=BuildCacheTransformer(),
         )
