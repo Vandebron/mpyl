@@ -528,8 +528,9 @@ def pull(obj: CliContext, tag: str, pr: int, path: Path):
 @click.option(
     "--artifact-type",
     "-a",
-    type=click.Choice(["cache", "manifests"]),
-    help="The type of artifact to store. Either build metadata from `.mpyl` folders or k8s manifests",
+    type=click.Choice(["cache", "argo"]),
+    help="The type of artifact to store. Either build metadata from `.mpyl` "
+    "folders or k8s manifests to be deployed by ArgoCD",
     required=True,
 )
 @click.pass_obj
@@ -551,14 +552,14 @@ def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: str):
 
     transformer = (
         ManifestPathTransformer(deploy_config)
-        if artifact_type == "manifests"
+        if artifact_type == "argo"
         else BuildCacheTransformer()
     )
 
     message = f"Revision {obj.repo.get_sha} {f'at {obj.repo.remote_url}' if obj.repo.remote_url else ''}"
 
     github_config = None
-    if artifact_type == "manifests":
+    if artifact_type == "argo":
         github = obj.config["vcs"]["argoGithub"]
         github_config = GithubConfig.from_github_config(github=github)
 

@@ -18,7 +18,7 @@ def prepare_artifacts_repo(
     git_config = (
         vcs.get("cachingRepository")
         if artifact_type == "cache"
-        else vcs.get("artifactRepository")
+        else vcs.get("argoRepository")
     )
     if git_config is None:
         raise ValueError(f"No repository for {artifact_type} configured")

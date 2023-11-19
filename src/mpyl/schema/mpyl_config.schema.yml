@@ -177,7 +177,7 @@ definitions:
       cachingRepository:
         description: "The repository where the build artifacts are persisted"
         "$ref": "#/definitions/Git"
-      artifactRepository:
+      argoRepository:
         description: "The argocd repository that contains the kubernetes manifests"
         "$ref": "#/definitions/Git"
       argoGithub:
