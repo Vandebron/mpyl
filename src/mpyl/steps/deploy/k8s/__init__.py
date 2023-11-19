@@ -187,11 +187,9 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
 ) -> Output:
     run_properties = step_input.run_properties
     project = step_input.project
+    deployment_config = DeployConfig.from_config(run_properties.config)
 
-    deploy_config = DeployConfig.from_config(run_properties.config)
-    rancher_config: ClusterConfig = cluster_config(target, run_properties)
-
-    action = deploy_config.action.value
+    action = deployment_config.action.value
     if action == DeployAction.KUBERNETES_MANIFEST.value:  # pylint: disable=no-member
         argo_folder_name = __get_argo_folder_name(target=target)
         namespace = get_namespace(
@@ -199,7 +197,7 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
         )
         path = Path(
             project.root_path,
-            deploy_config.output_path,
+            deployment_config.output_path,
             "k8s-manifests",
             project.name,
             argo_folder_name,
@@ -249,6 +247,7 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
         and project.deployment.kubernetes.rancher.project_id
         else ""
     )
+    rancher_config: ClusterConfig = cluster_config(target, run_properties)
 
     upsert_namespace(
         logger=logger,
