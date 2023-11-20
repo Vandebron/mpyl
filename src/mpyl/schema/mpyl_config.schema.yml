@@ -134,7 +134,7 @@ definitions:
         default: 'HelmDeploy'
       outputPath:
         type: string
-        default: target/kubernetes
+        default: .mpyl/kubernetes
         description: >-
           The path to the folder where the rendered helm chart or kubectl manifest will be written.
           Defaults to target/kubernetes under the root folder of the project.

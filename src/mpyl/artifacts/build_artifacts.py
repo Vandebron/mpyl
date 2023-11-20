@@ -53,7 +53,7 @@ class ManifestPathTransformer(PathTransformer):
     deploy_config: DeployConfig
 
     def artifact_type(self) -> str:
-        return "manifests"
+        return "argo"
 
     def __init__(self, deploy_config: DeployConfig):
         self.deploy_config = deploy_config
@@ -155,7 +155,7 @@ class ArtifactsRepository:
                     f"Pushed {branch} with {copied_paths} copied paths to {artifact_repo.remote_url}"
                 )
 
-                if path_transformer.artifact_type() == "manifests" and github_config:
+                if path_transformer.artifact_type() == "argo" and github_config:
                     github = Github(login_or_token=get_token(github_config))
                     repo = github.get_repo(github_config.repository)
                     repo.create_pull(
