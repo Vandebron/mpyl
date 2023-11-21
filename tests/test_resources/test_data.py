@@ -1,7 +1,6 @@
 import dataclasses
 import os
 from pathlib import Path
-from typing import Optional
 
 from attr import dataclass
 from git import Repo

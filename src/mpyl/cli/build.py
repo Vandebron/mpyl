@@ -551,7 +551,9 @@ def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: str):
     deploy_config = DeployConfig.from_config(obj.config)
 
     transformer = (
-        ManifestPathTransformer(deploy_config)
+        ManifestPathTransformer(
+            deploy_config=deploy_config, run_properties=run_properties
+        )
         if artifact_type == "argo"
         else BuildCacheTransformer()
     )

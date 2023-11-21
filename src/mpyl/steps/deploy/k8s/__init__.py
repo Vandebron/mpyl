@@ -191,18 +191,7 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
 
     action = deployment_config.action.value
     if action == DeployAction.KUBERNETES_MANIFEST.value:  # pylint: disable=no-member
-        argo_folder_name = __get_argo_folder_name(target=target)
-        namespace = get_namespace(
-            run_properties=run_properties, project=step_input.project
-        )
-        path = Path(
-            project.root_path,
-            deployment_config.output_path,
-            "k8s-manifests",
-            project.name,
-            argo_folder_name,
-            namespace,
-        )
+        path = Path(project.root_path, deployment_config.output_path)
         file_path = write_manifest(path, chart)
 
         artifact = input_to_artifact(
@@ -267,15 +256,6 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
         rancher_config.context,
         delete_existing,
     )
-
-
-def __get_argo_folder_name(target: Target) -> str:
-    if target in (
-        Target.PULL_REQUEST_BASE,
-        Target.PULL_REQUEST,
-    ):
-        return "test"
-    return target.name.lower()
 
 
 def substitute_namespaces(

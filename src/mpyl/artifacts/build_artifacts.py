@@ -14,8 +14,9 @@ from github import Github
 
 from ..cli.commands.build.jenkins import get_token
 from ..constants import BUILD_ARTIFACTS_FOLDER
-from ..project import Project
-from ..steps.deploy.k8s.deploy_config import DeployConfig
+from ..project import Project, Target, load_project
+from ..steps.deploy.k8s.deploy_config import DeployConfig, get_namespace
+from ..steps.models import RunProperties
 from ..utilities.github import GithubConfig
 from ..utilities.repo import Repository, RepoConfig
 
@@ -30,7 +31,7 @@ class PathTransformer(ABC):
         pass
 
     @abc.abstractmethod
-    def transform_for_write(self, artifact_path: str) -> Path:
+    def transform_for_write(self, artifact_path: str, project: Project) -> Path:
         pass
 
 
@@ -45,18 +46,20 @@ class BuildCacheTransformer(PathTransformer):
             )
         )
 
-    def transform_for_write(self, artifact_path: str) -> Path:
+    def transform_for_write(self, artifact_path: str, project: Project) -> Path:
         return Path(artifact_path)
 
 
 class ManifestPathTransformer(PathTransformer):
     deploy_config: DeployConfig
+    run_properties: RunProperties
 
     def artifact_type(self) -> str:
         return "argo"
 
-    def __init__(self, deploy_config: DeployConfig):
+    def __init__(self, deploy_config: DeployConfig, run_properties: RunProperties):
         self.deploy_config = deploy_config
+        self.run_properties = run_properties
 
     def transform_for_read(self, project_path: str) -> Path:
         return Path(
@@ -65,8 +68,23 @@ class ManifestPathTransformer(PathTransformer):
             )
         )
 
-    def transform_for_write(self, artifact_path: str) -> Path:
-        return Path(".")
+    def transform_for_write(self, artifact_path: str, project: Project) -> Path:
+        argo_folder_name = self.__get_argo_folder_name()
+        namespace = get_namespace(run_properties=self.run_properties, project=project)
+        return Path(
+            "k8s-manifests",
+            project.name,
+            argo_folder_name,
+            namespace,
+        )
+
+    def __get_argo_folder_name(self) -> str:
+        if self.run_properties.target in (
+            Target.PULL_REQUEST_BASE,
+            Target.PULL_REQUEST,
+        ):
+            return "test"
+        return self.run_properties.target.name.lower()
 
 
 class ArtifactsRepository:
@@ -172,11 +190,19 @@ class ArtifactsRepository:
         transformer: PathTransformer,
     ) -> int:
         path_in_repo = repo_path / self.path_within_artifact_repo
-        artifact_paths = list(map(transformer.transform_for_read, project_paths))
-        existing = [path for path in artifact_paths if path.exists() and path.is_dir()]
-        for file_path in existing:
+        artifact_paths: dict[Path, Path] = {
+            Path(project_path): transformer.transform_for_read(project_path)
+            for project_path in project_paths
+        }
+        existing: dict[Path, Path] = {
+            project_path: artifact_path
+            for project_path, artifact_path in artifact_paths.items()
+            if artifact_path.exists() and artifact_path.is_dir()
+        }
+        for project_path, file_path in existing.items():
+            project = load_project(Path(""), project_path)
             repo_transformed = path_in_repo / transformer.transform_for_write(
-                str(file_path)
+                artifact_path=str(file_path), project=project
             )
             self.logger.debug(f"Copying {file_path} to {repo_transformed}")
             os.makedirs(repo_transformed.parent, exist_ok=True)
