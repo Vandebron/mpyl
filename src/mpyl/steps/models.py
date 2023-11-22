@@ -108,7 +108,12 @@ class RunProperties:
             versioning=VersioningProperties(revision, branch, 123, tag),
             config=config,
             console=ConsoleProperties("INFO", True, 130),
-            stages=[Stage(stage["name"], stage["icon"]) for stage in stages],
+            stages=[
+                Stage(
+                    name=stage["name"], icon=stage["icon"], parallel=stage["parallel"]
+                )
+                for stage in stages
+            ],
         )
 
     def to_stage(self, stage_name: str) -> Stage:
@@ -155,7 +160,9 @@ class RunProperties:
             config=config,
             console=console,
             stages=[
-                Stage(stage["name"], stage["icon"])
+                Stage(
+                    name=stage["name"], icon=stage["icon"], parallel=stage["parallel"]
+                )
                 for stage in run_properties["stages"]
             ],
         )

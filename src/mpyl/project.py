@@ -54,6 +54,7 @@ class Target(Enum):
 class Stage:
     name: str
     icon: str
+    parallel: bool
 
 
 @dataclass(frozen=True)

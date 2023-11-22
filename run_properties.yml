@@ -20,9 +20,13 @@ build:
 stages:
   - name: 'build'
     icon: '🏗️'
+    parallel: true
   - name: 'test'
     icon: '📋'
+    parallel: true
   - name: 'deploy'
     icon: '🚀'
+    parallel: false
   - name: 'postdeploy'
     icon: '🦺️'
+    parallel: false

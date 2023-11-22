@@ -108,3 +108,6 @@ properties:
           type: string
         icon:
           type: string
+        parallel:
+          type: boolean
+          default: false
