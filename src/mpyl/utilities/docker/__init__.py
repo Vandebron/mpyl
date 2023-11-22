@@ -6,13 +6,13 @@ from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
 from traceback import print_exc
-from typing import Dict, Optional, Iterator, cast, Union, List
+from typing import Dict, Optional, Iterator, cast, Union
 from python_on_whales import docker, Image, Container, DockerException
 from python_on_whales.exceptions import NoSuchContainer
 from ruamel.yaml import yaml_object, YAML
 
 from ..logging import try_parse_ansi
-from ...project import Project, Docker
+from ...project import Project
 from ...steps.models import Input, ArtifactSpec
 
 yaml = YAML()
@@ -159,6 +159,16 @@ def docker_image_tag(step_input: Input) -> str:
     return f"{step_input.project.name.lower()}:{tag}".replace("/", "_")
 
 
+def get_default_build_args(
+    image_tag: str, maintainers: list[str], tag_name: str
+) -> dict[str, str]:
+    return {
+        "DOCKER_IMAGE": image_tag,
+        "MAINTAINER": ",".join(maintainers),
+        "TAG_NAME": tag_name,
+    }
+
+
 def docker_registry_path(docker_config: DockerRegistryConfig, image_name: str) -> str:
     path_components = [
         docker_config.host_name,
@@ -166,6 +176,16 @@ def docker_registry_path(docker_config: DockerRegistryConfig, image_name: str) -
         image_name,
     ]
     return "/".join([c for c in path_components if c]).lower()
+
+
+def full_image_path_for_project(step_input: Input) -> str:
+    docker_config: DockerConfig = DockerConfig.from_dict(
+        step_input.run_properties.config
+    )
+    docker_registry = registry_for_project(docker_config, step_input.project)
+
+    image_name = docker_image_tag(step_input)
+    return docker_registry_path(docker_registry, image_name)
 
 
 def push_to_registry(

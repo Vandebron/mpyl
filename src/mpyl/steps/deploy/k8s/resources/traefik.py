@@ -2,7 +2,7 @@
 This module contains the traefik ingress route CRD.
 """
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Union, Any
 
 from kubernetes.client import V1ObjectMeta
 
@@ -17,6 +17,8 @@ class HostWrapper:
     index: int
     service_port: int
     white_lists: dict[str, list[str]]
+    tls: Optional[str]
+    insecure: bool = False
 
     @property
     def full_name(self) -> str:
@@ -27,10 +29,11 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
     def __init__(
         self,
         metadata: V1ObjectMeta,
-        hosts: list[HostWrapper],
+        host: HostWrapper,
         target: Target,
         namespace: str,
         pr_number: Optional[int],
+        https: bool = True,
     ):
         def _interpolate_names(host: str, name: str) -> str:
             host = host.replace("{SERVICE-NAME}", name)
@@ -39,32 +42,38 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
                 return host.replace("{PR-NUMBER}", str(pr_number))
             return host
 
-        routes = [
-            {
-                "kind": "Rule",
-                "match": _interpolate_names(
-                    host=host.traefik_host.host.get_value(target),
-                    name=host.name,
-                ),
-                "services": [
-                    {"name": host.name, "kind": "Service", "port": host.service_port}
-                ],
-                "middlewares": [
-                    {"name": host.full_name},
-                    {"name": "traefik-https-redirect@kubernetescrd"},
-                ],
-            }
-            for host in hosts
-        ]
+        route: dict[str, Any] = {
+            "kind": "Rule",
+            "match": _interpolate_names(
+                host=host.traefik_host.host.get_value(target),
+                name=host.name,
+            ),
+            "services": [
+                {"name": host.name, "kind": "Service", "port": host.service_port}
+            ],
+            "middlewares": [
+                {"name": "traefik-https-redirect@kubernetescrd"} if not https else None,
+                {"name": host.full_name},
+            ],
+        }
+
+        if host.traefik_host.priority:
+            route |= {"priority": host.traefik_host.priority}
+
+        tls: dict[str, Union[str, dict]] = {
+            "secretName": host.tls if host.tls else "le-prod-wildcard-cert"
+        }
+        if host.insecure:
+            tls |= {"options": {"name": "insecure-ciphers", "namespace": "traefik"}}
 
         super().__init__(
             api_version="traefik.containo.us/v1alpha1",
             kind="IngressRoute",
             metadata=metadata,
             spec={
-                "routes": routes,
-                "entryPoints": ["websecure"],
-                "tls": {"secretName": "le-prod-wildcard-cert"},
+                "routes": [route],
+                "entryPoints": ["websecure" if https else "web"],
+                "tls": tls if https else None,
             },
             schema="traefik.ingress.schema.yml",
         )

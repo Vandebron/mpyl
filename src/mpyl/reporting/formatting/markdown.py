@@ -63,25 +63,13 @@ def __to_oneliner(result: list[StepResult], plan: set[Project]) -> str:
     return f'{", ".join(project_names)}'
 
 
-def stage_to_icon(stage: Stage):
-    if stage == Stage.BUILD:
-        return "🏗️"
-    if stage == Stage.TEST:
-        return "📋"
-    if stage == Stage.DEPLOY:
-        return "🚀"
-    if stage == Stage.POST_DEPLOY:
-        return "🦺"
-    return "➡️"
-
-
 def markdown_for_stage(run_result: RunResult, stage: Stage):
     step_results: list[StepResult] = run_result.results_for_stage(stage)
     plan: set[Project] = run_result.plan_for_stage(stage)
     if not step_results and not plan:
         return ""
 
-    result = f"{stage_to_icon(stage)} {__to_oneliner(step_results, plan)}  \n"
+    result = f"{stage.icon} {__to_oneliner(step_results, plan)}  \n"
     test_artifacts: dict[str, JunitTestSpec] = _collect_test_specs(step_results)
     test_results: dict[str, list[TestSuite]] = _collect_test_results(test_artifacts)
 
@@ -108,17 +96,17 @@ def run_result_to_markdown(run_result: RunResult) -> str:
     return status_line + execution_plan_as_markdown(run_result)
 
 
-def execution_plan_as_markdown(run_result):
+def execution_plan_as_markdown(run_result: RunResult):
     result = ""
     exception = run_result.exception
     if exception:
-        result += f"For _{exception.executor}_ on _{exception.project_name}_ at _{exception.stage}_ \n"
+        result += f"For _{exception.executor}_ on _{exception.project_name}_ at stage _{exception.stage}_ \n"
         result += f"\n\n{exception}\n\n"
     elif run_result.failed_result:
         failed = run_result.failed_result
-        result += f"For _{failed.project.name}_ at _{failed.stage}_ \n"
+        result += f"For _{failed.project.name}_ at stage _{failed.stage.name}_ \n"
         result += f"\n\n{run_result.failed_result.output.message}\n\n"
-    for stage in Stage:
+    for stage in run_result.run_properties.stages:
         result += markdown_for_stage(run_result, stage)
     return result
 

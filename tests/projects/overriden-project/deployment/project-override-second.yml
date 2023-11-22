@@ -1,0 +1,11 @@
+name: ocpp-second
+maintainer: ['MPyL']
+mpylVersion: 1.4.0
+stages:
+  deploy: Echo Deploy
+deployment:
+  namespace: ocpp
+  properties:
+    env:
+      - key: INSTANCE
+        all: 'two'

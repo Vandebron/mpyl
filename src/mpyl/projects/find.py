@@ -3,7 +3,8 @@ from pathlib import Path
 from typing import Optional
 
 from . import ProjectWithDependents, Protocol, Contract, Dependency
-from ..project import Project, load_project, Stage
+from ..project import Project, load_project
+from ..steps import test
 
 
 def load_projects(
@@ -33,7 +34,7 @@ def find_dependencies(
     ):
         dependent_projects = {}
         for dep in (
-            proj.project.dependencies.set_for_stage(Stage.TEST)
+            proj.project.dependencies.set_for_stage(test.STAGE_NAME)
             if proj.project.dependencies
             else set()
         ):
@@ -56,10 +57,3 @@ def find_dependencies(
     return recursively_find(
         ProjectWithDependents(project=project, dependent_projects={}), mapped, []
     )
-
-
-def find_all_dependencies(
-    root_dir: Path, paths: list[str]
-) -> list[ProjectWithDependents]:
-    projects = load_projects(root_dir, paths)
-    return list(map(lambda p: find_dependencies(p, projects), projects))

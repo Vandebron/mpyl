@@ -1,4 +1,4 @@
-"""Helper methods for linting projects for correctnessare can be found here"""
+"""Helper methods for linting projects for correctness are found here"""
 import itertools
 from dataclasses import dataclass
 from pathlib import Path
@@ -80,16 +80,13 @@ def _assert_correct_project_linkup(
     projects: list[Project],
     all_projects: list[Project],
     pr_identifier: Optional[int],
-):
+) -> list[WrongLinkupPerProject]:
     console.print("")
     console.print("Checking namespace substitution: ")
     wrong_substitutions = __get_wrong_substitutions_per_project(
         all_projects, projects, pr_identifier, target
     )
-    if len(wrong_substitutions) == 0:
-        console.print("  ✅ No wrong namespace substitutions found")
-    else:
-        __detail_wrong_substitutions(console, all_projects, wrong_substitutions)
+    return wrong_substitutions
 
 
 def __get_wrong_substitutions_per_project(
@@ -142,13 +139,13 @@ def _lint_whitelisting_rules(
     projects: list[Project],
     config: dict,
     target: Target,
-):
+) -> list[tuple[Project, set[str]]]:
     console.print("")
     console.print(f"Checking whitelisting rules for target {target}: ")
     defined_whitelists: set[str] = set(
         map(lambda rule: rule["name"], config["whiteLists"]["addresses"])
     )
-    wrong_whitelists: list[tuple[Project, set]] = []
+    wrong_whitelists: list[tuple[Project, set[str]]] = []
     for project in projects:
         if project.deployment:
             if traefik := project.deployment.traefik:
@@ -167,8 +164,5 @@ def _lint_whitelisting_rules(
                 )
                 if diff := whitelists.difference(defined_whitelists):
                     wrong_whitelists.append((project, diff))
-    if len(wrong_whitelists) == 0:
-        console.print("  ✅ No undefined whitelists found")
-    else:
-        for project, diff in wrong_whitelists:
-            console.log(f"  ❌ Project {project.name} has undefined whitelists: {diff}")
+
+    return wrong_whitelists

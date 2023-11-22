@@ -1,0 +1,11 @@
+name: 'sparkJob-second'
+maintainer: ['MPyL']
+mpylVersion: 1.4.0
+stages:
+  deploy: Kubernetes Spark Job Deploy
+deployment:
+  namespace: jobs
+  properties:
+    env:
+      - key: INSTANCE
+        all: 'two'

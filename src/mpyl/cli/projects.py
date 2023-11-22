@@ -21,10 +21,11 @@ from ..cli.commands.projects.lint import (
     _assert_unique_project_names,
     _assert_correct_project_linkup,
     _lint_whitelisting_rules,
+    __detail_wrong_substitutions,
 )
 from ..cli.commands.projects.upgrade import check_upgrade
 from ..constants import DEFAULT_CONFIG_FILE_NAME
-from ..project import load_project, Project, Target
+from ..project import load_project, Project, Target, get_project_root_dir
 from ..projects.versioning import (
     check_upgrades_needed,
     upgrade_file,
@@ -78,14 +79,35 @@ def projects(ctx, config, verbose, filter_):
     )
 
 
+OVERRIDE_PATTERN = "project-override"
+
+
 @projects.command(name="list", help="List found projects")
 @click.pass_obj
 def list_projects(obj: ProjectsContext):
     found_projects = obj.cli.repo.find_projects(obj.filter)
 
     for proj in found_projects:
-        name = load_project(obj.cli.repo.root_dir, Path(proj), False).name
-        obj.cli.console.print(Markdown(f"{proj} `{name}`"))
+        if OVERRIDE_PATTERN not in proj:
+            project = load_project(obj.cli.repo.root_dir, Path(proj), False)
+            obj.cli.console.print(Markdown(f"{proj} `{project.name}`"))
+
+
+@projects.command(name="names", help="List found project names")
+@click.pass_obj
+def list_project_names(obj: ProjectsContext):
+    found_projects = obj.cli.repo.find_projects(obj.filter)
+
+    names = sorted(
+        [
+            load_project(obj.cli.repo.root_dir, Path(proj), False).name
+            for proj in found_projects
+            if OVERRIDE_PATTERN not in proj
+        ]
+    )
+
+    for name in names:
+        obj.cli.console.print(name)
 
 
 class ProjectPath(ParamType):
@@ -98,8 +120,7 @@ class ProjectPath(ParamType):
         )
         found_projects = repo.find_projects(incomplete)
         return [
-            CompletionItem(value=proj.replace(f"/{Project.project_yaml_path()}", ""))
-            for proj in found_projects
+            CompletionItem(value=get_project_root_dir(proj)) for proj in found_projects
         ]
 
 
@@ -126,15 +147,8 @@ def show_project(ctx, name):
 
 
 @projects.command(help="Validate the yaml of changed projects against their schema")
-@click.option(
-    "--extended",
-    "-e",
-    "extended",
-    is_flag=True,
-    help="Enable extra validations like PR namespace linkup or whitelisting rules check",
-)
 @click.pass_obj
-def lint(obj: ProjectsContext, extended):
+def lint(obj: ProjectsContext):
     loaded_projects = _check_and_load_projects(
         console=obj.cli.console,
         repo=obj.cli.repo,
@@ -155,23 +169,42 @@ def lint(obj: ProjectsContext, extended):
         console=obj.cli.console,
         all_projects=all_projects,
     )
-    if extended:
-        obj.cli.console.print("")
-        obj.cli.console.print("Running extended checks...")
-        _assert_correct_project_linkup(
+
+    obj.cli.console.print("")
+    obj.cli.console.print("Running extended checks...")
+
+    failed = False
+    wrong_substitutions = _assert_correct_project_linkup(
+        console=obj.cli.console,
+        target=Target.PULL_REQUEST,
+        projects=loaded_projects,
+        all_projects=all_projects,
+        pr_identifier=123,
+    )
+    if len(wrong_substitutions) == 0:
+        obj.cli.console.print("  ✅ No wrong namespace substitutions found")
+    else:
+        failed = True
+        __detail_wrong_substitutions(obj.cli.console, all_projects, wrong_substitutions)
+
+    for target in Target:
+        wrong_whitelists = _lint_whitelisting_rules(
             console=obj.cli.console,
-            target=Target.PULL_REQUEST,
             projects=loaded_projects,
-            all_projects=all_projects,
-            pr_identifier=123,
+            config=obj.cli.config,
+            target=target,
         )
-        for target in Target:
-            _lint_whitelisting_rules(
-                console=obj.cli.console,
-                projects=loaded_projects,
-                config=obj.cli.config,
-                target=target,
-            )
+        if len(wrong_whitelists) == 0:
+            obj.cli.console.print("  ✅ No undefined whitelists found")
+        else:
+            for project, diff in wrong_whitelists:
+                obj.cli.console.log(
+                    f"  ❌ Project {project.name} has undefined whitelists: {diff}"
+                )
+                failed = True
+
+    if failed:
+        click.get_current_context().exit(1)
 
 
 @projects.command(help="Upgrade projects to conform with the latest schema")

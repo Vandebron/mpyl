@@ -1,11 +1,166 @@
 # Release notes
 
+## MPyL 1.4.6
+
+
+#### Enhancement
+- Shorten helm release names for dagster user deployment helm charts by using fullnameOverride
+- Cover more special cases for dagster user deployment helm charts by unittests
+
+#### Linting
+
+- Enable extended checks by default
+- Fail command if one of the extended checks fail
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.6)
+
+## MPyL 1.4.5
+
+
+#### Override option for dagster user deployments' helm charts
+
+- Enable users to override the serviceAccount in the user deployment helm chart of dagster with a global serviceAccount
+
+#### Bugfixes
+- Fix Spark Deploy Step: inject sealed secrets, set job argument correctly
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.5)
+
+## MPyL 1.4.4
+
+
+#### Bugfixes
+
+- Filter out override projects from the `projects` cli commands
+- Sort the `projects names` results alphabetically
+- Fix the fact that whitelists are being cached between charts/projects, thus subsequent charts/projects contain the whitelists from previous ones
+- Add default build_args for DockerBuild and DockerTest stages
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.4)
+
+## MPyL 1.4.3
+
+
+#### Manual project selection
+Allows for passing a comma separated string of projects to be passed to the run cli, using the `-p` or `--projects` 
+flags. This will override the default change detection behavior and the `-all` flag.
+
+#### Traefik configuration
+- Create HTTP ingress routes that redirect to the HTTPS one
+- Add priority for routes
+- Add insecure option
+
+#### Kubernetes configuration 
+- Set both maintainer and maintainers fields in the metadata
+- Use “service” as the default name of containers
+
+#### Bugfixes
+- Use the full image path when pulling images in `CloudFront Kubernetes Deploy` and `Deploy From Docker Container`
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.3)
+
+## MPyL 1.4.2
+
+
+#### Bugfixes
+
+- Fix on how the selected DockerRegistry is being opened when writing the values of a dagster user code helm chart
+- Fix ruamel.yaml.YAML() name overshadowing with the yaml package in the k8s module
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.2)
+
+## MPyL 1.4.1
+
+
+#### Bugfixes
+
+- Fix project overlays (merging children projects with their parent)
+- Github Check output only shows test summary, not the full test output
+- Get target branch in cache repo from the run properties
+- Only transition non-Epic Jira tickets to 'To Do'
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.1)
+
+## MPyL 1.4.0
+
+
+#### Customizable stages
+
+Stages are now customizable. You can add the stages to the run_properties according to the defined schema, for example:
+
+```yaml
+stages:
+  - name: 'build'
+    icon: '🏗️'
+  - name: 'test'
+    icon: '📋'
+```
+
+#### Support single stage runs
+
+It is now possible to run a single stage. For example, to run only the `build` stage:
+
+```bash
+mpyl build run --stage build
+```
+
+If you want the results / report of the previous stage run to be combined with your current stage run, use the
+`--sequential` flag. Without this flag, the previous results will be overwritten. The results are stored in a local
+file in `.mpyl` using `pickle`, see `mpyl-reporter.py` for an example on how to use them.
+
+#### Remote artifact caching
+
+Remote caching can be used now to significantly speed up builds.
+The mechanisms are described in [the documentation](https://vandebron.github.io/mpyl/mpyl.html#caching-build-artifacts)
+
+##### Artifact caching
+Is done by bookending your build commands with `mpyl build artifacts push` and `mpyl build artifacts pop`.
+```shell
+mpyl build artifacts pull
+mpyl build run
+mpyl build artifacts push --artifact-type cache
+```
+
+##### Docker image caching
+
+Allows you to cache from docker images in the registry. This is particularly useful in scenarios where the local
+filesystem cannot be relied upon to persist between builds, such as in CI environments.
+
+#### Implicit dependencies
+
+If dependencies are defined for the build stage they now implicitly also apply for the test and deploy stages.
+
+#### Support for project overlaying
+
+The MPyL recognizes the `project-override-*.yml` files and merges them to the parent yml(`project.yml`) file in the same
+directory.
+Using this functionality, you can define different deployments for the same project.
+For example, you can deploy the same project with different settings to different environments.
+
+#### Bugfixes
+
+- Fix TLS creation in ingress routes
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.0)
+
+## MPyL 1.3.2
+
+
+#### Bug Fixes
+
+- Fix the cypress kubectl config merging and passing to docker for linux environments
+- Fix jira ticket state switching to only switch from 'to do' to 'in progress'
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.3.2)
+
 ## MPyL 1.3.1
 
 
 #### Target specific whitelists
 
-Now have the possiblity to specify target specific whitelisting rules.
+Now have the possibility to specify target specific whitelisting rules.
 This means that for the same rule, we can apply different lists of IPs, depending on the target environment:
 Change in the `mpyl_config.yaml` file:
 
@@ -34,6 +189,7 @@ whiteLists:
 #### Fix bug in the Cypress tests
 
 - Account for multiple config files being passed in the KUBECONFIG env var
+
 
 Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.3.1)
 

@@ -88,7 +88,7 @@ class Meta:
     """External, unique identifier. The step can be referred to by this name from `project.yml`"""
     description: str
     version: str
-    stage: Stage
+    stage: str
     """The stage that this step relates to"""
 
     def __str__(self) -> str:

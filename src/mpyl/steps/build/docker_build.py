@@ -17,14 +17,14 @@ to a folder named `$WORKDIR/target/test-reports/`.
 .. include:: ../../../../tests/projects/service/deployment/Dockerfile-mpl
 ```
 """
-
+import os
 from logging import Logger
 
 from .post_docker_build import AfterBuildDocker
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType, input_to_artifact
+from . import STAGE_NAME
 from ...constants import BUILD_ARTIFACTS_FOLDER
-from ...project import Stage
 from ...utilities.docker import (
     DockerConfig,
     build,
@@ -33,6 +33,7 @@ from ...utilities.docker import (
     login,
     DockerImageSpec,
     registry_for_project,
+    get_default_build_args,
 )
 
 DOCKER_IGNORE_DEFAULT = ["**/target/*", f"**/{BUILD_ARTIFACTS_FOLDER}/*"]
@@ -46,7 +47,7 @@ class BuildDocker(Step):
                 name="Docker Build",
                 description="Build docker image",
                 version="0.0.1",
-                stage=Stage.BUILD,
+                stage=STAGE_NAME,
             ),
             produced_artifact=ArtifactType.DOCKER_IMAGE,
             required_artifact=ArtifactType.NONE,
@@ -75,14 +76,36 @@ class BuildDocker(Step):
             contents = "\n".join(DOCKER_IGNORE_DEFAULT)
             ignore_file.write(contents)
 
-        build_args: dict[str, str] = (
-            {
-                arg.key: arg.get_value(step_input.run_properties.target)
-                for arg in step_input.project.build.args.plain
-            }
-            if step_input.project.build
-            else {}
+        build_args: dict[str, str] = get_default_build_args(
+            image_tag,
+            step_input.project.maintainer,
+            step_input.run_properties.versioning.identifier,
         )
+        if build_config := step_input.project.build:
+            build_args |= {
+                arg.key: arg.get_value(step_input.run_properties.target)
+                for arg in build_config.args.plain
+            }
+
+            env_vars: set[str] = {
+                arg.secret_id for arg in build_config.args.credentials
+            }
+            if missing := env_vars.difference(
+                set(os.environ).union(set(build_args.keys()))
+            ):
+                self._logger.error(
+                    f"Project {step_input.project.name} requires {missing} environment variable(s) to be set"
+                )
+                return Output(
+                    success=False,
+                    message=f"Failed to build docker image for {step_input.project.name}",
+                    produced_artifact=None,
+                )
+
+            build_args |= {
+                arg.key: os.environ[arg.secret_id]
+                for arg in build_config.args.credentials
+            }
 
         success = build(
             logger=self._logger,

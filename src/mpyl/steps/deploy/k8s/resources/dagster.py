@@ -2,10 +2,12 @@
 This module contains the Dagster user-code-deployment values conversion
 """
 from dataclasses import dataclass
+from typing import Optional
 
 from .....project import Project, get_env_variables
 from .....steps.models import RunProperties
 from .....utilities.docker import DockerConfig, registry_for_project
+from .....utilities.helm import shorten_name
 
 
 @dataclass(frozen=True)
@@ -18,10 +20,19 @@ def to_user_code_values(
     project: Project,
     name_suffix: str,
     run_properties: RunProperties,
+    service_account_override: Optional[str],
     docker_config: DockerConfig,
 ) -> dict:
     docker_registry = registry_for_project(docker_config, project)
-    return {
+
+    global_override = {}
+    create_local_service_account = service_account_override is None
+    if not create_local_service_account:
+        global_override = {"global": {"serviceAccountName": service_account_override}}
+
+    return global_override | {
+        "serviceAccount": {"create": create_local_service_account},
+        "fullnameOverride": f"ucd-{shorten_name(project.name)}{name_suffix}",  # short for user-code-deployment
         "deployments": [
             {
                 "dagsterApiGrpcArgs": ["--python-file", project.dagster.repo],
@@ -38,7 +49,6 @@ def to_user_code_values(
                 "port": 3030,
             },
         ],
-        "nameOverride": "ucd",  # short for user-code-deployment
     }
 
 

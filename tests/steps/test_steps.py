@@ -8,8 +8,9 @@ from pyaml_env import parse_config
 from ruamel.yaml import YAML  # type: ignore
 
 from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME, BUILD_ARTIFACTS_FOLDER
-from src.mpyl.project import Project, Stages, Stage, Target, Dependencies
+from src.mpyl.project import Project, Stages, Target, Dependencies
 from src.mpyl.projects.versioning import yaml_to_string
+from src.mpyl.steps import build, postdeploy
 from src.mpyl.steps.collection import StepsCollection
 from src.mpyl.steps.deploy.k8s import RenderedHelmChartSpec
 from src.mpyl.steps.models import (
@@ -64,7 +65,7 @@ class TestSteps:
     def test_write_output(self):
         build_yaml = yaml_to_string(self.docker_image, yaml)
         assert_roundtrip(
-            test_resource_path / "deployment" / BUILD_ARTIFACTS_FOLDER / "BUILD.yml",
+            test_resource_path / "deployment" / BUILD_ARTIFACTS_FOLDER / "build.yml",
             build_yaml,
         )
 
@@ -81,13 +82,13 @@ class TestSteps:
         )
 
         assert_roundtrip(
-            test_resource_path / "deployment" / BUILD_ARTIFACTS_FOLDER / "DEPLOY.yml",
+            test_resource_path / "deployment" / BUILD_ARTIFACTS_FOLDER / "deploy.yml",
             yaml_to_string(output, yaml),
         )
 
     def test_find_required_output(self):
         found_artifact = Steps._find_required_artifact(
-            self.build_project, ArtifactType.DOCKER_IMAGE
+            self.build_project, RUN_PROPERTIES.stages, ArtifactType.DOCKER_IMAGE
         )
         assert found_artifact is not None
         assert self.docker_image.produced_artifact is not None
@@ -99,7 +100,9 @@ class TestSteps:
     def test_find_not_required_output(self):
         with pytest.raises(ValueError) as exc_info:
             Steps._find_required_artifact(
-                self.build_project, ArtifactType.DEPLOYED_HELM_APP
+                self.build_project,
+                RUN_PROPERTIES.stages,
+                ArtifactType.DEPLOYED_HELM_APP,
             )
         assert (
             str(exc_info.value)
@@ -107,7 +110,12 @@ class TestSteps:
         )
 
     def test_find_required_output_should_handle_none(self):
-        assert Steps._find_required_artifact(self.build_project, None) is None
+        assert (
+            Steps._find_required_artifact(
+                self.build_project, RUN_PROPERTIES.stages, None
+            )
+            is None
+        )
 
     def test_should_return_error_if_stage_not_defined(self):
         steps = Steps(
@@ -118,7 +126,7 @@ class TestSteps:
         project = Project(
             "test", "Test project", "", stages, [], None, None, None, None
         )
-        output = steps.execute(stage=Stage.BUILD, project=project).output
+        output = steps.execute(stage=build.STAGE_NAME, project=project).output
         assert not output.success
         assert output.message == "Stage 'build' not defined on project 'test'"
 
@@ -133,6 +141,7 @@ class TestSteps:
             VersioningProperties("", "feature/ARC-123", 1, None),
             config_values,
             ConsoleProperties("INFO", False, 130),
+            [],
         )
         with pytest.raises(ValidationError) as excinfo:
             Steps(logger=Logger.manager.getLogger("logger"), properties=properties)
@@ -140,7 +149,7 @@ class TestSteps:
 
     def test_should_succeed_if_executor_is_known(self):
         project = test_data.get_project_with_stages({"build": "Echo Build"})
-        result = self.executor.execute(stage=Stage.BUILD, project=project)
+        result = self.executor.execute(stage=build.STAGE_NAME, project=project)
         assert result.output.success
         assert result.output.message == "Built test"
         assert result.output.produced_artifact is not None
@@ -150,7 +159,7 @@ class TestSteps:
 
     def test_should_fail_if_executor_is_not_known(self):
         project = test_data.get_project_with_stages({"build": "Unknown Build"})
-        result = self.executor.execute(stage=Stage.BUILD, project=project)
+        result = self.executor.execute(stage=build.STAGE_NAME, project=project)
         assert not result.output.success
         assert (
             result.output.message
@@ -162,7 +171,7 @@ class TestSteps:
             stage_config={"build": "Echo Build"}, path="", maintainers=["Unknown Team"]
         )
 
-        result = self.executor.execute(stage=Stage.BUILD, project=project)
+        result = self.executor.execute(stage=build.STAGE_NAME, project=project)
         assert not result.output.success
         assert (
             result.output.message
@@ -171,7 +180,7 @@ class TestSteps:
 
     def test_should_succeed_if_stage_is_not_known(self):
         project = test_data.get_project_with_stages(stage_config={"test": "Some Test"})
-        result = self.executor.execute(stage=Stage.BUILD, project=project)
+        result = self.executor.execute(stage=build.STAGE_NAME, project=project)
         assert not result.output.success
         assert result.output.message == "Stage 'build' not defined on project 'test'"
 
@@ -189,5 +198,5 @@ class TestSteps:
             None,
             Dependencies.from_config({"postdeploy": ["specs/*.js"]}),
         )
-        result = self.executor.execute(stage=Stage.POST_DEPLOY, project=project)
+        result = self.executor.execute(stage=postdeploy.STAGE_NAME, project=project)
         assert result.output.success

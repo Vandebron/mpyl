@@ -10,6 +10,7 @@ from typing import Optional
 from kubernetes import config, client
 from kubernetes.client import V1ConfigMap, ApiException, V1Deployment
 from ruamel.yaml import yaml_object, YAML
+import yaml as dict_to_yaml_str
 
 from .helm import write_helm_chart, GENERATED_WARNING
 from ...deploy.k8s.resources import CustomResourceDefinition
@@ -141,7 +142,7 @@ def upsert_namespace(
 
 def render_manifests(chart: dict[str, CustomResourceDefinition]):
     result = f"{GENERATED_WARNING}\n"
-    for name, template_content in chart.items():
+    for name, template_content in sorted(chart.items()):
         manifest = render_crd(name, template_content)
         result += manifest
     return result
@@ -183,7 +184,7 @@ def get_version_of_deployment(
 def update_config_map_field(
     config_map: V1ConfigMap, field: str, data: dict
 ) -> V1ConfigMap:
-    config_map.data[field] = yaml.dump(data)
+    config_map.data[field] = dict_to_yaml_str.dump(data)
     return config_map
 
 

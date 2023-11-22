@@ -2,11 +2,12 @@
 from logging import Logger
 from typing import Callable, cast
 
+from . import STAGE_NAME
 from .after_test import IntegrationTestAfter
 from .before_test import IntegrationTestBefore
 from .. import Input, Output, Step
 from ..models import Artifact, input_to_artifact
-from ...project import Stage, Project
+from ...project import Project
 from ...steps import Meta, ArtifactType
 from ...utilities.junit import (
     to_test_suites,
@@ -27,7 +28,7 @@ class TestSbt(Step):
                 name="Sbt Test",
                 description="Run sbt tests",
                 version="0.0.1",
-                stage=Stage.TEST,
+                stage=STAGE_NAME,
             ),
             produced_artifact=ArtifactType.JUNIT_TESTS,
             required_artifact=ArtifactType.NONE,

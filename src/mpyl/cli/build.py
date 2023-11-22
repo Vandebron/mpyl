@@ -1,6 +1,6 @@
 """Commands related to build"""
 import asyncio
-import logging
+import pickle
 import shutil
 import sys
 from pathlib import Path
@@ -23,24 +23,25 @@ from . import (
     check_updates,
     get_meta_version,
     parse_config_from_supplied_location,
+    MpylCliParameters,
 )
 from . import create_console_logger
+from .commands.build.artifacts import prepare_artifacts_repo, branch_name
 from .commands.build.jenkins import JenkinsRunParameters, run_jenkins, get_token
-from ..build import (
-    run_mpyl,
-    MpylCliParameters,
-    get_build_plan,
+from ..artifacts.build_artifacts import (
+    ManifestPathTransformer,
+    BuildCacheTransformer,
 )
+from ..build import print_status, run_mpyl
 from ..constants import (
     DEFAULT_CONFIG_FILE_NAME,
     DEFAULT_RUN_PROPERTIES_FILE_NAME,
     BUILD_ARTIFACTS_FOLDER,
 )
 from ..project import load_project, Target
-from ..reporting.formatting.markdown import (
-    execution_plan_as_markdown,
-)
+from ..steps.deploy.k8s import DeployConfig
 from ..steps.models import RunProperties
+from ..steps.run import RunResult
 from ..utilities.github import GithubConfig
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
@@ -104,7 +105,25 @@ def build(ctx, config, properties, verbose):
     ctx.obj = CliContext(parsed_config, repo, console, verbose, parsed_properties)
 
 
-@build.command(help="Run an MPyL build")
+class CustomValidation(click.Command):
+    def invoke(self, ctx):
+        selected_stage = ctx.params.get("stage")
+        stages = [stage["name"] for stage in ctx.obj.run_properties["stages"]]
+
+        if selected_stage is None and ctx.params.get("sequential") is True:
+            raise click.ClickException(
+                message="A run can only be sequential if a stage is specified."
+            )
+
+        if selected_stage and selected_stage not in stages:
+            raise click.ClickException(
+                message=f"Stage {ctx.params.get('stage')} is not defined in the configuration."
+            )
+
+        super().invoke(ctx)
+
+
+@build.command(help="Run an MPyL build", cls=CustomValidation)
 @click.option(
     "--ci",
     is_flag=True,
@@ -124,8 +143,35 @@ def build(ctx, config, properties, verbose):
     help="don't push or deploy images",
 )
 @click.option("--tag", "-t", help="Tag to build", type=click.STRING, required=False)
+@click.option(
+    "--stage",
+    default=None,
+    type=str,
+    required=False,
+    help="Stage to run",
+)
+@click.option(
+    "--sequential",
+    is_flag=True,
+    default=False,
+    required=False,
+    help="Combine results with previous run(s)",
+)
+@click.option(
+    "--projects",
+    "-p",
+    type=str,
+    required=False,
+    help="Comma separated list of the projects to build",
+)
 @click.pass_obj
-def run(obj: CliContext, ci, all_, dryrun_, tag):  # pylint: disable=invalid-name
+def run(
+    obj: CliContext, ci, all_, dryrun_ tag, stage, sequential, projects
+):  # pylint: disable=invalid-name
+    run_result_file = Path(BUILD_ARTIFACTS_FOLDER) / "run_result"
+    if not sequential and run_result_file.is_file():
+        run_result_file.unlink()
+
     asyncio.run(warn_if_update(obj.console))
 
     parameters = MpylCliParameters(
@@ -135,6 +181,8 @@ def run(obj: CliContext, ci, all_, dryrun_, tag):  # pylint: disable=invalid-nam
         dryrun=dryrun_,
         verbose=obj.verbose,
         tag=tag,
+        stage=stage,
+        projects=projects,
     )
     obj.console.log(parameters)
 
@@ -151,80 +199,62 @@ def run(obj: CliContext, ci, all_, dryrun_, tag):  # pylint: disable=invalid-nam
         RunProperties.from_configuration(obj.run_properties, obj.config, tag)
         if ci
         else RunProperties.for_local_run(
-            obj.config, obj.repo.get_sha, obj.repo.get_branch, tag
+            obj.config,
+            obj.repo.get_sha,
+            obj.repo.get_branch,
+            tag,
+            obj.run_properties["stages"],
         )
     )
-    result = run_mpyl(
+
+    run_result = run_mpyl(
         run_properties=run_properties, cli_parameters=parameters, reporter=None
     )
-    sys.exit(0 if result.is_success else 1)
+
+    Path(BUILD_ARTIFACTS_FOLDER).mkdir(parents=True, exist_ok=True)
+
+    if sequential and run_result_file.is_file():
+        with open(run_result_file, "rb") as file:
+            previous_result: RunResult = pickle.load(file)
+            run_result.update_run_plan(previous_result.run_plan)
+            run_result.extend(previous_result.results)
+
+    with open(run_result_file, "wb") as file:
+        pickle.dump(run_result, file, pickle.HIGHEST_PROTOCOL)
+
+    sys.exit(0 if run_result.is_success else 1)
 
 
 @build.command(help="The status of the current local branch from MPyL's perspective")
+@click.option(
+    "--all",
+    "all_",
+    is_flag=True,
+    help="Build all projects, regardless of changes on branch",
+)
+@click.option(
+    "--projects",
+    "-p",
+    type=str,
+    required=False,
+    help="Comma separated list of the projects to build",
+)
 @click.pass_obj
-def status(obj: CliContext):
+def status(obj: CliContext, all_, projects):
     upgrade_check = None
     try:
         upgrade_check = asyncio.wait_for(warn_if_update(obj.console), timeout=3)
-        __print_status(obj)
+        parameters = MpylCliParameters(
+            local=sys.stdout.isatty(),
+            all=all_,
+            projects=projects,
+        )
+        print_status(obj, parameters)
     except asyncio.exceptions.TimeoutError:
         pass
     finally:
         if upgrade_check:
             asyncio.get_event_loop().run_until_complete(upgrade_check)
-
-
-def __print_status(obj: CliContext):
-    run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
-    console = obj.console
-    console.print(f"MPyL log level is set to {run_properties.console.log_level}")
-
-    branch = obj.repo.get_branch
-    main_branch = obj.repo.main_branch
-    tag = run_properties.versioning.tag
-
-    if tag is None:
-        if run_properties.versioning.branch and not obj.repo.get_branch:
-            console.print("Current branch is detached.")
-        else:
-            console.log(
-                Markdown(
-                    f"Branch not specified at `build.versioning.branch` in _{DEFAULT_RUN_PROPERTIES_FILE_NAME}_, "
-                    f"falling back to git: _{obj.repo.get_branch}_"
-                )
-            )
-
-        if branch == main_branch:
-            console.log(f"On main branch ({branch}), cannot determine build status")
-            return
-
-    version = run_properties.versioning
-    revision = version.revision or obj.repo.get_sha
-    base_revision = obj.repo.base_revision
-    if tag:
-        console.print(Markdown(f"**Tag:** `{version.tag}` at `{revision}`. "))
-    else:
-        base_revision_specification = (
-            f"at `{base_revision}`"
-            if base_revision
-            else f"not present. Earliest revision: `{obj.repo.root_commit_hex}` (grafted)."
-        )
-        console.print(
-            Markdown(f"**Branch:** `{branch}`. Base {base_revision_specification}. ")
-        )
-
-    result = get_build_plan(
-        logger=logging.getLogger("mpyl"),
-        repo=obj.repo,
-        run_properties=run_properties,
-        cli_parameters=MpylCliParameters(local=sys.stdout.isatty()),
-    )
-    if result.run_plan:
-        console.print(
-            Markdown("**Execution plan:**  \n" + execution_plan_as_markdown(result))
-        )
-    else:
-        console.print("No changes detected, nothing to do.")
 
 
 class Pipeline(ParamType):
@@ -511,6 +541,93 @@ def clean(obj: CliContext, filter_):
             obj.console.print(f"🧹 Cleaned up {target_path}")
     else:
         obj.console.print("Nothing to clean")
+
+
+@build.group(
+    "artifacts",
+    help="Commands related to artifacts like build cache and k8s manifests",
+)
+def artifacts():
+    pass
+
+
+@artifacts.command(help="Pull build artifacts from remote artifact repository")
+@click.option("--tag", "-t", type=click.STRING, help="Tag to build", required=False)
+@click.option("--pr", type=click.INT, help="PR number to fetch", required=False)
+@click.option(
+    "--path",
+    "-p",
+    type=click.Path(exists=False),
+    help="Path within repository to copy artifacts from",
+    default=Path("tmp"),
+    required=False,
+)
+@click.pass_obj
+def pull(obj: CliContext, tag: str, pr: int, path: Path):
+    run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
+    target_branch = __get_target_branch(run_properties, tag, pr)
+
+    build_artifacts = prepare_artifacts_repo(obj=obj, repo_path=path)
+    build_artifacts.pull(branch=branch_name(target_branch, "cache"))
+
+
+@artifacts.command(help="Push build artifacts to remote artifact repository")
+@click.option("--tag", "-t", type=click.STRING, help="Tag to build", required=False)
+@click.option("--pr", type=click.INT, help="PR number to fetch", required=False)
+@click.option(
+    "--path",
+    "-p",
+    type=click.Path(exists=False),
+    help="Path within repository to copy artifacts to",
+    default=Path("tmp"),
+    required=False,
+)
+@click.option(
+    "--artifact-type",
+    "-a",
+    type=click.Choice(["cache", "manifests"]),
+    help="The type of artifact to store. Either build metadata from `.mpyl` folders or k8s manifests",
+    required=True,
+)
+@click.pass_obj
+def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: str):
+    run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
+    target_branch = __get_target_branch(run_properties, tag, pr)
+
+    build_artifacts = prepare_artifacts_repo(obj=obj, repo_path=path)
+    deploy_config = DeployConfig.from_config(obj.config)
+
+    transformer = (
+        ManifestPathTransformer(deploy_config)
+        if artifact_type == "manifests"
+        else BuildCacheTransformer()
+    )
+
+    message = f"Revision {obj.repo.get_sha} {f'at {obj.repo.remote_url}' if obj.repo.remote_url else ''}"
+
+    build_artifacts.push(
+        branch=branch_name(target_branch, artifact_type),
+        message=message,
+        project_paths=obj.repo.find_projects(),
+        path_transformer=transformer,
+    )
+
+
+def __get_target_branch(run_properties: RunProperties, tag: str, pr: int) -> str:
+    target_branch = (
+        tag
+        if tag
+        else (
+            run_properties.versioning.tag
+            if run_properties.versioning.tag
+            else f"PR-{pr or run_properties.versioning.pr_number}"
+        )
+    )
+    if not target_branch:
+        raise click.ClickException(
+            "Either pr or tag must be specified, either as a flag or in the run properties"
+        )
+    return target_branch
 
 
 if __name__ == "__main__":

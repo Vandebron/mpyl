@@ -11,7 +11,9 @@ class TestReporting:
     def test_should_print_results_as_string(self):
         run_result = create_test_result()
         simple_report = to_string(run_result)
-        assert_roundtrip(self.test_resource_path / "simple_run.txt", simple_report)
+        assert_roundtrip(
+            self.test_resource_path / "simple_run.txt", simple_report, overwrite=False
+        )
 
     def test_should_convert_test_report_to_string(self):
         spec = JunitTestSpec(str(self.test_resource_path))

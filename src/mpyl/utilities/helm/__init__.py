@@ -2,6 +2,9 @@
 Helper methods for helm deployments
 """
 
+from mpyl.project import Target
+from mpyl.steps.models import RunProperties
+
 
 def convert_to_helm_release_name(name: str, tag: str) -> str:
     """
@@ -17,10 +20,19 @@ def _clean_release_name(name: str):
     return name.replace("_", "-").replace(".", "-").lower()
 
 
+def get_name_suffix(properties: RunProperties) -> str:
+    """
+    Returns a suffix for the helm release name based on the deploy_target
+    """
+    if properties.target == Target.PULL_REQUEST:
+        return f"-{properties.versioning.identifier}"
+    return ""
+
+
 def shorten_name(name: str) -> str:
     """
-    Condenses a name to the first letter of each segment to respect a 63 character limit
-    that is sometimes exceeded
+    Shortens name by taking the first letter of each hyphened sequence
     """
-    shortened_name = "".join([n[0] for n in _clean_release_name(name).split("-")])
-    return shortened_name
+    if len(name) <= 3:
+        return name
+    return "".join([word[0] for word in name.split("-")])

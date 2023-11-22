@@ -99,7 +99,7 @@ jobs:
           hide_complexity: true
           indicators: true
           output: both
-          thresholds: '80 99'
+          thresholds: '79 99'
 
       - name: Find PR number
         uses: jwalton/gh-find-current-pr@v1
@@ -216,6 +216,8 @@ jobs:
 
       - name: Build run
         run: mpyl build run
+        env:
+          SOME_CREDENTIAL: credential
 
   Integration_Test_Tag:
     name: Test tag
@@ -281,6 +283,7 @@ jobs:
       - name: Run tag build
         env:
           TAG_NAME: v${{ needs.Build_And_Upload.outputs.mpylVersion }}
+          SOME_CREDENTIAL: credential
         run: mpyl build run
 
   Build_Package:

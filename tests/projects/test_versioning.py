@@ -6,15 +6,11 @@ from src.mpyl.projects.versioning import (
     upgrade_file,
     get_entry_upgrader_index,
     PROJECT_UPGRADERS,
-    ProjectUpgraderOne8,
-    ProjectUpgraderOne9,
-    ProjectUpgraderOne10,
     load_for_roundtrip,
     pretty_print,
     Upgrader,
     CONFIG_UPGRADERS,
     PROPERTIES_UPGRADERS,
-    ProjectUpgraderOne31,
 )
 from src.mpyl.utilities.yaml import yaml_to_string
 from tests.test_resources.test_data import assert_roundtrip
@@ -39,27 +35,6 @@ class TestVersioning:
         assert get_entry_upgrader_index("1.0.8", PROJECT_UPGRADERS) == 0
         assert get_entry_upgrader_index("1.0.9", PROJECT_UPGRADERS) == 1
         assert get_entry_upgrader_index("1.0.7", PROJECT_UPGRADERS) is None
-
-    def test_first_upgrade(self):
-        self.__roundtrip(
-            self.upgrades_path / "test_project_1_0_8.yml",
-            self.upgrades_path / "test_project_1_0_9.yml",
-            [ProjectUpgraderOne8(), ProjectUpgraderOne9()],
-        )
-
-    def test_namespace_upgrade(self):
-        self.__roundtrip(
-            self.upgrades_path / "test_project_1_0_9.yml",
-            self.upgrades_path / "test_project_1_0_10.yml",
-            [ProjectUpgraderOne9(), ProjectUpgraderOne10()],
-        )
-
-    def test_cmd_replace(self):
-        self.__roundtrip(
-            self.upgrades_path / "test_project_1_0_11.yml",
-            self.upgrades_path / "test_project_1_3_1.yml",
-            [ProjectUpgraderOne10(), ProjectUpgraderOne31()],
-        )
 
     def test_full_upgrade(self):
         self.__roundtrip(

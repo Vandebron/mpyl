@@ -1,7 +1,6 @@
 """Command Line Interface parsing for MPyL"""
 import asyncio
 import importlib
-import json
 import logging
 from dataclasses import dataclass
 from importlib.metadata import version as version_meta
@@ -39,6 +38,8 @@ class MpylCliParameters:
     verbose: bool = False
     all: bool = False
     dryrun: bool = False
+    stage: Optional[str] = None
+    projects: Optional[str] = None
 
 
 async def get_publication_info(test: bool = False) -> dict:

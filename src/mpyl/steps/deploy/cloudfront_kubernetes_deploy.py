@@ -1,13 +1,17 @@
 """Uploads static files to s3 and then deploys the docker image referring to the files on S3
  and produced in the build stage to Kubernetes, using HELM."""
-from logging import Logger
 import tempfile
+from logging import Logger
 
+from . import STAGE_NAME
 from .kubernetes import DeployKubernetes
 from .. import Step, Meta
-from ...project import Stage
 from ..models import Input, Output, ArtifactType
-from ...utilities.docker import docker_image_tag, docker_copy, create_container
+from ...utilities.docker import (
+    docker_copy,
+    create_container,
+    full_image_path_for_project,
+)
 from ...utilities.s3 import S3Client, S3ClientConfig
 
 STATIC_FOLDER = "static"
@@ -21,7 +25,7 @@ class CloudFrontKubernetesDeploy(Step):
                 name="CloudFront Kubernetes Deploy",
                 description="uploads the build output to an s3 bucket",
                 version="0.0.1",
-                stage=Stage.DEPLOY,
+                stage=STAGE_NAME,
             ),
             produced_artifact=ArtifactType.NONE,
             required_artifact=ArtifactType.DOCKER_IMAGE,
@@ -45,9 +49,10 @@ class CloudFrontKubernetesDeploy(Step):
         """
         Copies the static assets from the docker image to a temp folder
         """
-        image_name = docker_image_tag(step_input)
+        full_image_path = full_image_path_for_project(step_input)
+
         container_path = f"{step_input.project.name}/{STATIC_FOLDER}"
-        container = create_container(logger, image_name)
+        container = create_container(logger, full_image_path)
         docker_copy(
             logger=logger,
             container_path=container_path,

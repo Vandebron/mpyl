@@ -173,6 +173,9 @@ definitions:
         "$ref": "#/definitions/Git"
       github:
         "$ref": "#/definitions/Github"
+      artifactRepository:
+        description: "The repository where the build artifacts are persisted"
+        "$ref": "#/definitions/Git"
     required:
       - git
       - github
@@ -184,10 +187,14 @@ definitions:
       remote:
         type: object
         additionalProperties: false
+        required: [ 'url', 'userName', 'password', 'email']
         properties:
           url:
-            type: [ string, null ]
+            type: [ string ]
           userName:
+            type: [ string, null ]
+          email:
+            description: "The email address to use when committing changes"
             type: [ string, null ]
           password:
             type: [ string, null ]
@@ -441,4 +448,7 @@ definitions:
         type: string
       webserver:
         description: "Name of the kubernetes instance that runs the dagster web UI, default"
+        type: string
+      globalServiceAccountOverride:
+        description: "Name of an (external) serviceAccount that will be assigned to a dagster user-deployment in favor of creating a new one"
         type: string

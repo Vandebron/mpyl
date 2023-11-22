@@ -20,7 +20,7 @@ import traceback
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Optional, TypeVar, Any, TextIO, List
+from typing import Optional, TypeVar, Any, List
 
 import jsonschema
 from mypy.checker import Generic
@@ -51,14 +51,9 @@ class Target(Enum):
 
 
 @dataclass(frozen=True)
-class Stage(Enum):
-    def __eq__(self, other):
-        return self.value == other.value
-
-    BUILD = "build"
-    TEST = "test"
-    DEPLOY = "deploy"
-    POST_DEPLOY = "postdeploy"
+class Stage:
+    name: str
+    icon: str
 
 
 @dataclass(frozen=True)
@@ -128,20 +123,36 @@ class KeyValueRef:
 
 
 @dataclass(frozen=True)
+class EnvCredential:
+    key: str
+    secret_id: str
+
+    @staticmethod
+    def from_config(values: dict):
+        key = values.get("key")
+        secret_id = values.get("id")
+        if not key or not secret_id:
+            raise KeyError("Credential must have a key and id set.")
+        return EnvCredential(key, secret_id)
+
+
+@dataclass(frozen=True)
 class StageSpecificProperty(Generic[T]):
     build: Optional[T]
     test: Optional[T]
     deploy: Optional[T]
     postdeploy: Optional[T]
 
-    def for_stage(self, stage: Stage) -> Optional[T]:
-        if stage == Stage.BUILD:
+    def for_stage(self, stage: str) -> Optional[T]:
+        if stage == "build":
             return self.build
-        if stage == Stage.TEST:
+        if stage == "test":
             return self.test
-        if stage == Stage.DEPLOY:
+        if stage == "deploy":
             return self.deploy
-        return self.postdeploy
+        if stage == "postdeploy":
+            return self.postdeploy
+        raise KeyError(f"Unknown stage: {stage}")
 
 
 @dataclass(frozen=True)
@@ -158,16 +169,17 @@ class Stages(StageSpecificProperty[str]):
 
 @dataclass(frozen=True)
 class Dependencies(StageSpecificProperty[set[str]]):
-    def set_for_stage(self, stage: Stage) -> set[str]:
+    def set_for_stage(self, stage: str) -> set[str]:
         deps_for_stage = self.for_stage(stage)
         return deps_for_stage if deps_for_stage else set()
 
     @staticmethod
     def from_config(values: dict):
+        build_deps = set(values.get("build", []))
         return Dependencies(
-            build=set(values.get("build", [])),
-            test=set(values.get("test", [])),
-            deploy=set(values.get("deploy", [])),
+            build=build_deps,
+            test=build_deps | set(values.get("test", [])),
+            deploy=build_deps | set(values.get("deploy", [])),
             postdeploy=set(values.get("postdeploy", [])),
         )
 
@@ -331,8 +343,10 @@ class Kubernetes:
 class TraefikHost:
     host: TargetProperty[str]
     service_port: Optional[int]
-    tls: TargetProperty[str]
+    tls: Optional[TargetProperty[str]]
     whitelists: TargetProperty[list[str]]
+    priority: Optional[int]
+    insecure: bool
 
     @staticmethod
     def from_config(values: dict):
@@ -341,6 +355,8 @@ class TraefikHost:
             service_port=values.get("servicePort"),
             tls=TargetProperty.from_config(values.get("tls", {})),
             whitelists=TargetProperty.from_config(values.get("whitelists", {})),
+            priority=values.get("priority"),
+            insecure=values.get("insecure", False),
         )
 
 
@@ -403,11 +419,15 @@ class Docker:
 @dataclass(frozen=True)
 class BuildArgs:
     plain: list[KeyValueProperty]
+    credentials: list[EnvCredential]
 
     @staticmethod
     def from_config(values: dict):
         return BuildArgs(
-            plain=list(map(KeyValueProperty.from_config, values.get("plain", [])))
+            plain=list(map(KeyValueProperty.from_config, values.get("plain", []))),
+            credentials=list(
+                map(EnvCredential.from_config, values.get("credentials", []))
+            ),
         )
 
 
@@ -519,9 +539,13 @@ class Project:
     def project_yaml_path() -> str:
         return "deployment/project.yml"
 
+    @staticmethod
+    def project_overrides_yml_pattern() -> str:
+        return "deployment/project-override-*.yml"
+
     @property
     def root_path(self) -> str:
-        return self.path.replace(Project.project_yaml_path(), "")
+        return get_project_root_dir(self.path)
 
     @property
     def deployment_path(self) -> str:
@@ -559,13 +583,12 @@ class Project:
         )
 
 
-def validate_project(file: TextIO) -> dict:
+def validate_project(yaml_values: dict) -> dict:
     """
     :file the file to validate
     :return: the validated schema
     :raises `jsonschema.exceptions.ValidationError` when validation fails
     """
-    yaml_values = YAML(typ="unsafe").load(file)
     template = pkgutil.get_data(__name__, "schema/project.schema.yml")
     if not template:
         raise ValueError("Schema project.schema.yml not found in package")
@@ -574,8 +597,35 @@ def validate_project(file: TextIO) -> dict:
     return yaml_values
 
 
+def get_project_root_dir(project_path: str) -> str:
+    if project_path.endswith(".yml"):
+        try:
+            return str(Path(project_path).parents[1])
+        except IndexError:
+            pass
+    return project_path
+
+
+def load_possible_parent(
+    full_path: Path,
+    safe: bool = False,
+) -> Optional[dict]:
+    parent_project_path = full_path.parents[1] / Project.project_yaml_path()
+    if (
+        str(full_path).endswith(Project.project_yaml_path())
+        or not parent_project_path.exists()
+    ):
+        return None
+    with open(parent_project_path, encoding="utf-8") as file:
+        return YAML(typ=None if safe else "unsafe").load(file)
+
+
 def load_project(
-    root_dir: Path, project_path: Path, strict: bool = True, log: bool = True
+    root_dir: Path,
+    project_path: Path,
+    strict: bool = True,
+    log: bool = True,
+    safe: bool = False,
 ) -> Project:
     """
     Load a `project.yml` to `Project` data class
@@ -583,15 +633,20 @@ def load_project(
     :param project_path: relative path from `root_dir` to the `project.yml`
     :param strict: indicates whether the schema should be validated
     :param log: indicates whether problems should be logged as warning
+    :param safe: indicates that correctness should be prioritized over speed. Safe loading is important
+    when the values possibly end up in artifacts
     :return: `Project` data class
     """
     log_level = logging.WARNING if log else logging.DEBUG
-    with open(root_dir / project_path, encoding="utf-8") as file:
+    full_path = root_dir / project_path
+    with open(full_path, encoding="utf-8") as file:
         try:
             start = time.time()
-            yaml_values = (
-                validate_project(file) if strict else YAML(typ="unsafe").load(file)
-            )
+            yaml_values: dict = YAML(typ=None if safe else "unsafe").load(file)
+            parent_yaml_values: Optional[dict] = load_possible_parent(full_path, safe)
+            yaml_values = merge_dicts(yaml_values, parent_yaml_values, True)
+            if strict:
+                validate_project(yaml_values)
             project = Project.from_config(yaml_values, project_path)
             logging.debug(
                 f"Loaded project {project.path} in {(time.time() - start) * 1000} ms"
@@ -609,6 +664,36 @@ def load_project(
         except Exception:
             logging.log(log_level, f"Failed to load {project_path}", exc_info=True)
             raise
+
+
+def merge_dicts(
+    yaml_values: dict, parent_yaml_values: Optional[dict], root_level=False
+) -> dict:
+    """
+    Merge yml values and possible parent yaml values. YML values take precedence over parent values.
+    stages are not merged, but overridden.
+    :param root_level: The current level is the root level, false for nested levels
+    :param yaml_values: the original yml values
+    :param parent_yaml_values: the possible parent, if None, the original values are returned
+    :return: the merged values.
+    """
+    if parent_yaml_values is None:
+        return yaml_values
+    merged = parent_yaml_values.copy()
+    for key, value in yaml_values.items():
+        # ignore all keys that are not allowed to be overridden
+        if root_level and key not in ("stages", "deployment", "name", "description"):
+            continue
+        # overriden project does not inherit stages
+        if root_level and key == "stages":
+            merged[key] = value
+        elif (
+            key in merged and isinstance(merged[key], dict) and isinstance(value, dict)
+        ):
+            merged[key] = merge_dicts(merged[key], value)
+        else:
+            merged[key] = value
+    return merged
 
 
 def get_env_variables(project: Project, target: Target) -> dict[str, str]:

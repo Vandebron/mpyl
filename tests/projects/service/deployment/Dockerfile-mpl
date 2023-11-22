@@ -5,6 +5,8 @@ WORKDIR /tests/projects/service
 RUN yarn install
 
 FROM installer as builder
+ARG SOME_CREDENTIAL
+ARG SOME_ENV
 ENTRYPOINT [ "yarn", "start" ]
 
 FROM installer as tester

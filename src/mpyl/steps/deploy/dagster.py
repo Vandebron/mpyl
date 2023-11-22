@@ -9,6 +9,7 @@ from typing import List
 import yaml
 from kubernetes import config, client
 
+from . import STAGE_NAME
 from .k8s import (
     helm,
     get_config_map,
@@ -21,10 +22,9 @@ from .k8s import (
 from .k8s.helm import write_chart
 from .k8s.resources.dagster import to_user_code_values, to_grpc_server_entry, Constants
 from .. import Step, Meta, ArtifactType, Input, Output
-from ...project import Stage, Target
 from ...utilities.dagster import DagsterConfig
-from ...utilities.docker import DockerRegistryConfig
-from ...utilities.helm import convert_to_helm_release_name, shorten_name
+from ...utilities.docker import DockerConfig
+from ...utilities.helm import convert_to_helm_release_name, get_name_suffix
 
 
 class DeployDagster(Step):
@@ -35,7 +35,7 @@ class DeployDagster(Step):
                 name="Dagster Deploy",
                 description="Deploy a dagster user code repository to k8s",
                 version="0.0.1",
-                stage=Stage.DEPLOY,
+                stage=STAGE_NAME,
             ),
             produced_artifact=ArtifactType.NONE,
             required_artifact=ArtifactType.DOCKER_IMAGE,
@@ -93,17 +93,14 @@ class DeployDagster(Step):
         if not result.success:
             return self.__evaluate_results(dagster_deploy_results)
 
-        name_suffix = (
-            f"-{properties.versioning.identifier}"
-            if properties.target == Target.PULL_REQUEST
-            else ""
-        )
+        name_suffix = get_name_suffix(properties)
 
         user_code_deployment = to_user_code_values(
             project=step_input.project,
             name_suffix=name_suffix,
             run_properties=properties,
-            docker_config=DockerRegistryConfig.from_dict(properties.config),
+            service_account_override=dagster_config.global_service_account_override,
+            docker_config=DockerConfig.from_dict(properties.config),
         )
 
         self._logger.debug(f"Deploying user code with values: {user_code_deployment}")
@@ -122,7 +119,7 @@ class DeployDagster(Step):
             dry_run=step_input.dry_run,
             values_path=values_path / Path("values.yaml"),
             release_name=convert_to_helm_release_name(
-                shorten_name(step_input.project.name), name_suffix
+                step_input.project.name, name_suffix
             ),
             chart_version=dagster_version,
             chart_name=Constants.CHART_NAME,

@@ -5,6 +5,7 @@ vcs:
       url: 'https://github.com/acme/repo.git'
       userName: !ENV ${GIT_CREDENTIALS_USR:git-user}
       password: !ENV ${GIT_CREDENTIALS_PSW:git-password}
+      email: !ENV ${GIT_EMAIL_ADDRESS:somebody@somewhere}
   github:
     repository: 'Vandebron/mpyl'
     token: !ENV ${GITHUB_TOKEN}

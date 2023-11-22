@@ -17,6 +17,7 @@ from typing import cast
 
 from python_on_whales import Container
 
+from . import STAGE_NAME
 from .after_test import IntegrationTestAfter
 from .before_test import IntegrationTestBefore
 from .. import Step, Meta
@@ -27,7 +28,7 @@ from ..models import (
     input_to_artifact,
     Artifact,
 )
-from ...project import Stage, Project
+from ...project import Project
 from ...utilities.docker import (
     DockerConfig,
     build,
@@ -38,6 +39,7 @@ from ...utilities.docker import (
     create_container,
     push_to_registry,
     registry_for_project,
+    get_default_build_args,
 )
 from ...utilities.junit import (
     to_test_suites,
@@ -54,7 +56,7 @@ class TestDocker(Step):
                 name="Docker Test",
                 description="Test docker image",
                 version="0.0.1",
-                stage=Stage.TEST,
+                stage=STAGE_NAME,
             ),
             produced_artifact=ArtifactType.JUNIT_TESTS,
             required_artifact=ArtifactType.NONE,
@@ -79,7 +81,11 @@ class TestDocker(Step):
             image_tag=tag,
             target=test_target,
             registry_config=docker_registry_config,
-            build_args={},
+            build_args=get_default_build_args(
+                tag,
+                step_input.project.maintainer,
+                step_input.run_properties.versioning.identifier,
+            ),
         )
 
         if success:

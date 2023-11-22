@@ -50,14 +50,18 @@ IDE [here](https://black.readthedocs.io/en/stable/integrations/editors.html).
 
 ## ..create a new release
 
-1. Check out main and pull the latest changes
-2. Run `pipenv run release create`
+1. Create a new release notes file in [releases/notes/](releases/notes/) and name it `<version>.md`
+   Noteworthy changes should be added to this file. Think: new cli commands, new features, breaking changes, upgrade
+   instructions, etc. 
+   Ideally create this file already when starting to work on a new version. 
+   Each PR that is to be included in that release, can add their notes to this file.
+2. Check out main and pull the latest changes
 3. Choose what release type you want to create. We use [semantic versioning](https://semver.org/). The most important distinction is between regular releases and release candidates.
    1. A *release candidate* does not require release notes and will be published to [test pypi](https://test.pypi.org/project/mpyl/).
    2. A *regular release* requires does require and will be published to [pypi](https://pypi.org/project/mpyl/).
-      Create a new release notes file in [releases/notes/](releases/notes/) and name it `<version>.md`
-      Noteworthy changes should be added to this file. Think: new cli commands, new features, breaking changes, upgrade
-      instructions, etc.
+4. Run `pipenv run release create`
+5. Merge the PR created by this command
+6. Run `pipenv run release publish` on main to publish the release
 
 ## ..troubleshoot Python setup
 

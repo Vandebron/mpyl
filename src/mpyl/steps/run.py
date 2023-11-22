@@ -77,11 +77,22 @@ class RunResult:
     def run_plan(self) -> dict[Stage, set[Project]]:
         return self._run_plan
 
+    @property
+    def has_run_plan_projects(self) -> bool:
+        return not all(len(projects) == 0 for stage, projects in self._run_plan.items())
+
+    @property
+    def results(self) -> list[StepResult]:
+        return self._results
+
     def append(self, result: StepResult):
         self._results.append(result)
 
     def extend(self, results: list[StepResult]):
         self._results.extend(results)
+
+    def update_run_plan(self, run_plan: dict[Stage, set[Project]]):
+        self._run_plan.update(run_plan)
 
     @property
     def is_success(self):
@@ -99,9 +110,7 @@ class RunResult:
 
     @property
     def is_in_progress(self):
-        return (
-            len(self.run_plan.items()) > 0 and self.is_success and not self.is_finished
-        )
+        return self.has_run_plan_projects and self.is_success and not self.is_finished
 
     def _results_success(self):
         return not self.has_results or all(r.output.success for r in self._results)

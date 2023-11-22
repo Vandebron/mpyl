@@ -3,8 +3,6 @@ kind: Middleware
 metadata:
   annotations:
     VPN: 10.0.0.1
-    K8s-Test: 1.2.3.0, 1.2.3.1
-    TargetSpecificWhitelist: 1.2.3.4
   labels:
     name: dockertest
     app.kubernetes.io/version: pr-1234
@@ -20,6 +18,3 @@ spec:
   ipWhiteList:
     sourceRange:
     - 10.0.0.1
-    - 1.2.3.0
-    - 1.2.3.1
-    - 1.2.3.4

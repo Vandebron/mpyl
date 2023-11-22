@@ -16,6 +16,8 @@ build:
 dependencies:
   build:
     - 'test/docker/'
+  test:
+    - 'test2/docker/'
   postdeploy:
     - 'specs/*.js'
 deployment:
@@ -80,6 +82,13 @@ deployment:
           forDuration: '1m'
           description: 'Service has encountered errors'
           severity: 'warning'
+        - name: "the name of the alert"
+          expr: "a prometheus expression"
+          forDuration: 0m # Fire instantly
+          severity: signup_alerting_once
+          description: |-
+            **{{ $value }}** new signup failures with reason `{{ $labels.reason }}`.
+            You can find more details in: <unrelated link>
     resources:
       instances:
         all: 3
@@ -122,4 +131,6 @@ deployment:
             - "VPN"
           production:
             - "Outside-World"
+        tls:
+          all: "le-other-prod-wildcard-cert"
 

@@ -1,4 +1,4 @@
-"""Github related utility methods"""
+"""GitHub related utility methods"""
 from dataclasses import dataclass
 from typing import Optional
 

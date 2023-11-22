@@ -2,9 +2,9 @@
 
 from logging import Logger
 
+from . import STAGE_NAME
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
-from ...project import Stage
 from ...utilities.docker import DockerImageSpec
 
 
@@ -16,7 +16,7 @@ class DeployEcho(Step):
                 name="Echo Deploy",
                 description="Dummy deploy step to test the framework",
                 version="0.0.1",
-                stage=Stage.DEPLOY,
+                stage=STAGE_NAME,
             ),
             ArtifactType.NONE,
             ArtifactType.DOCKER_IMAGE,
