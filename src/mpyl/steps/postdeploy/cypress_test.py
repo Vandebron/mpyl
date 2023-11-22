@@ -1,7 +1,5 @@
 """ Step that runs relevant cypress tests in the post deploy stage """
-import itertools
 import os
-from concurrent.futures import ProcessPoolExecutor, Future
 from logging import Logger
 
 from kubernetes.config.kube_config import KubeConfigMerger
@@ -14,6 +12,7 @@ from ...project import Target
 from ...utilities.cypress import CypressConfig
 from ...utilities.docker import execute_with_stream
 from ...utilities.junit import JunitTestSpec
+from ...utilities.parallel import run_in_parallel
 
 
 class CypressTest(Step):
@@ -62,37 +61,31 @@ class CypressTest(Step):
                 docker_container, step_input, reports_folder
             )
             record_key = cypress_config.record_key
-            run_command = ""
 
             if record_key:
                 ci_build_id = f"{cypress_config.ci_build_id}-{step_input.project.name}"
-                machines = [1, 2, 3, 4]
-                threads: list[Future] = []
-
-                for machine in machines:
-                    run_command = (
-                        f'bash -c "Xvfb :10{machine} & XDG_CONFIG_HOME=/tmp/cyhome{machine} '
-                        f"DISPLAY=:10{machine}  yarn cypress run --spec '{specs_string}' --ci-build-id "
-                        f"{ci_build_id} --parallel --reporter-options "
-                        f'"mochaFile={reports_folder}/[hash].xml" --record --key '
-                        'b6a2aab1-0b80-4ca0-a56c-1c8d98a8189c || true "'
-                    )
-                    executor = ProcessPoolExecutor(max_workers=len(machines))
-                    threads.append(
-                        executor.submit(
-                            execute_with_stream,
-                            logger=self._logger,
-                            container=docker_container,
-                            command=run_command,
-                            task_name="Running cypress tests parallel",
-                            multiprocess=True,
-                        )
-                    )
-
-                result: list[str] = list(
-                    itertools.chain.from_iterable(
-                        [thread.result() for thread in threads]
-                    )
+                run_command = (
+                    f'bash -c "Xvfb :10$MACHINE & XDG_CONFIG_HOME=/tmp/cyhome$MACHINE '
+                    f"DISPLAY=:10$MACHINE  yarn cypress run --spec '{specs_string}' --ci-build-id "
+                    f"{ci_build_id} --parallel --reporter-options "
+                    f'"mochaFile={reports_folder}/[hash].xml" --record --key '
+                    'b6a2aab1-0b80-4ca0-a56c-1c8d98a8189c || true "'
+                )
+                machines = ["1", "2", "3", "4", "5"]
+                commands = [
+                    {
+                        execute_with_stream: {
+                            "logger": self._logger,
+                            "container": docker_container,
+                            "command": run_command.replace("$MACHINE", machine),
+                            "task_name": "Running cypress tests parallel",
+                            "multiprocess": True,
+                        }
+                    }
+                    for machine in machines
+                ]
+                result: list[str] = run_in_parallel(
+                    commands=commands, number_of_threads=2
                 )
             else:
                 run_command = (
