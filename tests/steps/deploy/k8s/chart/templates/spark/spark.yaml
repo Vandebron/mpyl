@@ -45,7 +45,7 @@ spec:
           name: sparkjob
     executor:
       cores: 1
-      instances: 1
+      instances: 2
       memory: 3G
       memoryOverhead: '2048'
       labels:

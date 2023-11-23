@@ -15,6 +15,7 @@ def to_spark_body(
     image: str,
     command: Optional[list[str]],
     env_secret_key_refs: dict,
+    num_replicas: int,
 ) -> dict:
     static_body = {
         "type": "Scala",
@@ -36,7 +37,7 @@ def to_spark_body(
         },
         "executor": {
             "cores": 1,
-            "instances": 1,
+            "instances": num_replicas,
             "memory": "3G",
             "memoryOverhead": "2048",
             "labels": {"version": "3.1.1"},
