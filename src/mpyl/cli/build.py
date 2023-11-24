@@ -465,7 +465,7 @@ def clean(obj: CliContext, filter_):
 
     paths_to_clean = [path for path in found_projects if path.exists()]
     if paths_to_clean:
-        for target_path in paths_to_clean:
+        for target_path in set(paths_to_clean):
             shutil.rmtree(target_path)
             obj.console.print(f"🧹 Cleaned up {target_path}")
     else:
