@@ -1,12 +1,14 @@
 """ Entry point of MPyL. Loads all available Step implementations and triggers their execution based on the specified
 Project and Stage.
 """
+import logging
 import pkgutil
 from dataclasses import dataclass
 from datetime import datetime
 from logging import Logger
 from typing import Optional
 
+from rich.logging import RichHandler
 from ruamel.yaml import YAML  # type: ignore
 
 from . import Step
@@ -43,6 +45,7 @@ class Steps:
 
     _logger: Logger
     _properties: RunProperties
+    _steps_collection: StepsCollection
 
     def __init__(
         self,
@@ -66,7 +69,18 @@ class Steps:
         properties: RunProperties,
         artifact: Optional[Artifact],
         dry_run: bool = False,
+        parallel: bool = False,
     ) -> Output:
+        if parallel:  # Logger settings need to be re-applied in each process
+            FORMAT = "%(name)s  %(message)s"
+            logging.basicConfig(
+                level="INFO",
+                format=FORMAT,
+                datefmt="[%X]",
+                handlers=[
+                    RichHandler(markup=False),
+                ],
+            )
         self._logger.info(f"Executing {executor.meta.name} for '{project.name}'")
         required = executor.required_artifact
         if (
@@ -153,7 +167,11 @@ class Steps:
         return None
 
     def _execute_stage(
-        self, stage: Stage, project: Project, dry_run: bool = False
+        self,
+        stage: Stage,
+        project: Project,
+        dry_run: bool = False,
+        parallel: bool = False,
     ) -> Output:
         step_name = project.stages.for_stage(stage.name)
         if step_name is None:
@@ -198,7 +216,7 @@ class Steps:
                     return before_result
 
             result = self._execute(
-                executor, project, self._properties, artifact, dry_run
+                executor, project, self._properties, artifact, dry_run, parallel
             )
             result.write(project.target_path, stage.name)
 
@@ -220,15 +238,20 @@ class Steps:
             ) from exc
 
     def execute(
-        self, stage: str, project: Project, dry_run: bool = False
+        self,
+        stage: str,
+        project: Project,
+        dry_run: bool = False,
+        parallel: bool = False,
     ) -> StepResult:
         """
         :param stage: the stage to execute
         :param project: the project metadata
         :param dry_run: indicates whether artifacts should be submitted or deployed for real
+        :param parallel: indicates whether the stage steps are run in parallel or not
         :return: StepResult
         :raise ExecutionException
         """
         stage_object = self._properties.to_stage(stage)
-        step_output = self._execute_stage(stage_object, project, dry_run)
+        step_output = self._execute_stage(stage_object, project, dry_run, parallel)
         return StepResult(stage=stage_object, project=project, output=step_output)

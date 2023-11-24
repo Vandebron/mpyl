@@ -71,7 +71,7 @@ class CypressTest(Step):
                     f'"mochaFile={reports_folder}/[hash].xml" --record --key '
                     'b6a2aab1-0b80-4ca0-a56c-1c8d98a8189c || true "'
                 )
-                machines = ["1", "2", "3", "4", "5"]
+                machines = ["1", "2", "3", "4"]
                 commands = [
                     {
                         execute_with_stream: {
@@ -85,7 +85,9 @@ class CypressTest(Step):
                     for machine in machines
                 ]
                 result: list[str] = run_in_parallel(
-                    commands=commands, number_of_threads=2
+                    commands=commands,
+                    number_of_threads=len(machines),
+                    _return_type=str,
                 )
             else:
                 run_command = (

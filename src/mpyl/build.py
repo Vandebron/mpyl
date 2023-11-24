@@ -1,5 +1,4 @@
 """Simple MPyL build runner"""
-
 import logging
 from pathlib import Path
 from typing import Optional
@@ -22,7 +21,8 @@ from .steps import deploy
 from .steps.collection import StepsCollection
 from .steps.models import RunProperties
 from .steps.run import RunResult
-from .steps.steps import Steps, ExecutionException
+from .steps.steps import Steps, ExecutionException, StepResult
+from .utilities.parallel import run_in_parallel
 from .utilities.repo import Revision, Repository, RepoConfig
 
 
@@ -239,14 +239,30 @@ def run_build(
 ):
     try:
         for stage, projects in accumulator.run_plan.items():
-            for proj in projects:
-                result = executor.execute(stage.name, proj, dry_run)
+            commands = [
+                {
+                    executor.execute: {
+                        "stage": stage.name,
+                        "project": project,
+                        "dry_run": dry_run,
+                        "parallel": True,
+                    }
+                }
+                for project in projects
+            ]
+            results = run_in_parallel(
+                commands=commands,
+                number_of_threads=5 if stage.parallel else 1,
+                _return_type=StepResult,
+            )
+
+            for result in results:
                 accumulator.append(result)
                 if reporter:
                     reporter.send_report(accumulator)
 
                 if not result.output.success and stage.name == deploy.STAGE_NAME:
-                    logging.warning(f"Deployment failed for {proj.name}")
+                    logging.warning(f"Deployment failed for {result.project.name}")
                     return accumulator
 
             if accumulator.failed_result:
