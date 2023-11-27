@@ -1,7 +1,6 @@
 """Utility tool for running commands in parallel"""
 
-from asyncio import Future
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, Future
 from typing import Callable, Any, TypeVar, Type, Iterable
 
 T = TypeVar("T")

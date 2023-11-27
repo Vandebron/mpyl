@@ -72,7 +72,7 @@ class Steps:
         parallel: bool = False,
     ) -> Output:
         if parallel:  # Logger settings need to be re-applied in each process
-            FORMAT = "%(name)s  %(message)s"
+            FORMAT = "%(name)s  %(message)s"  # pylint: disable=invalid-name
             logging.basicConfig(
                 level="INFO",
                 format=FORMAT,

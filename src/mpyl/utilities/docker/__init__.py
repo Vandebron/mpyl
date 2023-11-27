@@ -117,7 +117,7 @@ def execute_with_stream(
     multiprocess: bool = False,
 ):
     if multiprocess:  # Logger settings need to be re-applied in each process
-        FORMAT = "%(name)s  %(message)s"
+        FORMAT = "%(name)s  %(message)s"  # pylint: disable=invalid-name
         logging.basicConfig(
             level="INFO",
             format=FORMAT,
