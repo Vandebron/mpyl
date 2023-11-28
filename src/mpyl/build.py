@@ -22,7 +22,7 @@ from .steps.collection import StepsCollection
 from .steps.models import RunProperties
 from .steps.run import RunResult
 from .steps.steps import Steps, ExecutionException, StepResult
-from .utilities.parallel import run_in_parallel
+from .utilities.parallel import run_in_parallel, ParallelObject
 from .utilities.repo import Revision, Repository, RepoConfig
 
 
@@ -240,14 +240,15 @@ def run_build(
     try:
         for stage, projects in accumulator.run_plan.items():
             commands = [
-                {
-                    executor.execute: {
+                ParallelObject(
+                    function=executor.execute,
+                    parameters={
                         "stage": stage.name,
                         "project": project,
                         "dry_run": dry_run,
                         "parallel": True,
-                    }
-                }
+                    },
+                )
                 for project in projects
             ]
             results = run_in_parallel(
