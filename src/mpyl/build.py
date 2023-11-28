@@ -1,5 +1,6 @@
 """Simple MPyL build runner"""
 import logging
+from concurrent.futures.process import BrokenProcessPool
 from pathlib import Path
 from typing import Optional
 
@@ -271,5 +272,8 @@ def run_build(
                 return accumulator
         return accumulator
     except ExecutionException as exc:
+        accumulator.exception = exc
+        return accumulator
+    except BrokenProcessPool as exc:
         accumulator.exception = exc
         return accumulator

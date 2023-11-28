@@ -1,6 +1,7 @@
 """Utility tool for running commands in parallel"""
-
+import logging
 from concurrent.futures import ProcessPoolExecutor, Future
+from concurrent.futures.process import BrokenProcessPool
 from dataclasses import dataclass
 from typing import Callable, Any, TypeVar, Type, Iterable
 
@@ -23,7 +24,14 @@ def run_in_parallel(
     for command in commands:
         threads.append(executor.submit(command.function, **command.parameters))
 
-    results: list[T] = list(__flatten([thread.result() for thread in threads]))
+    results: list[T] = []
+    try:
+        results = list(__flatten([thread.result() for thread in threads]))
+    except BrokenProcessPool as exc:
+        logging.warning(
+            f"One of the parallel processes stopped with the error: {exc.__cause__}"
+        )
+        # raise ExecutionException
 
     return results
 
