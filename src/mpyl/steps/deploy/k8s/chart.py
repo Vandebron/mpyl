@@ -419,6 +419,11 @@ class ChartBuilder:
                     s.key: {"key": s.key, "name": self.release_name}
                     for s in self.sealed_secrets
                 },
+                num_replicas=self.project.kubernetes.resources.instances.get_value(
+                    self.target
+                )
+                if self.project.kubernetes.resources.instances
+                else 1,
             ),
         )
 

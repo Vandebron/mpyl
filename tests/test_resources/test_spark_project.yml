@@ -46,8 +46,6 @@ deployment:
           all: 1.0
         mem:
           all: 2048
-    policies:
-      - 'star-readonly'
     role:
       resources:
         - 'pods'
