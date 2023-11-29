@@ -40,6 +40,7 @@ from ...utilities.docker import (
     push_to_registry,
     registry_for_project,
     get_default_build_args,
+    full_image_path_for_project,
 )
 from ...utilities.junit import (
     to_test_suites,
@@ -82,7 +83,7 @@ class TestDocker(Step):
             target=test_target,
             registry_config=docker_registry_config,
             build_args=get_default_build_args(
-                tag,
+                full_image_path_for_project(step_input),
                 step_input.project.maintainer,
                 step_input.run_properties.versioning.identifier,
             ),

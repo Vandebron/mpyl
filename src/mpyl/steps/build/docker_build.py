@@ -34,6 +34,7 @@ from ...utilities.docker import (
     DockerImageSpec,
     registry_for_project,
     get_default_build_args,
+    full_image_path_for_project,
 )
 
 DOCKER_IGNORE_DEFAULT = ["**/target/*", f"**/{BUILD_ARTIFACTS_FOLDER}/*"]
@@ -62,7 +63,7 @@ class BuildDocker(Step):
         if not build_target:
             raise ValueError("docker.buildTarget must be specified")
 
-        image_tag = docker_image_tag(step_input)
+        image_tag = full_image_path_for_project(step_input)
         dockerfile = docker_file_path(
             project=step_input.project, docker_config=docker_config
         )
