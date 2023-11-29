@@ -28,6 +28,7 @@ from ...constants import BUILD_ARTIFACTS_FOLDER
 from ...utilities.docker import (
     DockerConfig,
     build,
+    docker_image_tag,
     docker_file_path,
     login,
     DockerImageSpec,
@@ -62,7 +63,7 @@ class BuildDocker(Step):
         if not build_target:
             raise ValueError("docker.buildTarget must be specified")
 
-        image_tag = full_image_path_for_project(step_input)
+        image_tag = docker_image_tag(step_input)
         dockerfile = docker_file_path(
             project=step_input.project, docker_config=docker_config
         )
@@ -77,7 +78,7 @@ class BuildDocker(Step):
             ignore_file.write(contents)
 
         build_args: dict[str, str] = get_default_build_args(
-            image_tag,
+            full_image_path_for_project(step_input),
             step_input.project.maintainer,
             step_input.run_properties.versioning.identifier,
         )
