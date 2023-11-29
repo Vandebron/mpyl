@@ -154,10 +154,7 @@ class Steps:
         return None
 
     def _execute_stage(
-        self,
-        stage: Stage,
-        project: Project,
-        dry_run: bool = False,
+        self, stage: Stage, project: Project, dry_run: bool = False
     ) -> Output:
         step_name = project.stages.for_stage(stage.name)
         if step_name is None:
@@ -224,16 +221,12 @@ class Steps:
             ) from exc
 
     def execute(
-        self,
-        stage: str,
-        project: Project,
-        dry_run: bool = False,
+        self, stage: str, project: Project, dry_run: bool = False
     ) -> StepResult:
         """
         :param stage: the stage to execute
         :param project: the project metadata
         :param dry_run: indicates whether artifacts should be submitted or deployed for real
-        :param parallel: indicates whether the stage steps are run in parallel or not
         :return: StepResult
         :raise ExecutionException
         """
