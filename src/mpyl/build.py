@@ -1,6 +1,5 @@
 """Simple MPyL build runner"""
 import logging
-from concurrent.futures.process import BrokenProcessPool
 from pathlib import Path
 from typing import Optional
 
@@ -22,7 +21,7 @@ from .steps import deploy
 from .steps.collection import StepsCollection
 from .steps.models import RunProperties
 from .steps.run import RunResult
-from .steps.steps import Steps, ExecutionException
+from .steps.steps import Steps, ExecutionException, StepResult
 from .utilities.parallel import run_in_parallel, ParallelObject
 from .utilities.repo import Revision, Repository, RepoConfig
 
@@ -252,9 +251,9 @@ def run_build(
                 )
                 for project in projects
             ]
-            results = run_in_parallel(
+            results: list[StepResult] = run_in_parallel(
                 commands=commands,
-                number_of_threads=5 if stage.parallel else 1,
+                number_of_threads=stage.parallelism_factor,
             )
 
             for result in results:
@@ -271,8 +270,5 @@ def run_build(
                 return accumulator
         return accumulator
     except ExecutionException as exc:
-        accumulator.exception = exc
-        return accumulator
-    except BrokenProcessPool as exc:
         accumulator.exception = exc
         return accumulator

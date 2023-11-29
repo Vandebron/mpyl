@@ -40,15 +40,15 @@ RUN_PROPERTIES_PROD = dataclasses.replace(
 class TestStage:
     @staticmethod
     def build():
-        return Stage(name="build", icon="🏗️", parallel=True)
+        return Stage(name="build", icon="🏗️", parallelism_factor=4)
 
     @staticmethod
     def test():
-        return Stage(name="test", icon="📋", parallel=True)
+        return Stage(name="test", icon="📋", parallelism_factor=4)
 
     @staticmethod
     def deploy():
-        return Stage(name="deploy", icon="🚀", parallel=False)
+        return Stage(name="deploy", icon="🚀", parallelism_factor=1)
 
 
 def get_config_values() -> dict:

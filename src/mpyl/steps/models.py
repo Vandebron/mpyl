@@ -110,7 +110,9 @@ class RunProperties:
             console=ConsoleProperties("INFO", True, 130),
             stages=[
                 Stage(
-                    name=stage["name"], icon=stage["icon"], parallel=stage["parallel"]
+                    name=stage["name"],
+                    icon=stage["icon"],
+                    parallelism_factor=stage["parallelism_factor"],
                 )
                 for stage in stages
             ],
@@ -161,7 +163,9 @@ class RunProperties:
             console=console,
             stages=[
                 Stage(
-                    name=stage["name"], icon=stage["icon"], parallel=stage["parallel"]
+                    name=stage["name"],
+                    icon=stage["icon"],
+                    parallelism_factor=stage["parallelism_factor"],
                 )
                 for stage in run_properties["stages"]
             ],

@@ -79,7 +79,7 @@ properties:
             enum: [ "NOTSET", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL" ]
             default: "INFO"
       versioning:
-        description:
+        description: versioning details of the build
         type: object
         additionalProperties: false
         required:
@@ -108,6 +108,6 @@ properties:
           type: string
         icon:
           type: string
-        parallel:
-          type: boolean
-          default: false
+        parallelism_factor:
+          type: integer
+          default: 1
