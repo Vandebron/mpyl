@@ -80,7 +80,6 @@ class CypressTest(Step):
                             "container": docker_container,
                             "command": run_command.replace("$MACHINE", machine),
                             "task_name": "Running cypress tests parallel",
-                            "multiprocess": True,
                         },
                     )
                     for machine in machines

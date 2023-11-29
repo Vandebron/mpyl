@@ -1,14 +1,12 @@
 """ Entry point of MPyL. Loads all available Step implementations and triggers their execution based on the specified
 Project and Stage.
 """
-import logging
 import pkgutil
 from dataclasses import dataclass
 from datetime import datetime
 from logging import Logger
 from typing import Optional
 
-from rich.logging import RichHandler
 from ruamel.yaml import YAML  # type: ignore
 
 from . import Step
@@ -69,18 +67,7 @@ class Steps:
         properties: RunProperties,
         artifact: Optional[Artifact],
         dry_run: bool = False,
-        parallel: bool = False,
     ) -> Output:
-        if parallel:  # Logger settings need to be re-applied in each process
-            FORMAT = "%(name)s  %(message)s"  # pylint: disable=invalid-name
-            logging.basicConfig(
-                level="INFO",
-                format=FORMAT,
-                datefmt="[%X]",
-                handlers=[
-                    RichHandler(markup=False),
-                ],
-            )
         self._logger.info(f"Executing {executor.meta.name} for '{project.name}'")
         required = executor.required_artifact
         if (
@@ -171,7 +158,6 @@ class Steps:
         stage: Stage,
         project: Project,
         dry_run: bool = False,
-        parallel: bool = False,
     ) -> Output:
         step_name = project.stages.for_stage(stage.name)
         if step_name is None:
@@ -216,7 +202,7 @@ class Steps:
                     return before_result
 
             result = self._execute(
-                executor, project, self._properties, artifact, dry_run, parallel
+                executor, project, self._properties, artifact, dry_run
             )
             result.write(project.target_path, stage.name)
 
@@ -242,7 +228,6 @@ class Steps:
         stage: str,
         project: Project,
         dry_run: bool = False,
-        parallel: bool = False,
     ) -> StepResult:
         """
         :param stage: the stage to execute
@@ -253,5 +238,5 @@ class Steps:
         :raise ExecutionException
         """
         stage_object = self._properties.to_stage(stage)
-        step_output = self._execute_stage(stage_object, project, dry_run, parallel)
+        step_output = self._execute_stage(stage_object, project, dry_run)
         return StepResult(stage=stage_object, project=project, output=step_output)

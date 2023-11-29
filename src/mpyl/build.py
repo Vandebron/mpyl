@@ -246,7 +246,6 @@ def run_build(
                         "stage": stage.name,
                         "project": project,
                         "dry_run": dry_run,
-                        "parallel": True,
                     },
                 )
                 for project in projects

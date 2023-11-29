@@ -9,7 +9,6 @@ from traceback import print_exc
 from typing import Dict, Optional, Iterator, cast, Union
 from python_on_whales import docker, Image, Container, DockerException
 from python_on_whales.exceptions import NoSuchContainer
-from rich.logging import RichHandler
 from ruamel.yaml import yaml_object, YAML
 
 from ..logging import try_parse_ansi
@@ -114,19 +113,7 @@ def execute_with_stream(
     container: Container,
     command: str,
     task_name: str,
-    multiprocess: bool = False,
 ):
-    if multiprocess:  # Logger settings need to be re-applied in each process
-        FORMAT = "%(name)s  %(message)s"  # pylint: disable=invalid-name
-        logging.basicConfig(
-            level="INFO",
-            format=FORMAT,
-            datefmt="[%X]",
-            handlers=[
-                RichHandler(markup=False),
-            ],
-        )
-
     result = cast(
         Iterator[tuple[str, bytes]],
         container.execute(command=shlex.split(command), stream=True),
