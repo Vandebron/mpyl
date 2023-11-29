@@ -28,7 +28,6 @@ from ...constants import BUILD_ARTIFACTS_FOLDER
 from ...utilities.docker import (
     DockerConfig,
     build,
-    docker_image_tag,
     docker_file_path,
     login,
     DockerImageSpec,
