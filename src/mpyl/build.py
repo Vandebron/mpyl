@@ -22,7 +22,7 @@ from .steps import deploy
 from .steps.collection import StepsCollection
 from .steps.models import RunProperties
 from .steps.run import RunResult
-from .steps.steps import Steps, ExecutionException, StepResult
+from .steps.steps import Steps, ExecutionException
 from .utilities.parallel import run_in_parallel, ParallelObject
 from .utilities.repo import Revision, Repository, RepoConfig
 
@@ -255,7 +255,6 @@ def run_build(
             results = run_in_parallel(
                 commands=commands,
                 number_of_threads=5 if stage.parallel else 1,
-                _return_type=StepResult,
             )
 
             for result in results:

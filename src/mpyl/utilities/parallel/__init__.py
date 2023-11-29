@@ -1,9 +1,7 @@
 """Utility tool for running commands in parallel"""
-import logging
-from concurrent.futures import ProcessPoolExecutor, Future
-from concurrent.futures.process import BrokenProcessPool
+from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass
-from typing import Callable, Any, TypeVar, Type, Iterable
+from typing import Callable, Any, TypeVar, Iterable
 
 T = TypeVar("T")
 
@@ -17,28 +15,21 @@ class ParallelObject:
 def run_in_parallel(
     commands: list[ParallelObject],
     number_of_threads: int,
-    _return_type: Type[T],
 ) -> list[T]:
     threads: list[Future] = []
-    executor = ProcessPoolExecutor(max_workers=number_of_threads)
+    executor = ThreadPoolExecutor(max_workers=number_of_threads)
     for command in commands:
         threads.append(executor.submit(command.function, **command.parameters))
 
-    results: list[T] = []
-    try:
-        results = list(__flatten([thread.result() for thread in threads]))
-    except BrokenProcessPool as exc:
-        logging.warning(
-            f"One of the parallel processes stopped with the error: {exc.__cause__}"
-        )
-        # raise ExecutionException
+    results: list[T] = list(__flatten([thread.result() for thread in threads]))
 
     return results
 
 
 def __flatten(object_to_flatten: Any):
-    for i in object_to_flatten:
-        if isinstance(i, Iterable) and not isinstance(i, (str, bytes)):
-            yield from __flatten(i)
-        else:
-            yield i
+    if isinstance(object_to_flatten, Iterable):
+        for i in object_to_flatten:
+            if isinstance(i, Iterable) and not isinstance(i, (str, bytes)):
+                yield from __flatten(i)
+            else:
+                yield i
