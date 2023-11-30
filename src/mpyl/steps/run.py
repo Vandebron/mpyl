@@ -38,8 +38,10 @@ class RunResult:
         return "❌ Failed"
 
     @property
-    def failed_result(self) -> Optional[StepResult]:
-        return next((r for r in self._results if not r.output.success), None)
+    def failed_results(self) -> Optional[list[StepResult]]:
+        failed_results = list((r for r in self._results if not r.output.success))
+
+        return failed_results if len(failed_results) > 0 else None
 
     @property
     def progress_fraction(self) -> float:

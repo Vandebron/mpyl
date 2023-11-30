@@ -264,7 +264,7 @@ def run_build(
                     logging.warning(f"Deployment failed for {result.project.name}")
                     return accumulator
 
-            if accumulator.failed_result:
+            if accumulator.failed_results:
                 logging.warning(f"One of the builds failed at Stage {stage.name}")
                 return accumulator
         return accumulator

@@ -102,10 +102,16 @@ def execution_plan_as_markdown(run_result: RunResult):
     if exception:
         result += f"For _{exception.executor}_ on _{exception.project_name}_ at stage _{exception.stage}_ \n"
         result += f"\n\n{exception}\n\n"
-    elif run_result.failed_result:
-        failed = run_result.failed_result
-        result += f"For _{failed.project.name}_ at stage _{failed.stage.name}_ \n"
-        result += f"\n\n{run_result.failed_result.output.message}\n\n"
+    elif run_result.failed_results:
+        failed_projects = ", ".join(
+            set(failed.project.name for failed in run_result.failed_results)
+        )
+        failed_stage = next(failed.stage.name for failed in run_result.failed_results)
+        failed_outputs = ". \n\n".join(
+            [failed.output.message for failed in run_result.failed_results]
+        )
+        result += f"For _{failed_projects}_ at stage _{failed_stage}_ \n"
+        result += f"\n\n{failed_outputs}\n\n"
     for stage in run_result.run_properties.stages:
         result += markdown_for_stage(run_result, stage)
     return result
