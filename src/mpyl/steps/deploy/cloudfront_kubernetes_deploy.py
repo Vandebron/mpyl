@@ -50,11 +50,7 @@ class CloudFrontKubernetesDeploy(Step):
         """
         Copies the static assets from the docker image to a temp folder
         """
-        full_image_path = (
-            docker_image_tag(step_input)
-            if step_input.dry_run
-            else full_image_path_for_project(step_input)
-        )
+        full_image_path = full_image_path_for_project(step_input)
         container_path = f"{step_input.project.name}/{STATIC_FOLDER}"
         container = create_container(logger, full_image_path)
         docker_copy(

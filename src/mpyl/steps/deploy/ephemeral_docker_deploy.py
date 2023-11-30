@@ -30,11 +30,8 @@ class EphemeralDockerDeploy(Step):
         env_variables = get_env_variables(
             step_input.project, step_input.run_properties.target
         )
-        full_image_path = (
-            docker_image_tag(step_input)
-            if step_input.dry_run
-            else full_image_path_for_project(step_input)
-        )
+        full_image_path = full_image_path_for_project(step_input)
+
         docker_run_result = docker.run(
             image=full_image_path, remove=True, envs=env_variables
         )

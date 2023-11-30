@@ -185,7 +185,11 @@ def full_image_path_for_project(step_input: Input) -> str:
     docker_registry = registry_for_project(docker_config, step_input.project)
 
     image_name = docker_image_tag(step_input)
-    return docker_registry_path(docker_registry, image_name)
+    return (
+        docker_registry_path(docker_registry, image_name)
+        if not step_input.dry_run
+        else image_name
+    )
 
 
 def push_to_registry(
