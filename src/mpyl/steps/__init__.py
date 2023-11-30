@@ -70,7 +70,6 @@ from logging import Logger
 from typing import Optional, List
 
 from .models import ArtifactType, Input, Output
-from ..project import Stage
 
 
 class IPluginRegistry(type):

@@ -13,6 +13,8 @@ from rich.spinner import Spinner
 from rich.table import Table
 from rich.text import Text
 
+from mpyl.utilities.logging import try_parse_ansi
+
 COMMANDS = [
     "pipenv run format",
     "pipenv run lint",
@@ -62,13 +64,6 @@ def trim(error_message: str) -> str:
         return "\n".join(lines).strip()
 
     return "\n".join(error_message.splitlines()[-10:])
-
-
-def try_parse_ansi(text: str):
-    try:
-        return Text.from_ansi(text)
-    except ConsoleError:
-        return Text(text)
 
 
 def to_row(job: Job) -> list[RenderableType]:
