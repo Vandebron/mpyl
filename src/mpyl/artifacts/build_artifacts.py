@@ -4,6 +4,7 @@ import os
 import shutil
 import time
 from abc import ABC
+from enum import Enum
 from logging import Logger
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -21,9 +22,14 @@ from ..utilities.github import GithubConfig
 from ..utilities.repo import Repository, RepoConfig
 
 
+class ArtifactType(str, Enum):
+    CACHE = "cache"
+    ARGO = "argo"
+
+
 class PathTransformer(ABC):
     @abc.abstractmethod
-    def artifact_type(self) -> str:
+    def artifact_type(self) -> ArtifactType:
         pass
 
     @abc.abstractmethod
@@ -36,8 +42,8 @@ class PathTransformer(ABC):
 
 
 class BuildCacheTransformer(PathTransformer):
-    def artifact_type(self) -> str:
-        return "build_artifacts"
+    def artifact_type(self) -> ArtifactType:
+        return ArtifactType.CACHE
 
     def transform_for_read(self, project_path: str) -> Path:
         return Path(
@@ -54,8 +60,8 @@ class ManifestPathTransformer(PathTransformer):
     deploy_config: DeployConfig
     run_properties: RunProperties
 
-    def artifact_type(self) -> str:
-        return "argo"
+    def artifact_type(self) -> ArtifactType:
+        return ArtifactType.ARGO
 
     def __init__(self, deploy_config: DeployConfig, run_properties: RunProperties):
         self.deploy_config = deploy_config
@@ -173,7 +179,10 @@ class ArtifactsRepository:
                     f"Pushed {branch} with {copied_paths} copied paths to {artifact_repo.remote_url}"
                 )
 
-                if path_transformer.artifact_type() == "argo" and github_config:
+                if (
+                    path_transformer.artifact_type() == ArtifactType.ARGO
+                    and github_config
+                ):
                     github = Github(login_or_token=get_token(github_config))
                     repo = github.get_repo(github_config.repository)
                     repo.create_pull(

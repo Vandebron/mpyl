@@ -30,6 +30,7 @@ from .commands.build.jenkins import JenkinsRunParameters, run_jenkins, get_token
 from ..artifacts.build_artifacts import (
     ManifestPathTransformer,
     BuildCacheTransformer,
+    ArtifactType,
 )
 from ..build import print_status, run_mpyl
 from ..constants import (
@@ -510,9 +511,9 @@ def pull(obj: CliContext, tag: str, pr: int, path: Path):
     target_branch = __get_target_branch(run_properties, tag, pr)
 
     build_artifacts = prepare_artifacts_repo(
-        obj=obj, repo_path=path, artifact_type="cache"
+        obj=obj, repo_path=path, artifact_type=ArtifactType.CACHE
     )
-    build_artifacts.pull(branch=branch_name(target_branch, "cache"))
+    build_artifacts.pull(branch=branch_name(target_branch, ArtifactType.CACHE))
 
 
 @artifacts.command(help="Push build artifacts to remote artifact repository")
@@ -528,13 +529,13 @@ def pull(obj: CliContext, tag: str, pr: int, path: Path):
 @click.option(
     "--artifact-type",
     "-a",
-    type=click.Choice(["cache", "argo"]),
+    type=click.Choice(ArtifactType),
     help="The type of artifact to store. Either build metadata from `.mpyl` "
     "folders or k8s manifests to be deployed by ArgoCD",
     required=True,
 )
 @click.pass_obj
-def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: str):
+def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: ArtifactType):
     run_properties = initiate_run_properties(
         config=obj.config,
         properties=obj.run_properties,
@@ -543,7 +544,7 @@ def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: str):
     )
     target_branch = __get_target_branch(run_properties, tag, pr)
     if path is None:
-        path = Path("tmp") if artifact_type == "cache" else Path(".")
+        path = Path("tmp") if artifact_type == ArtifactType.CACHE else Path(".")
 
     build_artifacts = prepare_artifacts_repo(
         obj=obj, repo_path=path, artifact_type=artifact_type
@@ -554,12 +555,12 @@ def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: str):
         ManifestPathTransformer(
             deploy_config=deploy_config, run_properties=run_properties
         )
-        if artifact_type == "argo"
+        if artifact_type == ArtifactType.ARGO
         else BuildCacheTransformer()
     )
 
     github_config = None
-    if artifact_type == "argo":
+    if artifact_type == ArtifactType.ARGO:
         github = obj.config["vcs"]["argoGithub"]
         github_config = GithubConfig.from_github_config(github=github)
 

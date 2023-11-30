@@ -2,22 +2,22 @@
 import logging
 from pathlib import Path
 
-from ....artifacts.build_artifacts import ArtifactsRepository
+from ....artifacts.build_artifacts import ArtifactsRepository, ArtifactType
 from ....cli import CliContext
 from ....utilities.repo import RepoConfig
 
 
-def branch_name(target: str, artifact_type: str) -> str:
-    return f"{target}-{artifact_type}"
+def branch_name(target: str, artifact_type: ArtifactType) -> str:
+    return f"{target}-{artifact_type.value}"
 
 
 def prepare_artifacts_repo(
-    obj: CliContext, repo_path: Path, artifact_type: str
+    obj: CliContext, repo_path: Path, artifact_type: ArtifactType
 ) -> ArtifactsRepository:
     vcs = obj.config["vcs"]
     git_config = (
         vcs.get("cachingRepository")
-        if artifact_type == "cache"
+        if artifact_type == ArtifactType.CACHE
         else vcs.get("argoRepository")
     )
     if git_config is None:
