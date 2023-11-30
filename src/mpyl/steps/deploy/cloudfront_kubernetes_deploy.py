@@ -11,7 +11,6 @@ from ...utilities.docker import (
     docker_copy,
     create_container,
     full_image_path_for_project,
-    docker_image_tag,
 )
 from ...utilities.s3 import S3Client, S3ClientConfig
 

@@ -8,7 +8,7 @@ from . import STAGE_NAME
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
 from ...project import get_env_variables
-from ...utilities.docker import full_image_path_for_project, docker_image_tag
+from ...utilities.docker import full_image_path_for_project
 
 
 class EphemeralDockerDeploy(Step):
