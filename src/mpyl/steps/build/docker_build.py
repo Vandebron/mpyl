@@ -34,6 +34,7 @@ from ...utilities.docker import (
     DockerImageSpec,
     registry_for_project,
     get_default_build_args,
+    full_image_path_for_project,
 )
 
 DOCKER_IGNORE_DEFAULT = ["**/target/*", f"**/{BUILD_ARTIFACTS_FOLDER}/*"]
@@ -77,7 +78,7 @@ class BuildDocker(Step):
             ignore_file.write(contents)
 
         build_args: dict[str, str] = get_default_build_args(
-            image_tag,
+            full_image_path_for_project(step_input),
             step_input.project.maintainer,
             step_input.run_properties.versioning.identifier,
         )
