@@ -1,5 +1,19 @@
 # Release notes
 
+## MPyL 1.4.7
+
+
+#### Spark Deployment
+- Configure replica count for spark jobs
+
+#### Dagster deployment
+- Set `DOCKER_IMAGE` build argument to the full docker image path
+
+#### Cloudfront Deploy
+- Use local docker image when running with --dry-run
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.7)
+
 ## MPyL 1.4.6
 
 
