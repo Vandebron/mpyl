@@ -96,7 +96,7 @@ class RepoCredentials:
 class RepoConfig:
     main_branch: str
     ignore_patterns: list[str]
-    repo_credentials: Optional[RepoCredentials]
+    repo_credentials: RepoCredentials
 
     @staticmethod
     def from_config(config: dict):
@@ -318,6 +318,9 @@ class Repository:  # pylint: disable=too-many-public-methods
 
     def pull(self):
         return self._repo.git.pull()
+
+    def add_note(self, note: str):
+        return self._repo.git.notes("add", "-m", note)
 
     def push(self, branch: str):
         return self._repo.git.push("--set-upstream", "origin", branch)

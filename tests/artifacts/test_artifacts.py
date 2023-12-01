@@ -3,6 +3,7 @@ import os
 from os.path import relpath
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import cast
 
 import pytest
 
@@ -11,6 +12,7 @@ from src.mpyl.artifacts.build_artifacts import (
     BuildCacheTransformer,
     ManifestPathTransformer,
     PathTransformer,
+    ArtifactType,
 )
 from src.mpyl.project import Project, load_project
 from src.mpyl.steps.deploy.k8s.deploy_config import DeployConfig
@@ -26,8 +28,8 @@ class TestTransformer(PathTransformer):
     def __init__(self, root_folder):
         self.root_folder = root_folder
 
-    def artifact_type(self) -> str:
-        return "test_type"
+    def artifact_type(self) -> ArtifactType:
+        return cast(ArtifactType, "test_type")
 
     def transform_for_read(self, project_path: str) -> Path:
         return Path(self.root_folder, project_path).parent
@@ -100,4 +102,5 @@ class TestArtifacts:
             repository_url="https://@github.com/SamTheisens/mpyl-example-gha.git",
             project_paths=projects,
             path_transformer=BuildCacheTransformer(),
+            run_properties=RUN_PROPERTIES,
         )

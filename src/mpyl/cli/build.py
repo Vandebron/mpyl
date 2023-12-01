@@ -4,7 +4,7 @@ import pickle
 import shutil
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast, Sequence
 
 import click
 import questionary
@@ -535,7 +535,9 @@ def pull(obj: CliContext, tag: str, pr: int, path: Path):
 @click.option(
     "--artifact-type",
     "-a",
-    type=click.Choice(ArtifactType),
+    type=click.Choice(
+        cast(Sequence[str], ArtifactType)
+    ),  # Click does accept this enum type but mypy doesn't
     help="The type of artifact to store. Either build metadata from `.mpyl` "
     "folders or k8s manifests to be deployed by ArgoCD",
     required=True,
