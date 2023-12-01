@@ -35,11 +35,7 @@ class SbtConfig:
         )
 
     def to_command(self, client_mode: bool, sbt_commands: list[str]):
-        cmd = (
-            self.sbt_client_command.split(" ")
-            if client_mode
-            else self.sbt_command.split(" ")
-        )
+        cmd = (self.sbt_client_command if client_mode else self.sbt_command).split(" ")
         if self.verbose:
             cmd.append("-v")
         cmd.extend([f"-J{opt}" for opt in self.java_opts.split(" ")])

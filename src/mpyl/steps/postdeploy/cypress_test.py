@@ -12,7 +12,7 @@ from ...project import Target
 from ...utilities.cypress import CypressConfig
 from ...utilities.docker import execute_with_stream
 from ...utilities.junit import JunitTestSpec
-from ...utilities.parallel import run_in_parallel, ParallelObject
+from ...utilities.parallel import run_in_parallel, ParallelCommand
 
 
 class CypressTest(Step):
@@ -73,7 +73,7 @@ class CypressTest(Step):
                 )
                 machines = ["1", "2", "3", "4"]
                 commands = [
-                    ParallelObject(
+                    ParallelCommand(
                         function=execute_with_stream,
                         parameters={
                             "logger": self._logger,

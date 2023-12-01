@@ -1,4 +1,4 @@
-"""Utility tool for running commands in parallel"""
+"""Utility for running commands in parallel"""
 from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Callable, Any, TypeVar, Iterable
@@ -7,13 +7,13 @@ T = TypeVar("T")
 
 
 @dataclass(frozen=True)
-class ParallelObject:
+class ParallelCommand:
     function: Callable
-    parameters: dict[Any, Any]
+    parameters: dict[str, Any]
 
 
 def run_in_parallel(
-    commands: list[ParallelObject],
+    commands: list[ParallelCommand],
     number_of_threads: int,
 ) -> list[T]:
     threads: list[Future] = []

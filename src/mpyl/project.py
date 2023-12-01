@@ -54,7 +54,7 @@ class Target(Enum):
 class Stage:
     name: str
     icon: str
-    parallelism_factor: int
+    parallelism: int
 
 
 @dataclass(frozen=True)

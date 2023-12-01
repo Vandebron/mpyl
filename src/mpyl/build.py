@@ -22,7 +22,7 @@ from .steps.collection import StepsCollection
 from .steps.models import RunProperties
 from .steps.run import RunResult
 from .steps.steps import Steps, ExecutionException, StepResult
-from .utilities.parallel import run_in_parallel, ParallelObject
+from .utilities.parallel import run_in_parallel, ParallelCommand
 from .utilities.repo import Revision, Repository, RepoConfig
 
 
@@ -240,7 +240,7 @@ def run_build(
     try:
         for stage, projects in accumulator.run_plan.items():
             commands = [
-                ParallelObject(
+                ParallelCommand(
                     function=executor.execute,
                     parameters={
                         "stage": stage.name,
@@ -252,7 +252,7 @@ def run_build(
             ]
             results: list[StepResult] = run_in_parallel(
                 commands=commands,
-                number_of_threads=stage.parallelism_factor,
+                number_of_threads=stage.parallelism,
             )
 
             for result in results:

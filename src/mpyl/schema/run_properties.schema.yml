@@ -108,6 +108,7 @@ properties:
           type: string
         icon:
           type: string
-        parallelism_factor:
+        parallelism:
+          description: Amount of threads used for running projects in parallel per stage
           type: integer
           default: 1

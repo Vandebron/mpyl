@@ -18,13 +18,13 @@ build:
 stages:
   - name: 'build'
     icon: '🏗️'
-    parallelism_factor: 4
+    parallelism: 4
   - name: 'test'
     icon: '📋'
-    parallelism_factor: 4
+    parallelism: 4
   - name : 'deploy'
     icon: '🚀'
-    parallelism_factor: 1
+    parallelism: 1
   - name: 'postdeploy'
     icon: '🦺️'
-    parallelism_factor: 1
+    parallelism: 1
