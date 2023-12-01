@@ -167,6 +167,16 @@ class ArtifactsRepository:
 
                 artifact_repo.stage(".")
                 artifact_repo.commit(f"Revision {revision} at {repository_url}")
+                cluster_details = (
+                    f"Cluster: {get_argo_folder_name(target=run_properties.target)}"
+                )
+                commit_note = (
+                    f"{cluster_details.lower()} \n"
+                    + f"repository: {self.codebase_repo.config.repo_credentials.url} \n"
+                    + f"revision: {revision} \n"
+                    + f"tag: {run_properties.versioning.identifier}"
+                )
+                artifact_repo.add_note(note=commit_note)
 
                 try:  # to prevent issues with parallel runs pushing to the same branch
                     self.logger.info("Pushing changes to remote")
@@ -185,25 +195,12 @@ class ArtifactsRepository:
                     path_transformer.artifact_type() == ArtifactType.ARGO
                     and github_config
                 ):
-                    github = Github(login_or_token=get_token(github_config))
-                    body = f"""
-## 🚀 Deploying
-Docker tag: ??
-Commit: [{revision}]({self.codebase_repo.config.repo_credentials.url}/commit/{revision})
-
-## 📍 To
-Cluster: {get_argo_folder_name(target=run_properties.target)}
-
-## 🧑‍💻️ Started by
-[{run_properties.details.user}]
-                    """
-                    print("body: ", body)
-                    repo = github.get_repo(github_config.repository)
-                    repo.create_pull(
-                        title=branch,
-                        body=body,
-                        head=branch,
-                        base="main",
+                    self.__create_pr(
+                        github_config=github_config,
+                        run_properties=run_properties,
+                        revision=revision,
+                        cluster_details=cluster_details,
+                        branch=branch,
                     )
 
     def copy_files(
@@ -235,3 +232,31 @@ Cluster: {get_argo_folder_name(target=run_properties.target)}
                 dirs_exist_ok=True,
             )
         return len(existing)
+
+    def __create_pr(
+        self,
+        github_config: GithubConfig,
+        run_properties: RunProperties,
+        revision: str,
+        cluster_details: str,
+        branch: str,
+    ):
+        github = Github(login_or_token=get_token(github_config))
+        body = f"""
+## 🚀 Deploying
+Docker tag: [{run_properties.versioning.identifier}]{f'({run_properties.details.change_url})' if run_properties.details.change_url else ''}
+Commit: [{revision}]({self.codebase_repo.config.repo_credentials.url}/commit/{revision})
+
+## 📍 To
+{cluster_details}
+
+## 🧑‍💻️ Started by
+[{run_properties.details.user}]
+                        """
+        repo = github.get_repo(github_config.repository)
+        repo.create_pull(
+            title=branch,
+            body=body,
+            head=branch,
+            base="main",
+        )
