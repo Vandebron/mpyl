@@ -27,6 +27,15 @@ class ArtifactType(str, Enum):
     ARGO = "argo"
 
 
+def get_argo_folder_name(target: Target) -> str:
+    if target in (
+        Target.PULL_REQUEST_BASE,
+        Target.PULL_REQUEST,
+    ):
+        return "test"
+    return target.name.lower()
+
+
 class PathTransformer(ABC):
     @abc.abstractmethod
     def artifact_type(self) -> ArtifactType:
@@ -75,7 +84,7 @@ class ManifestPathTransformer(PathTransformer):
         )
 
     def transform_for_write(self, artifact_path: str, project: Project) -> Path:
-        argo_folder_name = self.__get_argo_folder_name()
+        argo_folder_name = get_argo_folder_name(target=self.run_properties.target)
         namespace = get_namespace(run_properties=self.run_properties, project=project)
         return Path(
             "k8s-manifests",
@@ -83,14 +92,6 @@ class ManifestPathTransformer(PathTransformer):
             argo_folder_name,
             namespace,
         )
-
-    def __get_argo_folder_name(self) -> str:
-        if self.run_properties.target in (
-            Target.PULL_REQUEST_BASE,
-            Target.PULL_REQUEST,
-        ):
-            return "test"
-        return self.run_properties.target.name.lower()
 
 
 class ArtifactsRepository:
@@ -139,6 +140,7 @@ class ArtifactsRepository:
         repository_url: str,
         project_paths: list[str],
         path_transformer: PathTransformer,
+        run_properties: RunProperties,
         github_config: Optional[GithubConfig] = None,
     ) -> None:
         with TemporaryDirectory() as tmp_repo_dir:
@@ -184,10 +186,22 @@ class ArtifactsRepository:
                     and github_config
                 ):
                     github = Github(login_or_token=get_token(github_config))
+                    body = f"""
+## 🚀 Deploying
+Docker tag: ??
+Commit: [{revision}]({self.codebase_repo.config.repo_credentials.url}/commit/{revision})
+
+## 📍 To
+Cluster: {get_argo_folder_name(target=run_properties.target)}
+
+## 🧑‍💻️ Started by
+[{run_properties.details.user}]
+                    """
+                    print("body: ", body)
                     repo = github.get_repo(github_config.repository)
                     repo.create_pull(
                         title=branch,
-                        body=f"Manifests from {branch} at {repository_url}",
+                        body=body,
                         head=branch,
                         base="main",
                     )

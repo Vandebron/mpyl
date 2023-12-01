@@ -117,7 +117,7 @@ class RepoConfig:
 
 class Repository:  # pylint: disable=too-many-public-methods
     def __init__(self, config: RepoConfig, repo: Optional[Repo] = None):
-        self._config = config
+        self.config = config
         self._repo = repo or Repo(path=Git().rev_parse("--show-toplevel"))
 
     def __enter__(self):
@@ -214,11 +214,11 @@ class Repository:  # pylint: disable=too-many-public-methods
 
     @property
     def main_branch(self) -> str:
-        return self._config.main_branch.split("/")[-1]
+        return self.config.main_branch.split("/")[-1]
 
     @property
     def main_origin_branch(self) -> str:
-        parts = self._config.main_branch.split("/")
+        parts = self.config.main_branch.split("/")
         if len(parts) > 1:
             return "/".join(parts)
         return f"origin/{self.main_branch}"
@@ -227,7 +227,7 @@ class Repository:  # pylint: disable=too-many-public-methods
         return len(self.changes_in_tagged_commit(tag)) > 0
 
     def __get_filter_patterns(self):
-        return ["--"] + [f":!{pattern}" for pattern in self._config.ignore_patterns]
+        return ["--"] + [f":!{pattern}" for pattern in self.config.ignore_patterns]
 
     def changes_between(self, base_revision: str, head_revision: str) -> list[Revision]:
         command = [

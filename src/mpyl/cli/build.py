@@ -513,7 +513,13 @@ def pull(obj: CliContext, tag: str, pr: int, path: Path):
     build_artifacts = prepare_artifacts_repo(
         obj=obj, repo_path=path, artifact_type=ArtifactType.CACHE
     )
-    build_artifacts.pull(branch=branch_name(target_branch, ArtifactType.CACHE))
+    build_artifacts.pull(
+        branch=branch_name(
+            identifier=target_branch,
+            artifact_type=ArtifactType.CACHE,
+            target=run_properties.target,
+        )
+    )
 
 
 @artifacts.command(help="Push build artifacts to remote artifact repository")
@@ -565,11 +571,16 @@ def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: Artifact
         github_config = GithubConfig.from_github_config(github=github)
 
     build_artifacts.push(
-        branch=branch_name(target_branch, artifact_type),
+        branch=branch_name(
+            identifier=target_branch,
+            artifact_type=artifact_type,
+            target=run_properties.target,
+        ),
         revision=obj.repo.get_sha,
         repository_url=obj.repo.remote_url if obj.repo.remote_url else "",
         project_paths=obj.repo.find_projects(),
         path_transformer=transformer,
+        run_properties=run_properties,
         github_config=github_config,
     )
 

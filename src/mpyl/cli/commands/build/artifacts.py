@@ -2,13 +2,20 @@
 import logging
 from pathlib import Path
 
-from ....artifacts.build_artifacts import ArtifactsRepository, ArtifactType
+from ....artifacts.build_artifacts import (
+    ArtifactsRepository,
+    ArtifactType,
+    get_argo_folder_name,
+)
 from ....cli import CliContext
+from ....project import Target
 from ....utilities.repo import RepoConfig
 
 
-def branch_name(target: str, artifact_type: ArtifactType) -> str:
-    return f"{target}-{artifact_type.value}"
+def branch_name(identifier: str, artifact_type: ArtifactType, target: Target) -> str:
+    if artifact_type == ArtifactType.ARGO:
+        return f"deploy/{get_argo_folder_name(target=target)}_{identifier}"
+    return f"{identifier}-{artifact_type.value}"
 
 
 def prepare_artifacts_repo(
