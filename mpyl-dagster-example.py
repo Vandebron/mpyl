@@ -26,12 +26,7 @@ def execute_step(proj: Project, stage: str, dry_run: bool = True) -> StepResult:
     config = parse_config(Path(f"{ROOT_PATH}mpyl_config.yml"))
     with Repository(RepoConfig.from_config(config)) as repo:
         run_properties = RunProperties.for_local_run(
-            config=config,
-            run_plan={},
-            revision=repo.get_sha,
-            branch=repo.get_branch,
-            tag=None,
-            stages=[],
+            config=config, run_plan={}, revision=repo.get_sha, branch=repo.get_branch
         )
     dagster_logger = get_dagster_logger()
     executor = Steps(dagster_logger, run_properties)

@@ -78,7 +78,6 @@ from ....project import (
     KeyValueRef,
     Metrics,
 )
-from ....stages.discovery import DeploySet
 from ....utilities.docker import DockerImageSpec
 
 yaml = YAML()
@@ -198,11 +197,10 @@ class ChartBuilder:
     target: Target
     release_name: str
     config_defaults: DeploymentDefaults
-    deploy_set: Optional[DeploySet]
     namespace: str
     role: Optional[dict]
 
-    def __init__(self, step_input: Input, deploy_set: Optional[DeploySet] = None):
+    def __init__(self, step_input: Input):
         self.step_input = step_input
         project = self.step_input.project
         self.project = project
@@ -225,7 +223,6 @@ class ChartBuilder:
         self.mappings = self.project.kubernetes.port_mappings
         self.target = step_input.run_properties.target
         self.release_name = self.project.name.lower()
-        self.deploy_set = deploy_set
         self.namespace = get_namespace(
             run_properties=step_input.run_properties, project=project
         )
@@ -699,15 +696,11 @@ class ChartBuilder:
             if self.step_input.run_properties.versioning.tag
             else self.step_input.run_properties.versioning.pr_number
         )
-        processed_env_vars = (
-            substitute_namespaces(
-                raw_env_vars,
-                {p.to_name for p in self.deploy_set.all_projects},
-                {p.to_name for p in self.deploy_set.projects_to_deploy},
-                pr_identifier,
-            )
-            if self.deploy_set
-            else raw_env_vars
+        processed_env_vars = substitute_namespaces(
+            raw_env_vars,
+            {p.to_name for p in self.step_input.run_properties.projects},
+            {p.to_name for p in self.step_input.run_properties.projects_to_deploy},
+            pr_identifier,
         )
 
         env_vars = [

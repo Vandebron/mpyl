@@ -4,13 +4,10 @@ from pathlib import Path
 
 from attr import dataclass
 
-from src.mpyl.utilities.docker import DockerImageSpec
 from src.mpyl.constants import (
     DEFAULT_CONFIG_FILE_NAME,
     DEFAULT_RUN_PROPERTIES_FILE_NAME,
 )
-from src.mpyl.utilities.pyaml_env import parse_config
-
 from src.mpyl.project import load_project, Target, Project, Stages, Stage
 from src.mpyl.steps.models import (
     RunProperties,
@@ -18,6 +15,8 @@ from src.mpyl.steps.models import (
     ArtifactType,
     Artifact,
 )
+from src.mpyl.utilities.docker import DockerImageSpec
+from src.mpyl.utilities.pyaml_env import parse_config
 from src.mpyl.utilities.repo import Repository, RepoConfig
 from tests import root_test_path
 
@@ -25,7 +24,7 @@ resource_path = root_test_path / "test_resources"
 config_values = parse_config(resource_path / DEFAULT_CONFIG_FILE_NAME)
 properties_values = parse_config(resource_path / DEFAULT_RUN_PROPERTIES_FILE_NAME)
 
-RUN_PROPERTIES = RunProperties.from_configuration(properties_values, config_values, {})
+RUN_PROPERTIES = RunProperties.from_configuration(properties_values, config_values)
 
 RUN_PROPERTIES_PROD = dataclasses.replace(
     RUN_PROPERTIES,
@@ -80,7 +79,23 @@ def safe_load_project(name: str) -> Project:
 
 
 def run_properties_with_plan(plan: dict[Stage, set[Project]]) -> RunProperties:
-    return RunProperties.from_configuration(properties_values, config_values, plan)
+    return RunProperties.from_configuration(
+        properties_values, config_values, plan, all_projects={get_minimal_project()}
+    )
+
+
+def run_properties_prod_with_plan() -> RunProperties:
+    plan = {TestStage.deploy(): {get_minimal_project()}}
+    run_properties_prod = RunProperties.from_configuration(
+        properties_values, config_values, plan, all_projects={get_minimal_project()}
+    )
+    return dataclasses.replace(
+        run_properties_prod,
+        target=Target.PRODUCTION,
+        versioning=dataclasses.replace(
+            RUN_PROPERTIES.versioning, tag="20230829-1234", pr_number=None
+        ),
+    )
 
 
 def get_output() -> Output:

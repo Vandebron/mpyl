@@ -142,6 +142,7 @@ class TestSteps:
             config_values,
             ConsoleProperties("INFO", False, 130),
             [],
+            set(),
             {},
         )
         with pytest.raises(ValidationError) as excinfo:

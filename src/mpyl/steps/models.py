@@ -8,6 +8,7 @@ from typing import Optional, cast, Type
 
 from ruamel.yaml import YAML, yaml_object  # type: ignore
 
+from . import deploy
 from ..project import Project, Stage, Target
 from ..validation import validate
 
@@ -93,6 +94,8 @@ class RunProperties:
     """Settings for the console output"""
     stages: list[Stage]
     """All stage definitions"""
+    projects: set[Project]
+    """All projects"""
     run_plan: dict[Stage, set[Project]]
     """Stages and projects for this run"""
 
@@ -102,8 +105,9 @@ class RunProperties:
         run_plan: dict[Stage, set[Project]],
         revision: str,
         branch: Optional[str],
-        tag: Optional[str],
-        stages: list[dict],
+        tag: Optional[str] = None,
+        stages: Optional[list[dict]] = None,
+        all_projects: Optional[set[Project]] = None,
     ):
         return RunProperties(
             details=RunContext("", "", "", "", "", None),
@@ -111,15 +115,19 @@ class RunProperties:
             versioning=VersioningProperties(revision, branch, 123, tag),
             config=config,
             console=ConsoleProperties("INFO", True, 130),
-            run_plan=run_plan,
-            stages=[Stage(stage["name"], stage["icon"]) for stage in stages],
+            run_plan=run_plan or {},
+            stages=[Stage(stage["name"], stage["icon"]) for stage in stages]
+            if stages
+            else [],
+            projects=all_projects or set(),
         )
 
     @staticmethod
     def from_configuration(
         run_properties: dict,
         config: dict,
-        run_plan: dict[Stage, set[Project]],
+        run_plan: Optional[dict[Stage, set[Project]]] = None,
+        all_projects: Optional[set[Project]] = None,
         cli_tag: Optional[str] = None,
     ):
         build_dict = pkgutil.get_data(__name__, "../schema/run_properties.schema.yml")
@@ -153,11 +161,20 @@ class RunProperties:
             versioning=versioning,
             config=config,
             console=console,
-            run_plan=run_plan,
+            run_plan=run_plan or {},
             stages=[
                 Stage(stage["name"], stage["icon"])
                 for stage in run_properties["stages"]
             ],
+            projects=all_projects or set(),
+        )
+
+    @property
+    def projects_to_deploy(self):
+        return next(
+            project
+            for stage, project in self.run_plan.items()
+            if stage.name == deploy.STAGE_NAME
         )
 
     def to_stage(self, stage_name: str) -> Stage:

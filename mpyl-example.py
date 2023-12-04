@@ -2,12 +2,13 @@ import argparse
 import logging
 import sys
 from logging import Logger
+from pathlib import Path
 
 from rich.console import Console
 from rich.logging import RichHandler
 
 from mpyl import Repository, RepoConfig
-from mpyl.project import Stage
+from mpyl.project import Stage, load_project
 from mpyl.stages.discovery import find_build_set
 
 
@@ -36,11 +37,24 @@ def main(log: Logger, args: argparse.Namespace):
         all=args.all,
     )
     with Repository(RepoConfig.from_config(config)) as repo:
+        project_paths = repo.find_projects()
+        all_projects = set(
+            map(
+                lambda p: load_project(
+                    root_dir=Path(""),
+                    project_path=Path(p),
+                    strict=False,
+                    log=True,
+                    safe=True,
+                ),
+                project_paths,
+            )
+        )
         run_properties = RunProperties.from_configuration(
             run_properties=properties,
             config=config,
             run_plan=find_build_set(
-                repo=repo,
+                all_projects=all_projects,
                 changes_in_branch=(
                     repo.changes_in_branch_including_local()
                     if cli_parameters.local
@@ -55,7 +69,6 @@ def main(log: Logger, args: argparse.Namespace):
                     for stage in properties["stages"]
                 ],
                 build_all=cli_parameters.all,
-                safe_load_projects=True,
                 selected_stage=cli_parameters.stage,
                 selected_projects=cli_parameters.projects,
             ),

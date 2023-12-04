@@ -3,14 +3,13 @@ discovered projects have been invalidated due to changes in the source code sinc
 output artifact."""
 import logging
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Optional
 
-from ..project import Project, load_project
+from ..project import Project
 from ..project import Stage
 from ..steps import deploy
-from ..steps.models import Output, RunProperties
-from ..utilities.repo import Revision, RepoConfig, Repository
+from ..steps.models import Output
+from ..utilities.repo import Revision
 
 
 @dataclass(frozen=True)
@@ -103,27 +102,13 @@ def find_invalidated_projects_for_stage(
 
 
 def find_build_set(
-    repo: Repository,
+    all_projects: set[Project],
     changes_in_branch: list[Revision],
     stages: list[Stage],
     build_all: bool,
-    safe_load_projects: bool,
     selected_stage: Optional[str] = None,
     selected_projects: Optional[str] = None,
 ) -> dict[Stage, set[Project]]:
-    project_paths = repo.find_projects()
-    all_projects = set(
-        map(
-            lambda p: load_project(
-                root_dir=Path(""),
-                project_path=Path(p),
-                strict=False,
-                log=True,
-                safe=safe_load_projects,
-            ),
-            project_paths,
-        )
-    )
     if selected_projects:
         projects_list = selected_projects.split(",")
 
@@ -147,22 +132,6 @@ def find_build_set(
         build_set.update({stage: projects})
 
     return build_set
-
-
-def find_deploy_set(run_properties: RunProperties) -> DeploySet:
-    with Repository(RepoConfig.from_config(run_properties.config)) as repo:
-        project_paths = repo.find_projects()
-        all_projects = set(
-            map(lambda p: load_project(Path(""), Path(p), False), project_paths)
-        )
-        return DeploySet(
-            all_projects,
-            next(
-                project
-                for stage, project in run_properties.run_plan.items()
-                if stage.name == deploy.STAGE_NAME
-            ),
-        )
 
 
 def for_stage(projects: set[Project], stage: Stage) -> set[Project]:

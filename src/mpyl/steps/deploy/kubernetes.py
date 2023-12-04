@@ -14,8 +14,6 @@ from ..models import (
     input_to_artifact,
 )
 from ...project import Target
-from ...stages.discovery import find_deploy_set
-from ...utilities.repo import RepoConfig
 
 
 class DeployKubernetes(Step):
@@ -50,7 +48,7 @@ class DeployKubernetes(Step):
 
     def execute(self, step_input: Input) -> Output:
         properties = step_input.run_properties
-        builder = ChartBuilder(step_input, find_deploy_set(run_properties=properties))
+        builder = ChartBuilder(step_input)
         chart = to_service_chart(builder)
 
         deploy_result = deploy_helm_chart(
