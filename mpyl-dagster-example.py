@@ -11,7 +11,7 @@ from dagster import (
     job,
 )
 
-from mpyl.project import load_project, Project, Stage
+from mpyl.project import load_project, Project
 from mpyl.stages.discovery import find_invalidated_projects_for_stage
 from mpyl.steps import build, test, deploy
 from mpyl.steps.models import RunProperties
@@ -26,7 +26,12 @@ def execute_step(proj: Project, stage: str, dry_run: bool = True) -> StepResult:
     config = parse_config(Path(f"{ROOT_PATH}mpyl_config.yml"))
     with Repository(RepoConfig.from_config(config)) as repo:
         run_properties = RunProperties.for_local_run(
-            config=config, revision=repo.get_sha, branch=repo.get_branch, tag=None
+            config=config,
+            run_plan={},
+            revision=repo.get_sha,
+            branch=repo.get_branch,
+            tag=None,
+            stages=[],
         )
     dagster_logger = get_dagster_logger()
     executor = Steps(dagster_logger, run_properties)

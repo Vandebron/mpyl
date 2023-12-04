@@ -6,13 +6,14 @@ from src.mpyl.steps.models import (
     Output,
     Artifact,
     ArtifactType,
+    RunProperties,
 )
 from src.mpyl.steps.run import RunResult
 from src.mpyl.steps.steps import StepResult
 from src.mpyl.utilities.junit import JunitTestSpec
 from tests import root_test_path
 from tests.test_resources import test_data
-from tests.test_resources.test_data import TestStage
+from tests.test_resources.test_data import TestStage, properties_values, config_values
 
 test_resource_path = root_test_path / "reporting" / "formatting" / "test_resources"
 
@@ -27,13 +28,16 @@ def create_test_result_with_plan() -> RunResult:
     build_projects = [test_data.get_project(), __get_other_project()]
     test_projects = [__get_other_project()]
     deploy_projects = [__get_other_project()]
+    run_plan = {
+        TestStage.build(): set(build_projects),
+        TestStage.test(): set(test_projects),
+        TestStage.deploy(): set(deploy_projects),
+    }
+    run_properties = RunProperties.from_configuration(
+        properties_values, config_values, run_plan
+    )
     return RunResult(
-        run_properties=test_data.RUN_PROPERTIES,
-        run_plan={
-            TestStage.build(): set(build_projects),
-            TestStage.test(): set(test_projects),
-            TestStage.deploy(): set(deploy_projects),
-        },
+        run_properties=run_properties,
     )
 
 

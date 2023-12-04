@@ -142,6 +142,7 @@ class TestSteps:
             config_values,
             ConsoleProperties("INFO", False, 130),
             [],
+            {},
         )
         with pytest.raises(ValidationError) as excinfo:
             Steps(logger=Logger.manager.getLogger("logger"), properties=properties)

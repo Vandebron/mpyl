@@ -92,11 +92,14 @@ class RunProperties:
     console: ConsoleProperties
     """Settings for the console output"""
     stages: list[Stage]
-    """Stage definitions"""
+    """All stage definitions"""
+    run_plan: dict[Stage, set[Project]]
+    """Stages and projects for this run"""
 
     @staticmethod
     def for_local_run(
         config: dict,
+        run_plan: dict[Stage, set[Project]],
         revision: str,
         branch: Optional[str],
         tag: Optional[str],
@@ -108,19 +111,15 @@ class RunProperties:
             versioning=VersioningProperties(revision, branch, 123, tag),
             config=config,
             console=ConsoleProperties("INFO", True, 130),
+            run_plan=run_plan,
             stages=[Stage(stage["name"], stage["icon"]) for stage in stages],
         )
-
-    def to_stage(self, stage_name: str) -> Stage:
-        stage_by_name = next(stage for stage in self.stages if stage.name == stage_name)
-        if stage_by_name:
-            return stage_by_name
-        raise ValueError(f"Stage {stage_name} not found")
 
     @staticmethod
     def from_configuration(
         run_properties: dict,
         config: dict,
+        run_plan: dict[Stage, set[Project]],
         cli_tag: Optional[str] = None,
     ):
         build_dict = pkgutil.get_data(__name__, "../schema/run_properties.schema.yml")
@@ -154,11 +153,18 @@ class RunProperties:
             versioning=versioning,
             config=config,
             console=console,
+            run_plan=run_plan,
             stages=[
                 Stage(stage["name"], stage["icon"])
                 for stage in run_properties["stages"]
             ],
         )
+
+    def to_stage(self, stage_name: str) -> Stage:
+        stage_by_name = next(stage for stage in self.stages if stage.name == stage_name)
+        if stage_by_name:
+            return stage_by_name
+        raise ValueError(f"Stage {stage_name} not found")
 
 
 @yaml_object(yaml)

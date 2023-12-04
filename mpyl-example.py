@@ -6,6 +6,10 @@ from logging import Logger
 from rich.console import Console
 from rich.logging import RichHandler
 
+from mpyl import Repository, RepoConfig
+from mpyl.project import Stage
+from mpyl.stages.discovery import find_build_set
+
 
 def main(log: Logger, args: argparse.Namespace):
     if args.local:
@@ -24,9 +28,38 @@ def main(log: Logger, args: argparse.Namespace):
 
     config = parse_config("mpyl_config.yml")
     properties = parse_config("run_properties.yml")
-    run_properties = RunProperties.from_configuration(
-        run_properties=properties, config=config, cli_tag=args.tag
+    cli_parameters = MpylCliParameters(
+        local=args.local,
+        tag=args.tag,
+        pull_main=True,
+        verbose=args.verbose,
+        all=args.all,
     )
+    with Repository(RepoConfig.from_config(config)) as repo:
+        run_properties = RunProperties.from_configuration(
+            run_properties=properties,
+            config=config,
+            run_plan=find_build_set(
+                repo=repo,
+                changes_in_branch=(
+                    repo.changes_in_branch_including_local()
+                    if cli_parameters.local
+                    else (
+                        repo.changes_in_tagged_commit(cli_parameters.tag)
+                        if cli_parameters.tag
+                        else repo.changes_in_branch()
+                    )
+                ),
+                stages=[
+                    Stage(stage["name"], stage["icon"])
+                    for stage in properties["stages"]
+                ],
+                build_all=cli_parameters.all,
+                safe_load_projects=True,
+                selected_stage=cli_parameters.stage,
+                selected_projects=cli_parameters.projects,
+            ),
+        )
     check = None
     slack_channel = None
     slack_personal = None
@@ -59,14 +92,6 @@ def main(log: Logger, args: argparse.Namespace):
             config=config, branch=run_properties.versioning.branch, logger=log
         )
         accumulator.add(check.start_check())
-
-    cli_parameters = MpylCliParameters(
-        local=args.local,
-        tag=args.tag,
-        pull_main=True,
-        verbose=args.verbose,
-        all=args.all,
-    )
     run_result = run_mpyl(
         run_properties=run_properties,
         cli_parameters=cli_parameters,

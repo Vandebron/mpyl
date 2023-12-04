@@ -33,7 +33,7 @@ def main(logger: Logger):
         config = parse_config("mpyl_config.yml")
         properties = parse_config("run_properties.yml")
         run_properties = RunProperties.from_configuration(
-            run_properties=properties, config=config
+            run_properties=properties, config=config, run_plan={}
         )
 
         commit_check = CommitCheck(config=config, logger=logger)

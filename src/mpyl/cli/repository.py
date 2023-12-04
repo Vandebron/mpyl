@@ -60,7 +60,7 @@ def status(obj: RepoContext):
     """Print the status of the current repository"""
     config = parse_config(obj.config)
     run_properties = RunProperties.from_configuration(
-        parse_config(obj.run_properties), config
+        run_properties=parse_config(obj.run_properties), config=config, run_plan={}
     )
     versioning = run_properties.versioning
     ci_branch = versioning.branch
@@ -174,7 +174,7 @@ def init(obj: RepoContext, url: str, pull: int, branch: str, pristine: bool):
         console.log(f"✅ Repository tracking {repo.remote_url}")
 
         properties = RunProperties.from_configuration(
-            parse_config(obj.run_properties), config
+            run_properties=parse_config(obj.run_properties), config=config, run_plan={}
         )
         pr_number = pull or properties.versioning.pr_number
 

@@ -25,7 +25,7 @@ resource_path = root_test_path / "test_resources"
 config_values = parse_config(resource_path / DEFAULT_CONFIG_FILE_NAME)
 properties_values = parse_config(resource_path / DEFAULT_RUN_PROPERTIES_FILE_NAME)
 
-RUN_PROPERTIES = RunProperties.from_configuration(properties_values, config_values)
+RUN_PROPERTIES = RunProperties.from_configuration(properties_values, config_values, {})
 
 RUN_PROPERTIES_PROD = dataclasses.replace(
     RUN_PROPERTIES,
@@ -77,6 +77,10 @@ def get_spark_project() -> Project:
 
 def safe_load_project(name: str) -> Project:
     return load_project(resource_path, Path(name), True, False, True)
+
+
+def run_properties_with_plan(plan: dict[Stage, set[Project]]) -> RunProperties:
+    return RunProperties.from_configuration(properties_values, config_values, plan)
 
 
 def get_output() -> Output:

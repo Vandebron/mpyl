@@ -16,6 +16,7 @@ from questionary import Choice
 from rich.console import Console
 from rich.markdown import Markdown
 
+from mpyl.stages.discovery import find_build_set
 from . import (
     CliContext,
     CONFIG_PATH_HELP,
@@ -37,7 +38,7 @@ from ..constants import (
     DEFAULT_RUN_PROPERTIES_FILE_NAME,
     BUILD_ARTIFACTS_FOLDER,
 )
-from ..project import load_project, Target
+from ..project import load_project, Target, Stage
 from ..steps.deploy.k8s import DeployConfig
 from ..steps.models import RunProperties
 from ..steps.run import RunResult
@@ -92,7 +93,7 @@ def build(ctx, config, properties, verbose):
     parsed_properties = parse_config(properties)
     parsed_config = parse_config(config)
     console_config = RunProperties.from_configuration(
-        parsed_properties, parsed_config
+        parsed_properties, parsed_config, run_plan={}
     ).console
     console = create_console_logger(
         show_path=console_config.show_paths,
@@ -186,11 +187,33 @@ def run(
         )
         sys.exit(1)
 
+    run_plan = find_build_set(
+        repo=obj.repo,
+        changes_in_branch=(
+            obj.repo.changes_in_branch_including_local()
+            if parameters.local
+            else (
+                obj.repo.changes_in_tagged_commit(parameters.tag)
+                if parameters.tag
+                else obj.repo.changes_in_branch()
+            )
+        ),
+        stages=[
+            Stage(stage["name"], stage["icon"])
+            for stage in obj.run_properties["stages"]
+        ],
+        build_all=parameters.all,
+        safe_load_projects=False,
+        selected_stage=parameters.stage,
+        selected_projects=parameters.projects,
+    )
+
     run_properties = (
-        RunProperties.from_configuration(obj.run_properties, obj.config, tag)
+        RunProperties.from_configuration(obj.run_properties, obj.config, run_plan, tag)
         if ci
         else RunProperties.for_local_run(
             obj.config,
+            run_plan,
             obj.repo.get_sha,
             obj.repo.get_branch,
             tag,
@@ -493,7 +516,9 @@ def artifacts():
 )
 @click.pass_obj
 def pull(obj: CliContext, tag: str, pr: int, path: Path):
-    run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
+    run_properties = RunProperties.from_configuration(
+        run_properties=obj.run_properties, config=obj.config, run_plan={}
+    )
     target_branch = __get_target_branch(run_properties, tag, pr)
 
     build_artifacts = prepare_artifacts_repo(obj=obj, repo_path=path)
@@ -520,7 +545,9 @@ def pull(obj: CliContext, tag: str, pr: int, path: Path):
 )
 @click.pass_obj
 def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: str):
-    run_properties = RunProperties.from_configuration(obj.run_properties, obj.config)
+    run_properties = RunProperties.from_configuration(
+        run_properties=obj.run_properties, config=obj.config, run_plan={}
+    )
     target_branch = __get_target_branch(run_properties, tag, pr)
 
     build_artifacts = prepare_artifacts_repo(obj=obj, repo_path=path)

@@ -102,6 +102,53 @@ def find_invalidated_projects_for_stage(
     )
 
 
+def find_build_set(
+    repo: Repository,
+    changes_in_branch: list[Revision],
+    stages: list[Stage],
+    build_all: bool,
+    safe_load_projects: bool,
+    selected_stage: Optional[str] = None,
+    selected_projects: Optional[str] = None,
+) -> dict[Stage, set[Project]]:
+    project_paths = repo.find_projects()
+    all_projects = set(
+        map(
+            lambda p: load_project(
+                root_dir=Path(""),
+                project_path=Path(p),
+                strict=False,
+                log=True,
+                safe=safe_load_projects,
+            ),
+            project_paths,
+        )
+    )
+    if selected_projects:
+        projects_list = selected_projects.split(",")
+
+    build_set = {}
+
+    for stage in stages:
+        if selected_stage and selected_stage != stage.name:
+            continue
+
+        if build_all or selected_projects:
+            if selected_projects:
+                all_projects = set(
+                    filter(lambda p: p.name in projects_list, all_projects)
+                )
+            projects = for_stage(all_projects, stage)
+        else:
+            projects = find_invalidated_projects_for_stage(
+                all_projects, stage.name, changes_in_branch
+            )
+
+        build_set.update({stage: projects})
+
+    return build_set
+
+
 def find_deploy_set(
     logger: logging.Logger, repo_config: RepoConfig, tag: Optional[str]
 ) -> DeploySet:
