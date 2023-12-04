@@ -9,7 +9,7 @@ from typing import Optional
 from ..project import Project, load_project
 from ..project import Stage
 from ..steps import deploy
-from ..steps.models import Output
+from ..steps.models import Output, RunProperties
 from ..utilities.repo import Revision, RepoConfig, Repository
 
 
@@ -149,23 +149,18 @@ def find_build_set(
     return build_set
 
 
-def find_deploy_set(
-    logger: logging.Logger, repo_config: RepoConfig, tag: Optional[str]
-) -> DeploySet:
-    with Repository(repo_config) as repo:
-        changes_in_branch = (
-            repo.changes_in_tagged_commit(tag)
-            if tag
-            else repo.changes_in_branch_including_local()
-        )
+def find_deploy_set(run_properties: RunProperties) -> DeploySet:
+    with Repository(RepoConfig.from_config(run_properties.config)) as repo:
         project_paths = repo.find_projects()
         all_projects = set(
             map(lambda p: load_project(Path(""), Path(p), False), project_paths)
         )
         return DeploySet(
             all_projects,
-            find_invalidated_projects_for_stage(
-                logger, all_projects, deploy.STAGE_NAME, changes_in_branch
+            next(
+                project
+                for stage, project in run_properties.run_plan.items()
+                if stage.name == deploy.STAGE_NAME
             ),
         )
 
