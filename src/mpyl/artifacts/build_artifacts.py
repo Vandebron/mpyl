@@ -161,35 +161,35 @@ class ArtifactsRepository:
                     project_paths, repo_path, path_transformer
                 )
 
-                if not artifact_repo.has_changes:
+                if artifact_repo.has_changes:
+                    artifact_repo.stage(".")
+                    artifact_repo.commit(f"Revision {revision} at {repository_url}")
+                    cluster_details = (
+                        f"Cluster: {get_argo_folder_name(target=run_properties.target)}"
+                    )
+                    commit_note = (
+                        f"{cluster_details.lower()} \n"
+                        + f"repository: {self.codebase_repo.config.repo_credentials.url} \n"
+                        + f"revision: {revision} \n"
+                        + f"tag: {run_properties.versioning.identifier}"
+                    )
+                    artifact_repo.add_note(note=commit_note)
+                    artifact_repo.push(branch)
+
+                    try:  # to prevent issues with parallel runs pushing to the same branch
+                        self.logger.info("Pushing changes to remote")
+                        artifact_repo.push(branch)
+                    except GitCommandError:
+                        self.logger.info("Retrying push after pulling from remote..")
+                        time.sleep(1)
+                        artifact_repo.pull()
+                        artifact_repo.push(branch)
+
+                    self.logger.info(
+                        f"Pushed {branch} with {copied_paths} copied paths to {artifact_repo.remote_url}"
+                    )
+                else:
                     self.logger.info("No changes detected, nothing to push")
-                    return
-
-                artifact_repo.stage(".")
-                artifact_repo.commit(f"Revision {revision} at {repository_url}")
-                cluster_details = (
-                    f"Cluster: {get_argo_folder_name(target=run_properties.target)}"
-                )
-                commit_note = (
-                    f"{cluster_details.lower()} \n"
-                    + f"repository: {self.codebase_repo.config.repo_credentials.url} \n"
-                    + f"revision: {revision} \n"
-                    + f"tag: {run_properties.versioning.identifier}"
-                )
-                artifact_repo.add_note(note=commit_note)
-
-                try:  # to prevent issues with parallel runs pushing to the same branch
-                    self.logger.info("Pushing changes to remote")
-                    artifact_repo.push(branch)
-                except GitCommandError:
-                    self.logger.info("Retrying push after pulling from remote..")
-                    time.sleep(1)
-                    artifact_repo.pull()
-                    artifact_repo.push(branch)
-
-                self.logger.info(
-                    f"Pushed {branch} with {copied_paths} copied paths to {artifact_repo.remote_url}"
-                )
 
                 if (
                     path_transformer.artifact_type() == ArtifactType.ARGO
