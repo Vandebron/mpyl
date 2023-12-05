@@ -600,7 +600,7 @@ def validate_project(yaml_values: dict) -> dict:
 def get_project_root_dir(project_path: str) -> str:
     if project_path.endswith(".yml"):
         try:
-            return str(Path(project_path).parents[1])
+            return str(Path(project_path).parents[1]) + "/"
         except IndexError:
             pass
     return project_path
