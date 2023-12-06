@@ -35,7 +35,13 @@ spec:
           name: job
         spec:
           containers:
-          - env:
+          - args:
+            - --env
+            - test
+            command:
+            - python
+            - run.py
+            env:
             - name: SOME_SECRET_ENV
               valueFrom:
                 secretKeyRef:
