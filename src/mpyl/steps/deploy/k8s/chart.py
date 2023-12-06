@@ -360,6 +360,16 @@ class ChartBuilder:
             env=self._get_env_vars(),
             image_pull_policy="Always",
             resources=self._get_resources(),
+            command=(
+                self.project.kubernetes.command.get_value(self.target).split(" ")
+                if self.project.kubernetes.command
+                else None
+            ),
+            args=(
+                self.project.kubernetes.args.get_value(self.target).split(" ")
+                if self.project.kubernetes.args
+                else None
+            ),
         )
 
         pod_template = V1PodTemplateSpec(
