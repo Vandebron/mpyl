@@ -54,6 +54,7 @@ def main(log: Logger, args: argparse.Namespace):
             run_properties=properties,
             config=config,
             run_plan=find_build_set(
+                logger=log,
                 all_projects=all_projects,
                 changes_in_branch=(
                     repo.changes_in_branch_including_local()

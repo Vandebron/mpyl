@@ -1,5 +1,6 @@
 """Commands related to build"""
 import asyncio
+import logging
 import pickle
 import shutil
 import sys
@@ -200,6 +201,7 @@ def run(
         )
     )
     run_plan = find_build_set(
+        logger=logging.getLogger("mpyl"),
         all_projects=all_projects,
         changes_in_branch=(
             obj.repo.changes_in_branch_including_local()

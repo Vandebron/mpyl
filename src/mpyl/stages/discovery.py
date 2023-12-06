@@ -102,6 +102,7 @@ def find_invalidated_projects_for_stage(
 
 
 def find_build_set(
+    logger: logging.Logger,
     all_projects: set[Project],
     changes_in_branch: list[Revision],
     stages: list[Stage],
@@ -126,7 +127,10 @@ def find_build_set(
             projects = for_stage(all_projects, stage)
         else:
             projects = find_invalidated_projects_for_stage(
-                all_projects, stage.name, changes_in_branch
+                logger, all_projects, stage.name, changes_in_branch
+            )
+            logger.debug(
+                f"Invalidated projects for stage {stage.name}: {[p.name for p in projects]}"
             )
 
         build_set.update({stage: projects})
