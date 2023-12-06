@@ -42,6 +42,6 @@ def add_commands():
 
 
 def main():
-    _disable_package_loggers(["markdown"])
+    _disable_package_loggers(["markdown", "asyncio"])
     add_commands()
     main_group()  # pylint: disable = no-value-for-parameter
