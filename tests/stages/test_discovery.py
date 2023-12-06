@@ -78,7 +78,7 @@ class TestDiscovery:
         assert 1 == len(invalidated)
 
     def test_should_correctly_check_root_path(self):
-        res = is_invalidated(
+        assert not is_invalidated(
             self.logger,
             project=load_project(
                 root_test_path, Path("projects/sbt-service/deployment/project.yml")
@@ -86,7 +86,6 @@ class TestDiscovery:
             stage="build",
             path="projects/sbt-service-other/file.py",
         )
-        assert not res
 
     def test_invalidation_logic(self):
         test_output = Path(
