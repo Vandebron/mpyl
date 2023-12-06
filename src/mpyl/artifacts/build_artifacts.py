@@ -156,17 +156,18 @@ class ArtifactsRepository:
                     artifact_repo.checkout_branch(branch_name=branch)
                 else:
                     artifact_repo.create_branch(branch_name=branch)
+                    self.logger.info(f"Created branch '{branch}'")
 
                 copied_paths = self.copy_files(
                     project_paths, repo_path, path_transformer
+                )
+                cluster_details = (
+                    f"Cluster: {get_argo_folder_name(target=run_properties.target)}"
                 )
 
                 if artifact_repo.has_changes:
                     artifact_repo.stage(".")
                     artifact_repo.commit(f"Revision {revision} at {repository_url}")
-                    cluster_details = (
-                        f"Cluster: {get_argo_folder_name(target=run_properties.target)}"
-                    )
                     commit_note = (
                         f"{cluster_details.lower()} \n"
                         + f"repository: {self.codebase_repo.config.repo_credentials.url} \n"
@@ -242,7 +243,11 @@ class ArtifactsRepository:
         branch: str,
     ):
         github = Github(login_or_token=get_token(github_config))
-        body = f"""
+        repo = github.get_repo(github_config.repository)
+        open_pulls = repo.get_pulls(head=branch)
+
+        if open_pulls.totalCount == 0:
+            body = f"""
 ## 🚀 Deploying
 Docker tag: [{run_properties.versioning.identifier}]{f'({run_properties.details.change_url})' if run_properties.details.change_url else ''}
 Commit: [{revision}]({self.codebase_repo.config.repo_credentials.url}/commit/{revision})
@@ -252,11 +257,15 @@ Commit: [{revision}]({self.codebase_repo.config.repo_credentials.url}/commit/{re
 
 ## 🧑‍💻️ Started by
 [{run_properties.details.user}]
-                        """
-        repo = github.get_repo(github_config.repository)
-        repo.create_pull(
-            title=branch,
-            body=body,
-            head=branch,
-            base="main",
-        )
+            """
+            repo.create_pull(
+                title=branch,
+                body=body,
+                head=branch,
+                base="main",
+            )
+            self.logger.info(
+                f"Created pr in repo '{github_config.repository}' for branch '{branch}'"
+            )
+        else:
+            self.logger.info(f"PR for branch '{branch}' is already open, doing nothing")
