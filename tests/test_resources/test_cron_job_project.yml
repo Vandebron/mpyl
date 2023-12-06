@@ -18,6 +18,10 @@ deployment:
         acceptance: "Acceptance"
         production: "Production"
   kubernetes:
+    command:
+      all: python run.py
+    args:
+      all: --env test
     job:
       cron:
         suspend: true
