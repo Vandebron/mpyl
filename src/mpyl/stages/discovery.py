@@ -1,6 +1,7 @@
 """ Discovery of projects that are relevant to a specific `mpyl.stage.Stage` . Determine which of the
 discovered projects have been invalidated due to changes in the source code since the last build of the project's
 output artifact."""
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -18,7 +19,9 @@ class DeploySet:
     projects_to_deploy: set[Project]
 
 
-def is_invalidated(project: Project, stage: str, path: str) -> bool:
+def is_invalidated(
+    logger: logging.Logger, project: Project, stage: str, path: str
+) -> bool:
     deps = project.dependencies
     deps_for_stage = deps.set_for_stage(stage) if deps else {}
 
@@ -26,6 +29,14 @@ def is_invalidated(project: Project, stage: str, path: str) -> bool:
         next(filter(path.startswith, deps_for_stage), None) if deps else None
     )
     startswith: bool = path.startswith(project.root_path)
+    if touched_dependency:
+        logger.debug(
+            f"Project {project.name}: {path} touched dependency {touched_dependency}"
+        )
+    if startswith:
+        logger.debug(
+            f"Project {project.name}: {path} touched project root {project.root_path}"
+        )
     return startswith or touched_dependency is not None
 
 
@@ -58,27 +69,42 @@ def _to_relevant_changes(
 
 
 def _are_invalidated(
-    project: Project, stage: str, change_history: list[Revision]
+    logger: logging.Logger, project: Project, stage: str, change_history: list[Revision]
 ) -> bool:
     if project.stages.for_stage(stage) is None:
         return False
 
     relevant_changes = _to_relevant_changes(project, stage, change_history)
     return (
-        len(set(filter(lambda c: is_invalidated(project, stage, c), relevant_changes)))
+        len(
+            set(
+                filter(
+                    lambda c: is_invalidated(logger, project, stage, c),
+                    relevant_changes,
+                )
+            )
+        )
         > 0
     )
 
 
 def find_invalidated_projects_for_stage(
-    all_projects: set[Project], stage: str, change_history: list[Revision]
+    logger: logging.Logger,
+    all_projects: set[Project],
+    stage: str,
+    change_history: list[Revision],
 ) -> set[Project]:
     return set(
-        filter(lambda p: _are_invalidated(p, stage, change_history), all_projects)
+        filter(
+            lambda p: _are_invalidated(logger, p, stage, change_history),
+            all_projects,
+        )
     )
 
 
-def find_deploy_set(repo_config: RepoConfig, tag: Optional[str]) -> DeploySet:
+def find_deploy_set(
+    logger: logging.Logger, repo_config: RepoConfig, tag: Optional[str]
+) -> DeploySet:
     with Repository(repo_config) as repo:
         changes_in_branch = (
             repo.changes_in_tagged_commit(tag)
@@ -92,7 +118,7 @@ def find_deploy_set(repo_config: RepoConfig, tag: Optional[str]) -> DeploySet:
         return DeploySet(
             all_projects,
             find_invalidated_projects_for_stage(
-                all_projects, deploy.STAGE_NAME, changes_in_branch
+                logger, all_projects, deploy.STAGE_NAME, changes_in_branch
             ),
         )
 

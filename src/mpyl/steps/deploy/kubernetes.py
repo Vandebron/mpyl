@@ -53,6 +53,7 @@ class DeployKubernetes(Step):
         builder = ChartBuilder(
             step_input,
             find_deploy_set(
+                logger=self._logger,
                 repo_config=RepoConfig.from_config(properties.config),
                 tag=step_input.run_properties.versioning.tag,
             ),

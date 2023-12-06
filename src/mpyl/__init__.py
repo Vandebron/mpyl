@@ -7,6 +7,7 @@
 
 .. include:: ../../releases/README.md
 """
+import logging
 
 import click
 
@@ -18,6 +19,13 @@ from .cli.projects import projects
 from .cli.repository import repository
 from .utilities.pyaml_env import parse_config
 from .utilities.repo import RepoConfig, Repository
+
+
+def _disable_package_loggers(offending_loggers: list[str]):
+    for name, _ in logging.root.manager.loggerDict.items():  # pylint: disable=no-member
+        for offending_logger in offending_loggers:
+            if name.startswith(offending_logger):
+                logging.getLogger(name).setLevel(logging.WARNING)
 
 
 @click.group(name="mpyl", help="Command Line Interface for MPyL")
@@ -34,5 +42,6 @@ def add_commands():
 
 
 def main():
+    _disable_package_loggers(["markdown", "asyncio"])
     add_commands()
     main_group()  # pylint: disable = no-value-for-parameter
