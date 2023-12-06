@@ -3,7 +3,7 @@ from pathlib import Path
 
 from ruamel.yaml import YAML  # type: ignore
 
-from mpyl.project import load_project
+from src.mpyl.project import load_project
 from src.mpyl.constants import BUILD_ARTIFACTS_FOLDER
 from src.mpyl.projects.find import load_projects
 from src.mpyl.stages.discovery import (
