@@ -22,7 +22,7 @@ from .utilities.repo import RepoConfig, Repository
 
 
 def _disable_package_loggers(offending_loggers: list[str]):
-    for name, _ in logging.root.manager.loggerDict.items():  # disable = no-member
+    for name, _ in logging.root.manager.loggerDict.items():  # pylint: disable=no-member
         for offending_logger in offending_loggers:
             if name.startswith(offending_logger):
                 logging.getLogger(name).setLevel(logging.WARNING)
