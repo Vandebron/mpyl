@@ -88,7 +88,7 @@ class ManifestPathTransformer(PathTransformer):
         namespace = get_namespace(run_properties=self.run_properties, project=project)
         return Path(
             "k8s-manifests",
-            project.name,
+            project.name.lower(),
             argo_folder_name,
             namespace,
         )
