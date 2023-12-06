@@ -258,14 +258,14 @@ Commit: [{revision}]({self.codebase_repo.config.repo_credentials.url}/commit/{re
 ## 🧑‍💻️ Started by
 [{run_properties.details.user}]
             """
-            repo.create_pull(
+            pr = repo.create_pull(
                 title=branch,
                 body=body,
                 head=branch,
                 base="main",
             )
             self.logger.info(
-                f"Created pr in repo '{github_config.repository}' for branch '{branch}'"
+                f"Created pr in repo '{github_config.repository}' for branch '{branch}': {pr.html_url}"
             )
         else:
             self.logger.info(f"PR for branch '{branch}' is already open, doing nothing")
