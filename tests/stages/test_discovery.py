@@ -3,11 +3,13 @@ from pathlib import Path
 
 from ruamel.yaml import YAML  # type: ignore
 
+from mpyl.project import load_project
 from src.mpyl.constants import BUILD_ARTIFACTS_FOLDER
 from src.mpyl.projects.find import load_projects
 from src.mpyl.stages.discovery import (
     find_invalidated_projects_for_stage,
     output_invalidated,
+    is_invalidated,
 )
 from src.mpyl.steps import Output
 from src.mpyl.steps import build, test, deploy
@@ -74,6 +76,17 @@ class TestDiscovery:
             [Revision(0, "hash", {"projects/job/file.py", "some_file.txt"})],
         )
         assert 1 == len(invalidated)
+
+    def test_should_correctly_check_root_path(self):
+        res = is_invalidated(
+            self.logger,
+            project=load_project(
+                root_test_path, Path("projects/sbt-service/deployment/project.yml")
+            ),
+            stage="build",
+            path="projects/sbt-service-other/file.py",
+        )
+        assert not res
 
     def test_invalidation_logic(self):
         test_output = Path(
