@@ -1,5 +1,23 @@
 # Release notes
 
+## MPyL 1.4.8
+
+
+#### Discovery
+
+Add debug logging to build plan discovery methods
+This provides more explanation on _why_ certain projects are selected for each stage
+Can be invoked by setting the `--verbose` for the `build` subcommand, e.g. `mpyl build --verbose status`
+
+#### Bug fixes
+- Add `command` and `args` fields to Kubernetes jobs
+- Fixes a bug when a non-changed project is selected whose base path includes fully a changed file's path.
+I.e. when the changed file is `projects/project-name/src/main.py` and a project's base path is `projects/project-name-other`,
+this other project was wrongly selected as changed.
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.8)
+
 ## MPyL 1.4.7
 
 
