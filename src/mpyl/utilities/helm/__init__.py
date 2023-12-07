@@ -2,8 +2,8 @@
 Helper methods for helm deployments
 """
 
-from mpyl.project import Target
-from mpyl.steps.models import RunProperties
+from ...project import Target
+from ...steps.models import RunProperties
 
 
 def convert_to_helm_release_name(name: str, tag: str) -> str:

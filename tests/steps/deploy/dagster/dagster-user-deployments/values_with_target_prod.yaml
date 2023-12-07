@@ -21,3 +21,10 @@ deployments:
     enabled: true
   name: example-dagster-user-code
   port: 3030
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 50m
+    limits:
+      memory: 512Mi
+      cpu: 1000m
