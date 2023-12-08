@@ -60,7 +60,10 @@ def status(obj: RepoContext):
     """Print the status of the current repository"""
     config = parse_config(obj.config)
     run_properties = initiate_run_properties(
-        config=config, properties=parse_config(obj.run_properties)
+        config=config,
+        properties=parse_config(obj.run_properties),
+        run_plan={},
+        all_projects=set(),
     )
     versioning = run_properties.versioning
     ci_branch = versioning.branch

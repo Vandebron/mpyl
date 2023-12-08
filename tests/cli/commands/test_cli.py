@@ -13,12 +13,27 @@ from tests.test_resources.test_data import assert_roundtrip
 class TestCli:
     resource_path = root_test_path / "cli" / "test_resources"
     config_path = root_test_path / "test_resources/mpyl_config.yml"
+    run_properties_path = root_test_path / "test_resources/run_properties.yml"
     runner = CliRunner()
     add_commands()
 
     def test_cli_help_output(self):
         result = self.runner.invoke(main_group, ["--help"])
         assert_roundtrip(self.resource_path / "main_help_text.txt", result.output)
+
+    def test_repo_status(self):
+        result = self.runner.invoke(
+            main_group,
+            [
+                "repo",
+                "-c",
+                str(self.config_path),
+                "-p",
+                str(self.run_properties_path),
+                "status",
+            ],
+        )
+        assert result.exception is None
 
     def test_build_projects_help_output(self):
         result = self.runner.invoke(main_group, ["build", "--help"])
