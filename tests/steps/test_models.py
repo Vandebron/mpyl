@@ -8,7 +8,8 @@ from src.mpyl.constants import (
     DEFAULT_CONFIG_FILE_NAME,
     DEFAULT_RUN_PROPERTIES_FILE_NAME,
 )
-from src.mpyl.steps.models import RunProperties, VersioningProperties
+from src.mpyl.steps.models import VersioningProperties
+from src.mpyl.steps.run_properties import initiate_run_properties
 from src.mpyl.utilities.pyaml_env import parse_config
 from tests import root_test_path
 
@@ -24,9 +25,12 @@ class TestModels:
 
     def test_should_return_error_if_validation_fails(self):
         with pytest.raises(ValidationError) as excinfo:
-            RunProperties.from_configuration(
-                parse_config(self.resource_path / "run_properties_invalid.yml"),
-                self.config_values,
+            initiate_run_properties(
+                config=self.config_values,
+                properties=parse_config(
+                    self.resource_path / "run_properties_invalid.yml"
+                ),
+                run_plan={},
             )
 
         assert "'stages' is a required property" in excinfo.value.message
@@ -36,8 +40,10 @@ class TestModels:
         valid_run_properties_values = parse_config(
             root_test_path / "../run_properties.yml"
         )
-        run_properties = RunProperties.from_configuration(
-            valid_run_properties_values, self.config_values
+        run_properties = initiate_run_properties(
+            config=self.config_values,
+            properties=valid_run_properties_values,
+            run_plan={},
         )
 
         assert run_properties

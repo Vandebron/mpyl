@@ -11,7 +11,7 @@ from . import (
     create_console_logger,
 )
 from ..constants import DEFAULT_CONFIG_FILE_NAME, DEFAULT_RUN_PROPERTIES_FILE_NAME
-from ..steps.models import RunProperties
+from ..steps.run_properties import initiate_run_properties
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
 
@@ -59,8 +59,8 @@ def repository(ctx, config, properties, verbose):
 def status(obj: RepoContext):
     """Print the status of the current repository"""
     config = parse_config(obj.config)
-    run_properties = RunProperties.from_configuration(
-        parse_config(obj.run_properties), config
+    run_properties = initiate_run_properties(
+        config=config, properties=parse_config(obj.run_properties)
     )
     versioning = run_properties.versioning
     ci_branch = versioning.branch
@@ -173,8 +173,8 @@ def init(obj: RepoContext, url: str, pull: int, branch: str, pristine: bool):
 
         console.log(f"✅ Repository tracking {repo.remote_url}")
 
-        properties = RunProperties.from_configuration(
-            parse_config(obj.run_properties), config
+        properties = initiate_run_properties(
+            config=config, properties=parse_config(obj.run_properties), run_plan={}
         )
         pr_number = pull or properties.versioning.pr_number
 

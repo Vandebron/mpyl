@@ -1,7 +1,6 @@
 """Simple MPyL build runner"""
 
 import logging
-from pathlib import Path
 from typing import Optional
 
 from jsonschema import ValidationError
@@ -11,56 +10,22 @@ from rich.markdown import Markdown
 
 from .cli import CliContext, MpylCliParameters
 from .constants import DEFAULT_RUN_PROPERTIES_FILE_NAME
-from .project import Stage, load_project
 from .reporting.formatting.markdown import (
     execution_plan_as_markdown,
     run_result_to_markdown,
 )
 from .reporting.targets import Reporter
-from .stages.discovery import find_build_set
 from .steps import deploy
 from .steps.collection import StepsCollection
 from .steps.models import RunProperties
 from .steps.run import RunResult
+from .steps.run_properties import initiate_run_properties
 from .steps.steps import Steps, ExecutionException
 
 
 def print_status(obj: CliContext, cli_params: MpylCliParameters):
-    all_projects = set(
-        map(
-            lambda p: load_project(
-                root_dir=Path(""),
-                project_path=Path(p),
-                strict=False,
-                log=True,
-                safe=True,
-            ),
-            obj.repo.find_projects(),
-        )
-    )
-    run_properties = RunProperties.from_configuration(
-        run_properties=obj.run_properties,
-        config=obj.config,
-        run_plan=find_build_set(
-            logger=logging.getLogger("mpyl"),
-            all_projects=all_projects,
-            changes_in_branch=(
-                obj.repo.changes_in_branch_including_local()
-                if cli_params.local
-                else (
-                    obj.repo.changes_in_tagged_commit(cli_params.tag)
-                    if cli_params.tag
-                    else obj.repo.changes_in_branch()
-                )
-            ),
-            stages=[
-                Stage(stage["name"], stage["icon"])
-                for stage in obj.run_properties["stages"]
-            ],
-            build_all=cli_params.all,
-            selected_stage=cli_params.stage,
-            selected_projects=cli_params.projects,
-        ),
+    run_properties = initiate_run_properties(
+        config=obj.config, properties=obj.run_properties, cli_parameters=cli_params
     )
     console = obj.console
     console.print(f"MPyL log level is set to {run_properties.console.log_level}")

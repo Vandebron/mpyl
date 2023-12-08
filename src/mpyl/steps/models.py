@@ -105,8 +105,8 @@ class RunProperties:
         run_plan: dict[Stage, set[Project]],
         revision: str,
         branch: Optional[str],
+        stages: list[Stage],
         tag: Optional[str] = None,
-        stages: Optional[list[dict]] = None,
         all_projects: Optional[set[Project]] = None,
     ):
         return RunProperties(
@@ -116,9 +116,7 @@ class RunProperties:
             config=config,
             console=ConsoleProperties("INFO", True, 130),
             run_plan=run_plan or {},
-            stages=[Stage(stage["name"], stage["icon"]) for stage in stages]
-            if stages
-            else [],
+            stages=stages,
             projects=all_projects or set(),
         )
 
@@ -126,7 +124,7 @@ class RunProperties:
     def from_configuration(
         run_properties: dict,
         config: dict,
-        run_plan: Optional[dict[Stage, set[Project]]] = None,
+        run_plan: Optional[dict[Stage, set[Project]]],
         all_projects: Optional[set[Project]] = None,
         cli_tag: Optional[str] = None,
     ):

@@ -2,27 +2,22 @@ import argparse
 import logging
 import sys
 from logging import Logger
-from pathlib import Path
 
 from rich.console import Console
 from rich.logging import RichHandler
-
-from mpyl import Repository, RepoConfig
-from mpyl.project import Stage, load_project
-from mpyl.stages.discovery import find_build_set
 
 
 def main(log: Logger, args: argparse.Namespace):
     if args.local:
         from src.mpyl.reporting.targets.jira import JiraReporter
-        from src.mpyl.steps.models import RunProperties
+        from src.mpyl.steps.run_properties import initiate_run_properties
         from src.mpyl.utilities.pyaml_env import parse_config
         from src.mpyl.cli import MpylCliParameters
         from mpyl.build import run_mpyl
 
     else:
         from mpyl.reporting.targets.jira import JiraReporter
-        from mpyl.steps.models import RunProperties
+        from mpyl.steps.run_properties import initiate_run_properties
         from mpyl.utilities.pyaml_env import parse_config
         from mpyl.build import run_mpyl
         from mpyl.cli import MpylCliParameters
@@ -36,44 +31,10 @@ def main(log: Logger, args: argparse.Namespace):
         verbose=args.verbose,
         all=args.all,
     )
-    with Repository(RepoConfig.from_config(config)) as repo:
-        project_paths = repo.find_projects()
-        all_projects = set(
-            map(
-                lambda p: load_project(
-                    root_dir=Path(""),
-                    project_path=Path(p),
-                    strict=False,
-                    log=True,
-                    safe=True,
-                ),
-                project_paths,
-            )
-        )
-        run_properties = RunProperties.from_configuration(
-            run_properties=properties,
-            config=config,
-            run_plan=find_build_set(
-                logger=log,
-                all_projects=all_projects,
-                changes_in_branch=(
-                    repo.changes_in_branch_including_local()
-                    if cli_parameters.local
-                    else (
-                        repo.changes_in_tagged_commit(cli_parameters.tag)
-                        if cli_parameters.tag
-                        else repo.changes_in_branch()
-                    )
-                ),
-                stages=[
-                    Stage(stage["name"], stage["icon"])
-                    for stage in properties["stages"]
-                ],
-                build_all=cli_parameters.all,
-                selected_stage=cli_parameters.stage,
-                selected_projects=cli_parameters.projects,
-            ),
-        )
+    run_properties = initiate_run_properties(
+        config=config, properties=properties, cli_parameters=cli_parameters
+    )
+
     check = None
     slack_channel = None
     slack_personal = None

@@ -1,6 +1,5 @@
 """Commands related to build"""
 import asyncio
-import logging
 import pickle
 import shutil
 import sys
@@ -38,11 +37,11 @@ from ..constants import (
     DEFAULT_RUN_PROPERTIES_FILE_NAME,
     BUILD_ARTIFACTS_FOLDER,
 )
-from ..project import load_project, Target, Stage
-from ..stages.discovery import find_build_set
+from ..project import load_project, Target
 from ..steps.deploy.k8s import DeployConfig
 from ..steps.models import RunProperties
 from ..steps.run import RunResult
+from ..steps.run_properties import initiate_run_properties
 from ..utilities.github import GithubConfig
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
@@ -93,8 +92,8 @@ def build(ctx, config, properties, verbose):
     """Pipeline build commands"""
     parsed_properties = parse_config(properties)
     parsed_config = parse_config(config)
-    console_config = RunProperties.from_configuration(
-        parsed_properties, parsed_config
+    console_config = initiate_run_properties(
+        properties=parsed_properties, config=parsed_config, run_plan={}
     ).console
     console = create_console_logger(
         show_path=console_config.show_paths,
@@ -188,55 +187,9 @@ def run(
         )
         sys.exit(1)
 
-    all_projects = set(
-        map(
-            lambda p: load_project(
-                root_dir=Path(""),
-                project_path=Path(p),
-                strict=False,
-                log=True,
-                safe=True,
-            ),
-            obj.repo.find_projects(),
-        )
+    run_properties = initiate_run_properties(
+        config=obj.config, properties=obj.run_properties, cli_parameters=parameters
     )
-    run_plan = find_build_set(
-        logger=logging.getLogger("mpyl"),
-        all_projects=all_projects,
-        changes_in_branch=(
-            obj.repo.changes_in_branch_including_local()
-            if parameters.local
-            else (
-                obj.repo.changes_in_tagged_commit(parameters.tag)
-                if parameters.tag
-                else obj.repo.changes_in_branch()
-            )
-        ),
-        stages=[
-            Stage(stage["name"], stage["icon"])
-            for stage in obj.run_properties["stages"]
-        ],
-        build_all=parameters.all,
-        selected_stage=parameters.stage,
-        selected_projects=parameters.projects,
-    )
-
-    run_properties = (
-        RunProperties.from_configuration(
-            obj.run_properties, obj.config, run_plan, all_projects, tag
-        )
-        if ci
-        else RunProperties.for_local_run(
-            obj.config,
-            run_plan,
-            obj.repo.get_sha,
-            obj.repo.get_branch,
-            tag,
-            obj.run_properties["stages"],
-            all_projects,
-        )
-    )
-
     run_result = run_mpyl(
         run_properties=run_properties, cli_parameters=parameters, reporter=None
     )
@@ -532,8 +485,8 @@ def artifacts():
 )
 @click.pass_obj
 def pull(obj: CliContext, tag: str, pr: int, path: Path):
-    run_properties = RunProperties.from_configuration(
-        run_properties=obj.run_properties, config=obj.config
+    run_properties = initiate_run_properties(
+        config=obj.config, properties=obj.run_properties
     )
     target_branch = __get_target_branch(run_properties, tag, pr)
 
@@ -561,8 +514,8 @@ def pull(obj: CliContext, tag: str, pr: int, path: Path):
 )
 @click.pass_obj
 def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: str):
-    run_properties = RunProperties.from_configuration(
-        run_properties=obj.run_properties, config=obj.config
+    run_properties = initiate_run_properties(
+        config=obj.config, properties=obj.run_properties
     )
     target_branch = __get_target_branch(run_properties, tag, pr)
 
