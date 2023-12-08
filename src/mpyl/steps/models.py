@@ -106,8 +106,8 @@ class RunProperties:
         revision: str,
         branch: Optional[str],
         stages: list[Stage],
-        tag: Optional[str] = None,
-        all_projects: Optional[set[Project]] = None,
+        all_projects: set[Project],
+        tag: Optional[str],
     ):
         return RunProperties(
             details=RunContext("", "", "", "", "", None),
@@ -115,18 +115,18 @@ class RunProperties:
             versioning=VersioningProperties(revision, branch, 123, tag),
             config=config,
             console=ConsoleProperties("INFO", True, 130),
-            run_plan=run_plan or {},
+            run_plan=run_plan,
             stages=stages,
-            projects=all_projects or set(),
+            projects=all_projects,
         )
 
     @staticmethod
     def from_configuration(
         run_properties: dict,
         config: dict,
-        run_plan: Optional[dict[Stage, set[Project]]],
-        all_projects: Optional[set[Project]] = None,
-        cli_tag: Optional[str] = None,
+        run_plan: dict[Stage, set[Project]],
+        all_projects: set[Project],
+        cli_tag: Optional[str],
     ):
         build_dict = pkgutil.get_data(__name__, "../schema/run_properties.schema.yml")
 
@@ -159,12 +159,12 @@ class RunProperties:
             versioning=versioning,
             config=config,
             console=console,
-            run_plan=run_plan or {},
+            run_plan=run_plan,
             stages=[
                 Stage(stage["name"], stage["icon"])
                 for stage in run_properties["stages"]
             ],
-            projects=all_projects or set(),
+            projects=all_projects,
         )
 
     @property

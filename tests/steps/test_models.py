@@ -31,6 +31,7 @@ class TestModels:
                     self.resource_path / "run_properties_invalid.yml"
                 ),
                 run_plan={},
+                all_projects=set(),
             )
 
         assert "'stages' is a required property" in excinfo.value.message
@@ -44,6 +45,7 @@ class TestModels:
             config=self.config_values,
             properties=valid_run_properties_values,
             run_plan={},
+            all_projects=set(),
         )
 
         assert run_properties

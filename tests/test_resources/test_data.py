@@ -95,7 +95,10 @@ def run_properties_with_plan(plan: dict[Stage, set[Project]]) -> RunProperties:
 def run_properties_prod_with_plan() -> RunProperties:
     plan = {TestStage.deploy(): {get_minimal_project()}}
     run_properties_prod = initiate_run_properties(
-        config=config_values, properties=properties_values, run_plan=plan
+        config=config_values,
+        properties=properties_values,
+        run_plan=plan,
+        all_projects={get_minimal_project()},
     )
     return dataclasses.replace(
         run_properties_prod,
@@ -103,7 +106,6 @@ def run_properties_prod_with_plan() -> RunProperties:
         versioning=dataclasses.replace(
             RUN_PROPERTIES.versioning, tag="20230829-1234", pr_number=None
         ),
-        projects={get_minimal_project()},
     )
 
 

@@ -24,16 +24,16 @@ def create_test_result_with_plan() -> RunResult:
     build_projects = [test_data.get_project(), __get_other_project()]
     test_projects = [__get_other_project()]
     deploy_projects = [__get_other_project()]
-    run_plan = {
-        TestStage.build(): set(build_projects),
-        TestStage.test(): set(test_projects),
-        TestStage.deploy(): set(deploy_projects),
-    }
-    run_properties = initiate_run_properties(
-        config=config_values, properties=properties_values, run_plan=run_plan
-    )
     return RunResult(
-        run_properties=run_properties,
+        run_properties=initiate_run_properties(
+            config=config_values,
+            properties=properties_values,
+            run_plan={
+                TestStage.build(): set(build_projects),
+                TestStage.test(): set(test_projects),
+                TestStage.deploy(): set(deploy_projects),
+            },
+        ),
     )
 
 

@@ -85,7 +85,10 @@ class TestBuildCommand:
         projects = {get_project_with_stages({"build": "Throwing Build"})}
         run_plan = {TestStage.build(): projects}
         run_properties = initiate_run_properties(
-            config=config_values, properties=properties_values, run_plan=run_plan
+            config=config_values,
+            properties=properties_values,
+            run_plan=run_plan,
+            all_projects=projects,
         )
         accumulator = RunResult(run_properties=run_properties)
         logger = logging.getLogger()

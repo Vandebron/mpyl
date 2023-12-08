@@ -62,7 +62,7 @@ class TestKubernetesChart:
                 TestStage.test(): projects,
                 TestStage.deploy(): projects,
             }
-            run_properties = test_data.run_properties_with_plan(run_plan)
+            run_properties = test_data.run_properties_with_plan(plan=run_plan)
         required_artifact = Artifact(
             artifact_type=ArtifactType.DOCKER_IMAGE,
             revision="revision",

@@ -177,7 +177,10 @@ def init(obj: RepoContext, url: str, pull: int, branch: str, pristine: bool):
         console.log(f"✅ Repository tracking {repo.remote_url}")
 
         properties = initiate_run_properties(
-            config=config, properties=parse_config(obj.run_properties), run_plan={}
+            config=config,
+            properties=parse_config(obj.run_properties),
+            run_plan={},
+            all_projects=set(),
         )
         pr_number = pull or properties.versioning.pr_number
 

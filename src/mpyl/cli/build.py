@@ -93,7 +93,10 @@ def build(ctx, config, properties, verbose):
     parsed_properties = parse_config(properties)
     parsed_config = parse_config(config)
     console_config = initiate_run_properties(
-        properties=parsed_properties, config=parsed_config, run_plan={}
+        properties=parsed_properties,
+        config=parsed_config,
+        run_plan={},
+        all_projects=set(),
     ).console
     console = create_console_logger(
         show_path=console_config.show_paths,
