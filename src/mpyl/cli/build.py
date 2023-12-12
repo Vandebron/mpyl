@@ -489,7 +489,8 @@ def pull(obj: CliContext, tag: str, pr: int, path: Path):
     run_properties = initiate_run_properties(
         config=obj.config,
         properties=obj.run_properties,
-        cli_parameters=MpylCliParameters(tag=tag),
+        run_plan={},
+        all_projects=set(),
     )
     target_branch = __get_target_branch(run_properties, tag, pr)
 
@@ -520,7 +521,8 @@ def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: str):
     run_properties = initiate_run_properties(
         config=obj.config,
         properties=obj.run_properties,
-        cli_parameters=MpylCliParameters(tag=tag),
+        run_plan={},
+        all_projects=set(),
     )
     target_branch = __get_target_branch(run_properties, tag, pr)
 
