@@ -1,5 +1,14 @@
 # Release notes
 
+## MPyL 1.4.10
+
+
+#### Bug fixes
+- Fix tag builds by taking the tag env variable into account in the new logic of v1.4.9
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.10)
+
 ## MPyL 1.4.9
 
 
