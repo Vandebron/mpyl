@@ -10,23 +10,31 @@ from rich.logging import RichHandler
 def main(log: Logger, args: argparse.Namespace):
     if args.local:
         from src.mpyl.reporting.targets.jira import JiraReporter
-        from src.mpyl.steps.models import RunProperties
+        from src.mpyl.steps.run_properties import initiate_run_properties
         from src.mpyl.utilities.pyaml_env import parse_config
         from src.mpyl.cli import MpylCliParameters
         from mpyl.build import run_mpyl
 
     else:
         from mpyl.reporting.targets.jira import JiraReporter
-        from mpyl.steps.models import RunProperties
+        from mpyl.steps.run_properties import initiate_run_properties
         from mpyl.utilities.pyaml_env import parse_config
         from mpyl.build import run_mpyl
         from mpyl.cli import MpylCliParameters
 
     config = parse_config("mpyl_config.yml")
     properties = parse_config("run_properties.yml")
-    run_properties = RunProperties.from_configuration(
-        run_properties=properties, config=config, cli_tag=args.tag
+    cli_parameters = MpylCliParameters(
+        local=args.local,
+        tag=args.tag,
+        pull_main=True,
+        verbose=args.verbose,
+        all=args.all,
     )
+    run_properties = initiate_run_properties(
+        config=config, properties=properties, cli_parameters=cli_parameters
+    )
+
     check = None
     slack_channel = None
     slack_personal = None
@@ -59,14 +67,6 @@ def main(log: Logger, args: argparse.Namespace):
             config=config, branch=run_properties.versioning.branch, logger=log
         )
         accumulator.add(check.start_check())
-
-    cli_parameters = MpylCliParameters(
-        local=args.local,
-        tag=args.tag,
-        pull_main=True,
-        verbose=args.verbose,
-        all=args.all,
-    )
     run_result = run_mpyl(
         run_properties=run_properties,
         cli_parameters=cli_parameters,

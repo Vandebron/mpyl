@@ -2,17 +2,14 @@ from datetime import datetime
 
 from src.mpyl.project import Stages, Project
 from src.mpyl.steps.deploy.k8s import DeployedHelmAppSpec
-from src.mpyl.steps.models import (
-    Output,
-    Artifact,
-    ArtifactType,
-)
+from src.mpyl.steps.models import Output, Artifact, ArtifactType
 from src.mpyl.steps.run import RunResult
+from src.mpyl.steps.run_properties import initiate_run_properties
 from src.mpyl.steps.steps import StepResult
 from src.mpyl.utilities.junit import JunitTestSpec
 from tests import root_test_path
 from tests.test_resources import test_data
-from tests.test_resources.test_data import TestStage
+from tests.test_resources.test_data import TestStage, properties_values, config_values
 
 test_resource_path = root_test_path / "reporting" / "formatting" / "test_resources"
 
@@ -28,12 +25,15 @@ def create_test_result_with_plan() -> RunResult:
     test_projects = [__get_other_project()]
     deploy_projects = [__get_other_project()]
     return RunResult(
-        run_properties=test_data.RUN_PROPERTIES,
-        run_plan={
-            TestStage.build(): set(build_projects),
-            TestStage.test(): set(test_projects),
-            TestStage.deploy(): set(deploy_projects),
-        },
+        run_properties=initiate_run_properties(
+            config=config_values,
+            properties=properties_values,
+            run_plan={
+                TestStage.build(): set(build_projects),
+                TestStage.test(): set(test_projects),
+                TestStage.deploy(): set(deploy_projects),
+            },
+        ),
     )
 
 

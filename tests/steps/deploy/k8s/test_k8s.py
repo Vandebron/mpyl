@@ -13,7 +13,6 @@ from src.mpyl.steps.deploy.k8s.chart import (
     to_job_chart,
     to_cron_job_chart,
     to_spark_job_chart,
-    DeploySet,
 )
 from src.mpyl.steps.deploy.k8s.resources import to_yaml, CustomResourceDefinition
 from src.mpyl.steps.deploy.k8s.resources.traefik import V1AlphaIngressRoute
@@ -29,6 +28,7 @@ from tests.test_resources.test_data import (
     get_spark_project,
     get_cron_job_project,
     get_minimal_project,
+    TestStage,
 )
 
 
@@ -54,21 +54,27 @@ class TestKubernetesChart:
         assert_roundtrip(name_chart, to_yaml(resource), overwrite)
 
     @staticmethod
-    def _get_builder(project: Project, run_properties=test_data.RUN_PROPERTIES):
+    def _get_builder(project: Project, run_properties=None):
+        if not run_properties:
+            projects = {project}
+            run_plan = {
+                TestStage.build(): projects,
+                TestStage.test(): projects,
+                TestStage.deploy(): projects,
+            }
+            run_properties = test_data.run_properties_with_plan(plan=run_plan)
         required_artifact = Artifact(
             artifact_type=ArtifactType.DOCKER_IMAGE,
             revision="revision",
             producing_step="build_docker_Step",
             spec=DockerImageSpec("registry/image:123"),
         )
-        other_project = get_minimal_project()
         return ChartBuilder(
             step_input=Input(
                 project,
                 run_properties=run_properties,
                 required_artifact=required_artifact,
             ),
-            deploy_set=DeploySet({project, other_project}, {project}),
         )
 
     def test_probe_values_should_be_customizable(self):
@@ -207,7 +213,7 @@ class TestKubernetesChart:
 
     def test_production_ingress(self):
         project = get_minimal_project()
-        builder = self._get_builder(project, test_data.RUN_PROPERTIES_PROD)
+        builder = self._get_builder(project, test_data.run_properties_prod_with_plan())
         chart = to_service_chart(builder)
         self._roundtrip(
             self.template_path / "ingress-prod", "minimalService-ingress-0-https", chart

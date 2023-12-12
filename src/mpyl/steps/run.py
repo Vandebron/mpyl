@@ -16,11 +16,9 @@ class RunResult:
     _run_properties: RunProperties
     _exception: Optional[ExecutionException]
 
-    def __init__(self, run_properties: RunProperties, run_plan=None):
-        if run_plan is None:
-            run_plan = {}
+    def __init__(self, run_properties: RunProperties):
         self._run_properties = run_properties
-        self._run_plan = run_plan
+        self._run_plan = run_properties.run_plan
         self._exception = None
         self._results = []
 
@@ -79,7 +77,7 @@ class RunResult:
 
     @property
     def has_run_plan_projects(self) -> bool:
-        return not all(len(projects) == 0 for stage, projects in self._run_plan.items())
+        return not all(len(projects) == 0 for stage, projects in self.run_plan.items())
 
     @property
     def results(self) -> list[StepResult]:

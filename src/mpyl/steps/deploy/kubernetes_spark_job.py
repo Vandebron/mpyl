@@ -9,8 +9,6 @@ from .k8s import deploy_helm_chart
 from .k8s.chart import ChartBuilder, to_spark_job_chart
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
-from ...stages.discovery import find_deploy_set
-from ...utilities.repo import RepoConfig
 
 
 class DeployKubernetesSparkJob(Step):
@@ -29,14 +27,7 @@ class DeployKubernetesSparkJob(Step):
 
     def execute(self, step_input: Input) -> Output:
         run_properties = step_input.run_properties
-        builder = ChartBuilder(
-            step_input,
-            find_deploy_set(
-                logger=self._logger,
-                repo_config=RepoConfig.from_config(run_properties.config),
-                tag=step_input.run_properties.versioning.tag,
-            ),
-        )
+        builder = ChartBuilder(step_input)
         chart = to_spark_job_chart(builder)
         return deploy_helm_chart(
             self._logger,

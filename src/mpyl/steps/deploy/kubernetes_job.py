@@ -7,8 +7,6 @@ from .k8s import deploy_helm_chart
 from .k8s.chart import ChartBuilder, to_cron_job_chart, to_job_chart
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
-from ...stages.discovery import find_deploy_set
-from ...utilities.repo import RepoConfig
 
 
 class DeployKubernetesJob(Step):
@@ -27,14 +25,7 @@ class DeployKubernetesJob(Step):
 
     def execute(self, step_input: Input) -> Output:
         run_properties = step_input.run_properties
-        builder = ChartBuilder(
-            step_input,
-            find_deploy_set(
-                logger=self._logger,
-                repo_config=RepoConfig.from_config(run_properties.config),
-                tag=step_input.run_properties.versioning.tag,
-            ),
-        )
+        builder = ChartBuilder(step_input)
         chart = (
             to_cron_job_chart(builder) if builder.is_cron_job else to_job_chart(builder)
         )

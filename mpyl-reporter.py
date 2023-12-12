@@ -8,14 +8,14 @@ from rich.console import Console
 from rich.logging import RichHandler
 
 from mpyl.constants import BUILD_ARTIFACTS_FOLDER
+from mpyl.reporting.targets import ReportAccumulator
 from mpyl.reporting.targets.github import CommitCheck
+from mpyl.reporting.targets.github import PullRequestReporter
+from mpyl.reporting.targets.jira import JiraReporter
+from mpyl.reporting.targets.jira import compose_build_status
 from mpyl.reporting.targets.slack import SlackReporter
 from mpyl.steps.run import RunResult
-from mpyl.reporting.targets import ReportAccumulator
-from mpyl.reporting.targets.github import PullRequestReporter
-from mpyl.reporting.targets.jira import compose_build_status
-from mpyl.reporting.targets.jira import JiraReporter
-from mpyl.steps.models import RunProperties
+from mpyl.steps.run_properties import initiate_run_properties
 from mpyl.utilities.pyaml_env import parse_config
 
 
@@ -32,9 +32,7 @@ def main(logger: Logger):
         accumulator = ReportAccumulator()
         config = parse_config("mpyl_config.yml")
         properties = parse_config("run_properties.yml")
-        run_properties = RunProperties.from_configuration(
-            run_properties=properties, config=config
-        )
+        run_properties = initiate_run_properties(config=config, properties=properties)
 
         commit_check = CommitCheck(config=config, logger=logger)
         accumulator.add(commit_check.send_report(run_result))

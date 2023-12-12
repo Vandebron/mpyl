@@ -3,14 +3,13 @@ discovered projects have been invalidated due to changes in the source code sinc
 output artifact."""
 import logging
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Optional
 
-from ..project import Project, load_project
+from ..project import Project
 from ..project import Stage
 from ..steps import deploy
 from ..steps.models import Output
-from ..utilities.repo import Revision, RepoConfig, Repository
+from ..utilities.repo import Revision
 
 
 @dataclass(frozen=True)
@@ -102,25 +101,41 @@ def find_invalidated_projects_for_stage(
     )
 
 
-def find_deploy_set(
-    logger: logging.Logger, repo_config: RepoConfig, tag: Optional[str]
-) -> DeploySet:
-    with Repository(repo_config) as repo:
-        changes_in_branch = (
-            repo.changes_in_tagged_commit(tag)
-            if tag
-            else repo.changes_in_branch_including_local()
-        )
-        project_paths = repo.find_projects()
-        all_projects = set(
-            map(lambda p: load_project(Path(""), Path(p), False), project_paths)
-        )
-        return DeploySet(
-            all_projects,
-            find_invalidated_projects_for_stage(
-                logger, all_projects, deploy.STAGE_NAME, changes_in_branch
-            ),
-        )
+def find_build_set(
+    logger: logging.Logger,
+    all_projects: set[Project],
+    changes_in_branch: list[Revision],
+    stages: list[Stage],
+    build_all: bool,
+    selected_stage: Optional[str] = None,
+    selected_projects: Optional[str] = None,
+) -> dict[Stage, set[Project]]:
+    if selected_projects:
+        projects_list = selected_projects.split(",")
+
+    build_set = {}
+
+    for stage in stages:
+        if selected_stage and selected_stage != stage.name:
+            continue
+
+        if build_all or selected_projects:
+            if selected_projects:
+                all_projects = set(
+                    filter(lambda p: p.name in projects_list, all_projects)
+                )
+            projects = for_stage(all_projects, stage)
+        else:
+            projects = find_invalidated_projects_for_stage(
+                logger, all_projects, stage.name, changes_in_branch
+            )
+            logger.debug(
+                f"Invalidated projects for stage {stage.name}: {[p.name for p in projects]}"
+            )
+
+        build_set.update({stage: projects})
+
+    return build_set
 
 
 def for_stage(projects: set[Project], stage: Stage) -> set[Project]:

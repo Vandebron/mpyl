@@ -136,12 +136,14 @@ class TestSteps:
             "invalid"
         ] = "somevalue"
         properties = RunProperties(
-            RUN_PROPERTIES.details,
-            Target.PULL_REQUEST,
-            VersioningProperties("", "feature/ARC-123", 1, None),
-            config_values,
-            ConsoleProperties("INFO", False, 130),
-            [],
+            details=RUN_PROPERTIES.details,
+            target=Target.PULL_REQUEST,
+            versioning=VersioningProperties("", "feature/ARC-123", 1, None),
+            config=config_values,
+            console=ConsoleProperties("INFO", False, 130),
+            stages=[],
+            projects=set(),
+            run_plan={},
         )
         with pytest.raises(ValidationError) as excinfo:
             Steps(logger=Logger.manager.getLogger("logger"), properties=properties)

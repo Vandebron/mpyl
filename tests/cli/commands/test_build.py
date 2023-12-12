@@ -1,23 +1,23 @@
 import logging
-import os
-import re
 
 from click.testing import CliRunner
 
-from mpyl.steps.build import STAGE_NAME
 from src.mpyl import main_group, add_commands
 from src.mpyl.build import run_build
-from src.mpyl.project import Stage
 from src.mpyl.steps import Step, Meta, ArtifactType, Input, Output
+from src.mpyl.steps.build import STAGE_NAME
 from src.mpyl.steps.run import RunResult
+from src.mpyl.steps.run_properties import initiate_run_properties
 from src.mpyl.steps.steps import Steps, StepsCollection
 from tests import root_test_path
 from tests.test_resources.test_data import (
     get_minimal_project,
     RUN_PROPERTIES,
     get_project_with_stages,
-    assert_roundtrip,
     TestStage,
+    config_values,
+    properties_values,
+    run_properties_with_plan,
 )
 
 
@@ -60,15 +60,14 @@ class TestBuildCommand:
         assert result.status_line == "🦥 Nothing to do"
 
     def test_run_build_with_plan_should_execute_successfully(self):
-        run_properties = RUN_PROPERTIES
-
-        projects = [get_minimal_project()]
+        projects = {get_minimal_project()}
         run_plan = {
             TestStage.build(): projects,
             TestStage.test(): projects,
             TestStage.deploy(): projects,
         }
-        accumulator = RunResult(run_properties=run_properties, run_plan=run_plan)
+        run_properties = run_properties_with_plan(plan=run_plan)
+        accumulator = RunResult(run_properties=run_properties)
         collection = StepsCollection(logging.getLogger())
         executor = Steps(
             logging.getLogger(),
@@ -83,11 +82,15 @@ class TestBuildCommand:
         assert result.exception is None
 
     def test_run_build_throwing_step_should_be_handled(self):
-        run_properties = RUN_PROPERTIES
-
-        projects = [get_project_with_stages({"build": "Throwing Build"})]
+        projects = {get_project_with_stages({"build": "Throwing Build"})}
         run_plan = {TestStage.build(): projects}
-        accumulator = RunResult(run_properties=run_properties, run_plan=run_plan)
+        run_properties = initiate_run_properties(
+            config=config_values,
+            properties=properties_values,
+            run_plan=run_plan,
+            all_projects=projects,
+        )
+        accumulator = RunResult(run_properties=run_properties)
         logger = logging.getLogger()
         collection = StepsCollection(logger)
         executor = Steps(logger, run_properties, collection)
@@ -100,32 +103,6 @@ class TestBuildCommand:
         assert result.exception.stage == TestStage.build().name
         assert result.exception.project_name == "test"
         assert result.exception.executor == "Throwing Build"
-
-    def test_build_status_output(self):
-        os.environ["CHANGE_ID"] = "123"
-        cmd = [
-            "build",
-            "-c",
-            str(self.config_path),
-            "-p",
-            str(self.run_properties_path),
-            "status",
-        ]
-        result = self.runner.invoke(
-            main_group,
-            cmd,
-        )
-
-        without_upgrade_suggestion = re.sub(
-            r".*You can upgrade.*", "", result.output
-        ).rstrip()
-        without_upgrade_suggestion = re.sub("git:.*", "", without_upgrade_suggestion)
-        first_lines_only = "\n".join(
-            without_upgrade_suggestion.split("\n")[0:2]
-        ).rstrip()
-
-        self.maxDiff = None
-        assert_roundtrip(self.resource_path / "build_status.txt", first_lines_only)
 
     def test_build_clean_output(self):
         result = self.runner.invoke(
