@@ -231,9 +231,7 @@ def status(obj: CliContext, all_, projects):
     try:
         upgrade_check = asyncio.wait_for(warn_if_update(obj.console), timeout=3)
         parameters = MpylCliParameters(
-            local=sys.stdout.isatty(),
-            all=all_,
-            projects=projects,
+            local=sys.stdout.isatty(), all=all_, projects=projects
         )
         print_status(obj, parameters)
     except asyncio.exceptions.TimeoutError:
@@ -489,7 +487,10 @@ def artifacts():
 @click.pass_obj
 def pull(obj: CliContext, tag: str, pr: int, path: Path):
     run_properties = initiate_run_properties(
-        config=obj.config, properties=obj.run_properties
+        config=obj.config,
+        properties=obj.run_properties,
+        run_plan={},
+        all_projects=set(),
     )
     target_branch = __get_target_branch(run_properties, tag, pr)
 
@@ -518,7 +519,10 @@ def pull(obj: CliContext, tag: str, pr: int, path: Path):
 @click.pass_obj
 def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: str):
     run_properties = initiate_run_properties(
-        config=obj.config, properties=obj.run_properties
+        config=obj.config,
+        properties=obj.run_properties,
+        run_plan={},
+        all_projects=set(),
     )
     target_branch = __get_target_branch(run_properties, tag, pr)
 

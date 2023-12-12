@@ -17,6 +17,7 @@ def initiate_run_properties(
     run_plan: Optional[dict[Stage, set[Project]]] = None,
     all_projects: Optional[set[Project]] = None,
 ) -> RunProperties:
+    tag = cli_parameters.tag or properties["build"]["versioning"].get("tag")
     if all_projects is None or run_plan is None:
         with Repository(RepoConfig.from_config(config)) as repo:
             if all_projects is None:
@@ -46,8 +47,8 @@ def initiate_run_properties(
                         repo.changes_in_branch_including_local()
                         if cli_parameters.local
                         else (
-                            repo.changes_in_tagged_commit(cli_parameters.tag)
-                            if cli_parameters.tag
+                            repo.changes_in_tagged_commit(tag)
+                            if tag
                             else repo.changes_in_branch()
                         )
                     ),
@@ -63,7 +64,7 @@ def initiate_run_properties(
             run_plan=run_plan,
             revision=repo.get_sha,
             branch=repo.get_branch,
-            tag=cli_parameters.tag,
+            tag=tag,
             stages=stages,
             all_projects=all_projects,
         )
@@ -73,5 +74,5 @@ def initiate_run_properties(
         config=config,
         run_plan=run_plan,
         all_projects=all_projects,
-        cli_tag=cli_parameters.tag,
+        cli_tag=tag,
     )
