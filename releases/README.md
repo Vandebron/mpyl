@@ -1,5 +1,14 @@
 # Release notes
 
+## MPyL 1.4.9
+
+
+#### Bug fixes
+- Fix manual deployment bug where the build plan for the deploy stage wasn't taking the manual selection into account.
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.9)
+
 ## MPyL 1.4.8
 
 
