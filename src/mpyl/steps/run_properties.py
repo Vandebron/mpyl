@@ -45,6 +45,7 @@ def initiate_run_properties(
                     changes_in_branch=(
                         repo.changes_in_branch_including_local()
                         if cli_parameters.local
+                        or properties["build"]["versioning"].get("tag")
                         else (
                             repo.changes_in_tagged_commit(cli_parameters.tag)
                             if cli_parameters.tag
