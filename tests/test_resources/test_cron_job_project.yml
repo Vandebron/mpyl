@@ -26,6 +26,7 @@ deployment:
       cron:
         suspend: true
         schedule: "0 22 * * *"
+        timeZone: "Europe/Amsterdam"
         successfulJobsHistoryLimit: 3
         failedJobsHistoryLimit: 1
         concurrencyPolicy: Allow

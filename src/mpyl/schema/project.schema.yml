@@ -840,6 +840,9 @@ definitions:
               schedule:
                 description: The schedule in Cron format, see https://en.wikipedia.org/wiki/Cron.
                 type: string
+              timeZone:
+                description: The timezone for the Cron schedule, see https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#time-zones
+                type: string
               startingDeadlineSeconds:
                 description: Optional deadline in seconds for starting the job if it misses scheduled
                   time for any reason.  Missed jobs executions will be counted as failed ones.
