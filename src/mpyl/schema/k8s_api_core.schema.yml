@@ -1,4 +1,4 @@
-# Taken from https://github.com/instrumenta/kubernetes-json-schema and converted to YAML
+# Taken from https://github.com/kubernetes/kubernetes/blob/master/api/openapi-spec/swagger.json and converted to YAML
 definitions:
   io.k8s.api.core.v1.EnvVarSource:
     description: EnvVarSource represents a source for the value of an EnvVar.
