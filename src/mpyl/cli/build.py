@@ -160,9 +160,23 @@ class CustomValidation(click.Command):
     required=False,
     help="Comma separated list of the projects to build",
 )
+@click.option(
+    "--dryrun",
+    "dryrun_",
+    is_flag=True,
+    default=False,
+    help="don't push or deploy images",
+)
 @click.pass_obj
 def run(
-    obj: CliContext, ci, all_, tag, stage, sequential, projects
+    obj: CliContext,
+    ci,
+    all_,
+    tag,
+    stage,
+    sequential,
+    projects,
+    dryrun_,
 ):  # pylint: disable=invalid-name
     run_result_file = Path(BUILD_ARTIFACTS_FOLDER) / "run_result"
     if not sequential and run_result_file.is_file():
@@ -178,6 +192,7 @@ def run(
         tag=tag,
         stage=stage,
         projects=projects,
+        dryrun=dryrun_,
     )
     obj.console.log(parameters)
 

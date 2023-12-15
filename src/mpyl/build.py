@@ -119,7 +119,13 @@ def run_mpyl(
                 properties=run_properties,
                 steps_collection=StepsCollection(logger=logger),
             )
-            run_result = run_build(run_result, steps, reporter, cli_parameters.local)
+
+            run_result = run_build(
+                run_result,
+                steps,
+                reporter,
+                cli_parameters.dryrun or cli_parameters.local,
+            )
         except ValidationError as exc:
             console.log(
                 f'Schema validation failed {exc.message} at `{".".join(map(str, exc.path))}`'
