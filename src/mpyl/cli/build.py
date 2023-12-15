@@ -170,13 +170,13 @@ class CustomValidation(click.Command):
 @click.pass_obj
 def run(
     obj: CliContext,
-        ci,
-        all_,
-        tag,
-        stage,
-        sequential,
-        projects,
-        dryrun_,
+    ci,
+    all_,
+    tag,
+    stage,
+    sequential,
+    projects,
+    dryrun_,
 ):  # pylint: disable=invalid-name
     run_result_file = Path(BUILD_ARTIFACTS_FOLDER) / "run_result"
     if not sequential and run_result_file.is_file():
