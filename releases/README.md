@@ -9,6 +9,9 @@
 #### Cronjob deployment
 - Add `timeZone` field to job specification
 
+#### CLI improvements
+- Add `--dryrun` flag
+
 Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.11)
 
 ## MPyL 1.4.10
