@@ -6,6 +6,9 @@
 #### Enhancements
 - Set resources for Dagster user code servers (hardcoded)
 
+#### Cronjob deployment
+- Add `timeZone` field to job specification
+
 
 Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.11)
 
