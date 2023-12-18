@@ -65,3 +65,4 @@ spec:
   schedule: 0 22 * * *
   successfulJobsHistoryLimit: 3
   suspend: true
+  timeZone: Europe/Amsterdam

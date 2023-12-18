@@ -12,6 +12,7 @@ deployment:
     job:
       cron:
         schedule: "0 22 * * *"
+        timeZone: "Europe/Amsterdam"
 dependencies:
   test:
     - tests/projects/service/file.py
