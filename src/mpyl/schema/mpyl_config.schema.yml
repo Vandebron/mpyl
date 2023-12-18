@@ -120,11 +120,7 @@ definitions:
         $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.apps.v1.DeploymentStrategy'
       deployAction:
         type: string
-        enum:
-          - 'HelmDeploy'
-          - 'HelmDryRun'
-          - 'HelmTemplate'
-          - 'KubectlManifest'
+        pattern: ((HelmDeploy)|(HelmDryrun)|(HelmTemplate)|(KubectlManifest))|(!ENV.*)
         description: >-
           Defines the action to take in the deploy step. Defaults to helmDeploy. 
           If set to HelmDeploy, the helm chart will be deployed to the cluster.
