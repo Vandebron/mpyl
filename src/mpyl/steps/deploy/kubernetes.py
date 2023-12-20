@@ -71,7 +71,7 @@ class DeployKubernetes(Step):
         chart = to_service_chart(builder)
 
         deploy_result = deploy_helm_chart(
-            self._logger, chart, step_input, properties.target, builder.release_name
+            self._logger, chart, step_input, builder.release_name
         )
         if deploy_result.success:
             hostname = self.try_extract_hostname(chart, builder.project.name)

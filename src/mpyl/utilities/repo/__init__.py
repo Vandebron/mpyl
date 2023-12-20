@@ -63,6 +63,7 @@ class Revision:
 
 @dataclass(frozen=True)
 class RepoCredentials:
+    name: str
     url: str
     ssh_url: str
     user_name: str
@@ -84,6 +85,7 @@ class RepoCredentials:
         url = config["url"]
         ssh_url = f"{url.replace('https://', 'git@').replace('.com/', '.com:')}"
         return RepoCredentials(
+            name=url.removeprefix("https://github.com/").removesuffix(".git"),
             url=url,
             ssh_url=ssh_url,
             user_name=config["userName"],

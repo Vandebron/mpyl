@@ -16,8 +16,7 @@ from src.mpyl.artifacts.build_artifacts import (
 )
 from src.mpyl.project import Project, load_project
 from src.mpyl.steps.deploy.k8s.deploy_config import DeployConfig
-from src.mpyl.utilities.repo import RepoConfig
-from src.mpyl.utilities.repo import RepoCredentials
+from src.mpyl.utilities.repo import RepoConfig, RepoCredentials
 from tests import test_resource_path, root_test_path
 from tests.test_resources.test_data import get_repo, config_values, RUN_PROPERTIES
 
@@ -46,6 +45,7 @@ class TestArtifacts:
         main_branch="main",
         ignore_patterns=[],
         repo_credentials=RepoCredentials(
+            name="Vandebron/mpyl",
             url=f"https://{os.environ.get('GITHUB_CREDS')}@github.com/SamTheisens/mpyl-example-argocd.git",
             ssh_url="git@github.com:Vandebron/mpyl-artifacts.git",
             email="",

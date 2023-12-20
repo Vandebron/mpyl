@@ -161,20 +161,10 @@ class ArtifactsRepository:
                 copied_paths = self.copy_files(
                     project_paths, repo_path, path_transformer
                 )
-                cluster_details = (
-                    f"Cluster: {get_argo_folder_name(target=run_properties.target)}"
-                )
 
                 if artifact_repo.has_changes:
                     artifact_repo.stage(".")
                     artifact_repo.commit(f"Revision {revision} at {repository_url}")
-                    commit_note = (
-                        f"{cluster_details.lower()} \n"
-                        + f"repository: {self.codebase_repo.config.repo_credentials.url} \n"
-                        + f"revision: {revision} \n"
-                        + f"tag: {run_properties.versioning.identifier}"
-                    )
-                    artifact_repo.add_note(note=commit_note)
                     artifact_repo.push(branch)
 
                     try:  # to prevent issues with parallel runs pushing to the same branch
@@ -200,7 +190,6 @@ class ArtifactsRepository:
                         github_config=github_config,
                         run_properties=run_properties,
                         revision=revision,
-                        cluster_details=cluster_details,
                         branch=branch,
                     )
 
@@ -239,7 +228,6 @@ class ArtifactsRepository:
         github_config: GithubConfig,
         run_properties: RunProperties,
         revision: str,
-        cluster_details: str,
         branch: str,
     ):
         github = Github(login_or_token=get_token(github_config))
@@ -250,10 +238,10 @@ class ArtifactsRepository:
             body = f"""
 ## 🚀 Deploying
 Docker tag: [{run_properties.versioning.identifier}]{f'({run_properties.details.change_url})' if run_properties.details.change_url else ''}
-Commit: [{revision}]({self.codebase_repo.config.repo_credentials.url}/commit/{revision})
+Commit: [{revision}]({self.codebase_repo.config.repo_credentials.url.removesuffix(".git")}/commit/{revision})
 
 ## 📍 To
-{cluster_details}
+Cluster: {get_argo_folder_name(target=run_properties.target)}
 
 ## 🧑‍💻️ Started by
 [{run_properties.details.user}]

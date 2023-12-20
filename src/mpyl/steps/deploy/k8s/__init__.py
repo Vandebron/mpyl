@@ -6,16 +6,16 @@ from logging import Logger
 from pathlib import Path
 from typing import Optional
 
+import yaml as dict_to_yaml_str
 from kubernetes import config, client
 from kubernetes.client import V1ConfigMap, ApiException, V1Deployment
 from ruamel.yaml import yaml_object, YAML
-import yaml as dict_to_yaml_str
 
 from .deploy_config import DeployConfig, DeployAction, get_namespace
 from .helm import write_helm_chart, GENERATED_WARNING
 from ...deploy.k8s.resources import CustomResourceDefinition
 from ...models import RunProperties, input_to_artifact, ArtifactType, ArtifactSpec
-from ....project import Target, ProjectName
+from ....project import ProjectName, Target
 from ....steps import Input, Output
 from ....steps.deploy.k8s import helm
 from ....steps.deploy.k8s.rancher import (
@@ -24,6 +24,7 @@ from ....steps.deploy.k8s.rancher import (
     ClusterConfig,
 )
 from ....steps.deploy.k8s.resources import to_yaml
+from ....utilities.repo import RepoConfig
 
 yaml = YAML()
 
@@ -181,7 +182,6 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
     logger: Logger,
     chart: dict[str, CustomResourceDefinition],
     step_input: Input,
-    target: Target,
     release_name: str,
     delete_existing: bool = False,
 ) -> Output:
@@ -199,6 +199,20 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
             step_input,
             spec=KubernetesManifestSpec(str(file_path)),
         )
+
+        cluster = (
+            "test"
+            if run_properties.target in (Target.PULL_REQUEST_BASE, Target.PULL_REQUEST)
+            else run_properties.target.name.lower()
+        )
+        deployment_details = (
+            f"cluster: {cluster} \n"
+            + f"repository: {RepoConfig.from_config(run_properties.config).repo_credentials.name} \n"
+            + f"revision: {run_properties.versioning.revision} \n"
+            + f"tag: {run_properties.versioning.identifier} \n"
+        )
+        with Path(path / "deployment.yaml").open(mode="w+", encoding="utf-8") as file:
+            file.write(deployment_details)
 
         return Output(
             success=True,
@@ -229,14 +243,16 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
         or action == DeployAction.HELM_DRY_RUN.value  # pylint: disable=no-member
     )
     project_id: str = (
-        project.deployment.kubernetes.rancher.project_id.get_value(target=target)
+        project.deployment.kubernetes.rancher.project_id.get_value(
+            target=run_properties.target
+        )
         if project.deployment
         and project.deployment.kubernetes
         and project.deployment.kubernetes.rancher
         and project.deployment.kubernetes.rancher.project_id
         else ""
     )
-    rancher_config: ClusterConfig = cluster_config(target, run_properties)
+    rancher_config: ClusterConfig = cluster_config(run_properties)
 
     upsert_namespace(
         logger=logger,
