@@ -202,7 +202,7 @@ class Steps:
             )
             result.write(project.target_path, stage.name)
 
-            if executor.after:
+            if executor.after and result.success:
                 return self._execute_after_(
                     result, executor.after, project, stage, dry_run
                 )
