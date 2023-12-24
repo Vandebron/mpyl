@@ -19,12 +19,12 @@ from .steps import deploy
 from .steps.collection import StepsCollection
 from .steps.models import RunProperties
 from .steps.run import RunResult
-from .steps.run_properties import initiate_run_properties
+from .steps.run_properties import construct_run_properties
 from .steps.steps import Steps, ExecutionException
 
 
 def print_status(obj: CliContext, cli_params: MpylCliParameters):
-    run_properties = initiate_run_properties(
+    run_properties = construct_run_properties(
         config=obj.config, properties=obj.run_properties, cli_parameters=cli_params
     )
     console = obj.console

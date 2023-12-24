@@ -10,7 +10,7 @@ from ..steps.models import RunProperties
 from ..utilities.repo import Repository, RepoConfig
 
 
-def initiate_run_properties(
+def construct_run_properties(
     config: dict,
     properties: dict,
     cli_parameters: MpylCliParameters = MpylCliParameters(),

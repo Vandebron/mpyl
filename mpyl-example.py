@@ -10,14 +10,14 @@ from rich.logging import RichHandler
 def main(log: Logger, args: argparse.Namespace):
     if args.local:
         from src.mpyl.reporting.targets.jira import JiraReporter
-        from src.mpyl.steps.run_properties import initiate_run_properties
+        from src.mpyl.steps.run_properties import construct_run_properties
         from src.mpyl.utilities.pyaml_env import parse_config
         from src.mpyl.cli import MpylCliParameters
         from mpyl.build import run_mpyl
 
     else:
         from mpyl.reporting.targets.jira import JiraReporter
-        from mpyl.steps.run_properties import initiate_run_properties
+        from mpyl.steps.run_properties import construct_run_properties
         from mpyl.utilities.pyaml_env import parse_config
         from mpyl.build import run_mpyl
         from mpyl.cli import MpylCliParameters
@@ -32,7 +32,7 @@ def main(log: Logger, args: argparse.Namespace):
         all=args.all,
         dryrun=args.dryrun,
     )
-    run_properties = initiate_run_properties(
+    run_properties = construct_run_properties(
         config=config, properties=properties, cli_parameters=cli_parameters
     )
 

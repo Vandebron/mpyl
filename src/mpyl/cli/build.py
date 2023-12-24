@@ -42,7 +42,7 @@ from ..project import load_project, Target
 from ..steps.deploy.k8s.deploy_config import DeployConfig
 from ..steps.models import RunProperties
 from ..steps.run import RunResult
-from ..steps.run_properties import initiate_run_properties
+from ..steps.run_properties import construct_run_properties
 from ..utilities.github import GithubConfig
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
@@ -93,7 +93,7 @@ def build(ctx, config, properties, verbose):
     """Pipeline build commands"""
     parsed_properties = parse_config(properties)
     parsed_config = parse_config(config)
-    console_config = initiate_run_properties(
+    console_config = construct_run_properties(
         properties=parsed_properties,
         config=parsed_config,
         run_plan={},
@@ -206,7 +206,7 @@ def run(
         )
         sys.exit(1)
 
-    run_properties = initiate_run_properties(
+    run_properties = construct_run_properties(
         config=obj.config, properties=obj.run_properties, cli_parameters=parameters
     )
     run_result = run_mpyl(
@@ -502,7 +502,7 @@ def artifacts():
 )
 @click.pass_obj
 def pull(obj: CliContext, tag: str, pr: int, path: Path):
-    run_properties = initiate_run_properties(
+    run_properties = construct_run_properties(
         config=obj.config,
         properties=obj.run_properties,
         run_plan={},
@@ -544,7 +544,7 @@ def pull(obj: CliContext, tag: str, pr: int, path: Path):
 )
 @click.pass_obj
 def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: ArtifactType):
-    run_properties = initiate_run_properties(
+    run_properties = construct_run_properties(
         config=obj.config,
         properties=obj.run_properties,
         run_plan={},
