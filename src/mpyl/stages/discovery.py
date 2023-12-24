@@ -95,9 +95,17 @@ def _is_output_invalid(
     if artifact is None:
         return True
 
-    return _revision_is_newer_than_artifact(
+    is_newer = _revision_is_newer_than_artifact(
         artifact.revision, changed_file_revision, change_history
     )
+
+    message = f"Revision {changed_file_revision} compared to {artifact.revision} from {artifact.producing_step}"
+    if is_newer:
+        logging.debug(f"{message} is newer, invalidating")
+    else:
+        logging.debug(f"{message} is older, cached artifact still valid")
+
+    return is_newer
 
 
 def is_invalidated_by_file(
