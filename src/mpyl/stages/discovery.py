@@ -2,7 +2,6 @@
 discovered projects have been invalidated due to changes in the source code since the last build of the project's
 output artifact."""
 import logging
-from dataclasses import dataclass
 from typing import Optional
 
 from ..project import Project, Dependencies
@@ -11,12 +10,6 @@ from ..steps import ArtifactType
 from ..steps.collection import StepsCollection
 from ..steps.models import Output
 from ..utilities.repo import Revision
-
-
-@dataclass(frozen=True)
-class DeploySet:
-    all_projects: set[Project]
-    projects_to_deploy: set[Project]
 
 
 def __log_invalidation(
