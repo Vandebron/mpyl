@@ -23,6 +23,7 @@ yaml = YAML()
 
 
 class TestDiscovery:
+    steps = StepsCollection(logger=logging.getLogger())
     logger = logging.getLogger(__name__)
 
     def test_should_find_invalidated_test_dependencies(self):
@@ -36,6 +37,7 @@ class TestDiscovery:
                         projects,
                         build.STAGE_NAME,
                         [Revision(0, "revision", touched_files)],
+                        self.steps,
                     )
                 )
                 == 1
@@ -47,6 +49,7 @@ class TestDiscovery:
                         projects,
                         test.STAGE_NAME,
                         [Revision(0, "revision", touched_files)],
+                        self.steps,
                     )
                 )
                 == 2
@@ -58,6 +61,7 @@ class TestDiscovery:
                         projects,
                         deploy.STAGE_NAME,
                         [Revision(0, "revision", touched_files)],
+                        self.steps,
                     )
                 )
                 == 2
@@ -75,6 +79,7 @@ class TestDiscovery:
             projects,
             TestStage.build().name,
             [Revision(0, "hash", {"projects/job/file.py", "some_file.txt"})],
+            self.steps,
         )
         assert 1 == len(invalidated)
 
@@ -124,18 +129,21 @@ class TestDiscovery:
                 projects,
                 build.STAGE_NAME,
                 [Revision(0, "revision", touched_files)],
+                self.steps,
             )
             projects_for_test = find_invalidated_projects_for_stage(
                 self.logger,
                 projects,
                 test.STAGE_NAME,
                 [Revision(0, "revision", touched_files)],
+                self.steps,
             )
             projects_for_deploy = find_invalidated_projects_for_stage(
                 self.logger,
                 projects,
                 deploy.STAGE_NAME,
                 [Revision(0, "revision", touched_files)],
+                self.steps,
             )
             assert len(projects_for_build) == 1
             assert len(projects_for_test) == 1

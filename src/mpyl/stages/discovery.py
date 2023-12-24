@@ -118,8 +118,8 @@ def find_invalidated_projects_for_stage(
     all_projects: set[Project],
     stage: str,
     change_history: list[Revision],
+    steps: StepsCollection,
 ) -> set[Project]:
-    steps = StepsCollection(logger=logging.getLogger())
     return set(
         filter(
             lambda p: _are_invalidated(logger, p, stage, change_history, steps),
@@ -141,6 +141,7 @@ def find_build_set(
         projects_list = selected_projects.split(",")
 
     build_set = {}
+    steps: StepsCollection = StepsCollection(logger=logging.getLogger())
 
     for stage in stages:
         if selected_stage and selected_stage != stage.name:
@@ -154,7 +155,7 @@ def find_build_set(
             projects = for_stage(all_projects, stage)
         else:
             projects = find_invalidated_projects_for_stage(
-                logger, all_projects, stage.name, changes_in_branch
+                logger, all_projects, stage.name, changes_in_branch, steps
             )
             logger.debug(
                 f"Invalidated projects for stage {stage.name}: {[p.name for p in projects]}"
