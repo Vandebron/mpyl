@@ -45,24 +45,8 @@ def construct_run_properties(
                 build_set_logger = logging.getLogger("mpyl")
                 if explain_run_plan:
                     build_set_logger.setLevel("DEBUG")
-                run_plan = find_build_set(
-                    logger=build_set_logger,
-                    all_projects=all_projects,
-                    changes_in_branch=(
-                        repo.changes_in_branch_including_local()
-                        if cli_parameters.local
-                        else (
-                            repo.changes_in_tagged_commit(tag)
-                            if tag
-                            else repo.changes_in_branch()
-                        )
-                    )
-                    if not cli_parameters.projects or cli_parameters.all
-                    else [],
-                    stages=stages,
-                    build_all=cli_parameters.all,
-                    selected_stage=cli_parameters.stage,
-                    selected_projects=cli_parameters.projects,
+                run_plan = _create_run_plan(
+                    all_projects, cli_parameters, explain_run_plan, repo, stages, tag
                 )
 
     if cli_parameters.local:
@@ -84,3 +68,33 @@ def construct_run_properties(
         cli_tag=tag,
         root_dir=root_dir,
     )
+
+
+def _create_run_plan(all_projects, cli_parameters, explain_run_plan, repo, stages, tag):
+    build_set_logger = logging.getLogger("mpyl")
+    if explain_run_plan:
+        build_set_logger.setLevel("DEBUG")
+
+    changes_in_branch = (
+        _get_changes(repo, cli_parameters.local, tag)
+        if not cli_parameters.projects or cli_parameters.all
+        else []
+    )
+    return find_build_set(
+        logger=build_set_logger,
+        all_projects=all_projects,
+        changes_in_branch=changes_in_branch,
+        stages=stages,
+        build_all=cli_parameters.all,
+        selected_stage=cli_parameters.stage,
+        selected_projects=cli_parameters.projects,
+    )
+
+
+def _get_changes(repo, local, tag):
+    if local:
+        return repo.changes_in_branch_including_local()
+    if tag:
+        return repo.changes_in_tagged_commit(tag)
+
+    return repo.changes_in_branch()

@@ -486,7 +486,7 @@ def clean(obj: CliContext, filter_):
     "artifacts",
     help="Commands related to artifacts like build cache and k8s manifests",
 )
-def artifacts():
+def artifacts():  # no implementation, only for nesting command
     pass
 
 
@@ -544,7 +544,13 @@ def pull(obj: CliContext, tag: str, pr: int, path: Path):
     required=True,
 )
 @click.pass_obj
-def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: ArtifactType):
+def push(
+    obj: CliContext,
+    tag: Optional[str],
+    pr: Optional[int],
+    path: Path,
+    artifact_type: ArtifactType,
+):
     run_properties = construct_run_properties(
         config=obj.config,
         properties=obj.run_properties,
@@ -588,21 +594,20 @@ def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: Artifact
     )
 
 
-def __get_target_branch(run_properties: RunProperties, tag: str, pr: int) -> str:
-    target_branch = (
-        tag
-        if tag
-        else (
-            run_properties.versioning.tag
-            if run_properties.versioning.tag
-            else f"PR-{pr or run_properties.versioning.pr_number}"
-        )
-    )
-    if not target_branch:
+def __get_target_branch(
+    run_properties: RunProperties, tag: Optional[str], pr: Optional[int]
+) -> str:
+    effective_tag = tag or run_properties.versioning.tag
+    effective_pr = pr or run_properties.versioning.pr_number
+    if effective_tag is None and effective_pr is None:
         raise click.ClickException(
             "Either pr or tag must be specified, either as a flag or in the run properties"
         )
-    return target_branch
+
+    if effective_tag:
+        return effective_tag
+
+    return f"PR-{effective_pr}"
 
 
 if __name__ == "__main__":
