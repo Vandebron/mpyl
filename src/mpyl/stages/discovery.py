@@ -37,10 +37,13 @@ def is_invalidated(
         logger.debug(
             f"Project {project.name}: {path} touched dependency {touched_dependency_path}"
         )
+        return True
+
     if startswith:
         logger.debug(
             f"Project {project.name}: {path} touched project root {project.root_path}"
         )
+        return True
 
     step_name = project.stages.for_stage(stage)
 
@@ -65,7 +68,7 @@ def is_invalidated(
                 if producing_stage is not None:
                     return True
 
-    return startswith or touched_dependency_path is not None
+    return False
 
 
 def output_invalidated(output: Optional[Output], revision_hash: str) -> bool:
