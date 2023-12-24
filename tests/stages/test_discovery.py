@@ -60,11 +60,12 @@ class TestDiscovery:
             deploy.STAGE_NAME, projects, touched_files
         ) == {
             "nodeservice",
-            "job",
         }
 
-    def test_should_find_invalidated_test_dependencies2(self):
-        touched_files = {"tests/projects/service/file.py"}
+    def test_should_find_invalidated_build_dependencies(self):
+        touched_files = {
+            "tests/projects/sbt-service/src/main/scala/vandebron/mpyl/Main.scala"
+        }
         projects = set(
             load_projects(
                 test_data.get_repo().root_dir, test_data.get_repo().find_projects()
@@ -72,17 +73,20 @@ class TestDiscovery:
         )
         assert self.find_invalidated_projects(
             build.STAGE_NAME, projects, touched_files
-        ) == {"nodeservice"}
+        ) == {
+            "job",
+            "sbtservice",
+        }
         assert self.find_invalidated_projects(
             test.STAGE_NAME, projects, touched_files
         ) == {
-            "job",
-            "nodeservice",
+            "sbtservice",
         }
         assert self.find_invalidated_projects(
             deploy.STAGE_NAME, projects, touched_files
         ) == {
-            "nodeservice",
+            "job",
+            "sbtservice",
         }
 
     def test_should_find_invalidated_dependencies(self):
