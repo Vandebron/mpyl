@@ -70,32 +70,55 @@ def is_invalidated(
     logger: logging.Logger,
     project: Project,
     stage: str,
-    path: str,
+    changed_file: ChangedFile,
+    change_history: list[Revision],
     steps: StepsCollection,
 ) -> bool:
-    if path.startswith(project.root_path):
-        __log_invalidation(logger, project, stage, path, "is in project root")
+    invalidated_by_file = is_invalidated_by_file(
+        logger, project, stage, changed_file, steps
+    )
+    if invalidated_by_file:
+        output = Output.try_read(project.target_path, stage)
+        return _is_output_invalid(output, change_history, changed_file.revision)
+    return False
+
+
+def _is_output_invalid(
+    output: Optional[Output], change_history: list[Revision], changed_file_revision: str
+) -> bool:
+    if output is None:
+        return True
+    if not output.success:
+        return True
+
+    artifact = output.produced_artifact
+    if artifact is None:
+        return True
+
+    return _revision_is_newer_than_artifact(
+        artifact.revision, changed_file_revision, change_history
+    )
+
+
+def is_invalidated_by_file(
+    logger: logging.Logger,
+    project: Project,
+    stage: str,
+    changed_file: ChangedFile,
+    steps: Optional[StepsCollection],
+) -> bool:
+    if changed_file.path.startswith(project.root_path):
+        __log_invalidation(
+            logger, project, stage, changed_file.path, "is in project root"
+        )
         return True
 
     deps: Optional[Dependencies] = project.dependencies
     if deps is None:
         return False
-
-    return __has_invalidated_dependencies(logger, deps, project, stage, path, steps)
-
-
-def output_invalidated(output: Optional[Output], revision_hash: str) -> bool:
-    if output is None:
-        return True
-    if not output.success:
-        return True
-    if output.produced_artifact is None:
-        return True
-    artifact = output.produced_artifact
-    if artifact.revision != revision_hash:
-        return True
-
-    return False
+    return __has_invalidated_dependencies(
+        logger, deps, project, stage, changed_file.path, steps
+    )
 
 
 def _revision_is_newer_than_artifact(
@@ -122,21 +145,7 @@ def _to_changed_files(change_history: list[Revision]) -> set[ChangedFile]:
     return {ChangedFile(path, revision) for path, revision in relevant.items()}
 
 
-def _to_relevant_changes(
-    project: Project, stage: str, change_history: list[Revision]
-) -> set[str]:
-    output: Output = Output.try_read(project.target_path, stage)
-    relevant = set()
-    for history in reversed(sorted(change_history, key=lambda c: c.ord)):
-        if output_invalidated(output, history.hash):
-            relevant.update(history.files_touched)
-        else:
-            return relevant
-
-    return relevant
-
-
-def _are_invalidated(
+def _is_project_invalidated(
     logger: logging.Logger,
     project: Project,
     stage: str,
@@ -146,11 +155,11 @@ def _are_invalidated(
     if project.stages.for_stage(stage) is None:
         return False
 
-    relevant_changes = _to_relevant_changes(project, stage, change_history)
+    changed_files: set[ChangedFile] = _to_changed_files(change_history)
     changes = set(
         filter(
-            lambda c: is_invalidated(logger, project, stage, c, steps),
-            relevant_changes,
+            lambda c: is_invalidated(logger, project, stage, c, change_history, steps),
+            changed_files,
         )
     )
     return len(changes) > 0
@@ -165,7 +174,7 @@ def find_invalidated_projects_for_stage(
 ) -> set[Project]:
     return set(
         filter(
-            lambda p: _are_invalidated(logger, p, stage, change_history, steps),
+            lambda p: _is_project_invalidated(logger, p, stage, change_history, steps),
             all_projects,
         )
     )

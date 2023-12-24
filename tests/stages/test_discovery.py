@@ -3,20 +3,20 @@ from pathlib import Path
 
 from ruamel.yaml import YAML  # type: ignore
 
-from src.mpyl.steps.collection import StepsCollection
-from src.mpyl.project import load_project, Project
 from src.mpyl.constants import BUILD_ARTIFACTS_FOLDER
+from src.mpyl.project import load_project, Project
 from src.mpyl.projects.find import load_projects
 from src.mpyl.stages.discovery import (
     find_invalidated_projects_for_stage,
-    output_invalidated,
     is_invalidated,
     _revision_is_newer_than_artifact,
     ChangedFile,
     _to_changed_files,
+    _is_output_invalid,
 )
 from src.mpyl.steps import Output
 from src.mpyl.steps import build, test, deploy
+from src.mpyl.steps.collection import StepsCollection
 from src.mpyl.utilities.repo import Revision
 from tests import root_test_path, test_resource_path
 from tests.test_resources import test_data
@@ -147,7 +147,10 @@ class TestDiscovery:
                 )
             ),
             stage="build",
-            path="projects/sbt-service-other/file.py",
+            changed_file=ChangedFile(
+                path="projects/sbt-service-other/file.py", revision="hash1"
+            ),
+            change_history=self.revisions,
             steps=StepsCollection(logger=logging.getLogger()),
         )
 
@@ -157,20 +160,25 @@ class TestDiscovery:
         ).read_text(encoding="utf-8")
         output = yaml.load(test_output)
         assert not output.success, "output should not be successful"
-        assert output_invalidated(None, "hash"), "should be invalidated if no output"
-        assert output_invalidated(
-            output, "hash"
+        assert _is_output_invalid(
+            None, [], "revision"
+        ), "should be invalidated if no output"
+        assert _is_output_invalid(
+            output, [], "hash"
         ), "should be invalidated if output is not successful"
-        assert output_invalidated(
-            Output(success=True, message="No artifact produced"), "hash"
+        assert _is_output_invalid(
+            Output(success=True, message="No artifact produced"), [], "hash"
         ), "should be invalidated if no artifact produced"
 
         output.success = True
-        assert output_invalidated(
-            output, "hash"
+        assert _is_output_invalid(
+            output, [], "hash"
         ), "should be invalidated if hash doesn't match"
-        assert not output_invalidated(
-            output, "a2fcde18082e14a260195b26f7f5bfed9dc8fbb4"
+
+        file_revision = "a2fcde18082e14a260195b26f7f5bfed9dc8fbb4"
+        revisions = [Revision(0, file_revision, {"some_file.txt"})]
+        assert not _is_output_invalid(
+            output, revisions, file_revision
         ), "should be valid if hash matches"
 
     def test_listing_override_files(self):
