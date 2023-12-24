@@ -4,7 +4,7 @@ from pathlib import Path
 from ruamel.yaml import YAML  # type: ignore
 
 from src.mpyl.steps.collection import StepsCollection
-from src.mpyl.project import load_project
+from src.mpyl.project import load_project, Project
 from src.mpyl.constants import BUILD_ARTIFACTS_FOLDER
 from src.mpyl.projects.find import load_projects
 from src.mpyl.stages.discovery import (
@@ -26,46 +26,64 @@ class TestDiscovery:
     steps = StepsCollection(logger=logging.getLogger())
     logger = logging.getLogger(__name__)
 
+    def find_invalidated_projects(
+        self, stage: str, projects: set[Project], touched_files: set[str]
+    ):
+        return {
+            project.name
+            for project in find_invalidated_projects_for_stage(
+                self.logger,
+                projects,
+                stage,
+                [Revision(0, "revision", touched_files)],
+                self.steps,
+            )
+        }
+
     def test_should_find_invalidated_test_dependencies(self):
-        with test_data.get_repo() as repo:
-            touched_files = {"tests/projects/service/file.py", "tests/some_file.txt"}
-            projects = set(load_projects(repo.root_dir, repo.find_projects()))
-            assert (
-                len(
-                    find_invalidated_projects_for_stage(
-                        self.logger,
-                        projects,
-                        build.STAGE_NAME,
-                        [Revision(0, "revision", touched_files)],
-                        self.steps,
-                    )
-                )
-                == 1
+        touched_files = {"tests/projects/service/file.py", "tests/some_file.txt"}
+        projects = set(
+            load_projects(
+                test_data.get_repo().root_dir, test_data.get_repo().find_projects()
             )
-            assert (
-                len(
-                    find_invalidated_projects_for_stage(
-                        self.logger,
-                        projects,
-                        test.STAGE_NAME,
-                        [Revision(0, "revision", touched_files)],
-                        self.steps,
-                    )
-                )
-                == 2
+        )
+        assert self.find_invalidated_projects(
+            build.STAGE_NAME, projects, touched_files
+        ) == {"nodeservice"}
+        assert self.find_invalidated_projects(
+            test.STAGE_NAME, projects, touched_files
+        ) == {
+            "nodeservice",
+            "job",
+        }
+        assert self.find_invalidated_projects(
+            deploy.STAGE_NAME, projects, touched_files
+        ) == {
+            "nodeservice",
+            "job",
+        }
+
+    def test_should_find_invalidated_test_dependencies2(self):
+        touched_files = {"tests/projects/service/file.py"}
+        projects = set(
+            load_projects(
+                test_data.get_repo().root_dir, test_data.get_repo().find_projects()
             )
-            assert (
-                len(
-                    find_invalidated_projects_for_stage(
-                        self.logger,
-                        projects,
-                        deploy.STAGE_NAME,
-                        [Revision(0, "revision", touched_files)],
-                        self.steps,
-                    )
-                )
-                == 2
-            )
+        )
+        assert self.find_invalidated_projects(
+            build.STAGE_NAME, projects, touched_files
+        ) == {"nodeservice"}
+        assert self.find_invalidated_projects(
+            test.STAGE_NAME, projects, touched_files
+        ) == {
+            "job",
+            "nodeservice",
+        }
+        assert self.find_invalidated_projects(
+            deploy.STAGE_NAME, projects, touched_files
+        ) == {
+            "nodeservice",
+        }
 
     def test_should_find_invalidated_dependencies(self):
         project_paths = [
