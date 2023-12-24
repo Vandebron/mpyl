@@ -17,6 +17,7 @@ def construct_run_properties(
     run_plan: Optional[dict[Stage, set[Project]]] = None,
     all_projects: Optional[set[Project]] = None,
     root_dir: Path = Path(""),
+    explain_run_plan: bool = False,
 ) -> RunProperties:
     tag = cli_parameters.tag or properties["build"]["versioning"].get("tag")
     if all_projects is None or run_plan is None:
@@ -41,8 +42,11 @@ def construct_run_properties(
                     Stage(stage["name"], stage["icon"])
                     for stage in properties["stages"]
                 ]
+                build_set_logger = logging.getLogger("mpyl")
+                if explain_run_plan:
+                    build_set_logger.setLevel("DEBUG")
                 run_plan = find_build_set(
-                    logger=logging.getLogger("mpyl"),
+                    logger=build_set_logger,
                     all_projects=all_projects,
                     changes_in_branch=(
                         repo.changes_in_branch_including_local()

@@ -241,15 +241,16 @@ def run(
     required=False,
     help="Comma separated list of the projects to build",
 )
+@click.option("--explain", "-e", is_flag=True, help="Explain the current run plan")
 @click.pass_obj
-def status(obj: CliContext, all_, projects):
+def status(obj: CliContext, all_, projects, explain):
     upgrade_check = None
     try:
         upgrade_check = asyncio.wait_for(warn_if_update(obj.console), timeout=3)
         parameters = MpylCliParameters(
             local=sys.stdout.isatty(), all=all_, projects=projects
         )
-        print_status(obj, parameters)
+        print_status(obj, parameters, explain)
     except asyncio.exceptions.TimeoutError:
         pass
     finally:

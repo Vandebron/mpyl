@@ -161,24 +161,27 @@ class TestDiscovery:
         output = yaml.load(test_output)
         assert not output.success, "output should not be successful"
         assert _is_output_invalid(
-            None, [], "revision"
+            self.logger, None, [], "revision"
         ), "should be invalidated if no output"
         assert _is_output_invalid(
-            output, [], "hash"
+            self.logger, output, [], "hash"
         ), "should be invalidated if output is not successful"
         assert _is_output_invalid(
-            Output(success=True, message="No artifact produced"), [], "hash"
+            self.logger,
+            Output(success=True, message="No artifact produced"),
+            [],
+            "hash",
         ), "should be invalidated if no artifact produced"
 
         output.success = True
         assert _is_output_invalid(
-            output, [], "hash"
+            self.logger, output, [], "hash"
         ), "should be invalidated if hash doesn't match"
 
         file_revision = "a2fcde18082e14a260195b26f7f5bfed9dc8fbb4"
         revisions = [Revision(0, file_revision, {"some_file.txt"})]
         assert not _is_output_invalid(
-            output, revisions, file_revision
+            self.logger, output, revisions, file_revision
         ), "should be valid if hash matches"
 
     def test_listing_override_files(self):

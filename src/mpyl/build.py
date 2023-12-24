@@ -23,9 +23,14 @@ from .steps.run_properties import construct_run_properties
 from .steps.steps import Steps, ExecutionException
 
 
-def print_status(obj: CliContext, cli_params: MpylCliParameters):
+def print_status(
+    obj: CliContext, cli_params: MpylCliParameters, explain_run_plan: bool
+):
     run_properties = construct_run_properties(
-        config=obj.config, properties=obj.run_properties, cli_parameters=cli_params
+        config=obj.config,
+        properties=obj.run_properties,
+        cli_parameters=cli_params,
+        explain_run_plan=explain_run_plan,
     )
     console = obj.console
     console.print(f"MPyL log level is set to {run_properties.console.log_level}")

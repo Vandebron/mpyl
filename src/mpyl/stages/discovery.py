@@ -23,7 +23,7 @@ def __log_invalidation(
     logger: logging.Logger, project: Project, stage: str, path: str, message: str
 ) -> None:
     logger.debug(
-        f"Invalidated '{project.name}' for '{stage}' by '{path}' because {message} "
+        f"'{project.name}' touched for '{stage}' by '{path}' because {message} "
     )
 
 
@@ -42,7 +42,8 @@ def __has_invalidated_dependencies(
     }
 
     if stage in touched_stages:
-        __log_invalidation(logger, project, stage, path, "directly touched dependency")
+        message = f"it matches the '{stage}' dependencies {deps.for_stage(stage)}"
+        __log_invalidation(logger, project, stage, path, message)
         return True
 
     step_name = project.stages.for_stage(stage)
@@ -59,7 +60,9 @@ def __has_invalidated_dependencies(
             project, required_artifact
         )
         if producing_stage is not None and producing_stage in touched_stages:
-            message = f"producing stage {producing_stage} for `{required_artifact}` "
+            message = (
+                f"is a producing stage {producing_stage} for `{required_artifact}` "
+            )
             __log_invalidation(logger, project, stage, path, message)
             return True
 
@@ -79,12 +82,15 @@ def is_invalidated(
     )
     if invalidated_by_file:
         output = Output.try_read(project.target_path, stage)
-        return _is_output_invalid(output, change_history, changed_file.revision)
+        return _is_output_invalid(logger, output, change_history, changed_file.revision)
     return False
 
 
 def _is_output_invalid(
-    output: Optional[Output], change_history: list[Revision], changed_file_revision: str
+    logger: logging.Logger,
+    output: Optional[Output],
+    change_history: list[Revision],
+    changed_file_revision: str,
 ) -> bool:
     if output is None:
         return True
@@ -99,11 +105,14 @@ def _is_output_invalid(
         artifact.revision, changed_file_revision, change_history
     )
 
-    message = f"Revision {changed_file_revision} compared to {artifact.revision} from {artifact.producing_step}"
-    if is_newer:
-        logging.debug(f"{message} is newer, invalidating")
-    else:
-        logging.debug(f"{message} is older, cached artifact still valid")
+    valid = "❌ stale" if is_newer else "✅ valid"
+    newer = "newer" if is_newer else "older"
+
+    message = (
+        f"'{artifact.artifact_type.name}' produced by '{artifact.producing_step}' is {valid} "
+        f"because {changed_file_revision} is {newer} than {artifact.revision}  "
+    )
+    logger.debug(message)
 
     return is_newer
 
@@ -116,9 +125,8 @@ def is_invalidated_by_file(
     steps: Optional[StepsCollection],
 ) -> bool:
     if changed_file.path.startswith(project.root_path):
-        __log_invalidation(
-            logger, project, stage, changed_file.path, "is in project root"
-        )
+        message = f"it is under the project root '{project.root_path}'"
+        __log_invalidation(logger, project, stage, changed_file.path, message)
         return True
 
     deps: Optional[Dependencies] = project.dependencies
