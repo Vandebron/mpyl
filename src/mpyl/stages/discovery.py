@@ -2,6 +2,7 @@
 discovered projects have been invalidated due to changes in the source code since the last build of the project's
 output artifact."""
 import logging
+from dataclasses import dataclass
 from typing import Optional
 
 from ..project import Project, Dependencies
@@ -10,6 +11,12 @@ from ..steps import ArtifactType
 from ..steps.collection import StepsCollection
 from ..steps.models import Output
 from ..utilities.repo import Revision
+
+
+@dataclass(frozen=True)
+class ChangedFile:
+    path: str
+    revision: str
 
 
 def __log_invalidation(
@@ -89,6 +96,30 @@ def output_invalidated(output: Optional[Output], revision_hash: str) -> bool:
         return True
 
     return False
+
+
+def _revision_is_newer_than_artifact(
+    artifact_hash: str, file_hash: str, change_history: list[Revision]
+):
+    hashes = {rev.hash for rev in change_history}
+    if artifact_hash not in hashes:
+        return True
+
+    for rev in sorted(change_history, key=lambda c: c.ord):
+        if rev.hash == file_hash:
+            return False
+        if rev.hash == artifact_hash:
+            return True
+    return True
+
+
+def _to_changed_files(change_history: list[Revision]) -> set[ChangedFile]:
+    relevant = dict[str, str]()
+    for history in sorted(change_history, key=lambda c: c.ord):
+        latest = {path: history.hash for path in history.files_touched}
+        relevant.update(latest)
+
+    return {ChangedFile(path, revision) for path, revision in relevant.items()}
 
 
 def _to_relevant_changes(

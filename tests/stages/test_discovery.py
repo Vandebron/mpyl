@@ -11,6 +11,9 @@ from src.mpyl.stages.discovery import (
     find_invalidated_projects_for_stage,
     output_invalidated,
     is_invalidated,
+    _revision_is_newer_than_artifact,
+    ChangedFile,
+    _to_changed_files,
 )
 from src.mpyl.steps import Output
 from src.mpyl.steps import build, test, deploy
@@ -25,6 +28,35 @@ yaml = YAML()
 class TestDiscovery:
     steps = StepsCollection(logger=logging.getLogger())
     logger = logging.getLogger(__name__)
+    revisions = [
+        Revision(0, "hash1", {"projects/job/file.py", "some_file.txt"}),
+        Revision(1, "hash2", {"projects/job/file.py"}),
+        Revision(2, "hash3", {"other_file.txt"}),
+    ]
+
+    def test_should_check_if_newer_than_artifact(self):
+        assert (
+            _revision_is_newer_than_artifact("hash1", "hash3", self.revisions) is True
+        )
+        assert (
+            _revision_is_newer_than_artifact("hash3", "hash1", self.revisions) is False
+        )
+        assert (
+            _revision_is_newer_than_artifact("nonexistent", "hash1", self.revisions)
+            is True
+        )
+        assert (
+            _revision_is_newer_than_artifact("hash2", "nonexistent", self.revisions)
+            is True
+        )
+
+    def test_should_take_latest_revision_per_path(self):
+        changed = _to_changed_files(self.revisions)
+        assert changed == {
+            ChangedFile(path="other_file.txt", revision="hash3"),
+            ChangedFile(path="projects/job/file.py", revision="hash2"),
+            ChangedFile(path="some_file.txt", revision="hash1"),
+        }
 
     def find_invalidated_projects(
         self, stage: str, projects: set[Project], touched_files: set[str]
