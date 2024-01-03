@@ -39,7 +39,9 @@ def to_test_suites(artifact: JunitTestSpec) -> list[TestSuite]:
 
     xml = JUnitXml()
     for file_name in [
-        fn for fn in os.listdir(junit_result_path) if fn.endswith(".xml")
+        fn
+        for fn in os.listdir(junit_result_path)
+        if os.path.isdir(junit_result_path) and fn.endswith(".xml")
     ]:
         xml += JUnitXml.fromfile(Path(junit_result_path, file_name).as_posix())
 
