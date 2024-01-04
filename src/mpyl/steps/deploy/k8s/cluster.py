@@ -1,7 +1,7 @@
 """ Utilities for creating rancher compatible helm charts. """
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Any
 
 from ...models import RunProperties
 from ....project import Target, TargetProperty
@@ -58,7 +58,7 @@ def get_cluster_config(
 
 
 def rancher_namespace_metadata(namespace: str, rancher_config: ClusterConfig):
-    metadata = {
+    metadata: dict[str, Any] = {
         "name": namespace,
     }
 
