@@ -262,8 +262,14 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
 
     namespace = get_namespace(run_properties, project)
 
+    cluster_override = (
+        project.deployment.cluster.get_value(target)
+        if project.deployment and project.deployment.cluster
+        else None
+    )
+
     cluster_config: ClusterConfig = get_cluster_config(
-        target, run_properties, project.deployment.cluster
+        target, run_properties, cluster_override
     )
 
     dry_run = (

@@ -137,7 +137,7 @@ class TestKubernetesChart:
         config = get_cluster_config(
             step_input.run_properties.target,
             step_input.run_properties,
-            config_override="other-test",
+            cluster_override="other-test",
         )
         assert config.cluster_env == "test-other"
         assert config.context == "digital-k8s-test-other"

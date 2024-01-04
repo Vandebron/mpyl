@@ -21,6 +21,12 @@ dependencies:
   postdeploy:
     - 'specs/*.js'
 deployment:
+  cluster:
+    pr: 'Leaf-Test'
+    test: 'Leaf-Test'
+    acceptance: 'AWS-Acceptance'
+    production: 'AWS-Production'
+  namespace: 'dockertest'
   properties:
     env:
       - key: SOME_ENV

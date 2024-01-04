@@ -27,7 +27,7 @@ class ClusterConfig:
 
 
 def get_cluster_config(
-    target: Target, run_properties: RunProperties, config_override: Optional[str]
+    target: Target, run_properties: RunProperties, cluster_override: Optional[str]
 ) -> ClusterConfig:
     kubernetes_config = run_properties.config["kubernetes"]
 
@@ -50,7 +50,7 @@ def get_cluster_config(
         )
 
     cluster_for_env = next(
-        (cluster for cluster in clusters if cluster.name == config_override),
+        (cluster for cluster in clusters if cluster.name == cluster_override),
         default_cluster,
     )
 
