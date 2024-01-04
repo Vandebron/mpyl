@@ -1,39 +1,51 @@
 """ Utilities for creating rancher compatible helm charts. """
 
 from dataclasses import dataclass
+from typing import Optional
 
 from ...models import RunProperties
-from ....project import Target
+from ....project import Target, TargetProperty
 
 
 @dataclass(frozen=True)
 class ClusterConfig:
-    project_id: str
-    cluster_id: str
+    name: str
+    project_id: Optional[str]
+    cluster_id: Optional[str]
     cluster_env: str
     context: str
 
     @staticmethod
     def from_config(config: dict):
         return ClusterConfig(
-            project_id=config["clusterId"],
-            cluster_id=config["clusterId"],
+            name=config["name"],
+            project_id=config.get("clusterId"),
+            cluster_id=config.get("clusterId"),
             cluster_env=config["clusterEnv"],
             context=config["context"],
         )
 
 
-def cluster_config(target: Target, run_properties: RunProperties) -> ClusterConfig:
+def get_cluster_config(
+    target: Target, run_properties: RunProperties, config_override: Optional[str]
+) -> ClusterConfig:
     kubernetes_config = run_properties.config["kubernetes"]
-    cluster_configs = kubernetes_config["rancher"]["cluster"]
 
-    if target in {Target.PULL_REQUEST, Target.PULL_REQUEST_BASE}:
-        return ClusterConfig.from_config(cluster_configs["test"])
-    if target == Target.ACCEPTANCE:
-        return ClusterConfig.from_config(cluster_configs["acceptance"])
-    if target == Target.PRODUCTION:
-        return ClusterConfig.from_config(cluster_configs["production"])
-    raise ValueError(f"Unknown target {target}")
+    clusters = [
+        ClusterConfig.from_config(cluster_config)
+        for cluster_config in kubernetes_config["clusters"]
+    ]
+
+    default_cluster: str = TargetProperty.from_config(
+        kubernetes_config["mainCluster"]
+    ).get_value(target)
+
+    cluster_for_env = next(
+        (cluster for cluster in clusters if cluster.name == config_override),
+        default_cluster,
+    )
+
+    return cluster_for_env
 
 
 def rancher_namespace_metadata(namespace: str, rancher_config: ClusterConfig):

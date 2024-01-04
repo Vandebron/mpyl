@@ -14,7 +14,7 @@ from .k8s import (
     helm,
     get_config_map,
     rollout_restart_deployment,
-    cluster_config,
+    get_cluster_config,
     replace_config_map,
     update_config_map_field,
     get_version_of_deployment,
@@ -65,7 +65,7 @@ class DeployDagster(Step):
         Deploys the docker image produced in the build stage as a Dagster user-code-deployment
         """
         properties = step_input.run_properties
-        context = cluster_config(properties.target, properties).context
+        context = get_cluster_config(properties.target, properties).context
         dagster_config: DagsterConfig = DagsterConfig.from_dict(properties.config)
         dagster_deploy_results = []
 
