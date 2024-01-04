@@ -136,23 +136,48 @@ definitions:
         description: >-
           The path to the folder where the rendered helm chart or kubectl manifest will be written.
           Defaults to target/kubernetes under the root folder of the project.
-      rancher:
+      mainCluster:
         type: object
-        additionalProperties: false
+        description: Main cluster to deploy to. Can be overriden in the project.yaml
         properties:
-          cluster:
-            "$ref": "#/definitions/RancherClusters"
-  RancherClusters:
+          test:
+            type: string
+          acceptance:
+            type: string
+          production:
+            type: string
+      clusters:
+        type: array
+        items:
+          "$ref": "#/definitions/NamedCluster"
+  Clusters:
     type: object
     additionalProperties: false
     properties:
       test:
-        "$ref": "#/definitions/RancherCluster"
+        "$ref": "#/definitions/Cluster"
       acceptance:
-        "$ref": "#/definitions/RancherCluster"
+        "$ref": "#/definitions/Cluster"
       production:
-        "$ref": "#/definitions/RancherCluster"
-  RancherCluster:
+        "$ref": "#/definitions/Cluster"
+  NamedCluster:
+    type: object
+    additionalProperties: false
+    properties:
+      name:
+        type: string
+      clusterId:
+        type: string
+        description: Rancher specific cluster ID
+      projectId:
+        type: string
+        description: Rancher specific project ID
+      clusterEnv:
+        type: string
+      context:
+        type: string
+    required: [ clusterEnv, context ]
+  Cluster:
     type: object
     additionalProperties: false
     properties:

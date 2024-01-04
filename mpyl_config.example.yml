@@ -82,23 +82,27 @@ whiteLists:
       production: ['3.4.5.6']
 kubernetes:
   deployAction: KubectlManifest
-  rancher:
-    cluster:
-      test:
-        clusterId: c-acme
-        projectId: p-acme
-        clusterEnv: test
-        context: acme-k8s-test
-      acceptance:
-        clusterId: c-acme
-        projectId: p-acme
-        clusterEnv: acce
-        context: acme-k8s-acce
-      production:
-        clusterId: c-acme
-        projectId: p-lb52t
-        clusterEnv: prd
-        context: acme-k8s-prod
+  mainCluster:
+    pr: 'K8S-Test'
+    test: 'K8S-Test'
+    acceptance: 'K8S-Acceptance'
+    production: 'K8S-Production'
+  clusters:
+    - name: K8S-Test
+      clusterId: c-acme
+      projectId: p-acme
+      clusterEnv: test
+      context: acme-k8s-test
+    - name: K8S-Acceptance
+      clusterId: c-acme
+      projectId: p-acme
+      clusterEnv: acce
+      context: acme-k8s-acce
+    - name: K8S-Production
+      clusterId: c-acme
+      projectId: p-lb52t
+      clusterEnv: prd
+      context: acme-k8s-prod
 project: # default values
   allowedMaintainers: [ 'Team1', 'Team2', 'MPyL' ]
   deployment:

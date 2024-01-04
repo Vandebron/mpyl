@@ -58,6 +58,11 @@ deployment:
             divisor: 0.5
             resource: limits.memory
   kubernetes:
+    cluster:
+      pr: 'Leaf-Test'
+      test: 'Leaf-Test'
+      acceptance: 'AWS-Acceptance'
+      production: 'AWS-Production'
     role:
       resources:
         - "pods"
