@@ -829,6 +829,20 @@ definitions:
               mainApplicationFile:
                 description: 'MainFile is the path to a bundled JAR, Python, or R file of the application.'
                 type: string
+      cluster:
+        type: object
+        additionalProperties: false
+        properties:
+          pr:
+            type: string
+          test:
+            type: string
+          acceptance:
+            type: string
+          production:
+            type: string
+          all:
+            type: string
       role:
         $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.rbac.v1.PolicyRule'
       metrics:
