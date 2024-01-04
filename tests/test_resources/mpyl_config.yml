@@ -92,10 +92,10 @@ project: # default values
       enabled: true
       hosts:
         - host:
-            pr: "Host(`{SERVICE-NAME}-{PR-NUMBER}.test-backend.nl`)"
-            test: "Host(`{namespace}-{SERVICE-NAME}.test-backend.nl`)"
-            acceptance: "Host(`{namespace}-{SERVICE-NAME}.acce-backend.nl`)"
-            production: "Host(`{namespace}-{SERVICE-NAME}.prod-backend.nl`)"
+            pr: "Host(`{SERVICE-NAME}-{PR-NUMBER}.{CLUSTER-ENV}-backend.nl`)"
+            test: "Host(`{namespace}-{SERVICE-NAME}.{CLUSTER-ENV}-backend.nl`)"
+            acceptance: "Host(`{namespace}-{SERVICE-NAME}.{CLUSTER-ENV}-backend.nl`)"
+            production: "Host(`{namespace}-{SERVICE-NAME}.{CLUSTER-ENV}-backend.nl`)"
           tls:
             all: "le-custom-prod-wildcard-cert"
           whitelists:
