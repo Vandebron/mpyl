@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Optional, Any
 
 from ...models import RunProperties
-from ....project import Target, TargetProperty
+from ....project import Target, TargetProperty, Project
 
 
 @dataclass(frozen=True)
@@ -26,9 +26,15 @@ class ClusterConfig:
         )
 
 
-def get_cluster_config(
-    target: Target, run_properties: RunProperties, cluster_override: Optional[str]
+def get_cluster_config_for_project(
+    target: Target, run_properties: RunProperties, project: Project
 ) -> ClusterConfig:
+    cluster_override = (
+        project.deployment.cluster.get_value(target)
+        if project.deployment and project.deployment.cluster
+        else None
+    )
+
     kubernetes_config = run_properties.config["kubernetes"]
 
     clusters = [

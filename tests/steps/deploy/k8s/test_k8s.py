@@ -4,9 +4,10 @@ import pytest
 from kubernetes.client import V1Probe, V1ObjectMeta
 from pyaml_env import parse_config
 
+from mpyl.steps.deploy.k8s import get_cluster_config_for_project
 from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME
 from src.mpyl.project import Target, Project
-from src.mpyl.steps.deploy.k8s import get_cluster_config, render_manifests
+from src.mpyl.steps.deploy.k8s import render_manifests
 from src.mpyl.steps.deploy.k8s.chart import (
     ChartBuilder,
     to_service_chart,
@@ -122,8 +123,10 @@ class TestKubernetesChart:
             required_artifact=test_data.get_output().produced_artifact,
             dry_run=True,
         )
-        config = get_cluster_config(
-            step_input.run_properties.target, step_input.run_properties, None
+        config = get_cluster_config_for_project(
+            step_input.run_properties.target,
+            step_input.run_properties,
+            project=test_data.get_minimal_project(),
         )
         assert config.cluster_env == "test"
 
@@ -134,10 +137,10 @@ class TestKubernetesChart:
             required_artifact=test_data.get_output().produced_artifact,
             dry_run=True,
         )
-        config = get_cluster_config(
+        config = get_cluster_config_for_project(
             step_input.run_properties.target,
             step_input.run_properties,
-            cluster_override="other-test",
+            project=test_data.get_project(),
         )
         assert config.cluster_env == "test-other"
         assert config.context == "digital-k8s-test-other"

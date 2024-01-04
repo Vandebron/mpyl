@@ -19,9 +19,9 @@ from ....project import Project, Target, ProjectName
 from ....steps import Input, Output
 from ....steps.deploy.k8s import helm
 from ....steps.deploy.k8s.cluster import (
-    get_cluster_config,
     rancher_namespace_metadata,
     ClusterConfig,
+    get_cluster_config_for_project,
 )
 from ....steps.deploy.k8s.resources import to_yaml
 
@@ -284,22 +284,6 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
         cluster_config.context,
         delete_existing,
     )
-
-
-def get_cluster_config_for_project(
-    target: Target, run_properties: RunProperties, project: Project
-) -> ClusterConfig:
-    cluster_override = (
-        project.deployment.cluster.get_value(target)
-        if project.deployment and project.deployment.cluster
-        else None
-    )
-
-    cluster_config: ClusterConfig = get_cluster_config(
-        target, run_properties, cluster_override
-    )
-
-    return cluster_config
 
 
 def substitute_namespaces(

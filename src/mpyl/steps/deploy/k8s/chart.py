@@ -43,7 +43,8 @@ from kubernetes.client import (
 )
 from ruamel.yaml import YAML
 
-from . import substitute_namespaces, get_namespace, get_cluster_config_for_project
+from . import substitute_namespaces, get_namespace
+from .cluster import get_cluster_config_for_project
 from .resources import (
     CustomResourceDefinition,
     to_dict,

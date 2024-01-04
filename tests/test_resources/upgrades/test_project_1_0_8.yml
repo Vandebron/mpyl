@@ -22,10 +22,10 @@ dependencies:
     - 'specs/*.js'
 deployment:
   cluster:
-    pr: 'Leaf-Test'
-    test: 'Leaf-Test'
-    acceptance: 'AWS-Acceptance'
-    production: 'AWS-Production'
+    pr: 'other-test'
+    test: 'test'
+    acceptance: 'acce'
+    production: 'prod'
   namespace: 'dockertest'
   properties:
     env:
