@@ -129,11 +129,7 @@ def upsert_namespace(
     )
     api = client.CoreV1Api()
 
-    meta_data = (
-        rancher_namespace_metadata(namespace, cluster_config)
-        if cluster_config.project_id
-        else None
-    )
+    meta_data = rancher_namespace_metadata(namespace, cluster_config)
     namespaces = api.list_namespace(field_selector=f"metadata.name={namespace}")
 
     if len(namespaces.items) == 0 and not dry_run:

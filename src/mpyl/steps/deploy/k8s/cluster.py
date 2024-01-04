@@ -58,14 +58,18 @@ def get_cluster_config(
 
 
 def rancher_namespace_metadata(namespace: str, rancher_config: ClusterConfig):
-    return {
-        "annotations": {
-            "field.cattle.io/projectId": f"{rancher_config.cluster_id}:{rancher_config.project_id}",
-            "lifecycle.cattle.io/create.namespace-auth": "true",
-        },
-        "labels": {
-            "field.cattle.io/projectId": rancher_config.project_id,
-            "kubernetes.io/metadata.name": namespace,
-        },
+    metadata = {
         "name": namespace,
     }
+
+    if rancher_config.project_id and rancher_config.cluster_id:
+        metadata["annotations"] = {
+            "field.cattle.io/projectId": f"{rancher_config.cluster_id}:{rancher_config.project_id}",
+            "lifecycle.cattle.io/create.namespace-auth": "true",
+        }
+        metadata["labels"] = {
+            "field.cattle.io/projectId": rancher_config.project_id,
+            "kubernetes.io/metadata.name": namespace,
+        }
+
+    return metadata
