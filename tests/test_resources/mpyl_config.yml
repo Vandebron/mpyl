@@ -80,7 +80,7 @@ kubernetes:
     - name: 'prod'
       clusterId: c-ccccc
       projectId: p-33333
-      clusterEnv: prd
+      clusterEnv: prod
       context: digital-k8s-prod
 s3:
   accessKeyId: !ENV ${AWS_ACCESS_KEY_ID:aws_access_key_id}

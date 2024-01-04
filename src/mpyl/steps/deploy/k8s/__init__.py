@@ -292,6 +292,22 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
     )
 
 
+def get_cluster_env_for_project(
+    target: Target, run_properties: RunProperties, project: Project
+) -> str:
+    cluster_override = (
+        project.deployment.cluster.get_value(target)
+        if project.deployment and project.deployment.cluster
+        else None
+    )
+
+    cluster_config: ClusterConfig = get_cluster_config(
+        target, run_properties, cluster_override
+    )
+
+    return cluster_config.cluster_env
+
+
 def substitute_namespaces(
     env_vars: dict[str, str],
     all_projects: set[ProjectName],

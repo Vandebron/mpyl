@@ -152,6 +152,7 @@ class TestKubernetesChart:
             target=Target.PRODUCTION,
             pr_number=1234,
             namespace="pr-1234",
+            cluster_env="test",
         )
         route.spec["tls"] = {"secretName": 1234}
 
