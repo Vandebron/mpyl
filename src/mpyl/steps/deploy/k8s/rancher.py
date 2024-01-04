@@ -36,9 +36,18 @@ def get_cluster_config(
         for cluster_config in kubernetes_config["clusters"]
     ]
 
-    default_cluster: str = TargetProperty.from_config(
+    default_cluster_name: str = TargetProperty.from_config(
         kubernetes_config["mainCluster"]
     ).get_value(target)
+
+    default_cluster: ClusterConfig = next(
+        cluster for cluster in clusters if cluster.name == default_cluster_name
+    )
+
+    if not default_cluster:
+        raise ValueError(
+            f"Default cluster {default_cluster_name} not found in list of clusters"
+        )
 
     cluster_for_env = next(
         (cluster for cluster in clusters if cluster.name == config_override),
