@@ -43,7 +43,7 @@ from kubernetes.client import (
 )
 from ruamel.yaml import YAML
 
-from . import substitute_namespaces, get_namespace, get_cluster_env_for_project
+from . import substitute_namespaces, get_namespace, get_cluster_config_for_project
 from .resources import (
     CustomResourceDefinition,
     to_dict,
@@ -509,9 +509,9 @@ class ChartBuilder:
 
     def to_ingress_routes(self, https: bool) -> list[V1AlphaIngressRoute]:
         hosts = self.create_host_wrappers()
-        cluster_env = get_cluster_env_for_project(
+        cluster_env = get_cluster_config_for_project(
             self.target, self.step_input.run_properties, self.project
-        )
+        ).cluster_env
         return [
             V1AlphaIngressRoute(
                 metadata=self._to_object_meta(
