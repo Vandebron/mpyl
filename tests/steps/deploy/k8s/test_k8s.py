@@ -6,7 +6,7 @@ from pyaml_env import parse_config
 
 from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME
 from src.mpyl.project import Target, Project
-from src.mpyl.steps.deploy.k8s import cluster_config, render_manifests
+from src.mpyl.steps.deploy.k8s import get_cluster_config, render_manifests
 from src.mpyl.steps.deploy.k8s.chart import (
     ChartBuilder,
     to_service_chart,
@@ -122,10 +122,25 @@ class TestKubernetesChart:
             required_artifact=test_data.get_output().produced_artifact,
             dry_run=True,
         )
-        config = cluster_config(
-            step_input.run_properties.target, step_input.run_properties
+        config = get_cluster_config(
+            step_input.run_properties.target, step_input.run_properties, None
         )
         assert config.cluster_env == "test"
+
+    def test_load_cluster_config_with_project_override(self):
+        step_input = Input(
+            get_project(),
+            test_data.RUN_PROPERTIES,
+            required_artifact=test_data.get_output().produced_artifact,
+            dry_run=True,
+        )
+        config = get_cluster_config(
+            step_input.run_properties.target,
+            step_input.run_properties,
+            config_override="other-test",
+        )
+        assert config.cluster_env == "test-other"
+        assert config.context == "digital-k8s-test-other"
 
     def test_should_validate_against_crd_schema(self):
         project = test_data.get_project()

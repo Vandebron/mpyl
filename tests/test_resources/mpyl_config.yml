@@ -58,23 +58,30 @@ whiteLists:
 cypress:
   cypressSourceCodePath: 'test_resources/cypress'
 kubernetes:
-  rancher:
-    cluster:
-      test:
-        clusterId: c-xxxxx
-        projectId: p-11111
-        clusterEnv: test
-        context: digital-k8s-test
-      acceptance:
-        clusterId: c-zzzzz
-        projectId: p-22222
-        clusterEnv: acce
-        context: digital-k8s-acce
-      production:
-        clusterId: c-ccccc
-        projectId: p-33333
-        clusterEnv: prd
-        context: digital-k8s-prod
+  mainCluster:
+    pr: 'test'
+    test: 'test'
+    acceptance: 'acce'
+    production: 'prod'
+  clusters:
+    - name: 'test'
+      clusterId: c-xxxxx
+      projectId: p-11111
+      clusterEnv: test
+      context: digital-k8s-test
+    - name: 'other-test'
+      clusterEnv: test-other
+      context: digital-k8s-test-other
+    - name: 'acce'
+      clusterId: c-zzzzz
+      projectId: p-22222
+      clusterEnv: acce
+      context: digital-k8s-acce
+    - name: 'prod'
+      clusterId: c-ccccc
+      projectId: p-33333
+      clusterEnv: prd
+      context: digital-k8s-prod
 s3:
   accessKeyId: !ENV ${AWS_ACCESS_KEY_ID:aws_access_key_id}
   secretAccessKey: !ENV ${AWS_SECRET_ACCESS_KEY:aws_secret_access_key}
