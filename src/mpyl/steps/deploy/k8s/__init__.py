@@ -18,7 +18,7 @@ from ...models import RunProperties, input_to_artifact, ArtifactType, ArtifactSp
 from ....project import Project, Target, ProjectName
 from ....steps import Input, Output
 from ....steps.deploy.k8s import helm
-from ....steps.deploy.k8s.rancher import (
+from ....steps.deploy.k8s.cluster import (
     get_cluster_config,
     rancher_namespace_metadata,
     ClusterConfig,
