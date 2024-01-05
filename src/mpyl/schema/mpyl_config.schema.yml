@@ -115,6 +115,9 @@ definitions:
   Kubernetes:
     type: object
     additionalProperties: false
+    required:
+      - mainCluster
+      - clusters
     properties:
       deployAction:
         type: string
@@ -176,7 +179,7 @@ definitions:
         type: string
       context:
         type: string
-    required: [ clusterEnv, context ]
+    required: [ name, clusterEnv, context ]
   Cluster:
     type: object
     additionalProperties: false
