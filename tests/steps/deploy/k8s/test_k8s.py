@@ -4,10 +4,9 @@ import pytest
 from kubernetes.client import V1Probe, V1ObjectMeta
 from pyaml_env import parse_config
 
-from mpyl.steps.deploy.k8s import get_cluster_config_for_project
 from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME
 from src.mpyl.project import Target, Project
-from src.mpyl.steps.deploy.k8s import render_manifests
+from src.mpyl.steps.deploy.k8s import render_manifests, get_cluster_config_for_project
 from src.mpyl.steps.deploy.k8s.chart import (
     ChartBuilder,
     to_service_chart,
