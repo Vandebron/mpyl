@@ -169,22 +169,27 @@ class ConfigUpgraderOne412(Upgrader):
 
     def upgrade(self, previous_dict: ordereddict) -> ordereddict:
         if kubernetes := previous_dict.get("kubernetes"):
-            if cluster := kubernetes.get("rancher").get("cluster"):
-                envs = ["pr", "test", "acceptance", "production"]
+            if rancher := kubernetes.get("rancher"):
+                if cluster := rancher.get("cluster"):
+                    envs = ["pr", "test", "acceptance", "production"]
 
-                clusters = [cluster.get(env) for env in envs if cluster.get(env)]
-                named_clusters = [{"name": c["clusterEnv"], **c} for c in clusters]
+                    clusters = [cluster.get(env) for env in envs if cluster.get(env)]
+                    named_clusters = [{"name": c["clusterEnv"], **c} for c in clusters]
 
-                kubernetes["clusters"] = named_clusters
-                kubernetes.pop("rancher")
+                    kubernetes["clusters"] = named_clusters
+                    kubernetes.pop("rancher")
 
-                kubernetes["mainCluster"] = {
-                    env: next(
-                        (c["clusterEnv"] for c in named_clusters if c["name"] == env),
-                        "MISSING",
-                    )
-                    for env in envs
-                }
+                    kubernetes["mainCluster"] = {
+                        env: next(
+                            (
+                                c["clusterEnv"]
+                                for c in named_clusters
+                                if c["name"] == env
+                            ),
+                            "MISSING",
+                        )
+                        for env in envs
+                    }
 
         return previous_dict
 
