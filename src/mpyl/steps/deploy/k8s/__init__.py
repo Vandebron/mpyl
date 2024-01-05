@@ -19,7 +19,7 @@ from ....project import Project, Target, ProjectName
 from ....steps import Input, Output
 from ....steps.deploy.k8s import helm
 from ....steps.deploy.k8s.cluster import (
-    rancher_namespace_metadata,
+    get_namespace_metadata,
     ClusterConfig,
     get_cluster_config_for_project,
 )
@@ -129,7 +129,7 @@ def upsert_namespace(
     )
     api = client.CoreV1Api()
 
-    meta_data = rancher_namespace_metadata(namespace, cluster_config)
+    meta_data = get_namespace_metadata(namespace, cluster_config)
     namespaces = api.list_namespace(field_selector=f"metadata.name={namespace}")
 
     if len(namespaces.items) == 0 and not dry_run:
