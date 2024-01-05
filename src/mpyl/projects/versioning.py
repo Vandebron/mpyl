@@ -172,18 +172,18 @@ class ConfigUpgraderOne412(Upgrader):
             if cluster := kubernetes.get("rancher").get("cluster"):
                 envs = ["pr", "test", "acceptance", "production"]
 
-                clusters = [cluster.get(x) for x in envs if cluster.get(x)]
+                clusters = [cluster.get(env) for env in envs if cluster.get(env)]
                 named_clusters = [{"name": c["clusterEnv"], **c} for c in clusters]
 
                 kubernetes["clusters"] = named_clusters
                 kubernetes.pop("rancher")
 
                 kubernetes["mainCluster"] = {
-                    x: next(
-                        (c["clusterEnv"] for c in named_clusters if c["name"] == x),
+                    env: next(
+                        (c["clusterEnv"] for c in named_clusters if c["name"] == env),
                         "MISSING",
                     )
-                    for x in envs
+                    for env in envs
                 }
 
         return previous_dict
