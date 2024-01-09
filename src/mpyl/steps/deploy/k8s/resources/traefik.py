@@ -32,12 +32,14 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
         host: HostWrapper,
         target: Target,
         namespace: str,
+        cluster_env: str,
         pr_number: Optional[int],
         https: bool = True,
     ):
-        def _interpolate_names(host: str, name: str) -> str:
+        def _interpolate_names(host: str, name: str, cluster_env: str) -> str:
             host = host.replace("{SERVICE-NAME}", name)
             host = host.replace("{namespace}", namespace)
+            host = host.replace("{CLUSTER-ENV}", cluster_env)
             if pr_number:
                 return host.replace("{PR-NUMBER}", str(pr_number))
             return host
@@ -47,6 +49,7 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
             "match": _interpolate_names(
                 host=host.traefik_host.host.get_value(target),
                 name=host.name,
+                cluster_env=cluster_env,
             ),
             "services": [
                 {"name": host.name, "kind": "Service", "port": host.service_port}

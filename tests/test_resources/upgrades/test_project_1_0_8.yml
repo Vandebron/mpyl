@@ -21,6 +21,12 @@ dependencies:
   postdeploy:
     - 'specs/*.js'
 deployment:
+  cluster:
+    pr: 'other-test'
+    test: 'test'
+    acceptance: 'acce'
+    production: 'prod'
+  namespace: 'dockertest'
   properties:
     env:
       - key: SOME_ENV

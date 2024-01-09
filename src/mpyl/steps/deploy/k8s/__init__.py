@@ -18,10 +18,10 @@ from ...models import RunProperties, input_to_artifact, ArtifactType, ArtifactSp
 from ....project import Project, Target, ProjectName
 from ....steps import Input, Output
 from ....steps.deploy.k8s import helm
-from ....steps.deploy.k8s.rancher import (
-    cluster_config,
-    rancher_namespace_metadata,
+from ....steps.deploy.k8s.cluster import (
+    get_namespace_metadata,
     ClusterConfig,
+    get_cluster_config_for_project,
 )
 from ....steps.deploy.k8s.resources import to_yaml
 
@@ -121,15 +121,15 @@ def upsert_namespace(
     namespace: str,
     dry_run: bool,
     run_properties: RunProperties,
-    rancher_config: ClusterConfig,
+    cluster_config: ClusterConfig,
 ) -> None:
-    config.load_kube_config(context=rancher_config.context)
+    config.load_kube_config(context=cluster_config.context)
     logger.info(
-        f"Deploying target {run_properties.target} and k8s context {rancher_config.context}"
+        f"Deploying target {run_properties.target} and k8s context {cluster_config.context}"
     )
     api = client.CoreV1Api()
 
-    meta_data = rancher_namespace_metadata(namespace, rancher_config)
+    meta_data = get_namespace_metadata(namespace, cluster_config)
     namespaces = api.list_namespace(field_selector=f"metadata.name={namespace}")
 
     if len(namespaces.items) == 0 and not dry_run:
@@ -257,7 +257,11 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
         )
 
     namespace = get_namespace(run_properties, project)
-    rancher_config: ClusterConfig = cluster_config(target, run_properties)
+
+    cluster_config: ClusterConfig = get_cluster_config_for_project(
+        target, run_properties, project
+    )
+
     dry_run = (
         step_input.dry_run
         or action == DeployAction.HELM_DRY_RUN.value  # pylint: disable=no-member
@@ -267,17 +271,17 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
         namespace,
         dry_run,
         run_properties,
-        rancher_config,
+        cluster_config,
     )
 
-    upsert_namespace(logger, namespace, dry_run, run_properties, rancher_config)
+    upsert_namespace(logger, namespace, dry_run, run_properties, cluster_config)
     return helm.install(
         logger,
         chart_path,
         dry_run,
         release_name,
         namespace,
-        rancher_config.context,
+        cluster_config.context,
         delete_existing,
     )
 

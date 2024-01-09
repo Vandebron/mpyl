@@ -442,6 +442,7 @@ class Build:
 
 @dataclass(frozen=True)
 class Deployment:
+    cluster: Optional[TargetProperty[str]]
     namespace: Optional[str]
     properties: Properties
     kubernetes: Optional[Kubernetes]
@@ -456,8 +457,10 @@ class Deployment:
         dagster = values.get("dagster")
         traefik = values.get("traefik")
         s3_bucket = values.get("s3")
+        cluster = values.get("cluster")
 
         return Deployment(
+            cluster=TargetProperty.from_config(cluster) if cluster else None,
             namespace=values.get("namespace"),
             properties=Properties.from_config(props) if props else None,
             kubernetes=Kubernetes.from_config(kubernetes) if kubernetes else None,

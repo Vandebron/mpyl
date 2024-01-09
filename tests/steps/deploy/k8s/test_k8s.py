@@ -6,7 +6,7 @@ from pyaml_env import parse_config
 
 from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME
 from src.mpyl.project import Target, Project
-from src.mpyl.steps.deploy.k8s import cluster_config, render_manifests
+from src.mpyl.steps.deploy.k8s import render_manifests, get_cluster_config_for_project
 from src.mpyl.steps.deploy.k8s.chart import (
     ChartBuilder,
     to_service_chart,
@@ -122,10 +122,27 @@ class TestKubernetesChart:
             required_artifact=test_data.get_output().produced_artifact,
             dry_run=True,
         )
-        config = cluster_config(
-            step_input.run_properties.target, step_input.run_properties
+        config = get_cluster_config_for_project(
+            step_input.run_properties.target,
+            step_input.run_properties,
+            project=test_data.get_minimal_project(),
         )
         assert config.cluster_env == "test"
+
+    def test_load_cluster_config_with_project_override(self):
+        step_input = Input(
+            get_project(),
+            test_data.RUN_PROPERTIES,
+            required_artifact=test_data.get_output().produced_artifact,
+            dry_run=True,
+        )
+        config = get_cluster_config_for_project(
+            step_input.run_properties.target,
+            step_input.run_properties,
+            project=test_data.get_project(),
+        )
+        assert config.cluster_env == "test-other"
+        assert config.context == "digital-k8s-test-other"
 
     def test_should_validate_against_crd_schema(self):
         project = test_data.get_project()
@@ -137,6 +154,7 @@ class TestKubernetesChart:
             target=Target.PRODUCTION,
             pr_number=1234,
             namespace="pr-1234",
+            cluster_env="test",
         )
         route.spec["tls"] = {"secretName": 1234}
 
