@@ -43,6 +43,7 @@ class Steps:
 
     _logger: Logger
     _properties: RunProperties
+    _steps_collection: StepsCollection
 
     def __init__(
         self,
