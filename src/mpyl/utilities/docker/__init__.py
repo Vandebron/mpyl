@@ -198,7 +198,7 @@ def push_to_registry(
     image = docker.image.inspect(image_name)
     logger.debug(f"Found image {image}")
 
-    login(logger=logger, registry_config=docker_config)
+    login_ecr(logger=logger, registry_config=docker_config)
     full_image_path = docker_registry_path(docker_config, image_name)
     docker.image.tag(image, full_image_path)
     docker.image.push(full_image_path, quiet=False)
@@ -315,12 +315,23 @@ def build(
         return False
 
 
-def login(logger: Logger, registry_config: DockerRegistryConfig) -> None:
-    logger.info(f"Logging in with user '{registry_config.user_name}'")
-    docker.login(
-        server=f"https://{registry_config.host_name}",
-        username=registry_config.user_name,
-        password=registry_config.password,
+# def login(logger: Logger, registry_config: DockerRegistryConfig) -> None:
+#     logger.info(f"Logging in with user '{registry_config.user_name}'")
+#     docker.login(
+#         server=f"https://{registry_config.host_name}",
+#         username=registry_config.user_name,
+#         password=registry_config.password,
+#     )
+#     logger.debug(f"Logged in as '{registry_config.user_name}'")
+
+
+def login_ecr(logger: Logger, registry_config: DockerRegistryConfig) -> None:
+    logger.info(f"Logging in to ECR with user '{registry_config.user_name}'")
+    docker.login_ecr(
+        aws_access_key_id=registry_config.user_name,
+        aws_secret_access_key=registry_config.password,
+        region_name='eu-central-1',
+        registry=registry_config.host_name,
     )
     logger.debug(f"Logged in as '{registry_config.user_name}'")
 

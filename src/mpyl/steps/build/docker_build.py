@@ -30,7 +30,7 @@ from ...utilities.docker import (
     build,
     docker_image_tag,
     docker_file_path,
-    login,
+    login_ecr,
     DockerImageSpec,
     registry_for_project,
     get_default_build_args,
@@ -71,7 +71,7 @@ class BuildDocker(Step):
         docker_registry_config = registry_for_project(docker_config, step_input.project)
         if not step_input.dry_run:
             # log in to registry, because we may need to pull in a base image
-            login(logger=self._logger, registry_config=docker_registry_config)
+            login_ecr(logger=self._logger, registry_config=docker_registry_config)
 
         with open(".dockerignore", "w+", encoding="utf-8") as ignore_file:
             contents = "\n".join(DOCKER_IGNORE_DEFAULT)
