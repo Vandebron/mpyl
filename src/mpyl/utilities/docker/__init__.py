@@ -330,7 +330,7 @@ def login_ecr(logger: Logger, registry_config: DockerRegistryConfig) -> None:
     docker.login_ecr(
         aws_access_key_id=registry_config.user_name,
         aws_secret_access_key=registry_config.password,
-        region_name='eu-central-1',
+        region_name="eu-central-1",
         registry=registry_config.host_name,
     )
     logger.debug(f"Logged in as '{registry_config.user_name}'")
