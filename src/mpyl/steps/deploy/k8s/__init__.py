@@ -206,10 +206,10 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
             else run_properties.target.name.lower()
         )
         deployment_details = (
-            f"cluster: {cluster} \n"
-            + f"repository: {RepoConfig.from_config(run_properties.config).repo_credentials.name} \n"
-            + f"revision: {run_properties.versioning.revision} \n"
-            + f"tag: {run_properties.versioning.identifier} \n"
+            f"cluster: {cluster}\n"
+            + f"repository: {RepoConfig.from_config(run_properties.config).repo_credentials.name}\n"
+            + f"revision: {run_properties.versioning.revision}\n"
+            + f"tag: {run_properties.versioning.identifier}\n"
         )
         with Path(path / "deployment.yaml").open(mode="w+", encoding="utf-8") as file:
             file.write(deployment_details)
