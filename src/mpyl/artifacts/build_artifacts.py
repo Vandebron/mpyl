@@ -142,7 +142,11 @@ class ArtifactsRepository:
         path_transformer: PathTransformer,
         run_properties: RunProperties,
         github_config: Optional[GithubConfig] = None,
-    ) -> None:
+    ) -> bool:
+        """
+        Function that pushes the build artifacts to the remote repository
+        :return: True if a PR was created, False otherwise
+        """
         with TemporaryDirectory() as tmp_repo_dir:
             repo_path = Path(tmp_repo_dir)
             with Repository.from_clone(
@@ -179,19 +183,22 @@ class ArtifactsRepository:
                     self.logger.info(
                         f"Pushed {branch} with {copied_paths} copied paths to {artifact_repo.remote_url}"
                     )
+
+                    if (
+                        path_transformer.artifact_type() == ArtifactType.ARGO
+                        and github_config
+                    ):
+                        self.__create_pr(
+                            github_config=github_config,
+                            run_properties=run_properties,
+                            revision=revision,
+                            branch=branch,
+                        )
+                        return True
                 else:
                     self.logger.info("No changes detected, nothing to push")
 
-                if (
-                    path_transformer.artifact_type() == ArtifactType.ARGO
-                    and github_config
-                ):
-                    self.__create_pr(
-                        github_config=github_config,
-                        run_properties=run_properties,
-                        revision=revision,
-                        branch=branch,
-                    )
+                return False
 
     def copy_files(
         self,
