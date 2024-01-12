@@ -572,7 +572,7 @@ def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: Artifact
         github = obj.config["vcs"]["argoGithub"]
         github_config = GithubConfig.from_github_config(github=github)
 
-    has_pr_been_created = build_artifacts.push(
+    build_artifacts.push(
         branch=branch_name(
             identifier=target_branch,
             artifact_type=artifact_type,
@@ -585,8 +585,6 @@ def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: Artifact
         run_properties=run_properties,
         github_config=github_config,
     )
-
-    obj.console.print(has_pr_been_created)
 
 
 def __get_target_branch(run_properties: RunProperties, tag: str, pr: int) -> str:
