@@ -100,9 +100,10 @@ class TestSbt(Step):
             suite = to_test_suites(
                 cast(JunitTestSpec, test_result.produced_artifact.spec)
             )
-            errors = sum_suites(suite).errors
+            combined = sum_suites(suite)
+            errors = combined.errors
             summary = dataclasses.replace(
-                sum_suites(suite), errors=errors if test_result.success else errors + 1
+                combined, errors=errors if test_result.success else errors + 1
             )
             return Output(
                 success=summary.is_success,
