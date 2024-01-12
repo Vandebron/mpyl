@@ -1,4 +1,5 @@
 """A step to compile and run tests for an SBT project"""
+import dataclasses
 from logging import Logger
 from typing import Callable, cast
 
@@ -93,7 +94,10 @@ class TestSbt(Step):
             suite = to_test_suites(
                 cast(JunitTestSpec, test_result.produced_artifact.spec)
             )
-            summary = sum_suites(suite)
+            errors = sum_suites(suite).errors
+            summary = dataclasses.replace(
+                sum_suites(suite), errors=errors if test_result.success else errors + 1
+            )
             return Output(
                 success=summary.is_success,
                 message=f"Tests results produced for {project.name} ({summary})",
