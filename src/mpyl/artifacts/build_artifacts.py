@@ -181,6 +181,7 @@ class ArtifactsRepository:
                     )
                 else:
                     self.logger.info("No changes detected, nothing to push")
+                    return
 
                 if (
                     path_transformer.artifact_type() == ArtifactType.ARGO
