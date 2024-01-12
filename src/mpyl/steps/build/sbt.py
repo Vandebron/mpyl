@@ -40,7 +40,9 @@ class BuildSbt(Step):
         image_name = docker_image_tag(step_input)
         command = self._construct_sbt_command(step_input, image_name)
 
-        output = custom_check_output(self.logger, command=command)
+        output = custom_check_output(
+            logger=self.logger, command=command, use_print=True
+        )
         artifact = input_to_artifact(
             ArtifactType.DOCKER_IMAGE, step_input, DockerImageSpec(image=image_name)
         )

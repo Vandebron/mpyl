@@ -9,7 +9,10 @@ from ...steps.models import Output
 
 
 def custom_check_output(
-    logger: Logger, command: Union[str, list[str]], capture_stdout: bool = False
+    logger: Logger,
+    command: Union[str, list[str]],
+    capture_stdout: bool = False,
+    use_print: bool = False,
 ) -> Output:
     """
     Wrapper around subprocess.Popen
@@ -39,7 +42,12 @@ def custom_check_output(
 
             for line in iter(process.stdout.readline, ""):
                 if line:
-                    logger.info(try_parse_ansi(line.rstrip()))
+                    stripped_line = line.rstrip()
+                    if use_print:
+                        print(stripped_line)
+                    else:
+                        logger.info(try_parse_ansi(stripped_line))
+
                 if process.poll() is not None:
                     break
             success = process.wait() == 0

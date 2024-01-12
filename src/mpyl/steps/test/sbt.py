@@ -41,7 +41,9 @@ class TestSbt(Step):
         command_compile = self._construct_sbt_command(
             step_input, sbt_config, self._construct_sbt_command_compile_with_coverage
         )
-        compile_outcome = custom_check_output(self._logger, command_compile)
+        compile_outcome = custom_check_output(
+            logger=self._logger, command=command_compile, use_print=True
+        )
         project_name = step_input.project.name
         if not compile_outcome.success:
             return Output(
@@ -53,7 +55,9 @@ class TestSbt(Step):
         command_test = self._construct_sbt_command(
             step_input, sbt_config, self._construct_sbt_command_test_with_coverage
         )
-        test_outcome = custom_check_output(self._logger, command_test)
+        test_outcome = custom_check_output(
+            logger=self._logger, command=command_test, use_print=True
+        )
         artifact = self._extract_test_report(step_input.project, step_input)
         if not test_outcome.success:
             return Output(
@@ -69,7 +73,9 @@ class TestSbt(Step):
         command_test_without_coverage = self._construct_sbt_command(
             step_input, sbt_config, self._construct_sbt_command_test_without_coverage
         )
-        run_outcome = custom_check_output(self._logger, command_test_without_coverage)
+        run_outcome = custom_check_output(
+            logger=self._logger, command=command_test_without_coverage, use_print=True
+        )
         artifact = self._extract_test_report(step_input.project, step_input)
         if not run_outcome.success:
             return Output(
