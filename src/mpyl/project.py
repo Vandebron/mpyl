@@ -587,7 +587,8 @@ class Project:
 
 def validate_project(yaml_values: dict, root_dir: Path) -> dict:
     """
-    :file the file to validate
+    :type yaml_values: the yaml dictionary to validate
+    :type root_dir: the root dir
     :return: the validated schema
     :raises `jsonschema.exceptions.ValidationError` when validation fails
     """

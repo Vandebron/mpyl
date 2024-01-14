@@ -88,3 +88,9 @@ class TestMpylSchema:
     def test_root_path(self):
         project = load_project(self.resource_path, Path("test_project.yml"))
         assert project.path == "test_project.yml"
+
+    def test_dynamic_stages(self):
+        project = load_project(
+            self.resource_path / "dynamic_stages", Path("test_project.yml")
+        )
+        assert project.path == "test_project.yml"

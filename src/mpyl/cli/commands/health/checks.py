@@ -63,7 +63,7 @@ def perform_health_checks(
         default=DEFAULT_CONFIG_FILE_NAME,
         config_name="config",
     ):
-        __validate_config(
+        _validate_config(
             console,
             config_file_path=config_path,
             schema_path="../../../schema/mpyl_config.schema.yml",
@@ -78,7 +78,7 @@ def perform_health_checks(
         default=DEFAULT_RUN_PROPERTIES_FILE_NAME,
         config_name="run properties",
     ):
-        __validate_config(
+        _validate_config(
             console,
             config_file_path=properties_path,
             schema_path="../../../schema/run_properties.schema.yml",
@@ -188,12 +188,13 @@ def __validate_config_path(
     return None
 
 
-def __validate_config(
+def _validate_config(
     console: HealthConsole,
     config_file_path: Path,
     schema_path: str,
     upgraders: list[Upgrader],
     perform_upgrade: bool = False,
+    root_dir=Path("."),
 ):
     path, diff = check_upgrade_needed(config_file_path, upgraders)
     pretty_diff = pretty_print(diff) if diff else ""
@@ -221,7 +222,7 @@ def __validate_config(
     schema_dict = pkgutil.get_data(__name__, schema_path)
     if schema_dict:
         try:
-            validate(parsed, schema_dict.decode("utf-8"))
+            validate(parsed, schema_dict.decode("utf-8"), root_dir)
             console.check(f"{config_file_path} is valid", success=True)
         except jsonschema.exceptions.ValidationError as exc:
             console.check(

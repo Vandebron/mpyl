@@ -16,11 +16,7 @@ build:
     width: 0
     logLevel: INFO
 stages:
-  - name: 'build'
+  - name: 'invalidStage'
     icon: '🏗️'
-  - name: 'test'
-    icon: '📋'
-  - name : 'deploy'
+  - name : 'firstStage'
     icon: '🚀'
-  - name: 'postdeploy'
-    icon: '🦺️'

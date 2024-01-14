@@ -42,7 +42,7 @@ properties:
     type: object
     additionalProperties: true
     propertyNames:
-      $ref: 'run_properties.yml#/definitions/stageNames'
+      $ref: 'mpyl_stages.schema.yml#/definitions/stageNames'
     properties:
       build:
         description: Output needs to be a docker image
@@ -298,7 +298,7 @@ properties:
               production:
                 type: array
   dependencies:
-    $ref: 'run_properties.yml#/definitions/dependencies'
+    $ref: 'mpyl_stages.schema.yml#/definitions/dependencies'
 definitions:
   traefik:
     additionalProperties: false

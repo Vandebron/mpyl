@@ -31,8 +31,8 @@ def load_schema(schema_string: str, root_dir: Path) -> Draft7Validator:
     )
     local_schema_dictionary.update(
         {
-            "run_properties.yml": yaml.load(
-                Path(root_dir, "run_properties.yml").read_text("utf-8")
+            "mpyl_stages.schema.yml": yaml.load(
+                Path(root_dir, "mpyl_stages.schema.yml").read_text("utf-8")
             )
         }
     )
