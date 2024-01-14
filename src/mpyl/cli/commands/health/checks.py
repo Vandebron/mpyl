@@ -17,7 +17,11 @@ from rich.prompt import Confirm
 
 from ..build.jenkins import get_token
 from ....cli import get_latest_publication, get_meta_version
-from ....constants import DEFAULT_CONFIG_FILE_NAME, DEFAULT_RUN_PROPERTIES_FILE_NAME
+from ....constants import (
+    DEFAULT_CONFIG_FILE_NAME,
+    DEFAULT_RUN_PROPERTIES_FILE_NAME,
+    DEFAULT_STAGES_SCHEMA_FILE_NAME,
+)
 from ....projects.versioning import (
     check_upgrade_needed,
     CONFIG_UPGRADERS,
@@ -72,6 +76,20 @@ def perform_health_checks(
         )
 
     console.title("Run configuration")
+
+    properties_schema_path = Path(
+        os.environ.get("MPYL_RUN_PROPERTIES_PATH") or DEFAULT_RUN_PROPERTIES_FILE_NAME
+    )
+
+    stages_schema = properties_schema_path.parent / DEFAULT_STAGES_SCHEMA_FILE_NAME
+    if not Path(stages_schema).exists():
+        console.check(
+            f"{stages_schema} does not exist. See _Stage configuration_ in documentation for an example.",
+            False,
+        )
+    else:
+        console.check(f"{stages_schema} is present", False)
+
     if properties_path := __validate_config_path(
         console,
         env_var="MPYL_RUN_PROPERTIES_PATH",

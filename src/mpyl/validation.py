@@ -8,6 +8,8 @@ import jsonschema
 from jsonschema import RefResolver, Draft7Validator, validators
 from ruamel.yaml import YAML
 
+from .constants import DEFAULT_STAGES_SCHEMA_FILE_NAME
+
 yaml = YAML()
 
 
@@ -31,8 +33,8 @@ def load_schema(schema_string: str, root_dir: Path) -> Draft7Validator:
     )
     local_schema_dictionary.update(
         {
-            "mpyl_stages.schema.yml": yaml.load(
-                Path(root_dir, "mpyl_stages.schema.yml").read_text("utf-8")
+            DEFAULT_STAGES_SCHEMA_FILE_NAME: yaml.load(
+                Path(root_dir, DEFAULT_STAGES_SCHEMA_FILE_NAME).read_text("utf-8")
             )
         }
     )
