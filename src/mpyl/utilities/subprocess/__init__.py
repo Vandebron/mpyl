@@ -4,11 +4,15 @@ import subprocess
 from logging import Logger
 from typing import Union
 
+from ..logging import try_parse_ansi
 from ...steps.models import Output
 
 
 def custom_check_output(
-    logger: Logger, command: Union[str, list[str]], capture_stdout: bool = False
+    logger: Logger,
+    command: Union[str, list[str]],
+    capture_stdout: bool = False,
+    use_print: bool = False,
 ) -> Output:
     """
     Wrapper around subprocess.Popen
@@ -21,6 +25,8 @@ def custom_check_output(
 
     command_argument = " ".join(command)
     logger.info(f"Executing: '{command_argument}'")
+    logger = logger.getChild("Subprocess")
+
     try:
         if capture_stdout:
             out = subprocess.check_output(command, stderr=subprocess.STDOUT).decode(
@@ -36,7 +42,12 @@ def custom_check_output(
 
             for line in iter(process.stdout.readline, ""):
                 if line:
-                    print(line.rstrip())
+                    stripped_line = line.rstrip()
+                    if use_print:
+                        print(stripped_line)
+                    else:
+                        logger.info(try_parse_ansi(stripped_line))
+
                 if process.poll() is not None:
                     break
             success = process.wait() == 0

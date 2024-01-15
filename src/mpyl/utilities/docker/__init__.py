@@ -109,23 +109,13 @@ class DockerConfig:
 
 
 def execute_with_stream(
-    logger: Logger,
-    container: Container,
-    command: str,
-    task_name: str,
-    multiprocess: bool = False,
+    logger: Logger, container: Container, command: str, task_name: str
 ):
-    if multiprocess:  # Logger settings need to be re-applied in each process
-        logger.setLevel(logging.INFO)
-        logger.handlers.clear()
-
     result = cast(
         Iterator[tuple[str, bytes]],
         container.execute(command=shlex.split(command), stream=True),
     )
     result_list = stream_docker_logging(logger, result, task_name)
-
-    logger.handlers.clear()
 
     return result_list
 
@@ -170,11 +160,7 @@ def get_default_build_args(
 
 
 def docker_registry_path(docker_config: DockerRegistryConfig, image_name: str) -> str:
-    path_components = [
-        docker_config.host_name,
-        docker_config.organization,
-        image_name,
-    ]
+    path_components = [docker_config.host_name, docker_config.organization, image_name]
     return "/".join([c for c in path_components if c]).lower()
 
 
