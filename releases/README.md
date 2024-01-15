@@ -1,5 +1,20 @@
 # Release notes
 
+## MPyL 1.4.12
+
+
+#### Enhancements
+- Several small code improvements
+- Improve sbt test step
+
+#### Bug Fixes
+- Fix `mpyl build clean` command for override projects
+- Fix test results collection on compile errors for sbt test
+- Make sure sbt test coverage always gets turned off again
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.12)
+
 ## MPyL 1.4.11
 
 
