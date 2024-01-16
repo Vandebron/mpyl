@@ -31,6 +31,7 @@ from ...utilities.docker import (
     docker_image_tag,
     docker_file_path,
     login,
+    login_ecr,
     DockerImageSpec,
     registry_for_project,
     get_default_build_args,
@@ -70,6 +71,10 @@ class BuildDocker(Step):
 
         docker_registry_config = registry_for_project(docker_config, step_input.project)
         if not step_input.dry_run:
+            if docker_registry_config.provider == "azure":
+                login(logger=self._logger, registry_config=docker_registry_config)
+            if docker_registry_config.provider == "aws":
+                login_ecr(logger=self._logger, registry_config=docker_registry_config)
             # log in to registry, because we may need to pull in a base image
             login(logger=self._logger, registry_config=docker_registry_config)
 
