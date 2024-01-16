@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.4
-FROM public.ecr.aws/vdb-public/base-images/python:3.10-latest as installer
+FROM python:3.9-alpine as installer
 COPY --link tests/projects/job/ /tests/projects/job/
 WORKDIR /tests/projects/job
 

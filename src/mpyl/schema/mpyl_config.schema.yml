@@ -292,6 +292,8 @@ definitions:
         type: string
       password:
         type: string
+      provider:
+        type: string
       cache:
         type: object
         additionalProperties: false
