@@ -22,3 +22,5 @@ deployment:
         production: 'INFO'
   dagster:
     repo: "/tests/projects/dagster-user-code/main.py"
+    secrets:
+      - name: "some-normal-secret"

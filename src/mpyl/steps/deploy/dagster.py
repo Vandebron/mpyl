@@ -4,7 +4,7 @@ Step to deploy a dagster user code repository to k8s
 from functools import reduce
 from logging import Logger
 from pathlib import Path
-from typing import List
+from typing import List, Dict
 
 import yaml
 from kubernetes import config, client
@@ -18,7 +18,10 @@ from .k8s import (
     replace_config_map,
     update_config_map_field,
     get_version_of_deployment,
+    deploy_helm_chart,
+    CustomResourceDefinition,
 )
+from .k8s.chart import ChartBuilder
 from .k8s.helm import write_chart
 from .k8s.resources.dagster import to_user_code_values, to_grpc_server_entry, Constants
 from .. import Step, Meta, ArtifactType, Input, Output
@@ -129,6 +132,18 @@ class DeployDagster(Step):
 
         dagster_deploy_results.append(helm_install_result)
         if helm_install_result.success and not step_input.dry_run:
+            builder = ChartBuilder(step_input)
+            sealed_secrets_chart: Dict[str, CustomResourceDefinition] = {
+                "sealed-secrets": builder.to_sealed_secrets()
+            }
+            deploy_helm_chart(
+                self._logger,
+                sealed_secrets_chart,
+                step_input,
+                properties.target,
+                builder.release_name,
+            )
+
             config_map = get_config_map(
                 core_api,
                 dagster_config.base_namespace,

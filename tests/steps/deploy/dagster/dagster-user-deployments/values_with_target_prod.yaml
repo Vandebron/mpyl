@@ -10,7 +10,8 @@ deployments:
   env:
     DEPLOY_ENV: prod
     LOGGING_LEVEL: INFO
-  envSecrets: []
+  envSecrets:
+  - name: some-normal-secret
   image:
     pullPolicy: Always
     imagePullSecrets:
