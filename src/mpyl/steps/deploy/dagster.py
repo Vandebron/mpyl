@@ -95,21 +95,21 @@ class DeployDagster(Step):
             return self.__evaluate_results(dagster_deploy_results)
 
         name_suffix = get_name_suffix(properties)
+        release_name = convert_to_helm_release_name(
+            step_input.project.name, name_suffix
+        )
 
         builder = ChartBuilder(step_input)
-        sealed_secrets_chart = builder.to_sealed_secrets(
-            release_name=convert_to_helm_release_name(
-                step_input.project.name, name_suffix
-            )
-        )
+        sealed_secrets_manifest = builder.to_sealed_secrets(release_name=release_name)
 
         user_code_deployment = to_user_code_values(
             project=step_input.project,
+            release_name=release_name,
             name_suffix=name_suffix,
             run_properties=properties,
             service_account_override=dagster_config.global_service_account_override,
             docker_config=DockerConfig.from_dict(properties.config),
-            extra_manifests=[sealed_secrets_chart],
+            extra_manifests=[sealed_secrets_manifest],
         )
 
         self._logger.debug(f"Deploying user code with values: {user_code_deployment}")
@@ -128,9 +128,7 @@ class DeployDagster(Step):
             logger=self._logger,
             dry_run=step_input.dry_run,
             values_path=values_path / Path("values.yaml"),
-            release_name=convert_to_helm_release_name(
-                step_input.project.name, name_suffix
-            ),
+            release_name=release_name,
             chart_version=dagster_version,
             chart_name=Constants.CHART_NAME,
             namespace=dagster_config.base_namespace,

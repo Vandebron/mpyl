@@ -43,6 +43,7 @@ class TestDagster:
 
         values = to_user_code_values(
             project=step_input.project,
+            release_name="example-dagster-user-code-pr-1234",
             name_suffix=get_name_suffix(test_data.RUN_PROPERTIES),
             run_properties=test_data.RUN_PROPERTIES,
             service_account_override="global_service_account",
@@ -64,6 +65,7 @@ class TestDagster:
 
         values = to_user_code_values(
             project=step_input.project,
+            release_name="example-dagster-user-code",
             name_suffix=get_name_suffix(test_data.RUN_PROPERTIES_PROD),
             run_properties=test_data.RUN_PROPERTIES_PROD,
             service_account_override="global_service_account",
@@ -83,6 +85,7 @@ class TestDagster:
 
         values = to_user_code_values(
             project=step_input.project,
+            release_name="example-dagster-user-code-pr-1234",
             name_suffix=get_name_suffix(test_data.RUN_PROPERTIES),
             run_properties=test_data.RUN_PROPERTIES,
             service_account_override=None,
@@ -104,6 +107,7 @@ class TestDagster:
 
         values = to_user_code_values(
             project=step_input.project,
+            release_name="example-dagster-user-code-pr-1234",
             name_suffix=get_name_suffix(test_data.RUN_PROPERTIES),
             run_properties=test_data.RUN_PROPERTIES,
             service_account_override=None,

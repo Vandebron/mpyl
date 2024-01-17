@@ -6,7 +6,7 @@ from typing import Optional, List
 
 from . import to_dict
 from .. import CustomResourceDefinition
-from .....project import Project, get_env_variables
+from .....project import Project, get_env_variables, Deployment
 from .....steps.models import RunProperties
 from .....utilities.docker import DockerConfig, registry_for_project
 from .....utilities.helm import shorten_name
@@ -18,7 +18,8 @@ class Constants:
     CHART_NAME = "dagster/dagster-user-deployments"
 
 
-def to_sealed_entry(secret_key: str, name: str) -> dict:
+# where to place this, and maybe split it into two functions, secretKeyRef() and valueFrom()
+def to_env_secret_key_ref(secret_key: str, name: str) -> dict:
     return {
         "name": secret_key,
         "valueFrom": {
@@ -31,8 +32,20 @@ def to_sealed_entry(secret_key: str, name: str) -> dict:
     }
 
 
+def sealed_secrets_to_dict(
+    release_name: str, deployment: Optional[Deployment]
+) -> List[dict]:
+    if deployment:
+        return [
+            to_env_secret_key_ref(sealed_secret.key, release_name)
+            for sealed_secret in deployment.properties.sealed_secret
+        ]
+    return []
+
+
 def to_user_code_values(
     project: Project,
+    release_name: str,
     name_suffix: str,
     run_properties: RunProperties,
     service_account_override: Optional[str],
@@ -46,14 +59,6 @@ def to_user_code_values(
     if not create_local_service_account:
         global_override = {"global": {"serviceAccountName": service_account_override}}
 
-    sealed_secrets = (
-        [
-            to_sealed_entry(sealed_secret.key, f"{project.name}{name_suffix}")
-            for sealed_secret in project.deployment.properties.sealed_secret
-        ]
-        if project.deployment
-        else []
-    )
     return global_override | {
         "serviceAccount": {"create": create_local_service_account},
         "fullnameOverride": f"ucd-{shorten_name(project.name)}{name_suffix}",  # short for user-code-deployment
@@ -66,7 +71,7 @@ def to_user_code_values(
                         project, run_properties.target
                     ).items()
                 ]
-                + sealed_secrets,
+                + sealed_secrets_to_dict(release_name, project.deployment),
                 "envSecrets": [{"name": s.name} for s in project.dagster.secrets],
                 "image": {
                     "pullPolicy": "Always",
@@ -75,7 +80,7 @@ def to_user_code_values(
                     "repository": f"{docker_registry.host_name}/{project.name}",
                 },
                 "includeConfigInLaunchedRuns": {"enabled": True},
-                "name": f"{project.name}{name_suffix}",
+                "name": release_name,
                 "port": 3030,
                 "resources": {
                     "requests": {"memory": "256Mi", "cpu": "50m"},
