@@ -593,12 +593,14 @@ class ChartBuilder:
             ],
         )
 
-    def to_sealed_secrets(self) -> V1SealedSecret:
+    def to_sealed_secrets(self, release_name: Optional[str] = None) -> V1SealedSecret:
         secrets: dict[str, str] = {}
         for secret in self.sealed_secrets:
             secrets[secret.key] = secret.get_value(self.target)
 
-        return V1SealedSecret(name=self.release_name, secrets=secrets)
+        return V1SealedSecret(
+            name=release_name if release_name else self.release_name, secrets=secrets
+        )
 
     @staticmethod
     def _to_resource_requirements(

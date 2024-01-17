@@ -97,7 +97,11 @@ class DeployDagster(Step):
         name_suffix = get_name_suffix(properties)
 
         builder = ChartBuilder(step_input)
-        sealed_secrets_chart = builder.to_sealed_secrets()
+        sealed_secrets_chart = builder.to_sealed_secrets(
+            release_name=convert_to_helm_release_name(
+                step_input.project.name, name_suffix
+            )
+        )
 
         user_code_deployment = to_user_code_values(
             project=step_input.project,
