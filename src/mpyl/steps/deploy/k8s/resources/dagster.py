@@ -8,7 +8,7 @@ from kubernetes.client import V1EnvVar
 
 from . import to_dict
 from .. import CustomResourceDefinition
-from .....project import Project, get_env_variables, Deployment
+from .....project import Project, get_env_variables
 from .....steps.models import RunProperties
 from .....utilities.docker import DockerConfig, registry_for_project
 from .....utilities.helm import shorten_name
