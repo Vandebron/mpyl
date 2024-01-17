@@ -216,6 +216,7 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
     target: Target,
     release_name: str,
     delete_existing: bool = False,
+    namespace: Optional[str] = None,
 ) -> Output:
     run_properties = step_input.run_properties
     project = step_input.project
@@ -256,7 +257,7 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
             produced_artifact=artifact,
         )
 
-    namespace = get_namespace(run_properties, project)
+    namespace = namespace if namespace else get_namespace(run_properties, project)
     rancher_config: ClusterConfig = cluster_config(target, run_properties)
     dry_run = (
         step_input.dry_run

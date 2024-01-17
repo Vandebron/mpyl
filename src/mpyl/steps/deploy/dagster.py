@@ -137,11 +137,14 @@ class DeployDagster(Step):
                 "sealed-secrets": builder.to_sealed_secrets()
             }
             deploy_helm_chart(
-                self._logger,
-                sealed_secrets_chart,
-                step_input,
-                properties.target,
-                builder.release_name,
+                logger=self._logger,
+                chart=sealed_secrets_chart,
+                step_input=step_input,
+                target=properties.target,
+                release_name=convert_to_helm_release_name(
+                    step_input.project.name, name_suffix
+                ),
+                namespace=dagster_config.base_namespace,
             )
 
             config_map = get_config_map(

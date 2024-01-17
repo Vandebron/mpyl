@@ -9,6 +9,9 @@ stages:
 deployment:
   namespace: 'example-dagster-user-code'
   properties:
+    sealedSecret:
+      - key: SOME_SEALED_SECRET
+        all: FDFSDJFLKJKLJKL
     env:
       - key: DEPLOY_ENV
         pr: 'test'

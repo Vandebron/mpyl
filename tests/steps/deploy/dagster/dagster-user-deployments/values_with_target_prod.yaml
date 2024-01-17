@@ -8,8 +8,16 @@ deployments:
   - --python-file
   - /tests/projects/dagster-user-code/main.py
   env:
-    DEPLOY_ENV: prod
-    LOGGING_LEVEL: INFO
+  - name: DEPLOY_ENV
+    value: prod
+  - name: LOGGING_LEVEL
+    value: INFO
+  - name: SOME_SEALED_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: example-dagster-user-code
+        key: SOME_SEALED_SECRET
+        optional: false
   envSecrets:
   - name: some-normal-secret
   image:

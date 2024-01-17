@@ -16,6 +16,19 @@ class Constants:
     CHART_NAME = "dagster/dagster-user-deployments"
 
 
+def to_sealed_entry(secret_key: str, name: str) -> dict:
+    return {
+        "name": secret_key,
+        "valueFrom": {
+            "secretKeyRef": {
+                "name": name,
+                "key": secret_key,
+                "optional": False,
+            }
+        },
+    }
+
+
 def to_user_code_values(
     project: Project,
     name_suffix: str,
@@ -30,13 +43,27 @@ def to_user_code_values(
     if not create_local_service_account:
         global_override = {"global": {"serviceAccountName": service_account_override}}
 
+    sealed_secrets = (
+        [
+            to_sealed_entry(sealed_secret.key, f"{project.name}{name_suffix}")
+            for sealed_secret in project.deployment.properties.sealed_secret
+        ]
+        if project.deployment
+        else []
+    )
     return global_override | {
         "serviceAccount": {"create": create_local_service_account},
         "fullnameOverride": f"ucd-{shorten_name(project.name)}{name_suffix}",  # short for user-code-deployment
         "deployments": [
             {
                 "dagsterApiGrpcArgs": ["--python-file", project.dagster.repo],
-                "env": get_env_variables(project, run_properties.target),
+                "env": [
+                    {"name": key, "value": value}
+                    for key, value in get_env_variables(
+                        project, run_properties.target
+                    ).items()
+                ]
+                + sealed_secrets,
                 "envSecrets": [{"name": s.name} for s in project.dagster.secrets],
                 "image": {
                     "pullPolicy": "Always",
