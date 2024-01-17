@@ -38,7 +38,7 @@ def to_user_code_values(
         global_override = {"global": {"serviceAccountName": service_account_override}}
 
     sealed_secret_refs = (
-        [to_dict(sealed_secret) for sealed_secret in sealed_secrets]
+        [to_dict(sealed_secret, skip_none=True) for sealed_secret in sealed_secrets]
         if sealed_secrets
         else []
     )

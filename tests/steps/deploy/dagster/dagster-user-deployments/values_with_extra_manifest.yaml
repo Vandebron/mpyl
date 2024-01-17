@@ -10,6 +10,12 @@ deployments:
     value: test
   - name: LOGGING_LEVEL
     value: DEBUG
+  - name: test
+    valueFrom:
+      secretKeyRef:
+        key: test
+        name: example-dagster-user-code-pr-1234
+        optional: false
   envSecrets:
   - name: some-normal-secret
   image:

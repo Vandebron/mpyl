@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from kubernetes.client import V1EnvVar, V1EnvVarSource, V1SecretKeySelector
 from ruamel.yaml import YAML
 
 from src.mpyl.utilities.helm import get_name_suffix
@@ -114,6 +115,18 @@ class TestDagster:
             docker_config=DockerConfig.from_dict(
                 parse_config(Path(f"{self.config_resource_path}/mpyl_config.yml"))
             ),
+            sealed_secrets=[
+                V1EnvVar(
+                    name="test",
+                    value_from=V1EnvVarSource(
+                        secret_key_ref=V1SecretKeySelector(
+                            key="test",
+                            name="example-dagster-user-code-pr-1234",
+                            optional=False,
+                        )
+                    ),
+                )
+            ],
             extra_manifests=[V1SealedSecret("test", {"secret": "somesealedsecret"})],
         )
 
