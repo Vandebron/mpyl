@@ -18,7 +18,6 @@ from .k8s import (
     replace_config_map,
     update_config_map_field,
     get_version_of_deployment,
-    deploy_helm_chart,
     CustomResourceDefinition,
 )
 from .k8s.chart import ChartBuilder
@@ -137,7 +136,6 @@ class DeployDagster(Step):
 
         dagster_deploy_results.append(helm_install_result)
         if helm_install_result.success and not step_input.dry_run:
-
             config_map = get_config_map(
                 core_api,
                 dagster_config.base_namespace,
