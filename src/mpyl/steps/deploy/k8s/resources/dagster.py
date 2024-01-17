@@ -4,6 +4,8 @@ This module contains the Dagster user-code-deployment values conversion
 from dataclasses import dataclass
 from typing import Optional, List
 
+from kubernetes.client import V1EnvVar
+
 from . import to_dict
 from .. import CustomResourceDefinition
 from .....project import Project, get_env_variables, Deployment
@@ -50,6 +52,7 @@ def to_user_code_values(
     run_properties: RunProperties,
     service_account_override: Optional[str],
     docker_config: DockerConfig,
+    sealed_secrets: Optional[List[V1EnvVar]] = None,
     extra_manifests: Optional[List[CustomResourceDefinition]] = None,
 ) -> dict:
     docker_registry = registry_for_project(docker_config, project)
@@ -71,7 +74,9 @@ def to_user_code_values(
                         project, run_properties.target
                     ).items()
                 ]
-                + sealed_secrets_to_dict(release_name, project.deployment),
+                + [to_dict(sealed_secret) for sealed_secret in sealed_secrets]
+                if sealed_secrets
+                else [],
                 "envSecrets": [{"name": s.name} for s in project.dagster.secrets],
                 "image": {
                     "pullPolicy": "Always",

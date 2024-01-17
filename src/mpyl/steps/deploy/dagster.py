@@ -8,6 +8,7 @@ from typing import List
 
 import yaml
 from kubernetes import config, client
+from kubernetes.client import V1EnvVar, V1EnvVarSource, V1SecretKeySelector
 
 from . import STAGE_NAME
 from .k8s import (
@@ -101,6 +102,25 @@ class DeployDagster(Step):
 
         builder = ChartBuilder(step_input)
         sealed_secrets_manifest = builder.to_sealed_secrets(release_name=release_name)
+        sealed_secrets_for_target = list(
+            filter(
+                lambda v: v.get_value(properties.target) is not None,
+                step_input.project.deployment.properties.sealed_secret
+                if step_input.project.deployment
+                else [],
+            )
+        )
+        sealed_secrets_as_env_var = [
+            V1EnvVar(
+                name=e.key,
+                value_from=V1EnvVarSource(
+                    secret_key_ref=V1SecretKeySelector(
+                        key=e.key, name=release_name, optional=False
+                    )
+                ),
+            )
+            for e in sealed_secrets_for_target
+        ]
 
         user_code_deployment = to_user_code_values(
             project=step_input.project,
@@ -109,6 +129,7 @@ class DeployDagster(Step):
             run_properties=properties,
             service_account_override=dagster_config.global_service_account_override,
             docker_config=DockerConfig.from_dict(properties.config),
+            sealed_secrets=sealed_secrets_as_env_var,
             extra_manifests=[sealed_secrets_manifest],
         )
 
