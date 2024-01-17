@@ -62,6 +62,11 @@ def to_user_code_values(
     if not create_local_service_account:
         global_override = {"global": {"serviceAccountName": service_account_override}}
 
+    sealed_secret_refs = (
+        [to_dict(sealed_secret) for sealed_secret in sealed_secrets]
+        if sealed_secrets
+        else []
+    )
     return global_override | {
         "serviceAccount": {"create": create_local_service_account},
         "fullnameOverride": f"ucd-{shorten_name(project.name)}{name_suffix}",  # short for user-code-deployment
@@ -74,9 +79,7 @@ def to_user_code_values(
                         project, run_properties.target
                     ).items()
                 ]
-                + [to_dict(sealed_secret) for sealed_secret in sealed_secrets]
-                if sealed_secrets
-                else [],
+                + sealed_secret_refs,
                 "envSecrets": [{"name": s.name} for s in project.dagster.secrets],
                 "image": {
                     "pullPolicy": "Always",

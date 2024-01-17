@@ -5,7 +5,11 @@ deployments:
 - dagsterApiGrpcArgs:
   - --python-file
   - /tests/projects/dagster-user-code/main.py
-  env: []
+  env:
+  - name: DEPLOY_ENV
+    value: test
+  - name: LOGGING_LEVEL
+    value: DEBUG
   envSecrets:
   - name: some-normal-secret
   image:
