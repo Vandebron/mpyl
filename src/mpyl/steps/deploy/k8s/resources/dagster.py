@@ -20,31 +20,6 @@ class Constants:
     CHART_NAME = "dagster/dagster-user-deployments"
 
 
-# where to place this, and maybe split it into two functions, secretKeyRef() and valueFrom()
-def to_env_secret_key_ref(secret_key: str, name: str) -> dict:
-    return {
-        "name": secret_key,
-        "valueFrom": {
-            "secretKeyRef": {
-                "name": name,
-                "key": secret_key,
-                "optional": False,
-            }
-        },
-    }
-
-
-def sealed_secrets_to_dict(
-    release_name: str, deployment: Optional[Deployment]
-) -> List[dict]:
-    if deployment:
-        return [
-            to_env_secret_key_ref(sealed_secret.key, release_name)
-            for sealed_secret in deployment.properties.sealed_secret
-        ]
-    return []
-
-
 def to_user_code_values(
     project: Project,
     release_name: str,
