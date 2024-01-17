@@ -2,13 +2,13 @@ from pathlib import Path
 
 from ruamel.yaml import YAML
 
-from mpyl.steps.deploy.k8s.resources.sealed_secret import V1SealedSecret
 from src.mpyl.utilities.helm import get_name_suffix
 from src.mpyl.utilities.yaml import yaml_to_string
 from src.mpyl import parse_config
 from src.mpyl.project import load_project
 from src.mpyl.steps import Input
 from src.mpyl.steps.deploy.k8s.resources.dagster import to_user_code_values
+from src.mpyl.steps.deploy.k8s.resources.sealed_secret import V1SealedSecret
 from src.mpyl.utilities.docker import DockerConfig
 from tests import root_test_path
 from tests.test_resources import test_data
