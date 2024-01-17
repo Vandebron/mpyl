@@ -108,10 +108,15 @@ class DeployDagster(Step):
 
         self._logger.debug(f"Deploying user code with values: {user_code_deployment}")
 
+        builder = ChartBuilder(step_input)
+        sealed_secrets_chart: Dict[str, CustomResourceDefinition] = {
+            "sealed-secrets": builder.to_sealed_secrets()
+        }
         values_path = Path(step_input.project.target_path)
         self._logger.info(f"Writing Helm values to {values_path}")
+
         write_chart(
-            chart={},
+            chart=sealed_secrets_chart,
             chart_path=values_path,
             chart_metadata="",
             values=user_code_deployment,
@@ -132,20 +137,6 @@ class DeployDagster(Step):
 
         dagster_deploy_results.append(helm_install_result)
         if helm_install_result.success and not step_input.dry_run:
-            builder = ChartBuilder(step_input)
-            sealed_secrets_chart: Dict[str, CustomResourceDefinition] = {
-                "sealed-secrets": builder.to_sealed_secrets()
-            }
-            deploy_helm_chart(
-                logger=self._logger,
-                chart=sealed_secrets_chart,
-                step_input=step_input,
-                target=properties.target,
-                release_name=convert_to_helm_release_name(
-                    step_input.project.name, name_suffix
-                ),
-                namespace=dagster_config.base_namespace,
-            )
 
             config_map = get_config_map(
                 core_api,
