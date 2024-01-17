@@ -2,8 +2,10 @@
 This module contains the Dagster user-code-deployment values conversion
 """
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List
 
+from . import to_dict
+from .. import CustomResourceDefinition
 from .....project import Project, get_env_variables
 from .....steps.models import RunProperties
 from .....utilities.docker import DockerConfig, registry_for_project
@@ -35,6 +37,7 @@ def to_user_code_values(
     run_properties: RunProperties,
     service_account_override: Optional[str],
     docker_config: DockerConfig,
+    extra_manifests: Optional[List[CustomResourceDefinition]] = None,
 ) -> dict:
     docker_registry = registry_for_project(docker_config, project)
 
@@ -80,6 +83,9 @@ def to_user_code_values(
                 },
             },
         ],
+        "extraManifests": [to_dict(manifest) for manifest in extra_manifests]
+        if extra_manifests
+        else [],
     }
 
 

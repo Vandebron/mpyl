@@ -35,4 +35,27 @@ deployments:
     limits:
       memory: 512Mi
       cpu: 1000m
-extraManifests: []
+extraManifests:
+- apiVersion: bitnami.com/v1alpha1
+  kind: SealedSecret
+  metadata:
+    annotations:
+      sealedsecrets.bitnami.com/cluster-wide: 'true'
+    creationTimestamp:
+    deletionGracePeriodSeconds:
+    deletionTimestamp:
+    finalizers:
+    generateName:
+    generation:
+    labels:
+      chart: service-0.1.0
+    managedFields:
+    name: test
+    namespace:
+    ownerReferences:
+    resourceVersion:
+    selfLink:
+    uid:
+  spec:
+    encryptedData:
+      secret: somesealedsecret

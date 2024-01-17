@@ -4,7 +4,7 @@ Step to deploy a dagster user code repository to k8s
 from functools import reduce
 from logging import Logger
 from pathlib import Path
-from typing import List, Dict
+from typing import List
 
 import yaml
 from kubernetes import config, client
@@ -18,7 +18,6 @@ from .k8s import (
     replace_config_map,
     update_config_map_field,
     get_version_of_deployment,
-    CustomResourceDefinition,
 )
 from .k8s.chart import ChartBuilder
 from .k8s.helm import write_chart
@@ -97,25 +96,25 @@ class DeployDagster(Step):
 
         name_suffix = get_name_suffix(properties)
 
+        builder = ChartBuilder(step_input)
+        sealed_secrets_chart = builder.to_sealed_secrets()
+
         user_code_deployment = to_user_code_values(
             project=step_input.project,
             name_suffix=name_suffix,
             run_properties=properties,
             service_account_override=dagster_config.global_service_account_override,
             docker_config=DockerConfig.from_dict(properties.config),
+            extra_manifests=[sealed_secrets_chart],
         )
 
         self._logger.debug(f"Deploying user code with values: {user_code_deployment}")
 
-        builder = ChartBuilder(step_input)
-        sealed_secrets_chart: Dict[str, CustomResourceDefinition] = {
-            "sealed-secrets": builder.to_sealed_secrets()
-        }
         values_path = Path(step_input.project.target_path)
         self._logger.info(f"Writing Helm values to {values_path}")
 
         write_chart(
-            chart=sealed_secrets_chart,
+            chart={},
             chart_path=values_path,
             chart_metadata="",
             values=user_code_deployment,
