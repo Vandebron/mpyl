@@ -51,6 +51,8 @@ class TestDagster:
             docker_config=DockerConfig.from_dict(
                 parse_config(Path(f"{self.config_resource_path}/mpyl_config.yml"))
             ),
+            sealed_secrets=[],
+            extra_manifests=[],
         )
 
         self._roundtrip(
@@ -73,6 +75,8 @@ class TestDagster:
             docker_config=DockerConfig.from_dict(
                 parse_config(Path(f"{self.config_resource_path}/mpyl_config.yml"))
             ),
+            sealed_secrets=[],
+            extra_manifests=[],
         )
 
         self._roundtrip(self.generated_values_path, "values_with_target_prod", values)
@@ -93,6 +97,8 @@ class TestDagster:
             docker_config=DockerConfig.from_dict(
                 parse_config(Path(f"{self.config_resource_path}/mpyl_config.yml"))
             ),
+            sealed_secrets=[],
+            extra_manifests=[],
         )
 
         self._roundtrip(

@@ -8,7 +8,6 @@ from typing import List
 
 import yaml
 from kubernetes import config, client
-from kubernetes.client import V1EnvVar, V1EnvVarSource, V1SecretKeySelector
 
 from . import STAGE_NAME
 from .k8s import (
@@ -105,25 +104,7 @@ class DeployDagster(Step):
         sealed_secrets_manifest = builder.to_sealed_secrets()
         # adjust manifest name to suffixed-release name
         sealed_secrets_manifest.metadata.name = release_name
-        sealed_secrets_for_target = list(
-            filter(
-                lambda v: v.get_value(properties.target) is not None,
-                step_input.project.deployment.properties.sealed_secret
-                if step_input.project.deployment
-                else [],
-            )
-        )
-        sealed_secrets_as_env_var = [
-            V1EnvVar(
-                name=e.key,
-                value_from=V1EnvVarSource(
-                    secret_key_ref=V1SecretKeySelector(
-                        key=e.key, name=release_name, optional=False
-                    )
-                ),
-            )
-            for e in sealed_secrets_for_target
-        ]
+        sealed_secrets_as_env_var = builder.get_sealed_secret_as_env_vars()
 
         user_code_deployment = to_user_code_values(
             project=step_input.project,

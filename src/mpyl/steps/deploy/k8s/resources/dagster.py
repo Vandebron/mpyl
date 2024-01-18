@@ -27,8 +27,8 @@ def to_user_code_values(
     run_properties: RunProperties,
     service_account_override: Optional[str],
     docker_config: DockerConfig,
-    sealed_secrets: Optional[List[V1EnvVar]] = None,
-    extra_manifests: Optional[List[CustomResourceDefinition]] = None,
+    sealed_secrets: List[V1EnvVar],
+    extra_manifests: List[CustomResourceDefinition],
 ) -> dict:
     docker_registry = registry_for_project(docker_config, project)
 
@@ -37,11 +37,9 @@ def to_user_code_values(
     if not create_local_service_account:
         global_override = {"global": {"serviceAccountName": service_account_override}}
 
-    sealed_secret_refs = (
-        [to_dict(sealed_secret, skip_none=True) for sealed_secret in sealed_secrets]
-        if sealed_secrets
-        else []
-    )
+    sealed_secret_refs = [
+        to_dict(sealed_secret, skip_none=True) for sealed_secret in sealed_secrets
+    ]
     return global_override | {
         "serviceAccount": {"create": create_local_service_account},
         "fullnameOverride": f"ucd-{shorten_name(project.name)}{name_suffix}",  # short for user-code-deployment
@@ -71,9 +69,7 @@ def to_user_code_values(
                 },
             },
         ],
-        "extraManifests": [to_dict(manifest) for manifest in extra_manifests]
-        if extra_manifests
-        else [],
+        "extraManifests": [to_dict(manifest) for manifest in extra_manifests],
     }
 
 
