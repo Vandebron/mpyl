@@ -109,7 +109,7 @@ class SlackReporter(Reporter):
             raise ValueError("slack config not set")
         self._client = WebClient(token=slack_config["botToken"])
         self._channel = channel
-        self._title = f"MPyL run for {versioning_identifier} on {target}"
+        self._title = f"MPyL run for {versioning_identifier} on {str(target)}"
         icons = slack_config["icons"]
         self._icons = SlackIcons(
             success=icons["success"],
