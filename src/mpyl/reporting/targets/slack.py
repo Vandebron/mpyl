@@ -47,6 +47,7 @@ from slack_sdk.models.blocks import (
 
 from . import Reporter, ReportOutcome
 from ..formatting.markdown import run_result_to_markdown
+from ...project import Target
 from ...steps.models import RunProperties
 from ...steps.run import RunResult
 
@@ -100,7 +101,7 @@ class SlackReporter(Reporter):
         config: dict,
         channel: Optional[str],
         versioning_identifier: str,
-        target: str,
+        target: Target,
         message_identifier: Optional[MessageIdentifier] = None,
     ):
         slack_config = config.get("slack")
