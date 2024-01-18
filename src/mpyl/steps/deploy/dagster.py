@@ -101,20 +101,13 @@ class DeployDagster(Step):
 
         builder = ChartBuilder(step_input)
 
-        sealed_secrets_manifest = builder.to_sealed_secrets()
-        # adjust manifest name to suffixed-release name
-        sealed_secrets_manifest.metadata.name = release_name
-        sealed_secrets_as_env_var = builder.get_sealed_secret_as_env_vars()
-
         user_code_deployment = to_user_code_values(
-            project=step_input.project,
+            builder=builder,
             release_name=release_name,
             name_suffix=name_suffix,
             run_properties=properties,
             service_account_override=dagster_config.global_service_account_override,
             docker_config=DockerConfig.from_dict(properties.config),
-            sealed_secrets=sealed_secrets_as_env_var,
-            extra_manifests=[sealed_secrets_manifest],
         )
 
         self._logger.debug(f"Deploying user code with values: {user_code_deployment}")
