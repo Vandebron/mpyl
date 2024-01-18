@@ -72,9 +72,7 @@ def to_user_code_values(
                         ).items()
                     ]
                     + sealed_secret_refs,
-                    "envSecrets": [
-                        {"name": s.name} for s in project.dagster.secrets
-                    ],
+                    "envSecrets": [{"name": s.name} for s in project.dagster.secrets],
                     "image": {
                         "pullPolicy": "Always",
                         "imagePullSecrets": [{"name": "bigdataregistry"}],
