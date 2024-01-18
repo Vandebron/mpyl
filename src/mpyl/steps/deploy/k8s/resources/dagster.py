@@ -48,13 +48,10 @@ def to_user_code_values(
     sealed_secret_manifest = builder.to_sealed_secrets()
     sealed_secret_manifest.metadata.name = release_name
     if sealed_secret_manifest.secrets:
-        extra_manifests = {
-            "extraManifests": [to_dict(sealed_secret_manifest, skip_none=True)]
-        }
+        extra_manifests = {"extraManifests": [to_dict(sealed_secret_manifest)]}
 
     return (
         global_override
-        | extra_manifests
         | {
             "serviceAccount": {"create": create_local_service_account},
             # ucd, short for user-code-deployment
@@ -89,4 +86,5 @@ def to_user_code_values(
                 }
             ],
         }
+        | extra_manifests
     )
