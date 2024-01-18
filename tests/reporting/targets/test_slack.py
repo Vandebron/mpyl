@@ -2,6 +2,7 @@ import os
 
 import pytest
 
+from src.mpyl.project import Target
 from src.mpyl.reporting.targets.slack import to_slack_markdown, SlackReporter
 from tests import root_test_path
 from tests.reporting import create_test_result_with_plan, append_results
@@ -33,7 +34,7 @@ class TestSlackReporter:
             },
             None,
             "MPyL test build",
-            "target",
+            Target.PULL_REQUEST,
         )
         slack.send_report(run_result)
         append_results(run_result)
