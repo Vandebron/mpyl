@@ -40,9 +40,9 @@ class TestDagster:
             test_data.RUN_PROPERTIES,
             None,
         )
-        builder = ChartBuilder(step_input)
+
         values = to_user_code_values(
-            builder=builder,
+            builder=ChartBuilder(step_input),
             release_name="example-dagster-user-code-pr-1234",
             name_suffix=get_name_suffix(test_data.RUN_PROPERTIES),
             run_properties=test_data.RUN_PROPERTIES,

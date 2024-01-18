@@ -31,7 +31,8 @@ def to_user_code_values(
     service_account_override: Optional[str],
     docker_config: DockerConfig,
 ) -> dict:
-    docker_registry = registry_for_project(docker_config, builder.project)
+    project = builder.project
+    docker_registry = registry_for_project(docker_config, project)
 
     global_override = {}
     create_local_service_account = service_account_override is None
@@ -57,28 +58,28 @@ def to_user_code_values(
         | {
             "serviceAccount": {"create": create_local_service_account},
             # ucd, short for user-code-deployment
-            "fullnameOverride": f"ucd-{shorten_name(builder.project.name)}{name_suffix}",
+            "fullnameOverride": f"ucd-{shorten_name(project.name)}{name_suffix}",
             "deployments": [
                 {
                     "dagsterApiGrpcArgs": [
                         "--python-file",
-                        builder.project.dagster.repo,
+                        project.dagster.repo,
                     ],
                     "env": [
                         {"name": key, "value": value}
                         for key, value in get_env_variables(
-                            builder.project, run_properties.target
+                            project, run_properties.target
                         ).items()
                     ]
                     + sealed_secret_refs,
                     "envSecrets": [
-                        {"name": s.name} for s in builder.project.dagster.secrets
+                        {"name": s.name} for s in project.dagster.secrets
                     ],
                     "image": {
                         "pullPolicy": "Always",
                         "imagePullSecrets": [{"name": "bigdataregistry"}],
                         "tag": run_properties.versioning.identifier,
-                        "repository": f"{docker_registry.host_name}/{builder.project.name}",
+                        "repository": f"{docker_registry.host_name}/{project.name}",
                     },
                     "includeConfigInLaunchedRuns": {"enabled": True},
                     "name": release_name,
