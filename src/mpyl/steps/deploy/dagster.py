@@ -101,7 +101,10 @@ class DeployDagster(Step):
         )
 
         builder = ChartBuilder(step_input)
-        sealed_secrets_manifest = builder.to_sealed_secrets(release_name=release_name)
+
+        sealed_secrets_manifest = builder.to_sealed_secrets()
+        # adjust manifest name to suffixed-release name
+        sealed_secrets_manifest.metadata.name = release_name
         sealed_secrets_for_target = list(
             filter(
                 lambda v: v.get_value(properties.target) is not None,
