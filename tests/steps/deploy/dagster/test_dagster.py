@@ -1,16 +1,14 @@
 from pathlib import Path
 
-from kubernetes.client import V1EnvVar, V1EnvVarSource, V1SecretKeySelector
 from ruamel.yaml import YAML
 
-from mpyl.steps.deploy.k8s.chart import ChartBuilder
 from src.mpyl.utilities.helm import get_name_suffix
 from src.mpyl.utilities.yaml import yaml_to_string
 from src.mpyl import parse_config
 from src.mpyl.project import load_project
 from src.mpyl.steps import Input
+from src.mpyl.steps.deploy.k8s.chart import ChartBuilder
 from src.mpyl.steps.deploy.k8s.resources.dagster import to_user_code_values
-from src.mpyl.steps.deploy.k8s.resources.sealed_secret import V1SealedSecret
 from src.mpyl.utilities.docker import DockerConfig
 from tests import root_test_path
 from tests.test_resources import test_data
@@ -42,16 +40,16 @@ class TestDagster:
             test_data.RUN_PROPERTIES,
             None,
         )
-
+        builder = ChartBuilder(step_input)
         values = to_user_code_values(
-            builder=ChartBuilder(step_input),
+            builder=builder,
             release_name="example-dagster-user-code-pr-1234",
             name_suffix=get_name_suffix(test_data.RUN_PROPERTIES),
             run_properties=test_data.RUN_PROPERTIES,
             service_account_override="global_service_account",
             docker_config=DockerConfig.from_dict(
                 parse_config(Path(f"{self.config_resource_path}/mpyl_config.yml"))
-            )
+            ),
         )
 
         self._roundtrip(
@@ -73,7 +71,7 @@ class TestDagster:
             service_account_override="global_service_account",
             docker_config=DockerConfig.from_dict(
                 parse_config(Path(f"{self.config_resource_path}/mpyl_config.yml"))
-            )
+            ),
         )
 
         self._roundtrip(self.generated_values_path, "values_with_target_prod", values)
@@ -93,7 +91,7 @@ class TestDagster:
             service_account_override=None,
             docker_config=DockerConfig.from_dict(
                 parse_config(Path(f"{self.config_resource_path}/mpyl_config.yml"))
-            )
+            ),
         )
 
         self._roundtrip(
@@ -102,7 +100,9 @@ class TestDagster:
 
     def test_generate_with_sealed_secret_as_extra_manifest(self):
         step_input = Input(
-            load_project(self.resource_path, Path("project_with_sealed_secret.yml"), True),
+            load_project(
+                self.resource_path, Path("project_with_sealed_secret.yml"), True
+            ),
             test_data.RUN_PROPERTIES,
             None,
         )
@@ -115,7 +115,7 @@ class TestDagster:
             service_account_override=None,
             docker_config=DockerConfig.from_dict(
                 parse_config(Path(f"{self.config_resource_path}/mpyl_config.yml"))
-            )
+            ),
         )
 
         self._roundtrip(
