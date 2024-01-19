@@ -314,7 +314,6 @@ def login(logger: Logger, registry_config: DockerRegistryConfig) -> None:
             password=registry_config.password,
         )
     if registry_config.provider == "aws":
-        print("ENV VAR", os.environ)
         docker.login_ecr(
             aws_access_key_id=registry_config.user_name,
             aws_secret_access_key=registry_config.password,
