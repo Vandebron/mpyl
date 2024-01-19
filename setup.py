@@ -61,4 +61,5 @@ setup(
     include_package_data=True,
     packages=setuptools.find_packages(where="./src"),
     python_requires=">= 3.9",
+    package_data={"mpyl": ["py.typed"]},
 )

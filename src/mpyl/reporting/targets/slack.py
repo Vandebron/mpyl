@@ -47,6 +47,7 @@ from slack_sdk.models.blocks import (
 
 from . import Reporter, ReportOutcome
 from ..formatting.markdown import run_result_to_markdown
+from ...project import Target
 from ...steps.models import RunProperties
 from ...steps.run import RunResult
 
@@ -100,7 +101,7 @@ class SlackReporter(Reporter):
         config: dict,
         channel: Optional[str],
         versioning_identifier: str,
-        target: str,
+        target: Target,
         message_identifier: Optional[MessageIdentifier] = None,
     ):
         slack_config = config.get("slack")
@@ -108,7 +109,7 @@ class SlackReporter(Reporter):
             raise ValueError("slack config not set")
         self._client = WebClient(token=slack_config["botToken"])
         self._channel = channel
-        self._title = f"MPyL run for {versioning_identifier} on {target}"
+        self._title = f"MPyL run for {versioning_identifier} on {str(target)}"
         icons = slack_config["icons"]
         self._icons = SlackIcons(
             success=icons["success"],
