@@ -70,6 +70,7 @@ class BuildDocker(Step):
 
         docker_registry_config = registry_for_project(docker_config, step_input.project)
         if not step_input.dry_run:
+            print("ENVIRON:", os.environ)
             login(logger=self._logger, registry_config=docker_registry_config)
 
         with open(".dockerignore", "w+", encoding="utf-8") as ignore_file:

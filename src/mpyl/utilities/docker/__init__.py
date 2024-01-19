@@ -321,7 +321,9 @@ def login(logger: Logger, registry_config: DockerRegistryConfig) -> None:
             registry=registry_config.host_name,
         )
     else:
-        raise ValueError(f"Docker config has no container registry provider with name {registry_config.provider}")
+        raise ValueError(
+            f"Docker config has no container registry provider with name {registry_config.provider}"
+        )
     logger.debug(f"Logged in as '{registry_config.user_name}'")
 
 
