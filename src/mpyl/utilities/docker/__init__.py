@@ -320,10 +320,7 @@ def login(logger: Logger, registry_config: DockerRegistryConfig) -> None:
             registry=registry_config.host_name,
         )
     else:
-        logger.debug(
-            "Container registry unknown. Check the registry settings inside the mpyl_config"
-        )
-        sys.exit()
+        raise ValueError(f"Docker config has no container registry provider with name {registry_config.provider}")
     logger.debug(f"Logged in as '{registry_config.user_name}'")
 
 
