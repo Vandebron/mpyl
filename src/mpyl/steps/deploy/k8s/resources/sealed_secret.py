@@ -9,7 +9,6 @@ from . import CustomResourceDefinition
 
 class V1SealedSecret(CustomResourceDefinition):
     def __init__(self, name: str, secrets: dict[str, str]):
-        self.secrets = secrets
         super().__init__(
             api_version="bitnami.com/v1alpha1",
             kind="SealedSecret",

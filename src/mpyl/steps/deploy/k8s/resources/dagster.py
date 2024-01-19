@@ -4,7 +4,6 @@ This module contains the Dagster user-code-deployment values conversion
 from dataclasses import dataclass
 from typing import Optional
 
-
 from . import to_dict
 from ..chart import ChartBuilder
 from .....project import get_env_variables
@@ -44,11 +43,14 @@ def to_user_code_values(
         sealed_secret_env.value_from.secret_key_ref.name = release_name
         sealed_secret_refs.append(to_dict(sealed_secret_env, skip_none=True))
 
-    extra_manifests = {}
     sealed_secret_manifest = builder.to_sealed_secrets()
     sealed_secret_manifest.metadata.name = release_name
-    if sealed_secret_manifest.secrets:
-        extra_manifests = {"extraManifests": [to_dict(sealed_secret_manifest)]}
+
+    extra_manifests = (
+        {"extraManifests": [to_dict(sealed_secret_manifest)]}
+        if len(sealed_secret_refs) > 0
+        else {}
+    )
 
     return (
         global_override
