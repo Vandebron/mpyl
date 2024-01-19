@@ -66,7 +66,12 @@ class DeployKubernetes(Step):
                     f"Service {step_input.project.name} reachable at: {hostname}"
                 )
                 endpoint = (
-                    "/" if has_specific_routes_configured else "/swagger/index.html"
+                    "/"
+                    if (
+                        has_specific_routes_configured
+                        or "nginx" in step_input.project.name
+                    )
+                    else "/swagger/index.html"
                 )
                 url = f"{hostname}{endpoint}"
             artifact = input_to_artifact(
