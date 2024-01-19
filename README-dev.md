@@ -1,15 +1,16 @@
 # Developer instructions
 
-## ..run example pipeline
+## ..install mpyl for development
 
-1. Install dependencies
-    ```shell
-    pipenv install -d
-    ```
-2. Run the Dagit UI
-    ```shell
-    dagit --workspace ./workspace.yml 
-    ```
+1. Clone the mpyl repo
+ ```shell
+ gh repo clone Vandebron/mpyl
+ ```
+
+2. Install dependencies
+ ```shell
+ pipenv install -d
+ ```
 
 ## ..run tests and checks
 
@@ -21,7 +22,8 @@ pipenv run validate
 
 ## ..create a pull request build
 
-After every push, if all validation passes, a test release is pushed to https://test.pypi.org/project/mpyl/.
+After working on a branch in MPyL repo, you can open a PR.
+After every push, if all validations pass, a test release is pushed to https://test.pypi.org/project/mpyl/.
 The naming of the version follows a `<pr_number>.<build_number>` pattern.
 
 A pull request build can be used in `Pipfile` via
