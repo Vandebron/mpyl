@@ -6,6 +6,7 @@
 #### Ship typing information
 - MPyL can now be type checked via `mypy`.
 
+
 Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.13)
 
 ## MPyL 1.4.12
