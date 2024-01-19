@@ -13,6 +13,8 @@ pipeline {
         AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
         SOME_CREDENTIAL = 'some-credential'
+        AWS_ECR_ACCESS_KEY_ID = credentials('AWS_ECR_ACCESS_KEY_ID')
+        AWS_ECR_SECRET_ACCESS_KEY = credentials('AWS_ECR_SECRET_ACCESS_KEY')
     }
     stages {
         stage('Initialize Parameters') {
