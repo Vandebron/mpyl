@@ -51,7 +51,9 @@ def initiate_run_properties(
                             if tag
                             else repo.changes_in_branch()
                         )
-                    ),
+                    )
+                    if not cli_parameters.projects
+                    else [],
                     stages=stages,
                     build_all=cli_parameters.all,
                     selected_stage=cli_parameters.stage,
