@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/mpyl.iml" filepath="$PROJECT_DIR$/mpyl.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../ewaldschrader/security/.idea/security.iml" filepath="$PROJECT_DIR$/../ewaldschrader/security/.idea/security.iml" />
     </modules>
   </component>
 </project>
