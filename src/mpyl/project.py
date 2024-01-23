@@ -343,6 +343,7 @@ class Kubernetes:
 class TraefikHost:
     host: TargetProperty[str]
     service_port: Optional[int]
+    has_swagger: bool
     tls: Optional[TargetProperty[str]]
     whitelists: TargetProperty[list[str]]
     priority: Optional[int]
@@ -353,6 +354,7 @@ class TraefikHost:
         return TraefikHost(
             host=TargetProperty.from_config(values.get("host", {})),
             service_port=values.get("servicePort"),
+            has_swagger=values.get("hasSwagger", True),
             tls=TargetProperty.from_config(values.get("tls", {})),
             whitelists=TargetProperty.from_config(values.get("whitelists", {})),
             priority=values.get("priority"),

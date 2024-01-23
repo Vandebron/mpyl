@@ -56,6 +56,13 @@ class DeployKubernetes(Step):
         )
         if deploy_result.success:
             hostname = self.try_extract_hostname(chart, builder.project.name)
+            hosts = (
+                step_input.project.deployment.traefik.hosts
+                if step_input.project.deployment
+                and step_input.project.deployment.traefik
+                else []
+            )
+            has_swagger = next((host.has_swagger for host in hosts))
             url = None
             if hostname:
                 has_specific_routes_configured: bool = bool(
@@ -65,12 +72,10 @@ class DeployKubernetes(Step):
                 self._logger.info(
                     f"Service {step_input.project.name} reachable at: {hostname}"
                 )
+
                 endpoint = (
                     "/"
-                    if (
-                        has_specific_routes_configured
-                        or "nginx" in step_input.project.name
-                    )
+                    if has_specific_routes_configured or not has_swagger
                     else "/swagger/index.html"
                 )
                 url = f"{hostname}{endpoint}"
