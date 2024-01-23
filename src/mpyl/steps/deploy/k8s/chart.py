@@ -689,6 +689,12 @@ class ChartBuilder:
         }
         return raw_env_vars
 
+    def get_sealed_secret_as_env_vars(self) -> list[V1EnvVar]:
+        sealed_secrets_for_target = list(
+            filter(lambda v: v.get_value(self.target) is not None, self.sealed_secrets)
+        )
+        return self._create_sealed_secret_env_vars(sealed_secrets_for_target)
+
     def _get_env_vars(self):
         raw_env_vars = self.extract_raw_env(self.target, self.env)
         pr_identifier = (
@@ -707,13 +713,9 @@ class ChartBuilder:
             V1EnvVar(name=key, value=value) for key, value in processed_env_vars.items()
         ]
 
-        sealed_secrets_for_target = list(
-            filter(lambda v: v.get_value(self.target) is not None, self.sealed_secrets)
-        )
-        sealed_secrets = self._create_sealed_secret_env_vars(sealed_secrets_for_target)
         secrets = self._create_secret_env_vars(self.secrets)
 
-        return env_vars + sealed_secrets + secrets
+        return env_vars + self.get_sealed_secret_as_env_vars() + secrets
 
     @property
     def is_cron_job(self) -> bool:

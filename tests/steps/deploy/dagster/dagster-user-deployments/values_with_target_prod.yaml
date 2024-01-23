@@ -8,9 +8,12 @@ deployments:
   - --python-file
   - /tests/projects/dagster-user-code/main.py
   env:
-    DEPLOY_ENV: prod
-    LOGGING_LEVEL: INFO
-  envSecrets: []
+  - name: DEPLOY_ENV
+    value: prod
+  - name: LOGGING_LEVEL
+    value: INFO
+  envSecrets:
+  - name: some-normal-secret
   image:
     pullPolicy: Always
     imagePullSecrets:

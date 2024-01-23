@@ -102,7 +102,7 @@ class CustomResourceDefinition:
         self._spec = spec
 
 
-def to_dict(obj):
+def to_dict(obj, skip_none=False):
     result = {}
 
     for attr, _ in six.iteritems(obj.openapi_types):
@@ -113,19 +113,21 @@ def to_dict(obj):
                 map(lambda x: to_dict(x) if hasattr(x, "to_dict") else x, value)
             )
         elif hasattr(value, "to_dict"):
-            result[key] = to_dict(value)
+            result[key] = to_dict(value, skip_none)
         elif isinstance(value, dict):
             result[key] = dict(  # type: ignore
                 map(
-                    lambda item: (item[0], to_dict(item[1]))
+                    lambda item: (item[0], to_dict(item[1], skip_none))
                     if hasattr(item[1], "to_dict")
                     else item,
                     value.items(),
                 )
             )
+        elif value is None:
+            if not skip_none:
+                result[key] = value  # type: ignore
         else:
             result[key] = value
-
     return result
 
 
