@@ -61,6 +61,7 @@ class DockerRegistryConfig:
     organization: Optional[str]
     user_name: str
     password: str
+    provider: Optional[str]
     cache_from_registry: bool
     custom_cache_config: Optional[DockerCacheConfig]
 
@@ -73,6 +74,7 @@ class DockerRegistryConfig:
                 user_name=config["userName"],
                 organization=config.get("organization", None),
                 password=config["password"],
+                provider=config.get("provider", None),
                 cache_from_registry=cache_config.get("cacheFromRegistry", False),
                 custom_cache_config=DockerCacheConfig.from_dict(cache_config["custom"])
                 if "custom" in cache_config
@@ -303,11 +305,23 @@ def build(
 
 def login(logger: Logger, registry_config: DockerRegistryConfig) -> None:
     logger.info(f"Logging in with user '{registry_config.user_name}'")
-    docker.login(
-        server=f"https://{registry_config.host_name}",
-        username=registry_config.user_name,
-        password=registry_config.password,
-    )
+    if registry_config.provider == "azure":
+        docker.login(
+            server=f"https://{registry_config.host_name}",
+            username=registry_config.user_name,
+            password=registry_config.password,
+        )
+    if registry_config.provider == "aws":
+        docker.login_ecr(
+            aws_access_key_id=registry_config.user_name,
+            aws_secret_access_key=registry_config.password,
+            region_name="eu-central-1",
+            registry=registry_config.host_name,
+        )
+    else:
+        raise ValueError(
+            f"Docker config has no container registry provider with name {registry_config.provider}"
+        )
     logger.debug(f"Logged in as '{registry_config.user_name}'")
 
 
