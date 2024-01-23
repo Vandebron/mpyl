@@ -46,6 +46,28 @@ class DeployKubernetes(Step):
                 return DeployKubernetes.match_to_url(match)
         return None
 
+    @staticmethod
+    def get_endpoint(builder: ChartBuilder) -> str:
+        step_input = builder.step_input
+        has_specific_routes_configured: bool = bool(
+            builder.deployment.traefik is not None
+            and step_input.run_properties.target == Target.PRODUCTION
+        )
+        hosts = (
+            step_input.project.deployment.traefik.hosts
+            if step_input.project.deployment and step_input.project.deployment.traefik
+            else []
+        )
+        if hosts:
+            has_swagger = hosts[0].has_swagger
+        else:
+            has_swagger = True
+        return (
+            "/"
+            if has_specific_routes_configured or not has_swagger
+            else "/swagger/index.html"
+        )
+
     def execute(self, step_input: Input) -> Output:
         properties = step_input.run_properties
         builder = ChartBuilder(step_input)
@@ -56,31 +78,12 @@ class DeployKubernetes(Step):
         )
         if deploy_result.success:
             hostname = self.try_extract_hostname(chart, builder.project.name)
-            hosts = (
-                step_input.project.deployment.traefik.hosts
-                if step_input.project.deployment
-                and step_input.project.deployment.traefik
-                else []
-            )
-            if hosts:
-                has_swagger = hosts[0].has_swagger
-            else:
-                has_swagger = True
             url = None
             if hostname:
-                has_specific_routes_configured: bool = bool(
-                    builder.deployment.traefik is not None
-                    and properties.target == Target.PRODUCTION
-                )
                 self._logger.info(
                     f"Service {step_input.project.name} reachable at: {hostname}"
                 )
-
-                endpoint = (
-                    "/"
-                    if has_specific_routes_configured or not has_swagger
-                    else "/swagger/index.html"
-                )
+                endpoint = self.get_endpoint(builder)
                 url = f"{hostname}{endpoint}"
             artifact = input_to_artifact(
                 ArtifactType.DEPLOYED_HELM_APP,

@@ -267,3 +267,18 @@ class TestKubernetesChart:
         builder = self._get_builder(get_spark_project())
         chart = to_spark_job_chart(builder)
         self._roundtrip(self.template_path / "spark", template, chart)
+
+    def test_get_endpoint(self):
+        project_with_swagger = get_project()
+        builder_with_swagger = self._get_builder(project_with_swagger)
+
+        endpoint_with_swagger = DeployKubernetes.get_endpoint(builder_with_swagger)
+        assert endpoint_with_swagger == "/swagger/index.html"
+
+        project_without_swagger = test_data.get_project_without_swagger()
+        builder_without_swagger = self._get_builder(project_without_swagger)
+
+        endpoint_without_swagger = DeployKubernetes.get_endpoint(
+            builder_without_swagger
+        )
+        assert endpoint_without_swagger == "/"
