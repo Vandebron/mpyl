@@ -292,6 +292,16 @@ definitions:
         type: string
       password:
         type: string
+      provider:
+        type: string
+        enum:
+          - 'aws'
+          - 'azure'
+        description: >-
+          Defines the container registry provider. Defaults to aws.
+        default: 'aws'
+      region:
+        type: string
       cache:
         type: object
         additionalProperties: false
