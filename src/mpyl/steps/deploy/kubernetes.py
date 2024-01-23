@@ -58,10 +58,7 @@ class DeployKubernetes(Step):
             if step_input.project.deployment and step_input.project.deployment.traefik
             else []
         )
-        if hosts:
-            has_swagger = hosts[0].has_swagger
-        else:
-            has_swagger = True
+        has_swagger = hosts[0].has_swagger if hosts else True
         return (
             "/"
             if has_specific_routes_configured or not has_swagger
