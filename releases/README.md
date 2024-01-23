@@ -1,5 +1,15 @@
 # Release notes
 
+## MPyL 1.4.14
+
+
+#### Sealed Secrets and Dagster Deploy
+- The DagsterDeploy step now supports sealed secrets.
+- The Dagster UserCode helm chart is deployed with an extra manifest that contains the sealed secrets that are manually sealed and documented in the `project.yml`
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.14)
+
 ## MPyL 1.4.13
 
 
