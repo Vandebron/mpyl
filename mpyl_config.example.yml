@@ -34,9 +34,9 @@ jira:
 docker:
   defaultRegistry: 'acme.docker.com'
   registries:
-    - hostName: "dkr.ecr.us-east-1.amazonaws.com"
-      userName: !ENV ${AWS_ECR_ACCESS_KEY_ID}
-      password: !ENV ${AWS_ECR_SECRET_ACCESS_KEY}
+    - hostName: "ecr.amazonaws.com"
+      userName: !ENV ${AWS_ACCESS_KEY_ID}
+      password: !ENV ${AWS_SECRET_ACCESS_KEY}
       provider: 'aws'
       region: 'us-east-1'
     - hostName: 'acme.docker.com'
