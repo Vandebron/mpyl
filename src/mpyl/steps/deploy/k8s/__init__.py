@@ -187,16 +187,16 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
 ) -> Output:
     run_properties = step_input.run_properties
     project = step_input.project
-    deployment_config = DeployConfig.from_config(run_properties.config)
+    deployment_config = DeployConfig.from_config(values=run_properties.config)
 
     action = deployment_config.action.value
     if action == DeployAction.KUBERNETES_MANIFEST.value:  # pylint: disable=no-member
         path = Path(project.root_path, deployment_config.output_path)
-        file_path = write_manifest(path, chart)
+        file_path = write_manifest(target_path=path, chart=chart)
 
         artifact = input_to_artifact(
-            ArtifactType.KUBERNETES_MANIFEST,
-            step_input,
+            artifact_type=ArtifactType.KUBERNETES_MANIFEST,
+            step_input=step_input,
             spec=KubernetesManifestSpec(str(file_path)),
         )
 
@@ -204,7 +204,7 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
             "test"
             if run_properties.target in (Target.PULL_REQUEST_BASE, Target.PULL_REQUEST)
             else run_properties.target.name.lower()
-        )
+        )  # Can't re-use get_argo_folder_name function for now because of circular imports
         deployment_details = (
             f"cluster: {cluster}\n"
             + f"repository: {RepoConfig.from_config(run_properties.config).repo_credentials.name}\n"
