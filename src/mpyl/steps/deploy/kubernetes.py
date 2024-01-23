@@ -62,7 +62,10 @@ class DeployKubernetes(Step):
                 and step_input.project.deployment.traefik
                 else []
             )
-            has_swagger = next((host.has_swagger for host in hosts))
+            if hosts:
+                has_swagger = hosts[0].has_swagger
+            else:
+                has_swagger = True
             url = None
             if hostname:
                 has_specific_routes_configured: bool = bool(
