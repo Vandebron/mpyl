@@ -300,6 +300,8 @@ definitions:
         description: >-
           Defines the container registry provider. Defaults to aws.
         default: 'aws'
+      region:
+        type: string
       cache:
         type: object
         additionalProperties: false

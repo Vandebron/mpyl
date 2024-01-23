@@ -62,6 +62,7 @@ class DockerRegistryConfig:
     user_name: str
     password: str
     provider: Optional[str]
+    region: Optional[str]
     cache_from_registry: bool
     custom_cache_config: Optional[DockerCacheConfig]
 
@@ -75,6 +76,7 @@ class DockerRegistryConfig:
                 organization=config.get("organization", None),
                 password=config["password"],
                 provider=config.get("provider", None),
+                region=config.get("region", None),
                 cache_from_registry=cache_config.get("cacheFromRegistry", False),
                 custom_cache_config=DockerCacheConfig.from_dict(cache_config["custom"])
                 if "custom" in cache_config
@@ -315,7 +317,7 @@ def login(logger: Logger, registry_config: DockerRegistryConfig) -> None:
         docker.login_ecr(
             aws_access_key_id=registry_config.user_name,
             aws_secret_access_key=registry_config.password,
-            region_name="eu-central-1",
+            region_name=registry_config.region,
             registry=registry_config.host_name,
         )
     else:
