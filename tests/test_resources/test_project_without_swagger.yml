@@ -1,0 +1,61 @@
+name: 'minimalService'
+description: 'This is a test container. For testing the MPL pipelines, not to be deployed anywhere.'
+stages:
+  build: Echo Build
+  test: Echo Test
+  deploy: Echo Deploy
+maintainer: [ 'MPyL' ]
+build:
+  args:
+    plain:
+      - key: SOME_ENV
+        test: "Test"
+        acceptance: "Acceptance"
+        production: "Production"
+dependencies:
+  build:
+    - 'test/docker/'
+deployment:
+  namespace: "mpyl"
+  properties:
+    env:
+      - key: SOME_ENV
+        pr: "PullRequest"
+        test: "Test"
+        acceptance: "Acceptance"
+        production: "Production"
+  kubernetes:
+    livenessProbe:
+      path:
+        all: /health
+      successThreshold: 0
+      failureThreshold: 99
+      grpc:
+        port: 123
+        service: 'grpcService'
+    portMappings:
+      8080: 8080
+    metrics:
+      enabled: false
+    resources:
+      instances:
+        all: 1
+      limit:
+        cpus:
+          all: 0.5
+        mem:
+          all: 1024
+  traefik:
+    hosts:
+      - host:
+          pr: "Host(`payments-{PR-NUMBER}.test.nl`)"
+          test: "Host(`payments.test.nl`)"
+          acceptance: "Host(`payments.acceptance1.nl`)"
+          production: "Host(`payments.nl`)"
+        hasSwagger: false
+        tls:
+          all: "le-custom-prod-wildcard-cert"
+        insecure: true
+        whitelists:
+          test:
+            - "Test"

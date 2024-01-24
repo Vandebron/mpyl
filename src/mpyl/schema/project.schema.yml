@@ -395,6 +395,8 @@ definitions:
             type: string
       servicePort:
         type: number
+      hasSwagger:
+        type: boolean
       whitelists:
         type: object
         additionalProperties: false
