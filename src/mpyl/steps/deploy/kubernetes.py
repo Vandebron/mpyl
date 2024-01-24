@@ -49,7 +49,7 @@ class DeployKubernetes(Step):
     @staticmethod
     def get_endpoint(builder: ChartBuilder) -> str:
         step_input = builder.step_input
-        has_specific_routes_configured = bool(
+        has_specific_routes_configured = (
             builder.deployment.traefik is not None
             and step_input.run_properties.target == Target.PRODUCTION
         )
