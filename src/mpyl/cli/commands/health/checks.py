@@ -60,35 +60,20 @@ def perform_health_checks(
     console.title("Version")
     __check_version(console)
 
-    console.title("MPyL configuration")
-    if config_path := __validate_config_path(
-        console,
-        env_var="MPYL_CONFIG_PATH",
-        default=DEFAULT_CONFIG_FILE_NAME,
-        config_name="config",
-    ):
-        _validate_config(
-            console,
-            config_file_path=config_path,
-            schema_path="../../../schema/mpyl_config.schema.yml",
-            upgraders=CONFIG_UPGRADERS,
-            perform_upgrade=perform_upgrade,
-        )
-
     console.title("Run configuration")
-
     properties_schema_path = Path(
         os.environ.get("MPYL_RUN_PROPERTIES_PATH") or DEFAULT_RUN_PROPERTIES_FILE_NAME
     )
 
     stages_schema = properties_schema_path.parent / DEFAULT_STAGES_SCHEMA_FILE_NAME
-    if not Path(stages_schema).exists():
+    stages_schema_exists = Path(stages_schema).exists()
+    if not stages_schema_exists:
         console.check(
             f"{stages_schema} does not exist. See _Stage configuration_ in documentation for an example.",
             False,
         )
     else:
-        console.check(f"{stages_schema} is present", False)
+        console.check(f"{stages_schema} is present", True)
 
     if properties_path := __validate_config_path(
         console,
@@ -101,6 +86,21 @@ def perform_health_checks(
             config_file_path=properties_path,
             schema_path="../../../schema/run_properties.schema.yml",
             upgraders=PROPERTIES_UPGRADERS,
+            perform_upgrade=perform_upgrade,
+        )
+
+    console.title("MPyL configuration")
+    if config_path := __validate_config_path(
+        console,
+        env_var="MPYL_CONFIG_PATH",
+        default=DEFAULT_CONFIG_FILE_NAME,
+        config_name="config",
+    ):
+        _validate_config(
+            console,
+            config_file_path=config_path,
+            schema_path="../../../schema/mpyl_config.schema.yml",
+            upgraders=CONFIG_UPGRADERS,
             perform_upgrade=perform_upgrade,
         )
 
