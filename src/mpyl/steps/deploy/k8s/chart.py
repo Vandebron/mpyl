@@ -394,7 +394,7 @@ class ChartBuilder:
         )
 
     def to_cron_job(self) -> V1CronJob:
-        values = self.project.job.cron
+        values = self.project.job.cron.get_value(self.target)
         job_template = V1JobTemplateSpec(spec=self.to_job().spec)
         template_dict = to_dict(job_template)
         values["jobTemplate"] = template_dict
@@ -411,7 +411,7 @@ class ChartBuilder:
     def to_spark_application(self) -> V1SparkApplication:
         return V1SparkApplication(
             metadata=self._to_object_meta(),
-            schedule=self._get_job().cron["schedule"],
+            schedule=self._get_job().cron.get_value(self.target)["schedule"],
             body=to_spark_body(
                 project_name=self.release_name,
                 env_vars=get_env_variables(self.project, self.target),
@@ -719,7 +719,7 @@ class ChartBuilder:
 
     @property
     def is_cron_job(self) -> bool:
-        return len(self._get_job().cron.keys()) > 0
+        return len(self._get_job().cron.get_value(self.target).keys()) > 0
 
     def to_deployment(self) -> V1Deployment:
         ports = [

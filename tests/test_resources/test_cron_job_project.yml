@@ -24,12 +24,13 @@ deployment:
       all: --env test
     job:
       cron:
-        suspend: true
-        schedule: "0 22 * * *"
-        timeZone: "Europe/Amsterdam"
-        successfulJobsHistoryLimit: 3
-        failedJobsHistoryLimit: 1
-        concurrencyPolicy: Allow
+        all:
+          suspend: true
+          schedule: "0 22 * * *"
+          timeZone: "Europe/Amsterdam"
+          successfulJobsHistoryLimit: 3
+          failedJobsHistoryLimit: 1
+          concurrencyPolicy: Allow
 dependencies:
   test:
     - tests/projects/service/file.py
