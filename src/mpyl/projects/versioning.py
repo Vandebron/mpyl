@@ -112,6 +112,21 @@ class Upgrader(ABC):
         return previous_dict
 
 
+class ProjectUpgraderOneFour15(Upgrader):
+    target_version = "1.4.15"
+
+    def upgrade(self, previous_dict: ordereddict) -> ordereddict:
+        job = previous_dict.get("deployment", {}).get("kubernetes", {}).get("job", {})
+        if cron := job.get("cron", None):
+            if not any(
+                x in cron for x in ["all", "pr", "test", "acceptance", "production"]
+            ):
+                job["cron"] = {}
+                job["cron"]["all"] = cron
+
+        return previous_dict
+
+
 class ProjectUpgraderOne31(Upgrader):
     target_version = "1.3.1"
 
@@ -161,6 +176,7 @@ PROJECT_UPGRADERS = [
     ProjectUpgraderOne10(),
     ProjectUpgraderOne11(),
     ProjectUpgraderOne31(),
+    ProjectUpgraderOneFour15(),
 ]
 
 
