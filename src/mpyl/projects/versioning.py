@@ -119,7 +119,7 @@ class ProjectUpgraderOneFour15(Upgrader):
         job = previous_dict.get("deployment", {}).get("kubernetes", {}).get("job", {})
         if cron := job.get("cron", None):
             if not any(
-                x in cron for x in ["all", "pr", "test", "acceptance", "production"]
+                env in cron for env in ["all", "pr", "test", "acceptance", "production"]
             ):
                 job["cron"] = {}
                 job["cron"]["all"] = cron
