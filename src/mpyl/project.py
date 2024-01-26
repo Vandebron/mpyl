@@ -632,7 +632,7 @@ def load_project(
 ) -> Project:
     """
     Load a `project.yml` to `Project` data class
-    :param root_dir: root source directory
+    :param root_dir: is the root of the project path. It contains the mpyl_config.yml and run_properties.yml files
     :param project_path: relative path from `root_dir` to the `project.yml`
     :param strict: indicates whether the schema should be validated
     :param log: indicates whether problems should be logged as warning

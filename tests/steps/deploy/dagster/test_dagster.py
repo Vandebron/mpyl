@@ -18,7 +18,8 @@ yaml = YAML()
 
 
 class TestDagster:
-    resource_path = root_test_path / "projects" / "dagster-user-code" / "deployment"
+    dagster_project_folder = Path("projects", "dagster-user-code", "deployment")
+    resource_path = root_test_path / dagster_project_folder
     generated_values_path = (
         root_test_path / "steps" / "deploy" / "dagster" / "dagster-user-deployments"
     )
@@ -103,9 +104,12 @@ class TestDagster:
         )
 
     def test_generate_with_sealed_secret_as_extra_manifest(self):
+        project_folder = self.config_resource_path / ".." / self.dagster_project_folder
         step_input = Input(
             load_project(
-                self.resource_path, Path("project_with_sealed_secret.yml"), True
+                self.config_resource_path,
+                project_folder / "project_with_sealed_secret.yml",
+                True,
             ),
             test_data.RUN_PROPERTIES,
             None,
