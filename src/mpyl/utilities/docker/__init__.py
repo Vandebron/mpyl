@@ -342,7 +342,7 @@ def remove_container(logger: Logger, container: Container) -> None:
     logger.info(f"Removed container {container.id}")
 
 
-def check_ecr_repo(logger: Logger, repo):
+def create_ecr_repo_if_needed(logger: Logger, repo):
     # Initialize the ECR client
     ecr_client = boto3.client('ecr')
 
