@@ -2,7 +2,6 @@
 import logging
 import shlex
 import shutil
-import boto3
 from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
@@ -11,6 +10,7 @@ from typing import Dict, Optional, Iterator, cast, Union
 from python_on_whales import docker, Image, Container, DockerException
 from python_on_whales.exceptions import NoSuchContainer
 from ruamel.yaml import yaml_object, YAML
+import boto3
 
 from ..logging import try_parse_ansi
 from ...project import Project
@@ -346,7 +346,7 @@ def check_ecr_repo(logger: Logger, repo):
     # Initialize the ECR client
     ecr_client = boto3.client('ecr')
 
-    #Check if the repository already exists
+    # Check if the repository already exists
     try:
         ecr_client.describe_repositories(repositoryNames=[repo])
         logger.info(f"Repository '{repo}' already exists.")
