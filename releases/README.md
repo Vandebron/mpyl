@@ -1,5 +1,23 @@
 # Release notes
 
+## MPyL 1.4.15
+
+
+#### Add AWS ECR
+- MPyL can now push/pull images to/from AWS ECR. Check mpyl_config file to set this.
+
+#### Enhancements
+- Adds the optional `hasSwagger` field to enhance PR descriptions. This update ensures accurate URL display for services that do not use Swagger
+
+#### Manual build improvements
+- Do not get changes from the remote repository when doing manual build
+
+#### Cron job improvements
+- Allow cron jobs to be configured per environment
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.15)
+
 ## MPyL 1.4.14
 
 
