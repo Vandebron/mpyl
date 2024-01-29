@@ -191,7 +191,7 @@ def push_to_registry(
 
     login(logger=logger, registry_config=docker_config)
     full_image_path = docker_registry_path(docker_config, image_name)
-    check_ecr_repo(logger=logger, repo=full_image_path)
+    check_ecr_repo(logger=logger, repo=image_name)
     docker.image.tag(image, full_image_path)
     docker.image.push(full_image_path, quiet=False)
 
@@ -348,7 +348,7 @@ def check_ecr_repo(logger: Logger, repo):
 
     # Check if the repository already exists
     try:
-        ecr_client.describe_repositories(repositoryNames=[repo])
+        ecr_client.describe_repositories(repositoryNames=[repo,])
         logger.info(f"Repository '{repo}' already exists.")
     except ecr_client.exceptions.RepositoryNotFoundException:
         # If RepositoryNotFoundException is raised, the repository doesn't exist
@@ -357,4 +357,4 @@ def check_ecr_repo(logger: Logger, repo):
         # Create the repository
         response = ecr_client.create_repository(repositoryName=repo)
         logger.info(f"Repository '{repo}' created successfully.")
-        logger.info("Repository URI:", response['repository']['repositoryUri'])
+        logger.info("Repository URI:", response["repository"]["repositoryUri"])
