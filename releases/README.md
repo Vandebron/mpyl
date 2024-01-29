@@ -1,5 +1,14 @@
 # Release notes
 
+## MPyL 1.4.16
+
+
+#### Bugfixes
+- Fix non-cron jobs deployments
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.16)
+
 ## MPyL 1.4.15
 
 
