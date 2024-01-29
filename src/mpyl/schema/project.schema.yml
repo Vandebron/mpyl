@@ -817,7 +817,27 @@ definitions:
           activeDeadlineSeconds:
             $ref: '#/definitions/dtapNumberValue'
           cron:
-            $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.batch.v1.CronJobSpec'
+            type: object
+            description: Cron job configuration
+            oneOf:
+              - required:
+                  - pr
+                  - test
+                  - acceptance
+                  - production
+              - required:
+                  - all
+            properties:
+              pr:
+                $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.batch.v1.CronJobSpec'
+              test:
+                $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.batch.v1.CronJobSpec'
+              acceptance:
+                $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.batch.v1.CronJobSpec'
+              production:
+                $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.batch.v1.CronJobSpec'
+              all:
+                $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.batch.v1.CronJobSpec'
           spark:
             description: >-
               Spark job. Requires google spark operator to be installed.

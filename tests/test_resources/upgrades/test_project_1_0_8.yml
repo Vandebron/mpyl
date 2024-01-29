@@ -56,6 +56,10 @@ deployment:
             divisor: 0.5
             resource: limits.memory
   kubernetes:
+    job:
+      cron:
+        schedule: "0 22 * * *"
+        timeZone: "Europe/Amsterdam"
     role:
       resources:
         - "pods"

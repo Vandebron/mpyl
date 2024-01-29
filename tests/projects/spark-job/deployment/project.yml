@@ -29,7 +29,8 @@ deployment:
       activeDeadlineSeconds:
         all: 86400
       cron:
-        schedule: "0 7 * * *"
+        all:
+          schedule: "0 7 * * *"
       spark:
         mainClass: "sparkjob.sparkJobMain"
         mainApplicationFile: "local:///app/sparkjob-assembly-1.0.jar"

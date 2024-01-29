@@ -293,7 +293,7 @@ class Resources:
 
 @dataclass(frozen=True)
 class Job:
-    cron: dict
+    cron: TargetProperty[dict]
     job: dict
     spark: dict
 
@@ -302,7 +302,7 @@ class Job:
         if not values:
             return None
         return Job(
-            cron=values.get("cron", {}),
+            cron=TargetProperty.from_config(values.get("cron", {})),
             job=without_keys(values, {"cron"}),
             spark=values.get("spark", {}),
         )
