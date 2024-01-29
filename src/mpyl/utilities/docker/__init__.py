@@ -2,6 +2,7 @@
 import logging
 import shlex
 import shutil
+import boto3
 from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
@@ -190,6 +191,7 @@ def push_to_registry(
 
     login(logger=logger, registry_config=docker_config)
     full_image_path = docker_registry_path(docker_config, image_name)
+    check_ecr_repo(logger=logger, repo=full_image_path)
     docker.image.tag(image, full_image_path)
     docker.image.push(full_image_path, quiet=False)
 
@@ -338,3 +340,21 @@ def remove_container(logger: Logger, container: Container) -> None:
     logger.debug(f"Removing container {container.id}")
     docker.remove(container.id)
     logger.info(f"Removed container {container.id}")
+
+
+def check_ecr_repo(logger: Logger, repo):
+    # Initialize the ECR client
+    ecr_client = boto3.client('ecr')
+
+    #Check if the repository already exists
+    try:
+        ecr_client.describe_repositories(repositoryNames=[repo])
+        logger.info(f"Repository '{repo}' already exists.")
+    except ecr_client.exceptions.RepositoryNotFoundException:
+        # If RepositoryNotFoundException is raised, the repository doesn't exist
+        logger.info(f"Repository '{repo}' not found. Creating...")
+
+        # Create the repository
+        response = ecr_client.create_repository(repositoryName=repo)
+        logger.info(f"Repository '{repo}' created successfully.")
+        logger.info("Repository URI:", response['repository']['repositoryUri'])
