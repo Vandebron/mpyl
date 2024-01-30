@@ -347,12 +347,9 @@ def remove_container(logger: Logger, container: Container) -> None:
 
 def create_ecr_repo_if_needed(logger: Logger, repo: str):
     ecr_config = Config(
-        region_name='eu-central-1',
-        signature_version='v4',
-        retries={
-            'max_attempts': 10,
-            'mode': 'standard'
-        }
+        region_name="eu-central-1",
+        signature_version="v4",
+        retries={"max_attempts": 10, "mode": "standard"},
     )
     ecr_client = boto3.client("ecr", config=ecr_config)
     try:
