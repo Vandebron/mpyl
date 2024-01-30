@@ -29,6 +29,14 @@ class ExecutionException(Exception):
         self.message = message
         super().__init__(self.message)
 
+    def __reduce__(self):
+        return ExecutionException, (
+            self.project_name,
+            self.executor,
+            self.stage,
+            self.message,
+        )
+
 
 @dataclass(frozen=True)
 class StepResult:
