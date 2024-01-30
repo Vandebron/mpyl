@@ -194,7 +194,7 @@ def push_to_registry(
     login(logger=logger, registry_config=docker_config)
     full_image_path = docker_registry_path(docker_config, image_name)
     if docker_config.provider == "aws":
-        create_ecr_repo_if_needed(logger, image_name)
+        create_ecr_repo_if_needed(logger, image_name.lower())
     docker.image.tag(image, full_image_path)
     docker.image.push(full_image_path, quiet=False)
 
