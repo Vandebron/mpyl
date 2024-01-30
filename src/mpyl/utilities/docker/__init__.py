@@ -1,4 +1,5 @@
 """Docker related utility methods"""
+import json
 import logging
 import shlex
 import shutil
@@ -191,7 +192,8 @@ def push_to_registry(
 
     login(logger=logger, registry_config=docker_config)
     full_image_path = docker_registry_path(docker_config, image_name)
-    check_ecr_repo(logger=logger, repo=image_name)
+    if docker_config.provider == "aws":
+        create_ecr_repo_if_needed(logger, image_name)
     docker.image.tag(image, full_image_path)
     docker.image.push(full_image_path, quiet=False)
 
@@ -342,19 +344,42 @@ def remove_container(logger: Logger, container: Container) -> None:
     logger.info(f"Removed container {container.id}")
 
 
-def create_ecr_repo_if_needed(logger: Logger, repo):
-    # Initialize the ECR client
-    ecr_client = boto3.client('ecr')
-
-    # Check if the repository already exists
+def create_ecr_repo_if_needed(logger: Logger, repo: str):
+    ecr_client = boto3.client("ecr")
     try:
-        ecr_client.describe_repositories(repositoryNames=[repo,])
-        logger.info(f"Repository '{repo}' already exists.")
+        ecr_client.describe_repositories(
+            repositoryNames=[
+                repo,
+            ]
+        )
+        logger.info(f"Repository '{repo}' exists.")
     except ecr_client.exceptions.RepositoryNotFoundException:
-        # If RepositoryNotFoundException is raised, the repository doesn't exist
         logger.info(f"Repository '{repo}' not found. Creating...")
-
-        # Create the repository
-        response = ecr_client.create_repository(repositoryName=repo)
+        create_repo = ecr_client.create_repository(repositoryName=repo)
         logger.info(f"Repository '{repo}' created successfully.")
-        logger.info("Repository URI:", response["repository"]["repositoryUri"])
+        logger.info("Repository URI:", create_repo["repository"]["repositoryUri"])
+        ecr_lifecycle_policy(ecr_client, repo)
+    return f"ECR ready, pushing image to {repo}..."
+
+
+def ecr_lifecycle_policy(ecr_client, repo):
+    lifecycle_policy = {
+        "rules": [
+            {
+                "rulePriority": 1,
+                "description": "Keep 30 image days",
+                "selection": {
+                    "tagStatus": "any",
+                    "countType": "sinceImagePushed",
+                    "countNumber": 30,
+                    "countUnit": "days",
+                },
+                "action": {"type": "expire"},
+            }
+        ]
+    }
+
+    ecr_client.put_lifecycle_policy(
+        repositoryName=repo, lifecyclePolicyText=json.dumps(lifecycle_policy)
+    )
+    return f"Lifecycle policy added to repository '{repo}'."
