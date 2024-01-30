@@ -352,10 +352,11 @@ def create_ecr_repo_if_needed(logger: Logger, repo: str):
         retries={"max_attempts": 10, "mode": "standard"},
     )
     ecr_client = boto3.client("ecr", config=ecr_config)
+    print("REPO PRINT TEST:", repo)
     try:
         ecr_client.describe_repositories(
             repositoryNames=[
-                repo,
+                repo.lower(),
             ]
         )
         logger.info(f"Repository '{repo}' exists.")
