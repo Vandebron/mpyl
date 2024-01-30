@@ -1,10 +1,10 @@
-from src.mpyl.reporting.targets.github import PullRequestReporter, GithubUpdateStategy
+from src.mpyl.reporting.targets.github import PullRequestReporter, GithubUpdateStrategy
 from tests.test_resources.test_data import get_config_values
 
 
 class TestGithubReporter:
     reporter = PullRequestReporter(
-        get_config_values(), update_stategy=GithubUpdateStategy.BODY
+        get_config_values(), update_strategy=GithubUpdateStrategy.BODY
     )
 
     def test_replace_pr_body_empty(self):
