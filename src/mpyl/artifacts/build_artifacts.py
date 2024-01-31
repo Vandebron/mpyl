@@ -2,10 +2,13 @@
 import abc
 import os
 import shutil
+import time
 from abc import ABC
 from logging import Logger
 from pathlib import Path
 from tempfile import TemporaryDirectory
+
+from git import GitCommandError
 
 from ..constants import BUILD_ARTIFACTS_FOLDER
 from ..project import Project
@@ -134,9 +137,15 @@ class ArtifactsRepository:
 
                 artifact_repo.stage(".")
                 artifact_repo.commit(message)
-                if remote_branch_exists:
-                    artifact_repo.pull()  # to prevent issues with parallel runs pushing to the same branch
-                artifact_repo.push(branch)
+
+                try:  # to prevent issues with parallel runs pushing to the same branch
+                    artifact_repo.push(branch)
+                except GitCommandError:
+                    if remote_branch_exists:
+                        time.sleep(1)
+                        artifact_repo.pull()
+                        artifact_repo.push(branch)
+
                 self.logger.info(
                     f"Pushed {branch} with {copied_paths} copied paths to {artifact_repo.remote_url}"
                 )
