@@ -139,12 +139,14 @@ class ArtifactsRepository:
                 artifact_repo.commit(message)
 
                 try:  # to prevent issues with parallel runs pushing to the same branch
+                    artifact_repo.pull()
+                    self.logger.info("Pushing changes to remote")
                     artifact_repo.push(branch)
                 except GitCommandError:
-                    if remote_branch_exists:
-                        time.sleep(1)
-                        artifact_repo.pull()
-                        artifact_repo.push(branch)
+                    self.logger.info("Retrying push after pulling from remote..")
+                    time.sleep(1)
+                    artifact_repo.pull()
+                    artifact_repo.push(branch)
 
                 self.logger.info(
                     f"Pushed {branch} with {copied_paths} copied paths to {artifact_repo.remote_url}"
