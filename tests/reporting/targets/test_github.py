@@ -28,3 +28,9 @@ class TestGithubReporter:
             )
             == f"body\n\n{self.reporter.body_separator}\n"
         )
+
+    def test_replace_similar_body(self):
+        assert (
+            self.reporter._extract_pr_header(current_body="body----body")
+            == f"body----body\n\n{self.reporter.body_separator}\n"
+        )

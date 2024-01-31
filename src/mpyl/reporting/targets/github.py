@@ -83,7 +83,7 @@ class PullRequestReporter(Reporter):
         self.git_repository = Repository(RepoConfig.from_config(config))
         self.compose_function = compose_function
         self.update_strategy: GithubUpdateStrategy = update_strategy
-        self.body_separator = "----"
+        self.body_separator = "----\n"
 
     def _get_pull_request(
         self, repo: GithubRepository, run_properties: RunProperties
