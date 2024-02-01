@@ -172,7 +172,7 @@ def docker_registry_path(docker_config: DockerRegistryConfig, image_name: str) -
 
 
 def ecr_repository_path(host_name: str, image_name: str) -> str:
-    path_components = [host_name.split('/', 1)[1], image_name.split(':', 1)[0]]
+    path_components = [host_name.split("/", 1)[1], image_name.split(":", 1)[0]]
     return "/".join([c for c in path_components if c]).lower()
 
 
@@ -394,4 +394,4 @@ def ecr_lifecycle_policy(logger: Logger, ecr_client, repo):
     ecr_client.put_lifecycle_policy(
         repositoryName=repo, lifecyclePolicyText=json.dumps(lifecycle_policy)
     )
-    logging.info(f"Lifecycle policy added to repository '{repo}'.")
+    logger.info(f"Lifecycle policy added to repository '{repo}'.")
