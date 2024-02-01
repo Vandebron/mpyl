@@ -1,4 +1,4 @@
-name: job
+name: test
 description: "A job"
 maintainer: ["MPyL"]
 mpylVersion: 1.0.10

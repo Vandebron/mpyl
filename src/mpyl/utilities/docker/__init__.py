@@ -171,6 +171,11 @@ def docker_registry_path(docker_config: DockerRegistryConfig, image_name: str) -
     return "/".join([c for c in path_components if c]).lower()
 
 
+def ecr_repository_path(host_name: str, image_name: str) -> str:
+    path_components = [host_name.split('/', 1)[1], image_name.split(':', 1)[0]]
+    return "/".join([c for c in path_components if c]).lower()
+
+
 def full_image_path_for_project(step_input: Input) -> str:
     docker_config: DockerConfig = DockerConfig.from_dict(
         step_input.run_properties.config
@@ -193,8 +198,10 @@ def push_to_registry(
 
     login(logger=logger, registry_config=docker_config)
     full_image_path = docker_registry_path(docker_config, image_name)
+    repo_path = ecr_repository_path(docker_config.host_name, image_name)
+
     if docker_config.provider == "aws":
-        create_ecr_repo_if_needed(logger, image_name.lower())
+        create_ecr_repo_if_needed(logger, repo_path)
     docker.image.tag(image, full_image_path)
     docker.image.push(full_image_path, quiet=False)
 
@@ -352,7 +359,6 @@ def create_ecr_repo_if_needed(logger: Logger, repo: str):
         retries={"max_attempts": 10, "mode": "standard"},
     )
     ecr_client = boto3.client("ecr", config=ecr_config)
-    print("REPO PRINT TEST:", repo)
     try:
         ecr_client.describe_repositories(
             repositoryNames=[
@@ -362,14 +368,13 @@ def create_ecr_repo_if_needed(logger: Logger, repo: str):
         logger.info(f"Repository '{repo}' exists.")
     except ecr_client.exceptions.RepositoryNotFoundException:
         logger.info(f"Repository '{repo}' not found. Creating...")
-        create_repo = ecr_client.create_repository(repositoryName=repo)
+        ecr_client.create_repository(repositoryName=repo)
         logger.info(f"Repository '{repo}' created successfully.")
-        logger.info("Repository URI:", create_repo["repository"]["repositoryUri"])
-        ecr_lifecycle_policy(ecr_client, repo)
-    return f"ECR ready, pushing image to {repo}..."
+        ecr_lifecycle_policy(logger, ecr_client, repo)
+    logger.info(f"ECR ready, pushing image to {repo}...")
 
 
-def ecr_lifecycle_policy(ecr_client, repo):
+def ecr_lifecycle_policy(logger: Logger, ecr_client, repo):
     lifecycle_policy = {
         "rules": [
             {
@@ -389,4 +394,4 @@ def ecr_lifecycle_policy(ecr_client, repo):
     ecr_client.put_lifecycle_policy(
         repositoryName=repo, lifecyclePolicyText=json.dumps(lifecycle_policy)
     )
-    return f"Lifecycle policy added to repository '{repo}'."
+    logging.info(f"Lifecycle policy added to repository '{repo}'.")
