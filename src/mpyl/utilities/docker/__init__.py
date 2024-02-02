@@ -352,13 +352,18 @@ def remove_container(logger: Logger, container: Container) -> None:
     logger.info(f"Removed container {container.id}")
 
 
-def create_ecr_repo_if_needed(logger: Logger, repo: str):
+def create_ecr_repo_if_needed(logger: Logger, registry_config: DockerRegistryConfig, repo: str):
     ecr_config = Config(
-        region_name="eu-central-1",
+        region_name=registry_config.region,
         signature_version="v4",
         retries={"max_attempts": 10, "mode": "standard"},
     )
-    ecr_client = boto3.client("ecr", config=ecr_config)
+    ecr_client = boto3.client("ecr",
+                              config=ecr_config,
+                              aws_access_key_id=registry_config.user_name,
+                              aws_secret_access_key=registry_config.password,
+                              )
+
     try:
         ecr_client.describe_repositories(
             repositoryNames=[
