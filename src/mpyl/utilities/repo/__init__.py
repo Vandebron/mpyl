@@ -314,6 +314,9 @@ class Repository:  # pylint: disable=too-many-public-methods
     def commit(self, message: str):
         return self._repo.git.commit("-m", message)
 
+    def pull(self):
+        return self._repo.git.pull()
+
     def push(self, branch: str):
         return self._repo.git.push("--set-upstream", "origin", branch)
 

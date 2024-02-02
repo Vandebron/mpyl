@@ -2,10 +2,13 @@
 import abc
 import os
 import shutil
+import time
 from abc import ABC
 from logging import Logger
 from pathlib import Path
 from tempfile import TemporaryDirectory
+
+from git import GitCommandError
 
 from ..constants import BUILD_ARTIFACTS_FOLDER
 from ..project import Project
@@ -115,8 +118,10 @@ class ArtifactsRepository:
             with Repository.from_clone(
                 config=self.artifact_repo_config, repo_path=repo_path
             ) as artifact_repo:
-                branch_exists = artifact_repo.remote_branch_exists(branch_name=branch)
-                if branch_exists:
+                remote_branch_exists = artifact_repo.remote_branch_exists(
+                    branch_name=branch
+                )
+                if remote_branch_exists:
                     self.logger.info(f"Fetching branch '{branch}' from remote")
                     artifact_repo.checkout_branch(branch_name=branch)
                 else:
@@ -132,7 +137,17 @@ class ArtifactsRepository:
 
                 artifact_repo.stage(".")
                 artifact_repo.commit(message)
-                artifact_repo.push(branch)
+
+                try:  # to prevent issues with parallel runs pushing to the same branch
+                    artifact_repo.pull()
+                    self.logger.info("Pushing changes to remote")
+                    artifact_repo.push(branch)
+                except GitCommandError:
+                    self.logger.info("Retrying push after pulling from remote..")
+                    time.sleep(1)
+                    artifact_repo.pull()
+                    artifact_repo.push(branch)
+
                 self.logger.info(
                     f"Pushed {branch} with {copied_paths} copied paths to {artifact_repo.remote_url}"
                 )
