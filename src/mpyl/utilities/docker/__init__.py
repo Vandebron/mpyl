@@ -376,11 +376,13 @@ def create_ecr_repo_if_needed(
         logger.info(f"Repository '{repo}' exists.")
     except ecr_client.exceptions.RepositoryNotFoundException:
         logger.info(f"Repository '{repo}' not found. Creating...")
-        ecr_client.create_repository(repositoryName=repo,
-                                     imageTagMutability="IMMUTABLE",
-                                     encryptionConfiguration={
-                                         "encryptionType": "AES256",
-                                     })
+        ecr_client.create_repository(
+            repositoryName=repo,
+            imageTagMutability="IMMUTABLE",
+            encryptionConfiguration={
+                "encryptionType": "AES256",
+            },
+        )
         logger.info(f"Repository '{repo}' created successfully.")
         ecr_lifecycle_policy(logger, ecr_client, repo)
     logger.info(f"ECR ready, pushing image to {repo}...")
