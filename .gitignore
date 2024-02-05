@@ -132,6 +132,9 @@ dmypy.json
 .mpyl/
 Project_Default.xml
 
+#VSCode
+.vscode/
+
 #documentation
 docs/*
 !docs/schema
@@ -148,6 +151,9 @@ node_modules/
 #Scala
 .jvmopts
 .bsp/
+
+#Metals
+.metals/
 
 #Customized locally
 mpyl_config.yml

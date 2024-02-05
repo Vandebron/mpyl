@@ -61,7 +61,7 @@ properties:
           deploy_target:
             description: The deploy target.
             type: ["string", "null"]
-            enum: [ null,  'PullRequest', 'PullRequestBase', 'Acceptance', 'Production' ]
+            enum: [ null,  'PullRequest', 'PullRequestBase', 'Acceptance', 'Acceptance & PullRequestBase', 'Production' ]
       console:
         type: object
         additionalProperties: false
