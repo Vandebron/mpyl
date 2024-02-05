@@ -30,6 +30,7 @@ def main(log: Logger, args: argparse.Namespace):
         pull_main=True,
         verbose=args.verbose,
         all=args.all,
+        dryrun=args.dryrun,
     )
     run_properties = initiate_run_properties(
         config=config, properties=properties, cli_parameters=cli_parameters

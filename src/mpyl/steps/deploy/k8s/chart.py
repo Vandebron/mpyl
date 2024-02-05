@@ -719,7 +719,7 @@ class ChartBuilder:
 
     @property
     def is_cron_job(self) -> bool:
-        return len(self._get_job().cron.get_value(self.target).keys()) > 0
+        return self._get_job().cron is not None
 
     def to_deployment(self) -> V1Deployment:
         ports = [

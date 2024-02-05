@@ -241,6 +241,12 @@ class TestKubernetesChart:
             == "https://test.host.nl"
         )
 
+    def test_is_cron_job(self):
+        cron_builder = self._get_builder(get_cron_job_project())
+        assert cron_builder.is_cron_job is True
+        builder = self._get_builder(get_job_project())
+        assert builder.is_cron_job is False
+
     @pytest.mark.parametrize("template", ["job", "service-account", "sealed-secrets"])
     def test_job_chart_roundtrip(self, template):
         builder = self._get_builder(get_job_project())
