@@ -124,7 +124,7 @@ class TestSteps:
         )
         stages = Stages(build=None, test=None, deploy=None, postdeploy=None)
         project = Project(
-            "test", "Test project", "", stages, [], None, None, None, None
+            "test", "Test project", "", stages, [], "", None, None, None, None
         )
         output = steps.execute(stage=build.STAGE_NAME, project=project).output
         assert not output.success
@@ -195,6 +195,7 @@ class TestSteps:
             "",
             stages,
             [],
+            "",
             None,
             None,
             None,

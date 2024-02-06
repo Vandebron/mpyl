@@ -6,6 +6,8 @@ stages:
   deploy: Kubernetes Deploy
 mpylVersion: 1.0.10
 maintainer: ['MPyL']
+projectId:
+  all: "p-11111"
 build:
   args:
     plain:

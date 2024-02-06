@@ -62,17 +62,14 @@ kubernetes:
     cluster:
       test:
         clusterId: c-xxxxx
-        projectId: p-11111
         clusterEnv: test
         context: digital-k8s-test
       acceptance:
         clusterId: c-zzzzz
-        projectId: p-22222
         clusterEnv: acce
         context: digital-k8s-acce
       production:
         clusterId: c-ccccc
-        projectId: p-33333
         clusterEnv: prd
         context: digital-k8s-prod
 s3:

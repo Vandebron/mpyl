@@ -5,6 +5,8 @@ stages:
   deploy: CloudFront Kubernetes Deploy
 mpylVersion: 1.0.9
 maintainer: ['MPyL']
+projectId:
+  all: "p-11111"
 build:
   args:
     plain:

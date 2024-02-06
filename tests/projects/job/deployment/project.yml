@@ -1,6 +1,8 @@
 name: job
 description: "A job"
 maintainer: ["MPyL"]
+projectId:
+  all: "p-11111"
 mpylVersion: 1.0.10
 stages:
   build: "Docker Build"

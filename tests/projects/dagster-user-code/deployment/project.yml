@@ -3,6 +3,8 @@ description: 'Example user-code deployment for dagster'
 mpylVersion: 1.4.12
 maintainer:
   - MPyL
+projectId:
+  all: "p-11111"
 stages:
   build: Docker Build
   deploy: Echo Deploy # once TECH-116 is merged we can add a sample project to the test pipeline

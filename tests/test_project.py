@@ -75,7 +75,7 @@ class TestMpylSchema:
     def test_schema_load_validation(self):
         with pytest.raises(ValidationError) as exc:
             load_project(Path(""), self.resource_path / "test_project_invalid.yml")
-        assert exc.value.message == "'maintainer' is a dependency of 'deployment'"
+        assert exc.value.message == "'maintainer' is a required property"
 
     def test_target_by_value(self):
         target = Target(Target.PULL_REQUEST)
