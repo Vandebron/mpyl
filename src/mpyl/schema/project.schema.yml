@@ -5,6 +5,7 @@ required:
   - name
   - stages
   - description
+  - maintainer
 additionalProperties: false
 dependencies:
   deployment:
@@ -35,6 +36,10 @@ properties:
       type: string
     uniqueItems: true
     minItems: 1
+  projectId:
+    description: >-
+      The rancher project id that this project should be deployed to, required for rbac. Represents a domain in rancher.
+    $ref: '#/definitions/dtapValue'
   stages:
     $id: '#/properties/stages'
     description: Defines which steps should be executed at each stage
