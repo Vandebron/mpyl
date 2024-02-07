@@ -199,6 +199,9 @@ class ChartBuilder:
     config_defaults: DeploymentDefaults
     namespace: str
     role: Optional[dict]
+    strategy_type: str
+    max_surge: str
+    max_unavailable: str
 
     def __init__(self, step_input: Input):
         self.step_input = step_input
@@ -227,6 +230,9 @@ class ChartBuilder:
             run_properties=step_input.run_properties, project=project
         )
         self.role = project.kubernetes.role
+        self.strategy_type = project.kubernetes.strategy_type
+        self.max_surge = project.kubernetes.max_surge
+        self.max_unavailable = project.kubernetes.max_unavailable
 
     def _to_labels(self) -> dict:
         run_properties = self.step_input.run_properties
@@ -760,6 +766,7 @@ class ChartBuilder:
 
         instances = resources.instances if resources.instances else defaults.instances
 
+        # TODO strategy = if()V1DeploymentStrategy()
         return V1Deployment(
             api_version="apps/v1",
             kind="Deployment",
@@ -780,7 +787,7 @@ class ChartBuilder:
                 ),
                 strategy=V1DeploymentStrategy(
                     rolling_update=V1RollingUpdateDeployment(
-                        max_surge="100%", max_unavailable="0%"
+                        max_surge=self.max_surge, max_unavailable=self.max_unavailable
                     ),
                     type="RollingUpdate",
                 ),

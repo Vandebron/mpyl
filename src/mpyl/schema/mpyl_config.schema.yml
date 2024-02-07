@@ -130,6 +130,23 @@ definitions:
           If set to HelmTemplate, the helm chart will be rendered and the result will be written to the folder specified in the helmTemplateOutputPath property
           If set to KubectlManifest, a k8s manifest be written to the file specified in the kubectlManifestOutputPath property. This manifest can be deployd with kubectl apply -f <manifest>
         default: 'HelmDeploy'
+      deployStrategy:
+        type: object
+        description: >-
+          Defines the strategy to use when deploying the helm chart. Defaults to RollingUpdate.
+        properties:
+            type:
+                type: string
+                enum:
+                - 'RollingUpdate'
+                - 'Recreate'
+                default: 'RollingUpdate'
+            maxSurge:
+                type: string
+                default: '25%'
+            maxUnavailable:
+                type: string
+                default: '25%'
       outputPath:
         type: string
         default: target/kubernetes

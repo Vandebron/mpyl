@@ -872,6 +872,25 @@ definitions:
             type: array
             items:
               $ref: '#/definitions/alert'
+      deploymentStrategy:
+        description: >-
+          Kubernetes deployment strategy.
+          https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
+        additionalProperties: false
+        type: object
+        properties:
+          type:
+            type: string
+            enum:
+              - 'RollingUpdate'
+              - 'Recreate'
+            default: 'RollingUpdate'
+          maxUnavailable:
+            type: string
+            default: '25%'
+          maxSurge:
+            type: string
+            default: '25%'
     dependencies:
       portMappings:
         - metrics

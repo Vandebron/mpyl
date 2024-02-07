@@ -321,6 +321,9 @@ class Kubernetes:
     command: Optional[TargetProperty[str]]
     args: Optional[TargetProperty[str]]
     labels: Optional[list[KeyValueProperty]]
+    strategy_type: str
+    max_surge: str
+    max_unavailable: str
 
     @staticmethod
     def from_config(values: dict):
@@ -336,6 +339,9 @@ class Kubernetes:
             command=TargetProperty.from_config(values.get("command", {})),
             args=TargetProperty.from_config(values.get("args", {})),
             labels=list(map(KeyValueProperty.from_config, values.get("labels", []))),
+            strategy_type=values.get("strategyType", "RollingUpdate"),
+            max_surge=values.get("maxSurge", "25%"),
+            max_unavailable=values.get("maxUnavailable", "25%"),
         )
 
 
