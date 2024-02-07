@@ -780,7 +780,7 @@ class ChartBuilder:
                 ),
                 strategy=V1DeploymentStrategy(
                     rolling_update=V1RollingUpdateDeployment(
-                        max_surge="25%", max_unavailable="25%"
+                        max_surge="100%", max_unavailable="0%"
                     ),
                     type="RollingUpdate",
                 ),
