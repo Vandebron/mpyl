@@ -1,9 +1,7 @@
 name: job
 description: "A job"
 maintainer: ["MPyL"]
-projectId:
-  all: "p-11111"
-mpylVersion: 1.0.10
+mpylVersion: 1.4.18
 stages:
   build: "Docker Build"
   test: "Echo Test"
@@ -11,6 +9,9 @@ stages:
 deployment:
   namespace: job
   kubernetes:
+    rancher:
+      projectId:
+        all: "p-11111"
     job:
       cron:
         all:

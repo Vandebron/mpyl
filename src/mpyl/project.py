@@ -309,7 +309,17 @@ class Job:
 
 
 @dataclass(frozen=True)
+class Rancher:
+    project_id: str
+
+    @staticmethod
+    def from_config(values: dict):
+        return Rancher(project_id=values.get("projectId", ""))
+
+
+@dataclass(frozen=True)
 class Kubernetes:
+    rancher: Optional[Rancher]
     port_mappings: dict[int, int]
     liveness_probe: Optional[Probe]
     startup_probe: Optional[Probe]
@@ -325,6 +335,7 @@ class Kubernetes:
     @staticmethod
     def from_config(values: dict):
         return Kubernetes(
+            rancher=Rancher.from_config(values.get("rancher", {})),
             port_mappings=values.get("portMappings", {}),
             liveness_probe=Probe.from_config(values.get("livenessProbe", {})),
             startup_probe=Probe.from_config(values.get("startupProbe", {})),
@@ -482,7 +493,6 @@ class Project:
     path: str
     stages: Stages
     maintainer: list[str]
-    project_id: str
     docker: Optional[Docker]
     build: Optional[Build]
     deployment: Optional[Deployment]
@@ -577,7 +587,6 @@ class Project:
             path=str(project_path),
             stages=Stages.from_config(values.get("stages", {})),
             maintainer=values.get("maintainer", []),
-            project_id=values.get("projectId", ""),
             docker=Docker.from_config(docker_config) if docker_config else None,
             build=Build.from_config(values.get("build", {})),
             deployment=Deployment.from_config(deployment) if deployment else None,

@@ -24,7 +24,6 @@ class TestCypress:
             path="",
             stages=stages,
             maintainer=[],
-            project_id="",
             docker=None,
             build=None,
             deployment=None,

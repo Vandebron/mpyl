@@ -265,10 +265,18 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
         step_input.dry_run
         or action == DeployAction.HELM_DRY_RUN.value  # pylint: disable=no-member
     )
+    project_id = (
+        project.deployment.kubernetes.rancher.project_id
+        if project.deployment
+        and project.deployment.kubernetes
+        and project.deployment.kubernetes.rancher
+        else ""
+    )
+
     upsert_namespace(
         logger=logger,
         namespace=namespace,
-        project_id=project.project_id,
+        project_id=project_id,
         dry_run=dry_run,
         run_properties=run_properties,
         rancher_config=rancher_config,

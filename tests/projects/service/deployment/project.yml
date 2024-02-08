@@ -4,10 +4,8 @@ stages:
   build: Docker Build
   test: Docker Test
   deploy: Kubernetes Deploy
-mpylVersion: 1.0.10
+mpylVersion: 1.4.18
 maintainer: ['MPyL']
-projectId:
-  all: "p-11111"
 build:
   args:
     plain:
@@ -30,6 +28,9 @@ deployment:
         acceptance: "Acceptance"
         production: "Production"
   kubernetes:
+    rancher:
+      projectId:
+        all: "p-11111"
     livenessProbe:
       path:
         all: /health

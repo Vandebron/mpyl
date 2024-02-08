@@ -1,7 +1,5 @@
 name: kong-sync
 maintainer: ['MPyL']
-projectId:
-  all: "p-11111"
 description: 'Deployment of Kong config'
 mpylVersion: 1.0.10
 stages:

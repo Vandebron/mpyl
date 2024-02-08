@@ -191,7 +191,7 @@ def lint(obj: ProjectsContext):
         )
         failed = True
     else:
-        console.print("  ✅ All projects have a project id")
+        console.print("  ✅ All kubernetes projects have a project id")
 
     wrong_substitutions = _assert_correct_project_linkup(
         console=console,
@@ -263,7 +263,7 @@ def upgrade(obj: ProjectsContext, apply: bool):
             status.stop()
             status.console.print(
                 Markdown(
-                    f"Upgraded {number_of_upgrades} projects. Validate with `mpyl projects lint --extended`"
+                    f"Upgraded {number_of_upgrades} projects. Validate with `mpyl projects lint`"
                 )
             )
 
