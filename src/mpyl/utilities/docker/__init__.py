@@ -366,7 +366,6 @@ def create_ecr_repo_if_needed(
         aws_access_key_id=registry_config.user_name,
         aws_secret_access_key=registry_config.password,
     )
-
     try:
         ecr_client.describe_repositories(
             repositoryNames=[
@@ -374,16 +373,23 @@ def create_ecr_repo_if_needed(
             ]
         )
         logger.info(f"Repository '{repo}' exists.")
+    except (ecr_client.exceptions.InvalidParameterException,
+            ecr_client.exceptions.ServerException) as exc:
+        raise exc
     except ecr_client.exceptions.RepositoryNotFoundException:
         logger.info(f"Repository '{repo}' not found. Creating...")
-        ecr_client.create_repository(
-            repositoryName=repo,
-            imageTagMutability="IMMUTABLE",
-            encryptionConfiguration={
-                "encryptionType": "AES256",
-            },
+        try:
+            ecr_client.create_repository(
+                repositoryName=repo.lower(),
+                imageTagMutability="IMMUTABLE",
+                encryptionConfiguration={
+                    "encryptionType": "AES256",
+                },
         )
-        logger.info(f"Repository '{repo}' created successfully.")
+        except (ecr_client.exceptions.InvalidTagException,
+                ecr_client.exceptions.TooManyTagsException,
+                ecr_client.exceptions.LimitExceededException) as exc:
+            raise exc
         ecr_lifecycle_policy(logger, ecr_client, repo)
     logger.info(f"ECR ready, pushing image to {repo}...")
 
