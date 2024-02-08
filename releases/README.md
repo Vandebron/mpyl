@@ -1,5 +1,18 @@
 # Release notes
 
+## MPyL 1.4.17
+
+
+#### Bugfixes
+- Fix updating of pr body's that include "----"
+- Don't fail the Github pr body update function based on the mpyl run result
+- Fix loading of custom `ExecutionException` with pickle
+- Add a retry on the artifact caching push to avoid issues on parallel runs
+- Fix the cypress docker image
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.17)
+
 ## MPyL 1.4.16
 
 

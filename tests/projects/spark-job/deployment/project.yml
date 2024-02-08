@@ -39,9 +39,9 @@ deployment:
         all: 2
       limit:
         cpus:
-          all: 1.0
+          all: 0.1
         mem:
-          all: 2048
+          all: 128
     role:
       resources:
         - 'pods'
