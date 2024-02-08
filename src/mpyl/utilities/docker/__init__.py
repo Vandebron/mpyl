@@ -373,8 +373,10 @@ def create_ecr_repo_if_needed(
             ]
         )
         logger.info(f"Repository '{repo}' exists.")
-    except (ecr_client.exceptions.InvalidParameterException,
-            ecr_client.exceptions.ServerException) as exc:
+    except (
+        ecr_client.exceptions.InvalidParameterException,
+        ecr_client.exceptions.ServerException,
+    ) as exc:
         raise exc
     except ecr_client.exceptions.RepositoryNotFoundException:
         logger.info(f"Repository '{repo}' not found. Creating...")
@@ -385,10 +387,12 @@ def create_ecr_repo_if_needed(
                 encryptionConfiguration={
                     "encryptionType": "AES256",
                 },
-        )
-        except (ecr_client.exceptions.InvalidTagException,
-                ecr_client.exceptions.TooManyTagsException,
-                ecr_client.exceptions.LimitExceededException) as exc:
+            )
+        except (
+            ecr_client.exceptions.InvalidTagException,
+            ecr_client.exceptions.TooManyTagsException,
+            ecr_client.exceptions.LimitExceededException,
+        ) as exc:
             raise exc
         ecr_lifecycle_policy(logger, ecr_client, repo)
     logger.info(f"ECR ready, pushing image to {repo}...")
