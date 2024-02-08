@@ -766,7 +766,13 @@ class ChartBuilder:
 
         instances = resources.instances if resources.instances else defaults.instances
 
-        # TODO strategy = if()V1DeploymentStrategy()
+        rolling_update_params = (
+            V1RollingUpdateDeployment(
+                max_surge=self.max_surge, max_unavailable=self.max_unavailable
+            )
+            if self.strategy_type == "RollingUpdate"
+            else None
+        )
         return V1Deployment(
             api_version="apps/v1",
             kind="Deployment",
@@ -786,10 +792,8 @@ class ChartBuilder:
                     ),
                 ),
                 strategy=V1DeploymentStrategy(
-                    rolling_update=V1RollingUpdateDeployment(
-                        max_surge=self.max_surge, max_unavailable=self.max_unavailable
-                    ),
-                    type="RollingUpdate",
+                    rolling_update=rolling_update_params,
+                    type=self.strategy_type,
                 ),
                 selector=self._to_selector(),
             ),
