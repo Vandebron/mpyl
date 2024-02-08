@@ -200,7 +200,7 @@ def push_to_registry(
     full_image_path = docker_registry_path(docker_config, image_name)
     repo_path = ecr_repository_path(docker_config.host_name, image_name)
 
-    if docker_config.provider == "aws" or "aws_external":
+    if docker_config.provider == "aws":
         create_ecr_repo_if_needed(logger, docker_config, repo_path)
     docker.image.tag(image, full_image_path)
     docker.image.push(full_image_path, quiet=False)
@@ -325,7 +325,7 @@ def login(logger: Logger, registry_config: DockerRegistryConfig) -> None:
             username=registry_config.user_name,
             password=registry_config.password,
         )
-    elif registry_config.provider == "aws" or "aws_external":
+    elif registry_config.provider == "aws":
         docker.login_ecr(
             aws_access_key_id=registry_config.user_name,
             aws_secret_access_key=registry_config.password,

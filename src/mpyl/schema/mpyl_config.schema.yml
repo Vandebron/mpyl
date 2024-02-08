@@ -296,7 +296,6 @@ definitions:
         type: string
         enum:
           - 'aws'
-          - 'aws-external'
           - 'azure'
         description: >-
           Defines the container registry provider. Defaults to aws.
