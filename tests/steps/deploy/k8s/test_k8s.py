@@ -24,6 +24,7 @@ from tests.test_resources import test_data
 from tests.test_resources.test_data import (
     assert_roundtrip,
     get_project,
+    get_deployment_strategy_project,
     get_job_project,
     get_spark_project,
     get_cron_job_project,
@@ -201,6 +202,16 @@ class TestKubernetesChart:
             self.k8s_resources_path / "templates" / "manifest.yaml",
             manifest,
             overwrite=False,
+        )
+
+    def test_deployment_strategy_roundtrip(self):
+        project = get_deployment_strategy_project()
+        builder = self._get_builder(project)
+        chart = to_service_chart(builder)
+        manifest = render_manifests(chart)
+        assert_roundtrip(
+            self.k8s_resources_path / "templates" / "deployment_strategy.yaml",
+            manifest,
         )
 
     def test_default_ingress(self):
