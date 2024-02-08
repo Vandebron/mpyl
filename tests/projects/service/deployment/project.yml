@@ -42,9 +42,9 @@ deployment:
         all: 1
       limit:
         cpus:
-          all: 0.5
+          all: 0.1
         mem:
-          all: 1024
+          all: 128
   traefik:
     hosts:
       - host:
