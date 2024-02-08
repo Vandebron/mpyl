@@ -264,6 +264,9 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
         rancher_config=rancher_config,
     )
 
+    helm.retrieve_installed_version(
+        logger, release_name, namespace, rancher_config.context
+    )
     return helm.install(
         logger,
         chart_path,
