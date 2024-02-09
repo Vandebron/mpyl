@@ -60,12 +60,23 @@ def _assert_unique_project_names(console: Console, all_projects: list[Project]):
     duplicates = [
         project.name for project in all_projects if all_projects.count(project) > 1
     ]
-    if duplicates:
-        console.print(
-            f"  ❌ Found {len(duplicates)} duplicate project names: {duplicates}"
-        )
-        click.get_current_context().exit(1)
-    console.print("  ✅ No duplicate project names found")
+    return duplicates
+
+
+def _assert_project_ids(console: Console, all_projects: list[Project]):
+    console.print("")
+    console.print("Checking for missing project ids: ")
+    missing_ids = [
+        project.name
+        for project in all_projects
+        if project.stages.deploy is not None
+        and project.deployment
+        and project.deployment.kubernetes
+        and project.kubernetes.rancher
+        and not project.kubernetes.rancher.project_id
+        and "override" not in project.path
+    ]
+    return missing_ids
 
 
 @dataclass

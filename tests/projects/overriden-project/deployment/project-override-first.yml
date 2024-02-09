@@ -1,6 +1,6 @@
 name: ocpp-first
 maintainer: ['MPyL']
-mpylVersion: 1.4.0
+mpylVersion: 1.0.9
 stages:
   deploy: Echo Deploy
 deployment:

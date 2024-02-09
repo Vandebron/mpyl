@@ -4,7 +4,7 @@ stages:
   build: Sbt Build
   test: Sbt Test
   deploy: Kubernetes Deploy
-mpylVersion: 1.0.10
+mpylVersion: 1.4.18
 description: 'Demonstrates how an SBT project can be built and tested'
 deployment:
   namespace: 'sbtservice'
@@ -23,6 +23,9 @@ deployment:
             key: sbt-job
             optional: false
   kubernetes:
+    rancher:
+      projectId:
+        all: "p-11111"
     livenessProbe:
       path:
         all: /health

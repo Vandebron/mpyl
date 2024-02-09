@@ -158,13 +158,11 @@ definitions:
     properties:
       clusterId:
         type: string
-      projectId:
-        type: string
       clusterEnv:
         type: string
       context:
         type: string
-    required: [ clusterId, projectId, clusterEnv, context ]
+    required: [ clusterId, clusterEnv, context ]
   VCS:
     type: object
     additionalProperties: false
