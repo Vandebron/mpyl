@@ -876,21 +876,7 @@ definitions:
         description: >-
           Kubernetes deployment strategy.
           https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
-        additionalProperties: false
-        type: object
-        properties:
-          type:
-            type: string
-            enum:
-              - 'RollingUpdate'
-              - 'Recreate'
-            default: 'RollingUpdate'
-          maxUnavailable:
-            type: string
-            default: '25%'
-          maxSurge:
-            type: string
-            default: '25%'
+        $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.apps.v1.DeploymentStrategy'
     dependencies:
       portMappings:
         - metrics

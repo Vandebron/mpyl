@@ -12,7 +12,6 @@ from kubernetes.client import (
     V1DeploymentSpec,
     V1ObjectMeta,
     V1PodSpec,
-    V1RollingUpdateDeployment,
     V1LabelSelector,
     V1ContainerPort,
     V1EnvVar,
@@ -168,6 +167,7 @@ class DeploymentDefaults:
     traefik_defaults: dict
     white_lists: DefaultWhitelists
     image_pull_secrets: dict
+    deployment_strategy: dict
 
     @staticmethod
     def from_config(config: dict):
@@ -183,6 +183,7 @@ class DeploymentDefaults:
             traefik_defaults=deployment_values.get("traefik", {}),
             white_lists=DefaultWhitelists.from_config(config.get("whiteLists", {})),
             image_pull_secrets=kubernetes.get("imagePullSecrets", {}),
+            deployment_strategy=kubernetes["deploymentStrategy"],
         )
 
 
@@ -199,9 +200,7 @@ class ChartBuilder:
     config_defaults: DeploymentDefaults
     namespace: str
     role: Optional[dict]
-    strategy_type: str
-    max_surge: str
-    max_unavailable: str
+    deployment_strategy: Optional[dict]
 
     def __init__(self, step_input: Input):
         self.step_input = step_input
@@ -230,9 +229,7 @@ class ChartBuilder:
             run_properties=step_input.run_properties, project=project
         )
         self.role = project.kubernetes.role
-        self.strategy_type = project.kubernetes.strategy_type
-        self.max_surge = project.kubernetes.max_surge
-        self.max_unavailable = project.kubernetes.max_unavailable
+        self.deployment_strategy = project.kubernetes.deployment_strategy
 
     def _to_labels(self) -> dict:
         run_properties = self.step_input.run_properties
@@ -766,12 +763,10 @@ class ChartBuilder:
 
         instances = resources.instances if resources.instances else defaults.instances
 
-        rolling_update_params = (
-            V1RollingUpdateDeployment(
-                max_surge=self.max_surge, max_unavailable=self.max_unavailable
-            )
-            if self.strategy_type == "RollingUpdate"
-            else None
+        strategy = (
+            ChartBuilder._to_k8s_model(self.deployment_strategy, V1DeploymentStrategy)
+            if self.deployment_strategy
+            else self.config_defaults.deployment_strategy
         )
         return V1Deployment(
             api_version="apps/v1",
@@ -791,10 +786,7 @@ class ChartBuilder:
                         service_account_name=self.release_name,
                     ),
                 ),
-                strategy=V1DeploymentStrategy(
-                    rolling_update=rolling_update_params,
-                    type=self.strategy_type,
-                ),
+                strategy=strategy,
                 selector=self._to_selector(),
             ),
         )

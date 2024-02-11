@@ -26,9 +26,10 @@ deployment:
         production: "Production"
   kubernetes:
     deploymentStrategy:
-      type: RollingUpdate
-      maxSurge: 100%
-      maxUnavailable: 0%
+      rollingUpdate:
+        maxSurge: "100%"
+        maxUnavailable: "0%"
+      type: "RollingUpdate"
     livenessProbe:
       path:
         all: /health

@@ -321,13 +321,10 @@ class Kubernetes:
     command: Optional[TargetProperty[str]]
     args: Optional[TargetProperty[str]]
     labels: Optional[list[KeyValueProperty]]
-    strategy_type: str
-    max_surge: str
-    max_unavailable: str
+    deployment_strategy: Optional[dict]
 
     @staticmethod
     def from_config(values: dict):
-        deployment_strategy = values.get("deploymentStrategy", {})
         return Kubernetes(
             port_mappings=values.get("portMappings", {}),
             liveness_probe=Probe.from_config(values.get("livenessProbe", {})),
@@ -340,9 +337,7 @@ class Kubernetes:
             command=TargetProperty.from_config(values.get("command", {})),
             args=TargetProperty.from_config(values.get("args", {})),
             labels=list(map(KeyValueProperty.from_config, values.get("labels", []))),
-            strategy_type=deployment_strategy.get("strategyType", "RollingUpdate"),
-            max_surge=deployment_strategy.get("maxSurge", "25%"),
-            max_unavailable=deployment_strategy.get("maxUnavailable", "25%"),
+            deployment_strategy=values.get("deploymentStrategy", {}),
         )
 
 
