@@ -201,18 +201,13 @@ class TestKubernetesChart:
         assert_roundtrip(
             self.k8s_resources_path / "templates" / "manifest.yaml",
             manifest,
-            overwrite=False,
         )
 
     def test_deployment_strategy_roundtrip(self):
         project = get_deployment_strategy_project()
         builder = self._get_builder(project)
         chart = to_service_chart(builder)
-        manifest = render_manifests(chart)
-        assert_roundtrip(
-            self.k8s_resources_path / "templates" / "deployment_strategy.yaml",
-            manifest,
-        )
+        self._roundtrip(self.template_path / "deployment", "deployment", chart)
 
     def test_default_ingress(self):
         project = get_minimal_project()
