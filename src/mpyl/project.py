@@ -314,7 +314,9 @@ class Rancher:
 
     @staticmethod
     def from_config(values: dict):
-        return Rancher(project_id=TargetProperty.from_config(values.get("env", {})))
+        return Rancher(
+            project_id=TargetProperty.from_config(values.get("projectId", {}))
+        )
 
 
 @dataclass(frozen=True)

@@ -270,6 +270,7 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
         if project.deployment
         and project.deployment.kubernetes
         and project.deployment.kubernetes.rancher
+        and project.deployment.kubernetes.rancher.project_id
         else ""
     )
 

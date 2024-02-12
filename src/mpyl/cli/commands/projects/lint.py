@@ -70,11 +70,11 @@ def _assert_project_ids(console: Console, all_projects: list[Project]):
         project.name
         for project in all_projects
         if project.stages.deploy is not None
+        and "override" not in project.path
         and project.deployment
         and project.deployment.kubernetes
         and project.kubernetes.rancher
         and not project.kubernetes.rancher.project_id
-        and "override" not in project.path
     ]
     return missing_ids
 
