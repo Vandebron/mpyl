@@ -104,6 +104,10 @@ kubernetes:
         projectId: p-lb52t
         clusterEnv: prd
         context: acme-k8s-prod
+  deploymentStrategy:
+    type: RollingUpdate
+    maxUnavailable: 25%
+    maxSurge: 25%
 project: # default values
   allowedMaintainers: [ 'Team1', 'Team2', 'MPyL' ]
   deployment:

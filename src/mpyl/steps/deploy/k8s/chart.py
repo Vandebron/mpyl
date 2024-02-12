@@ -77,6 +77,7 @@ from ....project import (
     Alert,
     KeyValueRef,
     Metrics,
+    StrategyType,
 )
 from ....utilities.docker import DockerImageSpec
 
@@ -199,7 +200,7 @@ class ChartBuilder:
     config_defaults: DeploymentDefaults
     namespace: str
     role: Optional[dict]
-    strategy_type: str
+    strategy_type: StrategyType
     max_surge: str
     max_unavailable: str
 
@@ -230,9 +231,22 @@ class ChartBuilder:
             run_properties=step_input.run_properties, project=project
         )
         self.role = project.kubernetes.role
-        self.strategy_type = project.kubernetes.strategy_type
-        self.max_surge = project.kubernetes.max_surge
-        self.max_unavailable = project.kubernetes.max_unavailable
+
+        deployment_strategy_defaults = step_input.run_properties.config.get(
+            "kubernetes", {}
+        ).get("deploymentStrategy")
+        self.strategy_type = (
+            project.kubernetes.deployment_strategy
+            and project.kubernetes.deployment_strategy.type
+        ) or StrategyType.from_str(deployment_strategy_defaults.get("type"))
+        self.max_surge = (
+            project.kubernetes.deployment_strategy
+            and project.kubernetes.deployment_strategy.max_surge
+        ) or deployment_strategy_defaults.get("maxSurge")
+        self.max_unavailable = (
+            project.kubernetes.deployment_strategy
+            and project.kubernetes.deployment_strategy.max_unavailable
+        ) or deployment_strategy_defaults.get("maxUnavailable")
 
     def _to_labels(self) -> dict:
         run_properties = self.step_input.run_properties
@@ -770,7 +784,7 @@ class ChartBuilder:
             V1RollingUpdateDeployment(
                 max_surge=self.max_surge, max_unavailable=self.max_unavailable
             )
-            if self.strategy_type == "RollingUpdate"
+            if self.strategy_type == StrategyType.ROLLING_UPDATE
             else None
         )
         return V1Deployment(
@@ -793,7 +807,7 @@ class ChartBuilder:
                 ),
                 strategy=V1DeploymentStrategy(
                     rolling_update=rolling_update_params,
-                    type=self.strategy_type,
+                    type=str(self.strategy_type),
                 ),
                 selector=self._to_selector(),
             ),

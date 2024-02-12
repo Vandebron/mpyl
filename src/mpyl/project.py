@@ -51,6 +51,43 @@ class Target(Enum):
 
 
 @dataclass(frozen=True)
+class StrategyType(Enum):
+    def __eq__(self, other):
+        return self.value == other.value
+
+    def __str__(self):
+        return str(self.value)
+
+    @staticmethod
+    def from_str(value: str):
+        if value == "RollingUpdate":
+            return StrategyType.ROLLING_UPDATE
+        else:
+            return StrategyType.RECREATE
+
+    ROLLING_UPDATE = "RollingUpdate"
+    RECREATE = "Recreate"
+
+
+@dataclass(frozen=True)
+class DeploymentStrategy:
+    type: Optional[StrategyType]
+    max_surge: Optional[str]
+    max_unavailable: Optional[str]
+
+    @staticmethod
+    def from_config(values: dict):
+        if not values:
+            return None
+        maybe_type = values.get("type", None)
+        return DeploymentStrategy(
+            type=StrategyType.from_str(maybe_type) if maybe_type else None,
+            max_surge=values.get("maxSurge", None),
+            max_unavailable=values.get("maxUnavailable", None),
+        )
+
+
+@dataclass(frozen=True)
 class Stage:
     name: str
     icon: str
@@ -321,13 +358,10 @@ class Kubernetes:
     command: Optional[TargetProperty[str]]
     args: Optional[TargetProperty[str]]
     labels: Optional[list[KeyValueProperty]]
-    strategy_type: str
-    max_surge: str
-    max_unavailable: str
+    deployment_strategy: DeploymentStrategy
 
     @staticmethod
     def from_config(values: dict):
-        deployment_strategy = values.get("deploymentStrategy", {})
         return Kubernetes(
             port_mappings=values.get("portMappings", {}),
             liveness_probe=Probe.from_config(values.get("livenessProbe", {})),
@@ -340,9 +374,9 @@ class Kubernetes:
             command=TargetProperty.from_config(values.get("command", {})),
             args=TargetProperty.from_config(values.get("args", {})),
             labels=list(map(KeyValueProperty.from_config, values.get("labels", []))),
-            strategy_type=deployment_strategy.get("strategyType", "RollingUpdate"),
-            max_surge=deployment_strategy.get("maxSurge", "25%"),
-            max_unavailable=deployment_strategy.get("maxUnavailable", "25%"),
+            deployment_strategy=DeploymentStrategy.from_config(
+                values.get("deploymentStrategy", {})
+            ),
         )
 
 
