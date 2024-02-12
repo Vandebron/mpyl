@@ -265,11 +265,12 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
         step_input.dry_run
         or action == DeployAction.HELM_DRY_RUN.value  # pylint: disable=no-member
     )
-    project_id = (
-        project.deployment.kubernetes.rancher.project_id
+    project_id: str = (
+        project.deployment.kubernetes.rancher.project_id.get_value(target=target)
         if project.deployment
         and project.deployment.kubernetes
         and project.deployment.kubernetes.rancher
+        and project.deployment.kubernetes.rancher.project_id
         else ""
     )
 

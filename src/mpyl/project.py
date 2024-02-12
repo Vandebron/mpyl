@@ -310,11 +310,13 @@ class Job:
 
 @dataclass(frozen=True)
 class Rancher:
-    project_id: str
+    project_id: TargetProperty[dict]
 
     @staticmethod
     def from_config(values: dict):
-        return Rancher(project_id=values.get("projectId", ""))
+        return Rancher(
+            project_id=TargetProperty.from_config(values.get("projectId", {}))
+        )
 
 
 @dataclass(frozen=True)
