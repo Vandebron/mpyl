@@ -62,8 +62,7 @@ class StrategyType(Enum):
     def from_str(value: str):
         if value == "RollingUpdate":
             return StrategyType.ROLLING_UPDATE
-        else:
-            return StrategyType.RECREATE
+        return StrategyType.RECREATE
 
     ROLLING_UPDATE = "RollingUpdate"
     RECREATE = "Recreate"
