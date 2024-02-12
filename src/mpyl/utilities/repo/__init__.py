@@ -385,6 +385,10 @@ class Repository:  # pylint: disable=too-many-public-methods
         logging.debug(f"Found local branches: {local_branches}")
         return branch_name in local_branches
 
+    def get_date_for_tag(self, tag_name: str) -> str:
+        command = ["--pretty=format::%cI", "-n1", tag_name]
+        return self._repo.git.log(tag_name, command)
+
     def remote_branch_exists(self, branch_name: str) -> bool:
         return self._repo.git.ls_remote("origin", branch_name) != ""
 
