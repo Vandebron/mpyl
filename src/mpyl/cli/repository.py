@@ -220,3 +220,7 @@ def init(obj: RepoContext, url: str, pull: int, branch: str, pristine: bool):
                         f"✅ Found base `{repo.main_origin_branch}` at `{repo.base_revision}`"
                     )
                 )
+
+            console.log(
+                "Date for target branch: " + repo.get_date_for_tag(target_branch)
+            )
