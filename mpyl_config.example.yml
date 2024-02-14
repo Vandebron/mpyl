@@ -86,6 +86,11 @@ whiteLists:
       acceptance: ['2.3.4.5']
       production: ['3.4.5.6']
 kubernetes:
+  deploymentStrategy:
+    rollingUpdate:
+      maxUnavailable: "25%"
+      maxSurge: "25%"
+    type: "RollingUpdate"
   deployAction: KubectlManifest
   rancher:
     cluster:
@@ -105,11 +110,6 @@ project: # default values
   allowedMaintainers: [ 'Team1', 'Team2', 'MPyL' ]
   deployment:
     kubernetes:
-      deploymentStrategy:
-        rollingUpdate:
-          maxUnavailable: "25%"
-          maxSurge: "25%"
-        type: "RollingUpdate"
       imagePullSecrets:
         - name: 'acme-registry'
       job:

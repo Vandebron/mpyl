@@ -144,6 +144,7 @@ definitions:
         properties:
           cluster:
             "$ref": "#/definitions/RancherClusters"
+    required: [ deploymentStrategy ]
   RancherClusters:
     type: object
     additionalProperties: false

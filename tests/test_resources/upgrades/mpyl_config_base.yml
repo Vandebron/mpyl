@@ -51,6 +51,11 @@ whiteLists:
 cypress:
   cypressSourceCodePath: 'test_resources/cypress'
 kubernetes:
+  deploymentStrategy:
+    type: 'RollingUpdate'
+    rollingUpdate:
+      maxSurge: "25%"
+      maxUnavailable: "25%"
   rancher:
     cluster:
       test:

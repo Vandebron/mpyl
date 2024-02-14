@@ -58,6 +58,11 @@ whiteLists:
 cypress:
   cypressSourceCodePath: 'test_resources/cypress'
 kubernetes:
+  deploymentStrategy:
+    rollingUpdate:
+      maxUnavailable: "25%"
+      maxSurge: "25%"
+    type: "RollingUpdate"
   rancher:
     cluster:
       test:
@@ -92,11 +97,6 @@ project: # default values
             all: [ "VPN" ]
           insecure: false
     kubernetes:
-      deploymentStrategy:
-        rollingUpdate:
-          maxUnavailable: "25%"
-          maxSurge: "25%"
-        type: "RollingUpdate"
       imagePullSecrets:
         - name: 'acme-registry'
       job:

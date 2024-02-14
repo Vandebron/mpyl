@@ -183,7 +183,7 @@ class DeploymentDefaults:
             traefik_defaults=deployment_values.get("traefik", {}),
             white_lists=DefaultWhitelists.from_config(config.get("whiteLists", {})),
             image_pull_secrets=kubernetes.get("imagePullSecrets", {}),
-            deployment_strategy=kubernetes["deploymentStrategy"],
+            deployment_strategy=config["kubernetes"]["deploymentStrategy"],
         )
 
 
