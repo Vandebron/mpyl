@@ -28,6 +28,11 @@ deployment:
         acceptance: "Acceptance"
         production: "Production"
   kubernetes:
+    deploymentStrategy:
+      rollingUpdate:
+        maxSurge: "25%"
+        maxUnavailable: "25%"
+      type: "RollingUpdate"
     rancher:
       projectId:
         all: "p-11111"

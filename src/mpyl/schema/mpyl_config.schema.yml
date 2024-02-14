@@ -116,6 +116,8 @@ definitions:
     type: object
     additionalProperties: false
     properties:
+      deploymentStrategy:
+        $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.apps.v1.DeploymentStrategy'
       deployAction:
         type: string
         enum:
@@ -142,6 +144,7 @@ definitions:
         properties:
           cluster:
             "$ref": "#/definitions/RancherClusters"
+    required: [ deploymentStrategy ]
   RancherClusters:
     type: object
     additionalProperties: false

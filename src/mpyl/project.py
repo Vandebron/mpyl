@@ -333,6 +333,7 @@ class Kubernetes:
     command: Optional[TargetProperty[str]]
     args: Optional[TargetProperty[str]]
     labels: Optional[list[KeyValueProperty]]
+    deployment_strategy: Optional[dict]
 
     @staticmethod
     def from_config(values: dict):
@@ -349,6 +350,7 @@ class Kubernetes:
             command=TargetProperty.from_config(values.get("command", {})),
             args=TargetProperty.from_config(values.get("args", {})),
             labels=list(map(KeyValueProperty.from_config, values.get("labels", []))),
+            deployment_strategy=values.get("deploymentStrategy", {}),
         )
 
 
