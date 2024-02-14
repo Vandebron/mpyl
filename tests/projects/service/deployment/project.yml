@@ -30,7 +30,7 @@ deployment:
   kubernetes:
     deploymentStrategy:
       rollingUpdate:
-        maxSurge: "25"
+        maxSurge: "25%"
         maxUnavailable: "25%"
       type: "RollingUpdate"
     rancher:
