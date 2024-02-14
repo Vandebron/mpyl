@@ -23,8 +23,8 @@ spec:
       app.kubernetes.io/name: dockertest
   strategy:
     rollingUpdate:
-      maxUnavailable: 25%
       maxSurge: 25%
+      maxUnavailable: 25%
     type: RollingUpdate
   template:
     metadata:

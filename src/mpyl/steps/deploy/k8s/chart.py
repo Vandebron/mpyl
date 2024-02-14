@@ -762,12 +762,11 @@ class ChartBuilder:
         )
 
         instances = resources.instances if resources.instances else defaults.instances
-
-        strategy = (
-            ChartBuilder._to_k8s_model(self.deployment_strategy, V1DeploymentStrategy)
-            if self.deployment_strategy
-            else self.config_defaults.deployment_strategy
-        )
+        merged_config = {
+            **self.config_defaults.deployment_strategy,
+            **(self.deployment_strategy or {}),
+        }
+        strategy = ChartBuilder._to_k8s_model(merged_config, V1DeploymentStrategy)
         return V1Deployment(
             api_version="apps/v1",
             kind="Deployment",

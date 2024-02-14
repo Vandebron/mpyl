@@ -29,7 +29,6 @@ deployment:
       rollingUpdate:
         maxSurge: "100%"
         maxUnavailable: "0%"
-      type: "RollingUpdate"
     livenessProbe:
       path:
         all: /health
