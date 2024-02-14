@@ -91,17 +91,14 @@ kubernetes:
     cluster:
       test:
         clusterId: c-acme
-        projectId: p-acme
         clusterEnv: test
         context: acme-k8s-test
       acceptance:
         clusterId: c-acme
-        projectId: p-acme
         clusterEnv: acce
         context: acme-k8s-acce
       production:
         clusterId: c-acme
-        projectId: p-lb52t
         clusterEnv: prd
         context: acme-k8s-prod
 project: # default values

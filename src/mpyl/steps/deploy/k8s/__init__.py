@@ -119,6 +119,7 @@ def get_namespace_from_project(project: Project) -> Optional[str]:
 def upsert_namespace(
     logger: Logger,
     namespace: str,
+    project_id: str,
     dry_run: bool,
     run_properties: RunProperties,
     rancher_config: ClusterConfig,
@@ -129,7 +130,9 @@ def upsert_namespace(
     )
     api = client.CoreV1Api()
 
-    meta_data = rancher_namespace_metadata(namespace, rancher_config)
+    meta_data = rancher_namespace_metadata(
+        namespace=namespace, rancher_config=rancher_config, project_id=project_id
+    )
     namespaces = api.list_namespace(field_selector=f"metadata.name={namespace}")
 
     if len(namespaces.items) == 0 and not dry_run:
@@ -262,15 +265,24 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
         step_input.dry_run
         or action == DeployAction.HELM_DRY_RUN.value  # pylint: disable=no-member
     )
-    upsert_namespace(
-        logger,
-        namespace,
-        dry_run,
-        run_properties,
-        rancher_config,
+    project_id: str = (
+        project.deployment.kubernetes.rancher.project_id.get_value(target=target)
+        if project.deployment
+        and project.deployment.kubernetes
+        and project.deployment.kubernetes.rancher
+        and project.deployment.kubernetes.rancher.project_id
+        else ""
     )
 
-    upsert_namespace(logger, namespace, dry_run, run_properties, rancher_config)
+    upsert_namespace(
+        logger=logger,
+        namespace=namespace,
+        project_id=project_id,
+        dry_run=dry_run,
+        run_properties=run_properties,
+        rancher_config=rancher_config,
+    )
+
     return helm.install(
         logger,
         chart_path,

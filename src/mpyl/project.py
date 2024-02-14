@@ -309,7 +309,19 @@ class Job:
 
 
 @dataclass(frozen=True)
+class Rancher:
+    project_id: TargetProperty[dict]
+
+    @staticmethod
+    def from_config(values: dict):
+        return Rancher(
+            project_id=TargetProperty.from_config(values.get("projectId", {}))
+        )
+
+
+@dataclass(frozen=True)
 class Kubernetes:
+    rancher: Optional[Rancher]
     port_mappings: dict[int, int]
     liveness_probe: Optional[Probe]
     startup_probe: Optional[Probe]
@@ -326,6 +338,7 @@ class Kubernetes:
     @staticmethod
     def from_config(values: dict):
         return Kubernetes(
+            rancher=Rancher.from_config(values.get("rancher", {})),
             port_mappings=values.get("portMappings", {}),
             liveness_probe=Probe.from_config(values.get("livenessProbe", {})),
             startup_probe=Probe.from_config(values.get("startupProbe", {})),

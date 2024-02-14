@@ -5,6 +5,7 @@ required:
   - name
   - stages
   - description
+  - maintainer
 additionalProperties: false
 dependencies:
   deployment:
@@ -731,6 +732,13 @@ definitions:
     type: object
     additionalProperties: false
     properties:
+      rancher:
+        type: object
+        properties:
+          projectId:
+            description: >-
+              The rancher project id that this project should be deployed to, required for rbac. Represents a domain in rancher.
+            $ref: '#/definitions/dtapValue'
       secrets:
         type: array
         additionalItems: false
