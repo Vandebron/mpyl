@@ -7,6 +7,21 @@
 Project id is now a required property for non override project.yml's that have a deploy stage defined. It can/will be used
 for rbac purposes in rancher.
 
+#### Deployment strategy
+Make deployment strategy configurable in `project.yml` and `mpyl_config.yml`:
+
+```yaml
+kubernetes:
+  deploymentStrategy:
+    rollingUpdate:
+      maxUnavailable: "25%"
+      maxSurge: "25%"
+    type: "RollingUpdate"
+```
+
+#### Cache repo
+- Fix bug when pushing artifacts
+
 
 Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.18)
 
