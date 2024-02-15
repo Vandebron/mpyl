@@ -12,7 +12,6 @@ from kubernetes.client import (
     V1DeploymentSpec,
     V1ObjectMeta,
     V1PodSpec,
-    V1RollingUpdateDeployment,
     V1LabelSelector,
     V1ContainerPort,
     V1EnvVar,
@@ -168,6 +167,7 @@ class DeploymentDefaults:
     traefik_defaults: dict
     white_lists: DefaultWhitelists
     image_pull_secrets: dict
+    deployment_strategy: dict
 
     @staticmethod
     def from_config(config: dict):
@@ -183,6 +183,7 @@ class DeploymentDefaults:
             traefik_defaults=deployment_values.get("traefik", {}),
             white_lists=DefaultWhitelists.from_config(config.get("whiteLists", {})),
             image_pull_secrets=kubernetes.get("imagePullSecrets", {}),
+            deployment_strategy=config["kubernetes"]["deploymentStrategy"],
         )
 
 
@@ -199,6 +200,7 @@ class ChartBuilder:
     config_defaults: DeploymentDefaults
     namespace: str
     role: Optional[dict]
+    deployment_strategy: Optional[dict]
 
     def __init__(self, step_input: Input):
         self.step_input = step_input
@@ -227,6 +229,7 @@ class ChartBuilder:
             run_properties=step_input.run_properties, project=project
         )
         self.role = project.kubernetes.role
+        self.deployment_strategy = project.kubernetes.deployment_strategy
 
     def _to_labels(self) -> dict:
         run_properties = self.step_input.run_properties
@@ -759,7 +762,11 @@ class ChartBuilder:
         )
 
         instances = resources.instances if resources.instances else defaults.instances
-
+        merged_config = {
+            **self.config_defaults.deployment_strategy,
+            **(self.deployment_strategy or {}),
+        }
+        strategy = ChartBuilder._to_k8s_model(merged_config, V1DeploymentStrategy)
         return V1Deployment(
             api_version="apps/v1",
             kind="Deployment",
@@ -778,12 +785,7 @@ class ChartBuilder:
                         service_account_name=self.release_name,
                     ),
                 ),
-                strategy=V1DeploymentStrategy(
-                    rolling_update=V1RollingUpdateDeployment(
-                        max_surge="25%", max_unavailable="25%"
-                    ),
-                    type="RollingUpdate",
-                ),
+                strategy=strategy,
                 selector=self._to_selector(),
             ),
         )

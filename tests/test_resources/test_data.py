@@ -61,6 +61,10 @@ def get_project() -> Project:
     return safe_load_project("test_project.yml")
 
 
+def get_deployment_strategy_project() -> Project:
+    return safe_load_project("test_project_deployment_strategy.yml")
+
+
 def get_minimal_project() -> Project:
     return safe_load_project("test_minimal_project.yml")
 
