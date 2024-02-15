@@ -66,6 +66,7 @@ class DockerRegistryConfig:
     password: str
     provider: Optional[str]
     region: Optional[str]
+    lifecyclepolicy: Optional[dict]
     cache_from_registry: bool
     custom_cache_config: Optional[DockerCacheConfig]
 
@@ -80,6 +81,7 @@ class DockerRegistryConfig:
                 password=config["password"],
                 provider=config.get("provider", None),
                 region=config.get("region", None),
+                lifecyclepolicy=config.get("lifecycle_policy", None),
                 cache_from_registry=cache_config.get("cacheFromRegistry", False),
                 custom_cache_config=DockerCacheConfig.from_dict(cache_config["custom"])
                 if "custom" in cache_config
@@ -373,49 +375,36 @@ def create_ecr_repo_if_needed(
             ]
         )
         logger.info(f"Repository '{repo}' exists.")
-    except (
-        ecr_client.exceptions.InvalidParameterException,
-        ecr_client.exceptions.ServerException,
-    ) as exc:
-        raise exc
     except ecr_client.exceptions.RepositoryNotFoundException:
         logger.info(f"Repository '{repo}' not found. Creating...")
-        try:
-            ecr_client.create_repository(
-                repositoryName=repo.lower(),
-                imageTagMutability="IMMUTABLE",
-                encryptionConfiguration={
-                    "encryptionType": "AES256",
-                },
-            )
-        except (
-            ecr_client.exceptions.InvalidTagException,
-            ecr_client.exceptions.TooManyTagsException,
-            ecr_client.exceptions.LimitExceededException,
-        ) as exc:
-            raise exc
-        ecr_lifecycle_policy(logger, ecr_client, repo)
+        ecr_client.create_repository(
+            repositoryName=repo.lower(),
+            imageTagMutability="IMMUTABLE",
+            encryptionConfiguration={
+                "encryptionType": "AES256",
+            },
+        )
+        attach_ecr_lifecycle_policy(logger, ecr_client, repo, registry_config.lifecyclepolicy)
     logger.info(f"ECR ready, pushing image to {repo}...")
 
 
-def ecr_lifecycle_policy(logger: Logger, ecr_client, repo):
-    lifecycle_policy = {
+def attach_ecr_lifecycle_policy(logger: Logger, ecr_client, repo, lifecyclepolicy):
+    policy = {
         "rules": [
             {
-                "rulePriority": 1,
-                "description": "Keep 30 image days",
+                "rulePriority": lifecyclepolicy["rulePriority"],
+                "description": lifecyclepolicy["description"],
                 "selection": {
-                    "tagStatus": "any",
-                    "countType": "sinceImagePushed",
-                    "countNumber": 30,
-                    "countUnit": "days",
+                    "tagStatus": lifecyclepolicy["tagStatus"],
+                    "countType": lifecyclepolicy["countType"],
+                    "countNumber": lifecyclepolicy["countNumber"],
+                    "countUnit": lifecyclepolicy["countUnit"],
                 },
-                "action": {"type": "expire"},
+                "action": {"type": lifecyclepolicy["action"]},
             }
         ]
     }
-
     ecr_client.put_lifecycle_policy(
-        repositoryName=repo, lifecyclePolicyText=json.dumps(lifecycle_policy)
+        repositoryName=repo, lifecyclePolicyText=json.dumps(policy)
     )
     logger.info(f"Lifecycle policy added to repository '{repo}'.")
