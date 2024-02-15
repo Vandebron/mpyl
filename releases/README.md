@@ -1,5 +1,15 @@
 # Release notes
 
+## MPyL 1.4.18
+
+
+#### Project id
+Project id is now a required property for non override project.yml's that have a deploy stage defined. It can/will be used
+for rbac purposes in rancher.
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.18)
+
 ## MPyL 1.4.17
 
 
