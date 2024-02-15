@@ -1,0 +1,107 @@
+serviceAccount:
+  create: true
+fullnameOverride: ucd-educ-pr-1234
+deployments:
+- dagsterApiGrpcArgs:
+  - --python-file
+  - /tests/projects/dagster-user-code/main.py
+  env:
+  - name: DEPLOY_ENV
+    value: test
+  - name: LOGGING_LEVEL
+    value: DEBUG
+  envSecrets:
+  - name: some-normal-secret
+  image:
+    pullPolicy: Always
+    tag: pr-1234
+    repository: docker_host/example-dagster-user-code
+  includeConfigInLaunchedRuns:
+    enabled: true
+  name: example-dagster-user-code-pr-1234
+  port: 3030
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 50m
+    limits:
+      memory: 512Mi
+      cpu: 1000m
+extraManifests:
+- apiVersion: monitoring.coreos.com/v1
+  kind: PrometheusRule
+  metadata:
+    annotations:
+    creationTimestamp:
+    deletionGracePeriodSeconds:
+    deletionTimestamp:
+    finalizers:
+    generateName:
+    generation:
+    labels:
+      name: example-dagster-user-code
+      app.kubernetes.io/version: pr-1234
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: example-dagster-user-code
+      app.kubernetes.io/instance: example-dagster-user-code
+      maintainers: MPyL
+      maintainer: MPyL
+      version: pr-1234
+      revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
+    managedFields:
+    name: example-dagster-user-code-prometheus-rule
+    namespace:
+    ownerReferences:
+    resourceVersion:
+    selfLink:
+    uid:
+  spec:
+    groups:
+    - name: example-dagster-user-code-prometheus-rule-group
+      rules:
+      - alert: MyCustomAlert
+        annotations:
+          description: This is a custom alert
+        expr: some PromQL expression
+        for: 5m
+        labels:
+          alertname: MyCustomAlert
+          severity: critical
+- apiVersion: monitoring.coreos.com/v1
+  kind: ServiceMonitor
+  metadata:
+    annotations:
+    creationTimestamp:
+    deletionGracePeriodSeconds:
+    deletionTimestamp:
+    finalizers:
+    generateName:
+    generation:
+    labels:
+      name: example-dagster-user-code
+      app.kubernetes.io/version: pr-1234
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: example-dagster-user-code
+      app.kubernetes.io/instance: example-dagster-user-code
+      maintainers: MPyL
+      maintainer: MPyL
+      version: pr-1234
+      revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
+    managedFields:
+    name: example-dagster-user-code-service-monitor
+    namespace:
+    ownerReferences:
+    resourceVersion:
+    selfLink:
+    uid:
+  spec:
+    endpoints:
+    - honorLabels: true
+      path: /metrics
+      targetPort: 1234
+    namespaceSelector:
+      matchNames:
+      - pr-1234
+    selector:
+      matchLabels:
+        app.kubernetes.io/name: example-dagster-user-code

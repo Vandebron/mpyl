@@ -2,10 +2,10 @@
 This module contains the Dagster user-code-deployment values conversion
 """
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List
 
-from . import to_dict
-from ..chart import ChartBuilder
+from . import to_dict, CustomResourceDefinition
+from ..chart import ChartBuilder, to_prometheus_chart
 from .....project import get_env_variables
 from .....steps.models import RunProperties
 from .....utilities.docker import DockerConfig, registry_for_project
@@ -20,6 +20,20 @@ class Constants:
 
 def to_grpc_server_entry(host: str, location_name: str, port: int) -> dict:
     return {"grpc_server": {"host": host, "location_name": location_name, "port": port}}
+
+
+def collect_extra_manifests(
+    builder: ChartBuilder, sealed_secrets_count: int, release_name: str
+) -> List[CustomResourceDefinition]:
+    sealed_secret_manifest = builder.to_sealed_secrets()
+    sealed_secret_manifest.metadata.name = release_name
+
+    extra_manifests_definitions = list(to_prometheus_chart(builder).values())
+
+    if sealed_secrets_count > 0:
+        extra_manifests_definitions.append(sealed_secret_manifest)
+
+    return extra_manifests_definitions
 
 
 def to_user_code_values(
@@ -42,15 +56,17 @@ def to_user_code_values(
     for sealed_secret_env in builder.get_sealed_secret_as_env_vars():
         sealed_secret_env.value_from.secret_key_ref.name = release_name
         sealed_secret_refs.append(to_dict(sealed_secret_env, skip_none=True))
-
-    sealed_secret_manifest = builder.to_sealed_secrets()
-    sealed_secret_manifest.metadata.name = release_name
-
-    extra_manifests = (
-        {"extraManifests": [to_dict(sealed_secret_manifest)]}
-        if len(sealed_secret_refs) > 0
-        else {}
+    extra_manifests = collect_extra_manifests(
+        builder, len(sealed_secret_refs), release_name
     )
+
+    image_dict: dict = {
+        "pullPolicy": "Always",
+        "tag": run_properties.versioning.identifier,
+        "repository": f"{docker_registry.host_name}/{project.name}",
+    }
+    if docker_registry.host_name == "azure":
+        image_dict["imagePullSecrets"] = [{"name": "bigdataregistry"}]
 
     return (
         global_override
@@ -72,12 +88,7 @@ def to_user_code_values(
                     ]
                     + sealed_secret_refs,
                     "envSecrets": [{"name": s.name} for s in project.dagster.secrets],
-                    "image": {
-                        "pullPolicy": "Always",
-                        "imagePullSecrets": [{"name": "bigdataregistry"}],
-                        "tag": run_properties.versioning.identifier,
-                        "repository": f"{docker_registry.host_name}/{project.name}",
-                    },
+                    "image": image_dict,
                     "includeConfigInLaunchedRuns": {"enabled": True},
                     "name": release_name,
                     "port": 3030,
@@ -88,5 +99,9 @@ def to_user_code_values(
                 }
             ],
         }
-        | extra_manifests
+        | (
+            {"extraManifests": [to_dict(c) for c in extra_manifests]}
+            if len(extra_manifests) > 0
+            else {}
+        )
     )
