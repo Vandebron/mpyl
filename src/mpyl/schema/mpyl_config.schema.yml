@@ -293,7 +293,6 @@ definitions:
       password:
         type: string
       provider:
-        type: string
         enum:
           - 'aws'
           - 'azure'

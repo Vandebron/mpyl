@@ -5,6 +5,7 @@ import shlex
 import shutil
 import sys
 from dataclasses import dataclass
+from enum import Enum
 from logging import Logger
 from pathlib import Path
 from traceback import print_exc
@@ -118,6 +119,12 @@ class DockerConfig:
             raise KeyError(f"Docker config could not be loaded from {config}") from exc
 
 
+@dataclass(frozen=True)
+class Provider(Enum):
+    AWS = "aws"
+    AZURE = "azure"
+
+
 def execute_with_stream(
     logger: Logger, container: Container, command: str, task_name: str
 ):
@@ -203,7 +210,7 @@ def push_to_registry(
     full_image_path = docker_registry_path(docker_config, image_name)
     repo_path = ecr_repository_path(docker_config.host_name, image_name)
 
-    if docker_config.provider == "aws":
+    if docker_config.provider == Provider.AWS.value:
         create_ecr_repo_if_needed(logger, docker_config, repo_path)
     docker.image.tag(image, full_image_path)
     docker.image.push(full_image_path, quiet=False)
@@ -322,13 +329,13 @@ def build(
 
 def login(logger: Logger, registry_config: DockerRegistryConfig) -> None:
     logger.info(f"Logging in with user '{registry_config.user_name}'")
-    if registry_config.provider == "azure":
+    if registry_config.provider == Provider.AZURE.value:
         docker.login(
             server=f"https://{registry_config.host_name}",
             username=registry_config.user_name,
             password=registry_config.password,
         )
-    elif registry_config.provider == "aws":
+    elif registry_config.provider == Provider.AWS.value:
         docker.login_ecr(
             aws_access_key_id=registry_config.user_name,
             aws_secret_access_key=registry_config.password,
