@@ -22,7 +22,6 @@ kubernetes:
 #### Cache repo
 - Fix bug when pushing artifacts
 
-
 Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.18)
 
 ## MPyL 1.4.17
