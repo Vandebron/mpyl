@@ -3,6 +3,7 @@ import json
 import logging
 import shlex
 import shutil
+import sys
 from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
@@ -384,8 +385,21 @@ def create_ecr_repo_if_needed(
                 "encryptionType": "AES256",
             },
         )
-        attach_ecr_lifecycle_policy(logger, ecr_client, repo, registry_config.lifecyclepolicy)
-    logger.info(f"ECR ready, pushing image to {repo}...")
+        try:
+            attach_ecr_lifecycle_policy(
+                logger, ecr_client, repo, registry_config.lifecyclepolicy
+            )
+            logger.info(f"ECR ready, pushing image to {repo}...")
+        except TypeError as exc:
+            ecr_client.delete_repository(
+                repositoryName=repo.lower(),
+            )
+            error_msg = (
+                f"To push the docker image to the newly created ECR repository '{repo}', "
+                "a lifecycle policy is required. This is not defined inside mpyl_config.yml. "
+                "Check mpyl_config.schema.yml on how to set this up."
+            )
+            raise TypeError(error_msg) from exc
 
 
 def attach_ecr_lifecycle_policy(logger: Logger, ecr_client, repo, lifecyclepolicy):
