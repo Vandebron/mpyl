@@ -100,7 +100,7 @@ def to_user_code_values(
             ],
         }
         | (
-            {"extraManifests": [to_dict(c) for c in extra_manifests]}
+            {"extraManifests": [to_dict(manifest) for manifest in extra_manifests]}
             if len(extra_manifests) > 0
             else {}
         )
