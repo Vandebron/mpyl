@@ -210,7 +210,7 @@ def push_to_registry(
     full_image_path = docker_registry_path(docker_config, image_name)
     repo_path = ecr_repository_path(docker_config.host_name, image_name)
 
-    if docker_config.provider == Provider.AWS.value:
+    if docker_config.provider == Provider.AWS.value: # pylint: disable=no-member
         create_ecr_repo_if_needed(logger, docker_config, repo_path)
     docker.image.tag(image, full_image_path)
     docker.image.push(full_image_path, quiet=False)
@@ -329,13 +329,13 @@ def build(
 
 def login(logger: Logger, registry_config: DockerRegistryConfig) -> None:
     logger.info(f"Logging in with user '{registry_config.user_name}'")
-    if registry_config.provider == Provider.AZURE.value:
+    if registry_config.provider == Provider.AZURE.value: # pylint: disable=no-member
         docker.login(
             server=f"https://{registry_config.host_name}",
             username=registry_config.user_name,
             password=registry_config.password,
         )
-    elif registry_config.provider == Provider.AWS.value:
+    elif registry_config.provider == Provider.AWS.value: # pylint: disable=no-member
         docker.login_ecr(
             aws_access_key_id=registry_config.user_name,
             aws_secret_access_key=registry_config.password,
