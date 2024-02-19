@@ -1,8 +1,11 @@
 """Docker related utility methods"""
+import json
 import logging
 import shlex
 import shutil
+import sys
 from dataclasses import dataclass
+from enum import Enum
 from logging import Logger
 from pathlib import Path
 from traceback import print_exc
@@ -10,6 +13,8 @@ from typing import Dict, Optional, Iterator, cast, Union
 from python_on_whales import docker, Image, Container, DockerException
 from python_on_whales.exceptions import NoSuchContainer
 from ruamel.yaml import yaml_object, YAML
+import boto3
+from botocore.config import Config
 
 from ..logging import try_parse_ansi
 from ...project import Project
@@ -63,6 +68,7 @@ class DockerRegistryConfig:
     password: str
     provider: Optional[str]
     region: Optional[str]
+    lifecyclepolicy: Optional[dict]
     cache_from_registry: bool
     custom_cache_config: Optional[DockerCacheConfig]
 
@@ -77,6 +83,7 @@ class DockerRegistryConfig:
                 password=config["password"],
                 provider=config.get("provider", None),
                 region=config.get("region", None),
+                lifecyclepolicy=config.get("lifecycle_policy", None),
                 cache_from_registry=cache_config.get("cacheFromRegistry", False),
                 custom_cache_config=DockerCacheConfig.from_dict(cache_config["custom"])
                 if "custom" in cache_config
@@ -110,6 +117,12 @@ class DockerConfig:
             )
         except KeyError as exc:
             raise KeyError(f"Docker config could not be loaded from {config}") from exc
+
+
+@dataclass(frozen=True)
+class Provider(Enum):
+    AWS = "aws"
+    AZURE = "azure"
 
 
 def execute_with_stream(
@@ -168,6 +181,11 @@ def docker_registry_path(docker_config: DockerRegistryConfig, image_name: str) -
     return "/".join([c for c in path_components if c]).lower()
 
 
+def ecr_repository_path(host_name: str, image_name: str) -> str:
+    path_components = [host_name.split("/", 1)[1], image_name.split(":", 1)[0]]
+    return "/".join([c for c in path_components if c]).lower()
+
+
 def full_image_path_for_project(step_input: Input) -> str:
     docker_config: DockerConfig = DockerConfig.from_dict(
         step_input.run_properties.config
@@ -190,6 +208,10 @@ def push_to_registry(
 
     login(logger=logger, registry_config=docker_config)
     full_image_path = docker_registry_path(docker_config, image_name)
+    repo_path = ecr_repository_path(docker_config.host_name, image_name)
+
+    if docker_config.provider == Provider.AWS.value:  # pylint: disable=no-member
+        create_ecr_repo_if_needed(logger, docker_config, repo_path)
     docker.image.tag(image, full_image_path)
     docker.image.push(full_image_path, quiet=False)
 
@@ -307,13 +329,13 @@ def build(
 
 def login(logger: Logger, registry_config: DockerRegistryConfig) -> None:
     logger.info(f"Logging in with user '{registry_config.user_name}'")
-    if registry_config.provider == "azure":
+    if registry_config.provider == Provider.AZURE.value:  # pylint: disable=no-member
         docker.login(
             server=f"https://{registry_config.host_name}",
             username=registry_config.user_name,
             password=registry_config.password,
         )
-    elif registry_config.provider == "aws":
+    elif registry_config.provider == Provider.AWS.value:  # pylint: disable=no-member
         docker.login_ecr(
             aws_access_key_id=registry_config.user_name,
             aws_secret_access_key=registry_config.password,
@@ -338,3 +360,72 @@ def remove_container(logger: Logger, container: Container) -> None:
     logger.debug(f"Removing container {container.id}")
     docker.remove(container.id)
     logger.info(f"Removed container {container.id}")
+
+
+def create_ecr_repo_if_needed(
+    logger: Logger, registry_config: DockerRegistryConfig, repo: str
+):
+    ecr_config = Config(
+        region_name=registry_config.region,
+        signature_version="v4",
+        retries={"max_attempts": 10, "mode": "standard"},
+    )
+    ecr_client = boto3.client(
+        "ecr",
+        config=ecr_config,
+        aws_access_key_id=registry_config.user_name,
+        aws_secret_access_key=registry_config.password,
+    )
+    try:
+        ecr_client.describe_repositories(
+            repositoryNames=[
+                repo.lower(),
+            ]
+        )
+        logger.info(f"Repository '{repo}' exists.")
+    except ecr_client.exceptions.RepositoryNotFoundException:
+        logger.info(f"Repository '{repo}' not found. Creating...")
+        ecr_client.create_repository(
+            repositoryName=repo.lower(),
+            imageTagMutability="IMMUTABLE",
+            encryptionConfiguration={
+                "encryptionType": "AES256",
+            },
+        )
+        try:
+            attach_ecr_lifecycle_policy(
+                logger, ecr_client, repo, registry_config.lifecyclepolicy
+            )
+            logger.info(f"ECR ready, pushing image to {repo}...")
+        except TypeError as exc:
+            ecr_client.delete_repository(
+                repositoryName=repo.lower(),
+            )
+            error_msg = (
+                f"To push the docker image to the newly created ECR repository '{repo}', "
+                "a lifecycle policy is required. This is not defined inside mpyl_config.yml. "
+                "Check mpyl_config.schema.yml on how to set this up."
+            )
+            raise TypeError(error_msg) from exc
+
+
+def attach_ecr_lifecycle_policy(logger: Logger, ecr_client, repo, lifecyclepolicy):
+    policy = {
+        "rules": [
+            {
+                "rulePriority": lifecyclepolicy["rulePriority"],
+                "description": lifecyclepolicy["description"],
+                "selection": {
+                    "tagStatus": lifecyclepolicy["tagStatus"],
+                    "countType": lifecyclepolicy["countType"],
+                    "countNumber": lifecyclepolicy["countNumber"],
+                    "countUnit": lifecyclepolicy["countUnit"],
+                },
+                "action": {"type": lifecyclepolicy["action"]},
+            }
+        ]
+    }
+    ecr_client.put_lifecycle_policy(
+        repositoryName=repo, lifecyclePolicyText=json.dumps(policy)
+    )
+    logger.info(f"Lifecycle policy added to repository '{repo}'.")

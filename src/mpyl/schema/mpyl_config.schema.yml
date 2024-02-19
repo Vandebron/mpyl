@@ -294,7 +294,6 @@ definitions:
       password:
         type: string
       provider:
-        type: string
         enum:
           - 'aws'
           - 'azure'
@@ -321,6 +320,48 @@ definitions:
               from:
                 description: "The --cache-from argument for docker buildx"
                 type: string
+      lifecycle_policy:
+        type: object
+        additionalProperties: false
+        properties:
+          rulePriority:
+            type: integer
+            default: 1
+            description: "Sets the order in which rules are applied, lowest to highest."
+          description:
+            type: string
+            description: "Describes the purpose of a rule within a lifecycle policy."
+          tagStatus:
+            enum:
+              - any
+            default: any
+            description:
+              "Specifies a tag for an image. The rule is applied to all images in that repository."
+          countType:
+            enum:
+              - imageCountMoreThan
+              - sinceImagePushed
+            default: sinceImagePushed
+            description: "Specify a count type to apply to the images. imageCountMoreThan sets a limit on the number of images that exist in your repository. sinceImagePushed specifies a time limit on the images that exist in your repository."
+          countNumber:
+            type: integer
+            default: 30
+            description: "Specify a count number. Acceptable values are positive integers (0 is not an accepted value)."
+          countUnit:
+            enum:
+              - days
+            default: days
+            description: "Only if countType is set to sinceImagePushed. Specify a count unit of days to indicate that as the unit of time."
+          action:
+            enum:
+             - expire
+            default: expire
+            description: "Specify an action type. The supported value is expire."
+          required:
+            - rulePriority
+            - tagStatus
+            - countType
+            - countNumber
     required:
       - hostName
       - password
