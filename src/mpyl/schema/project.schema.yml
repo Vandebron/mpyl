@@ -431,7 +431,27 @@ definitions:
           your ingress for old clients
         type: boolean
       priority:
-        type: number
+        type: object
+        additionalProperties: false
+        oneOf:
+          - required:
+              - pr
+              - test
+              - acceptance
+              - production
+          - required:
+              - all
+        properties:
+          pr:
+            type: number
+          test:
+            type: number
+          acceptance:
+            type: number
+          production:
+            type: number
+          all:
+            type: number
   livenessProbe:
     type: object
     additionalProperties: true

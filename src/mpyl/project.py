@@ -361,7 +361,7 @@ class TraefikHost:
     has_swagger: bool
     tls: Optional[TargetProperty[str]]
     whitelists: TargetProperty[list[str]]
-    priority: Optional[int]
+    priority: TargetProperty[int]
     insecure: bool
 
     @staticmethod
@@ -372,7 +372,7 @@ class TraefikHost:
             has_swagger=values.get("hasSwagger", True),
             tls=TargetProperty.from_config(values.get("tls", {})),
             whitelists=TargetProperty.from_config(values.get("whitelists", {})),
-            priority=values.get("priority"),
+            priority=TargetProperty.from_config(values.get("priority", {})),
             insecure=values.get("insecure", False),
         )
 

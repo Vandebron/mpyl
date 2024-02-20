@@ -58,7 +58,7 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
         }
 
         if host.traefik_host.priority:
-            route |= {"priority": host.traefik_host.priority}
+            route |= {"priority": host.traefik_host.priority.get_value(target)}
 
         tls: dict[str, Union[str, dict]] = {
             "secretName": host.tls if host.tls else "le-prod-wildcard-cert"

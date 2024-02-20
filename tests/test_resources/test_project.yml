@@ -125,7 +125,8 @@ deployment:
       - host:
           all: "Host(`some.other.host.com`)"
         servicePort: 4091
-        priority: 1000
+        priority:
+          all: 1000
         whitelists:
           pr:
             - "K8s-Test"
