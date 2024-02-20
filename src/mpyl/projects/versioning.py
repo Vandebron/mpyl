@@ -121,7 +121,8 @@ class ProjectUpgraderOneFour19(Upgrader):
         for host in hosts:
             if priority := host.get("priority", None):
                 if isinstance(priority, numbers.Number) or not any(
-                        env in priority for env in ["all", "pr", "test", "acceptance", "production"]
+                    env in priority
+                    for env in ["all", "pr", "test", "acceptance", "production"]
                 ):
                     host["priority"] = {}
                     host["priority"]["all"] = priority
