@@ -7,6 +7,7 @@ list in this module.
 
 """
 import copy
+import numbers
 import pkgutil
 import re
 from abc import ABC
@@ -112,6 +113,22 @@ class Upgrader(ABC):
         return previous_dict
 
 
+class ProjectUpgraderOneFour19(Upgrader):
+    target_version = "1.4.19"
+
+    def upgrade(self, previous_dict: ordereddict) -> ordereddict:
+        hosts = previous_dict.get("deployment", {}).get("traefik", {}).get("hosts", [])
+        for host in hosts:
+            if priority := host.get("priority", None):
+                if isinstance(priority, numbers.Number) or not any(
+                        env in priority for env in ["all", "pr", "test", "acceptance", "production"]
+                ):
+                    host["priority"] = {}
+                    host["priority"]["all"] = priority
+
+        return previous_dict
+
+
 class ProjectUpgraderOneFour15(Upgrader):
     target_version = "1.4.15"
 
@@ -177,6 +194,7 @@ PROJECT_UPGRADERS = [
     ProjectUpgraderOne11(),
     ProjectUpgraderOne31(),
     ProjectUpgraderOneFour15(),
+    ProjectUpgraderOneFour19(),
 ]
 
 
