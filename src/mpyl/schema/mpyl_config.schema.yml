@@ -320,7 +320,7 @@ definitions:
               from:
                 description: "The --cache-from argument for docker buildx"
                 type: string
-      lifecycle_policy:
+      lifecyclePolicy:
         type: object
         additionalProperties: false
         properties:
