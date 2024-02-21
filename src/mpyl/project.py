@@ -361,7 +361,7 @@ class TraefikHost:
     has_swagger: bool
     tls: Optional[TargetProperty[str]]
     whitelists: TargetProperty[list[str]]
-    priority: TargetProperty[int]
+    priority: Optional[TargetProperty[int]]
     insecure: bool
 
     @staticmethod

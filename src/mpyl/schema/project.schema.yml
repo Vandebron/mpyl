@@ -431,27 +431,7 @@ definitions:
           your ingress for old clients
         type: boolean
       priority:
-        type: object
-        additionalProperties: false
-        oneOf:
-          - required:
-              - pr
-              - test
-              - acceptance
-              - production
-          - required:
-              - all
-        properties:
-          pr:
-            type: number
-          test:
-            type: number
-          acceptance:
-            type: number
-          production:
-            type: number
-          all:
-            type: number
+        $ref: '#/definitions/dtapNumberValue'
   livenessProbe:
     type: object
     additionalProperties: true
