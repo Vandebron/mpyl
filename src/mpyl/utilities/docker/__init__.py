@@ -3,18 +3,18 @@ import json
 import logging
 import shlex
 import shutil
+import sys
 from dataclasses import dataclass
 from enum import Enum
 from logging import Logger
 from pathlib import Path
 from traceback import print_exc
 from typing import Dict, Optional, Iterator, cast, Union
-
-import boto3
-from botocore.config import Config
 from python_on_whales import docker, Image, Container, DockerException
 from python_on_whales.exceptions import NoSuchContainer
 from ruamel.yaml import yaml_object, YAML
+import boto3
+from botocore.config import Config
 
 from ..logging import try_parse_ansi
 from ...project import Project
@@ -83,7 +83,7 @@ class DockerRegistryConfig:
                 password=config["password"],
                 provider=config.get("provider", None),
                 region=config.get("region", None),
-                lifecyclepolicy=config.get("lifecyclePolicy", None),
+                lifecyclepolicy=config.get("lifecycle_policy", None),
                 cache_from_registry=cache_config.get("cacheFromRegistry", False),
                 custom_cache_config=DockerCacheConfig.from_dict(cache_config["custom"])
                 if "custom" in cache_config
@@ -387,9 +387,10 @@ def create_ecr_repo_if_needed(
         logger.info(f"Repository '{repo}' not found. Creating...")
         ecr_client.create_repository(
             repositoryName=repo.lower(),
-            imageScanningConfiguration={"scanOnPush": True},
-            imageTagMutability="MUTABLE",
-            encryptionConfiguration={"encryptionType": "AES256"},
+            imageTagMutability="IMMUTABLE",
+            encryptionConfiguration={
+                "encryptionType": "AES256",
+            },
         )
         try:
             attach_ecr_lifecycle_policy(
@@ -408,19 +409,19 @@ def create_ecr_repo_if_needed(
             raise TypeError(error_msg) from exc
 
 
-def attach_ecr_lifecycle_policy(logger: Logger, ecr_client, repo, lifecycle_policy):
+def attach_ecr_lifecycle_policy(logger: Logger, ecr_client, repo, lifecyclepolicy):
     policy = {
         "rules": [
             {
-                "rulePriority": lifecycle_policy["rulePriority"],
-                "description": lifecycle_policy["description"],
+                "rulePriority": lifecyclepolicy["rulePriority"],
+                "description": lifecyclepolicy["description"],
                 "selection": {
-                    "tagStatus": lifecycle_policy["tagStatus"],
-                    "countType": lifecycle_policy["countType"],
-                    "countNumber": lifecycle_policy["countNumber"],
-                    "countUnit": lifecycle_policy["countUnit"],
+                    "tagStatus": lifecyclepolicy["tagStatus"],
+                    "countType": lifecyclepolicy["countType"],
+                    "countNumber": lifecyclepolicy["countNumber"],
+                    "countUnit": lifecyclepolicy["countUnit"],
                 },
-                "action": {"type": lifecycle_policy["action"]},
+                "action": {"type": lifecyclepolicy["action"]},
             }
         ]
     }
