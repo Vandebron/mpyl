@@ -39,14 +39,6 @@ docker:
       password: !ENV ${AWS_SECRET_ACCESS_KEY:password}
       region: 'us-east-1'
       provider: 'aws'
-      lifecyclePolicy:
-        description: "Keep image 30 days"
-        rulePriority: 1
-        tagStatus: "any"
-        countType: "sinceImagePushed"
-        countNumber: 30
-        countUnit: "days"
-        action: "expire"
     - hostName: 'acme.docker.com'
       userName: !ENV ${DOCKER_REGISTRY_USR:docker_user}
       password: !ENV ${DOCKER_REGISTRY_PSW:docker_password}
