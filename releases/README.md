@@ -1,5 +1,14 @@
 # Release notes
 
+## MPyL 1.4.19
+
+
+#### ECR repo
+- New ECR repositories now allow for mutable image tags
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.19)
+
 ## MPyL 1.4.18
 
 
