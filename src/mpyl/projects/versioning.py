@@ -130,6 +130,13 @@ class ProjectUpgraderOneFour20(Upgrader):
         return previous_dict
 
 
+class ProjectUpgraderOneFour18(Upgrader):
+    target_version = "1.4.18"
+
+    def upgrade(self, previous_dict: ordereddict) -> ordereddict:
+        return previous_dict  # To account for the project id upgrade that couldn't be committed
+
+
 class ProjectUpgraderOneFour15(Upgrader):
     target_version = "1.4.15"
 
@@ -195,6 +202,7 @@ PROJECT_UPGRADERS = [
     ProjectUpgraderOne11(),
     ProjectUpgraderOne31(),
     ProjectUpgraderOneFour15(),
+    ProjectUpgraderOneFour18(),
     ProjectUpgraderOneFour20(),
 ]
 
