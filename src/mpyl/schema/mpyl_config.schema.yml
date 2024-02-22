@@ -442,6 +442,41 @@ definitions:
     dependencies:
       accessKeyId: [ secretAccessKey ]
       secretAccessKey: [ accessKeyId ]
+  camunda:
+    type: object
+    properties:
+      pr:
+        type: object
+        clusterId:
+          type: string
+        clientId:
+          type: string
+        clientSecret:
+          type: string
+      test:
+        type: object
+        clusterId:
+          type: string
+        clientId:
+          type: string
+        clientSecret:
+          type: string
+      acceptance:
+        type: object
+        clusterId:
+          type: string
+        clientId:
+          type: string
+        clientSecret:
+          type: string
+      production:
+        type: object
+          clusterId:
+            type: string
+          clientId:
+            type: string
+          clientSecret:
+            type: string
   Dagster:
     title: Dagster
     type: object
