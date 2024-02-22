@@ -446,37 +446,23 @@ definitions:
     type: object
     properties:
       pr:
-        type: object
-        clusterId:
-          type: string
-        clientId:
-          type: string
-        clientSecret:
-          type: string
+        "$ref": "#/definitions/CamundaCluster"
       test:
-        type: object
-        clusterId:
-          type: string
-        clientId:
-          type: string
-        clientSecret:
-          type: string
+        "$ref": "#/definitions/CamundaCluster"
       acceptance:
-        type: object
-        clusterId:
-          type: string
-        clientId:
-          type: string
-        clientSecret:
-          type: string
+        "$ref": "#/definitions/CamundaCluster"
       production:
-        type: object
-          clusterId:
-            type: string
-          clientId:
-            type: string
-          clientSecret:
-            type: string
+        "$ref": "#/definitions/CamundaCluster"
+  CamundaCluster:
+    type: object
+    properties:
+      clusterId:
+        type: string
+      clientId:
+        type: string
+      clientSecret:
+        type: string
+    required: [ clusterId, clientId, clientSecret ]
   Dagster:
     title: Dagster
     type: object
