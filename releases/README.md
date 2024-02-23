@@ -1,5 +1,34 @@
 # Release notes
 
+## MPyL 1.4.20
+
+
+#### Traefik priority rules per environment
+
+You can now configure Traefik route priorities per environment:
+
+```yaml
+deployment:
+  traefik:
+    hosts:
+      - host:
+          all: "Host(`host1.example.com`)"
+          servicePort: 1234
+          priority:
+            all: 10
+      - host:
+          all: "Host(`host2.example.com`)"
+          servicePort: 1235
+          priority:
+            pr: 20
+            test: 30
+            acceptance: 40
+            production: 50
+```
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.20)
+
 ## MPyL 1.4.19
 
 
