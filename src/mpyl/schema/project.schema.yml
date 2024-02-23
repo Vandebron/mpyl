@@ -431,7 +431,7 @@ definitions:
           your ingress for old clients
         type: boolean
       priority:
-        type: number
+        $ref: '#/definitions/dtapNumberValue'
   livenessProbe:
     type: object
     additionalProperties: true
