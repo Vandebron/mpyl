@@ -66,7 +66,6 @@ class DeployKubernetes(Step):
         )
 
     def execute(self, step_input: Input) -> Output:
-        properties = step_input.run_properties
         builder = ChartBuilder(step_input)
         chart = to_service_chart(builder)
 
