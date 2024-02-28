@@ -24,7 +24,6 @@ class DeployKubernetesJob(Step):
         )
 
     def execute(self, step_input: Input) -> Output:
-        run_properties = step_input.run_properties
         builder = ChartBuilder(step_input)
         chart = (
             to_cron_job_chart(builder) if builder.is_cron_job else to_job_chart(builder)
@@ -33,7 +32,6 @@ class DeployKubernetesJob(Step):
             self._logger,
             chart,
             step_input,
-            run_properties.target,
             builder.release_name,
             delete_existing=True,
         )

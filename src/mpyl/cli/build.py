@@ -4,7 +4,7 @@ import pickle
 import shutil
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast, Sequence
 
 import click
 import questionary
@@ -30,6 +30,7 @@ from .commands.build.jenkins import JenkinsRunParameters, run_jenkins, get_token
 from ..artifacts.build_artifacts import (
     ManifestPathTransformer,
     BuildCacheTransformer,
+    ArtifactType,
 )
 from ..build import print_status, run_mpyl
 from ..constants import (
@@ -38,7 +39,7 @@ from ..constants import (
     BUILD_ARTIFACTS_FOLDER,
 )
 from ..project import load_project, Target
-from ..steps.deploy.k8s import DeployConfig
+from ..steps.deploy.k8s.deploy_config import DeployConfig
 from ..steps.models import RunProperties
 from ..steps.run import RunResult
 from ..steps.run_properties import initiate_run_properties
@@ -509,8 +510,16 @@ def pull(obj: CliContext, tag: str, pr: int, path: Path):
     )
     target_branch = __get_target_branch(run_properties, tag, pr)
 
-    build_artifacts = prepare_artifacts_repo(obj=obj, repo_path=path)
-    build_artifacts.pull(branch=branch_name(target_branch, "cache"))
+    build_artifacts = prepare_artifacts_repo(
+        obj=obj, repo_path=path, artifact_type=ArtifactType.CACHE
+    )
+    build_artifacts.pull(
+        branch=branch_name(
+            identifier=target_branch,
+            artifact_type=ArtifactType.CACHE,
+            target=run_properties.target,
+        )
+    )
 
 
 @artifacts.command(help="Push build artifacts to remote artifact repository")
@@ -521,18 +530,20 @@ def pull(obj: CliContext, tag: str, pr: int, path: Path):
     "-p",
     type=click.Path(exists=False),
     help="Path within repository to copy artifacts to",
-    default=Path("tmp"),
     required=False,
 )
 @click.option(
     "--artifact-type",
     "-a",
-    type=click.Choice(["cache", "manifests"]),
-    help="The type of artifact to store. Either build metadata from `.mpyl` folders or k8s manifests",
+    type=click.Choice(
+        cast(Sequence[str], ArtifactType)
+    ),  # Click does accept this enum type but mypy doesn't
+    help="The type of artifact to store. Either build metadata from `.mpyl` "
+    "folders or k8s manifests to be deployed by ArgoCD",
     required=True,
 )
 @click.pass_obj
-def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: str):
+def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: ArtifactType):
     run_properties = initiate_run_properties(
         config=obj.config,
         properties=obj.run_properties,
@@ -540,23 +551,39 @@ def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: str):
         all_projects=set(),
     )
     target_branch = __get_target_branch(run_properties, tag, pr)
+    if path is None:
+        path = Path("tmp") if artifact_type == ArtifactType.CACHE else Path(".")
 
-    build_artifacts = prepare_artifacts_repo(obj=obj, repo_path=path)
+    build_artifacts = prepare_artifacts_repo(
+        obj=obj, repo_path=path, artifact_type=artifact_type
+    )
     deploy_config = DeployConfig.from_config(obj.config)
 
     transformer = (
-        ManifestPathTransformer(deploy_config)
-        if artifact_type == "manifests"
+        ManifestPathTransformer(
+            deploy_config=deploy_config, run_properties=run_properties
+        )
+        if artifact_type == ArtifactType.ARGO
         else BuildCacheTransformer()
     )
 
-    message = f"Revision {obj.repo.get_sha} {f'at {obj.repo.remote_url}' if obj.repo.remote_url else ''}"
+    github_config = None
+    if artifact_type == ArtifactType.ARGO:
+        github = obj.config["vcs"]["argoGithub"]
+        github_config = GithubConfig.from_github_config(github=github)
 
     build_artifacts.push(
-        branch=branch_name(target_branch, artifact_type),
-        message=message,
+        branch=branch_name(
+            identifier=target_branch,
+            artifact_type=artifact_type,
+            target=run_properties.target,
+        ),
+        revision=obj.repo.get_sha,
+        repository_url=obj.repo.remote_url if obj.repo.remote_url else "",
         project_paths=obj.repo.find_projects(),
         path_transformer=transformer,
+        run_properties=run_properties,
+        github_config=github_config,
     )
 
 

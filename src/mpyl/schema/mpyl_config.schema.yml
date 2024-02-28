@@ -120,11 +120,7 @@ definitions:
         $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.apps.v1.DeploymentStrategy'
       deployAction:
         type: string
-        enum:
-          - 'HelmDeploy'
-          - 'HelmDryRun'
-          - 'HelmTemplate'
-          - 'KubectlManifest'
+        pattern: ((HelmDeploy)|(HelmDryrun)|(HelmTemplate)|(KubectlManifest))|(!ENV.*)
         description: >-
           Defines the action to take in the deploy step. Defaults to helmDeploy. 
           If set to HelmDeploy, the helm chart will be deployed to the cluster.
@@ -134,7 +130,7 @@ definitions:
         default: 'HelmDeploy'
       outputPath:
         type: string
-        default: target/kubernetes
+        default: .mpyl/kubernetes
         description: >-
           The path to the folder where the rendered helm chart or kubectl manifest will be written.
           Defaults to target/kubernetes under the root folder of the project.
@@ -174,9 +170,14 @@ definitions:
         "$ref": "#/definitions/Git"
       github:
         "$ref": "#/definitions/Github"
-      artifactRepository:
+      cachingRepository:
         description: "The repository where the build artifacts are persisted"
         "$ref": "#/definitions/Git"
+      argoRepository:
+        description: "The argocd repository that contains the kubernetes manifests"
+        "$ref": "#/definitions/Git"
+      argoGithub:
+        "$ref": "#/definitions/Github"
     required:
       - git
       - github

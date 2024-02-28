@@ -13,13 +13,23 @@ vcs:
     app:
       privateKeyBase64Encoded: !ENV ${MPYL_GITHUB_APP_PRIVATE_KEY}
       appId: '295700'
-  artifactRepository:
+  cachingRepository:
     mainBranch: 'main'
     remote:
       url: 'https://github.com/acme/artifact-repo.git'
       userName: !ENV ${GIT_CREDENTIALS_USR}
       password: !ENV ${GIT_CREDENTIALS_PSW}
       email: "employee@acme.com"
+  argoRepository:
+    mainBranch: 'main'
+    remote:
+      url: 'https://github.com/acme/argocd.git'
+      userName: !ENV ${GIT_CREDENTIALS_USR}
+      password: !ENV ${GIT_CREDENTIALS_PSW}
+      email: !ENV ${GIT_EMAIL_ADDRESS}
+  argoGithub:
+    repository: 'acme/argocd'
+    token: !ENV ${GITHUB_TOKEN}
 slack:
   botToken: !ENV ${SLACK_TOKEN}
   icons:

@@ -236,7 +236,6 @@ class ChartBuilder:
         app_labels = {
             "name": self.release_name,
             "app.kubernetes.io/version": run_properties.versioning.identifier,
-            "app.kubernetes.io/managed-by": "Helm",
             "app.kubernetes.io/name": self.release_name,
             "app.kubernetes.io/instance": self.release_name,
         }
