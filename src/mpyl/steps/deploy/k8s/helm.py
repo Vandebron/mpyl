@@ -5,7 +5,9 @@ step.
 import shutil
 from logging import Logger
 from pathlib import Path
+from typing import Optional
 
+import json
 import yaml
 
 from .resources import to_yaml, CustomResourceDefinition
@@ -122,6 +124,27 @@ def __execute_install_cmd(
             f"--debug --dry-run"
         )
     return custom_check_output(logger, cmd)
+
+
+def retrieve_installed_version(
+    logger: Logger,
+    chart_name: str,
+    name_space: str,
+    kube_context: str,
+) -> Optional[str]:
+    cmd = f"helm list -n {name_space} -l name={chart_name} --kube-context {kube_context} --output json"
+    output = custom_check_output(logger, cmd, capture_stdout=True)
+    if not output.success:
+        logger.warning(f"Retrieve installed version for {chart_name} failed")
+        return None
+
+    results = json.loads(output.message)
+    if len(results) != 1:
+        logger.info(f"Retrieve installed version for {chart_name}: release not found")
+        return None
+    version = results[0]["app_version"]
+    logger.info(f"Retrieve installed version for {chart_name}: {version}")
+    return version
 
 
 def install(
