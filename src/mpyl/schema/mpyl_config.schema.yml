@@ -35,7 +35,7 @@ definitions:
       s3:
         "$ref": "#/definitions/s3"
       camunda:
-        "$ref": "#/definitions/camunda"
+        "$ref": "#/definitions/Camunda"
     required:
       - vcs
       - docker
@@ -442,7 +442,7 @@ definitions:
     dependencies:
       accessKeyId: [ secretAccessKey ]
       secretAccessKey: [ accessKeyId ]
-  camunda:
+  Camunda:
     type: object
     properties:
       pr:

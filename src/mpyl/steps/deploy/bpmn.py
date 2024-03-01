@@ -1,12 +1,10 @@
 """Deploys the Camunda diagrams in the build stage to Camunda cluster, using BPM. """
-import asyncio
-import logging
-import sys
 import os
 from logging import Logger
-from pyzeebe import ZeebeClient, create_camunda_cloud_channel, create_insecure_channel
+from python_on_whales import docker, Container, DockerException
+from ...utilities.docker import execute_with_stream
+from ...utilities.bpmn import CamundaConfig
 from . import STAGE_NAME
-from ...project import Target
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
 
@@ -26,73 +24,71 @@ class BpmnDiagramDeploy(Step):
             # TO DO: make an artifcatype with a camunda deployed diagram link -> miss information to construct dynamic link...
         )
 
-    async def deploy_all_diagrams(
-        self, camunda_config, bpm_file_path: str
-    ):
-        self._logger.debug(bpm_file_path)
-        zeebe_client = self.authentication(camunda_config)
-        for file_name in (
-            [fn for fn in os.listdir(bpm_file_path) if fn.endswith(".bpmn")]
-            if os.path.isdir(bpm_file_path)
-            else []
-        ):
-            self._logger.info(file_name)
-            await self.deploy_diagram(bpm_file_path + file_name, zeebe_client)
-
-    async def deploy_diagram(self, path: str, zeebe_client: ZeebeClient):
-        await zeebe_client.deploy_process(path)
-    
-    def authentication(self, camunda_config):
-        channel = create_insecure_channel(hostname="localhost", port=26500)
-        # channel = create_camunda_cloud_channel(
-        #         client_id=camunda_config.get("clientId"),
-        #         client_secret=camunda_config.get("clientSecret"),
-        #         cluster_id=camunda_config.get("clusterId"),
-        #         region="bru-2",
-        #     )
-        return ZeebeClient(channel)
-
-    def get_env_value(self, target: Target):
-        if target == Target.PULL_REQUEST:
-            env = "pr"
-        elif target == Target.PULL_REQUEST_BASE:
-            env = "test"
-        elif target == Target.ACCEPTANCE:
-            env = "acceptance"
-        elif target == Target.PRODUCTION:
-            env = "production"
-        return env
-            
-
     def execute(self, step_input: Input) -> Output:
-        logger = logging.getLogger(__name__)
-        logger.setLevel(logging.DEBUG)
-        stream_handler = logging.StreamHandler(sys.stdout)
-        logger.addHandler(stream_handler)
-        self._logger = logger
-        self._logger.debug(__name__)
-        
-        env = self.get_env_value(step_input.run_properties.target)
-        camunda_config_info = step_input.run_properties.config.get("camunda")
-        
-        if camunda_config_info is not None:
-            camunda_config = camunda_config_info.get(env)
-            
-        bpm_file_paths = step_input.project.root_path + "src/test/resources/"
+        volume_path = os.path.join(os.getcwd(), 'bpm')
+        camunda_config = CamundaConfig.from_config(step_input.run_properties.config, step_input.run_properties.target)
+        docker_container = self._get_docker_container(volume_path, camunda_config)
+        bpm_file_path = volume_path+'/camunda-diagrams/src/test/resources/'
         
         try:
-            asyncio.run(self.deploy_all_diagrams(camunda_config, bpm_file_paths))
-        except Exception as exc:  # pylint: disable=broad-exception-caught
-            message = str(exc)
-            logger.debug(message)
+            for file_name in (
+                [fn for fn in os.listdir(bpm_file_path) if fn.endswith(".bpmn")]
+                if os.path.isdir(bpm_file_path)
+                else []
+            ):
+                self._logger.info(file_name)
+                run_command = (
+                    f'zbctl deploy camunda-diagrams/src/test/resources/{file_name}'
+                )
+                result = execute_with_stream(
+                    logger=self._logger,
+                    container=docker_container,
+                    command=run_command,
+                    task_name=f'Deploy bpmn diagram {file_name}',
+                )
+                for stdout in result:
+                    if "error Command failed with exit code" in stdout:
+                        raise DockerException(command_launched=[run_command], return_code=1)
+        except DockerException:
             return Output(
                 success=False,
-                message= f"Deployed failed with error {message}",
+                message=f"Deploy BPMN diagrams for project {step_input.project.name} have one or more failures",
                 produced_artifact=None,
             )
-        
+        finally:
+            docker_container.stop()
+            docker_container.remove()
+
         return Output(
             success=True,
             message=f"Deployed all diagrams in {step_input.project.name}",
             produced_artifact=None,
         )
+        
+    def _get_docker_container(
+        self, volume_path: str, camunda_config: CamundaConfig
+    ) -> Container:
+        custom_image_tag = "mpyl/bpmn"
+        docker.build(
+            context_path=volume_path,
+            tags=[custom_image_tag],
+            file=f"{volume_path}/camunda-diagrams/deployment/Dockerfile",
+        )
+
+        self._logger.debug(volume_path)
+        docker_container = docker.run(
+            image=custom_image_tag,
+            interactive=True,
+            detach=True,
+            volumes=[
+                (volume_path,"/camunda-diagrams")
+            ],
+            envs={"ZEEBE_ADDRESS": camunda_config.cluster_id,
+                  "ZEEBE_CLIENT_ID": camunda_config.client_id,
+                  "ZEEBE_CLIENT_SECRET":camunda_config.client_secret},
+            workdir="/camunda-diagrams",
+        )
+        if not isinstance(docker_container, Container):
+            raise TypeError("Docker run command should return a container")
+
+        return docker_container
