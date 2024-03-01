@@ -79,7 +79,7 @@ def __get_pr_pipeline(
         return None
 
 
-async def run_jenkins(run_config: JenkinsRunParameters):
+def run_jenkins(run_config: JenkinsRunParameters):
     log_console = Console(log_path=False, log_time=False)
     with log_console.status(
         "Fetching Github info.. [bright_blue]>gh pr view[/bright_blue]"
@@ -126,7 +126,7 @@ async def run_jenkins(run_config: JenkinsRunParameters):
                     follow=run_config.follow,
                     verbose=run_config.verbose,
                 )
-                await runner.run(run_config.pipeline_parameters)
+                runner.run(run_config.pipeline_parameters)
             except requests.ConnectionError:
                 play_sound(Sound.FAILURE)
                 status.console.log("⚠️ Could not connect. Are you on VPN?")

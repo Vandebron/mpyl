@@ -414,9 +414,8 @@ def jenkins(  # pylint: disable=too-many-arguments
     silent,
     tag,
 ):
-    upgrade_check = None
     try:
-        upgrade_check = asyncio.wait_for(warn_if_update(ctx.obj.console), timeout=5)
+        asyncio.run(warn_if_update(ctx.obj.console))
         if "jenkins" not in ctx.obj.config:
             ctx.obj.console.print(
                 "No Jenkins configuration found in config file. "
@@ -448,18 +447,10 @@ def jenkins(  # pylint: disable=too-many-arguments
                 tag=tag,
                 tag_target=getattr(Target, target) if tag else None,
             )
-
-            asyncio.wait_for(run_jenkins(run_argument), timeout=7200)
-            ctx.obj.console.print(f"after running jenkins for {target}...")
+            run_jenkins(run_argument)
+        # sys.exit()
     except asyncio.exceptions.TimeoutError:
-        ctx.obj.console.print("inside except block...")
         pass
-    finally:
-        ctx.obj.console.print("inside finally block...")
-        if upgrade_check:
-            asyncio.get_event_loop().run_until_complete(upgrade_check)
-
-    ctx.obj.console.print("end of function...")
 
 
 @build.command(help=f"Clean MPyL metadata in `{BUILD_ARTIFACTS_FOLDER}` folders")
