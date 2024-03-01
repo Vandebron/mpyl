@@ -310,13 +310,12 @@ def select_tag(ctx) -> str:
         return release.tag_name
 
 
-def select_target():
-    return questionary.select(
+def select_targets() -> list[str]:
+    return questionary.checkbox(
         "Which environment do you want to deploy to?",
-        show_selected=True,
         choices=[
             Choice(title=t.name, value=t.name)  # pylint: disable=no-member
-            for t in [Target.ACCEPTANCE, Target.PULL_REQUEST_BASE, Target.PRODUCTION]
+            for t in [Target.PULL_REQUEST_BASE, Target.ACCEPTANCE, Target.PRODUCTION]
         ],
     ).ask()
 
@@ -433,24 +432,34 @@ def jenkins(  # pylint: disable=too-many-arguments
         if arguments:
             pipeline_parameters["BUILD_PARAMS"] = " ".join(arguments)
 
-        run_argument = JenkinsRunParameters(
-            jenkins_user=user,
-            jenkins_password=password,
-            config=ctx.obj.config,
-            pipeline=selected_pipeline,
-            pipeline_parameters=pipeline_parameters,
-            verbose=not silent or ctx.obj.verbose,
-            follow=not background,
-            tag=tag,
-            tag_target=getattr(Target, select_target()) if tag else None,
-        )
+        targets = select_targets()
+        ctx.obj.console.print("targets: ", targets)
 
-        run_jenkins(run_argument)
+        for target in targets:
+            ctx.obj.console.print(f"running jenkins for {target}...")
+            run_argument = JenkinsRunParameters(
+                jenkins_user=user,
+                jenkins_password=password,
+                config=ctx.obj.config,
+                pipeline=selected_pipeline,
+                pipeline_parameters=pipeline_parameters,
+                verbose=not silent or ctx.obj.verbose,
+                follow=not background,
+                tag=tag,
+                tag_target=getattr(Target, target) if tag else None,
+            )
+
+            asyncio.wait_for(run_jenkins(run_argument), timeout=7200)
+            ctx.obj.console.print(f"after running jenkins for {target}...")
     except asyncio.exceptions.TimeoutError:
+        ctx.obj.console.print("inside except block...")
         pass
     finally:
+        ctx.obj.console.print("inside finally block...")
         if upgrade_check:
             asyncio.get_event_loop().run_until_complete(upgrade_check)
+
+    ctx.obj.console.print("end of function...")
 
 
 @build.command(help=f"Clean MPyL metadata in `{BUILD_ARTIFACTS_FOLDER}` folders")
