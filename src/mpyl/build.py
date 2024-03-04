@@ -19,13 +19,18 @@ from .steps import deploy
 from .steps.collection import StepsCollection
 from .steps.models import RunProperties
 from .steps.run import RunResult
-from .steps.run_properties import initiate_run_properties
+from .steps.run_properties import construct_run_properties
 from .steps.steps import Steps, ExecutionException
 
 
-def print_status(obj: CliContext, cli_params: MpylCliParameters):
-    run_properties = initiate_run_properties(
-        config=obj.config, properties=obj.run_properties, cli_parameters=cli_params
+def print_status(
+    obj: CliContext, cli_params: MpylCliParameters, explain_run_plan: bool
+):
+    run_properties = construct_run_properties(
+        config=obj.config,
+        properties=obj.run_properties,
+        cli_parameters=cli_params,
+        explain_run_plan=explain_run_plan,
     )
     console = obj.console
     console.print(f"MPyL log level is set to {run_properties.console.log_level}")
@@ -56,7 +61,7 @@ def print_status(obj: CliContext, cli_params: MpylCliParameters):
         console.print(Markdown(f"**Tag:** `{version.tag}` at `{revision}`. "))
     else:
         base_revision_specification = (
-            f"at `{base_revision}`"
+            f"`{main_branch}` at `{base_revision}`"
             if base_revision
             else f"not present. Earliest revision: `{obj.repo.root_commit_hex}` (grafted)."
         )

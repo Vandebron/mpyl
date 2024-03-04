@@ -15,7 +15,7 @@ from mpyl.reporting.targets.jira import JiraReporter
 from mpyl.reporting.targets.jira import compose_build_status
 from mpyl.reporting.targets.slack import SlackReporter
 from mpyl.steps.run import RunResult
-from mpyl.steps.run_properties import initiate_run_properties
+from mpyl.steps.run_properties import construct_run_properties
 from mpyl.utilities.pyaml_env import parse_config
 
 
@@ -32,7 +32,7 @@ def main(logger: Logger):
         accumulator = ReportAccumulator()
         config = parse_config("mpyl_config.yml")
         properties = parse_config("run_properties.yml")
-        run_properties = initiate_run_properties(config=config, properties=properties)
+        run_properties = construct_run_properties(config=config, properties=properties)
 
         commit_check = CommitCheck(config=config, logger=logger)
         accumulator.add(commit_check.send_report(run_result))

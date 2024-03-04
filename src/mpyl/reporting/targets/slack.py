@@ -56,9 +56,9 @@ def to_slack_markdown(markdown: str) -> str:
     regex_replace = (
         (re.compile(r"\[(.*?)\]\((.*?)\)"), r"<\2|\1>"),
         (re.compile(r"^- ", flags=re.M), "• "),
-        (re.compile(r"^  - ", flags=re.M), "  ◦ "),
-        (re.compile(r"^    - ", flags=re.M), "    ⬩ "),
-        (re.compile(r"^      - ", flags=re.M), "    ◽ "),
+        (re.compile(r"^ {2}- ", flags=re.M), "  ◦ "),
+        (re.compile(r"^ {4}- ", flags=re.M), "    ⬩ "),
+        (re.compile(r"^ {6}- ", flags=re.M), "    ◽ "),
         (re.compile(r"^#+ (.+)$", flags=re.M), r"*\1*"),
         (re.compile(r"\*\*"), "*"),
         (re.compile(r"~~"), "~"),
@@ -95,6 +95,7 @@ class SlackOutcome(ReportOutcome):
 class SlackReporter(Reporter):
     _icons: SlackIcons
     _message_identifier: Optional[MessageIdentifier]
+    ICON_ROBOT = ":robot_face:"
 
     def __init__(
         self,
@@ -143,7 +144,7 @@ class SlackReporter(Reporter):
                 self._client.chat_update(
                     channel=self._message_identifier.channel_id,
                     ts=self._message_identifier.time_stamp,
-                    icon_emoji=":robot_face:",
+                    icon_emoji=self.ICON_ROBOT,
                     mrkdwn=True,
                     blocks=blocks,
                     text=body,
@@ -152,7 +153,7 @@ class SlackReporter(Reporter):
 
             response = self._client.chat_postMessage(
                 channel=self._channel,
-                icon_emoji=":robot_face:",
+                icon_emoji=self.ICON_ROBOT,
                 mrkdwn=True,
                 blocks=blocks,
                 text=body,
@@ -180,7 +181,7 @@ class SlackReporter(Reporter):
         self._client.chat_update(
             channel=self._message_identifier.channel_id,
             ts=self._message_identifier.time_stamp,
-            icon_emoji=":robot_face:",
+            icon_emoji=self.ICON_ROBOT,
             mrkdwn=True,
             blocks=blocks,
             text=body,

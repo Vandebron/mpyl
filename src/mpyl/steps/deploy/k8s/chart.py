@@ -531,7 +531,6 @@ class ChartBuilder:
 
         def to_metadata(host: HostWrapper) -> V1ObjectMeta:
             metadata = self._to_object_meta(name=host.full_name)
-            # metadata.annotations = host.white_lists
             metadata.annotations = {
                 k: ", ".join(v) for k, v in host.white_lists.items()
             }

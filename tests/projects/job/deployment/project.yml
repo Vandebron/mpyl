@@ -18,5 +18,7 @@ deployment:
           schedule: "0 22 * * *"
           timeZone: "Europe/Amsterdam"
 dependencies:
+  build:
+    - tests/projects/sbt-service/src/
   test:
     - tests/projects/service/file.py

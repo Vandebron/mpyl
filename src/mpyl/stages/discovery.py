@@ -5,86 +5,180 @@ import logging
 from dataclasses import dataclass
 from typing import Optional
 
-from ..project import Project
+from ..project import Project, Dependencies
 from ..project import Stage
-from ..steps import deploy
+from ..steps import ArtifactType
+from ..steps.collection import StepsCollection
 from ..steps.models import Output
 from ..utilities.repo import Revision
 
 
 @dataclass(frozen=True)
-class DeploySet:
-    all_projects: set[Project]
-    projects_to_deploy: set[Project]
+class ChangedFile:
+    path: str
+    revision: str
 
 
-def is_invalidated(
-    logger: logging.Logger, project: Project, stage: str, path: str
-) -> bool:
-    deps = project.dependencies
-    deps_for_stage = deps.set_for_stage(stage) if deps else {}
-
-    touched_dependency = (
-        next(filter(path.startswith, deps_for_stage), None) if deps else None
+def __log_invalidation(
+    logger: logging.Logger, project: Project, stage: str, path: str, message: str
+) -> None:
+    logger.debug(
+        f"'{project.name}' touched for '{stage}' by '{path}' because {message} "
     )
-    startswith: bool = path.startswith(project.root_path)
-    if touched_dependency:
-        logger.debug(
-            f"Project {project.name}: {path} touched dependency {touched_dependency}"
-        )
-    if startswith:
-        logger.debug(
-            f"Project {project.name}: {path} touched project root {project.root_path}"
-        )
-    return startswith or touched_dependency is not None
 
 
-def output_invalidated(output: Optional[Output], revision_hash: str) -> bool:
-    if output is None:
+def __has_invalidated_dependencies(
+    logger: logging.Logger,
+    deps: Dependencies,
+    project: Project,
+    stage: str,
+    path: str,
+    steps: Optional[StepsCollection],
+) -> bool:
+    touched_stages: set[str] = {
+        dep_stage
+        for dep_stage, dependencies in deps.all().items()
+        if len([d for d in dependencies if path.startswith(d)]) > 0
+    }
+
+    if stage in touched_stages:
+        message = f"it matches the '{stage}' dependencies {deps.for_stage(stage)}"
+        __log_invalidation(logger, project, stage, path, message)
         return True
-    if not output.success:
-        return True
-    if output.produced_artifact is None:
-        return True
-    artifact = output.produced_artifact
-    if artifact.revision != revision_hash:
-        return True
+
+    step_name = project.stages.for_stage(stage)
+    if step_name is None or steps is None:
+        return False
+
+    executor = steps.get_executor(Stage(stage, "icon"), step_name)
+    if executor is None:
+        return False
+
+    required_artifact = executor.required_artifact
+    if required_artifact != ArtifactType.NONE:
+        producing_stage = steps.get_stage_for_producing_artifact(
+            project, required_artifact
+        )
+        if producing_stage is not None and producing_stage in touched_stages:
+            message = (
+                f"is a producing stage {producing_stage} for `{required_artifact}` "
+            )
+            __log_invalidation(logger, project, stage, path, message)
+            return True
 
     return False
 
 
-def _to_relevant_changes(
-    project: Project, stage: str, change_history: list[Revision]
-) -> set[str]:
-    output: Output = Output.try_read(project.target_path, stage)
-    relevant = set()
-    for history in reversed(sorted(change_history, key=lambda c: c.ord)):
-        if stage == deploy.STAGE_NAME or output_invalidated(output, history.hash):
-            relevant.update(history.files_touched)
-        else:
-            return relevant
+def is_invalidated(
+    logger: logging.Logger,
+    project: Project,
+    stage: str,
+    changed_file: ChangedFile,
+    change_history: list[Revision],
+    steps: StepsCollection,
+) -> bool:
+    invalidated_by_file = is_invalidated_by_file(
+        logger, project, stage, changed_file, steps
+    )
+    if invalidated_by_file:
+        output = Output.try_read(project.target_path, stage)
+        return _is_output_invalid(logger, output, change_history, changed_file.revision)
+    return False
 
-    return relevant
+
+def _is_output_invalid(
+    logger: logging.Logger,
+    output: Optional[Output],
+    change_history: list[Revision],
+    changed_file_revision: str,
+) -> bool:
+    if output is None:
+        return True
+    if not output.success:
+        return True
+
+    artifact = output.produced_artifact
+    if artifact is None:
+        return True
+
+    is_newer = _revision_is_newer_than_artifact(
+        artifact.revision, changed_file_revision, change_history
+    )
+
+    valid = "❌ stale" if is_newer else "✅ valid"
+    newer = "newer" if is_newer else "older"
+
+    message = (
+        f"'{artifact.artifact_type.name}' produced by '{artifact.producing_step}' is {valid} "
+        f"because {changed_file_revision} is {newer} than {artifact.revision}  "
+    )
+    logger.debug(message)
+
+    return is_newer
 
 
-def _are_invalidated(
-    logger: logging.Logger, project: Project, stage: str, change_history: list[Revision]
+def is_invalidated_by_file(
+    logger: logging.Logger,
+    project: Project,
+    stage: str,
+    changed_file: ChangedFile,
+    steps: Optional[StepsCollection],
+) -> bool:
+    if changed_file.path.startswith(project.root_path):
+        message = f"it is under the project root '{project.root_path}'"
+        __log_invalidation(logger, project, stage, changed_file.path, message)
+        return True
+
+    deps: Optional[Dependencies] = project.dependencies
+    if deps is None:
+        return False
+    return __has_invalidated_dependencies(
+        logger, deps, project, stage, changed_file.path, steps
+    )
+
+
+def _revision_is_newer_than_artifact(
+    artifact_hash: str, file_hash: str, change_history: list[Revision]
+):
+    hashes = {rev.hash for rev in change_history}
+    if artifact_hash not in hashes:
+        return True
+
+    for rev in sorted(change_history, key=lambda c: c.ord):
+        if rev.hash == file_hash:
+            return False
+        if rev.hash == artifact_hash:
+            return True
+    return True
+
+
+def _to_changed_files(change_history: list[Revision]) -> set[ChangedFile]:
+    relevant = dict[str, str]()
+    for history in sorted(change_history, key=lambda c: c.ord):
+        latest = {path: history.hash for path in history.files_touched}
+        relevant.update(latest)
+
+    return {ChangedFile(path, revision) for path, revision in relevant.items()}
+
+
+def _is_project_invalidated(
+    logger: logging.Logger,
+    project: Project,
+    stage: str,
+    change_history: list[Revision],
+    steps: StepsCollection,
 ) -> bool:
     if project.stages.for_stage(stage) is None:
         return False
 
-    relevant_changes = _to_relevant_changes(project, stage, change_history)
-    return (
-        len(
-            set(
-                filter(
-                    lambda c: is_invalidated(logger, project, stage, c),
-                    relevant_changes,
-                )
-            )
+    changed_files: set[ChangedFile] = _to_changed_files(change_history)
+    changes = set(
+        filter(
+            lambda c: is_invalidated(logger, project, stage, c, change_history, steps),
+            changed_files,
         )
-        > 0
     )
+    return len(changes) > 0
 
 
 def find_invalidated_projects_for_stage(
@@ -92,10 +186,11 @@ def find_invalidated_projects_for_stage(
     all_projects: set[Project],
     stage: str,
     change_history: list[Revision],
+    steps: StepsCollection,
 ) -> set[Project]:
     return set(
         filter(
-            lambda p: _are_invalidated(logger, p, stage, change_history),
+            lambda p: _is_project_invalidated(logger, p, stage, change_history, steps),
             all_projects,
         )
     )
@@ -114,6 +209,7 @@ def find_build_set(
         projects_list = selected_projects.split(",")
 
     build_set = {}
+    steps: StepsCollection = StepsCollection(logger=logging.getLogger())
 
     for stage in stages:
         if selected_stage and selected_stage != stage.name:
@@ -127,7 +223,7 @@ def find_build_set(
             projects = for_stage(all_projects, stage)
         else:
             projects = find_invalidated_projects_for_stage(
-                logger, all_projects, stage.name, changes_in_branch
+                logger, all_projects, stage.name, changes_in_branch, steps
             )
             logger.debug(
                 f"Invalidated projects for stage {stage.name}: {[p.name for p in projects]}"

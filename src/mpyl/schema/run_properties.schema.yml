@@ -105,6 +105,6 @@ properties:
       additionalProperties: false
       properties:
         name:
-          type: string
+          "$ref": "mpyl_stages.schema.yml#/definitions/stageNames"
         icon:
           type: string

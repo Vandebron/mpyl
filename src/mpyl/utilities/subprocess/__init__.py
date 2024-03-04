@@ -7,6 +7,8 @@ from typing import Union
 from ..logging import try_parse_ansi
 from ...steps.models import Output
 
+SUBPROCESS_FAILED = "Subprocess failed"
+
 
 def custom_check_output(
     logger: Logger,
@@ -52,12 +54,9 @@ def custom_check_output(
                     break
             success = process.wait() == 0
             if not success:
-                logger.warning(
-                    "Subprocess failed" + f" with {process.stderr.read()}"
-                    if process.stderr
-                    else ""
-                )
-                return Output(success=False, message="Subprocess failed")
+                if process.stderr:
+                    logger.warning(f"{SUBPROCESS_FAILED} with {process.stderr.read()}")
+                return Output(success=False, message=SUBPROCESS_FAILED)
 
             return Output(success=True, message="Subprocess executed successfully")
 
@@ -71,4 +70,4 @@ def custom_check_output(
     except FileNotFoundError:
         logger.warning(f"'{command_argument}: file not found", exc_info=True)
 
-    return Output(success=False, message="Subprocess failed")
+    return Output(success=False, message=SUBPROCESS_FAILED)
