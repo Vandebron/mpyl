@@ -402,7 +402,7 @@ def ask_for_tag_input(ctx, _param, value) -> Optional[str]:
     callback=ask_for_tag_input,
 )
 @click.pass_context
-def jenkins(  # pylint: disable=too-many-arguments
+def jenkins(  # pylint: disable=too-many-arguments, too-many-locals
     ctx,
     user,
     password,
