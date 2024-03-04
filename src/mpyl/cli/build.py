@@ -432,10 +432,7 @@ def jenkins(  # pylint: disable=too-many-arguments
             pipeline_parameters["BUILD_PARAMS"] = " ".join(arguments)
 
         targets = select_targets()
-        ctx.obj.console.print("targets: ", targets)
-
         for target in targets:
-            ctx.obj.console.print(f"running jenkins for {target}...")
             run_argument = JenkinsRunParameters(
                 jenkins_user=user,
                 jenkins_password=password,
@@ -448,7 +445,6 @@ def jenkins(  # pylint: disable=too-many-arguments
                 tag_target=getattr(Target, target) if tag else None,
             )
             run_jenkins(run_argument)
-        # sys.exit()
     except asyncio.exceptions.TimeoutError:
         pass
 
