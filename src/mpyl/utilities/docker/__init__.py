@@ -68,7 +68,6 @@ class DockerRegistryConfig:
     password: str
     provider: Optional[str]
     region: Optional[str]
-    lifecyclepolicy: Optional[dict]
     cache_from_registry: bool
     custom_cache_config: Optional[DockerCacheConfig]
 
@@ -83,7 +82,6 @@ class DockerRegistryConfig:
                 password=config["password"],
                 provider=config.get("provider", None),
                 region=config.get("region", None),
-                lifecyclepolicy=config.get("lifecyclePolicy", None),
                 cache_from_registry=cache_config.get("cacheFromRegistry", False),
                 custom_cache_config=DockerCacheConfig.from_dict(cache_config["custom"])
                 if "custom" in cache_config
