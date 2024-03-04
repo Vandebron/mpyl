@@ -391,40 +391,4 @@ def create_ecr_repo_if_needed(
             imageTagMutability="MUTABLE",
             encryptionConfiguration={"encryptionType": "AES256"},
         )
-        try:
-            attach_ecr_lifecycle_policy(
-                logger, ecr_client, repo, registry_config.lifecyclepolicy
-            )
-            logger.info(f"ECR ready, pushing image to {repo}...")
-        except TypeError as exc:
-            ecr_client.delete_repository(
-                repositoryName=repo.lower(),
-            )
-            error_msg = (
-                f"To push the docker image to the newly created ECR repository '{repo}', "
-                "a lifecycle policy is required. This is not defined inside mpyl_config.yml. "
-                "Check mpyl_config.schema.yml on how to set this up."
-            )
-            raise TypeError(error_msg) from exc
 
-
-def attach_ecr_lifecycle_policy(logger: Logger, ecr_client, repo, lifecycle_policy):
-    policy = {
-        "rules": [
-            {
-                "rulePriority": lifecycle_policy["rulePriority"],
-                "description": lifecycle_policy["description"],
-                "selection": {
-                    "tagStatus": lifecycle_policy["tagStatus"],
-                    "countType": lifecycle_policy["countType"],
-                    "countNumber": lifecycle_policy["countNumber"],
-                    "countUnit": lifecycle_policy["countUnit"],
-                },
-                "action": {"type": lifecycle_policy["action"]},
-            }
-        ]
-    }
-    ecr_client.put_lifecycle_policy(
-        repositoryName=repo, lifecyclePolicyText=json.dumps(policy)
-    )
-    logger.info(f"Lifecycle policy added to repository '{repo}'.")
