@@ -391,4 +391,3 @@ def create_ecr_repo_if_needed(
             imageTagMutability="MUTABLE",
             encryptionConfiguration={"encryptionType": "AES256"},
         )
-
