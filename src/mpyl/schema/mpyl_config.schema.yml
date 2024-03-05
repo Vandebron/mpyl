@@ -453,6 +453,19 @@ definitions:
         "$ref": "#/definitions/CamundaCluster"
       production:
         "$ref": "#/definitions/CamundaCluster"
+      diagramResourcesPath:
+        type: string
+      dockerDirectoryPath:
+        type: string
+      dockerFilePath:
+        type: string
+      bpmProjectPath:
+        type: string
+    required:
+      - diagramResourcesPath
+      - dockerDirectoryPath
+      - dockerFilePath
+      - bpmProjectPath
   CamundaCluster:
     type: object
     properties:

@@ -88,7 +88,7 @@ properties:
           - Renew Lets Encrypt Deploy
           - Helm Deploy
           - Dagster Deploy
-          - BPMN Diagram Deploy
+          - BPM Diagram Deploy
       postdeploy:
         description: Additional steps that can be done after the project has been deployed.
         examples:
