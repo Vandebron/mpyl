@@ -3,7 +3,7 @@ import os
 from logging import Logger
 from python_on_whales import docker, Container, DockerException
 from ...utilities.docker import execute_with_stream
-from ...utilities.bpmn import CamundaConfig
+from ...utilities.bpm import CamundaConfig
 from . import STAGE_NAME
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
@@ -14,7 +14,7 @@ class BpmnDiagramDeploy(Step):
         super().__init__(
             logger,
             Meta(
-                name="BPMN Diagram Deploy",
+                name="BPM Diagram Deploy",
                 description="Deploy BPMN diagram to Camunda Cluster",
                 version="0.0.1",
                 stage=STAGE_NAME,
@@ -25,12 +25,14 @@ class BpmnDiagramDeploy(Step):
         )
 
     def execute(self, step_input: Input) -> Output:
-        volume_path = os.path.join(os.getcwd(), "bpm")
         camunda_config = CamundaConfig.from_config(
-            step_input.run_properties.config, step_input.run_properties.target
+            step_input.run_properties.config,
+            step_input.run_properties.target,
+            step_input.project.root_path,
         )
+        volume_path = os.path.join(os.getcwd(), camunda_config.bpm_project_path)
         docker_container = self._get_docker_container(volume_path, camunda_config)
-        bpm_file_path = volume_path + "/camunda-diagrams/src/test/resources/"
+        bpm_file_path = camunda_config.bpm_diagram_folder_path
         try:
             for file_name in (
                 [fn for fn in os.listdir(bpm_file_path) if fn.endswith(".bpmn")]
@@ -38,9 +40,10 @@ class BpmnDiagramDeploy(Step):
                 else []
             ):
                 self._logger.info(file_name)
-                run_command = (
-                    f"zbctl deploy camunda-diagrams/src/test/resources/{file_name}"
+                relative_file_path = os.path.relpath(
+                    os.path.join(bpm_file_path, file_name), volume_path
                 )
+                run_command = f"zbctl deploy {relative_file_path}"
                 result = execute_with_stream(
                     logger=self._logger,
                     container=docker_container,
@@ -75,21 +78,20 @@ class BpmnDiagramDeploy(Step):
         docker.build(
             context_path=volume_path,
             tags=[custom_image_tag],
-            file=f"{volume_path}/camunda-diagrams/deployment/Dockerfile",
+            file=f"{volume_path}{camunda_config.docker_file_path}",
         )
 
-        self._logger.debug(volume_path)
         docker_container = docker.run(
             image=custom_image_tag,
             interactive=True,
             detach=True,
-            volumes=[(volume_path, "/camunda-diagrams")],
+            volumes=[(volume_path, camunda_config.docker_directory_path)],
             envs={
                 "ZEEBE_ADDRESS": camunda_config.cluster_id,
                 "ZEEBE_CLIENT_ID": camunda_config.client_id,
                 "ZEEBE_CLIENT_SECRET": camunda_config.client_secret,
             },
-            workdir="/camunda-diagrams",
+            workdir=camunda_config.docker_directory_path,
         )
         if not isinstance(docker_container, Container):
             raise TypeError("Docker run command should return a container")
