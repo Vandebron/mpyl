@@ -431,7 +431,11 @@ def jenkins(  # pylint: disable=too-many-arguments, too-many-locals
         if arguments:
             pipeline_parameters["BUILD_PARAMS"] = " ".join(arguments)
 
-        targets = select_targets()
+        targets = (
+            select_targets()
+            if tag
+            else [Target.PULL_REQUEST.name]  # pylint: disable=no-member
+        )
         for target in targets:
             run_argument = JenkinsRunParameters(
                 jenkins_user=user,
