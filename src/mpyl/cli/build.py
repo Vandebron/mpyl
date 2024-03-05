@@ -310,13 +310,12 @@ def select_tag(ctx) -> str:
         return release.tag_name
 
 
-def select_target():
-    return questionary.select(
+def select_targets() -> list[str]:
+    return questionary.checkbox(
         "Which environment do you want to deploy to?",
-        show_selected=True,
         choices=[
             Choice(title=t.name, value=t.name)  # pylint: disable=no-member
-            for t in [Target.ACCEPTANCE, Target.PULL_REQUEST_BASE, Target.PRODUCTION]
+            for t in [Target.PULL_REQUEST_BASE, Target.ACCEPTANCE, Target.PRODUCTION]
         ],
     ).ask()
 
@@ -403,7 +402,7 @@ def ask_for_tag_input(ctx, _param, value) -> Optional[str]:
     callback=ask_for_tag_input,
 )
 @click.pass_context
-def jenkins(  # pylint: disable=too-many-arguments
+def jenkins(  # pylint: disable=too-many-arguments, too-many-locals
     ctx,
     user,
     password,
@@ -415,9 +414,8 @@ def jenkins(  # pylint: disable=too-many-arguments
     silent,
     tag,
 ):
-    upgrade_check = None
     try:
-        upgrade_check = asyncio.wait_for(warn_if_update(ctx.obj.console), timeout=5)
+        asyncio.run(warn_if_update(ctx.obj.console))
         if "jenkins" not in ctx.obj.config:
             ctx.obj.console.print(
                 "No Jenkins configuration found in config file. "
@@ -433,24 +431,26 @@ def jenkins(  # pylint: disable=too-many-arguments
         if arguments:
             pipeline_parameters["BUILD_PARAMS"] = " ".join(arguments)
 
-        run_argument = JenkinsRunParameters(
-            jenkins_user=user,
-            jenkins_password=password,
-            config=ctx.obj.config,
-            pipeline=selected_pipeline,
-            pipeline_parameters=pipeline_parameters,
-            verbose=not silent or ctx.obj.verbose,
-            follow=not background,
-            tag=tag,
-            tag_target=getattr(Target, select_target()) if tag else None,
+        targets = (
+            select_targets()
+            if tag
+            else [Target.PULL_REQUEST.name]  # pylint: disable=no-member
         )
-
-        run_jenkins(run_argument)
+        for target in targets:
+            run_argument = JenkinsRunParameters(
+                jenkins_user=user,
+                jenkins_password=password,
+                config=ctx.obj.config,
+                pipeline=selected_pipeline,
+                pipeline_parameters=pipeline_parameters,
+                verbose=not silent or ctx.obj.verbose,
+                follow=not background,
+                tag=tag,
+                tag_target=getattr(Target, target) if tag else None,
+            )
+            run_jenkins(run_argument)
     except asyncio.exceptions.TimeoutError:
         pass
-    finally:
-        if upgrade_check:
-            asyncio.get_event_loop().run_until_complete(upgrade_check)
 
 
 @build.command(help=f"Clean MPyL metadata in `{BUILD_ARTIFACTS_FOLDER}` folders")

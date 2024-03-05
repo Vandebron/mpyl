@@ -137,9 +137,9 @@ class JenkinsRunner:
         self.status.console.log()
 
         play_sound(Sound.SUCCESS if finished_build.is_good() else Sound.FAILURE)
-        sys.exit()
 
-    def _stream_logs(self, build_to_follow, duration_estimation, verbose):
+    @staticmethod
+    def _stream_logs(build_to_follow, duration_estimation, verbose):
         progress = Progress(
             TimeElapsedColumn(),
             BarColumn(bar_width=None),
