@@ -19,6 +19,7 @@ to a folder named `$WORKDIR/target/test-reports/`.
 """
 import os
 from logging import Logger
+from typing import Optional
 
 from .post_docker_build import AfterBuildDocker
 from .. import Step, Meta
@@ -84,11 +85,7 @@ class BuildDocker(Step):
         )
         if build_config := step_input.project.build:
             build_args |= {
-                arg.key: (
-                    original_value.replace("{PR-NUMBER}", str(pr_number))
-                    if original_value and pr_number
-                    else original_value
-                )
+                arg.key: BuildDocker.substitute_pr_number(original_value, pr_number)
                 for arg in build_config.args.plain
                 for original_value in [arg.get_value(step_input.run_properties.target)]
                 for pr_number in [step_input.run_properties.versioning.pr_number]
@@ -139,3 +136,10 @@ class BuildDocker(Step):
             message=f"Failed to build docker image for {step_input.project.name}",
             produced_artifact=None,
         )
+
+    @staticmethod
+    def substitute_pr_number(original_value: str, pr_number: Optional[int]) -> Optional[str]:
+        if original_value and pr_number:
+            return original_value.replace("{PR-NUMBER}", str(pr_number))
+        else:
+            return original_value
