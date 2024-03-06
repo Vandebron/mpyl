@@ -84,8 +84,14 @@ class BuildDocker(Step):
         )
         if build_config := step_input.project.build:
             build_args |= {
-                arg.key: arg.get_value(step_input.run_properties.target)
+                arg.key: (
+                    original_value.replace("{PR-NUMBER}", str(pr_number))
+                    if original_value and pr_number
+                    else original_value
+                )
                 for arg in build_config.args.plain
+                for original_value in [arg.get_value(step_input.run_properties.target)]
+                for pr_number in [step_input.run_properties.versioning.pr_number]
             }
 
             env_vars: set[str] = {
