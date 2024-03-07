@@ -168,10 +168,10 @@ class RunProperties:
         )
 
     @property
-    def projects_to_deploy(self):
+    def projects_to_deploy(self) -> set[ProjectExecution]:
         return next(
-            project
-            for stage, project in self.run_plan.items()
+            project_execution
+            for stage, project_execution in self.run_plan.items()
             if stage.name == deploy.STAGE_NAME
         )
 

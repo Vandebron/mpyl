@@ -2,14 +2,15 @@ from pathlib import Path
 
 from ruamel.yaml import YAML
 
-from src.mpyl.utilities.helm import get_name_suffix
-from src.mpyl.utilities.yaml import yaml_to_string
 from src.mpyl import parse_config
 from src.mpyl.project import load_project
+from src.mpyl.project_execution import ProjectExecution
 from src.mpyl.steps import Input
 from src.mpyl.steps.deploy.k8s.chart import ChartBuilder
 from src.mpyl.steps.deploy.k8s.resources.dagster import to_user_code_values
 from src.mpyl.utilities.docker import DockerConfig
+from src.mpyl.utilities.helm import get_name_suffix
+from src.mpyl.utilities.yaml import yaml_to_string
 from tests import root_test_path
 from tests.test_resources import test_data
 from tests.test_resources.test_data import assert_roundtrip
@@ -36,7 +37,10 @@ class TestDagster:
 
     def test_generate_correct_values_yaml_with_service_account_override(self):
         step_input = Input(
-            load_project(self.resource_path, Path("project.yml"), True),
+            ProjectExecution(
+                project=load_project(self.resource_path, Path("project.yml"), True),
+                changed_files=frozenset(),
+            ),
             test_data.RUN_PROPERTIES,
             None,
         )
@@ -58,7 +62,10 @@ class TestDagster:
 
     def test_generate_correct_values_yaml_with_production_target(self):
         step_input = Input(
-            load_project(self.resource_path, Path("project.yml"), True),
+            ProjectExecution(
+                project=load_project(self.resource_path, Path("project.yml"), True),
+                changed_files=frozenset(),
+            ),
             test_data.RUN_PROPERTIES_PROD,
             None,
         )
@@ -78,7 +85,10 @@ class TestDagster:
 
     def test_generate_correct_values_yaml_without_service_account_override(self):
         step_input = Input(
-            load_project(self.resource_path, Path("project.yml"), True),
+            ProjectExecution(
+                project=load_project(self.resource_path, Path("project.yml"), True),
+                changed_files=frozenset(),
+            ),
             test_data.RUN_PROPERTIES,
             None,
         )
@@ -100,8 +110,11 @@ class TestDagster:
 
     def test_generate_with_sealed_secret_as_extra_manifest(self):
         step_input = Input(
-            load_project(
-                self.resource_path, Path("project_with_sealed_secret.yml"), True
+            ProjectExecution(
+                project=load_project(
+                    self.resource_path, Path("project_with_sealed_secret.yml"), True
+                ),
+                changed_files=frozenset(),
             ),
             test_data.RUN_PROPERTIES,
             None,

@@ -4,11 +4,11 @@ from src.mpyl.steps.models import Input
 from src.mpyl.steps.test.sbt import TestSbt
 from src.mpyl.utilities.sbt import SbtConfig
 from tests.test_resources import test_data
-from tests.test_resources.test_data import get_project
+from tests.test_resources.test_data import get_project_execution
 
 
 class TestBuildSbt:
-    step_input = Input(get_project(), test_data.RUN_PROPERTIES, None)
+    step_input = Input(get_project_execution(), test_data.RUN_PROPERTIES, None)
     sbt_config = SbtConfig.from_config(config=step_input.run_properties.config)
 
     def test_sbt_test_compile_command_should_be_properly_constructed(self):

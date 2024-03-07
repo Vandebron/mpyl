@@ -135,7 +135,7 @@ class TestDiscovery:
             assert len(projects_for_build) == 1
             assert len(projects_for_test) == 1
             assert len(projects_for_deploy) == 2
-            assert projects_for_deploy.pop().kubernetes.port_mappings == {
+            assert projects_for_deploy.pop().project.kubernetes.port_mappings == {
                 8088: 8088,
                 8089: 8089,
             }

@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from mpyl.project_execution import ProjectExecution
 from src.mpyl.project import load_project, get_env_variables
+from src.mpyl.project_execution import ProjectExecution
 from src.mpyl.steps.models import Input
 from tests import root_test_path
 from tests.test_resources import test_data

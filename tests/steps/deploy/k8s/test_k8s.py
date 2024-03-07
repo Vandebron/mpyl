@@ -6,6 +6,7 @@ from pyaml_env import parse_config
 
 from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME
 from src.mpyl.project import Target, Project
+from src.mpyl.project_execution import ProjectExecution
 from src.mpyl.steps.deploy.k8s import cluster_config, render_manifests
 from src.mpyl.steps.deploy.k8s.chart import (
     ChartBuilder,
@@ -30,6 +31,7 @@ from tests.test_resources.test_data import (
     get_cron_job_project,
     get_minimal_project,
     TestStage,
+    get_project_execution,
 )
 
 
@@ -56,23 +58,27 @@ class TestKubernetesChart:
 
     @staticmethod
     def _get_builder(project: Project, run_properties=None):
+        project_execution = ProjectExecution(project=project, changed_files=frozenset())
+
         if not run_properties:
-            projects = {project}
+            project_executions = {project_execution}
             run_plan = {
-                TestStage.build(): projects,
-                TestStage.test(): projects,
-                TestStage.deploy(): projects,
+                TestStage.build(): project_executions,
+                TestStage.test(): project_executions,
+                TestStage.deploy(): project_executions,
             }
             run_properties = test_data.run_properties_with_plan(plan=run_plan)
+
         required_artifact = Artifact(
             artifact_type=ArtifactType.DOCKER_IMAGE,
             revision="revision",
             producing_step="build_docker_Step",
             spec=DockerImageSpec("registry/image:123"),
         )
+
         return ChartBuilder(
             step_input=Input(
-                project,
+                project_execution=project_execution,
                 run_properties=run_properties,
                 required_artifact=required_artifact,
             ),
@@ -118,7 +124,7 @@ class TestKubernetesChart:
 
     def test_load_cluster_config(self):
         step_input = Input(
-            get_project(),
+            get_project_execution(),
             test_data.RUN_PROPERTIES,
             required_artifact=test_data.get_output().produced_artifact,
             dry_run=True,
