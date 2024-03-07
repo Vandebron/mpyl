@@ -445,27 +445,33 @@ definitions:
   Camunda:
     type: object
     properties:
-      pr:
-        "$ref": "#/definitions/CamundaCluster"
-      test:
-        "$ref": "#/definitions/CamundaCluster"
-      acceptance:
-        "$ref": "#/definitions/CamundaCluster"
-      production:
-        "$ref": "#/definitions/CamundaCluster"
-      diagramResourcesPath:
-        type: string
-      dockerDirectoryPath:
-        type: string
-      dockerFilePath:
-        type: string
-      bpmProjectPath:
-        type: string
+      zeebeCredentials:
+        type: object
+        properties:
+          pr:
+            "$ref": "#/definitions/CamundaCluster"
+          test:
+            "$ref": "#/definitions/CamundaCluster"
+          acceptance:
+            "$ref": "#/definitions/CamundaCluster"
+          production:
+            "$ref": "#/definitions/CamundaCluster"
+        required: [ 'pr', 'test', 'acceptance', 'production' ]
+      camundaDeploymentPath:
+        type: object
+        properties:
+          diagramResourcesPath:
+            type: string
+          dockerDirectoryPath:
+            type: string
+          dockerFilePath:
+            type: string
+          bpmProjectPath:
+            type: string
+        required: [ 'diagramResourcesPath', 'dockerDirectoryPath', 'dockerFilePath', 'bpmProjectPath' ]
     required:
-      - diagramResourcesPath
-      - dockerDirectoryPath
-      - dockerFilePath
-      - bpmProjectPath
+      - zeebeCredentials
+      - camundaDeploymentPath
   CamundaCluster:
     type: object
     properties:
