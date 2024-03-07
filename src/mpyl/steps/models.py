@@ -279,7 +279,7 @@ def input_to_artifact(
     return Artifact(
         artifact_type=artifact_type,
         revision=step_input.run_properties.versioning.revision,
-        hash=step_input.project_execution.hashed_files,
+        hash=step_input.project_execution.hashed_changes,
         producing_step=step_input.project_execution.name,
         spec=spec,
     )

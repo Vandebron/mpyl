@@ -15,13 +15,15 @@ class ProjectExecution:
         return self.project.name
 
     @property
-    def hashed_files(self):
-        hash_sha256 = hashlib.sha256()
-
-        for filename in self.changed_files:
+    def hashed_changes(self):
+        def sha256(filename: str):
             with open(filename, "rb") as file:
-                for chunk in iter(lambda: file.read(4096), b""):
-                    hash_sha256.update(chunk)
+                return hashlib.file_digest(file, "sha256").hexdigest()
+
+        # what's better than hashing once? hashing twice!
+        hash_sha256 = hashlib.sha256()
+        for changed_file in self.changed_files:
+            hash_sha256.update(sha256(changed_file))
 
         changes_hash = hash_sha256.hexdigest()
         print(f"hash of changes for ${self.name}: ${changes_hash}")
