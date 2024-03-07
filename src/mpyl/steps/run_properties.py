@@ -5,6 +5,7 @@ from typing import Optional
 
 from ..cli import MpylCliParameters
 from ..project import load_project, Stage, Project
+from ..project_execution import ProjectExecution
 from ..stages.discovery import find_build_set
 from ..steps.models import RunProperties
 from ..utilities.repo import Repository, RepoConfig
@@ -14,7 +15,7 @@ def initiate_run_properties(
     config: dict,
     properties: dict,
     cli_parameters: MpylCliParameters = MpylCliParameters(),
-    run_plan: Optional[dict[Stage, set[Project]]] = None,
+    run_plan: Optional[dict[Stage, set[ProjectExecution]]] = None,
     all_projects: Optional[set[Project]] = None,
 ) -> RunProperties:
     tag = cli_parameters.tag or properties["build"]["versioning"].get("tag")

@@ -26,10 +26,10 @@ class DeployEcho(Step):
         artifact = step_input.as_spec(DockerImageSpec)
 
         self._logger.info(
-            f"Deploying project {step_input.project.name} with artifact: {artifact}"
+            f"Deploying project {step_input.project_execution.name} with artifact: {artifact}"
         )
         return Output(
             success=True,
-            message=f"Deployed project {step_input.project.name}",
+            message=f"Deployed project {step_input.project_execution.name}",
             produced_artifact=None,
         )

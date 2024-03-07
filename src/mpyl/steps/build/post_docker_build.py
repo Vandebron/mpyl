@@ -35,7 +35,9 @@ class AfterBuildDocker(Step):
 
         properties = step_input.run_properties
         docker_config: DockerConfig = DockerConfig.from_dict(properties.config)
-        docker_registry = registry_for_project(docker_config, step_input.project)
+        docker_registry = registry_for_project(
+            docker_config, step_input.project_execution.project
+        )
 
         full_image_path = docker_registry_path(docker_registry, image_name)
         artifact = Artifact(

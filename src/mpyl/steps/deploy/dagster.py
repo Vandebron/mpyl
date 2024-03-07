@@ -96,7 +96,7 @@ class DeployDagster(Step):
 
         name_suffix = get_name_suffix(properties)
         release_name = convert_to_helm_release_name(
-            step_input.project.name, name_suffix
+            step_input.project_execution.name, name_suffix
         )
 
         builder = ChartBuilder(step_input)
@@ -112,7 +112,7 @@ class DeployDagster(Step):
 
         self._logger.debug(f"Deploying user code with values: {user_code_deployment}")
 
-        values_path = Path(step_input.project.target_path)
+        values_path = Path(step_input.project_execution.project.target_path)
         self._logger.info(f"Writing Helm values to {values_path}")
 
         write_chart(

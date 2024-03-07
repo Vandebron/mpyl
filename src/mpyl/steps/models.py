@@ -1,5 +1,5 @@
 """ Model representation of run-specific configuration. """
-
+import hashlib
 import pkgutil
 from dataclasses import dataclass
 from enum import Enum
@@ -10,6 +10,7 @@ from ruamel.yaml import YAML, yaml_object  # type: ignore
 
 from . import deploy
 from ..project import Project, Stage, Target
+from ..project_execution import ProjectExecution
 from ..validation import validate
 
 yaml = YAML()
@@ -96,13 +97,13 @@ class RunProperties:
     """All stage definitions"""
     projects: set[Project]
     """All projects"""
-    run_plan: dict[Stage, set[Project]]
+    run_plan: dict[Stage, set[ProjectExecution]]
     """Stages and projects for this run"""
 
     @staticmethod
     def for_local_run(
         config: dict,
-        run_plan: dict[Stage, set[Project]],
+        run_plan: dict[Stage, set[ProjectExecution]],
         revision: str,
         branch: Optional[str],
         stages: list[Stage],
@@ -124,7 +125,7 @@ class RunProperties:
     def from_configuration(
         run_properties: dict,
         config: dict,
-        run_plan: dict[Stage, set[Project]],
+        run_plan: dict[Stage, set[ProjectExecution]],
         all_projects: set[Project],
         cli_tag: Optional[str],
     ):
@@ -226,12 +227,14 @@ class Artifact:
     revision: str
     producing_step: str
     spec: ArtifactSpec
+    hash: Optional[str] = None
+    # add init with default value for hash
 
 
 @yaml_object(yaml)
 @dataclass(frozen=True)
 class Input:
-    project: Project
+    project_execution: ProjectExecution
     run_properties: RunProperties
     """Run specific properties"""
     required_artifact: Optional[Artifact] = None
@@ -240,7 +243,9 @@ class Input:
     def as_spec(self, spec_type: Type[ArtifactSpec]):
         """Returns the artifact spec as type :param typ:"""
         if self.required_artifact is None:
-            raise ValueError(f"Artifact required for {self.project.name} not set")
+            raise ValueError(
+                f"Artifact required for {self.project_execution.name} not set"
+            )
         return cast(spec_type, self.required_artifact.spec)  # type: ignore
 
 
@@ -275,6 +280,7 @@ def input_to_artifact(
     return Artifact(
         artifact_type=artifact_type,
         revision=step_input.run_properties.versioning.revision,
-        producing_step=step_input.project.name,
+        hash=step_input.project_execution.hashed_files,
+        producing_step=step_input.project_execution.name,
         spec=spec,
     )

@@ -6,12 +6,13 @@ import operator
 from typing import Optional
 
 from .models import RunProperties
-from ..project import Stage, Project
 from .steps import StepResult, ExecutionException
+from ..project import Stage, Project
+from ..project_execution import ProjectExecution
 
 
 class RunResult:
-    _run_plan: dict[Stage, set[Project]]
+    _run_plan: dict[Stage, set[ProjectExecution]]
     _results: list[StepResult]
     _run_properties: RunProperties
     _exception: Optional[ExecutionException]
@@ -74,12 +75,15 @@ class RunResult:
         return self._run_properties
 
     @property
-    def run_plan(self) -> dict[Stage, set[Project]]:
+    def run_plan(self) -> dict[Stage, set[ProjectExecution]]:
         return self._run_plan
 
     @property
     def has_run_plan_projects(self) -> bool:
-        return not all(len(projects) == 0 for stage, projects in self.run_plan.items())
+        return not all(
+            len(project_execution) == 0
+            for stage, project_execution in self.run_plan.items()
+        )
 
     @property
     def results(self) -> list[StepResult]:
@@ -91,7 +95,7 @@ class RunResult:
     def extend(self, results: list[StepResult]):
         self._results.extend(results)
 
-    def update_run_plan(self, run_plan: dict[Stage, set[Project]]):
+    def update_run_plan(self, run_plan: dict[Stage, set[ProjectExecution]]):
         self._run_plan.update(run_plan)
 
     @property
@@ -125,8 +129,8 @@ class RunResult:
         )
 
     def plan_for_stage(self, stage: Stage) -> set[Project]:
-        plan: Optional[set[Project]] = self.run_plan.get(stage)
+        plan: Optional[set[ProjectExecution]] = self.run_plan.get(stage)
         if plan:
-            return plan
+            return {execution.project for execution in plan}
 
         return set()

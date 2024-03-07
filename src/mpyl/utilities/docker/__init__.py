@@ -163,7 +163,7 @@ def stream_docker_logging(
 def docker_image_tag(step_input: Input) -> str:
     git = step_input.run_properties.versioning
     tag = git.tag if git.tag else f"pr-{git.pr_number}"
-    return f"{step_input.project.name.lower()}:{tag}".replace("/", "_")
+    return f"{step_input.project_execution.name.lower()}:{tag}".replace("/", "_")
 
 
 def get_default_build_args(
@@ -190,7 +190,9 @@ def full_image_path_for_project(step_input: Input) -> str:
     docker_config: DockerConfig = DockerConfig.from_dict(
         step_input.run_properties.config
     )
-    docker_registry = registry_for_project(docker_config, step_input.project)
+    docker_registry = registry_for_project(
+        docker_config, step_input.project_execution.project
+    )
 
     image_name = docker_image_tag(step_input)
     return (

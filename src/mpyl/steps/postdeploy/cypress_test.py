@@ -36,21 +36,23 @@ class CypressTest(Step):
             )
 
         self._logger.info(
-            f"Running cypress tests for project {step_input.project.name}"
+            f"Running cypress tests for project {step_input.project_execution.name}"
         )
         cypress_config = CypressConfig.from_config(step_input.run_properties.config)
         volume_path = os.path.join(os.getcwd(), cypress_config.cypress_source_code_path)
 
         if (
-            step_input.project.dependencies
-            and step_input.project.dependencies.postdeploy
+            step_input.project_execution.project.dependencies
+            and step_input.project_execution.project.dependencies.postdeploy
         ):
-            specs_string = ",".join(step_input.project.dependencies.postdeploy)
+            specs_string = ",".join(
+                step_input.project_execution.project.dependencies.postdeploy
+            )
         else:
             raise ValueError("No cypress specs are defined in the project dependencies")
 
         docker_container = self._get_docker_container(volume_path, cypress_config)
-        reports_folder = f"reports/{step_input.project.name}"
+        reports_folder = f"reports/{step_input.project_execution.name}"
         artifact = input_to_artifact(
             artifact_type=ArtifactType.JUNIT_TESTS,
             step_input=step_input,
@@ -63,7 +65,9 @@ class CypressTest(Step):
             record_key = cypress_config.record_key
 
             if record_key:
-                ci_build_id = f"{cypress_config.ci_build_id}-{step_input.project.name}"
+                ci_build_id = (
+                    f"{cypress_config.ci_build_id}-{step_input.project_execution.name}"
+                )
                 run_command = (
                     f'bash -c "Xvfb :10$MACHINE & XDG_CONFIG_HOME=/tmp/cyhome$MACHINE '
                     f"DISPLAY=:10$MACHINE  yarn cypress run --spec '{specs_string}' --ci-build-id "
@@ -117,7 +121,7 @@ class CypressTest(Step):
         except DockerException:
             return Output(
                 success=False,
-                message=f"Cypress tests for project {step_input.project.name} have one or more failures",
+                message=f"Cypress tests for project {step_input.project_execution.name} have one or more failures",
                 produced_artifact=artifact,
             )
         finally:
@@ -126,7 +130,7 @@ class CypressTest(Step):
 
         return Output(
             success=True,
-            message=f"Cypress tests for project {step_input.project.name} passed",
+            message=f"Cypress tests for project {step_input.project_execution.name} passed",
             produced_artifact=artifact,
         )
 

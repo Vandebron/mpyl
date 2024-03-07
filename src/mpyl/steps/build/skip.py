@@ -22,8 +22,10 @@ class BuildSkip(Step):
         )
 
     def execute(self, step_input: Input) -> Output:
-        self._logger.info(f"Skip build stage for project {step_input.project.name}")
+        self._logger.info(
+            f"Skip build stage for project {step_input.project_execution.name}"
+        )
         return Output(
             success=True,
-            message=f"Skipped build stage for project {step_input.project.name}",
+            message=f"Skipped build stage for project {step_input.project_execution.name}",
         )

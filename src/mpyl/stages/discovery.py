@@ -7,6 +7,7 @@ from typing import Optional
 
 from ..project import Project
 from ..project import Stage
+from ..project_execution import ProjectExecution
 from ..steps import deploy
 from ..steps.models import Output
 from ..utilities.repo import Revision
@@ -67,38 +68,46 @@ def _to_relevant_changes(
     return relevant
 
 
-def _are_invalidated(
+def _to_project_execution(
     logger: logging.Logger, project: Project, stage: str, change_history: list[Revision]
-) -> bool:
+) -> Optional[ProjectExecution]:
     if project.stages.for_stage(stage) is None:
-        return False
+        return None
 
     relevant_changes = _to_relevant_changes(project, stage, change_history)
-    return (
-        len(
-            set(
-                filter(
-                    lambda c: is_invalidated(logger, project, stage, c),
-                    relevant_changes,
-                )
-            )
+    files_changed_for_this_project = frozenset(
+        filter(
+            lambda c: is_invalidated(logger, project, stage, c),
+            relevant_changes,
         )
-        > 0
+    )
+
+    return (
+        ProjectExecution(project, files_changed_for_this_project)
+        if files_changed_for_this_project
+        else None
     )
 
 
-def find_invalidated_projects_for_stage(
+def build_project_executions(
     logger: logging.Logger,
     all_projects: set[Project],
     stage: str,
     change_history: list[Revision],
-) -> set[Project]:
-    return set(
-        filter(
-            lambda p: _are_invalidated(logger, p, stage, change_history),
+) -> set[ProjectExecution]:
+    maybe_execution_projects = set(
+        map(
+            lambda project: _to_project_execution(
+                logger, project, stage, change_history
+            ),
             all_projects,
         )
     )
+    return {
+        project_execution
+        for project_execution in maybe_execution_projects
+        if project_execution is not None
+    }
 
 
 def find_build_set(
@@ -109,7 +118,7 @@ def find_build_set(
     build_all: bool,
     selected_stage: Optional[str] = None,
     selected_projects: Optional[str] = None,
-) -> dict[Stage, set[Project]]:
+) -> dict[Stage, set[ProjectExecution]]:
     if selected_projects:
         projects_list = selected_projects.split(",")
 
@@ -125,15 +134,16 @@ def find_build_set(
                     filter(lambda p: p.name in projects_list, all_projects)
                 )
             projects = for_stage(all_projects, stage)
+            project_executions = {ProjectExecution(p, set()) for p in projects}
         else:
-            projects = find_invalidated_projects_for_stage(
+            project_executions = build_project_executions(
                 logger, all_projects, stage.name, changes_in_branch
             )
             logger.debug(
-                f"Invalidated projects for stage {stage.name}: {[p.name for p in projects]}"
+                f"Invalidated projects for stage {stage.name}: {[p.name for p in project_executions]}"
             )
 
-        build_set.update({stage: projects})
+        build_set.update({stage: project_executions})
 
     return build_set
 

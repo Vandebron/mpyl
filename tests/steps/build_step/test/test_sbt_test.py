@@ -13,7 +13,7 @@ class TestBuildSbt:
 
     def test_sbt_test_compile_command_should_be_properly_constructed(self):
         command = TestSbt._construct_sbt_command(
-            self.step_input.project.name,
+            self.step_input.project_execution.name,
             self.sbt_config,
             True,
         )
@@ -25,7 +25,7 @@ class TestBuildSbt:
 
     def test_sbt_test_test_command_should_be_properly_constructed(self):
         command = TestSbt._construct_sbt_command(
-            self.step_input.project.name,
+            self.step_input.project_execution.name,
             self.sbt_config,
             False,
         )
@@ -43,7 +43,7 @@ class TestBuildSbt:
             sbt_config, test_with_coverage=False, test_with_client=True, verbose=False
         )
         command = TestSbt._construct_sbt_command(
-            self.step_input.project.name, sbt_config_with_coverage, True
+            self.step_input.project_execution.name, sbt_config_with_coverage, True
         )
         assert " ".join(command) == (
             "sbtn -J-Xmx4G -J-Xms4G -J-XX:+UseG1GC -J-XX:+CMSClassUnloadingEnabled "
@@ -59,7 +59,7 @@ class TestBuildSbt:
             sbt_config, test_with_coverage=False, test_with_client=True, verbose=False
         )
         command = TestSbt._construct_sbt_command(
-            self.step_input.project.name, sbt_config_with_coverage, False
+            self.step_input.project_execution.name, sbt_config_with_coverage, False
         )
         assert " ".join(command) == (
             "sbtn -J-Xmx4G -J-Xms4G -J-XX:+UseG1GC -J-XX:+CMSClassUnloadingEnabled "

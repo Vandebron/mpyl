@@ -23,7 +23,7 @@ class BuildEcho(Step):
         )
 
     def execute(self, step_input: Input) -> Output:
-        self._logger.info(f"Building project {step_input.project.name}")
+        self._logger.info(f"Building project {step_input.project_execution.name}")
         artifact = input_to_artifact(
             ArtifactType.DOCKER_IMAGE,
             step_input,
@@ -31,6 +31,6 @@ class BuildEcho(Step):
         )
         return Output(
             success=True,
-            message=f"Built {step_input.project.name}",
+            message=f"Built {step_input.project_execution.name}",
             produced_artifact=artifact,
         )

@@ -243,12 +243,15 @@ class Repository:  # pylint: disable=too-many-public-methods
         return Revision.from_git_output(revs, changed_files)
 
     def changes_in_branch(self) -> list[Revision]:
-        base_ref = self.base_revision
-        base_hex = base_ref.hexsha if base_ref else self.root_commit_hex
+        base = self._repo.merge_base(self.main_origin_branch, "HEAD")[0]
+        if base:
+            changed_files = self._repo.git.diff(
+                f"HEAD..{base.hexsha}", name_only=True
+            ).splitlines()
 
-        head_hex = self._repo.active_branch.commit.hexsha
+            return [Revision(1, self.get_sha, set(changed_files))]
 
-        return self.changes_between(base_hex, head_hex)
+        return []
 
     def changes_in_commit(self) -> set[str]:
         changed: set[str] = set(

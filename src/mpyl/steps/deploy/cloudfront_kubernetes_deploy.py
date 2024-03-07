@@ -50,7 +50,7 @@ class CloudFrontKubernetesDeploy(Step):
         Copies the static assets from the docker image to a temp folder
         """
         full_image_path = full_image_path_for_project(step_input)
-        container_path = f"{step_input.project.name}/{STATIC_FOLDER}"
+        container_path = f"{step_input.project_execution.name}/{STATIC_FOLDER}"
         container = create_container(logger, full_image_path)
         docker_copy(
             logger=logger,
@@ -66,10 +66,10 @@ class CloudFrontKubernetesDeploy(Step):
         """
         logger.info("Creating S3 client")
 
-        bucket_name = step_input.project.s3_bucket.bucket.get_value(
+        bucket_name = step_input.project_execution.project.s3_bucket.bucket.get_value(
             step_input.run_properties.target
         )
-        bucket_region = step_input.project.s3_bucket.region
+        bucket_region = step_input.project_execution.project.s3_bucket.region
 
         s3_config = S3ClientConfig(
             run_properties=step_input.run_properties,

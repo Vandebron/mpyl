@@ -65,10 +65,12 @@ class BuildDocker(Step):
 
         image_tag = docker_image_tag(step_input)
         dockerfile = docker_file_path(
-            project=step_input.project, docker_config=docker_config
+            project=step_input.project_execution.project, docker_config=docker_config
         )
 
-        docker_registry_config = registry_for_project(docker_config, step_input.project)
+        docker_registry_config = registry_for_project(
+            docker_config, step_input.project_execution.project
+        )
         if not step_input.dry_run:
             # log in to registry, because we may need to pull in a base image
             login(logger=self._logger, registry_config=docker_registry_config)
@@ -79,10 +81,10 @@ class BuildDocker(Step):
 
         build_args: dict[str, str] = get_default_build_args(
             full_image_path_for_project(step_input),
-            step_input.project.maintainer,
+            step_input.project_execution.project.maintainer,
             step_input.run_properties.versioning.identifier,
         )
-        if build_config := step_input.project.build:
+        if build_config := step_input.project_execution.project.build:
             build_args |= {
                 arg.key: arg.get_value(step_input.run_properties.target)
                 for arg in build_config.args.plain
@@ -95,11 +97,11 @@ class BuildDocker(Step):
                 set(os.environ).union(set(build_args.keys()))
             ):
                 self._logger.error(
-                    f"Project {step_input.project.name} requires {missing} environment variable(s) to be set"
+                    f"Project {step_input.project_execution.name} requires {missing} environment variable(s) to be set"
                 )
                 return Output(
                     success=False,
-                    message=f"Failed to build docker image for {step_input.project.name}",
+                    message=f"Failed to build docker image for {step_input.project_execution.name}",
                     produced_artifact=None,
                 )
 
@@ -124,12 +126,12 @@ class BuildDocker(Step):
         if success:
             return Output(
                 success=True,
-                message=f"Built {step_input.project.name}",
+                message=f"Built {step_input.project_execution.name}",
                 produced_artifact=artifact,
             )
 
         return Output(
             success=False,
-            message=f"Failed to build docker image for {step_input.project.name}",
+            message=f"Failed to build docker image for {step_input.project_execution.name}",
             produced_artifact=None,
         )

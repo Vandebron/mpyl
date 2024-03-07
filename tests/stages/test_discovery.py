@@ -7,7 +7,7 @@ from src.mpyl.project import load_project
 from src.mpyl.constants import BUILD_ARTIFACTS_FOLDER
 from src.mpyl.projects.find import load_projects
 from src.mpyl.stages.discovery import (
-    find_invalidated_projects_for_stage,
+    build_project_executions,
     output_invalidated,
     is_invalidated,
 )
@@ -30,7 +30,7 @@ class TestDiscovery:
             projects = set(load_projects(repo.root_dir, repo.find_projects()))
             assert (
                 len(
-                    find_invalidated_projects_for_stage(
+                    build_project_executions(
                         self.logger,
                         projects,
                         build.STAGE_NAME,
@@ -41,7 +41,7 @@ class TestDiscovery:
             )
             assert (
                 len(
-                    find_invalidated_projects_for_stage(
+                    build_project_executions(
                         self.logger,
                         projects,
                         test.STAGE_NAME,
@@ -52,7 +52,7 @@ class TestDiscovery:
             )
             assert (
                 len(
-                    find_invalidated_projects_for_stage(
+                    build_project_executions(
                         self.logger,
                         projects,
                         deploy.STAGE_NAME,
@@ -69,7 +69,7 @@ class TestDiscovery:
             "projects/sbt-service/deployment/project.yml",
         ]
         projects = set(load_projects(root_test_path, project_paths))
-        invalidated = find_invalidated_projects_for_stage(
+        invalidated = build_project_executions(
             self.logger,
             projects,
             TestStage.build().name,
@@ -114,19 +114,19 @@ class TestDiscovery:
             touched_files = {"tests/projects/overriden-project/file.py"}
             projects = load_projects(repo.root_dir, repo.find_projects())
             assert len(projects) == 13
-            projects_for_build = find_invalidated_projects_for_stage(
+            projects_for_build = build_project_executions(
                 self.logger,
                 projects,
                 build.STAGE_NAME,
                 [Revision(0, "revision", touched_files)],
             )
-            projects_for_test = find_invalidated_projects_for_stage(
+            projects_for_test = build_project_executions(
                 self.logger,
                 projects,
                 test.STAGE_NAME,
                 [Revision(0, "revision", touched_files)],
             )
-            projects_for_deploy = find_invalidated_projects_for_stage(
+            projects_for_deploy = build_project_executions(
                 self.logger,
                 projects,
                 deploy.STAGE_NAME,

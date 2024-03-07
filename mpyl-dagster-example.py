@@ -12,7 +12,7 @@ from dagster import (
 )
 
 from mpyl.project import load_project, Project
-from mpyl.stages.discovery import find_invalidated_projects_for_stage
+from mpyl.stages.discovery import build_project_executions
 from mpyl.steps import build, test, deploy
 from mpyl.steps.run_properties import initiate_run_properties
 from mpyl.steps.steps import Steps, StepResult
@@ -77,9 +77,7 @@ def find_projects(stage: str) -> list[DynamicOutput[Project]]:
     all_projects = set(
         map(lambda p: load_project(Path("."), Path(p), strict=False), project_paths)
     )
-    invalidated = find_invalidated_projects_for_stage(
-        all_projects, stage, changes_in_branch
-    )
+    invalidated = build_project_executions(all_projects, stage, changes_in_branch)
     return list(
         map(
             lambda project: DynamicOutput(

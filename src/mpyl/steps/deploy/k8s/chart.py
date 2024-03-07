@@ -204,7 +204,7 @@ class ChartBuilder:
 
     def __init__(self, step_input: Input):
         self.step_input = step_input
-        project = self.step_input.project
+        project = self.step_input.project_execution.project
         self.project = project
         if project.deployment is None:
             raise AttributeError("deployment field should be set")
