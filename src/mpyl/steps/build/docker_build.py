@@ -85,10 +85,11 @@ class BuildDocker(Step):
         )
         if build_config := step_input.project.build:
             build_args |= {
-                arg.key: BuildDocker.substitute_pr_number(original_value, pr_number)
+                arg.key: BuildDocker.substitute_pr_number(
+                    arg.get_value(step_input.run_properties.target),
+                    step_input.run_properties.versioning.pr_number,
+                )
                 for arg in build_config.args.plain
-                for original_value in [arg.get_value(step_input.run_properties.target)]
-                for pr_number in [step_input.run_properties.versioning.pr_number]
             }
 
             env_vars: set[str] = {
@@ -138,8 +139,7 @@ class BuildDocker(Step):
         )
 
     @staticmethod
-    def substitute_pr_number(original_value: str, pr_number: Optional[int]) -> Optional[str]:
+    def substitute_pr_number(original_value: Optional[str], pr_number: Optional[int]):
         if original_value and pr_number:
             return original_value.replace("{PR-NUMBER}", str(pr_number))
-        else:
-            return original_value
+        return original_value
