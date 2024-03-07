@@ -7,3 +7,4 @@ produced_artifact: !Artifact
   producing_step: Producing Step
   spec: !DockerImageSpec
     image: image:latest
+  hash: a generated hash

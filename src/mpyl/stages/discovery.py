@@ -1,6 +1,7 @@
 """ Discovery of projects that are relevant to a specific `mpyl.stage.Stage` . Determine which of the
 discovered projects have been invalidated due to changes in the source code since the last build of the project's
 output artifact."""
+import hashlib
 import logging
 from dataclasses import dataclass
 from typing import Optional
@@ -10,7 +11,7 @@ from ..project import Stage
 from ..project_execution import ProjectExecution
 from ..steps import deploy
 from ..steps.models import Output
-from ..utilities.repo import Revision
+from ..utilities.repo import Changeset
 
 
 @dataclass(frozen=True)
@@ -19,87 +20,121 @@ class DeploySet:
     projects_to_deploy: set[Project]
 
 
-def is_invalidated(
-    logger: logging.Logger, project: Project, stage: str, path: str
-) -> bool:
+def file_belongs_to_project(logger: logging.Logger, project: Project, path: str) -> bool:
+    startswith: bool = path.startswith(project.root_path)
+    if startswith:
+        logger.debug(
+            f"Project {project.name}: {path} touched project root {project.root_path}"
+        )
+    return startswith
+
+
+def is_dependency_touched(logger: logging.Logger, project: Project, stage: str, path: str) -> bool:
     deps = project.dependencies
     deps_for_stage = deps.set_for_stage(stage) if deps else {}
 
     touched_dependency = (
         next(filter(path.startswith, deps_for_stage), None) if deps else None
     )
-    startswith: bool = path.startswith(project.root_path)
     if touched_dependency:
         logger.debug(
             f"Project {project.name}: {path} touched dependency {touched_dependency}"
         )
-    if startswith:
-        logger.debug(
-            f"Project {project.name}: {path} touched project root {project.root_path}"
-        )
-    return startswith or touched_dependency is not None
+    return touched_dependency is not None
 
 
-def output_invalidated(output: Optional[Output], revision_hash: str) -> bool:
+def is_stage_cached(output: Optional[Output], cache_key: str) -> bool:
     if output is None:
-        return True
+        return False
     if not output.success:
-        return True
+        return False
     if output.produced_artifact is None:
-        return True
-    artifact = output.produced_artifact
-    if artifact.revision != revision_hash:
-        return True
-
-    return False
+        return False
+    return output.produced_artifact.hash == cache_key
 
 
-def _to_relevant_changes(
-    project: Project, stage: str, change_history: list[Revision]
-) -> set[str]:
-    output: Output = Output.try_read(project.target_path, stage)
-    relevant = set()
-    for history in reversed(sorted(change_history, key=lambda c: c.ord)):
-        if stage == deploy.STAGE_NAME or output_invalidated(output, history.hash):
-            relevant.update(history.files_touched)
-        else:
-            return relevant
+# FIXME go back to the old version
+def hashed_changes(files: set[str]) -> str:
+    def sha256(filename: str):
+        with open(filename, "rb") as file:
+            return hashlib.file_digest(file, "sha256").hexdigest()
 
-    return relevant
+    # what's better than hashing once? hashing twice!
+    hash_sha256 = hashlib.sha256()
+    for changed_file in files:
+        hash_sha256.update(sha256(changed_file))
+    return hash_sha256.hexdigest()
 
 
 def _to_project_execution(
-    logger: logging.Logger, project: Project, stage: str, change_history: list[Revision]
+    logger: logging.Logger, project: Project, stage: str, changes: Changeset
 ) -> Optional[ProjectExecution]:
     if project.stages.for_stage(stage) is None:
         return None
 
-    relevant_changes = _to_relevant_changes(project, stage, change_history)
-    files_changed_for_this_project = frozenset(
-        filter(
-            lambda c: is_invalidated(logger, project, stage, c),
-            relevant_changes,
-        )
+    project_changed_files = set(filter(
+        lambda changed_file: file_belongs_to_project(logger, project, changed_file),
+        changes.files_touched,
+    ))
+
+    any_dependency_touched = any(
+        is_dependency_touched(logger, project, stage, changed_file)
+        for changed_file in changes.files_touched
     )
 
-    return (
-        ProjectExecution(project, files_changed_for_this_project)
-        if files_changed_for_this_project
-        else None
-    )
+    if project_changed_files:
+        hash_of_project_changed_files = hashed_changes(project_changed_files)
+
+        if stage == deploy.STAGE_NAME:
+            execution = ProjectExecution.files_changed(
+                project=project,
+                files=project_changed_files,
+                cache_key=hash_of_project_changed_files,
+                cached=False
+            )
+        else:
+            execution = ProjectExecution.files_changed(
+                project=project,
+                files=project_changed_files,
+                cache_key=hash_of_project_changed_files,
+                cached=is_stage_cached(
+                    output=Output.try_read(project.target_path, stage),
+                    cache_key=hash_of_project_changed_files
+                )
+            )
+
+    elif any_dependency_touched:
+        if stage == deploy.STAGE_NAME:
+            execution = ProjectExecution.dependency_touched(
+                project=project,
+                cache_key=changes.sha,
+                cached=False
+            )
+        else:
+            execution = ProjectExecution.dependency_touched(
+                project=project,
+                cache_key=changes.sha,
+                cached=is_stage_cached(
+                    output=Output.try_read(project.target_path, stage),
+                    cache_key=changes.sha
+                )
+            )
+
+    else:
+        execution = None
+
+    return execution
 
 
 def build_project_executions(
     logger: logging.Logger,
     all_projects: set[Project],
     stage: str,
-    change_history: list[Revision],
+    changes: Changeset,
 ) -> set[ProjectExecution]:
     maybe_execution_projects = set(
         map(
-            lambda project: _to_project_execution(
-                logger, project, stage, change_history
-            ),
+            lambda project: _to_project_execution(logger, project, stage, changes),
             all_projects,
         )
     )
@@ -113,7 +148,7 @@ def build_project_executions(
 def find_build_set(
     logger: logging.Logger,
     all_projects: set[Project],
-    changes_in_branch: list[Revision],
+    changes_in_branch: Changeset,
     stages: list[Stage],
     build_all: bool,
     selected_stage: Optional[str] = None,
@@ -134,7 +169,7 @@ def find_build_set(
                     filter(lambda p: p.name in projects_list, all_projects)
                 )
             projects = for_stage(all_projects, stage)
-            project_executions = {ProjectExecution(p, frozenset()) for p in projects}
+            project_executions = {ProjectExecution.always_run(p) for p in projects}
         else:
             project_executions = build_project_executions(
                 logger, all_projects, stage.name, changes_in_branch

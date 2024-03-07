@@ -80,6 +80,10 @@ class RunResult:
 
     @property
     def has_run_plan_projects(self) -> bool:
+        # FIXME the current version of this logic is slightly different than what it used to be.
+        #  We now create a ProjectExecution for every project that is changed in the branch
+        #  we're building, HOWEVER we also know per-project whether it's cached or not.
+        # In this function we should read that value to exclude projects that don't need rebuilding.
         return not all(
             len(project_execution) == 0
             for stage, project_execution in self.run_plan.items()

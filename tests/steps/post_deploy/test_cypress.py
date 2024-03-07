@@ -33,9 +33,7 @@ class TestCypress:
         with pytest.raises(ExecutionException) as exc_info:
             self.executor.execute(
                 stage=postdeploy.STAGE_NAME,
-                project_execution=ProjectExecution(
-                    project=project, changed_files=frozenset()
-                ),
+                project_execution=ProjectExecution.always_run(project),
             )
 
         assert "No cypress specs are defined in the project dependencies" in str(

@@ -17,10 +17,8 @@ from ...utilities.pyaml_env import parse_config
 
 
 @dataclass(frozen=True)
-class Revision:
-    ord: int
-    """Ordinal number indicating how this revision ranks historically"""
-    hash: str
+class Changeset:
+    sha: str
     """Git hash for this revision"""
     files_touched: set[str]
     """Paths to files that were altered in this hash"""
@@ -40,10 +38,10 @@ class Revision:
         current_section: list[str] = []
         lines = git_log_output.splitlines()
         for line in lines:
-            if line.startswith(Revision.BREAK_WORD):
+            if line.startswith(Changeset.BREAK_WORD):
                 if current_section:
                     sections.append(current_section)
-                current_section = [line.replace(Revision.BREAK_WORD, "")]
+                current_section = [line.replace(Changeset.BREAK_WORD, "")]
             else:
                 current_section.append(line)
 
@@ -51,12 +49,11 @@ class Revision:
             sections.append(current_section)
 
         revisions = [
-            Revision(
-                index,
+            Changeset(
                 section[0],
                 {line for line in section[1:] if line in change_set},
             )
-            for index, section in enumerate(reversed(sections))
+            for section in reversed(sections)
         ]
         return revisions
 
@@ -227,9 +224,9 @@ class Repository:  # pylint: disable=too-many-public-methods
     def __get_filter_patterns(self):
         return ["--"] + [f":!{pattern}" for pattern in self._config.ignore_patterns]
 
-    def changes_between(self, base_revision: str, head_revision: str) -> list[Revision]:
+    def changes_between(self, base_revision: str, head_revision: str) -> list[Changeset]:
         command = [
-            f'--pretty=format:"{Revision.BREAK_WORD}%H"',
+            f'--pretty=format:"{Changeset.BREAK_WORD}%H"',
             "--name-only",
             "--no-abbrev-commit",
             f"{base_revision}..{head_revision}",
@@ -240,18 +237,17 @@ class Repository:  # pylint: disable=too-many-public-methods
         changed_files = self._repo.git.diff(
             f"{base_revision}..{head_revision}", name_only=True
         )
-        return Revision.from_git_output(revs, changed_files)
+        return Changeset.from_git_output(revs, changed_files)
 
-    def changes_in_branch(self) -> list[Revision]:
+    def changes_in_branch(self) -> Changeset:
         base = self._repo.merge_base(self.main_origin_branch, "HEAD")[0]
         if base:
             changed_files = self._repo.git.diff(
                 f"HEAD..{base.hexsha}", name_only=True
             ).splitlines()
+            return Changeset(self.get_sha, set(changed_files))
 
-            return [Revision(1, self.get_sha, set(changed_files))]
-
-        return []
+        raise ValueError(f"Cannot find merge base between ${self.main_origin_branch} and the current branch")
 
     def changes_in_commit(self) -> set[str]:
         changed: set[str] = set(
@@ -261,14 +257,13 @@ class Repository:  # pylint: disable=too-many-public-methods
         )
         return changed.union(self._repo.untracked_files)
 
-    def changes_in_branch_including_local(self) -> list[Revision]:
-        in_branch = self.changes_in_branch()
-        in_branch.append(
-            Revision(len(in_branch), self.get_sha, self.changes_in_commit())
-        )
-        return in_branch
+    def changes_in_branch_including_local(self) -> list[Changeset]:
+        return [
+            self.changes_in_branch(),
+            Changeset(self.get_sha, self.changes_in_commit())
+        ]
 
-    def changes_in_tagged_commit(self, current_tag: str) -> list[Revision]:
+    def changes_in_tagged_commit(self, current_tag: str) -> list[Changeset]:
         curr_rev_tag = self.get_tag
 
         if curr_rev_tag != current_tag:
@@ -288,7 +283,7 @@ class Repository:  # pylint: disable=too-many-public-methods
         files_changed = self._repo.git.diff(
             f"{str(self._repo.head.commit)}..{str(parent_revs[0])}", name_only=True
         ).splitlines()
-        return [Revision(ord=0, hash=str(self.get_sha), files_touched=files_changed)]
+        return [Changeset(sha=str(self.get_sha), files_touched=files_changed)]
 
     def init_remote(self, url: Optional[str]) -> Remote:
         if url:

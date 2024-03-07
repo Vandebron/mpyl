@@ -1,19 +1,22 @@
 import logging
 from pathlib import Path
+from typing import Optional
 
 from ruamel.yaml import YAML  # type: ignore
 
+from mpyl.steps import ArtifactType
+from mpyl.steps.models import Artifact
+from mpyl.utilities.docker import DockerImageSpec
 from src.mpyl.project import load_project
-from src.mpyl.constants import BUILD_ARTIFACTS_FOLDER
 from src.mpyl.projects.find import load_projects
 from src.mpyl.stages.discovery import (
     build_project_executions,
-    output_invalidated,
-    is_invalidated,
+    is_stage_cached,
+    is_dependency_touched,
 )
 from src.mpyl.steps import Output
 from src.mpyl.steps import build, test, deploy
-from src.mpyl.utilities.repo import Revision
+from src.mpyl.utilities.repo import Changeset
 from tests import root_test_path, test_resource_path
 from tests.test_resources import test_data
 from tests.test_resources.test_data import TestStage
@@ -34,7 +37,7 @@ class TestDiscovery:
                         self.logger,
                         projects,
                         build.STAGE_NAME,
-                        [Revision(0, "revision", touched_files)],
+                        Changeset("revision", touched_files),
                     )
                 )
                 == 1
@@ -45,7 +48,7 @@ class TestDiscovery:
                         self.logger,
                         projects,
                         test.STAGE_NAME,
-                        [Revision(0, "revision", touched_files)],
+                        Changeset("revision", touched_files),
                     )
                 )
                 == 2
@@ -56,7 +59,7 @@ class TestDiscovery:
                         self.logger,
                         projects,
                         deploy.STAGE_NAME,
-                        [Revision(0, "revision", touched_files)],
+                        Changeset("revision", touched_files),
                     )
                 )
                 == 1
@@ -73,12 +76,12 @@ class TestDiscovery:
             self.logger,
             projects,
             TestStage.build().name,
-            [Revision(0, "hash", {"projects/job/file.py", "some_file.txt"})],
+            Changeset("hash", {"projects/job/file.py", "some_file.txt"}),
         )
         assert 1 == len(invalidated)
 
     def test_should_correctly_check_root_path(self):
-        assert not is_invalidated(
+        assert not is_dependency_touched(
             self.logger,
             project=load_project(
                 root_test_path, Path("projects/sbt-service/deployment/project.yml")
@@ -87,27 +90,49 @@ class TestDiscovery:
             path="projects/sbt-service-other/file.py",
         )
 
-    def test_invalidation_logic(self):
-        test_output = Path(
-            test_resource_path / "deployment" / BUILD_ARTIFACTS_FOLDER / "test.yml"
-        ).read_text(encoding="utf-8")
-        output = yaml.load(test_output)
-        assert not output.success, "output should not be successful"
-        assert output_invalidated(None, "hash"), "should be invalidated if no output"
-        assert output_invalidated(
-            output, "hash"
-        ), "should be invalidated if output is not successful"
-        assert output_invalidated(
-            Output(success=True, message="No artifact produced"), "hash"
-        ), "should be invalidated if no artifact produced"
+    def test_is_stage_cached(self):
+        cache_key = "a generated test hash"
 
-        output.success = True
-        assert output_invalidated(
-            output, "hash"
-        ), "should be invalidated if hash doesn't match"
-        assert not output_invalidated(
-            output, "a2fcde18082e14a260195b26f7f5bfed9dc8fbb4"
-        ), "should be valid if hash matches"
+        def stub_artifact(hash: str = cache_key):
+            return Artifact(
+                artifact_type=ArtifactType.DOCKER_IMAGE,
+                revision="revision",
+                producing_step="step",
+                spec=DockerImageSpec(image="image"),
+                hash=hash
+            )
+
+        def stub_output(
+            success: bool,
+            artifact: Optional[Artifact] = stub_artifact(cache_key),
+        ):
+            return Output(success=success, message="an output message", produced_artifact=artifact)
+
+
+        assert not is_stage_cached(
+            output=None,
+            cache_key=cache_key
+        ), "should not be cached if no output"
+
+        assert not is_stage_cached(
+            output=stub_output(success=False, artifact=stub_artifact(cache_key)),
+            cache_key=cache_key
+        ), "should not be cached if output is not successful"
+
+        assert not is_stage_cached(
+            output=stub_output(success=True, artifact=None),
+            cache_key=cache_key
+        ), "should not be cached if no artifact produced"
+
+        assert not is_stage_cached(
+            output=stub_output(success=True, artifact=stub_artifact(cache_key)),
+            cache_key="a hash that doesn't match"
+        ), "should not be cached if hash doesn't match"
+
+        assert is_stage_cached(
+            output=stub_output(success=True, artifact=stub_artifact(cache_key)),
+            cache_key=cache_key
+        ), "should be cached if hash matches"
 
     def test_listing_override_files(self):
         with test_data.get_repo() as repo:
@@ -118,19 +143,19 @@ class TestDiscovery:
                 self.logger,
                 projects,
                 build.STAGE_NAME,
-                [Revision(0, "revision", touched_files)],
+                Changeset("revision", touched_files),
             )
             projects_for_test = build_project_executions(
                 self.logger,
                 projects,
                 test.STAGE_NAME,
-                [Revision(0, "revision", touched_files)],
+                Changeset("revision", touched_files),
             )
             projects_for_deploy = build_project_executions(
                 self.logger,
                 projects,
                 deploy.STAGE_NAME,
-                [Revision(0, "revision", touched_files)],
+                Changeset("revision", touched_files),
             )
             assert len(projects_for_build) == 1
             assert len(projects_for_test) == 1

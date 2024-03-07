@@ -37,9 +37,8 @@ class TestDagster:
 
     def test_generate_correct_values_yaml_with_service_account_override(self):
         step_input = Input(
-            ProjectExecution(
-                project=load_project(self.resource_path, Path("project.yml"), True),
-                changed_files=frozenset(),
+            ProjectExecution.always_run(
+                project=load_project(self.resource_path, Path("project.yml"), True)
             ),
             test_data.RUN_PROPERTIES,
             None,
@@ -62,9 +61,8 @@ class TestDagster:
 
     def test_generate_correct_values_yaml_with_production_target(self):
         step_input = Input(
-            ProjectExecution(
+            ProjectExecution.always_run(
                 project=load_project(self.resource_path, Path("project.yml"), True),
-                changed_files=frozenset(),
             ),
             test_data.RUN_PROPERTIES_PROD,
             None,
@@ -85,9 +83,8 @@ class TestDagster:
 
     def test_generate_correct_values_yaml_without_service_account_override(self):
         step_input = Input(
-            ProjectExecution(
-                project=load_project(self.resource_path, Path("project.yml"), True),
-                changed_files=frozenset(),
+            ProjectExecution.always_run(
+                project=load_project(self.resource_path, Path("project.yml"), True)
             ),
             test_data.RUN_PROPERTIES,
             None,
@@ -110,11 +107,10 @@ class TestDagster:
 
     def test_generate_with_sealed_secret_as_extra_manifest(self):
         step_input = Input(
-            ProjectExecution(
+            ProjectExecution.always_run(
                 project=load_project(
                     self.resource_path, Path("project_with_sealed_secret.yml"), True
-                ),
-                changed_files=frozenset(),
+                )
             ),
             test_data.RUN_PROPERTIES,
             None,

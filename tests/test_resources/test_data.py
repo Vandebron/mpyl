@@ -63,7 +63,7 @@ def get_project() -> Project:
 
 
 def get_project_execution() -> ProjectExecution:
-    return ProjectExecution(project=get_project(), changed_files=frozenset())
+    return ProjectExecution.always_run(get_project())
 
 
 def get_deployment_strategy_project() -> Project:
@@ -108,7 +108,7 @@ def run_properties_with_plan(plan: dict[Stage, set[ProjectExecution]]) -> RunPro
 def run_properties_prod_with_plan() -> RunProperties:
     plan = {
         TestStage.deploy(): {
-            ProjectExecution(project=get_minimal_project(), changed_files=frozenset())
+            ProjectExecution.always_run(get_minimal_project())
         }
     }
     run_properties_prod = initiate_run_properties(
@@ -133,6 +133,7 @@ def get_output() -> Output:
         produced_artifact=Artifact(
             artifact_type=ArtifactType.DOCKER_IMAGE,
             revision="123",
+            hash="a generated hash",
             producing_step="Producing Step",
             spec=DockerImageSpec(image="image:latest"),
         ),

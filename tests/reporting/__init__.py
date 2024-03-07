@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from mpyl.project_execution import ProjectExecution
 from src.mpyl.project import Stages, Project
 from src.mpyl.steps.deploy.k8s import DeployedHelmAppSpec
 from src.mpyl.steps.models import Output, Artifact, ArtifactType
@@ -29,9 +30,9 @@ def create_test_result_with_plan() -> RunResult:
             config=config_values,
             properties=properties_values,
             run_plan={
-                TestStage.build(): set(build_projects),
-                TestStage.test(): set(test_projects),
-                TestStage.deploy(): set(deploy_projects),
+                TestStage.build(): {ProjectExecution.always_run(p) for p in build_projects},
+                TestStage.test(): {ProjectExecution.always_run(p) for p in test_projects},
+                TestStage.deploy(): {ProjectExecution.always_run(p) for p in deploy_projects},
             },
         ),
     )
