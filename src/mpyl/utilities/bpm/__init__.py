@@ -21,15 +21,18 @@ class CamundaConfig:
         if not camunda_config:
             raise KeyError("Camunda section needs to be defined in mpyl_config.yml")
 
-        config = TargetProperty.from_config(camunda_config).get_value(target)
+        credentials = TargetProperty.from_config(
+            camunda_config.get("zeebeCredentials")
+        ).get_value(target)
+        deploy_path = camunda_config.get("camundaDeploymentPath")
         return CamundaConfig(
-            cluster_id=str(config.get("clusterId")),
-            client_id=str(config.get("clientId")),
-            client_secret=str(config.get("clientSecret")),
-            docker_directory_path=camunda_config.get("dockerDirectoryPath"),
-            docker_file_path=camunda_config.get("dockerFilePath"),
-            bpm_project_path=camunda_config.get("bpmProjectPath"),
+            cluster_id=credentials.get("clusterId"),
+            client_id=credentials.get("clientId"),
+            client_secret=credentials.get("clientSecret"),
+            docker_directory_path=deploy_path.get("dockerDirectoryPath"),
+            docker_file_path=deploy_path.get("dockerFilePath"),
+            bpm_project_path=deploy_path.get("bpmProjectPath"),
             bpm_diagram_folder_path=os.path.join(
-                root_path, camunda_config.get("diagramResourcesPath")
+                root_path, deploy_path.get("diagramResourcesPath")
             ),
         )
