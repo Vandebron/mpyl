@@ -19,10 +19,10 @@ class ProjectExecution:
         hash_sha256 = hashlib.sha256()
 
         for filename in self.changed_files:
-            with open(filename, "rb") as f:
-                for chunk in iter(lambda: f.read(4096), b""):
+            with open(filename, "rb") as file:
+                for chunk in iter(lambda: file.read(4096), b""):
                     hash_sha256.update(chunk)
 
-        h = hash_sha256.hexdigest()
-        print(f"hash of changes for ${self.name}: ${h}")
-        return h
+        changes_hash = hash_sha256.hexdigest()
+        print(f"hash of changes for ${self.name}: ${changes_hash}")
+        return changes_hash

@@ -134,7 +134,7 @@ def find_build_set(
                     filter(lambda p: p.name in projects_list, all_projects)
                 )
             projects = for_stage(all_projects, stage)
-            project_executions = {ProjectExecution(p, set()) for p in projects}
+            project_executions = {ProjectExecution(p, frozenset()) for p in projects}
         else:
             project_executions = build_project_executions(
                 logger, all_projects, stage.name, changes_in_branch

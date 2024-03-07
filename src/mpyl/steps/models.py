@@ -1,5 +1,4 @@
 """ Model representation of run-specific configuration. """
-import hashlib
 import pkgutil
 from dataclasses import dataclass
 from enum import Enum
