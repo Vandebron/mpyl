@@ -25,6 +25,10 @@ class Changeset:
     BREAK_WORD = "hash "
 
     @staticmethod
+    def empty(sha: str):
+        return Changeset(sha=sha, files_touched=set())
+
+    @staticmethod
     def from_git_output(git_log_output: str, git_diff_output: str):
         """
         :param git_diff_output: output of `git log --pretty=format:"hash %H" --name-only
@@ -253,7 +257,7 @@ class Repository:  # pylint: disable=too-many-public-methods
             return Changeset(self.get_sha, set(changed_files))
 
         raise ValueError(
-            f"Cannot find merge base between ${self.main_origin_branch} and the current branch"
+            f"Cannot find merge base between {self.main_origin_branch} and the current branch"
         )
 
     def changes_in_commit(self) -> set[str]:
@@ -267,7 +271,6 @@ class Repository:  # pylint: disable=too-many-public-methods
     def changes_in_branch_including_local(self) -> Changeset:
         change_set = self.changes_in_branch()
         change_set.add_files(self.changes_in_commit())
-
         return change_set
 
     def changes_in_tagged_commit(self, current_tag: str) -> Changeset:
@@ -275,7 +278,7 @@ class Repository:  # pylint: disable=too-many-public-methods
 
         if curr_rev_tag != current_tag:
             logging.error(f"HEAD is at {curr_rev_tag} not at expected `{current_tag}`")
-            return Changeset(sha=self.get_sha, files_touched=set())
+            return Changeset.empty(self.get_sha)
 
         return self.changes_in_merge_commit()
 
@@ -285,7 +288,7 @@ class Repository:  # pylint: disable=too-many-public-methods
             logging.error(
                 "HEAD is not at merge commit, cannot determine changed files."
             )
-            return Changeset(sha=self.get_sha, files_touched=set())
+            return Changeset.empty(self.get_sha)
         logging.debug(f"Parent revisions: {parent_revs}")
         files_changed = self._repo.git.diff(
             f"{str(self._repo.head.commit)}..{str(parent_revs[0])}", name_only=True

@@ -20,7 +20,7 @@ class TestRepo:
             changes_in_branch = repo.changes_in_branch_including_local()
             changes_in_commit = repo.changes_in_commit()
 
-        assert changes_in_branch[-1].files_touched == changes_in_commit
+        assert changes_in_branch.files_touched == changes_in_commit
 
     def test_load_config(self):
         config = RepoConfig.from_config(get_config_values())

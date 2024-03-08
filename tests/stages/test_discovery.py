@@ -65,20 +65,31 @@ class TestDiscovery:
                 == 1
             )
 
-    def test_should_find_invalidated_dependencies(self):
+    def test_build_project_executions(self):
         project_paths = [
-            "projects/job/deployment/project.yml",
-            "projects/service/deployment/project.yml",
-            "projects/sbt-service/deployment/project.yml",
+            "tests/projects/job/deployment/project.yml",
+            "tests/projects/service/deployment/project.yml",
+            "tests/projects/sbt-service/deployment/project.yml",
         ]
-        projects = set(load_projects(root_test_path, project_paths))
-        invalidated = build_project_executions(
-            self.logger,
-            projects,
-            TestStage.build().name,
-            Changeset("hash", {"projects/job/file.py", "some_file.txt"}),
+        projects = set(load_projects(root_test_path.parent, project_paths))
+        project_executions = build_project_executions(
+            logger=self.logger,
+            all_projects=projects,
+            stage=TestStage.build().name,
+            changes=Changeset(
+                sha="a git SHA",
+                files_touched={
+                    "tests/projects/job/deployment/project.yml",
+                    "some_other_unrelated_file.txt",
+                },
+            ),
         )
-        assert 1 == len(invalidated)
+        assert 1 == len(project_executions)
+        assert project_executions.pop().project == load_project(
+            root_test_path.parent,
+            Path("tests/projects/job/deployment/project.yml"),
+            strict=False,
+        )
 
     def test_should_correctly_check_root_path(self):
         assert not is_dependency_touched(
@@ -110,23 +121,28 @@ class TestDiscovery:
             )
 
         assert not is_stage_cached(
-            output=None, cache_key=cache_key
+            output=None,
+            cache_key=cache_key,
         ), "should not be cached if no output"
 
         assert not is_stage_cached(
-            output=create_test_output(success=False), cache_key=cache_key
+            output=create_test_output(success=False),
+            cache_key=cache_key,
         ), "should not be cached if output is not successful"
 
         assert not is_stage_cached(
-            output=create_test_output(artifact=None), cache_key=cache_key
+            output=create_test_output(artifact=None),
+            cache_key=cache_key,
         ), "should not be cached if no artifact produced"
 
         assert not is_stage_cached(
-            output=create_test_output(), cache_key="a hash that doesn't match"
+            output=create_test_output(),
+            cache_key="a hash that doesn't match",
         ), "should not be cached if hash doesn't match"
 
         assert is_stage_cached(
-            output=create_test_output(), cache_key=cache_key
+            output=create_test_output(),
+            cache_key=cache_key,
         ), "should be cached if hash matches"
 
     def test_listing_override_files(self):

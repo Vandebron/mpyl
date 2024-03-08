@@ -106,7 +106,9 @@ def _to_project_execution(
             )
 
         execution = ProjectExecution(
-            project=project, cache_key=hash_of_project_changed_files, cached=cached
+            project=project,
+            cache_key=hash_of_project_changed_files,
+            cached=cached,
         )
 
     elif any_dependency_touched:
