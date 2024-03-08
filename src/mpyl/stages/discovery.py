@@ -119,7 +119,9 @@ def _to_project_execution(
             )
 
         execution = ProjectExecution(
-            project=project, cache_key=changes.sha, cached=cached
+            project=project,
+            cache_key=changes.sha,
+            cached=cached,
         )
 
     else:
