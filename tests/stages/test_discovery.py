@@ -93,21 +93,19 @@ class TestDiscovery:
     def test_is_stage_cached(self):
         cache_key = "a generated test hash"
 
-        def stub_artifact(hash: str = cache_key):
-            return Artifact(
-                artifact_type=ArtifactType.DOCKER_IMAGE,
-                revision="revision",
-                producing_step="step",
-                spec=DockerImageSpec(image="image"),
-                hash=hash
-            )
+        test_artifact = Artifact(
+            artifact_type=ArtifactType.DOCKER_IMAGE,
+            revision="revision",
+            producing_step="step",
+            spec=DockerImageSpec(image="image"),
+            hash=cache_key
+        )
 
-        def stub_output(
-            success: bool,
-            artifact: Optional[Artifact] = stub_artifact(cache_key),
+        def create_test_output(
+            success: bool = True,
+            artifact: Optional[Artifact] = test_artifact,
         ):
             return Output(success=success, message="an output message", produced_artifact=artifact)
-
 
         assert not is_stage_cached(
             output=None,
@@ -115,22 +113,22 @@ class TestDiscovery:
         ), "should not be cached if no output"
 
         assert not is_stage_cached(
-            output=stub_output(success=False, artifact=stub_artifact(cache_key)),
+            output=create_test_output(success=False),
             cache_key=cache_key
         ), "should not be cached if output is not successful"
 
         assert not is_stage_cached(
-            output=stub_output(success=True, artifact=None),
+            output=create_test_output(artifact=None),
             cache_key=cache_key
         ), "should not be cached if no artifact produced"
 
         assert not is_stage_cached(
-            output=stub_output(success=True, artifact=stub_artifact(cache_key)),
+            output=create_test_output(),
             cache_key="a hash that doesn't match"
         ), "should not be cached if hash doesn't match"
 
         assert is_stage_cached(
-            output=stub_output(success=True, artifact=stub_artifact(cache_key)),
+            output=create_test_output(),
             cache_key=cache_key
         ), "should be cached if hash matches"
 
