@@ -86,39 +86,33 @@ def _to_project_execution(
         hash_of_project_changed_files = hashed_changes(project_changed_files)
 
         if stage == deploy.STAGE_NAME:
-            execution = ProjectExecution.files_changed(
-                project=project,
-                files=project_changed_files,
-                cache_key=hash_of_project_changed_files,
-                cached=False
-            )
+            cached = False
         else:
-            execution = ProjectExecution.files_changed(
-                project=project,
-                files=project_changed_files,
-                cache_key=hash_of_project_changed_files,
-                cached=is_stage_cached(
-                    output=Output.try_read(project.target_path, stage),
-                    cache_key=hash_of_project_changed_files
-                )
+            cached = is_stage_cached(
+                output=Output.try_read(project.target_path, stage),
+                cache_key=hash_of_project_changed_files
             )
+
+        execution = ProjectExecution(
+            project=project,
+            cache_key=hash_of_project_changed_files,
+            cached=cached
+        )
 
     elif any_dependency_touched:
         if stage == deploy.STAGE_NAME:
-            execution = ProjectExecution.dependency_touched(
-                project=project,
-                cache_key=changes.sha,
-                cached=False
-            )
+            cached = False
         else:
-            execution = ProjectExecution.dependency_touched(
-                project=project,
-                cache_key=changes.sha,
-                cached=is_stage_cached(
-                    output=Output.try_read(project.target_path, stage),
-                    cache_key=changes.sha
-                )
+            cached = is_stage_cached(
+                output=Output.try_read(project.target_path, stage),
+                cache_key=changes.sha
             )
+
+        execution = ProjectExecution(
+            project=project,
+            cache_key=changes.sha,
+            cached=False
+        )
 
     else:
         execution = None
