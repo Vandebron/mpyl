@@ -206,9 +206,9 @@ def push_to_registry(
 
     login(logger=logger, registry_config=docker_config)
     full_image_path = docker_registry_path(docker_config, image_name)
-    repo_path = ecr_repository_path(docker_config.host_name, image_name)
 
     if docker_config.provider == Provider.AWS.value:  # pylint: disable=no-member
+        repo_path = ecr_repository_path(docker_config.host_name, image_name)
         create_ecr_repo_if_needed(logger, docker_config, repo_path)
     docker.image.tag(image, full_image_path)
     docker.image.push(full_image_path, quiet=False)
