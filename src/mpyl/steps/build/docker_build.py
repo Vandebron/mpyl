@@ -140,6 +140,4 @@ class BuildDocker(Step):
 
     @staticmethod
     def substitute_pr_number(original_value: Optional[str], pr_number: Optional[int]):
-        if original_value and pr_number:
-            return original_value.replace("{PR-NUMBER}", str(pr_number))
-        return original_value
+        return original_value.replace("{PR-NUMBER}", str(pr_number)) if original_value and pr_number else original_value
