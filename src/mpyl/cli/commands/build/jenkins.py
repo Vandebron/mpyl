@@ -70,7 +70,7 @@ def __get_pr_pipeline(
             target=Target.PULL_REQUEST,
             tag=f"{pull.number}",
             url=pull.html_url,
-            pipeline=pipeline,
+            pipeline_name=pipeline,
             body=pull.body,
             jenkins_config=JenkinsConfig.from_config(config),
         )
@@ -93,7 +93,7 @@ def run_jenkins(run_config: JenkinsRunParameters):
                         target=run_config.tag_target,
                         tag=run_config.tag,
                         url="https://tag-url",
-                        pipeline=run_config.pipeline,
+                        pipeline_name=run_config.pipeline,
                         body="",
                         jenkins_config=JenkinsConfig.from_config(config),
                     )

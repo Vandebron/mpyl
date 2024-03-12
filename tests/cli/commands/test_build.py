@@ -7,7 +7,7 @@ from src.mpyl.build import run_build
 from src.mpyl.steps import Step, Meta, ArtifactType, Input, Output
 from src.mpyl.steps.build import STAGE_NAME
 from src.mpyl.steps.run import RunResult
-from src.mpyl.steps.run_properties import initiate_run_properties
+from src.mpyl.steps.run_properties import construct_run_properties
 from src.mpyl.steps.steps import Steps, StepsCollection
 from tests import root_test_path
 from tests.test_resources.test_data import (
@@ -84,7 +84,7 @@ class TestBuildCommand:
     def test_run_build_throwing_step_should_be_handled(self):
         projects = {get_project_with_stages({"build": "Throwing Build"})}
         run_plan = {TestStage.build(): projects}
-        run_properties = initiate_run_properties(
+        run_properties = construct_run_properties(
             config=config_values,
             properties=properties_values,
             run_plan=run_plan,

@@ -35,6 +35,10 @@ class GithubConfig:
     @staticmethod
     def from_config(config: dict):
         github = config["vcs"]["github"]
+        return GithubConfig.from_github_config(github=github)
+
+    @staticmethod
+    def from_github_config(github: dict):
         repo_parts = github["repository"].split("/")
         return GithubConfig(
             repository=(github["repository"]),
@@ -50,11 +54,13 @@ class GithubConfig:
 
 
 def get_pr_for_branch(repo: Repository, branch: str) -> PullRequest:
-    pulls = repo.get_pulls(head=f"{repo.full_name}:{branch}").get_page(0)
+    pull_request = next(
+        (pull for pull in repo.get_pulls() if pull.head.ref == branch), None
+    )
 
-    if len(pulls) == 0:
+    if pull_request is None:
         raise ValueError(
             f"No PR related to {branch} was found. Did you create it yet? `gh pr create --draft`"
         )
 
-    return pulls.pop()
+    return pull_request

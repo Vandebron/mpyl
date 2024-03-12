@@ -126,12 +126,13 @@ class RunProperties:
         config: dict,
         run_plan: dict[Stage, set[Project]],
         all_projects: set[Project],
-        cli_tag: Optional[str],
+        cli_tag: Optional[str] = None,
+        root_dir: Path = Path("."),
     ):
         build_dict = pkgutil.get_data(__name__, "../schema/run_properties.schema.yml")
 
         if build_dict:
-            validate(run_properties, build_dict.decode("utf-8"))
+            validate(run_properties, build_dict.decode("utf-8"), root_dir)
 
         build = run_properties["build"]
         versioning_config = build["versioning"]

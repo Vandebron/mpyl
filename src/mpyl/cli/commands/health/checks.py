@@ -17,14 +17,18 @@ from rich.prompt import Confirm
 
 from ..build.jenkins import get_token
 from ....cli import get_latest_publication, get_meta_version
-from ....constants import DEFAULT_CONFIG_FILE_NAME, DEFAULT_RUN_PROPERTIES_FILE_NAME
+from ....constants import (
+    DEFAULT_CONFIG_FILE_NAME,
+    DEFAULT_RUN_PROPERTIES_FILE_NAME,
+    DEFAULT_STAGES_SCHEMA_FILE_NAME,
+)
 from ....projects.versioning import (
     check_upgrade_needed,
     CONFIG_UPGRADERS,
     pretty_print,
     Upgrader,
     upgrade_file,
-    PROJECT_UPGRADERS,
+    PROPERTIES_UPGRADERS,
 )
 from ....utilities.github import GithubConfig
 from ....utilities.jenkins import JenkinsConfig
@@ -56,6 +60,35 @@ def perform_health_checks(
     console.title("Version")
     __check_version(console)
 
+    console.title("Run configuration")
+    properties_schema_path = Path(
+        os.environ.get("MPYL_RUN_PROPERTIES_PATH") or DEFAULT_RUN_PROPERTIES_FILE_NAME
+    )
+
+    stages_schema = properties_schema_path.parent / DEFAULT_STAGES_SCHEMA_FILE_NAME
+    stages_schema_exists = Path(stages_schema).exists()
+    if not stages_schema_exists:
+        console.check(
+            f"{stages_schema} does not exist. See _Stage configuration_ in documentation for an example.",
+            False,
+        )
+    else:
+        console.check(f"{stages_schema} is present", True)
+
+    if properties_path := __validate_config_path(
+        console,
+        env_var="MPYL_RUN_PROPERTIES_PATH",
+        default=DEFAULT_RUN_PROPERTIES_FILE_NAME,
+        config_name="run properties",
+    ):
+        _validate_config(
+            console,
+            config_file_path=properties_path,
+            schema_path="../../../schema/run_properties.schema.yml",
+            upgraders=PROPERTIES_UPGRADERS,
+            perform_upgrade=perform_upgrade,
+        )
+
     console.title("MPyL configuration")
     if config_path := __validate_config_path(
         console,
@@ -63,26 +96,11 @@ def perform_health_checks(
         default=DEFAULT_CONFIG_FILE_NAME,
         config_name="config",
     ):
-        __validate_config(
+        _validate_config(
             console,
             config_file_path=config_path,
             schema_path="../../../schema/mpyl_config.schema.yml",
             upgraders=CONFIG_UPGRADERS,
-            perform_upgrade=perform_upgrade,
-        )
-
-    console.title("Run configuration")
-    if properties_path := __validate_config_path(
-        console,
-        env_var="MPYL_RUN_PROPERTIES_PATH",
-        default=DEFAULT_RUN_PROPERTIES_FILE_NAME,
-        config_name="run properties",
-    ):
-        __validate_config(
-            console,
-            config_file_path=properties_path,
-            schema_path="../../../schema/run_properties.schema.yml",
-            upgraders=PROJECT_UPGRADERS,
             perform_upgrade=perform_upgrade,
         )
 
@@ -188,12 +206,13 @@ def __validate_config_path(
     return None
 
 
-def __validate_config(
+def _validate_config(
     console: HealthConsole,
     config_file_path: Path,
     schema_path: str,
     upgraders: list[Upgrader],
     perform_upgrade: bool = False,
+    root_dir=Path("."),
 ):
     path, diff = check_upgrade_needed(config_file_path, upgraders)
     pretty_diff = pretty_print(diff) if diff else ""
@@ -221,7 +240,7 @@ def __validate_config(
     schema_dict = pkgutil.get_data(__name__, schema_path)
     if schema_dict:
         try:
-            validate(parsed, schema_dict.decode("utf-8"))
+            validate(parsed, schema_dict.decode("utf-8"), root_dir)
             console.check(f"{config_file_path} is valid", success=True)
         except jsonschema.exceptions.ValidationError as exc:
             console.check(

@@ -4,7 +4,6 @@ metadata:
   labels:
     name: minimalservice
     app.kubernetes.io/version: 20230829-1234
-    app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: minimalservice
     app.kubernetes.io/instance: minimalservice
     maintainers: MPyL

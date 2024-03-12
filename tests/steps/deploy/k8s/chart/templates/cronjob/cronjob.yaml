@@ -4,7 +4,6 @@ metadata:
   labels:
     name: job
     app.kubernetes.io/version: pr-1234
-    app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: job
     app.kubernetes.io/instance: job
     maintainers: MPyL
@@ -25,7 +24,6 @@ spec:
           labels:
             name: job
             app.kubernetes.io/version: pr-1234
-            app.kubernetes.io/managed-by: Helm
             app.kubernetes.io/name: job
             app.kubernetes.io/instance: job
             maintainers: MPyL
