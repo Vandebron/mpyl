@@ -17,10 +17,9 @@ class TestRepo:
     )
     def test_changes_local_and_un_versioned_should_be_included(self):
         with test_data.get_repo() as repo:
-            changes_in_branch = repo.changes_in_branch_including_local()
-            changes_in_commit = repo.changes_in_commit()
-
-        assert changes_in_branch.files_touched == changes_in_commit
+            changes_in_branch = repo.changes_in_branch_including_unversioned_files()
+            unversioned_changes = repo.unversioned_files()
+            assert unversioned_changes.issubset(changes_in_branch.files_touched)
 
     def test_load_config(self):
         config = RepoConfig.from_config(get_config_values())

@@ -72,7 +72,7 @@ def deploy_projects(
 def find_projects(stage: str) -> list[DynamicOutput[Project]]:
     yaml_values = parse_config(Path(f"{ROOT_PATH}mpyl_config.yml"))
     with Repository(RepoConfig.from_config(yaml_values)) as repo:
-        changes_in_branch = repo.changes_in_branch_including_local()
+        changes_in_branch = repo.changes_in_branch_including_unversioned_files()
         project_paths = repo.find_projects()
     all_projects = set(
         map(lambda p: load_project(Path("."), Path(p), strict=False), project_paths)

@@ -60,9 +60,6 @@ class Changeset:
         ]
         return revisions
 
-    def add_files(self, files: set[str]) -> None:
-        self.files_touched.update(files)
-
 
 @dataclass(frozen=True)
 class RepoCredentials:
@@ -249,18 +246,21 @@ class Repository:  # pylint: disable=too-many-public-methods
         return Changeset.from_git_output(revs, changed_files)
 
     def changes_in_branch(self) -> Changeset:
+        return Changeset(self.get_sha, self.changed_files_in_branch())
+
+    def changed_files_in_branch(self) -> set[str]:
         base = self._repo.merge_base(self.main_origin_branch, "HEAD")[0]
         if base:
             changed_files = self._repo.git.diff(
                 f"HEAD..{base.hexsha}", name_only=True
             ).splitlines()
-            return Changeset(self.get_sha, set(changed_files))
+            return set(changed_files)
 
         raise ValueError(
             f"Cannot find merge base between {self.main_origin_branch} and the current branch"
         )
 
-    def changes_in_commit(self) -> set[str]:
+    def unversioned_files(self) -> set[str]:
         changed: set[str] = set(
             self._repo.git.diff(
                 self.__get_filter_patterns(), None, name_only=True
@@ -268,10 +268,11 @@ class Repository:  # pylint: disable=too-many-public-methods
         )
         return changed.union(self._repo.untracked_files)
 
-    def changes_in_branch_including_local(self) -> Changeset:
-        change_set = self.changes_in_branch()
-        change_set.add_files(self.changes_in_commit())
-        return change_set
+    def changes_in_branch_including_unversioned_files(self) -> Changeset:
+        return Changeset(
+            sha=self.get_sha,
+            files_touched=(self.changed_files_in_branch() | self.unversioned_files()),
+        )
 
     def changes_in_tagged_commit(self, current_tag: str) -> Changeset:
         curr_rev_tag = self.get_tag
