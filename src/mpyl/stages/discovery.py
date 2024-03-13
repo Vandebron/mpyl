@@ -20,7 +20,9 @@ class DeploySet:
     projects_to_deploy: set[Project]
 
 
-def file_belongs_to_project(logger: logging.Logger, project: Project, path: str) -> bool:
+def file_belongs_to_project(
+    logger: logging.Logger, project: Project, path: str
+) -> bool:
     startswith: bool = path.startswith(project.root_path)
     if startswith:
         logger.debug(
@@ -29,7 +31,9 @@ def file_belongs_to_project(logger: logging.Logger, project: Project, path: str)
     return startswith
 
 
-def is_dependency_touched(logger: logging.Logger, project: Project, stage: str, path: str) -> bool:
+def is_dependency_touched(
+    logger: logging.Logger, project: Project, stage: str, path: str
+) -> bool:
     deps = project.dependencies
     deps_for_stage = deps.set_for_stage(stage) if deps else {}
 
@@ -53,16 +57,22 @@ def is_stage_cached(output: Optional[Output], cache_key: str) -> bool:
     return output.produced_artifact.hash == cache_key
 
 
-# FIXME go back to the old version
 def hashed_changes(files: set[str]) -> str:
     def sha256(filename: str):
         with open(filename, "rb") as file:
-            return hashlib.file_digest(file, "sha256").hexdigest()
+            _sha256 = hashlib.sha256()
 
-    # what's better than hashing once? hashing twice!
+            while True:
+                data = file.read(65536)
+                if not data:
+                    break
+                _sha256.update(data)
+            return _sha256.hexdigest()
+
     hash_sha256 = hashlib.sha256()
     for changed_file in files:
-        hash_sha256.update(sha256(changed_file))
+        hash_sha256.update(sha256(changed_file).encode("utf-8"))
+
     return hash_sha256.hexdigest()
 
 
@@ -72,10 +82,12 @@ def _to_project_execution(
     if project.stages.for_stage(stage) is None:
         return None
 
-    project_changed_files = set(filter(
-        lambda changed_file: file_belongs_to_project(logger, project, changed_file),
-        changes.files_touched,
-    ))
+    project_changed_files = set(
+        filter(
+            lambda changed_file: file_belongs_to_project(logger, project, changed_file),
+            changes.files_touched,
+        )
+    )
 
     any_dependency_touched = any(
         is_dependency_touched(logger, project, stage, changed_file)
@@ -83,20 +95,18 @@ def _to_project_execution(
     )
 
     if project_changed_files:
-        hash_of_project_changed_files = hashed_changes(project_changed_files)
+        hash_of_project_changed_files = hashed_changes(files=project_changed_files)
 
         if stage == deploy.STAGE_NAME:
             cached = False
         else:
             cached = is_stage_cached(
                 output=Output.try_read(project.target_path, stage),
-                cache_key=hash_of_project_changed_files
+                cache_key=hash_of_project_changed_files,
             )
 
         execution = ProjectExecution(
-            project=project,
-            cache_key=hash_of_project_changed_files,
-            cached=cached
+            project=project, cache_key=hash_of_project_changed_files, cached=cached
         )
 
     elif any_dependency_touched:
@@ -105,13 +115,11 @@ def _to_project_execution(
         else:
             cached = is_stage_cached(
                 output=Output.try_read(project.target_path, stage),
-                cache_key=changes.sha
+                cache_key=changes.sha,
             )
 
         execution = ProjectExecution(
-            project=project,
-            cache_key=changes.sha,
-            cached=False
+            project=project, cache_key=changes.sha, cached=cached
         )
 
     else:

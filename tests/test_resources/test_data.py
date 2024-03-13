@@ -106,11 +106,7 @@ def run_properties_with_plan(plan: dict[Stage, set[ProjectExecution]]) -> RunPro
 
 
 def run_properties_prod_with_plan() -> RunProperties:
-    plan = {
-        TestStage.deploy(): {
-            ProjectExecution.always_run(get_minimal_project())
-        }
-    }
+    plan = {TestStage.deploy(): {ProjectExecution.always_run(get_minimal_project())}}
     run_properties_prod = initiate_run_properties(
         config=config_values,
         properties=properties_values,

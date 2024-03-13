@@ -31,7 +31,6 @@ class Changeset:
         --no-abbrev-commit <from>..<until>`
         :param git_log_output: output of `git diff --name-only <from>..<until>`
         """
-
         change_set = set(git_diff_output.splitlines())
 
         sections = []
@@ -56,6 +55,9 @@ class Changeset:
             for section in reversed(sections)
         ]
         return revisions
+
+    def add_files(self, files: set[str]) -> None:
+        self.files_touched.update(files)
 
 
 @dataclass(frozen=True)
@@ -219,12 +221,15 @@ class Repository:  # pylint: disable=too-many-public-methods
         return f"origin/{self.main_branch}"
 
     def fit_for_tag_build(self, tag: str) -> bool:
-        return len(self.changes_in_tagged_commit(tag)) > 0
+        return len(self.changes_in_tagged_commit(tag).files_touched) > 0
 
     def __get_filter_patterns(self):
         return ["--"] + [f":!{pattern}" for pattern in self._config.ignore_patterns]
 
-    def changes_between(self, base_revision: str, head_revision: str) -> list[Changeset]:
+    # Only used in the repo status command, can be deleted later
+    def changes_between(
+        self, base_revision: str, head_revision: str
+    ) -> list[Changeset]:
         command = [
             f'--pretty=format:"{Changeset.BREAK_WORD}%H"',
             "--name-only",
@@ -247,7 +252,9 @@ class Repository:  # pylint: disable=too-many-public-methods
             ).splitlines()
             return Changeset(self.get_sha, set(changed_files))
 
-        raise ValueError(f"Cannot find merge base between ${self.main_origin_branch} and the current branch")
+        raise ValueError(
+            f"Cannot find merge base between ${self.main_origin_branch} and the current branch"
+        )
 
     def changes_in_commit(self) -> set[str]:
         changed: set[str] = set(
@@ -257,33 +264,33 @@ class Repository:  # pylint: disable=too-many-public-methods
         )
         return changed.union(self._repo.untracked_files)
 
-    def changes_in_branch_including_local(self) -> list[Changeset]:
-        return [
-            self.changes_in_branch(),
-            Changeset(self.get_sha, self.changes_in_commit())
-        ]
+    def changes_in_branch_including_local(self) -> Changeset:
+        change_set = self.changes_in_branch()
+        change_set.add_files(self.changes_in_commit())
 
-    def changes_in_tagged_commit(self, current_tag: str) -> list[Changeset]:
+        return change_set
+
+    def changes_in_tagged_commit(self, current_tag: str) -> Changeset:
         curr_rev_tag = self.get_tag
 
         if curr_rev_tag != current_tag:
             logging.error(f"HEAD is at {curr_rev_tag} not at expected `{current_tag}`")
-            return []
+            return Changeset(sha=self.get_sha, files_touched=set())
 
         return self.changes_in_merge_commit()
 
-    def changes_in_merge_commit(self):
+    def changes_in_merge_commit(self) -> Changeset:
         parent_revs = self._repo.head.commit.parents
         if not parent_revs:
             logging.error(
                 "HEAD is not at merge commit, cannot determine changed files."
             )
-            return []
+            return Changeset(sha=self.get_sha, files_touched=set())
         logging.debug(f"Parent revisions: {parent_revs}")
         files_changed = self._repo.git.diff(
             f"{str(self._repo.head.commit)}..{str(parent_revs[0])}", name_only=True
         ).splitlines()
-        return [Changeset(sha=str(self.get_sha), files_touched=files_changed)]
+        return Changeset(sha=str(self.get_sha), files_touched=files_changed)
 
     def init_remote(self, url: Optional[str]) -> Remote:
         if url:

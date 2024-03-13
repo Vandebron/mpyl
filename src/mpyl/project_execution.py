@@ -14,8 +14,8 @@ class ProjectExecution:
     def always_run(project: Project):
         return ProjectExecution(
             project=project,
-            cache_key="",  # TODO check if this should be a random string instead
-            cached=False
+            cache_key="",  # Check if this should be a random string instead
+            cached=False,
         )
 
     @property

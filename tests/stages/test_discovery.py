@@ -4,9 +4,6 @@ from typing import Optional
 
 from ruamel.yaml import YAML  # type: ignore
 
-from mpyl.steps import ArtifactType
-from mpyl.steps.models import Artifact
-from mpyl.utilities.docker import DockerImageSpec
 from src.mpyl.project import load_project
 from src.mpyl.projects.find import load_projects
 from src.mpyl.stages.discovery import (
@@ -14,10 +11,13 @@ from src.mpyl.stages.discovery import (
     is_stage_cached,
     is_dependency_touched,
 )
+from src.mpyl.steps import ArtifactType
 from src.mpyl.steps import Output
 from src.mpyl.steps import build, test, deploy
+from src.mpyl.steps.models import Artifact
+from src.mpyl.utilities.docker import DockerImageSpec
 from src.mpyl.utilities.repo import Changeset
-from tests import root_test_path, test_resource_path
+from tests import root_test_path
 from tests.test_resources import test_data
 from tests.test_resources.test_data import TestStage
 
@@ -98,38 +98,35 @@ class TestDiscovery:
             revision="revision",
             producing_step="step",
             spec=DockerImageSpec(image="image"),
-            hash=cache_key
+            hash=cache_key,
         )
 
         def create_test_output(
             success: bool = True,
             artifact: Optional[Artifact] = test_artifact,
         ):
-            return Output(success=success, message="an output message", produced_artifact=artifact)
+            return Output(
+                success=success, message="an output message", produced_artifact=artifact
+            )
 
         assert not is_stage_cached(
-            output=None,
-            cache_key=cache_key
+            output=None, cache_key=cache_key
         ), "should not be cached if no output"
 
         assert not is_stage_cached(
-            output=create_test_output(success=False),
-            cache_key=cache_key
+            output=create_test_output(success=False), cache_key=cache_key
         ), "should not be cached if output is not successful"
 
         assert not is_stage_cached(
-            output=create_test_output(artifact=None),
-            cache_key=cache_key
+            output=create_test_output(artifact=None), cache_key=cache_key
         ), "should not be cached if no artifact produced"
 
         assert not is_stage_cached(
-            output=create_test_output(),
-            cache_key="a hash that doesn't match"
+            output=create_test_output(), cache_key="a hash that doesn't match"
         ), "should not be cached if hash doesn't match"
 
         assert is_stage_cached(
-            output=create_test_output(),
-            cache_key=cache_key
+            output=create_test_output(), cache_key=cache_key
         ), "should be cached if hash matches"
 
     def test_listing_override_files(self):
