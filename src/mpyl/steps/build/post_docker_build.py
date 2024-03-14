@@ -41,10 +41,11 @@ class AfterBuildDocker(Step):
 
         full_image_path = docker_registry_path(docker_registry, image_name)
         artifact = Artifact(
-            ArtifactType.DOCKER_IMAGE,
-            properties.versioning.revision,
-            self.meta.name,
-            DockerImageSpec(image=full_image_path),
+            artifact_type=ArtifactType.DOCKER_IMAGE,
+            revision=properties.versioning.revision,
+            producing_step=self.meta.name,
+            spec=DockerImageSpec(image=full_image_path),
+            hash=step_input.project_execution.cache_key,
         )
 
         if step_input.dry_run:

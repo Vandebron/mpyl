@@ -132,9 +132,7 @@ class RunResult:
             [res for res in self._results if res.stage == stage]
         )
 
-    def plan_for_stage(self, stage: Stage) -> set[Project]:
+    def plan_for_stage(self, stage: Stage) -> set[ProjectExecution]:
         plan: Optional[set[ProjectExecution]] = self.run_plan.get(stage)
-        if plan:
-            return {execution.project for execution in plan}
 
-        return set()
+        return plan if plan else set()

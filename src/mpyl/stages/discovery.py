@@ -58,22 +58,17 @@ def is_stage_cached(output: Optional[Output], cache_key: str) -> bool:
 
 
 def hashed_changes(files: set[str]) -> str:
-    def sha256(filename: str):
-        with open(filename, "rb") as file:
-            _sha256 = hashlib.sha256()
+    sha256 = hashlib.sha256()
 
+    for changed_file in files:
+        with open(changed_file, "rb") as file:
             while True:
                 data = file.read(65536)
                 if not data:
                     break
-                _sha256.update(data)
-            return _sha256.hexdigest()
+                sha256.update(data)
 
-    hash_sha256 = hashlib.sha256()
-    for changed_file in files:
-        hash_sha256.update(sha256(changed_file).encode("utf-8"))
-
-    return hash_sha256.hexdigest()
+    return sha256.hexdigest()
 
 
 def _to_project_execution(
