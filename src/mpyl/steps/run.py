@@ -7,7 +7,7 @@ from typing import Optional
 
 from .models import RunProperties
 from .steps import StepResult, ExecutionException
-from ..project import Stage, Project
+from ..project import Stage
 from ..project_execution import ProjectExecution
 
 
@@ -28,7 +28,7 @@ class RunResult:
         if self._exception:
             return "❗ Failed with exception"
         if self.is_in_progress:
-            return "🏗️ Building"
+            return "🛠️ Building"
         if not self.has_results:
             return "🦥 Nothing to do"
         if self._results_success():

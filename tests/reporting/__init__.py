@@ -40,6 +40,7 @@ def create_test_result_with_plan() -> RunResult:
                     ProjectExecution.always_run(p) for p in deploy_projects
                 },
             },
+            all_projects=set(),
         ),
     )
 

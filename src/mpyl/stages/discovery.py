@@ -60,7 +60,7 @@ def is_stage_cached(output: Optional[Output], cache_key: str) -> bool:
 def hashed_changes(files: set[str]) -> str:
     sha256 = hashlib.sha256()
 
-    for changed_file in files:
+    for changed_file in sorted(files):
         with open(changed_file, "rb") as file:
             while True:
                 data = file.read(65536)
