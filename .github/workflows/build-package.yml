@@ -191,6 +191,8 @@ jobs:
         run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_And_Upload.outputs.mpylVersion }}
 
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Repo status
         run: mpyl repo status
@@ -237,6 +239,8 @@ jobs:
         run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_And_Upload.outputs.mpylVersion }}
 
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Get head revision
         id: headRevision
