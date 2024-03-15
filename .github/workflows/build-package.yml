@@ -194,6 +194,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      - run: |-
+          git diff --name-only main...HEAD || true
+          git diff --name-only origin/main...HEAD || true
+
       - name: Check mpyl health
         run: mpyl health --ci
 
