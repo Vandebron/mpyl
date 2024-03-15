@@ -77,7 +77,7 @@ def hashed_changes(files: set[str]) -> str:
 
 
 def _to_project_execution(
-    logger: logging.Logger, project: Project, stage: str, changes: Changeset
+    logger: logging.Logger, project: Project, stage: str, changeset: Changeset
 ) -> Optional[ProjectExecution]:
     if project.stages.for_stage(stage) is None:
         return None
@@ -85,13 +85,13 @@ def _to_project_execution(
     project_changed_files = set(
         filter(
             lambda changed_file: file_belongs_to_project(logger, project, changed_file),
-            changes.files_touched,
+            changeset.files_touched,
         )
     )
 
     any_dependency_touched = any(
         is_dependency_touched(logger, project, stage, changed_file)
-        for changed_file in changes.files_touched
+        for changed_file in changeset.files_touched
     )
 
     if project_changed_files:
@@ -117,12 +117,12 @@ def _to_project_execution(
         else:
             cached = is_stage_cached(
                 output=Output.try_read(project.target_path, stage),
-                cache_key=changes.sha,
+                cache_key=changeset.sha,
             )
 
         execution = ProjectExecution(
             project=project,
-            cache_key=changes.sha,
+            cache_key=changeset.sha,
             cached=cached,
         )
 
@@ -136,11 +136,11 @@ def build_project_executions(
     logger: logging.Logger,
     all_projects: set[Project],
     stage: str,
-    changes: Changeset,
+    changeset: Changeset,
 ) -> set[ProjectExecution]:
     maybe_execution_projects = set(
         map(
-            lambda project: _to_project_execution(logger, project, stage, changes),
+            lambda project: _to_project_execution(logger, project, stage, changeset),
             all_projects,
         )
     )
@@ -154,7 +154,7 @@ def build_project_executions(
 def find_build_set(
     logger: logging.Logger,
     all_projects: set[Project],
-    changes_in_branch: Changeset,
+    changeset: Changeset,
     stages: list[Stage],
     build_all: bool,
     selected_stage: Optional[str] = None,
@@ -178,7 +178,7 @@ def find_build_set(
             project_executions = {ProjectExecution.always_run(p) for p in projects}
         else:
             project_executions = build_project_executions(
-                logger, all_projects, stage.name, changes_in_branch
+                logger, all_projects, stage.name, changeset
             )
             logger.debug(
                 f"Invalidated projects for stage {stage.name}: {[p.name for p in project_executions]}"

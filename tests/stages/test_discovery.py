@@ -76,7 +76,7 @@ class TestDiscovery:
             logger=self.logger,
             all_projects=projects,
             stage=TestStage.build().name,
-            changes=Changeset(
+            changeset=Changeset(
                 sha="a git SHA",
                 files_touched={
                     "tests/projects/job/deployment/project.yml",

@@ -28,38 +28,6 @@ class Changeset:
     def empty(sha: str):
         return Changeset(sha=sha, files_touched=set())
 
-    @staticmethod
-    def from_git_output(git_log_output: str, git_diff_output: str):
-        """
-        :param git_diff_output: output of `git log --pretty=format:"hash %H" --name-only
-        --no-abbrev-commit <from>..<until>`
-        :param git_log_output: output of `git diff --name-only <from>..<until>`
-        """
-        change_set = set(git_diff_output.splitlines())
-
-        sections = []
-        current_section: list[str] = []
-        lines = git_log_output.splitlines()
-        for line in lines:
-            if line.startswith(Changeset.BREAK_WORD):
-                if current_section:
-                    sections.append(current_section)
-                current_section = [line.replace(Changeset.BREAK_WORD, "")]
-            else:
-                current_section.append(line)
-
-        if current_section:
-            sections.append(current_section)
-
-        revisions = [
-            Changeset(
-                section[0],
-                {line for line in section[1:] if line in change_set},
-            )
-            for section in reversed(sections)
-        ]
-        return revisions
-
 
 @dataclass(frozen=True)
 class RepoCredentials:
@@ -149,24 +117,6 @@ class Repository:  # pylint: disable=too-many-public-methods
 
         return Repository(config=config, repo_path=repo_path)
 
-    @staticmethod
-    def from_shallow_diff_clone(
-        branch_name: str, url: str, base_branch: str, config_path: Path, path: Path
-    ):
-        Repo.clone_from(
-            url,
-            path,
-            allow_unsafe_protocols=True,
-            shallow_exclude=base_branch,
-            single_branch=True,
-            branch=branch_name,
-        )
-        return Repository(RepoConfig.from_config(parse_config(config_path)))
-
-    @property
-    def has_valid_head(self):
-        return self._repo.head.is_valid()
-
     @property
     def get_sha(self):
         return self._repo.head.commit.hexsha
@@ -227,24 +177,6 @@ class Repository:  # pylint: disable=too-many-public-methods
     def __get_filter_patterns(self):
         return ["--"] + [f":!{pattern}" for pattern in self._config.ignore_patterns]
 
-    # Only used in the repo status command, can be deleted later
-    def changes_between(
-        self, base_revision: str, head_revision: str
-    ) -> list[Changeset]:
-        command = [
-            f'--pretty=format:"{Changeset.BREAK_WORD}%H"',
-            "--name-only",
-            "--no-abbrev-commit",
-            f"{base_revision}..{head_revision}",
-            self.__get_filter_patterns(),
-        ]
-
-        revs = self._repo.git.log(*command).replace('"', "")
-        changed_files = self._repo.git.diff(
-            f"{base_revision}..{head_revision}", name_only=True
-        )
-        return Changeset.from_git_output(revs, changed_files)
-
     def changes_in_branch(self) -> Changeset:
         return Changeset(self.get_sha, self.changed_files_in_branch())
 
@@ -281,9 +213,6 @@ class Repository:  # pylint: disable=too-many-public-methods
             logging.error(f"HEAD is at {curr_rev_tag} not at expected `{current_tag}`")
             return Changeset.empty(self.get_sha)
 
-        return self.changes_in_merge_commit()
-
-    def changes_in_merge_commit(self) -> Changeset:
         parent_revs = self._repo.head.commit.parents
         if not parent_revs:
             logging.error(
@@ -295,20 +224,6 @@ class Repository:  # pylint: disable=too-many-public-methods
             f"{str(self._repo.head.commit)}..{str(parent_revs[0])}", name_only=True
         ).splitlines()
         return Changeset(sha=str(self.get_sha), files_touched=files_changed)
-
-    def init_remote(self, url: Optional[str]) -> Remote:
-        if url:
-            return self._repo.create_remote("origin", url=url)
-
-        return self._repo.remote()
-
-    def fetch_main_branch(self):
-        return self._repo.remote().fetch(
-            f"{self.main_branch}:refs/remotes/{self.main_origin_branch}"
-        )
-
-    def fetch_pr(self, pr_number: int):
-        return self._repo.remote().fetch(f"pull/{pr_number}/head:PR-{pr_number}")
 
     def create_branch(self, branch_name: str):
         return self._repo.git.checkout("-b", f"{branch_name}")
@@ -332,18 +247,8 @@ class Repository:  # pylint: disable=too-many-public-methods
     def checkout_branch(self, branch_name: str):
         self._repo.git.switch(branch_name)
 
-    def local_branch_exists(self, branch_name: str) -> bool:
-        local_branches = [
-            branch.strip(" ") for branch in self._repo.git.branch("--list").splitlines()
-        ]
-        logging.debug(f"Found local branches: {local_branches}")
-        return branch_name in local_branches
-
     def remote_branch_exists(self, branch_name: str) -> bool:
         return self._repo.git.ls_remote("origin", branch_name) != ""
-
-    def delete_local_branch(self, branch_name: str):
-        self._repo.git.branch("-D", branch_name)
 
     def find_projects(self, folder_pattern: str = "") -> list[str]:
         """returns a set of all project.yml files
