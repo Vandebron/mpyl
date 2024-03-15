@@ -106,7 +106,7 @@ def status(obj: RepoContext):
                     console.log("❌ Repo not fit for tag build")
                 else:
                     changes = repo.changes_in_tagged_commit(versioning.tag)
-                    files_changed = changes[0].files_touched
+                    files_changed = changes.files_touched
                     console.log(
                         Markdown(
                             f"*{len(files_changed)}* files changed in merge commit `{versioning.tag}`"
