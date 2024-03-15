@@ -190,8 +190,9 @@ jobs:
       - name: Install MPyL
         run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_And_Upload.outputs.mpylVersion }}
 
-      - name: Initialize repo
-        run: mpyl repo init -b ${{ github.ref }} -u https://${{ env.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git -p
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Repo status
         run: mpyl repo status
@@ -237,8 +238,9 @@ jobs:
       - name: Install MPyL
         run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_And_Upload.outputs.mpylVersion }}
 
-      - name: Initialize repo
-        run: mpyl repo init -b ${{ github.ref }} -u https://${{ env.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git -p
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Get head revision
         id: headRevision

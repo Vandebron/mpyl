@@ -174,16 +174,13 @@ class Repository:  # pylint: disable=too-many-public-methods
         return Changeset(self.get_sha, self.changed_files_in_branch())
 
     def changed_files_in_branch(self) -> set[str]:
-        base = self._repo.merge_base(self.main_origin_branch, "HEAD")[0]
-        if base:
-            changed_files = self._repo.git.diff(
-                f"HEAD..{base.hexsha}", name_only=True
-            ).splitlines()
-            return set(changed_files)
-
-        raise ValueError(
-            f"Cannot find merge base between {self.main_origin_branch} and the current branch"
-        )
+        # TODO pass the base_branch as a build parameter, not all branches  # pylint: disable=fixme
+        #  are created from the main branch
+        base_branch = self.main_origin_branch
+        changed_files = self._repo.git.diff(
+            f"{base_branch}...HEAD", name_only=True
+        ).splitlines()
+        return set(changed_files)
 
     def unversioned_files(self) -> set[str]:
         changed: set[str] = set(
