@@ -194,9 +194,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Repo status
-        run: mpyl repo status
-
       - name: Check mpyl health
         run: mpyl health --ci
 
@@ -246,9 +243,6 @@ jobs:
         id: headRevision
         run: echo "headRevision=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Repo status
-        run: mpyl repo status
-
       - name: Build status
         run: mpyl build status
 
@@ -271,11 +265,6 @@ jobs:
 
       - name: Tag merge
         run: git tag -a v${{ needs.Build_And_Upload.outputs.mpylVersion }} -m "Tagging v${{ needs.Build_And_Upload.outputs.mpylVersion }}"
-
-      - name: Repo status after merge
-        env:
-          TAG_NAME: v${{ needs.Build_And_Upload.outputs.mpylVersion }}
-        run: mpyl repo status
 
       - name: Show build status
         env:
