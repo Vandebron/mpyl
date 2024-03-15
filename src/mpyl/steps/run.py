@@ -7,7 +7,7 @@ from typing import Optional
 
 from .models import RunProperties
 from .steps import StepResult, ExecutionException
-from ..project import Stage, Project
+from ..project import Stage
 from ..project_execution import ProjectExecution
 
 
@@ -28,7 +28,7 @@ class RunResult:
         if self._exception:
             return "❗ Failed with exception"
         if self.is_in_progress:
-            return "🏗️ Building"
+            return "🛠️ Building"
         if not self.has_results:
             return "🦥 Nothing to do"
         if self._results_success():
@@ -80,10 +80,11 @@ class RunResult:
 
     @property
     def has_run_plan_projects(self) -> bool:
-        #  The current version of this logic is slightly different than what it used to be.
-        #  We now create a ProjectExecution for every project that is changed in the branch
-        #  we're building, HOWEVER we also know per-project whether it's cached or not.
-        # In this function we should read that value to exclude projects that don't need rebuilding.
+        """
+        We create a ProjectExecution for every project that is changed in the branch we're building, HOWEVER we also
+        know per-project whether it's cached or not. In this function we should read that value to exclude projects
+        that don't need rebuilding.
+        """
         return not all(
             len(project_execution) == 0
             for stage, project_execution in self.run_plan.items()
@@ -132,9 +133,7 @@ class RunResult:
             [res for res in self._results if res.stage == stage]
         )
 
-    def plan_for_stage(self, stage: Stage) -> set[Project]:
+    def plan_for_stage(self, stage: Stage) -> set[ProjectExecution]:
         plan: Optional[set[ProjectExecution]] = self.run_plan.get(stage)
-        if plan:
-            return {execution.project for execution in plan}
 
-        return set()
+        return plan if plan else set()

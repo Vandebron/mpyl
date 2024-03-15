@@ -227,7 +227,6 @@ class Artifact:
     producing_step: str
     spec: ArtifactSpec
     hash: Optional[str] = None
-    # add init with default value for hash
 
 
 @yaml_object(yaml)

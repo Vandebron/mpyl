@@ -144,13 +144,6 @@ class Repository:  # pylint: disable=too-many-public-methods
         return self._safe_ref_parse(main)
 
     @property
-    def get_tag(self) -> Optional[str]:
-        current_revision = self._repo.head.commit
-        current_tag = self._repo.git.tag(current_revision, points_at=True)
-        logging.debug(f"Current revision: {current_revision} tag: {current_tag}")
-        return current_tag
-
-    @property
     def remote_url(self) -> Optional[str]:
         if self._repo.remotes:
             return self._repo.remote().url
@@ -206,22 +199,11 @@ class Repository:  # pylint: disable=too-many-public-methods
             files_touched=(self.changed_files_in_branch() | self.unversioned_files()),
         )
 
-    def changes_in_tagged_commit(self, current_tag: str) -> Changeset:
-        curr_rev_tag = self.get_tag
-
-        if curr_rev_tag != current_tag:
-            logging.error(f"HEAD is at {curr_rev_tag} not at expected `{current_tag}`")
-            return Changeset.empty(self.get_sha)
-
-        parent_revs = self._repo.head.commit.parents
-        if not parent_revs:
-            logging.error(
-                "HEAD is not at merge commit, cannot determine changed files."
-            )
-            return Changeset.empty(self.get_sha)
-        logging.debug(f"Parent revisions: {parent_revs}")
+    def changes_in_tagged_commit(self, tag: str) -> Changeset:
+        previous_tag = self._repo.git.describe("--tags", "--abbrev=0", f"{tag}^")
+        logging.debug(f"Previous tag: {previous_tag}")
         files_changed = self._repo.git.diff(
-            f"{str(self._repo.head.commit)}..{str(parent_revs[0])}", name_only=True
+            f"{previous_tag}..{tag}", name_only=True
         ).splitlines()
         return Changeset(sha=str(self.get_sha), files_touched=files_changed)
 

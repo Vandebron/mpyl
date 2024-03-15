@@ -8,7 +8,7 @@ from src.mpyl.project import load_project
 from src.mpyl.projects.find import load_projects
 from src.mpyl.stages.discovery import (
     build_project_executions,
-    is_stage_cached,
+    is_output_cached,
     is_dependency_touched,
 )
 from src.mpyl.steps import ArtifactType
@@ -120,27 +120,27 @@ class TestDiscovery:
                 success=success, message="an output message", produced_artifact=artifact
             )
 
-        assert not is_stage_cached(
+        assert not is_output_cached(
             output=None,
             cache_key=cache_key,
         ), "should not be cached if no output"
 
-        assert not is_stage_cached(
+        assert not is_output_cached(
             output=create_test_output(success=False),
             cache_key=cache_key,
         ), "should not be cached if output is not successful"
 
-        assert not is_stage_cached(
+        assert not is_output_cached(
             output=create_test_output(artifact=None),
             cache_key=cache_key,
         ), "should not be cached if no artifact produced"
 
-        assert not is_stage_cached(
+        assert not is_output_cached(
             output=create_test_output(),
             cache_key="a hash that doesn't match",
         ), "should not be cached if hash doesn't match"
 
-        assert is_stage_cached(
+        assert is_output_cached(
             output=create_test_output(),
             cache_key=cache_key,
         ), "should be cached if hash matches"

@@ -47,33 +47,29 @@ def is_dependency_touched(
     return touched_dependency is not None
 
 
-def is_stage_cached(output: Optional[Output], cache_key: str) -> bool:
-    if output is None:
-        return False
-    if not output.success:
-        return False
-    if output.produced_artifact is None:
+def is_output_cached(output: Optional[Output], cache_key: str) -> bool:
+    if (
+        output is None
+        or not output.success
+        or output.produced_artifact is None
+        or not output.produced_artifact.hash
+    ):
         return False
     return output.produced_artifact.hash == cache_key
 
 
 def hashed_changes(files: set[str]) -> str:
-    def sha256(filename: str):
-        with open(filename, "rb") as file:
-            _sha256 = hashlib.sha256()
+    sha256 = hashlib.sha256()
 
+    for changed_file in sorted(files):
+        with open(changed_file, "rb") as file:
             while True:
                 data = file.read(65536)
                 if not data:
                     break
-                _sha256.update(data)
-            return _sha256.hexdigest()
+                sha256.update(data)
 
-    hash_sha256 = hashlib.sha256()
-    for changed_file in files:
-        hash_sha256.update(sha256(changed_file).encode("utf-8"))
-
-    return hash_sha256.hexdigest()
+    return sha256.hexdigest()
 
 
 def _to_project_execution(
@@ -82,6 +78,10 @@ def _to_project_execution(
     if project.stages.for_stage(stage) is None:
         return None
 
+    is_any_dependency_touched = any(
+        is_dependency_touched(logger, project, stage, changed_file)
+        for changed_file in changeset.files_touched
+    )
     project_changed_files = set(
         filter(
             lambda changed_file: file_belongs_to_project(logger, project, changed_file),
@@ -89,47 +89,26 @@ def _to_project_execution(
         )
     )
 
-    any_dependency_touched = any(
-        is_dependency_touched(logger, project, stage, changed_file)
-        for changed_file in changeset.files_touched
-    )
-
     if project_changed_files:
-        hash_of_project_changed_files = hashed_changes(files=project_changed_files)
-
-        if stage == deploy.STAGE_NAME:
-            cached = False
-        else:
-            cached = is_stage_cached(
-                output=Output.try_read(project.target_path, stage),
-                cache_key=hash_of_project_changed_files,
-            )
-
-        execution = ProjectExecution(
-            project=project,
-            cache_key=hash_of_project_changed_files,
-            cached=cached,
-        )
-
-    elif any_dependency_touched:
-        if stage == deploy.STAGE_NAME:
-            cached = False
-        else:
-            cached = is_stage_cached(
-                output=Output.try_read(project.target_path, stage),
-                cache_key=changeset.sha,
-            )
-
-        execution = ProjectExecution(
-            project=project,
-            cache_key=changeset.sha,
-            cached=cached,
-        )
-
+        cache_key = hashed_changes(files=project_changed_files)
+    elif is_any_dependency_touched:
+        cache_key = changeset.sha
     else:
-        execution = None
+        return None
 
-    return execution
+    if stage == deploy.STAGE_NAME:
+        cached = False
+    else:
+        cached = is_output_cached(
+            output=Output.try_read(project.target_path, stage),
+            cache_key=cache_key,
+        )
+
+    return ProjectExecution(
+        project=project,
+        cache_key=cache_key,
+        cached=cached,
+    )
 
 
 def build_project_executions(

@@ -77,13 +77,19 @@ def find_projects(stage: str) -> list[DynamicOutput[Project]]:
     all_projects = set(
         map(lambda p: load_project(Path("."), Path(p), strict=False), project_paths)
     )
-    invalidated = build_project_executions(all_projects, stage, changes_in_branch)
+    dagster_logger = get_dagster_logger()
+    project_executions = build_project_executions(
+        logger=dagster_logger,
+        all_projects=all_projects,
+        stage=stage,
+        changes=changes_in_branch,
+    )
     return list(
         map(
             lambda project: DynamicOutput(
                 project, mapping_key=project.name.replace("-", "_")
             ),
-            invalidated,
+            project_executions,
         )
     )
 

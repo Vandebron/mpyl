@@ -154,6 +154,11 @@ def run_build(
     try:
         for stage, projects in accumulator.run_plan.items():
             for proj in projects:
+                if proj.cached:
+                    logging.info(
+                        f"Skipping {proj.name} for stage {stage.name} because it is cached"
+                    )
+                    continue
                 result = executor.execute(stage.name, proj, dry_run)
                 accumulator.append(result)
                 if reporter:

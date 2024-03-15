@@ -120,7 +120,9 @@ class BuildDocker(Step):
             build_args=build_args,
         )
         artifact = input_to_artifact(
-            ArtifactType.DOCKER_IMAGE, step_input, spec=DockerImageSpec(image=image_tag)
+            artifact_type=ArtifactType.DOCKER_IMAGE,
+            step_input=step_input,
+            spec=DockerImageSpec(image=image_tag),
         )
 
         if success:

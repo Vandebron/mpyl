@@ -1,4 +1,5 @@
 """This module contains the ProjectExecution class."""
+import uuid
 from dataclasses import dataclass
 
 from .project import Project
@@ -13,9 +14,7 @@ class ProjectExecution:
     @staticmethod
     def always_run(project: Project):
         return ProjectExecution(
-            project=project,
-            cache_key="",  # TODO Check if this should be a random string instead
-            cached=False,
+            project=project, cache_key=uuid.uuid4().hex, cached=False
         )
 
     @property

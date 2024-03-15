@@ -25,8 +25,8 @@ class BuildEcho(Step):
     def execute(self, step_input: Input) -> Output:
         self._logger.info(f"Building project {step_input.project_execution.name}")
         artifact = input_to_artifact(
-            ArtifactType.DOCKER_IMAGE,
-            step_input,
+            artifact_type=ArtifactType.DOCKER_IMAGE,
+            step_input=step_input,
             spec=DockerImageSpec(docker_image_tag(step_input)),
         )
         return Output(
