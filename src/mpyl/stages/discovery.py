@@ -48,7 +48,12 @@ def is_dependency_touched(
 
 
 def is_output_cached(output: Optional[Output], cache_key: str) -> bool:
-    if output is None or not output.success or output.produced_artifact is None:
+    if (
+        output is None
+        or not output.success
+        or output.produced_artifact is None
+        or not output.produced_artifact.hash
+    ):
         return False
     return output.produced_artifact.hash == cache_key
 
