@@ -24,6 +24,7 @@ from ....steps.deploy.k8s.rancher import (
     ClusterConfig,
 )
 from ....steps.deploy.k8s.resources import to_yaml
+from ....utilities import replace_pr_number
 from ....utilities.repo import RepoConfig
 
 yaml = YAML()
@@ -292,7 +293,7 @@ def substitute_namespaces(
 
     When the env var is substituted, first the referenced service (serviceName) is looked up in the list of projects.
     If it is part of the deploy set, and we're in deploying to target PullRequest,
-    the namespace is subsituted with the PR namespace (pr-XXXX).
+    the namespace is substituted with the PR namespace (pr-XXXX).
     Else is substituted with the namespace of the referenced project.
 
     Note that the name of the service in the env var is case-sensitive!
@@ -323,10 +324,6 @@ def substitute_namespaces(
                 replaced_namespace = replace_namespace(
                     value, project.name, linked_project_namespace
                 )
-                updated_pr = (
-                    replaced_namespace.replace("{PR-NUMBER}", str(pr_identifier))
-                    if pr_identifier
-                    else replaced_namespace
-                )
+                updated_pr = replace_pr_number(replaced_namespace, pr_identifier)
                 env[key] = updated_pr
     return env
