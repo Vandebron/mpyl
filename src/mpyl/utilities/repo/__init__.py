@@ -257,7 +257,7 @@ class Repository:  # pylint: disable=too-many-public-methods
         ).splitlines()
         return set(changed_files)
 
-    def unversioned_files(self) -> set[str]:
+    def files_changed_locally(self) -> set[str]:
         changed: set[str] = set(
             self._repo.git.diff(
                 self.__get_filter_patterns(), None, name_only=True
@@ -265,10 +265,12 @@ class Repository:  # pylint: disable=too-many-public-methods
         )
         return changed.union(self._repo.untracked_files)
 
-    def changes_in_branch_including_unversioned_files(self) -> Changeset:
+    def changes_in_branch_including_local(self) -> Changeset:
         return Changeset(
             sha=self.get_sha,
-            files_touched=(self.changed_files_in_branch() | self.unversioned_files()),
+            files_touched=(
+                self.changed_files_in_branch() | self.files_changed_locally()
+            ),
         )
 
     def changes_in_tagged_commit(self, current_tag: str) -> Changeset:

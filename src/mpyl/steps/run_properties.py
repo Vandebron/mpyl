@@ -45,7 +45,7 @@ def initiate_run_properties(
                     logger=logging.getLogger("mpyl"),
                     all_projects=all_projects,
                     changes_in_branch=(
-                        repo.changes_in_branch_including_unversioned_files()
+                        repo.changes_in_branch_including_local()
                         if cli_parameters.local
                         else (
                             repo.changes_in_tagged_commit(tag)
