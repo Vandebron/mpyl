@@ -13,7 +13,6 @@ from git.objects import Commit
 from gitdb.exc import BadName
 
 from ...project import Project
-from ...utilities.pyaml_env import parse_config
 
 
 @dataclass(frozen=True)
@@ -21,8 +20,6 @@ class Changeset:
     sha: str
     """Git hash for this revision"""
     files_touched: set[str]
-    """Paths to files that were altered in this hash"""
-    BREAK_WORD = "hash "
 
     @staticmethod
     def empty(sha: str):
