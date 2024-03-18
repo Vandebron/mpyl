@@ -1,5 +1,14 @@
 # Release notes
 
+## MPyL 1.5.1
+
+
+#### Bugfixes
+- Always add changes to the build plan for the deploy stage
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.5.1)
+
 ## MPyL 1.5.0
 
 
