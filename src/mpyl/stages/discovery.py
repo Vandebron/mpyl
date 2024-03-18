@@ -7,7 +7,7 @@ from typing import Optional
 
 from ..project import Project, Dependencies
 from ..project import Stage
-from ..steps import ArtifactType
+from ..steps import ArtifactType, deploy
 from ..steps.collection import StepsCollection
 from ..steps.models import Output
 from ..utilities.repo import Revision
@@ -82,7 +82,9 @@ def is_invalidated(
     )
     if invalidated_by_file:
         output = Output.try_read(project.target_path, stage)
-        return _is_output_invalid(logger, output, change_history, changed_file.revision)
+        return stage == deploy.STAGE_NAME or _is_output_invalid(
+            logger, output, change_history, changed_file.revision
+        )
     return False
 
 
