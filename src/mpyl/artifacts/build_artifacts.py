@@ -129,7 +129,9 @@ class ArtifactsRepository:
                 artifact_repo.checkout_branch(branch_name=branch)
                 path_in_repo = repo_path / self.path_within_artifact_repo
                 self.logger.info(f"repo_path: '{repo_path}'")
-                self.logger.info(f"path_within_artifact_repo: '{self.path_within_artifact_repo}'")
+                self.logger.info(
+                    f"path_within_artifact_repo: '{self.path_within_artifact_repo}'"
+                )
                 self.logger.info(f"path in repo: '{path_in_repo}'")
                 g = f"{str(path_in_repo)}/*"
                 self.logger.info(f"path in repo: '{glob.glob(g)}'")
