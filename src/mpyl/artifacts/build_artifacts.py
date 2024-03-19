@@ -132,13 +132,13 @@ class ArtifactsRepository:
 
                 # ptab remove me
                 self.logger.info(f"repo_path: '{repo_path}'")
-                os.listdir(repo_path)
+                self.logger.info(os.listdir(repo_path))
 
                 path_in_repo = repo_path / self.path_within_artifact_repo
 
                 # ptab remove me
                 self.logger.info(f"path in repo: '{path_in_repo}'")
-                os.listdir(path_in_repo)
+                self.logger.info(os.listdir(path_in_repo))
 
                 shutil.copytree(
                     src=path_in_repo,
