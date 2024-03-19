@@ -1,6 +1,5 @@
 """Class that handles remote caching of build artifacts"""
 import abc
-import glob
 import os
 import shutil
 import time
@@ -117,7 +116,7 @@ class ArtifactsRepository:
         with TemporaryDirectory() as tmp_repo_dir:
             repo_path = Path(tmp_repo_dir)
             with Repository.from_clone(
-                config=self.artifact_repo_config, repo_path=Path(tmp_repo_dir)
+                config=self.artifact_repo_config, repo_path=repo_path
             ) as artifact_repo:
                 if not artifact_repo.remote_branch_exists(branch_name=branch):
                     self.logger.info(
@@ -129,12 +128,9 @@ class ArtifactsRepository:
                 artifact_repo.checkout_branch(branch_name=branch)
                 path_in_repo = repo_path / self.path_within_artifact_repo
                 self.logger.info(f"repo_path: '{repo_path}'")
-                self.logger.info(
-                    f"path_within_artifact_repo: '{self.path_within_artifact_repo}'"
-                )
+                os.listdir(path_in_repo)
                 self.logger.info(f"path in repo: '{path_in_repo}'")
-                g_variable = f"{str(path_in_repo)}/*"
-                self.logger.info(f"path in repo: '{glob.glob(g_variable)}'")
+                os.listdir(path_in_repo)
 
                 shutil.copytree(
                     src=path_in_repo,
