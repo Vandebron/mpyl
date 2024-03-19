@@ -37,6 +37,7 @@ class TestSteps:
         logger=logging.getLogger(),
         properties=test_data.RUN_PROPERTIES,
         steps_collection=StepsCollection(logging.getLogger()),
+        root_dir=resource_path,
     )
 
     docker_image = get_output()
@@ -123,8 +124,11 @@ class TestSteps:
         steps = Steps(
             logger=Logger.manager.getLogger("logger"),
             properties=test_data.RUN_PROPERTIES,
+            root_dir=self.resource_path,
         )
-        stages = Stages(build=None, test=None, deploy=None, postdeploy=None)
+        stages = Stages(
+            {"build": None, "test": None, "deploy": None, "postdeploy": None}
+        )
         project = Project(
             "test", "Test project", "", stages, [], None, None, None, None
         )
@@ -151,7 +155,11 @@ class TestSteps:
             run_plan={},
         )
         with pytest.raises(ValidationError) as excinfo:
-            Steps(logger=Logger.manager.getLogger("logger"), properties=properties)
+            Steps(
+                logger=Logger.manager.getLogger("logger"),
+                properties=properties,
+                root_dir=self.resource_path,
+            )
         assert "('invalid' was unexpected)" in excinfo.value.message
 
     def test_should_succeed_if_executor_is_known(self):
@@ -197,7 +205,7 @@ class TestSteps:
     def test_should_succeed_if_stage_is_not_known(self):
         project = test_data.get_project_with_stages(stage_config={"test": "Some Test"})
         result = self.executor.execute(
-            stage=build.STAGE_NAME,
+            stage="build",
             project_execution=ProjectExecution.always_run(project),
         )
         assert not result.output.success

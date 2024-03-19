@@ -63,6 +63,7 @@ class Changeset:
 
 @dataclass(frozen=True)
 class RepoCredentials:
+    name: str
     url: str
     ssh_url: str
     user_name: str
@@ -84,6 +85,7 @@ class RepoCredentials:
         url = config["url"]
         ssh_url = f"{url.replace('https://', 'git@').replace('.com/', '.com:')}"
         return RepoCredentials(
+            name=url.removeprefix("https://github.com/").removesuffix(".git"),
             url=url,
             ssh_url=ssh_url,
             user_name=config["userName"],
@@ -96,7 +98,7 @@ class RepoCredentials:
 class RepoConfig:
     main_branch: str
     ignore_patterns: list[str]
-    repo_credentials: Optional[RepoCredentials]
+    repo_credentials: RepoCredentials
 
     @staticmethod
     def from_config(config: dict):
@@ -116,12 +118,9 @@ class RepoConfig:
 
 
 class Repository:  # pylint: disable=too-many-public-methods
-    def __init__(self, config: RepoConfig, repo_path: Optional[Path] = None):
-        self._config = config
-        self._root_dir = repo_path or Git().rev_parse("--show-toplevel")
-        self._repo = Repo(
-            path=self._root_dir
-        )  # pylint: disable=attribute-defined-outside-init
+    def __init__(self, config: RepoConfig, repo: Optional[Repo] = None):
+        self.config = config
+        self._repo = repo or Repo(path=Git().rev_parse("--show-toplevel"))
 
     def __enter__(self):
         return self
@@ -138,16 +137,21 @@ class Repository:  # pylint: disable=too-many-public-methods
         if not creds:
             raise ValueError("Cannot clone repository without credentials")
 
+        if user_name := creds.user_name is None:
+            return Repository(
+                config=config,
+                repo=Repo.clone_from(url=creds.ssh_url, to_path=repo_path),
+            )
+
         repo = Repo.clone_from(
             url=creds.to_url_with_credentials,
             to_path=repo_path,
         )
-        user_name = creds.user_name
         with repo.config_writer() as writer:
             writer.set_value("user", "name", user_name)
-            writer.set_value("user", "email", creds.email or "somebody@somwhere.com")
+            writer.set_value("user", "email", creds.email or "somebody@somewhere.com")
 
-        return Repository(config=config, repo_path=repo_path)
+        return Repository(config=config, repo=repo)
 
     @staticmethod
     def from_shallow_diff_clone(
@@ -208,24 +212,24 @@ class Repository:  # pylint: disable=too-many-public-methods
 
     @property
     def root_dir(self) -> Path:
-        return Path(self._root_dir)
+        return Path(self._repo.git_dir).parent
 
     @property
     def main_branch(self) -> str:
-        return self._config.main_branch.split("/")[-1]
+        return self.config.main_branch.split("/")[-1]
 
     @property
     def main_origin_branch(self) -> str:
-        parts = self._config.main_branch.split("/")
+        parts = self.config.main_branch.split("/")
         if len(parts) > 1:
             return "/".join(parts)
-        return f"origin/{self.main_branch}"
+        return f"{self.main_branch}"
 
     def fit_for_tag_build(self, tag: str) -> bool:
         return len(self.changes_in_tagged_commit(tag).files_touched) > 0
 
     def __get_filter_patterns(self):
-        return ["--"] + [f":!{pattern}" for pattern in self._config.ignore_patterns]
+        return ["--"] + [f":!{pattern}" for pattern in self.config.ignore_patterns]
 
     # Only used in the repo status command, can be deleted later
     def changes_between(
@@ -325,6 +329,9 @@ class Repository:  # pylint: disable=too-many-public-methods
     def pull(self):
         return self._repo.git.pull()
 
+    def add_note(self, note: str):
+        return self._repo.git.notes("add", "-m", note)
+
     def push(self, branch: str):
         return self._repo.git.push("--set-upstream", "origin", branch)
 
@@ -350,11 +357,11 @@ class Repository:  # pylint: disable=too-many-public-methods
         """
         projects = set(
             self._repo.git.ls_files(
-                f"*{folder_pattern}*/{Project.project_yaml_path()}"
+                f"*{folder_pattern}*{Project.project_yaml_path()}"
             ).splitlines()
         ) | set(
             self._repo.git.ls_files(
-                f"*{folder_pattern}*/{Project.project_overrides_yml_pattern()}"
+                f"*{folder_pattern}*{Project.project_overrides_yml_pattern()}"
             ).splitlines()
         )
         return sorted(projects)

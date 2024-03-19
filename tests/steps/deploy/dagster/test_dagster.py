@@ -11,7 +11,7 @@ from src.mpyl.steps.deploy.k8s.resources.dagster import to_user_code_values
 from src.mpyl.utilities.docker import DockerConfig
 from src.mpyl.utilities.helm import get_name_suffix
 from src.mpyl.utilities.yaml import yaml_to_string
-from tests import root_test_path
+from tests import root_test_path, test_resource_path
 from tests.test_resources import test_data
 from tests.test_resources.test_data import assert_roundtrip
 
@@ -19,7 +19,8 @@ yaml = YAML()
 
 
 class TestDagster:
-    resource_path = root_test_path / "projects" / "dagster-user-code" / "deployment"
+    dagster_project_folder = Path("projects", "dagster-user-code", "deployment")
+    resource_path = root_test_path / dagster_project_folder
     generated_values_path = (
         root_test_path / "steps" / "deploy" / "dagster" / "dagster-user-deployments"
     )
@@ -38,7 +39,9 @@ class TestDagster:
     def test_generate_correct_values_yaml_with_service_account_override(self):
         step_input = Input(
             ProjectExecution.always_run(
-                project=load_project(self.resource_path, Path("project.yml"), True)
+                project=load_project(
+                    test_resource_path, self.resource_path / "project.yml", True
+                )
             ),
             test_data.RUN_PROPERTIES,
             None,
@@ -62,7 +65,9 @@ class TestDagster:
     def test_generate_correct_values_yaml_with_production_target(self):
         step_input = Input(
             ProjectExecution.always_run(
-                project=load_project(self.resource_path, Path("project.yml"), True),
+                project=load_project(
+                    test_resource_path, Path(self.resource_path, "project.yml"), True
+                ),
             ),
             test_data.RUN_PROPERTIES_PROD,
             None,
@@ -84,7 +89,9 @@ class TestDagster:
     def test_generate_correct_values_yaml_without_service_account_override(self):
         step_input = Input(
             ProjectExecution.always_run(
-                project=load_project(self.resource_path, Path("project.yml"), True)
+                project=load_project(
+                    test_resource_path, Path(self.resource_path, "project.yml"), True
+                )
             ),
             test_data.RUN_PROPERTIES,
             None,
@@ -106,10 +113,13 @@ class TestDagster:
         )
 
     def test_generate_with_sealed_secret_as_extra_manifest(self):
+        project_folder = self.config_resource_path / ".." / self.dagster_project_folder
         step_input = Input(
             ProjectExecution.always_run(
                 project=load_project(
-                    self.resource_path, Path("project_with_sealed_secret.yml"), True
+                    self.config_resource_path,
+                    project_folder / "project_with_sealed_secret.yml",
+                    True,
                 )
             ),
             test_data.RUN_PROPERTIES,

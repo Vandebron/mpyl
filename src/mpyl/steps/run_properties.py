@@ -11,12 +11,14 @@ from ..steps.models import RunProperties
 from ..utilities.repo import Repository, RepoConfig
 
 
-def initiate_run_properties(
+def construct_run_properties(
     config: dict,
     properties: dict,
     cli_parameters: MpylCliParameters = MpylCliParameters(),
     run_plan: Optional[dict[Stage, set[ProjectExecution]]] = None,
     all_projects: Optional[set[Project]] = None,
+    root_dir: Path = Path(""),
+    explain_run_plan: bool = False,
 ) -> RunProperties:
     tag = cli_parameters.tag or properties["build"]["versioning"].get("tag")
     if all_projects is None or run_plan is None:
@@ -26,7 +28,7 @@ def initiate_run_properties(
                 all_projects = set(
                     map(
                         lambda p: load_project(
-                            root_dir=Path(""),
+                            root_dir=root_dir,
                             project_path=Path(p),
                             strict=False,
                             log=True,
@@ -41,24 +43,11 @@ def initiate_run_properties(
                     Stage(stage["name"], stage["icon"])
                     for stage in properties["stages"]
                 ]
-                run_plan = find_build_set(
-                    logger=logging.getLogger("mpyl"),
-                    all_projects=all_projects,
-                    changes_in_branch=(
-                        repo.changes_in_branch_including_local()
-                        if cli_parameters.local
-                        else (
-                            repo.changes_in_tagged_commit(tag)
-                            if tag
-                            else repo.changes_in_branch()
-                        )
-                    )
-                    if not cli_parameters.projects or cli_parameters.all
-                    else [],
-                    stages=stages,
-                    build_all=cli_parameters.all,
-                    selected_stage=cli_parameters.stage,
-                    selected_projects=cli_parameters.projects,
+                build_set_logger = logging.getLogger("mpyl")
+                if explain_run_plan:
+                    build_set_logger.setLevel("DEBUG")
+                run_plan = _create_run_plan(
+                    all_projects, cli_parameters, explain_run_plan, repo, stages, tag
                 )
 
     if cli_parameters.local:
@@ -78,4 +67,35 @@ def initiate_run_properties(
         run_plan=run_plan,
         all_projects=all_projects,
         cli_tag=tag,
+        root_dir=root_dir,
     )
+
+
+def _create_run_plan(all_projects, cli_parameters, explain_run_plan, repo, stages, tag):
+    build_set_logger = logging.getLogger("mpyl")
+    if explain_run_plan:
+        build_set_logger.setLevel("DEBUG")
+
+    changes_in_branch = (
+        _get_changes(repo, cli_parameters.local, tag)
+        if not cli_parameters.projects or cli_parameters.all
+        else []
+    )
+    return find_build_set(
+        logger=build_set_logger,
+        all_projects=all_projects,
+        changes_in_branch=changes_in_branch,
+        stages=stages,
+        build_all=cli_parameters.all,
+        selected_stage=cli_parameters.stage,
+        selected_projects=cli_parameters.projects,
+    )
+
+
+def _get_changes(repo, local, tag):
+    if local:
+        return repo.changes_in_branch_including_local()
+    if tag:
+        return repo.changes_in_tagged_commit(tag)
+
+    return repo.changes_in_branch()

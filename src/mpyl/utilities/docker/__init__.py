@@ -68,7 +68,6 @@ class DockerRegistryConfig:
     password: str
     provider: Optional[str]
     region: Optional[str]
-    lifecyclepolicy: Optional[dict]
     cache_from_registry: bool
     custom_cache_config: Optional[DockerCacheConfig]
 
@@ -83,7 +82,6 @@ class DockerRegistryConfig:
                 password=config["password"],
                 provider=config.get("provider", None),
                 region=config.get("region", None),
-                lifecyclepolicy=config.get("lifecyclePolicy", None),
                 cache_from_registry=cache_config.get("cacheFromRegistry", False),
                 custom_cache_config=DockerCacheConfig.from_dict(cache_config["custom"])
                 if "custom" in cache_config
@@ -210,9 +208,9 @@ def push_to_registry(
 
     login(logger=logger, registry_config=docker_config)
     full_image_path = docker_registry_path(docker_config, image_name)
-    repo_path = ecr_repository_path(docker_config.host_name, image_name)
 
     if docker_config.provider == Provider.AWS.value:  # pylint: disable=no-member
+        repo_path = ecr_repository_path(docker_config.host_name, image_name)
         create_ecr_repo_if_needed(logger, docker_config, repo_path)
     docker.image.tag(image, full_image_path)
     docker.image.push(full_image_path, quiet=False)
@@ -393,40 +391,3 @@ def create_ecr_repo_if_needed(
             imageTagMutability="MUTABLE",
             encryptionConfiguration={"encryptionType": "AES256"},
         )
-        try:
-            attach_ecr_lifecycle_policy(
-                logger, ecr_client, repo, registry_config.lifecyclepolicy
-            )
-            logger.info(f"ECR ready, pushing image to {repo}...")
-        except TypeError as exc:
-            ecr_client.delete_repository(
-                repositoryName=repo.lower(),
-            )
-            error_msg = (
-                f"To push the docker image to the newly created ECR repository '{repo}', "
-                "a lifecycle policy is required. This is not defined inside mpyl_config.yml. "
-                "Check mpyl_config.schema.yml on how to set this up."
-            )
-            raise TypeError(error_msg) from exc
-
-
-def attach_ecr_lifecycle_policy(logger: Logger, ecr_client, repo, lifecycle_policy):
-    policy = {
-        "rules": [
-            {
-                "rulePriority": lifecycle_policy["rulePriority"],
-                "description": lifecycle_policy["description"],
-                "selection": {
-                    "tagStatus": lifecycle_policy["tagStatus"],
-                    "countType": lifecycle_policy["countType"],
-                    "countNumber": lifecycle_policy["countNumber"],
-                    "countUnit": lifecycle_policy["countUnit"],
-                },
-                "action": {"type": lifecycle_policy["action"]},
-            }
-        ]
-    }
-    ecr_client.put_lifecycle_policy(
-        repositoryName=repo, lifecyclePolicyText=json.dumps(policy)
-    )
-    logger.info(f"Lifecycle policy added to repository '{repo}'.")

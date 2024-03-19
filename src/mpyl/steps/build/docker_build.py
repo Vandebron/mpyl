@@ -25,6 +25,7 @@ from .. import Step, Meta
 from ..models import Input, Output, ArtifactType, input_to_artifact
 from . import STAGE_NAME
 from ...constants import BUILD_ARTIFACTS_FOLDER
+from ...utilities import replace_pr_number
 from ...utilities.docker import (
     DockerConfig,
     build,
@@ -86,7 +87,10 @@ class BuildDocker(Step):
         )
         if build_config := step_input.project_execution.project.build:
             build_args |= {
-                arg.key: arg.get_value(step_input.run_properties.target)
+                arg.key: replace_pr_number(
+                    arg.get_value(step_input.run_properties.target),
+                    step_input.run_properties.versioning.pr_number,
+                )
                 for arg in build_config.args.plain
             }
 

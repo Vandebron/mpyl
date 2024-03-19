@@ -41,14 +41,9 @@ class CypressTest(Step):
         cypress_config = CypressConfig.from_config(step_input.run_properties.config)
         volume_path = os.path.join(os.getcwd(), cypress_config.cypress_source_code_path)
 
-        if (
-            step_input.project_execution.project.dependencies
-            and step_input.project_execution.project.dependencies.postdeploy
-        ):
-            specs_string = ",".join(
-                step_input.project_execution.project.dependencies.postdeploy
-            )
-        else:
+        deps = step_input.project_execution.project.dependencies
+        specs_string = ",".join(deps.set_for_stage(STAGE_NAME)) if deps else ""
+        if not specs_string:
             raise ValueError("No cypress specs are defined in the project dependencies")
 
         docker_container = self._get_docker_container(volume_path, cypress_config)

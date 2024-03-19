@@ -10,7 +10,8 @@ from ..project import Project
 from ..project import Stage
 from ..project_execution import ProjectExecution
 from ..steps import deploy
-from ..steps.models import Output
+from ..steps.collection import StepsCollection
+from ..steps.models import Output, ArtifactType
 from ..utilities.repo import Changeset
 
 
@@ -32,19 +33,53 @@ def file_belongs_to_project(
 
 
 def is_dependency_touched(
-    logger: logging.Logger, project: Project, stage: str, path: str
+    logger: logging.Logger,
+    project: Project,
+    stage: str,
+    path: str,
+    steps: Optional[StepsCollection],
 ) -> bool:
     deps = project.dependencies
-    deps_for_stage = deps.set_for_stage(stage) if deps else {}
+    if not deps:
+        return False
 
-    touched_dependency = (
-        next(filter(path.startswith, deps_for_stage), None) if deps else None
-    )
-    if touched_dependency:
+    touched_stages: set[str] = {
+        dep_stage
+        for dep_stage, dependencies in deps.all().items()
+        if len([d for d in dependencies if path.startswith(d)]) > 0
+    }
+
+    if stage in touched_stages:
         logger.debug(
-            f"Project {project.name}: {path} touched dependency {touched_dependency}"
+            f"Project {project.name}: {path} touched one of the dependencies for stage {stage}"
         )
-    return touched_dependency is not None
+        return True
+
+    step_name = project.stages.for_stage(stage)
+    if step_name is None or steps is None:
+        logger.debug(
+            f"Project {project.name}: the step for stage {stage} is not defined or not found"
+        )
+        return False
+
+    executor = steps.get_executor(Stage(stage, "icon"), step_name)
+    if executor is None:
+        logger.debug(f"Project {project.name}: no executor found for stage {stage}")
+        return False
+
+    required_artifact = executor.required_artifact
+    if required_artifact != ArtifactType.NONE:
+        producing_stage = steps.get_stage_for_producing_artifact(
+            project, required_artifact
+        )
+        if producing_stage is not None and producing_stage in touched_stages:
+            logger.debug(
+                f"Project {project.name}: producing stage {producing_stage} for required artifact {required_artifact} "
+                f"is touched"
+            )
+            return True
+
+    return False
 
 
 def is_output_cached(output: Optional[Output], cache_key: str) -> bool:
@@ -73,13 +108,17 @@ def hashed_changes(files: set[str]) -> str:
 
 
 def _to_project_execution(
-    logger: logging.Logger, project: Project, stage: str, changes: Changeset
+    logger: logging.Logger,
+    project: Project,
+    stage: str,
+    changes: Changeset,
+    steps: Optional[StepsCollection],
 ) -> Optional[ProjectExecution]:
     if project.stages.for_stage(stage) is None:
         return None
 
     is_any_dependency_touched = any(
-        is_dependency_touched(logger, project, stage, changed_file)
+        is_dependency_touched(logger, project, stage, changed_file, steps)
         for changed_file in changes.files_touched
     )
     project_changed_files = set(
@@ -116,10 +155,13 @@ def build_project_executions(
     all_projects: set[Project],
     stage: str,
     changes: Changeset,
+    steps: Optional[StepsCollection],
 ) -> set[ProjectExecution]:
     maybe_execution_projects = set(
         map(
-            lambda project: _to_project_execution(logger, project, stage, changes),
+            lambda project: _to_project_execution(
+                logger, project, stage, changes, steps
+            ),
             all_projects,
         )
     )
@@ -156,8 +198,9 @@ def find_build_set(
             projects = for_stage(all_projects, stage)
             project_executions = {ProjectExecution.always_run(p) for p in projects}
         else:
+            steps = StepsCollection(logger=logging.getLogger())
             project_executions = build_project_executions(
-                logger, all_projects, stage.name, changes_in_branch
+                logger, all_projects, stage.name, changes_in_branch, steps
             )
             logger.debug(
                 f"Invalidated projects for stage {stage.name}: {[p.name for p in project_executions]}"

@@ -120,11 +120,7 @@ definitions:
         $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.apps.v1.DeploymentStrategy'
       deployAction:
         type: string
-        enum:
-          - 'HelmDeploy'
-          - 'HelmDryRun'
-          - 'HelmTemplate'
-          - 'KubectlManifest'
+        pattern: ((HelmDeploy)|(HelmDryrun)|(HelmTemplate)|(KubectlManifest))|(!ENV.*)
         description: >-
           Defines the action to take in the deploy step. Defaults to helmDeploy. 
           If set to HelmDeploy, the helm chart will be deployed to the cluster.
@@ -134,7 +130,7 @@ definitions:
         default: 'HelmDeploy'
       outputPath:
         type: string
-        default: target/kubernetes
+        default: .mpyl/kubernetes
         description: >-
           The path to the folder where the rendered helm chart or kubectl manifest will be written.
           Defaults to target/kubernetes under the root folder of the project.
@@ -174,9 +170,14 @@ definitions:
         "$ref": "#/definitions/Git"
       github:
         "$ref": "#/definitions/Github"
-      artifactRepository:
+      cachingRepository:
         description: "The repository where the build artifacts are persisted"
         "$ref": "#/definitions/Git"
+      argoRepository:
+        description: "The argocd repository that contains the kubernetes manifests"
+        "$ref": "#/definitions/Git"
+      argoGithub:
+        "$ref": "#/definitions/Github"
     required:
       - git
       - github
@@ -320,48 +321,6 @@ definitions:
               from:
                 description: "The --cache-from argument for docker buildx"
                 type: string
-      lifecyclePolicy:
-        type: object
-        additionalProperties: false
-        properties:
-          rulePriority:
-            type: integer
-            default: 1
-            description: "Sets the order in which rules are applied, lowest to highest."
-          description:
-            type: string
-            description: "Describes the purpose of a rule within a lifecycle policy."
-          tagStatus:
-            enum:
-              - any
-            default: any
-            description:
-              "Specifies a tag for an image. The rule is applied to all images in that repository."
-          countType:
-            enum:
-              - imageCountMoreThan
-              - sinceImagePushed
-            default: sinceImagePushed
-            description: "Specify a count type to apply to the images. imageCountMoreThan sets a limit on the number of images that exist in your repository. sinceImagePushed specifies a time limit on the images that exist in your repository."
-          countNumber:
-            type: integer
-            default: 30
-            description: "Specify a count number. Acceptable values are positive integers (0 is not an accepted value)."
-          countUnit:
-            enum:
-              - days
-            default: days
-            description: "Only if countType is set to sinceImagePushed. Specify a count unit of days to indicate that as the unit of time."
-          action:
-            enum:
-             - expire
-            default: expire
-            description: "Specify an action type. The supported value is expire."
-          required:
-            - rulePriority
-            - tagStatus
-            - countType
-            - countNumber
     required:
       - hostName
       - password

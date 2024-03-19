@@ -129,9 +129,7 @@ class TestKubernetesChart:
             required_artifact=test_data.get_output().produced_artifact,
             dry_run=True,
         )
-        config = cluster_config(
-            step_input.run_properties.target, step_input.run_properties
-        )
+        config = cluster_config(step_input.run_properties)
         assert config.cluster_env == "test"
 
     def test_should_validate_against_crd_schema(self):

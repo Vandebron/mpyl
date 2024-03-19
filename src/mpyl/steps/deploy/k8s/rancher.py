@@ -21,9 +21,10 @@ class ClusterConfig:
         )
 
 
-def cluster_config(target: Target, run_properties: RunProperties) -> ClusterConfig:
+def cluster_config(run_properties: RunProperties) -> ClusterConfig:
     kubernetes_config = run_properties.config["kubernetes"]
     cluster_configs = kubernetes_config["rancher"]["cluster"]
+    target = run_properties.target
 
     if target in {Target.PULL_REQUEST, Target.PULL_REQUEST_BASE}:
         return ClusterConfig.from_config(cluster_configs["test"])

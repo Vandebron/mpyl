@@ -11,7 +11,7 @@ from . import (
     create_console_logger,
 )
 from ..constants import DEFAULT_CONFIG_FILE_NAME, DEFAULT_RUN_PROPERTIES_FILE_NAME
-from ..steps.run_properties import initiate_run_properties
+from ..steps.run_properties import construct_run_properties
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
 
@@ -59,7 +59,7 @@ def repository(ctx, config, properties, verbose):
 def status(obj: RepoContext):
     """Print the status of the current repository"""
     config = parse_config(obj.config)
-    run_properties = initiate_run_properties(
+    run_properties = construct_run_properties(
         config=config,
         properties=parse_config(obj.run_properties),
         run_plan={},
@@ -175,7 +175,7 @@ def init(obj: RepoContext, url: str, pull: int, branch: str, pristine: bool):
 
         console.log(f"✅ Repository tracking {repo.remote_url}")
 
-        properties = initiate_run_properties(
+        properties = construct_run_properties(
             config=config,
             properties=parse_config(obj.run_properties),
             run_plan={},
@@ -184,38 +184,36 @@ def init(obj: RepoContext, url: str, pull: int, branch: str, pristine: bool):
         pr_number = pull or properties.versioning.pr_number
 
         if pr_number:
-            target_branch = (
-                f"PR-{pr_number}"
-                if pr_number
-                else branch or properties.versioning.branch
-            )
-            console.log(Markdown(f"Initializing `{target_branch}`..."))
-            repo.fetch_main_branch()
+            target_branch = branch or properties.versioning.branch
+            _check_out_pr(target_branch, console, pr_number, repo)
 
-            if repo.get_branch != target_branch:
-                with console.status(f"👷 Fetching PR #{pr_number}"):
-                    if repo.local_branch_exists(target_branch):
-                        console.log(
-                            Markdown(
-                                f"👷 Deleting local branch to prevent conflicts `{target_branch}`"
-                            )
-                        )
-                        repo.delete_local_branch(target_branch)
 
-                    repo.fetch_pr(pr_number)
-                    repo.checkout_branch(target_branch)
-                    console.log(
-                        Markdown(f"✅ Fetched PR #{pr_number} to `{target_branch}`")
-                    )
-            else:
-                console.log(Markdown(f"✅ HEAD is on `{target_branch}`"))
-            with console.status("Finding base"):
-                base_revision = repo.base_revision
-                if not base_revision:
-                    repo.fetch_main_branch()
-
+def _check_out_pr(branch, console, pr_number, repo):
+    target_branch = f"PR-{pr_number}" if pr_number else branch
+    console.log(Markdown(f"Initializing `{target_branch}`..."))
+    repo.fetch_main_branch()
+    if repo.get_branch != target_branch:
+        with console.status(f"👷 Fetching PR #{pr_number}"):
+            if repo.local_branch_exists(target_branch):
                 console.log(
                     Markdown(
-                        f"✅ Found base `{repo.main_origin_branch}` at `{repo.base_revision}`"
+                        f"👷 Deleting local branch to prevent conflicts `{target_branch}`"
                     )
                 )
+                repo.delete_local_branch(target_branch)
+
+            repo.fetch_pr(pr_number)
+            repo.checkout_branch(target_branch)
+            console.log(Markdown(f"✅ Fetched PR #{pr_number} to `{target_branch}`"))
+    else:
+        console.log(Markdown(f"✅ HEAD is on `{target_branch}`"))
+    with console.status("Finding base"):
+        base_revision = repo.base_revision
+        if not base_revision:
+            repo.fetch_main_branch()
+
+        console.log(
+            Markdown(
+                f"✅ Found base `{repo.main_origin_branch}` at `{repo.base_revision}`"
+            )
+        )

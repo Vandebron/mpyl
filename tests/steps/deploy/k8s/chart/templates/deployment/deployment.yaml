@@ -7,7 +7,6 @@ metadata:
   labels:
     name: testdeploymentstrategyparameters
     app.kubernetes.io/version: pr-1234
-    app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: testdeploymentstrategyparameters
     app.kubernetes.io/instance: testdeploymentstrategyparameters
     maintainers: MPyL
@@ -31,7 +30,6 @@ spec:
       labels:
         name: testdeploymentstrategyparameters
         app.kubernetes.io/version: pr-1234
-        app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: testdeploymentstrategyparameters
         app.kubernetes.io/instance: testdeploymentstrategyparameters
         maintainers: MPyL

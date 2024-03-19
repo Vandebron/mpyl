@@ -98,6 +98,18 @@ will be absent in the resulting configuration dictionary.
 Check the [schema](https://vandebron.github.io/mpyl/schema/run_properties.schema.yml) for `run_properties.yml`, which contains detailed
 documentation and can be used to enable on-the-fly validation and auto-completion in your IDE.
 
+###### Stage configuration
+
+MPyL can be configured to use an arbitrary set of build stages. Typical CI/CD stages are `build`, `test` or `deploy`.
+See `mpyl.steps` for the steps that come bundled and how to define and register your own. 
+
+<details>
+  <summary>Example stage configuration</summary>
+```yaml
+.. include:: mpyl_stages.schema.yml
+```
+</details>
+
 #### Auto completion
 Usability of the CLI is *greatly enhanced* by autocompletion.
 To enable autocompletion, depending on your terminal, do the following:
@@ -279,7 +291,7 @@ mpyl build artifacts push
 command at the end of a run. This will push the `.mpyl` folder to the remote repository configured in `mpyl_config.yml`
 ```yaml
 vcs:
-  artifactRepository:
+  cachingRepository:
       mainBranch: 'main'
       remote:
         url: 'https://github.com/acme/artifact-repo.git'

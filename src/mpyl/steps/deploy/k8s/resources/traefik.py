@@ -8,6 +8,7 @@ from kubernetes.client import V1ObjectMeta
 
 from . import CustomResourceDefinition
 from .....project import TraefikHost, Target
+from .....utilities import replace_pr_number
 
 
 @dataclass(frozen=True)
@@ -38,8 +39,7 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
         def _interpolate_names(host: str, name: str) -> str:
             host = host.replace("{SERVICE-NAME}", name)
             host = host.replace("{namespace}", namespace)
-            if pr_number:
-                return host.replace("{PR-NUMBER}", str(pr_number))
+            host = replace_pr_number(host, pr_number)
             return host
 
         route: dict[str, Any] = {
