@@ -133,8 +133,8 @@ class ArtifactsRepository:
                     f"path_within_artifact_repo: '{self.path_within_artifact_repo}'"
                 )
                 self.logger.info(f"path in repo: '{path_in_repo}'")
-                g = f"{str(path_in_repo)}/*"
-                self.logger.info(f"path in repo: '{glob.glob(g)}'")
+                g_variable = f"{str(path_in_repo)}/*"
+                self.logger.info(f"path in repo: '{glob.glob(g_variable)}'")
 
                 shutil.copytree(
                     src=path_in_repo,
