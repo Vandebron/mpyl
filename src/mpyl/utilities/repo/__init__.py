@@ -223,7 +223,7 @@ class Repository:  # pylint: disable=too-many-public-methods
         parts = self.config.main_branch.split("/")
         if len(parts) > 1:
             return "/".join(parts)
-        return f"{self.main_branch}"
+        return f"origin/{self.main_branch}"
 
     def fit_for_tag_build(self, tag: str) -> bool:
         return len(self.changes_in_tagged_commit(tag).files_touched) > 0
