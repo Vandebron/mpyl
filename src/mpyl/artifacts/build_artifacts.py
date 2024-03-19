@@ -126,9 +126,13 @@ class ArtifactsRepository:
 
                 self.logger.info(f"Fetching branch '{branch}' from remote")
                 artifact_repo.checkout_branch(branch_name=branch)
-                path_in_repo = repo_path / self.path_within_artifact_repo
+
+                self.logger.info(f"artifact_repo.root_dir: '{artifact_repo.root_dir}'")
+
                 self.logger.info(f"repo_path: '{repo_path}'")
-                os.listdir(path_in_repo)
+                os.listdir(repo_path)
+
+                path_in_repo = repo_path / self.path_within_artifact_repo
                 self.logger.info(f"path in repo: '{path_in_repo}'")
                 os.listdir(path_in_repo)
 
