@@ -19,6 +19,7 @@ def construct_run_properties(
     all_projects: Optional[set[Project]] = None,
     root_dir: Path = Path(""),
     explain_run_plan: bool = False,
+    sequential: bool = False,
 ) -> RunProperties:
     tag = cli_parameters.tag or properties["build"]["versioning"].get("tag")
     if all_projects is None or run_plan is None:
@@ -47,7 +48,13 @@ def construct_run_properties(
                 if explain_run_plan:
                     build_set_logger.setLevel("DEBUG")
                 run_plan = _create_run_plan(
-                    all_projects, cli_parameters, explain_run_plan, repo, stages, tag
+                    all_projects,
+                    cli_parameters,
+                    explain_run_plan,
+                    repo,
+                    stages,
+                    tag,
+                    sequential,
                 )
 
     if cli_parameters.local:
@@ -71,7 +78,15 @@ def construct_run_properties(
     )
 
 
-def _create_run_plan(all_projects, cli_parameters, explain_run_plan, repo, stages, tag):
+def _create_run_plan(
+    all_projects: set[Project],
+    cli_parameters: MpylCliParameters,
+    explain_run_plan: bool,
+    repo: Repository,
+    stages: list[Stage],
+    tag: Optional[str] = None,
+    sequential: Optional[bool] = False,
+):  # add types
     build_set_logger = logging.getLogger("mpyl")
     if explain_run_plan:
         build_set_logger.setLevel("DEBUG")
@@ -89,10 +104,11 @@ def _create_run_plan(all_projects, cli_parameters, explain_run_plan, repo, stage
         build_all=cli_parameters.all,
         selected_stage=cli_parameters.stage,
         selected_projects=cli_parameters.projects,
+        sequential=sequential,
     )
 
 
-def _get_changes(repo, local, tag):
+def _get_changes(repo: Repository, local: bool, tag: Optional[str] = None):
     if local:
         return repo.changes_in_branch_including_local()
     if tag:

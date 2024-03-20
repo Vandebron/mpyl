@@ -257,6 +257,7 @@ class Repository:  # pylint: disable=too-many-public-methods
     def changed_files_in_branch(self) -> set[str]:
         # TODO pass the base_branch as a build parameter, not all branches  # pylint: disable=fixme
         #  are created from the main branch
+        #  Also throw a more specific exception if the base branch is not found
         base_branch = self.main_origin_branch
         changed_files = self._repo.git.diff(
             f"{base_branch}...HEAD", name_only=True

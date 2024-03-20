@@ -3,9 +3,12 @@ discovered projects have been invalidated due to changes in the source code sinc
 output artifact."""
 import hashlib
 import logging
+import pickle
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Optional
 
+from ..constants import BUILD_ARTIFACTS_FOLDER
 from ..project import Project
 from ..project import Stage
 from ..project_execution import ProjectExecution
@@ -180,12 +183,28 @@ def find_build_set(
     build_all: bool,
     selected_stage: Optional[str] = None,
     selected_projects: Optional[str] = None,
+    sequential: bool = False,
 ) -> dict[Stage, set[ProjectExecution]]:
     if selected_projects:
         projects_list = selected_projects.split(",")
 
-    build_set = {}
+    build_set: dict[Stage, set[ProjectExecution]] = {}
 
+    build_set_file = Path(BUILD_ARTIFACTS_FOLDER) / "build_plan"
+    if sequential:
+        if not build_set_file.is_file():
+            logger.info(
+                f"Sequential flag is passed, but no previous build plan found: {build_set_file}"
+            )
+        else:
+            with open(build_set_file, "rb") as file:
+                logger.info(f"Loading previous build set: {build_set_file}")
+                return pickle.load(file)
+    elif build_set_file.is_file():
+        logger.info(f"Deleting previous build set: {build_set_file}")
+        build_set_file.unlink()
+
+    logger.info("Discovering build set...")
     for stage in stages:
         if selected_stage and selected_stage != stage.name:
             continue
@@ -207,6 +226,10 @@ def find_build_set(
             )
 
         build_set.update({stage: project_executions})
+
+    with open(build_set_file, "wb") as file:
+        logger.info(f"Storing build set in: {build_set_file}")
+        pickle.dump(build_set, file, pickle.HIGHEST_PROTOCOL)
 
     return build_set
 

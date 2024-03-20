@@ -152,7 +152,7 @@ class CustomValidation(click.Command):
     is_flag=True,
     default=False,
     required=False,
-    help="Combine results with previous run(s)",
+    help="Combine results with previous run(s) and load cached build set",
 )
 @click.option(
     "--projects",
@@ -207,7 +207,10 @@ def run(
         sys.exit(1)
 
     run_properties = construct_run_properties(
-        config=obj.config, properties=obj.run_properties, cli_parameters=parameters
+        config=obj.config,
+        properties=obj.run_properties,
+        cli_parameters=parameters,
+        sequential=sequential,
     )
     run_result = run_mpyl(
         run_properties=run_properties, cli_parameters=parameters, reporter=None
