@@ -200,16 +200,10 @@ def find_build_set(  # pylint: disable=too-many-arguments, too-many-locals
                 f"Sequential flag is passed, but no previous build set found: {build_set_file}"
             )
         else:
-            with open(build_set_file, "rb") as file:
-                logger.info(f"Loading previous build set: {build_set_file}")
-                full_build_set: dict[Stage, set[ProjectExecution]] = pickle.load(file)
-                if selected_stage:
-                    build_set = {
-                        stage: project_executions
-                        for stage, project_executions in full_build_set.items()
-                        if stage.name == selected_stage
-                    }
-                    return build_set
+            logger.info(f"Loading cached build set: {build_set_file}")
+            return _get_cached_build_set(
+                build_set_file=build_set_file, selected_stage=selected_stage
+            )
 
     elif build_set_file.is_file():
         logger.info(f"Deleting previous build set: {build_set_file}")
@@ -263,3 +257,17 @@ def _get_changes(repo: Repository, local: bool, tag: Optional[str] = None):
         return repo.changes_in_tagged_commit(tag)
 
     return repo.changes_in_branch()
+
+
+def _get_cached_build_set(
+    build_set_file: Path, selected_stage: Optional[str]
+) -> dict[Stage, set[ProjectExecution]]:
+    with open(build_set_file, "rb") as file:
+        full_build_set: dict[Stage, set[ProjectExecution]] = pickle.load(file)
+        if selected_stage:
+            return {
+                stage: project_executions
+                for stage, project_executions in full_build_set.items()
+                if stage.name == selected_stage
+            }
+        return full_build_set
