@@ -17,10 +17,10 @@ from .reporting.formatting.markdown import (
 from .reporting.targets import Reporter
 from .steps import deploy
 from .steps.collection import StepsCollection
-from .steps.models import RunProperties
+from .steps.models import RunProperties, Output
 from .steps.run import RunResult
 from .steps.run_properties import construct_run_properties
-from .steps.steps import Steps, ExecutionException
+from .steps.steps import Steps, ExecutionException, StepResult
 
 
 def print_status(
@@ -157,20 +157,25 @@ def run_build(
     dry_run: bool = True,
 ):
     try:
-        for stage, projects in accumulator.run_plan.items():
-            for proj in projects:
-                if proj.cached:
+        for stage, project_executions in accumulator.run_plan.items():
+            for project_execution in project_executions:
+                if project_execution.cached:
                     logging.info(
-                        f"Skipping {proj.name} for stage {stage.name} because it is cached"
+                        f"Skipping {project_execution.name} for stage {stage.name} because it is cached"
                     )
-                    continue
-                result = executor.execute(stage.name, proj, dry_run)
+                    result = StepResult(
+                        stage=stage,
+                        project=project_execution.project,
+                        output=Output(success=True, message="This step was cached"),
+                    )
+                else:
+                    result = executor.execute(stage.name, project_execution, dry_run)
                 accumulator.append(result)
                 if reporter:
                     reporter.send_report(accumulator)
 
                 if not result.output.success and stage.name == deploy.STAGE_NAME:
-                    logging.warning(f"Deployment failed for {proj.name}")
+                    logging.warning(f"Deployment failed for {project_execution.name}")
                     return accumulator
 
             if accumulator.failed_results:
