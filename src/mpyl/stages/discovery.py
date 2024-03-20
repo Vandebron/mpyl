@@ -3,6 +3,7 @@ discovered projects have been invalidated due to changes in the source code sinc
 output artifact."""
 import hashlib
 import logging
+import os
 import pickle
 from dataclasses import dataclass
 from pathlib import Path
@@ -227,6 +228,7 @@ def find_build_set(  # pylint: disable=too-many-locals
 
         build_set.update({stage: project_executions})
 
+    os.makedirs(os.path.dirname(build_set_file), exist_ok=True)
     with open(build_set_file, "wb") as file:
         logger.info(f"Storing build set in: {build_set_file}")
         pickle.dump(build_set, file, pickle.HIGHEST_PROTOCOL)
