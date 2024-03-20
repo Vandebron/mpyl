@@ -114,11 +114,6 @@ class CustomValidation(click.Command):
         selected_stage = ctx.params.get("stage")
         stages = [stage["name"] for stage in ctx.obj.run_properties["stages"]]
 
-        if selected_stage is None and ctx.params.get("sequential") is True:
-            raise click.ClickException(
-                message="A run can only be sequential if a stage is specified."
-            )
-
         if selected_stage and selected_stage not in stages:
             raise click.ClickException(
                 message=f"Stage {ctx.params.get('stage')} is not defined in the configuration."
@@ -244,14 +239,21 @@ def run(
     required=False,
     help="Comma separated list of the projects to build",
 )
+@click.option(
+    "--stage",
+    default=None,
+    type=str,
+    required=False,
+    help="Stage to run",
+)
 @click.option("--explain", "-e", is_flag=True, help="Explain the current run plan")
 @click.pass_obj
-def status(obj: CliContext, all_, projects, explain):
+def status(obj: CliContext, all_, projects, stage, explain):
     upgrade_check = None
     try:
         upgrade_check = asyncio.wait_for(warn_if_update(obj.console), timeout=3)
         parameters = MpylCliParameters(
-            local=sys.stdout.isatty(), all=all_, projects=projects
+            local=sys.stdout.isatty(), all=all_, projects=projects, stage=stage
         )
         print_status(obj, parameters, explain)
     except asyncio.exceptions.TimeoutError:

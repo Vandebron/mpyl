@@ -196,13 +196,21 @@ def find_build_set(  # pylint: disable=too-many-arguments, too-many-locals
     build_set_file = Path(BUILD_ARTIFACTS_FOLDER) / "build_plan"
     if sequential:
         if not build_set_file.is_file():
-            logger.info(
-                f"Sequential flag is passed, but no previous build plan found: {build_set_file}"
+            logger.warning(
+                f"Sequential flag is passed, but no previous build set found: {build_set_file}"
             )
         else:
             with open(build_set_file, "rb") as file:
                 logger.info(f"Loading previous build set: {build_set_file}")
-                return pickle.load(file)
+                full_build_set: dict[Stage, set[ProjectExecution]] = pickle.load(file)
+                if selected_stage:
+                    build_set = {
+                        stage: project_executions
+                        for stage, project_executions in full_build_set.items()
+                        if stage.name == selected_stage
+                    }
+                    return build_set
+
     elif build_set_file.is_file():
         logger.info(f"Deleting previous build set: {build_set_file}")
         build_set_file.unlink()
