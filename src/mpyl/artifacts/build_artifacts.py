@@ -126,20 +126,7 @@ class ArtifactsRepository:
 
                 self.logger.info(f"Fetching branch '{branch}' from remote")
                 artifact_repo.checkout_branch(branch_name=branch)
-
-                # ptab remove me
-                self.logger.info(f"artifact_repo.root_dir: '{artifact_repo.root_dir}'")
-
-                # ptab remove me
-                self.logger.info(f"repo_path: '{repo_path}'")
-                self.logger.info(os.listdir(repo_path))
-
                 path_in_repo = repo_path / self.path_within_artifact_repo
-
-                # ptab remove me
-                self.logger.info(f"path in repo: '{path_in_repo}'")
-                self.logger.info(os.listdir(path_in_repo))
-
                 shutil.copytree(
                     src=path_in_repo,
                     dst=self.codebase_repo.root_dir.absolute(),

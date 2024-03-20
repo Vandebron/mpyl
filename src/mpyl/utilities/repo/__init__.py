@@ -140,15 +140,15 @@ class Repository:  # pylint: disable=too-many-public-methods
             raise ValueError("Cannot clone repository without credentials")
 
         if user_name := creds.user_name is None:
-            repo = Repo.clone_from(url=creds.ssh_url, to_path=repo_path)
-            logging.info(f"repo = {repo}")  # ptab remove me
-            return Repository(config=config, repo=repo)
+            return Repository(
+                config=config,
+                repo=Repo.clone_from(url=creds.ssh_url, to_path=repo_path),
+            )
 
         repo = Repo.clone_from(
             url=creds.to_url_with_credentials,
             to_path=repo_path,
         )
-        logging.info(f"repo = {repo}")  # ptab remove me
         with repo.config_writer() as writer:
             writer.set_value("user", "name", user_name)
             writer.set_value("user", "email", creds.email or "somebody@somewhere.com")
