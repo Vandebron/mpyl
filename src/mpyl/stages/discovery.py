@@ -16,7 +16,7 @@ from ..project_execution import ProjectExecution
 from ..steps import deploy
 from ..steps.collection import StepsCollection
 from ..steps.models import Output, ArtifactType
-from ..utilities.repo import Changeset
+from ..utilities.repo import Changeset, Repository
 
 
 @dataclass(frozen=True)
@@ -176,12 +176,14 @@ def build_project_executions(
     }
 
 
-def find_build_set(  # pylint: disable=too-many-locals
+def find_build_set(  # pylint: disable=too-many-arguments, too-many-locals
     logger: logging.Logger,
+    repository: Repository,
     all_projects: set[Project],
-    changes_in_branch: Changeset,
     stages: list[Stage],
     build_all: bool,
+    local: bool,
+    tag: Optional[str] = None,
     selected_stage: Optional[str] = None,
     selected_projects: Optional[str] = None,
     sequential: Optional[bool] = False,
@@ -219,6 +221,12 @@ def find_build_set(  # pylint: disable=too-many-locals
             project_executions = {ProjectExecution.always_run(p) for p in projects}
         else:
             steps = StepsCollection(logger=logging.getLogger())
+            changes_in_branch = (
+                _get_changes(repository, local, tag)
+                if not selected_projects or build_all
+                else []
+            )
+
             project_executions = build_project_executions(
                 logger, all_projects, stage.name, changes_in_branch, steps
             )
@@ -238,3 +246,12 @@ def find_build_set(  # pylint: disable=too-many-locals
 
 def for_stage(projects: set[Project], stage: Stage) -> set[Project]:
     return set(filter(lambda p: p.stages.for_stage(stage.name), projects))
+
+
+def _get_changes(repo: Repository, local: bool, tag: Optional[str] = None):
+    if local:
+        return repo.changes_in_branch_including_local()
+    if tag:
+        return repo.changes_in_tagged_commit(tag)
+
+    return repo.changes_in_branch()

@@ -91,27 +91,15 @@ def _create_run_plan(
     if explain_run_plan:
         build_set_logger.setLevel("DEBUG")
 
-    changes_in_branch = (
-        _get_changes(repo, cli_parameters.local, tag)
-        if not cli_parameters.projects or cli_parameters.all
-        else []
-    )
     return find_build_set(
         logger=build_set_logger,
+        repository=repo,
         all_projects=all_projects,
-        changes_in_branch=changes_in_branch,
         stages=stages,
+        tag=tag,
+        local=cli_parameters.local,
         build_all=cli_parameters.all,
         selected_stage=cli_parameters.stage,
         selected_projects=cli_parameters.projects,
         sequential=sequential,
     )
-
-
-def _get_changes(repo: Repository, local: bool, tag: Optional[str] = None):
-    if local:
-        return repo.changes_in_branch_including_local()
-    if tag:
-        return repo.changes_in_tagged_commit(tag)
-
-    return repo.changes_in_branch()
