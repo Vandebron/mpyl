@@ -175,7 +175,7 @@ def build_project_executions(
     }
 
 
-def find_build_set(
+def find_build_set(  # pylint: disable=too-many-locals
     logger: logging.Logger,
     all_projects: set[Project],
     changes_in_branch: Changeset,
@@ -183,7 +183,7 @@ def find_build_set(
     build_all: bool,
     selected_stage: Optional[str] = None,
     selected_projects: Optional[str] = None,
-    sequential: bool = False,
+    sequential: Optional[bool] = False,
 ) -> dict[Stage, set[ProjectExecution]]:
     if selected_projects:
         projects_list = selected_projects.split(",")
