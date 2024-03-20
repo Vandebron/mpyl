@@ -41,7 +41,6 @@ extraManifests:
     labels:
       name: example-dagster-user-code
       app.kubernetes.io/version: pr-1234
-      app.kubernetes.io/managed-by: Helm
       app.kubernetes.io/name: example-dagster-user-code
       app.kubernetes.io/instance: example-dagster-user-code
       maintainers: MPyL
@@ -80,7 +79,6 @@ extraManifests:
     labels:
       name: example-dagster-user-code
       app.kubernetes.io/version: pr-1234
-      app.kubernetes.io/managed-by: Helm
       app.kubernetes.io/name: example-dagster-user-code
       app.kubernetes.io/instance: example-dagster-user-code
       maintainers: MPyL

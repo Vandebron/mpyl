@@ -131,9 +131,12 @@ class TestDagster:
         )
 
     def test_generate_correct_values_yaml_with_prometheus_manifests(self):
+        project_folder = self.config_resource_path / ".." / self.dagster_project_folder
         step_input = Input(
             load_project(
-                self.resource_path, Path("project_with_prometheus_charts.yml"), True
+                self.config_resource_path,
+                project_folder / Path("project_with_prometheus_charts.yml"),
+                True
             ),
             test_data.RUN_PROPERTIES,
             None,
@@ -153,5 +156,5 @@ class TestDagster:
         self._roundtrip(
             self.generated_values_path,
             "values_with_extra_manifest_prometheus_rules",
-            values,
+            values
         )
