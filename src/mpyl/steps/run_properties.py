@@ -86,7 +86,7 @@ def _create_run_plan(
     stages: list[Stage],
     tag: Optional[str] = None,
     sequential: Optional[bool] = False,
-):  # add types
+):
     build_set_logger = logging.getLogger("mpyl")
     if explain_run_plan:
         build_set_logger.setLevel("DEBUG")
