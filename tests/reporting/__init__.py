@@ -10,7 +10,12 @@ from src.mpyl.steps.steps import StepResult
 from src.mpyl.utilities.junit import JunitTestSpec
 from tests import root_test_path
 from tests.test_resources import test_data
-from tests.test_resources.test_data import TestStage, properties_values, config_values
+from tests.test_resources.test_data import (
+    TestStage,
+    properties_values,
+    config_values,
+    resource_path,
+)
 
 test_resource_path = root_test_path / "reporting" / "formatting" / "test_resources"
 
@@ -41,6 +46,7 @@ def create_test_result_with_plan() -> RunResult:
                 },
             },
             all_projects=set(),
+            root_dir=resource_path,
         ),
     )
 
