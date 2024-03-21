@@ -6,7 +6,7 @@
 #### Improvements
 - Implement a different way to determine the build plan
 - Change the layout of the build plan print to improve transparency
-- Allow passing --stage to the build plan command
+- Allow passing --stage to the build status command
 
 #### Build set caching
 Store the build set when `--sequential` is passed, this allows for skipping the build plan calculation on subsequent 
