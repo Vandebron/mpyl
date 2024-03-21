@@ -5,9 +5,9 @@ For _dockertest_ at stage _build_
 Build failed
 
 🏗️ Build:  
-&nbsp;  ~dockertest~, *test*  
+~dockertest~, *test*  
 📋 Test:  
-&nbsp;  *test*  
+*test*  
 🧪 51 ❌ 1 💔 0 🙈 0 <http://localhost/tests|Docker Test>  
 🚀 Deploy:  
-&nbsp;  *<https://some.location.com|test>*  
+*<https://some.location.com|test>*  
