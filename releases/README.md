@@ -9,12 +9,11 @@
 - Allow passing --stage to the build status command
 
 #### Build set caching
-Store the build set in disk and read it back when `--sequential` is passed as a parameter, preventing us to rebuild the plan on subsequent 
+Store the build set in disk and read it back when `--sequential` is passed as a parameter, preventing us to rebuild the plan on subsequent
 stages. Which means there is no need to diff with the main branch, thus no need to fetch the entire main branch history
 before running mpyl.
-This is a significant performance improvement as you only need to do a clone with full history for the first stage, 
+This is a significant performance improvement as you only need to do a clone with full history for the first stage,
 and run all others using a shallow clone (much faster to check out on repositories with many commits).
-
 
 
 Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.6.0)
