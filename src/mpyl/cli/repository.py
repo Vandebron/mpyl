@@ -106,7 +106,7 @@ def status(obj: RepoContext):
                     console.log("❌ Repo not fit for tag build")
                 else:
                     changes = repo.changes_in_tagged_commit(versioning.tag)
-                    files_changed = changes[0].files_touched
+                    files_changed = changes.files_touched
                     console.log(
                         Markdown(
                             f"*{len(files_changed)}* files changed in merge commit `{versioning.tag}`"
@@ -130,11 +130,10 @@ def status(obj: RepoContext):
                 )
             )
         else:
-            changes = repo.changes_in_branch()
             console.log(
                 Markdown(
                     f"Revision for `{repo.main_origin_branch}` not found. Cannot diff with base. "
-                    f"*{len(changes)}* (grafted) commits on `{repo.get_branch}`"
+                    f"*1* (grafted) commits on `{repo.get_branch}`"
                 )
             )
 

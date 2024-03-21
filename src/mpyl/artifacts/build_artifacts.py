@@ -116,7 +116,7 @@ class ArtifactsRepository:
         with TemporaryDirectory() as tmp_repo_dir:
             repo_path = Path(tmp_repo_dir)
             with Repository.from_clone(
-                config=self.artifact_repo_config, repo_path=Path(tmp_repo_dir)
+                config=self.artifact_repo_config, repo_path=repo_path
             ) as artifact_repo:
                 if not artifact_repo.remote_branch_exists(branch_name=branch):
                     self.logger.info(

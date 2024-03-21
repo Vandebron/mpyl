@@ -34,8 +34,8 @@ class TestEcho(Step):
         )
 
     def execute(self, step_input: Input) -> Output:
-        self._logger.info(f"Testing project {step_input.project.name}")
-        path = Path(step_input.project.target_path, "test_results")
+        self._logger.info(f"Testing project {step_input.project_execution.name}")
+        path = Path(step_input.project_execution.project.target_path, "test_results")
         path.mkdir(parents=True, exist_ok=True)
         Path(path, "test.xml").write_text(SAMPLE_JUNIT_RESULT, encoding="utf-8")
 
@@ -49,6 +49,6 @@ class TestEcho(Step):
         )
         return Output(
             success=True,
-            message=f"Tested {step_input.project.name}",
+            message=f"Tested {step_input.project_execution.name}",
             produced_artifact=artifact,
         )

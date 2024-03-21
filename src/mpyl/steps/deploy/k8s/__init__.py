@@ -187,7 +187,7 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
     delete_existing: bool = False,
 ) -> Output:
     run_properties = step_input.run_properties
-    project = step_input.project
+    project = step_input.project_execution.project
     deployment_config = DeployConfig.from_config(values=run_properties.config)
 
     action = deployment_config.action.value

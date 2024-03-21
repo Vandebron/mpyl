@@ -29,7 +29,7 @@ class StepsCollection:
             self.__load_steps_in_module(".", alternative_library_location)
             location = alternative_library_location
 
-        logger.info(f"Loaded {len(IPluginRegistry.plugins)} executors from {location}")
+        logger.debug(f"Loaded {len(IPluginRegistry.plugins)} executors from {location}")
         if not IPluginRegistry.plugins:
             logger.warning(f"No executors found. Check {location} for plugins.")
 

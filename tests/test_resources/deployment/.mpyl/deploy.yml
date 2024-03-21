@@ -7,3 +7,4 @@ produced_artifact: !Artifact
   producing_step: Producing Step
   spec: !RenderedHelmChartSpec
     chart_path: target/template.yml
+  hash: a generated hash

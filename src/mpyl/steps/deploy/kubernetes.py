@@ -54,8 +54,9 @@ class DeployKubernetes(Step):
             and step_input.run_properties.target == Target.PRODUCTION
         )
         hosts = (
-            step_input.project.deployment.traefik.hosts
-            if step_input.project.deployment and step_input.project.deployment.traefik
+            step_input.project_execution.project.deployment.traefik.hosts
+            if step_input.project_execution.project.deployment
+            and step_input.project_execution.project.deployment.traefik
             else []
         )
         has_swagger = hosts[0].has_swagger if hosts else True
@@ -77,7 +78,7 @@ class DeployKubernetes(Step):
             url = None
             if hostname:
                 self._logger.info(
-                    f"Service {step_input.project.name} reachable at: {hostname}"
+                    f"Service {step_input.project_execution.name} reachable at: {hostname}"
                 )
                 endpoint = self.get_endpoint(builder)
                 url = f"{hostname}{endpoint}"

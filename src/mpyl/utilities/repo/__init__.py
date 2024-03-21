@@ -3,6 +3,7 @@
 At this moment Git is the only supported VCS.
 """
 import logging
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -17,14 +18,16 @@ from ...utilities.pyaml_env import parse_config
 
 
 @dataclass(frozen=True)
-class Revision:
-    ord: int
-    """Ordinal number indicating how this revision ranks historically"""
-    hash: str
+class Changeset:
+    sha: str
     """Git hash for this revision"""
     files_touched: set[str]
     """Paths to files that were altered in this hash"""
     BREAK_WORD = "hash "
+
+    @staticmethod
+    def empty(sha: str):
+        return Changeset(sha=sha, files_touched=set())
 
     @staticmethod
     def from_git_output(git_log_output: str, git_diff_output: str):
@@ -33,17 +36,16 @@ class Revision:
         --no-abbrev-commit <from>..<until>`
         :param git_log_output: output of `git diff --name-only <from>..<until>`
         """
-
         change_set = set(git_diff_output.splitlines())
 
         sections = []
         current_section: list[str] = []
         lines = git_log_output.splitlines()
         for line in lines:
-            if line.startswith(Revision.BREAK_WORD):
+            if line.startswith(Changeset.BREAK_WORD):
                 if current_section:
                     sections.append(current_section)
-                current_section = [line.replace(Revision.BREAK_WORD, "")]
+                current_section = [line.replace(Changeset.BREAK_WORD, "")]
             else:
                 current_section.append(line)
 
@@ -51,12 +53,11 @@ class Revision:
             sections.append(current_section)
 
         revisions = [
-            Revision(
-                index,
+            Changeset(
                 section[0],
                 {line for line in section[1:] if line in change_set},
             )
-            for index, section in enumerate(reversed(sections))
+            for section in reversed(sections)
         ]
         return revisions
 
@@ -223,17 +224,20 @@ class Repository:  # pylint: disable=too-many-public-methods
         parts = self.config.main_branch.split("/")
         if len(parts) > 1:
             return "/".join(parts)
-        return f"{self.main_branch}"
+        return f"origin/{self.main_branch}"
 
     def fit_for_tag_build(self, tag: str) -> bool:
-        return len(self.changes_in_tagged_commit(tag)) > 0
+        return len(self.changes_in_tagged_commit(tag).files_touched) > 0
 
     def __get_filter_patterns(self):
         return ["--"] + [f":!{pattern}" for pattern in self.config.ignore_patterns]
 
-    def changes_between(self, base_revision: str, head_revision: str) -> list[Revision]:
+    # Only used in the repo status command, can be deleted later
+    def changes_between(
+        self, base_revision: str, head_revision: str
+    ) -> list[Changeset]:
         command = [
-            f'--pretty=format:"{Revision.BREAK_WORD}%H"',
+            f'--pretty=format:"{Changeset.BREAK_WORD}%H"',
             "--name-only",
             "--no-abbrev-commit",
             f"{base_revision}..{head_revision}",
@@ -244,17 +248,22 @@ class Repository:  # pylint: disable=too-many-public-methods
         changed_files = self._repo.git.diff(
             f"{base_revision}..{head_revision}", name_only=True
         )
-        return Revision.from_git_output(revs, changed_files)
+        return Changeset.from_git_output(revs, changed_files)
 
-    def changes_in_branch(self) -> list[Revision]:
-        base_ref = self.base_revision
-        base_hex = base_ref.hexsha if base_ref else self.root_commit_hex
+    def changes_in_branch(self) -> Changeset:
+        return Changeset(self.get_sha, self.changed_files_in_branch())
 
-        head_hex = self._repo.active_branch.commit.hexsha
+    def changed_files_in_branch(self) -> set[str]:
+        # TODO pass the base_branch as a build parameter, not all branches  # pylint: disable=fixme
+        #  are created from the main branch
+        #  Also throw a more specific exception if the base branch is not found
+        base_branch = self.main_origin_branch
+        changed_files = self._repo.git.diff(
+            f"{base_branch}...HEAD", name_only=True
+        ).splitlines()
+        return set(changed_files)
 
-        return self.changes_between(base_hex, head_hex)
-
-    def changes_in_commit(self) -> set[str]:
+    def files_changed_locally(self) -> set[str]:
         changed: set[str] = set(
             self._repo.git.diff(
                 self.__get_filter_patterns(), None, name_only=True
@@ -262,34 +271,35 @@ class Repository:  # pylint: disable=too-many-public-methods
         )
         return changed.union(self._repo.untracked_files)
 
-    def changes_in_branch_including_local(self) -> list[Revision]:
-        in_branch = self.changes_in_branch()
-        in_branch.append(
-            Revision(len(in_branch), self.get_sha, self.changes_in_commit())
+    def changes_in_branch_including_local(self) -> Changeset:
+        return Changeset(
+            sha=self.get_sha,
+            files_touched=(
+                self.changed_files_in_branch() | self.files_changed_locally()
+            ),
         )
-        return in_branch
 
-    def changes_in_tagged_commit(self, current_tag: str) -> list[Revision]:
+    def changes_in_tagged_commit(self, current_tag: str) -> Changeset:
         curr_rev_tag = self.get_tag
 
         if curr_rev_tag != current_tag:
             logging.error(f"HEAD is at {curr_rev_tag} not at expected `{current_tag}`")
-            return []
+            return Changeset.empty(self.get_sha)
 
         return self.changes_in_merge_commit()
 
-    def changes_in_merge_commit(self):
+    def changes_in_merge_commit(self) -> Changeset:
         parent_revs = self._repo.head.commit.parents
         if not parent_revs:
             logging.error(
                 "HEAD is not at merge commit, cannot determine changed files."
             )
-            return []
+            return Changeset.empty(self.get_sha)
         logging.debug(f"Parent revisions: {parent_revs}")
         files_changed = self._repo.git.diff(
             f"{str(self._repo.head.commit)}..{str(parent_revs[0])}", name_only=True
         ).splitlines()
-        return [Revision(ord=0, hash=str(self.get_sha), files_touched=files_changed)]
+        return Changeset(sha=str(self.get_sha), files_touched=files_changed)
 
     def init_remote(self, url: Optional[str]) -> Remote:
         if url:

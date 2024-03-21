@@ -1,40 +1,52 @@
 """ Discovery of projects that are relevant to a specific `mpyl.stage.Stage` . Determine which of the
 discovered projects have been invalidated due to changes in the source code since the last build of the project's
 output artifact."""
+import hashlib
 import logging
+import os
+import pickle
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Optional
 
-from ..project import Project, Dependencies
+from ..constants import BUILD_ARTIFACTS_FOLDER
+from ..project import Project
 from ..project import Stage
-from ..steps import ArtifactType, deploy
+from ..project_execution import ProjectExecution
+from ..steps import deploy
 from ..steps.collection import StepsCollection
-from ..steps.models import Output
-from ..utilities.repo import Revision
+from ..steps.models import Output, ArtifactType
+from ..utilities.repo import Changeset, Repository
 
 
 @dataclass(frozen=True)
-class ChangedFile:
-    path: str
-    revision: str
+class DeploySet:
+    all_projects: set[Project]
+    projects_to_deploy: set[Project]
 
 
-def __log_invalidation(
-    logger: logging.Logger, project: Project, stage: str, path: str, message: str
-) -> None:
-    logger.debug(
-        f"'{project.name}' touched for '{stage}' by '{path}' because {message} "
-    )
+def file_belongs_to_project(
+    logger: logging.Logger, project: Project, path: str
+) -> bool:
+    startswith: bool = path.startswith(project.root_path)
+    if startswith:
+        logger.debug(
+            f"Project {project.name}: {path} touched project root {project.root_path}"
+        )
+    return startswith
 
 
-def __has_invalidated_dependencies(
+def is_dependency_touched(
     logger: logging.Logger,
-    deps: Dependencies,
     project: Project,
     stage: str,
     path: str,
     steps: Optional[StepsCollection],
 ) -> bool:
+    deps = project.dependencies
+    if not deps:
+        return False
+
     touched_stages: set[str] = {
         dep_stage
         for dep_stage, dependencies in deps.all().items()
@@ -42,16 +54,21 @@ def __has_invalidated_dependencies(
     }
 
     if stage in touched_stages:
-        message = f"it matches the '{stage}' dependencies {deps.for_stage(stage)}"
-        __log_invalidation(logger, project, stage, path, message)
+        logger.debug(
+            f"Project {project.name}: {path} touched one of the dependencies for stage {stage}"
+        )
         return True
 
     step_name = project.stages.for_stage(stage)
     if step_name is None or steps is None:
+        logger.debug(
+            f"Project {project.name}: the step for stage {stage} is not defined or not found"
+        )
         return False
 
     executor = steps.get_executor(Stage(stage, "icon"), step_name)
     if executor is None:
+        logger.debug(f"Project {project.name}: no executor found for stage {stage}")
         return False
 
     required_artifact = executor.required_artifact
@@ -60,159 +77,139 @@ def __has_invalidated_dependencies(
             project, required_artifact
         )
         if producing_stage is not None and producing_stage in touched_stages:
-            message = (
-                f"is a producing stage {producing_stage} for `{required_artifact}` "
+            logger.debug(
+                f"Project {project.name}: producing stage {producing_stage} for required artifact {required_artifact} "
+                f"is touched"
             )
-            __log_invalidation(logger, project, stage, path, message)
             return True
 
     return False
 
 
-def is_invalidated(
+def is_output_cached(output: Optional[Output], cache_key: str) -> bool:
+    if (
+        output is None
+        or not output.success
+        or output.produced_artifact is None
+        or not output.produced_artifact.hash
+    ):
+        return False
+    return output.produced_artifact.hash == cache_key
+
+
+def hashed_changes(files: set[str]) -> str:
+    sha256 = hashlib.sha256()
+
+    for changed_file in sorted(files):
+        with open(changed_file, "rb") as file:
+            while True:
+                data = file.read(65536)
+                if not data:
+                    break
+                sha256.update(data)
+
+    return sha256.hexdigest()
+
+
+def _to_project_execution(
     logger: logging.Logger,
     project: Project,
     stage: str,
-    changed_file: ChangedFile,
-    change_history: list[Revision],
-    steps: StepsCollection,
-) -> bool:
-    invalidated_by_file = is_invalidated_by_file(
-        logger, project, stage, changed_file, steps
-    )
-    if invalidated_by_file:
-        output = Output.try_read(project.target_path, stage)
-        return stage == deploy.STAGE_NAME or _is_output_invalid(
-            logger, output, change_history, changed_file.revision
-        )
-    return False
-
-
-def _is_output_invalid(
-    logger: logging.Logger,
-    output: Optional[Output],
-    change_history: list[Revision],
-    changed_file_revision: str,
-) -> bool:
-    if output is None:
-        return True
-    if not output.success:
-        return True
-
-    artifact = output.produced_artifact
-    if artifact is None:
-        return True
-
-    is_newer = _revision_is_newer_than_artifact(
-        artifact.revision, changed_file_revision, change_history
-    )
-
-    valid = "❌ stale" if is_newer else "✅ valid"
-    newer = "newer" if is_newer else "older"
-
-    message = (
-        f"'{artifact.artifact_type.name}' produced by '{artifact.producing_step}' is {valid} "
-        f"because {changed_file_revision} is {newer} than {artifact.revision}  "
-    )
-    logger.debug(message)
-
-    return is_newer
-
-
-def is_invalidated_by_file(
-    logger: logging.Logger,
-    project: Project,
-    stage: str,
-    changed_file: ChangedFile,
+    changes: Changeset,
     steps: Optional[StepsCollection],
-) -> bool:
-    if changed_file.path.startswith(project.root_path):
-        message = f"it is under the project root '{project.root_path}'"
-        __log_invalidation(logger, project, stage, changed_file.path, message)
-        return True
-
-    deps: Optional[Dependencies] = project.dependencies
-    if deps is None:
-        return False
-    return __has_invalidated_dependencies(
-        logger, deps, project, stage, changed_file.path, steps
-    )
-
-
-def _revision_is_newer_than_artifact(
-    artifact_hash: str, file_hash: str, change_history: list[Revision]
-):
-    hashes = {rev.hash for rev in change_history}
-    if artifact_hash not in hashes:
-        return True
-
-    for rev in sorted(change_history, key=lambda c: c.ord):
-        if rev.hash == file_hash:
-            return False
-        if rev.hash == artifact_hash:
-            return True
-    return True
-
-
-def _to_changed_files(change_history: list[Revision]) -> set[ChangedFile]:
-    relevant = dict[str, str]()
-    for history in sorted(change_history, key=lambda c: c.ord):
-        latest = {path: history.hash for path in history.files_touched}
-        relevant.update(latest)
-
-    return {ChangedFile(path, revision) for path, revision in relevant.items()}
-
-
-def _is_project_invalidated(
-    logger: logging.Logger,
-    project: Project,
-    stage: str,
-    change_history: list[Revision],
-    steps: StepsCollection,
-) -> bool:
+) -> Optional[ProjectExecution]:
     if project.stages.for_stage(stage) is None:
-        return False
+        return None
 
-    changed_files: set[ChangedFile] = _to_changed_files(change_history)
-    changes = set(
+    is_any_dependency_touched = any(
+        is_dependency_touched(logger, project, stage, changed_file, steps)
+        for changed_file in changes.files_touched
+    )
+    project_changed_files = set(
         filter(
-            lambda c: is_invalidated(logger, project, stage, c, change_history, steps),
-            changed_files,
+            lambda changed_file: file_belongs_to_project(logger, project, changed_file),
+            changes.files_touched,
         )
     )
-    return len(changes) > 0
+
+    if project_changed_files:
+        cache_key = hashed_changes(files=project_changed_files)
+    elif is_any_dependency_touched:
+        cache_key = changes.sha
+    else:
+        return None
+
+    if stage == deploy.STAGE_NAME:
+        cached = False
+    else:
+        cached = is_output_cached(
+            output=Output.try_read(project.target_path, stage),
+            cache_key=cache_key,
+        )
+
+    return ProjectExecution(
+        project=project,
+        cache_key=cache_key,
+        cached=cached,
+    )
 
 
-def find_invalidated_projects_for_stage(
+def build_project_executions(
     logger: logging.Logger,
     all_projects: set[Project],
     stage: str,
-    change_history: list[Revision],
-    steps: StepsCollection,
-) -> set[Project]:
-    return set(
-        filter(
-            lambda p: _is_project_invalidated(logger, p, stage, change_history, steps),
+    changes: Changeset,
+    steps: Optional[StepsCollection],
+) -> set[ProjectExecution]:
+    maybe_execution_projects = set(
+        map(
+            lambda project: _to_project_execution(
+                logger, project, stage, changes, steps
+            ),
             all_projects,
         )
     )
+    return {
+        project_execution
+        for project_execution in maybe_execution_projects
+        if project_execution is not None
+    }
 
 
-def find_build_set(
+def find_build_set(  # pylint: disable=too-many-arguments, too-many-locals
     logger: logging.Logger,
+    repository: Repository,
     all_projects: set[Project],
-    changes_in_branch: list[Revision],
     stages: list[Stage],
     build_all: bool,
+    local: bool,
+    tag: Optional[str] = None,
     selected_stage: Optional[str] = None,
     selected_projects: Optional[str] = None,
-) -> dict[Stage, set[Project]]:
+    sequential: Optional[bool] = False,
+) -> dict[Stage, set[ProjectExecution]]:
     if selected_projects:
         projects_list = selected_projects.split(",")
 
-    build_set = {}
-    steps: StepsCollection = StepsCollection(logger=logging.getLogger())
+    build_set: dict[Stage, set[ProjectExecution]] = {}
 
+    build_set_file = Path(BUILD_ARTIFACTS_FOLDER) / "build_plan"
+    if sequential:
+        if not build_set_file.is_file():
+            logger.warning(
+                f"Sequential flag is passed, but no previous build set found: {build_set_file}"
+            )
+        else:
+            logger.info(f"Loading cached build set: {build_set_file}")
+            return _get_cached_build_set(
+                build_set_file=build_set_file, selected_stage=selected_stage
+            )
+
+    elif build_set_file.is_file():
+        logger.info(f"Deleting previous build set: {build_set_file}")
+        build_set_file.unlink()
+
+    logger.info("Discovering build set...")
     for stage in stages:
         if selected_stage and selected_stage != stage.name:
             continue
@@ -223,18 +220,54 @@ def find_build_set(
                     filter(lambda p: p.name in projects_list, all_projects)
                 )
             projects = for_stage(all_projects, stage)
+            project_executions = {ProjectExecution.always_run(p) for p in projects}
         else:
-            projects = find_invalidated_projects_for_stage(
+            steps = StepsCollection(logger=logging.getLogger())
+            changes_in_branch = (
+                _get_changes(repository, local, tag)
+                if not selected_projects or build_all
+                else []
+            )
+
+            project_executions = build_project_executions(
                 logger, all_projects, stage.name, changes_in_branch, steps
             )
             logger.debug(
-                f"Invalidated projects for stage {stage.name}: {[p.name for p in projects]}"
+                f"Invalidated projects for stage {stage.name}: {[p.name for p in project_executions]}"
             )
 
-        build_set.update({stage: projects})
+        build_set.update({stage: project_executions})
+
+    os.makedirs(os.path.dirname(build_set_file), exist_ok=True)
+    with open(build_set_file, "wb") as file:
+        logger.info(f"Storing build set in: {build_set_file}")
+        pickle.dump(build_set, file, pickle.HIGHEST_PROTOCOL)
 
     return build_set
 
 
 def for_stage(projects: set[Project], stage: Stage) -> set[Project]:
     return set(filter(lambda p: p.stages.for_stage(stage.name), projects))
+
+
+def _get_changes(repo: Repository, local: bool, tag: Optional[str] = None):
+    if local:
+        return repo.changes_in_branch_including_local()
+    if tag:
+        return repo.changes_in_tagged_commit(tag)
+
+    return repo.changes_in_branch()
+
+
+def _get_cached_build_set(
+    build_set_file: Path, selected_stage: Optional[str]
+) -> dict[Stage, set[ProjectExecution]]:
+    with open(build_set_file, "rb") as file:
+        full_build_set: dict[Stage, set[ProjectExecution]] = pickle.load(file)
+        if selected_stage:
+            return {
+                stage: project_executions
+                for stage, project_executions in full_build_set.items()
+                if stage.name == selected_stage
+            }
+        return full_build_set

@@ -49,13 +49,13 @@ class BuildSbt(Step):
         if output.success:
             return Output(
                 success=True,
-                message=f"Built {step_input.project.name}",
+                message=f"Built {step_input.project_execution.name}",
                 produced_artifact=artifact,
             )
 
         return Output(
             success=False,
-            message=f"Failed to build sbt project for {step_input.project.name}",
+            message=f"Failed to build sbt project for {step_input.project_execution.name}",
             produced_artifact=None,
         )
 
@@ -69,7 +69,7 @@ class BuildSbt(Step):
         commands: list[str] = [
             command
             for command in [
-                f"project {step_input.project.name}",
+                f"project {step_input.project_execution.name}",
                 f'set docker / imageNames := Seq(ImageName("{image_name}"))',
                 check_fmt,
                 "docker",

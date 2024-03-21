@@ -1,23 +1,23 @@
 import logging
 from pathlib import Path
+from typing import Optional
 
 from ruamel.yaml import YAML  # type: ignore
 
-from src.mpyl.constants import BUILD_ARTIFACTS_FOLDER
-from src.mpyl.project import load_project, Project
+from src.mpyl.project import load_project
 from src.mpyl.projects.find import load_projects
 from src.mpyl.stages.discovery import (
-    find_invalidated_projects_for_stage,
-    is_invalidated,
-    _revision_is_newer_than_artifact,
-    ChangedFile,
-    _to_changed_files,
-    _is_output_invalid,
+    build_project_executions,
+    is_output_cached,
+    is_dependency_touched,
 )
+from src.mpyl.steps import ArtifactType
 from src.mpyl.steps import Output
 from src.mpyl.steps import build, test, deploy
 from src.mpyl.steps.collection import StepsCollection
-from src.mpyl.utilities.repo import Revision
+from src.mpyl.steps.models import Artifact
+from src.mpyl.utilities.docker import DockerImageSpec
+from src.mpyl.utilities.repo import Changeset
 from tests import root_test_path, test_resource_path
 from tests.test_resources import test_data
 from tests.test_resources.test_data import TestStage
@@ -26,194 +26,163 @@ yaml = YAML()
 
 
 class TestDiscovery:
-    steps = StepsCollection(logger=logging.getLogger())
     logger = logging.getLogger(__name__)
-    revisions = [
-        Revision(0, "hash1", {"projects/job/file.py", "some_file.txt"}),
-        Revision(1, "hash2", {"projects/job/file.py"}),
-        Revision(2, "hash3", {"other_file.txt"}),
-    ]
-
-    def test_should_check_if_newer_than_artifact(self):
-        assert (
-            _revision_is_newer_than_artifact("hash1", "hash3", self.revisions) is True
-        )
-        assert (
-            _revision_is_newer_than_artifact("hash3", "hash1", self.revisions) is False
-        )
-        assert (
-            _revision_is_newer_than_artifact("nonexistent", "hash1", self.revisions)
-            is True
-        )
-        assert (
-            _revision_is_newer_than_artifact("hash2", "nonexistent", self.revisions)
-            is True
-        )
-
-    def test_should_take_latest_revision_per_path(self):
-        changed = _to_changed_files(self.revisions)
-        assert changed == {
-            ChangedFile(path="other_file.txt", revision="hash3"),
-            ChangedFile(path="projects/job/file.py", revision="hash2"),
-            ChangedFile(path="some_file.txt", revision="hash1"),
-        }
-
-    def find_invalidated_projects(
-        self, stage: str, projects: set[Project], touched_files: set[str]
-    ):
-        return {
-            project.name
-            for project in find_invalidated_projects_for_stage(
-                self.logger,
-                projects,
-                stage,
-                [Revision(0, "revision", touched_files)],
-                self.steps,
-            )
-        }
+    steps = StepsCollection(logger=logger)
 
     def test_should_find_invalidated_test_dependencies(self):
-        touched_files = {"tests/projects/service/file.py", "tests/some_file.txt"}
-        projects = set(
-            load_projects(
-                test_data.get_repo().root_dir, test_data.get_repo().find_projects()
+        with test_data.get_repo() as repo:
+            touched_files = {"tests/projects/service/file.py", "tests/some_file.txt"}
+            projects = set(load_projects(repo.root_dir, repo.find_projects()))
+            assert (
+                len(
+                    build_project_executions(
+                        self.logger,
+                        projects,
+                        build.STAGE_NAME,
+                        Changeset("revision", touched_files),
+                        self.steps,
+                    )
+                )
+                == 1
             )
-        )
-        assert self.find_invalidated_projects(
-            build.STAGE_NAME, projects, touched_files
-        ) == {"nodeservice"}
-        assert self.find_invalidated_projects(
-            test.STAGE_NAME, projects, touched_files
-        ) == {
-            "nodeservice",
-            "job",
-        }
-        assert self.find_invalidated_projects(
-            deploy.STAGE_NAME, projects, touched_files
-        ) == {
-            "nodeservice",
-        }
-
-    def test_should_find_invalidated_build_dependencies(self):
-        touched_files = {
-            "tests/projects/sbt-service/src/main/scala/vandebron/mpyl/Main.scala"
-        }
-        projects = set(
-            load_projects(
-                test_data.get_repo().root_dir, test_data.get_repo().find_projects()
+            assert (
+                len(
+                    build_project_executions(
+                        self.logger,
+                        projects,
+                        test.STAGE_NAME,
+                        Changeset("revision", touched_files),
+                        self.steps,
+                    )
+                )
+                == 2
             )
-        )
-        assert self.find_invalidated_projects(
-            build.STAGE_NAME, projects, touched_files
-        ) == {
-            "job",
-            "sbtservice",
-        }
-        assert self.find_invalidated_projects(
-            test.STAGE_NAME, projects, touched_files
-        ) == {
-            "sbtservice",
-        }
-        assert self.find_invalidated_projects(
-            deploy.STAGE_NAME, projects, touched_files
-        ) == {
-            "job",
-            "sbtservice",
-        }
+            assert (
+                len(
+                    build_project_executions(
+                        self.logger,
+                        projects,
+                        deploy.STAGE_NAME,
+                        Changeset("revision", touched_files),
+                        self.steps,
+                    )
+                )
+                == 1
+            )
 
-    def test_should_find_invalidated_dependencies(self):
+    def test_build_project_executions(self):
         project_paths = [
-            "projects/job/deployment/project.yml",
-            "projects/service/deployment/project.yml",
-            "projects/sbt-service/deployment/project.yml",
+            "tests/projects/job/deployment/project.yml",
+            "tests/projects/service/deployment/project.yml",
+            "tests/projects/sbt-service/deployment/project.yml",
         ]
-        projects = set(load_projects(root_test_path, project_paths))
-        invalidated = find_invalidated_projects_for_stage(
-            self.logger,
-            projects,
-            TestStage.build().name,
-            [Revision(0, "hash", {"projects/job/file.py", "some_file.txt"})],
-            self.steps,
+        projects = set(load_projects(root_test_path.parent, project_paths))
+        project_executions = build_project_executions(
+            logger=self.logger,
+            all_projects=projects,
+            stage=TestStage.build().name,
+            changes=Changeset(
+                sha="a git SHA",
+                files_touched={
+                    "tests/projects/job/deployment/project.yml",
+                    "some_other_unrelated_file.txt",
+                },
+            ),
+            steps=self.steps,
         )
-        assert 1 == len(invalidated)
+        assert 1 == len(project_executions)
+        assert project_executions.pop().project == load_project(
+            root_test_path.parent,
+            Path("tests/projects/job/deployment/project.yml"),
+            strict=False,
+        )
 
     def test_should_correctly_check_root_path(self):
-        assert not is_invalidated(
+        assert not is_dependency_touched(
             self.logger,
-            project=(
-                load_project(
-                    test_resource_path,
-                    Path("../projects/sbt-service/deployment/project.yml"),
-                )
+            load_project(
+                test_resource_path,
+                Path("../projects/sbt-service/deployment/project.yml"),
             ),
             stage="build",
-            changed_file=ChangedFile(
-                path="projects/sbt-service-other/file.py", revision="hash1"
-            ),
-            change_history=self.revisions,
-            steps=StepsCollection(logger=logging.getLogger()),
+            path="projects/sbt-service-other/file.py",
+            steps=self.steps,
         )
 
-    def test_invalidation_logic(self):
-        test_output = Path(
-            test_resource_path / "deployment" / BUILD_ARTIFACTS_FOLDER / "test.yml"
-        ).read_text(encoding="utf-8")
-        output = yaml.load(test_output)
-        assert not output.success, "output should not be successful"
-        assert _is_output_invalid(
-            self.logger, None, [], "revision"
-        ), "should be invalidated if no output"
-        assert _is_output_invalid(
-            self.logger, output, [], "hash"
-        ), "should be invalidated if output is not successful"
-        assert _is_output_invalid(
-            self.logger,
-            Output(success=True, message="No artifact produced"),
-            [],
-            "hash",
-        ), "should be invalidated if no artifact produced"
+    def test_is_stage_cached(self):
+        cache_key = "a generated test hash"
 
-        output.success = True
-        assert _is_output_invalid(
-            self.logger, output, [], "hash"
-        ), "should be invalidated if hash doesn't match"
+        test_artifact = Artifact(
+            artifact_type=ArtifactType.DOCKER_IMAGE,
+            revision="revision",
+            producing_step="step",
+            spec=DockerImageSpec(image="image"),
+            hash=cache_key,
+        )
 
-        file_revision = "a2fcde18082e14a260195b26f7f5bfed9dc8fbb4"
-        revisions = [Revision(0, file_revision, {"some_file.txt"})]
-        assert not _is_output_invalid(
-            self.logger, output, revisions, file_revision
-        ), "should be valid if hash matches"
+        def create_test_output(
+            success: bool = True,
+            artifact: Optional[Artifact] = test_artifact,
+        ):
+            return Output(
+                success=success, message="an output message", produced_artifact=artifact
+            )
+
+        assert not is_output_cached(
+            output=None,
+            cache_key=cache_key,
+        ), "should not be cached if no output"
+
+        assert not is_output_cached(
+            output=create_test_output(success=False),
+            cache_key=cache_key,
+        ), "should not be cached if output is not successful"
+
+        assert not is_output_cached(
+            output=create_test_output(artifact=None),
+            cache_key=cache_key,
+        ), "should not be cached if no artifact produced"
+
+        assert not is_output_cached(
+            output=create_test_output(),
+            cache_key="a hash that doesn't match",
+        ), "should not be cached if hash doesn't match"
+
+        assert is_output_cached(
+            output=create_test_output(),
+            cache_key=cache_key,
+        ), "should be cached if hash matches"
 
     def test_listing_override_files(self):
         with test_data.get_repo() as repo:
             touched_files = {"tests/projects/overriden-project/file.py"}
             projects = load_projects(repo.root_dir, repo.find_projects())
             assert len(projects) == 13
-            projects_for_build = find_invalidated_projects_for_stage(
+            projects_for_build = build_project_executions(
                 self.logger,
                 projects,
                 build.STAGE_NAME,
-                [Revision(0, "revision", touched_files)],
+                Changeset("revision", touched_files),
                 self.steps,
             )
-            projects_for_test = find_invalidated_projects_for_stage(
+            projects_for_test = build_project_executions(
                 self.logger,
                 projects,
                 test.STAGE_NAME,
-                [Revision(0, "revision", touched_files)],
+                Changeset("revision", touched_files),
                 self.steps,
             )
-            projects_for_deploy = find_invalidated_projects_for_stage(
+            projects_for_deploy = build_project_executions(
                 self.logger,
                 projects,
                 deploy.STAGE_NAME,
-                [Revision(0, "revision", touched_files)],
+                Changeset("revision", touched_files),
                 self.steps,
             )
             assert len(projects_for_build) == 1
             assert len(projects_for_test) == 1
             assert len(projects_for_deploy) == 2
-            assert projects_for_deploy.pop().kubernetes.port_mappings == {
+            assert projects_for_deploy.pop().project.kubernetes.port_mappings == {
                 8088: 8088,
                 8089: 8089,
             }

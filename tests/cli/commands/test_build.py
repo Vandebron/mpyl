@@ -4,6 +4,7 @@ from click.testing import CliRunner
 
 from src.mpyl import main_group, add_commands
 from src.mpyl.build import run_build
+from src.mpyl.project_execution import ProjectExecution
 from src.mpyl.steps import Step, Meta, ArtifactType, Input, Output
 from src.mpyl.steps.build import STAGE_NAME
 from src.mpyl.steps.run import RunResult
@@ -60,11 +61,11 @@ class TestBuildCommand:
         assert result.status_line == "🦥 Nothing to do"
 
     def test_run_build_with_plan_should_execute_successfully(self):
-        projects = {get_minimal_project()}
+        project_executions = {ProjectExecution.always_run(get_minimal_project())}
         run_plan = {
-            TestStage.build(): projects,
-            TestStage.test(): projects,
-            TestStage.deploy(): projects,
+            TestStage.build(): project_executions,
+            TestStage.test(): project_executions,
+            TestStage.deploy(): project_executions,
         }
         run_properties = run_properties_with_plan(plan=run_plan)
         accumulator = RunResult(run_properties=run_properties)
@@ -83,7 +84,9 @@ class TestBuildCommand:
 
     def test_run_build_throwing_step_should_be_handled(self):
         projects = {get_project_with_stages({"build": "Throwing Build"})}
-        run_plan = {TestStage.build(): projects}
+        run_plan = {
+            TestStage.build(): {ProjectExecution.always_run(p) for p in projects}
+        }
         run_properties = construct_run_properties(
             config=config_values,
             properties=properties_values,

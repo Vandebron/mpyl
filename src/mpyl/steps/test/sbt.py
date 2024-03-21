@@ -38,7 +38,9 @@ class TestSbt(Step):
 
     def _test(self, step_input: Input, sbt_config: SbtConfig) -> Output:
         command_compile = self._construct_sbt_command(
-            project_name=step_input.project.name, config=sbt_config, compile_test=True
+            project_name=step_input.project_execution.name,
+            config=sbt_config,
+            compile_test=True,
         )
         compile_outcome = custom_check_output(
             logger=self._logger, command=command_compile, use_print=True
@@ -53,27 +55,31 @@ class TestSbt(Step):
                 )
             return Output(
                 success=False,
-                message=f"Tests failed to compile for {step_input.project.name}",
+                message=f"Tests failed to compile for {step_input.project_execution.name}",
                 produced_artifact=None,
             )
 
         command_test = self._construct_sbt_command(
-            project_name=step_input.project.name, config=sbt_config, compile_test=False
+            project_name=step_input.project_execution.name,
+            config=sbt_config,
+            compile_test=False,
         )
         run_outcome = custom_check_output(
             logger=self._logger, command=command_test, use_print=True
         )
-        artifact = self._extract_test_report(step_input.project, step_input)
+        artifact = self._extract_test_report(
+            step_input.project_execution.project, step_input
+        )
         if not run_outcome.success:
             return Output(
                 success=False,
-                message=f"Tests without coverage failed to run for {step_input.project.name}",
+                message=f"Tests without coverage failed to run for {step_input.project_execution.name}",
                 produced_artifact=artifact,
             )
         return Output(success=True, message="Success", produced_artifact=artifact)
 
     def execute(self, step_input: Input) -> Output:
-        project = step_input.project
+        project = step_input.project_execution
         sbt_config = SbtConfig.from_config(config=step_input.run_properties.config)
         self._logger.debug(f"Config {sbt_config}")
         test_result = self._test(step_input=step_input, sbt_config=sbt_config)

@@ -5,6 +5,7 @@ from typing import Optional
 
 from ..cli import MpylCliParameters
 from ..project import load_project, Stage, Project
+from ..project_execution import ProjectExecution
 from ..stages.discovery import find_build_set
 from ..steps.models import RunProperties
 from ..utilities.repo import Repository, RepoConfig
@@ -14,10 +15,11 @@ def construct_run_properties(
     config: dict,
     properties: dict,
     cli_parameters: MpylCliParameters = MpylCliParameters(),
-    run_plan: Optional[dict[Stage, set[Project]]] = None,
+    run_plan: Optional[dict[Stage, set[ProjectExecution]]] = None,
     all_projects: Optional[set[Project]] = None,
     root_dir: Path = Path(""),
     explain_run_plan: bool = False,
+    sequential: bool = False,
 ) -> RunProperties:
     tag = cli_parameters.tag or properties["build"]["versioning"].get("tag")
     if all_projects is None or run_plan is None:
@@ -46,7 +48,13 @@ def construct_run_properties(
                 if explain_run_plan:
                     build_set_logger.setLevel("DEBUG")
                 run_plan = _create_run_plan(
-                    all_projects, cli_parameters, explain_run_plan, repo, stages, tag
+                    all_projects=all_projects,
+                    cli_parameters=cli_parameters,
+                    explain_run_plan=explain_run_plan,
+                    repo=repo,
+                    stages=stages,
+                    tag=tag,
+                    sequential=sequential,
                 )
 
     if cli_parameters.local:
@@ -70,31 +78,28 @@ def construct_run_properties(
     )
 
 
-def _create_run_plan(all_projects, cli_parameters, explain_run_plan, repo, stages, tag):
+def _create_run_plan(
+    all_projects: set[Project],
+    cli_parameters: MpylCliParameters,
+    explain_run_plan: bool,
+    repo: Repository,
+    stages: list[Stage],
+    tag: Optional[str] = None,
+    sequential: Optional[bool] = False,
+):
     build_set_logger = logging.getLogger("mpyl")
     if explain_run_plan:
         build_set_logger.setLevel("DEBUG")
 
-    changes_in_branch = (
-        _get_changes(repo, cli_parameters.local, tag)
-        if not cli_parameters.projects or cli_parameters.all
-        else []
-    )
     return find_build_set(
         logger=build_set_logger,
+        repository=repo,
         all_projects=all_projects,
-        changes_in_branch=changes_in_branch,
         stages=stages,
+        tag=tag,
+        local=cli_parameters.local,
         build_all=cli_parameters.all,
         selected_stage=cli_parameters.stage,
         selected_projects=cli_parameters.projects,
+        sequential=sequential,
     )
-
-
-def _get_changes(repo, local, tag):
-    if local:
-        return repo.changes_in_branch_including_local()
-    if tag:
-        return repo.changes_in_tagged_commit(tag)
-
-    return repo.changes_in_branch()

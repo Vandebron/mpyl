@@ -47,7 +47,7 @@ class IntegrationTestBefore(Step):
         return total_not_running == 0
 
     def execute(self, step_input: Input) -> Output:
-        compose_file = step_input.project.test_containers_path
+        compose_file = step_input.project_execution.project.test_containers_path
         if not os.path.exists(compose_file):
             return Output(success=True, message="No containers to start")
 

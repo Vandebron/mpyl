@@ -204,7 +204,7 @@ class ChartBuilder:
 
     def __init__(self, step_input: Input):
         self.step_input = step_input
-        project = self.step_input.project
+        project = self.step_input.project_execution.project
         self.project = project
         if project.deployment is None:
             raise AttributeError("deployment field should be set")
@@ -705,8 +705,11 @@ class ChartBuilder:
         )
         processed_env_vars = substitute_namespaces(
             raw_env_vars,
-            {p.to_name for p in self.step_input.run_properties.projects},
-            {p.to_name for p in self.step_input.run_properties.projects_to_deploy},
+            {project.to_name for project in self.step_input.run_properties.projects},
+            {
+                project_execution.project.to_name
+                for project_execution in self.step_input.run_properties.projects_to_deploy
+            },
             pr_identifier,
         )
 
