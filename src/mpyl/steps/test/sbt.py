@@ -64,6 +64,12 @@ class TestSbt(Step):
             config=sbt_config,
             compile_test=False,
         )
+
+        # ptab remove me
+        custom_check_output(
+            logger=self._logger, command=["docker", "ps"], use_print=True
+        )
+
         run_outcome = custom_check_output(
             logger=self._logger, command=command_test, use_print=True
         )
