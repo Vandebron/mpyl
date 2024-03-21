@@ -9,7 +9,7 @@
 - Allow passing --stage to the build status command
 
 #### Build set caching
-Store the build set when `--sequential` is passed, this allows for skipping the build plan calculation on subsequent 
+Store the build set in disk and read it back when `--sequential` is passed as a parameter, preventing us to rebuild the plan on subsequent 
 stages. Which means there is no need to diff with the main branch, thus no need to fetch the entire main branch history
 before running mpyl.
 This is a significant performance improvement as you only need to do a clone with full history for the first stage, 
