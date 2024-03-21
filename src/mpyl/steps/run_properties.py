@@ -48,13 +48,13 @@ def construct_run_properties(
                 if explain_run_plan:
                     build_set_logger.setLevel("DEBUG")
                 run_plan = _create_run_plan(
-                    all_projects,
-                    cli_parameters,
-                    explain_run_plan,
-                    repo,
-                    stages,
-                    tag,
-                    sequential,
+                    all_projects=all_projects,
+                    cli_parameters=cli_parameters,
+                    explain_run_plan=explain_run_plan,
+                    repo=repo,
+                    stages=stages,
+                    tag=tag,
+                    sequential=sequential,
                 )
 
     if cli_parameters.local:

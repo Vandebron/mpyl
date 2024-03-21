@@ -244,7 +244,7 @@ def run(
     default=None,
     type=str,
     required=False,
-    help="Stage to run",
+    help="Stage to get status for",
 )
 @click.option("--explain", "-e", is_flag=True, help="Explain the current run plan")
 @click.pass_obj

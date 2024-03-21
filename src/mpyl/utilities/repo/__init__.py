@@ -134,7 +134,6 @@ class Repository:  # pylint: disable=too-many-public-methods
 
     @staticmethod
     def from_clone(config: RepoConfig, repo_path: Path):
-        logging.basicConfig(level=logging.DEBUG)
         creds = config.repo_credentials
         if not creds:
             raise ValueError("Cannot clone repository without credentials")
