@@ -1,5 +1,14 @@
 # Release notes
 
+## MPyL 1.6.1
+
+
+#### Bugfixes
+- Do not try to hash deleted or renamed files when building a cache key
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.6.1)
+
 ## MPyL 1.6.0
 
 
