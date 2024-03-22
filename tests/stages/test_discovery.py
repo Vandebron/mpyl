@@ -88,6 +88,7 @@ class TestDiscovery:
                 sha="a git SHA",
                 _files_touched={
                     "tests/projects/job/deployment/project.yml": "A",
+                    "tests/projects/job/deployment/deleted-file": "D",
                     "some_other_unrelated_file.txt": "A",
                 },
             ),
@@ -95,6 +96,34 @@ class TestDiscovery:
         )
         assert 1 == len(project_executions)
         assert project_executions.pop().project == load_project(
+            root_test_path.parent,
+            Path("tests/projects/job/deployment/project.yml"),
+            strict=False,
+        )
+
+    def test_build_project_executions_when_all_files_filtered(self):
+        project_paths = [
+            "tests/projects/job/deployment/project.yml",
+            "tests/projects/service/deployment/project.yml",
+            "tests/projects/sbt-service/deployment/project.yml",
+        ]
+        projects = set(load_projects(root_test_path.parent, project_paths))
+        project_executions = build_project_executions(
+            logger=self.logger,
+            all_projects=projects,
+            stage=TestStage.build().name,
+            changes=Changeset(
+                sha="a git SHA",
+                _files_touched={
+                    "tests/projects/job/deployment/project.yml": "D",
+                },
+            ),
+            steps=self.steps,
+        )
+        assert 1 == len(project_executions)
+        execution = project_executions.pop()
+        assert execution.cache_key == "a git SHA"
+        assert execution.project == load_project(
             root_test_path.parent,
             Path("tests/projects/job/deployment/project.yml"),
             strict=False,
