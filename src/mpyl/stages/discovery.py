@@ -1,6 +1,7 @@
 """ Discovery of projects that are relevant to a specific `mpyl.stage.Stage` . Determine which of the
 discovered projects have been invalidated due to changes in the source code since the last build of the project's
 output artifact."""
+
 import hashlib
 import logging
 import os
@@ -238,10 +239,11 @@ def find_build_set(  # pylint: disable=too-many-arguments, too-many-locals
 
         build_set.update({stage: project_executions})
 
-    os.makedirs(os.path.dirname(build_set_file), exist_ok=True)
-    with open(build_set_file, "wb") as file:
-        logger.info(f"Storing build set in: {build_set_file}")
-        pickle.dump(build_set, file, pickle.HIGHEST_PROTOCOL)
+    if not selected_stage and not build_all and not selected_projects:
+        os.makedirs(os.path.dirname(build_set_file), exist_ok=True)
+        with open(build_set_file, "wb") as file:
+            logger.info(f"Storing build set in: {build_set_file}")
+            pickle.dump(build_set, file, pickle.HIGHEST_PROTOCOL)
 
     return build_set
 
