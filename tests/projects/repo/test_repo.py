@@ -18,7 +18,11 @@ class TestRepo:
 
     def test_from_diff(self):
         sha = "a sha"
-        diff_text = (self.resource_path / "git_diff_name_status.txt").read_text(encoding="utf-8").splitlines()
+        diff_text = (
+            (self.resource_path / "git_diff_name_status.txt")
+            .read_text(encoding="utf-8")
+            .splitlines()
+        )
         changeset = Changeset.from_diff(sha, diff_text)
 
         assert changeset.sha == "a sha"
@@ -30,7 +34,11 @@ class TestRepo:
 
     def test_from_diff_with_filter(self):
         sha = "a sha"
-        diff_text = (self.resource_path / "git_diff_name_status.txt").read_text(encoding="utf-8").splitlines()
+        diff_text = (
+            (self.resource_path / "git_diff_name_status.txt")
+            .read_text(encoding="utf-8")
+            .splitlines()
+        )
         changeset = Changeset.from_diff(sha, diff_text)
 
         assert changeset.sha == "a sha"

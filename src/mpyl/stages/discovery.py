@@ -136,7 +136,7 @@ def _to_project_execution(
                 lambda changed_file: file_belongs_to_project(
                     logger, project, changed_file
                 ),
-                changes.files_touched(status={"A", "M", "R"})
+                changes.files_touched(status={"A", "M", "R"}),
             )
         )
 

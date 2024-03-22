@@ -331,7 +331,7 @@ class Repository:  # pylint: disable=too-many-public-methods
         files_changed = set(
             self._repo.git.diff(
                 f"{str(self._repo.head.commit)}..{str(parent_revs[0])}",
-                name_status=True
+                name_status=True,
             ).splitlines()
         )
         return Changeset.from_diff(sha=str(self.get_sha), diff=files_changed)
