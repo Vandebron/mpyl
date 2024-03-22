@@ -133,7 +133,9 @@ def _to_project_execution(
     if is_project_modified:
         files_to_hash = set(
             filter(
-                lambda changed_file: file_belongs_to_project(logger, project, changed_file),
+                lambda changed_file: file_belongs_to_project(
+                    logger, project, changed_file
+                ),
                 changes.files_touched(status={"A", "M", "R"})
             )
         )

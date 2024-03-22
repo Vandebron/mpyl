@@ -89,7 +89,9 @@ class Changeset:
             # (see https://github.com/Vandebron/mpyl/pull/378) so I don't really want to spend more time fixing it
             Changeset(
                 sha=section[0],
-                _files_touched=dict({line: "A" for line in section[1:] if line in change_set}),
+                _files_touched=dict(
+                    {line: "A" for line in section[1:] if line in change_set}
+                ),
             )
             for section in reversed(sections)
         ]
@@ -293,9 +295,7 @@ class Repository:  # pylint: disable=too-many-public-methods
         #  Also throw a more specific exception if the base branch is not found
         base_branch = self.main_origin_branch
         diff = set(
-            self._repo.git.diff(
-                f"{base_branch}...HEAD", name_status=True
-            ).splitlines()
+            self._repo.git.diff(f"{base_branch}...HEAD", name_status=True).splitlines()
         )
         return diff
 
@@ -330,7 +330,8 @@ class Repository:  # pylint: disable=too-many-public-methods
         logging.debug(f"Parent revisions: {parent_revs}")
         files_changed = set(
             self._repo.git.diff(
-                f"{str(self._repo.head.commit)}..{str(parent_revs[0])}", name_status=True
+                f"{str(self._repo.head.commit)}..{str(parent_revs[0])}",
+                name_status=True
             ).splitlines()
         )
         return Changeset.from_diff(sha=str(self.get_sha), diff=files_changed)

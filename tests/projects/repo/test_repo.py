@@ -12,8 +12,8 @@ class TestRepo:
         repo_credentials = config.repo_credentials
         assert repo_credentials.url == "https://github.com/acme/repo.git"
         assert (
-                repo_credentials.to_url_with_credentials
-                == "https://git-user:git-password@github.com/acme/repo.git"
+            repo_credentials.to_url_with_credentials
+            == "https://git-user:git-password@github.com/acme/repo.git"
         )
 
     def test_from_diff(self):
@@ -50,5 +50,5 @@ class TestRepo:
 
         last_revision = revisions[-1]
         assert (
-                last_revision.files_touched() == set()
+            last_revision.files_touched() == set()
         ), "Pipfile does not have a net change"

@@ -88,7 +88,7 @@ class TestDiscovery:
                 sha="a git SHA",
                 _files_touched={
                     "tests/projects/job/deployment/project.yml": "A",
-                    "some_other_unrelated_file.txt": "A"
+                    "some_other_unrelated_file.txt": "A",
                 },
             ),
             steps=self.steps,
