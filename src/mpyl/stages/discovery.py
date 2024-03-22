@@ -139,9 +139,9 @@ def _to_project_execution(
         )
 
         if len(files_to_hash) == 0:
-            cache_key = hashed_changes(files=files_to_hash)
-        else:
             cache_key = changes.sha
+        else:
+            cache_key = hashed_changes(files=files_to_hash)
     elif is_any_dependency_touched:
         cache_key = changes.sha
     else:
