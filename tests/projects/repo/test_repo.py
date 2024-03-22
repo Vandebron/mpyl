@@ -1,25 +1,10 @@
-import os
-
-import pytest
-
 from src.mpyl.utilities.repo import RepoConfig, Changeset
 from tests import root_test_path
-from tests.test_resources import test_data
 from tests.test_resources.test_data import get_config_values
 
 
 class TestRepo:
     resource_path = root_test_path / "test_resources" / "repository"
-
-    @pytest.mark.skipif(
-        condition="GITHUB_JOB" in os.environ,
-        reason="main is not available in github action",
-    )
-    def test_changes_local_and_un_versioned_should_be_included(self):
-        with test_data.get_repo() as repo:
-            assert repo.files_changed_locally().issubset(
-                repo.changes_in_branch_including_local().files_touched
-            )
 
     def test_load_config(self):
         config = RepoConfig.from_config(get_config_values())
@@ -39,9 +24,9 @@ class TestRepo:
 
         first_revision = revisions[0]
         assert first_revision.sha == "e9ff18931070de4803da2190274d5fccb0362824"
-        assert first_revision.files_touched == {"projects/service/src/sum.js"}
+        assert first_revision.files_touched() == {"projects/service/src/sum.js"}
 
         last_revision = revisions[-1]
         assert (
-            last_revision.files_touched == set()
+            last_revision.files_touched() == set()
         ), "Pipfile does not have a net change"

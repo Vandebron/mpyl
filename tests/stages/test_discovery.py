@@ -31,7 +31,10 @@ class TestDiscovery:
 
     def test_should_find_invalidated_test_dependencies(self):
         with test_data.get_repo() as repo:
-            touched_files = {"tests/projects/service/file.py", "tests/some_file.txt"}
+            touched_files = {
+                "tests/projects/service/file.py": "A",
+                "tests/some_file.txt": "A",
+            }
             projects = set(load_projects(repo.root_dir, repo.find_projects()))
             assert (
                 len(
@@ -83,9 +86,9 @@ class TestDiscovery:
             stage=TestStage.build().name,
             changes=Changeset(
                 sha="a git SHA",
-                files_touched={
-                    "tests/projects/job/deployment/project.yml",
-                    "some_other_unrelated_file.txt",
+                _files_touched={
+                    "tests/projects/job/deployment/project.yml": "A",
+                    "some_other_unrelated_file.txt": "A"
                 },
             ),
             steps=self.steps,
@@ -155,7 +158,7 @@ class TestDiscovery:
 
     def test_listing_override_files(self):
         with test_data.get_repo() as repo:
-            touched_files = {"tests/projects/overriden-project/file.py"}
+            touched_files = {"tests/projects/overriden-project/file.py": "A"}
             projects = load_projects(repo.root_dir, repo.find_projects())
             assert len(projects) == 13
             projects_for_build = build_project_executions(
