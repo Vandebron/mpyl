@@ -2,6 +2,7 @@
 `mpyl.utilities.repo.Repository` is a facade for the Version Control System.
 At this moment Git is the only supported VCS.
 """
+
 import logging
 from dataclasses import dataclass
 from pathlib import Path
@@ -148,9 +149,11 @@ class RepoConfig:
         return RepoConfig(
             main_branch=git_config["mainBranch"],
             ignore_patterns=git_config.get("ignorePatterns", []),
-            repo_credentials=RepoCredentials.from_config(maybe_remote_config)
-            if maybe_remote_config
-            else None,
+            repo_credentials=(
+                RepoCredentials.from_config(maybe_remote_config)
+                if maybe_remote_config
+                else None
+            ),
         )
 
 
@@ -330,7 +333,7 @@ class Repository:  # pylint: disable=too-many-public-methods
         logging.debug(f"Parent revisions: {parent_revs}")
         files_changed = set(
             self._repo.git.diff(
-                f"{str(self._repo.head.commit)}..{str(parent_revs[0])}",
+                f"{str(parent_revs[0])}..{str(self._repo.head.commit)}",
                 name_status=True,
             ).splitlines()
         )
