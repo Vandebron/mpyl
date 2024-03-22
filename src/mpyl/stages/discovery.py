@@ -123,17 +123,27 @@ def _to_project_execution(
 
     is_any_dependency_touched = any(
         is_dependency_touched(logger, project, stage, changed_file, steps)
-        for changed_file in changes.files_touched
+        for changed_file in changes.files_touched()
     )
-    project_changed_files = set(
-        filter(
-            lambda changed_file: file_belongs_to_project(logger, project, changed_file),
-            changes.files_touched,
-        )
+    is_project_modified = any(
+        file_belongs_to_project(logger, project, changed_file)
+        for changed_file in changes.files_touched()
     )
 
-    if project_changed_files:
-        cache_key = hashed_changes(files=project_changed_files)
+    if is_project_modified:
+        files_to_hash = set(
+            filter(
+                lambda changed_file: file_belongs_to_project(
+                    logger, project, changed_file
+                ),
+                changes.files_touched(status={"A", "M", "R"}),
+            )
+        )
+
+        if len(files_to_hash) == 0:
+            cache_key = changes.sha
+        else:
+            cache_key = hashed_changes(files=files_to_hash)
     elif is_any_dependency_touched:
         cache_key = changes.sha
     else:

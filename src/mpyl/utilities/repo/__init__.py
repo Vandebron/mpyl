@@ -2,8 +2,8 @@
 `mpyl.utilities.repo.Repository` is a facade for the Version Control System.
 At this moment Git is the only supported VCS.
 """
+
 import logging
-import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -21,13 +21,45 @@ from ...utilities.pyaml_env import parse_config
 class Changeset:
     sha: str
     """Git hash for this revision"""
-    files_touched: set[str]
-    """Paths to files that were altered in this hash"""
+    _files_touched: dict[str, str]
+    """Paths to files that were touched in this changeset"""
     BREAK_WORD = "hash "
+
+    def files_touched(self, status: Optional[set[str]] = None):
+        if not status or len(status) == 0:
+            return set(self._files_touched.keys())
+
+        return {file for file, s in self._files_touched.items() if s in status}
+
+    @staticmethod
+    def from_diff(sha: str, diff: set[str]):
+        changes = {}
+        for line in diff:
+            parts = line.split("\t")
+            if len(parts) == 2:
+                changes[parts[1]] = parts[0]
+            elif len(parts) == 3 and parts[0].startswith("R"):
+                changes[parts[2]] = "R"
+            else:
+                logging.warning(f"Skipping unparseable diff output line {line}")
+
+        return Changeset(sha, changes)
+
+    @staticmethod
+    def with_untracked_files(sha: str, diff: set[str], untracked_files: set[str]):
+        changes = {}
+        for line in diff:
+            parts = line.split("\t")
+            changes[parts[1]] = parts[0]
+
+        for file in untracked_files:
+            changes[file] = "U"
+
+        return Changeset(sha, changes)
 
     @staticmethod
     def empty(sha: str):
-        return Changeset(sha=sha, files_touched=set())
+        return Changeset(sha=sha, _files_touched={})
 
     @staticmethod
     def from_git_output(git_log_output: str, git_diff_output: str):
@@ -53,9 +85,14 @@ class Changeset:
             sections.append(current_section)
 
         revisions = [
+            # this is technically incorrect as it will consider any file name as being an addition.
+            # however, this whole method is only used for the `repo status` command which is slated for removal
+            # (see https://github.com/Vandebron/mpyl/pull/378) so I don't really want to spend more time fixing it
             Changeset(
-                section[0],
-                {line for line in section[1:] if line in change_set},
+                sha=section[0],
+                _files_touched=dict(
+                    {line: "A" for line in section[1:] if line in change_set}
+                ),
             )
             for section in reversed(sections)
         ]
@@ -112,9 +149,11 @@ class RepoConfig:
         return RepoConfig(
             main_branch=git_config["mainBranch"],
             ignore_patterns=git_config.get("ignorePatterns", []),
-            repo_credentials=RepoCredentials.from_config(maybe_remote_config)
-            if maybe_remote_config
-            else None,
+            repo_credentials=(
+                RepoCredentials.from_config(maybe_remote_config)
+                if maybe_remote_config
+                else None
+            ),
         )
 
 
@@ -227,7 +266,7 @@ class Repository:  # pylint: disable=too-many-public-methods
         return f"origin/{self.main_branch}"
 
     def fit_for_tag_build(self, tag: str) -> bool:
-        return len(self.changes_in_tagged_commit(tag).files_touched) > 0
+        return len(self.changes_in_tagged_commit(tag).files_touched()) > 0
 
     def __get_filter_patterns(self):
         return ["--"] + [f":!{pattern}" for pattern in self.config.ignore_patterns]
@@ -251,32 +290,28 @@ class Repository:  # pylint: disable=too-many-public-methods
         return Changeset.from_git_output(revs, changed_files)
 
     def changes_in_branch(self) -> Changeset:
-        return Changeset(self.get_sha, self.changed_files_in_branch())
+        return Changeset.from_diff(self.get_sha, self.changed_files_in_branch())
 
     def changed_files_in_branch(self) -> set[str]:
         # TODO pass the base_branch as a build parameter, not all branches  # pylint: disable=fixme
         #  are created from the main branch
         #  Also throw a more specific exception if the base branch is not found
         base_branch = self.main_origin_branch
-        changed_files = self._repo.git.diff(
-            f"{base_branch}...HEAD", name_only=True
-        ).splitlines()
-        return set(changed_files)
-
-    def files_changed_locally(self) -> set[str]:
-        changed: set[str] = set(
-            self._repo.git.diff(
-                self.__get_filter_patterns(), None, name_only=True
-            ).splitlines()
+        diff = set(
+            self._repo.git.diff(f"{base_branch}...HEAD", name_status=True).splitlines()
         )
-        return changed.union(self._repo.untracked_files)
+        return diff
 
     def changes_in_branch_including_local(self) -> Changeset:
-        return Changeset(
+        local_changes = set(
+            self._repo.git.diff(
+                self.__get_filter_patterns(), None, name_status=True
+            ).splitlines()
+        )
+        return Changeset.with_untracked_files(
             sha=self.get_sha,
-            files_touched=(
-                self.changed_files_in_branch() | self.files_changed_locally()
-            ),
+            diff=self.changed_files_in_branch() | local_changes,
+            untracked_files=set(self._repo.untracked_files),
         )
 
     def changes_in_tagged_commit(self, current_tag: str) -> Changeset:
@@ -296,10 +331,13 @@ class Repository:  # pylint: disable=too-many-public-methods
             )
             return Changeset.empty(self.get_sha)
         logging.debug(f"Parent revisions: {parent_revs}")
-        files_changed = self._repo.git.diff(
-            f"{str(self._repo.head.commit)}..{str(parent_revs[0])}", name_only=True
-        ).splitlines()
-        return Changeset(sha=str(self.get_sha), files_touched=files_changed)
+        files_changed = set(
+            self._repo.git.diff(
+                f"{str(parent_revs[0])}..{str(self._repo.head.commit)}",
+                name_status=True,
+            ).splitlines()
+        )
+        return Changeset.from_diff(sha=str(self.get_sha), diff=files_changed)
 
     def init_remote(self, url: Optional[str]) -> Remote:
         if url:
