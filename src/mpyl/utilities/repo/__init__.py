@@ -35,7 +35,12 @@ class Changeset:
         changes = {}
         for line in diff:
             parts = line.split("\t")
-            changes[parts[1]] = parts[0]
+            if len(parts) == 2:
+                changes[parts[1]] = parts[0]
+            elif len(parts) == 3 and parts[0].startswith("R"):
+                changes[parts[2]] = "R"
+            else:
+                logging.warning(f"Skipping unparseable diff output line {line}")
 
         return Changeset(sha, changes)
 
