@@ -12,7 +12,7 @@ runs:
         helm repo add traefik https://helm.traefik.io/traefik
         helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
         helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
-        helm repo add spark-operator https://googlecloudplatform.github.io/spark-on-k8s-operator
+        helm repo add spark-operator https://kubeflow.github.io/spark-operator
         helm repo update
       shell: bash
 
@@ -23,4 +23,7 @@ runs:
       shell: bash
 
     - run: helm install sealed-secrets sealed-secrets/sealed-secrets
+      shell: bash
+
+    - run: helm install spark-operator spark-operator/spark-operator
       shell: bash
