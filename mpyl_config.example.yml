@@ -107,7 +107,7 @@ kubernetes:
       test:
         clusterId: c-acme
         clusterEnv: test
-        context: acme-k8s-test
+        context: kind-chart-testing
       acceptance:
         clusterId: c-acme
         clusterEnv: acce

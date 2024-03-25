@@ -194,7 +194,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: Vandebron/github-actions/setup-kind@main
+      # TODO: change to 'main' before merging
+      - uses: Vandebron/mpyl/.github/setup-kind@feature/GUILD-487-migrate-mpyl-runner-to-github-actions
 
       - name: Check mpyl health
         run: mpyl health --ci
@@ -206,16 +207,10 @@ jobs:
         run: mpyl projects upgrade
 
       - name: Build status
-        run: mpyl build status
-
-      - name: Force change
-        run: echo "To force a change " >> tests/projects/service/change.txt
-
-      - name: Build status with change
-        run: mpyl build status
+        run: mpyl build status --all
 
       - name: Build run
-        run: mpyl build run
+        run: mpyl build run --all
         env:
           SOME_CREDENTIAL: credential
 
@@ -240,6 +235,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      # TODO: change to 'main' before merging
+      - uses: Vandebron/mpyl/.github/setup-kind@feature/GUILD-487-migrate-mpyl-runner-to-github-actions
 
       - name: Get head revision
         id: headRevision
