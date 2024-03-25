@@ -194,8 +194,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Repo status
-        run: mpyl repo status
+      - uses: Vandebron/github-actions/setup-kind@main
 
       - name: Check mpyl health
         run: mpyl health --ci

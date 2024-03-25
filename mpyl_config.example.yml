@@ -101,7 +101,7 @@ kubernetes:
       maxUnavailable: "25%"
       maxSurge: "25%"
     type: "RollingUpdate"
-  deployAction: KubectlManifest
+  deployAction: HelmDeploy
   rancher:
     cluster:
       test:
