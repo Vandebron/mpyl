@@ -95,19 +95,23 @@ whiteLists:
       test: ['1.2.3.4']
       acceptance: ['2.3.4.5']
       production: ['3.4.5.6']
+cypress:
+  recordKey: ''
+  cypressSourceCodePath: 'tests/test_resources/cypress'
+  kubectlConfigPath: !ENV ${KUBECONFIG:~/.kube/config}
 kubernetes:
   deploymentStrategy:
     rollingUpdate:
       maxUnavailable: "25%"
       maxSurge: "25%"
     type: "RollingUpdate"
-  deployAction: KubectlManifest
+  deployAction: HelmDeploy
   rancher:
     cluster:
       test:
         clusterId: c-acme
         clusterEnv: test
-        context: acme-k8s-test
+        context: kind-chart-testing
       acceptance:
         clusterId: c-acme
         clusterEnv: acce
