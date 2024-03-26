@@ -194,8 +194,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      # TODO: change to 'main' before merging
-      - uses: Vandebron/mpyl/.github/setup-kind@feature/GUILD-487-migrate-mpyl-runner-to-github-actions
+      - uses: Vandebron/mpyl/.github/setup-kind@main
 
       - name: Check mpyl health
         run: mpyl health --ci
@@ -236,8 +235,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      # TODO: change to 'main' before merging
-      - uses: Vandebron/mpyl/.github/setup-kind@feature/GUILD-487-migrate-mpyl-runner-to-github-actions
+      - uses: Vandebron/mpyl/.github/setup-kind@main
 
       - name: Get head revision
         id: headRevision
