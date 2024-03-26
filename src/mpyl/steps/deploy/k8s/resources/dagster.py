@@ -83,7 +83,7 @@ def to_user_code_values(
                     "port": 3030,
                     "resources": {
                         "requests": {"memory": "256Mi", "cpu": "50m"},
-                        "limits": {"memory": "512Mi", "cpu": "1000m"},
+                        "limits": {"memory": "1024Mi", "cpu": "1000m"},
                     },
                 }
             ],
