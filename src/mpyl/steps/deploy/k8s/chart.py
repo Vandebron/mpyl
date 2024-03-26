@@ -812,22 +812,24 @@ def to_service_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinitio
     )
 
 
-def _to_service_components_chart(builder):
-    common_chart = {
-        "deployment": builder.to_deployment(),
-        "service": builder.to_service(),
-    }
+def to_prometheus_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
     metrics = builder.project.kubernetes.metrics
-    prometheus_chart = (
+    return (
         {
-            "prometheus-rule": builder.to_prometheus_rule(
-                alerts=builder.project.kubernetes.metrics.alerts
-            ),
+            "prometheus-rule": builder.to_prometheus_rule(alerts=metrics.alerts),
             "service-monitor": builder.to_service_monitor(metrics=metrics),
         }
         if metrics and metrics.enabled
         else {}
     )
+
+
+def _to_service_components_chart(builder):
+    common_chart = {
+        "deployment": builder.to_deployment(),
+        "service": builder.to_service(),
+    }
+    prometheus_chart = to_prometheus_chart(builder)
     ingress_https = {
         f"{builder.project.name}-ingress-{i}-https": route
         for i, route in enumerate(builder.to_ingress_routes(https=True))

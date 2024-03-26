@@ -16,8 +16,6 @@ deployments:
   - name: some-normal-secret
   image:
     pullPolicy: Always
-    imagePullSecrets:
-    - name: bigdataregistry
     tag: 20230829-1234
     repository: docker_host/example-dagster-user-code
   includeConfigInLaunchedRuns:
