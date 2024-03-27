@@ -1,4 +1,5 @@
 """Deploys the Camunda diagrams in the build stage to Camunda cluster, using BPM. """
+
 from logging import Logger
 from typing import List
 from functools import reduce
