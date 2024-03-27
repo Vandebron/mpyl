@@ -4,7 +4,7 @@ import pickle
 import shutil
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast, Sequence
 
 import click
 import questionary
@@ -30,6 +30,7 @@ from .commands.build.jenkins import JenkinsRunParameters, run_jenkins, get_token
 from ..artifacts.build_artifacts import (
     ManifestPathTransformer,
     BuildCacheTransformer,
+    ArtifactType,
 )
 from ..build import print_status, run_mpyl
 from ..constants import (
@@ -38,10 +39,10 @@ from ..constants import (
     BUILD_ARTIFACTS_FOLDER,
 )
 from ..project import load_project, Target
-from ..steps.deploy.k8s import DeployConfig
+from ..steps.deploy.k8s.deploy_config import DeployConfig
 from ..steps.models import RunProperties
 from ..steps.run import RunResult
-from ..steps.run_properties import initiate_run_properties
+from ..steps.run_properties import construct_run_properties
 from ..utilities.github import GithubConfig
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
@@ -92,7 +93,7 @@ def build(ctx, config, properties, verbose):
     """Pipeline build commands"""
     parsed_properties = parse_config(properties)
     parsed_config = parse_config(config)
-    console_config = initiate_run_properties(
+    console_config = construct_run_properties(
         properties=parsed_properties,
         config=parsed_config,
         run_plan={},
@@ -112,11 +113,6 @@ class CustomValidation(click.Command):
     def invoke(self, ctx):
         selected_stage = ctx.params.get("stage")
         stages = [stage["name"] for stage in ctx.obj.run_properties["stages"]]
-
-        if selected_stage is None and ctx.params.get("sequential") is True:
-            raise click.ClickException(
-                message="A run can only be sequential if a stage is specified."
-            )
 
         if selected_stage and selected_stage not in stages:
             raise click.ClickException(
@@ -151,7 +147,7 @@ class CustomValidation(click.Command):
     is_flag=True,
     default=False,
     required=False,
-    help="Combine results with previous run(s)",
+    help="Combine results with previous run(s) and load cached build set",
 )
 @click.option(
     "--projects",
@@ -205,8 +201,11 @@ def run(
         )
         sys.exit(1)
 
-    run_properties = initiate_run_properties(
-        config=obj.config, properties=obj.run_properties, cli_parameters=parameters
+    run_properties = construct_run_properties(
+        config=obj.config,
+        properties=obj.run_properties,
+        cli_parameters=parameters,
+        sequential=sequential,
     )
     run_result = run_mpyl(
         run_properties=run_properties, cli_parameters=parameters, reporter=None
@@ -240,15 +239,23 @@ def run(
     required=False,
     help="Comma separated list of the projects to build",
 )
+@click.option(
+    "--stage",
+    default=None,
+    type=str,
+    required=False,
+    help="Stage to get status for",
+)
+@click.option("--explain", "-e", is_flag=True, help="Explain the current run plan")
 @click.pass_obj
-def status(obj: CliContext, all_, projects):
+def status(obj: CliContext, all_, projects, stage, explain):
     upgrade_check = None
     try:
         upgrade_check = asyncio.wait_for(warn_if_update(obj.console), timeout=3)
         parameters = MpylCliParameters(
-            local=sys.stdout.isatty(), all=all_, projects=projects
+            local=sys.stdout.isatty(), all=all_, projects=projects, stage=stage
         )
-        print_status(obj, parameters)
+        print_status(obj, parameters, explain)
     except asyncio.exceptions.TimeoutError:
         pass
     finally:
@@ -308,13 +315,12 @@ def select_tag(ctx) -> str:
         return release.tag_name
 
 
-def select_target():
-    return questionary.select(
+def select_targets() -> list[str]:
+    return questionary.checkbox(
         "Which environment do you want to deploy to?",
-        show_selected=True,
         choices=[
             Choice(title=t.name, value=t.name)  # pylint: disable=no-member
-            for t in [Target.ACCEPTANCE, Target.PULL_REQUEST_BASE, Target.PRODUCTION]
+            for t in [Target.PULL_REQUEST_BASE, Target.ACCEPTANCE, Target.PRODUCTION]
         ],
     ).ask()
 
@@ -401,7 +407,7 @@ def ask_for_tag_input(ctx, _param, value) -> Optional[str]:
     callback=ask_for_tag_input,
 )
 @click.pass_context
-def jenkins(  # pylint: disable=too-many-arguments
+def jenkins(  # pylint: disable=too-many-arguments, too-many-locals
     ctx,
     user,
     password,
@@ -413,9 +419,8 @@ def jenkins(  # pylint: disable=too-many-arguments
     silent,
     tag,
 ):
-    upgrade_check = None
     try:
-        upgrade_check = asyncio.wait_for(warn_if_update(ctx.obj.console), timeout=5)
+        asyncio.run(warn_if_update(ctx.obj.console))
         if "jenkins" not in ctx.obj.config:
             ctx.obj.console.print(
                 "No Jenkins configuration found in config file. "
@@ -431,24 +436,26 @@ def jenkins(  # pylint: disable=too-many-arguments
         if arguments:
             pipeline_parameters["BUILD_PARAMS"] = " ".join(arguments)
 
-        run_argument = JenkinsRunParameters(
-            jenkins_user=user,
-            jenkins_password=password,
-            config=ctx.obj.config,
-            pipeline=selected_pipeline,
-            pipeline_parameters=pipeline_parameters,
-            verbose=not silent or ctx.obj.verbose,
-            follow=not background,
-            tag=tag,
-            tag_target=getattr(Target, select_target()) if tag else None,
+        targets = (
+            select_targets()
+            if tag
+            else [Target.PULL_REQUEST.name]  # pylint: disable=no-member
         )
-
-        run_jenkins(run_argument)
+        for target in targets:
+            run_argument = JenkinsRunParameters(
+                jenkins_user=user,
+                jenkins_password=password,
+                config=ctx.obj.config,
+                pipeline=selected_pipeline,
+                pipeline_parameters=pipeline_parameters,
+                verbose=not silent or ctx.obj.verbose,
+                follow=not background,
+                tag=tag,
+                tag_target=getattr(Target, target) if tag else None,
+            )
+            run_jenkins(run_argument)
     except asyncio.exceptions.TimeoutError:
         pass
-    finally:
-        if upgrade_check:
-            asyncio.get_event_loop().run_until_complete(upgrade_check)
 
 
 @build.command(help=f"Clean MPyL metadata in `{BUILD_ARTIFACTS_FOLDER}` folders")
@@ -484,7 +491,7 @@ def clean(obj: CliContext, filter_):
     "artifacts",
     help="Commands related to artifacts like build cache and k8s manifests",
 )
-def artifacts():
+def artifacts():  # no implementation, only for nesting command
     pass
 
 
@@ -501,7 +508,7 @@ def artifacts():
 )
 @click.pass_obj
 def pull(obj: CliContext, tag: str, pr: int, path: Path):
-    run_properties = initiate_run_properties(
+    run_properties = construct_run_properties(
         config=obj.config,
         properties=obj.run_properties,
         run_plan={},
@@ -509,8 +516,16 @@ def pull(obj: CliContext, tag: str, pr: int, path: Path):
     )
     target_branch = __get_target_branch(run_properties, tag, pr)
 
-    build_artifacts = prepare_artifacts_repo(obj=obj, repo_path=path)
-    build_artifacts.pull(branch=branch_name(target_branch, "cache"))
+    build_artifacts = prepare_artifacts_repo(
+        obj=obj, repo_path=path, artifact_type=ArtifactType.CACHE
+    )
+    build_artifacts.pull(
+        branch=branch_name(
+            identifier=target_branch,
+            artifact_type=ArtifactType.CACHE,
+            target=run_properties.target,
+        )
+    )
 
 
 @artifacts.command(help="Push build artifacts to remote artifact repository")
@@ -521,60 +536,83 @@ def pull(obj: CliContext, tag: str, pr: int, path: Path):
     "-p",
     type=click.Path(exists=False),
     help="Path within repository to copy artifacts to",
-    default=Path("tmp"),
     required=False,
 )
 @click.option(
     "--artifact-type",
     "-a",
-    type=click.Choice(["cache", "manifests"]),
-    help="The type of artifact to store. Either build metadata from `.mpyl` folders or k8s manifests",
+    type=click.Choice(
+        cast(Sequence[str], ArtifactType)
+    ),  # Click does accept this enum type but mypy doesn't
+    help="The type of artifact to store. Either build metadata from `.mpyl` "
+    "folders or k8s manifests to be deployed by ArgoCD",
     required=True,
 )
 @click.pass_obj
-def push(obj: CliContext, tag: str, pr: int, path: Path, artifact_type: str):
-    run_properties = initiate_run_properties(
+def push(
+    obj: CliContext,
+    tag: Optional[str],
+    pr: Optional[int],
+    path: Path,
+    artifact_type: ArtifactType,
+):
+    run_properties = construct_run_properties(
         config=obj.config,
         properties=obj.run_properties,
         run_plan={},
         all_projects=set(),
     )
     target_branch = __get_target_branch(run_properties, tag, pr)
+    if path is None:
+        path = Path("tmp") if artifact_type == ArtifactType.CACHE else Path(".")
 
-    build_artifacts = prepare_artifacts_repo(obj=obj, repo_path=path)
+    build_artifacts = prepare_artifacts_repo(
+        obj=obj, repo_path=path, artifact_type=artifact_type
+    )
     deploy_config = DeployConfig.from_config(obj.config)
 
     transformer = (
-        ManifestPathTransformer(deploy_config)
-        if artifact_type == "manifests"
+        ManifestPathTransformer(
+            deploy_config=deploy_config, run_properties=run_properties
+        )
+        if artifact_type == ArtifactType.ARGO
         else BuildCacheTransformer()
     )
 
-    message = f"Revision {obj.repo.get_sha} {f'at {obj.repo.remote_url}' if obj.repo.remote_url else ''}"
+    github_config = None
+    if artifact_type == ArtifactType.ARGO:
+        github = obj.config["vcs"]["argoGithub"]
+        github_config = GithubConfig.from_github_config(github=github)
 
     build_artifacts.push(
-        branch=branch_name(target_branch, artifact_type),
-        message=message,
+        branch=branch_name(
+            identifier=target_branch,
+            artifact_type=artifact_type,
+            target=run_properties.target,
+        ),
+        revision=obj.repo.get_sha,
+        repository_url=obj.repo.remote_url if obj.repo.remote_url else "",
         project_paths=obj.repo.find_projects(),
         path_transformer=transformer,
+        run_properties=run_properties,
+        github_config=github_config,
     )
 
 
-def __get_target_branch(run_properties: RunProperties, tag: str, pr: int) -> str:
-    target_branch = (
-        tag
-        if tag
-        else (
-            run_properties.versioning.tag
-            if run_properties.versioning.tag
-            else f"PR-{pr or run_properties.versioning.pr_number}"
-        )
-    )
-    if not target_branch:
+def __get_target_branch(
+    run_properties: RunProperties, tag: Optional[str], pr: Optional[int]
+) -> str:
+    effective_tag = tag or run_properties.versioning.tag
+    effective_pr = pr or run_properties.versioning.pr_number
+    if effective_tag is None and effective_pr is None:
         raise click.ClickException(
             "Either pr or tag must be specified, either as a flag or in the run properties"
         )
-    return target_branch
+
+    if effective_tag:
+        return effective_tag
+
+    return f"PR-{effective_pr}"
 
 
 if __name__ == "__main__":

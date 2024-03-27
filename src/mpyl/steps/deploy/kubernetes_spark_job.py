@@ -26,14 +26,12 @@ class DeployKubernetesSparkJob(Step):
         )
 
     def execute(self, step_input: Input) -> Output:
-        run_properties = step_input.run_properties
         builder = ChartBuilder(step_input)
         chart = to_spark_job_chart(builder)
         return deploy_helm_chart(
             self._logger,
             chart,
             step_input,
-            run_properties.target,
             ChartBuilder(step_input).release_name,
             delete_existing=True,
         )

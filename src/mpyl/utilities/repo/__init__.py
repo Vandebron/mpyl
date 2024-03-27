@@ -2,6 +2,7 @@
 `mpyl.utilities.repo.Repository` is a facade for the Version Control System.
 At this moment Git is the only supported VCS.
 """
+
 import logging
 from dataclasses import dataclass
 from pathlib import Path
@@ -19,15 +20,48 @@ from ...project import Project
 class Changeset:
     sha: str
     """Git hash for this revision"""
-    files_touched: set[str]
+    _files_touched: dict[str, str]
+
+    def files_touched(self, status: Optional[set[str]] = None):
+        if not status or len(status) == 0:
+            return set(self._files_touched.keys())
+
+        return {file for file, s in self._files_touched.items() if s in status}
+
+    @staticmethod
+    def from_diff(sha: str, diff: set[str]):
+        changes = {}
+        for line in diff:
+            parts = line.split("\t")
+            if len(parts) == 2:
+                changes[parts[1]] = parts[0]
+            elif len(parts) == 3 and parts[0].startswith("R"):
+                changes[parts[2]] = "R"
+            else:
+                logging.warning(f"Skipping unparseable diff output line {line}")
+
+        return Changeset(sha, changes)
+
+    @staticmethod
+    def with_untracked_files(sha: str, diff: set[str], untracked_files: set[str]):
+        changes = {}
+        for line in diff:
+            parts = line.split("\t")
+            changes[parts[1]] = parts[0]
+
+        for file in untracked_files:
+            changes[file] = "U"
+
+        return Changeset(sha, changes)
 
     @staticmethod
     def empty(sha: str):
-        return Changeset(sha=sha, files_touched=set())
+        return Changeset(sha=sha, _files_touched={})
 
 
 @dataclass(frozen=True)
 class RepoCredentials:
+    name: str
     url: str
     ssh_url: str
     user_name: str
@@ -49,6 +83,7 @@ class RepoCredentials:
         url = config["url"]
         ssh_url = f"{url.replace('https://', 'git@').replace('.com/', '.com:')}"
         return RepoCredentials(
+            name=url.removeprefix("https://github.com/").removesuffix(".git"),
             url=url,
             ssh_url=ssh_url,
             user_name=config["userName"],
@@ -61,7 +96,7 @@ class RepoCredentials:
 class RepoConfig:
     main_branch: str
     ignore_patterns: list[str]
-    repo_credentials: Optional[RepoCredentials]
+    repo_credentials: RepoCredentials
 
     @staticmethod
     def from_config(config: dict):
@@ -74,19 +109,18 @@ class RepoConfig:
         return RepoConfig(
             main_branch=git_config["mainBranch"],
             ignore_patterns=git_config.get("ignorePatterns", []),
-            repo_credentials=RepoCredentials.from_config(maybe_remote_config)
-            if maybe_remote_config
-            else None,
+            repo_credentials=(
+                RepoCredentials.from_config(maybe_remote_config)
+                if maybe_remote_config
+                else None
+            ),
         )
 
 
 class Repository:  # pylint: disable=too-many-public-methods
-    def __init__(self, config: RepoConfig, repo_path: Optional[Path] = None):
-        self._config = config
-        self._root_dir = repo_path or Git().rev_parse("--show-toplevel")
-        self._repo = Repo(
-            path=self._root_dir
-        )  # pylint: disable=attribute-defined-outside-init
+    def __init__(self, config: RepoConfig, repo: Optional[Repo] = None):
+        self.config = config
+        self._repo = repo or Repo(path=Git().rev_parse("--show-toplevel"))
 
     def __enter__(self):
         return self
@@ -103,16 +137,21 @@ class Repository:  # pylint: disable=too-many-public-methods
         if not creds:
             raise ValueError("Cannot clone repository without credentials")
 
+        if user_name := creds.user_name is None:
+            return Repository(
+                config=config,
+                repo=Repo.clone_from(url=creds.ssh_url, to_path=repo_path),
+            )
+
         repo = Repo.clone_from(
             url=creds.to_url_with_credentials,
             to_path=repo_path,
         )
-        user_name = creds.user_name
         with repo.config_writer() as writer:
             writer.set_value("user", "name", user_name)
-            writer.set_value("user", "email", creds.email or "somebody@somwhere.com")
+            writer.set_value("user", "email", creds.email or "somebody@somewhere.com")
 
-        return Repository(config=config, repo_path=repo_path)
+        return Repository(config=config, repo=repo)
 
     @property
     def get_sha(self):
@@ -148,58 +187,76 @@ class Repository:  # pylint: disable=too-many-public-methods
 
     @property
     def root_dir(self) -> Path:
-        return Path(self._root_dir)
+        return Path(self._repo.git_dir).parent
 
     @property
     def main_branch(self) -> str:
-        return self._config.main_branch.split("/")[-1]
+        return self.config.main_branch.split("/")[-1]
 
     @property
     def main_origin_branch(self) -> str:
-        parts = self._config.main_branch.split("/")
+        parts = self.config.main_branch.split("/")
         if len(parts) > 1:
             return "/".join(parts)
         return f"origin/{self.main_branch}"
 
     def fit_for_tag_build(self, tag: str) -> bool:
-        return len(self.changes_in_tagged_commit(tag).files_touched) > 0
+        return len(self.changes_in_tagged_commit(tag).files_touched()) > 0
 
     def __get_filter_patterns(self):
-        return ["--"] + [f":!{pattern}" for pattern in self._config.ignore_patterns]
+        return ["--"] + [f":!{pattern}" for pattern in self.config.ignore_patterns]
 
     def changes_in_branch(self) -> Changeset:
-        return Changeset(self.get_sha, self.changed_files_in_branch())
+        return Changeset.from_diff(self.get_sha, self.changed_files_in_branch())
 
     def changed_files_in_branch(self) -> set[str]:
         # TODO pass the base_branch as a build parameter, not all branches  # pylint: disable=fixme
         #  are created from the main branch
+        #  Also throw a more specific exception if the base branch is not found
         base_branch = self.main_origin_branch
-        changed_files = self._repo.git.diff(
-            f"{base_branch}...HEAD", name_only=True
-        ).splitlines()
-        return set(changed_files)
+        diff = set(
+            self._repo.git.diff(f"{base_branch}...HEAD", name_status=True).splitlines()
+        )
+        return diff
 
-    def unversioned_files(self) -> set[str]:
-        changed: set[str] = set(
+    def changes_in_branch_including_local(self) -> Changeset:
+        local_changes = set(
             self._repo.git.diff(
-                self.__get_filter_patterns(), None, name_only=True
+                self.__get_filter_patterns(), None, name_status=True
             ).splitlines()
         )
-        return changed.union(self._repo.untracked_files)
-
-    def changes_in_branch_including_unversioned_files(self) -> Changeset:
-        return Changeset(
+        return Changeset.with_untracked_files(
             sha=self.get_sha,
-            files_touched=(self.changed_files_in_branch() | self.unversioned_files()),
+            diff=self.changed_files_in_branch() | local_changes,
+            untracked_files=set(self._repo.untracked_files),
         )
 
-    def changes_in_tagged_commit(self, tag: str) -> Changeset:
-        previous_tag = self._repo.git.describe("--tags", "--abbrev=0", f"{tag}^")
-        logging.debug(f"Previous tag: {previous_tag}")
-        files_changed = self._repo.git.diff(
-            f"{previous_tag}..{tag}", name_only=True
-        ).splitlines()
-        return Changeset(sha=str(self.get_sha), files_touched=files_changed)
+    def changes_in_tagged_commit(self, current_tag: str) -> Changeset:
+        current_revision = self._repo.head.commit
+        curr_rev_tag = self._repo.git.tag(current_revision, points_at=True)
+        logging.debug(f"Current revision: {current_revision} tag: {curr_rev_tag}")
+
+        if curr_rev_tag != current_tag:
+            logging.error(f"HEAD is at {curr_rev_tag} not at expected `{current_tag}`")
+            return Changeset.empty(self.get_sha)
+
+        return self.changes_in_merge_commit()
+
+    def changes_in_merge_commit(self) -> Changeset:
+        parent_revs = self._repo.head.commit.parents
+        if not parent_revs:
+            logging.error(
+                "HEAD is not at merge commit, cannot determine changed files."
+            )
+            return Changeset.empty(self.get_sha)
+        logging.debug(f"Parent revisions: {parent_revs}")
+        files_changed = set(
+            self._repo.git.diff(
+                f"{str(parent_revs[0])}..{str(self._repo.head.commit)}",
+                name_status=True,
+            ).splitlines()
+        )
+        return Changeset.from_diff(sha=str(self.get_sha), diff=files_changed)
 
     def create_branch(self, branch_name: str):
         return self._repo.git.checkout("-b", f"{branch_name}")
@@ -217,6 +274,9 @@ class Repository:  # pylint: disable=too-many-public-methods
     def pull(self):
         return self._repo.git.pull()
 
+    def add_note(self, note: str):
+        return self._repo.git.notes("add", "-m", note)
+
     def push(self, branch: str):
         return self._repo.git.push("--set-upstream", "origin", branch)
 
@@ -232,11 +292,11 @@ class Repository:  # pylint: disable=too-many-public-methods
         """
         projects = set(
             self._repo.git.ls_files(
-                f"*{folder_pattern}*/{Project.project_yaml_path()}"
+                f"*{folder_pattern}*{Project.project_yaml_path()}"
             ).splitlines()
         ) | set(
             self._repo.git.ls_files(
-                f"*{folder_pattern}*/{Project.project_overrides_yml_pattern()}"
+                f"*{folder_pattern}*{Project.project_overrides_yml_pattern()}"
             ).splitlines()
         )
         return sorted(projects)

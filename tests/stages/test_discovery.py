@@ -14,10 +14,11 @@ from src.mpyl.stages.discovery import (
 from src.mpyl.steps import ArtifactType
 from src.mpyl.steps import Output
 from src.mpyl.steps import build, test, deploy
+from src.mpyl.steps.collection import StepsCollection
 from src.mpyl.steps.models import Artifact
 from src.mpyl.utilities.docker import DockerImageSpec
 from src.mpyl.utilities.repo import Changeset
-from tests import root_test_path
+from tests import root_test_path, test_resource_path
 from tests.test_resources import test_data
 from tests.test_resources.test_data import TestStage
 
@@ -26,10 +27,14 @@ yaml = YAML()
 
 class TestDiscovery:
     logger = logging.getLogger(__name__)
+    steps = StepsCollection(logger=logger)
 
     def test_should_find_invalidated_test_dependencies(self):
         with test_data.get_repo() as repo:
-            touched_files = {"tests/projects/service/file.py", "tests/some_file.txt"}
+            touched_files = {
+                "tests/projects/service/file.py": "A",
+                "tests/some_file.txt": "A",
+            }
             projects = set(load_projects(repo.root_dir, repo.find_projects()))
             assert (
                 len(
@@ -38,6 +43,7 @@ class TestDiscovery:
                         projects,
                         build.STAGE_NAME,
                         Changeset("revision", touched_files),
+                        self.steps,
                     )
                 )
                 == 1
@@ -49,6 +55,7 @@ class TestDiscovery:
                         projects,
                         test.STAGE_NAME,
                         Changeset("revision", touched_files),
+                        self.steps,
                     )
                 )
                 == 2
@@ -60,6 +67,7 @@ class TestDiscovery:
                         projects,
                         deploy.STAGE_NAME,
                         Changeset("revision", touched_files),
+                        self.steps,
                     )
                 )
                 == 1
@@ -78,11 +86,13 @@ class TestDiscovery:
             stage=TestStage.build().name,
             changeset=Changeset(
                 sha="a git SHA",
-                files_touched={
-                    "tests/projects/job/deployment/project.yml",
-                    "some_other_unrelated_file.txt",
+                _files_touched={
+                    "tests/projects/job/deployment/project.yml": "A",
+                    "tests/projects/job/deployment/deleted-file": "D",
+                    "some_other_unrelated_file.txt": "A",
                 },
             ),
+            steps=self.steps,
         )
         assert 1 == len(project_executions)
         assert project_executions.pop().project == load_project(
@@ -91,14 +101,44 @@ class TestDiscovery:
             strict=False,
         )
 
+    def test_build_project_executions_when_all_files_filtered(self):
+        project_paths = [
+            "tests/projects/job/deployment/project.yml",
+            "tests/projects/service/deployment/project.yml",
+            "tests/projects/sbt-service/deployment/project.yml",
+        ]
+        projects = set(load_projects(root_test_path.parent, project_paths))
+        project_executions = build_project_executions(
+            logger=self.logger,
+            all_projects=projects,
+            stage=TestStage.build().name,
+            changeset=Changeset(
+                sha="a git SHA",
+                _files_touched={
+                    "tests/projects/job/deployment/project.yml": "D",
+                },
+            ),
+            steps=self.steps,
+        )
+        assert 1 == len(project_executions)
+        execution = project_executions.pop()
+        assert execution.cache_key == "a git SHA"
+        assert execution.project == load_project(
+            root_test_path.parent,
+            Path("tests/projects/job/deployment/project.yml"),
+            strict=False,
+        )
+
     def test_should_correctly_check_root_path(self):
         assert not is_dependency_touched(
             self.logger,
-            project=load_project(
-                root_test_path, Path("projects/sbt-service/deployment/project.yml")
+            load_project(
+                test_resource_path,
+                Path("../projects/sbt-service/deployment/project.yml"),
             ),
             stage="build",
             path="projects/sbt-service-other/file.py",
+            steps=self.steps,
         )
 
     def test_is_stage_cached(self):
@@ -147,7 +187,7 @@ class TestDiscovery:
 
     def test_listing_override_files(self):
         with test_data.get_repo() as repo:
-            touched_files = {"tests/projects/overriden-project/file.py"}
+            touched_files = {"tests/projects/overriden-project/file.py": "A"}
             projects = load_projects(repo.root_dir, repo.find_projects())
             assert len(projects) == 13
             projects_for_build = build_project_executions(
@@ -155,18 +195,21 @@ class TestDiscovery:
                 projects,
                 build.STAGE_NAME,
                 Changeset("revision", touched_files),
+                self.steps,
             )
             projects_for_test = build_project_executions(
                 self.logger,
                 projects,
                 test.STAGE_NAME,
                 Changeset("revision", touched_files),
+                self.steps,
             )
             projects_for_deploy = build_project_executions(
                 self.logger,
                 projects,
                 deploy.STAGE_NAME,
                 Changeset("revision", touched_files),
+                self.steps,
             )
             assert len(projects_for_build) == 1
             assert len(projects_for_test) == 1

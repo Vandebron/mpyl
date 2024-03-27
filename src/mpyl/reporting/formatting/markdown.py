@@ -61,7 +61,7 @@ def __to_oneliner(result: list[StepResult], plan: set[ProjectExecution]) -> str:
     else:
         project_names = list(map(lambda r: f"_{r.project.name}_", result))
 
-    return f'&nbsp;  {", ".join(project_names)}'
+    return f'{", ".join(project_names)}'
 
 
 def markdown_for_stage(run_result: RunResult, stage: Stage):
@@ -115,6 +115,8 @@ def execution_plan_as_markdown(run_result: RunResult):
         result += f"\n\n{failed_outputs}\n\n"
     for stage in run_result.run_properties.stages:
         result += markdown_for_stage(run_result, stage)
+    if result == "":
+        return "🤷 Nothing to do"
     return result
 
 

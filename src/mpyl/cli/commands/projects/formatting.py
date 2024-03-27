@@ -11,6 +11,7 @@ from ... import Repository
 from ....project import load_project
 from ....projects import ProjectWithDependents
 from ....projects.find import load_projects, find_dependencies
+from ....utilities.yaml import yaml_to_string, yaml_for_roundtrip
 
 
 def print_project(repo: Repository, console: Console, project_path: str):
@@ -28,11 +29,14 @@ def project_to_markdown(
 ) -> Tuple[Table, Optional[Markdown]]:
     project = with_dependencies.project
     table = Table(title=f"Project {project.name}", show_header=False)
-    table.add_row("Name", project.name)
+    yaml = yaml_for_roundtrip()
+    table.add_row("Name", Markdown(f"`{project.name}`"))
     table.add_row("Path", project.path)
     table.add_row("Description", project.description)
-    table.add_row("Maintainer", f"{project.maintainer}")
-    table.add_row("Stages", f"{project.stages}")
+    table.add_row("Maintainer", Markdown(f"{yaml_to_string(project.maintainer, yaml)}"))
+    table.add_row(
+        "Stages", Markdown(f"```yaml\n{yaml_to_string(project.stages.all(), yaml)}```")
+    )
     if with_dependencies.dependent_projects:
         table.add_row(
             "Dependent projects", f"{set(with_dependencies.dependent_projects.keys())}"

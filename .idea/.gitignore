@@ -12,3 +12,5 @@ vcs.xml
 watcherTasks.xml
 /scala_compiler.xml
 kubernetes-settings.xml
+# GitHub Copilot persisted chat sessions
+/copilot/chatSessions

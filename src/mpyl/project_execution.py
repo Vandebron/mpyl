@@ -13,6 +13,7 @@ class ProjectExecution:
 
     @staticmethod
     def always_run(project: Project):
+        """Create a ProjectExecution for a project that will always run, regardless of caching"""
         return ProjectExecution(
             project=project, cache_key=uuid.uuid4().hex, cached=False
         )

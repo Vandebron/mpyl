@@ -14,7 +14,8 @@ from dagster import (
 from mpyl.project import load_project, Project
 from mpyl.stages.discovery import build_project_executions
 from mpyl.steps import build, test, deploy
-from mpyl.steps.run_properties import initiate_run_properties
+from mpyl.steps.collection import StepsCollection
+from mpyl.steps.run_properties import construct_run_properties
 from mpyl.steps.steps import Steps, StepResult
 from mpyl.utilities.pyaml_env import parse_config
 from mpyl.utilities.repo import Repository, RepoConfig
@@ -24,7 +25,7 @@ ROOT_PATH = "./"
 
 def execute_step(proj: Project, stage: str, dry_run: bool = True) -> StepResult:
     config = parse_config(Path(f"{ROOT_PATH}mpyl_config.yml"))
-    run_properties = initiate_run_properties(config=config, properties={}, run_plan={})
+    run_properties = construct_run_properties(config=config, properties={}, run_plan={})
     dagster_logger = get_dagster_logger()
     executor = Steps(dagster_logger, run_properties)
     step_result = executor.execute(stage, proj, dry_run)
@@ -72,17 +73,19 @@ def deploy_projects(
 def find_projects(stage: str) -> list[DynamicOutput[Project]]:
     yaml_values = parse_config(Path(f"{ROOT_PATH}mpyl_config.yml"))
     with Repository(RepoConfig.from_config(yaml_values)) as repo:
-        changes_in_branch = repo.changes_in_branch_including_unversioned_files()
+        changes_in_branch = repo.changes_in_branch_including_local()
         project_paths = repo.find_projects()
     all_projects = set(
         map(lambda p: load_project(Path("."), Path(p), strict=False), project_paths)
     )
     dagster_logger = get_dagster_logger()
+    steps = StepsCollection(logger=dagster_logger)
     project_executions = build_project_executions(
         logger=dagster_logger,
         all_projects=all_projects,
         stage=stage,
         changes=changes_in_branch,
+        steps=steps,
     )
     return list(
         map(

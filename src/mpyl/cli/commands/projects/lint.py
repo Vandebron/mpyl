@@ -9,6 +9,7 @@ import jsonschema
 from rich.console import Console
 
 from ....project import Project, load_project, Target
+from ....steps.deploy import STAGE_NAME
 from ....steps.deploy.k8s import substitute_namespaces
 from ....steps.deploy.k8s.chart import ChartBuilder
 from ....utilities.repo import Repository
@@ -69,7 +70,7 @@ def _assert_project_ids(console: Console, all_projects: list[Project]):
     missing_ids = [
         project.name
         for project in all_projects
-        if project.stages.deploy is not None
+        if project.stages.for_stage(STAGE_NAME) is not None
         and "override" not in project.path
         and project.deployment
         and project.deployment.kubernetes

@@ -12,7 +12,6 @@ in the `deployment/project.yml`. It defines how the source code to which it rela
 
 .. include:: ../../README-dev.md
 """
-
 import logging
 import pkgutil
 import time
@@ -138,33 +137,22 @@ class EnvCredential:
 
 @dataclass(frozen=True)
 class StageSpecificProperty(Generic[T]):
-    build: Optional[T]
-    test: Optional[T]
-    deploy: Optional[T]
-    postdeploy: Optional[T]
+    stages: dict[str, Optional[T]]
 
     def for_stage(self, stage: str) -> Optional[T]:
-        if stage == "build":
-            return self.build
-        if stage == "test":
-            return self.test
-        if stage == "deploy":
-            return self.deploy
-        if stage == "postdeploy":
-            return self.postdeploy
-        raise KeyError(f"Unknown stage: {stage}")
+        if stage not in self.stages.keys():
+            return None
+        return self.stages[stage]
 
 
 @dataclass(frozen=True)
 class Stages(StageSpecificProperty[str]):
+    def all(self) -> dict[str, Optional[str]]:
+        return self.stages
+
     @staticmethod
     def from_config(values: dict):
-        return Stages(
-            build=values.get("build"),
-            test=values.get("test"),
-            deploy=values.get("deploy"),
-            postdeploy=values.get("postdeploy"),
-        )
+        return Stages(values)
 
 
 @dataclass(frozen=True)
@@ -173,15 +161,12 @@ class Dependencies(StageSpecificProperty[set[str]]):
         deps_for_stage = self.for_stage(stage)
         return deps_for_stage if deps_for_stage else set()
 
+    def all(self) -> dict[str, set[str]]:
+        return {key: self.set_for_stage(key) for key in self.stages.keys()}
+
     @staticmethod
     def from_config(values: dict):
-        build_deps = set(values.get("build", []))
-        return Dependencies(
-            build=build_deps,
-            test=build_deps | set(values.get("test", [])),
-            deploy=build_deps | set(values.get("deploy", [])),
-            postdeploy=set(values.get("postdeploy", [])),
-        )
+        return Dependencies(values)
 
 
 @dataclass(frozen=True)
@@ -600,16 +585,17 @@ class Project:
         )
 
 
-def validate_project(yaml_values: dict) -> dict:
+def validate_project(yaml_values: dict, root_dir: Path) -> dict:
     """
-    :file the file to validate
+    :type yaml_values: the yaml dictionary to validate
+    :type root_dir: the root dir
     :return: the validated schema
     :raises `jsonschema.exceptions.ValidationError` when validation fails
     """
     template = pkgutil.get_data(__name__, "schema/project.schema.yml")
     if not template:
         raise ValueError("Schema project.schema.yml not found in package")
-    validate(yaml_values, template.decode("utf-8"))
+    validate(yaml_values, template.decode("utf-8"), root_dir)
 
     return yaml_values
 
@@ -646,7 +632,7 @@ def load_project(
 ) -> Project:
     """
     Load a `project.yml` to `Project` data class
-    :param root_dir: root source directory
+    :param root_dir: is the root of the project path. It contains the mpyl_config.yml and run_properties.yml files
     :param project_path: relative path from `root_dir` to the `project.yml`
     :param strict: indicates whether the schema should be validated
     :param log: indicates whether problems should be logged as warning
@@ -663,7 +649,7 @@ def load_project(
             parent_yaml_values: Optional[dict] = load_possible_parent(full_path, safe)
             yaml_values = merge_dicts(yaml_values, parent_yaml_values, True)
             if strict:
-                validate_project(yaml_values)
+                validate_project(yaml_values, root_dir=root_dir)
             project = Project.from_config(yaml_values, project_path)
             logging.debug(
                 f"Loaded project {project.path} in {(time.time() - start) * 1000} ms"

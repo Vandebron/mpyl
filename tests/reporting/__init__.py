@@ -5,12 +5,17 @@ from src.mpyl.project_execution import ProjectExecution
 from src.mpyl.steps.deploy.k8s import DeployedHelmAppSpec
 from src.mpyl.steps.models import Output, Artifact, ArtifactType
 from src.mpyl.steps.run import RunResult
-from src.mpyl.steps.run_properties import initiate_run_properties
+from src.mpyl.steps.run_properties import construct_run_properties
 from src.mpyl.steps.steps import StepResult
 from src.mpyl.utilities.junit import JunitTestSpec
 from tests import root_test_path
 from tests.test_resources import test_data
-from tests.test_resources.test_data import TestStage, properties_values, config_values
+from tests.test_resources.test_data import (
+    TestStage,
+    properties_values,
+    config_values,
+    resource_path,
+)
 
 test_resource_path = root_test_path / "reporting" / "formatting" / "test_resources"
 
@@ -26,7 +31,7 @@ def create_test_result_with_plan() -> RunResult:
     test_projects = [__get_other_project()]
     deploy_projects = [__get_other_project()]
     return RunResult(
-        run_properties=initiate_run_properties(
+        run_properties=construct_run_properties(
             config=config_values,
             properties=properties_values,
             run_plan={
@@ -41,6 +46,7 @@ def create_test_result_with_plan() -> RunResult:
                 },
             },
             all_projects=set(),
+            root_dir=resource_path,
         ),
     )
 
@@ -102,5 +108,5 @@ def append_results(result: RunResult) -> None:
 
 
 def __get_other_project():
-    stages = Stages(build=None, test=None, deploy=None, postdeploy=None)
+    stages = Stages({"build": None, "test": None, "deploy": None, "postdeploy": None})
     return Project("test", "Test project", "", stages, [], None, None, None, None)

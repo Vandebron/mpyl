@@ -1,5 +1,79 @@
 # Release notes
 
+## MPyL 1.6.1
+
+
+#### Bugfixes
+- Do not try to hash deleted or renamed files when building a cache key
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.6.1)
+
+## MPyL 1.6.0
+
+
+#### Improvements
+- Implement a different way to determine the build plan
+- Change the layout of the build plan print to improve transparency
+- Allow passing --stage to the build status command
+
+#### Build set caching
+Store the build set in disk and read it back when `--sequential` is passed as a parameter, preventing us to rebuild the plan on subsequent
+stages. Which means there is no need to diff with the main branch, thus no need to fetch the entire main branch history
+before running mpyl.
+This is a significant performance improvement as you only need to do a clone with full history for the first stage,
+and run all others using a shallow clone (much faster to check out on repositories with many commits).
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.6.0)
+
+## MPyL 1.5.1
+
+
+#### Bugfixes
+- Always add changes to the build plan for the deploy stage
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.5.1)
+
+## MPyL 1.5.0
+
+
+#### Argocd
+
+Add support for an argocd repository and workflow:
+- Can be toggled on by setting `kubernetes.deployAction` to 'KubectlManifest' in the `mpyl_config.yaml` file.
+- An `argoRepository` and `argoGithub` object have been added to the `vcs` section in the `mpyl_config.yaml` file to
+  configure the argocd repository and github repository.
+- The `manifest.yaml` file will be created during the deploy step.
+- The command to push the k8s manifests to the argocd repository is `mpyl build artifacts push --artifact-type argo`. 
+- An additional `deployment.yaml` file will be created in the push command, it contains some extra metadata for argocd.
+- A pull request will be created in the configured argocd repository with the created k8s manifest files.
+- The folder in the argocd repo structure has the following pattern: `k8s-manifests/{project_name}/{target}/{namespace}/*.yaml`.
+
+#### Manual selection
+Include project overrides in list of projects.
+
+#### Multiple deploy targets
+
+Allow multiple deploy targets when using the jenkins cli command.
+
+
+#### Stage configuration
+
+MPyL can be configured to use an arbitrary set of build stages. Typical CI/CD stages are `build`, `test` or `deploy`.
+See `mpyl.steps` for the steps that come bundled and how to define and register your own.
+
+<details>
+  <summary>Example stage configuration</summary>
+```yaml
+.. include:: mpyl_stages.schema.yml
+```
+</details>
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.5.0)
+
 ## MPyL 1.4.20
 
 

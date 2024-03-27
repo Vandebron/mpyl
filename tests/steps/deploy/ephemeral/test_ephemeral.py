@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from src.mpyl.project import load_project, get_env_variables
 from src.mpyl.project_execution import ProjectExecution
 from src.mpyl.steps.models import Input
@@ -9,11 +7,14 @@ from tests.test_resources import test_data
 
 class TestEphemeral:
     resource_path = root_test_path / "projects" / "ephemeral" / "deployment"
+    config_resource_path = root_test_path / "test_resources"
 
     def test_get_env_variables_for_target(self):
         step_input = Input(
             ProjectExecution.always_run(
-                load_project(self.resource_path, Path("project.yml"), True)
+                load_project(
+                    self.config_resource_path, self.resource_path / "project.yml", True
+                )
             ),
             test_data.RUN_PROPERTIES,
             None,

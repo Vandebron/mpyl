@@ -89,9 +89,8 @@ def list_projects(obj: ProjectsContext):
     found_projects = obj.cli.repo.find_projects(obj.filter)
 
     for proj in found_projects:
-        if OVERRIDE_PATTERN not in proj:
-            project = load_project(obj.cli.repo.root_dir, Path(proj), False)
-            obj.cli.console.print(Markdown(f"{proj} `{project.name}`"))
+        project = load_project(obj.cli.repo.root_dir, Path(proj), False)
+        obj.cli.console.print(Markdown(f"{proj} `{project.name}`"))
 
 
 @projects.command(name="names", help="List found project names")
@@ -103,7 +102,6 @@ def list_project_names(obj: ProjectsContext):
         [
             load_project(obj.cli.repo.root_dir, Path(proj), False).name
             for proj in found_projects
-            if OVERRIDE_PATTERN not in proj
         ]
     )
 
