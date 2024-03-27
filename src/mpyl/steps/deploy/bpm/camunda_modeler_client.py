@@ -1,4 +1,5 @@
 """Http requests to Camunda modeler"""
+
 import time
 from collections import namedtuple
 from ....utilities.http_client.exceptions import AuthorizationError

@@ -1,4 +1,5 @@
 """Configuration required for running bpm"""
+
 import os
 from dataclasses import dataclass
 from ...project import Project, Target, TargetProperty

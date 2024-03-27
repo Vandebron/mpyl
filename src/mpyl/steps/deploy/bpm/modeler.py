@@ -1,4 +1,5 @@
 """Camunda modeler related methods to deploy diagrams"""
+
 import os
 from logging import Logger
 from collections import namedtuple
@@ -16,22 +17,19 @@ def deploy_diagram_to_modeler(
         else []
     ):
         logger.info(file_name)
-        if file_name == "test-process.bpmn":
-            file_info = get_file_data(file_name, project_id, client)
-            file_path = os.path.join(bpm_file_path, file_name)
-            update_diagram(file_path, file_info, client)
+        file_info = get_file_data(file_name, project_id, client)
+        file_path = os.path.join(bpm_file_path, file_name)
+        update_diagram(file_path, file_info, client)
 
 
 def get_file_data(
     file_name: str, project_id: str, client: CamundaModelerClient
 ) -> File:
-    simple_path = file_name.replace("-", " ")
-    search_name = simple_path.rstrip(".bpmn")
+    search_name = file_name.replace("-", " ").rstrip(".bpmn")
     request = {
         "filter": {
             "name": search_name,
             "projectId": project_id,
-            "simplePath": simple_path,
         },
         "size": 10,
     }

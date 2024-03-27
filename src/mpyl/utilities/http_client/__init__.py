@@ -1,4 +1,5 @@
 """Generic Http Client for handling requests"""
+
 import requests
 from requests.exceptions import RequestException, HTTPError
 from .exceptions import AuthorizationError, HTTPRequestError
