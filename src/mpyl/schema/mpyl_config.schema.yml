@@ -445,6 +445,26 @@ definitions:
   Camunda:
     type: object
     properties:
+      modelerAPI:
+        type: object
+        properties:
+          baseUrl:
+            type: string
+          tokenUrl:
+            type: string
+        required: [ "baseUrl", "tokenUrl" ]
+      modelerCredentials:
+        type: object
+        properties:
+          clientId:
+            type: string
+          clientSecret:
+            type: string
+          grantType:
+            type: string
+          audience:
+            type: string
+        required: [ "clientId", "clientSecret", "grantType", "audience" ]
       zeebeCredentials:
         type: object
         properties:
@@ -470,6 +490,8 @@ definitions:
             type: string
         required: [ 'diagramResourcesPath', 'dockerDirectoryPath', 'dockerFilePath', 'bpmProjectPath' ]
     required:
+      - modelerAPI
+      - modelerCredentials
       - zeebeCredentials
       - camundaDeploymentPath
   CamundaCluster:
