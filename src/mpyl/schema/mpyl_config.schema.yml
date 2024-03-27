@@ -462,7 +462,6 @@ definitions:
         type: string
       clientSecret:
         type: string
-    required: [ clusterId, clientId, clientSecret ]
   Dagster:
     title: Dagster
     type: object
