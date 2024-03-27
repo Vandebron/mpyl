@@ -12,6 +12,7 @@ The test results need to be written to a folder named `$WORKDIR/target/test-repo
 
 
 """
+
 from logging import Logger
 from typing import cast
 

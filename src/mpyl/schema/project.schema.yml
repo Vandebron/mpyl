@@ -84,7 +84,6 @@ properties:
           - Kubernetes Job Deploy
           - Kubernetes Job Template Deploy
           - Kubernetes Spark Job Deploy
-          - CloudFront Kubernetes Deploy
           - Renew Lets Encrypt Deploy
           - Helm Deploy
           - Dagster Deploy
