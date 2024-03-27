@@ -12,6 +12,7 @@ from ..models import Input, Output, ArtifactType
 
 class BpmnDiagramDeploy(Step):
     def __init__(self, logger: Logger) -> None:
+        print("step bpmn deploy")
         super().__init__(
             logger,
             Meta(
@@ -21,7 +22,7 @@ class BpmnDiagramDeploy(Step):
                 stage=STAGE_NAME,
             ),
             produced_artifact=ArtifactType.NONE,
-            required_artifact=ArtifactType.DOCKER_IMAGE,
+            required_artifact=None,
             # make an artifcatype with a camunda deployed diagram link
         )
 
@@ -51,15 +52,21 @@ class BpmnDiagramDeploy(Step):
         return env
 
     def execute(self, step_input: Input) -> Output:
-        env = self.__get_env_value(step_input.run_properties.target)
-        camunda_config_info = step_input.run_properties.config.get("camunda")
-        if camunda_config_info is not None:
-            camunda_config = camunda_config_info.get(env)
+        # env = self.__get_env_value(step_input.run_properties.target)
+        # camunda_config_info = step_input.run_properties.config.get("camunda")
+        # if camunda_config_info is not None:
+        #     camunda_config = camunda_config_info.get(env)
 
+        # channel = create_camunda_cloud_channel(
+        #     client_id=camunda_config.get("clientId"),
+        #     client_secret=camunda_config.get("clientSecret"),
+        #     cluster_id=camunda_config.get("clusterId"),
+        #     region="bru-2",
+        # )
         channel = create_camunda_cloud_channel(
-            client_id=camunda_config.get("clientId"),
-            client_secret=camunda_config.get("clientSecret"),
-            cluster_id=camunda_config.get("clusterId"),
+            client_id=" ",
+            client_secret="",
+            cluster_id="",
             region="bru-2",
         )
         zeebe_client = ZeebeClient(channel)

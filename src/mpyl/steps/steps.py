@@ -195,6 +195,8 @@ class Steps:
             return invalid_maintainers
 
         executor: Optional[Step] = self._steps_collection.get_executor(stage, step_name)
+        print("executor " + executor)
+        print("executor " + executor.required_artifact)
         if not executor:
             self._logger.error(
                 f"No executor found for {step_name} in stage {stage.name}"
