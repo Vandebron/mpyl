@@ -53,10 +53,12 @@ class IntegrationTestBefore(Step):
 
         config = DockerComposeConfig.from_yaml(step_input.run_properties.config)
 
-        self._logger.debug(f"Starting containers in {compose_file}")
         docker_client = DockerClient(compose_files=[compose_file])
+        self._logger.debug(f"Stopping running containers in {compose_file}")
         docker_client.compose.down(remove_orphans=True)
+        self._logger.debug(f"Building containers in {compose_file}")
         docker_client.compose.build()
+        self._logger.debug(f"Starting containers in {compose_file}")
         docker_client.compose.up(detach=True, color=True, quiet=False)
 
         goal_reached: bool = False
@@ -64,6 +66,8 @@ class IntegrationTestBefore(Step):
         stream_docker_logging(
             logger=self._logger, generator=logs, task_name=f"Start {compose_file}"
         )
+
+        self._logger.info("Waiting for containers to be healthy..")
 
         poll = 0
         while not goal_reached:
@@ -85,13 +89,14 @@ class IntegrationTestBefore(Step):
                 for c in container_healths
                 if c.status != "healthy"
             ]
-            if not goal_reached:
-                if poll == 0:
-                    self._logger.info(
-                        "Waiting for container to be running and healthy.."
-                    )
-                self._logger.debug(f"Project stats: {project_status}")
-                self._logger.debug(f"Container healths: {unhealthy}")
+
+            self._logger.debug(f"all_running: {self.all_running(project_status)}")
+            self._logger.debug(f"all_healthy: {all_healthy}")
+            self._logger.debug(f"goal_reached: {goal_reached}")
+
+            self._logger.debug(f"Project stats: {project_status}")
+            self._logger.debug(f"Container healths: {container_healths}")
+            self._logger.info(f"Unhealthy containers: {unhealthy}")
 
             poll += 1
             if poll >= config.failure_threshold:
@@ -107,4 +112,5 @@ class IntegrationTestBefore(Step):
         running_containers: list[Container] = docker_client.compose.ps()
         container_names = list(map(lambda l: l.name, running_containers))
 
+        self._logger.info(f"Started {', '.join(container_names)}")
         return Output(success=True, message=f"Started {', '.join(container_names)}")
