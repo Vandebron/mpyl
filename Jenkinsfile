@@ -10,8 +10,6 @@ pipeline {
         MPYL_GITHUB_APP_PRIVATE_KEY = credentials('mpyl_pipeline_github_app_private_key')
         SLACK_TOKEN = credentials('JENKINS_MPYL_APP_OAUTH_TOKEN')
         MPYL_JIRA_TOKEN = credentials('MPYL_JIRA_TOKEN')
-        AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
-        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
         AWS_ECR_ACCESS_KEY_ID = credentials('AWS_ECR_ACCESS_KEY_ID')
         AWS_ECR_SECRET_ACCESS_KEY = credentials('AWS_ECR_SECRET_ACCESS_KEY')
         SOME_CREDENTIAL = 'some-credential'
