@@ -46,17 +46,3 @@ class TestRepo:
             "projects/a/this-file-was-added",
             "projects/b/this-file-was-renamed",
         }
-
-    def test_map_git_log_to_revisions(self):
-        log_text = (self.resource_path / "git_log.txt").read_text(encoding="utf-8")
-        diff_text = (self.resource_path / "git_diff.txt").read_text(encoding="utf-8")
-        revisions = Changeset.from_git_output(log_text, diff_text)
-
-        first_revision = revisions[0]
-        assert first_revision.sha == "e9ff18931070de4803da2190274d5fccb0362824"
-        assert first_revision.files_touched() == {"projects/service/src/sum.js"}
-
-        last_revision = revisions[-1]
-        assert (
-            last_revision.files_touched() == set()
-        ), "Pipfile does not have a net change"

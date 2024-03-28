@@ -116,7 +116,7 @@ def _to_project_execution(
     logger: logging.Logger,
     project: Project,
     stage: str,
-    changes: Changeset,
+    changeset: Changeset,
     steps: Optional[StepsCollection],
 ) -> Optional[ProjectExecution]:
     if project.stages.for_stage(stage) is None:
@@ -124,11 +124,11 @@ def _to_project_execution(
 
     is_any_dependency_touched = any(
         is_dependency_touched(logger, project, stage, changed_file, steps)
-        for changed_file in changes.files_touched()
+        for changed_file in changeset.files_touched()
     )
     is_project_modified = any(
         file_belongs_to_project(logger, project, changed_file)
-        for changed_file in changes.files_touched()
+        for changed_file in changeset.files_touched()
     )
 
     if is_project_modified:
@@ -137,16 +137,16 @@ def _to_project_execution(
                 lambda changed_file: file_belongs_to_project(
                     logger, project, changed_file
                 ),
-                changes.files_touched(status={"A", "M", "R"}),
+                changeset.files_touched(status={"A", "M", "R"}),
             )
         )
 
         if len(files_to_hash) == 0:
-            cache_key = changes.sha
+            cache_key = changeset.sha
         else:
             cache_key = hashed_changes(files=files_to_hash)
     elif is_any_dependency_touched:
-        cache_key = changes.sha
+        cache_key = changeset.sha
     else:
         return None
 
@@ -169,13 +169,13 @@ def build_project_executions(
     logger: logging.Logger,
     all_projects: set[Project],
     stage: str,
-    changes: Changeset,
+    changeset: Changeset,
     steps: Optional[StepsCollection],
 ) -> set[ProjectExecution]:
     maybe_execution_projects = set(
         map(
             lambda project: _to_project_execution(
-                logger, project, stage, changes, steps
+                logger, project, stage, changeset, steps
             ),
             all_projects,
         )
@@ -234,14 +234,14 @@ def find_build_set(  # pylint: disable=too-many-arguments, too-many-locals
             project_executions = {ProjectExecution.always_run(p) for p in projects}
         else:
             steps = StepsCollection(logger=logging.getLogger())
-            changes_in_branch = (
+            changeset = (
                 _get_changes(repository, local, tag)
                 if not selected_projects or build_all
                 else []
             )
 
             project_executions = build_project_executions(
-                logger, all_projects, stage.name, changes_in_branch, steps
+                logger, all_projects, stage.name, changeset, steps
             )
             logger.debug(
                 f"Invalidated projects for stage {stage.name}: {[p.name for p in project_executions]}"

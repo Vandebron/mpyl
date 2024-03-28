@@ -21,27 +21,9 @@ class TestCli:
         result = self.runner.invoke(main_group, ["--help"])
         assert_roundtrip(self.resource_path / "main_help_text.txt", result.output)
 
-    def test_repo_status(self):
-        result = self.runner.invoke(
-            main_group,
-            [
-                "repo",
-                "-c",
-                str(self.config_path),
-                "-p",
-                str(self.run_properties_path),
-                "status",
-            ],
-        )
-        assert result.exception is None
-
     def test_build_projects_help_output(self):
         result = self.runner.invoke(main_group, ["build", "--help"])
         assert_roundtrip(self.resource_path / "build_help_text.txt", result.output)
-
-    def test_build_projects_repo_output(self):
-        result = self.runner.invoke(main_group, ["repo", "--help"])
-        assert_roundtrip(self.resource_path / "repo_help_text.txt", result.output)
 
     def test_projects_help_output(self):
         result = self.runner.invoke(main_group, ["projects", "--help"])

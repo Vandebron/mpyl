@@ -84,7 +84,7 @@ class TestDiscovery:
             logger=self.logger,
             all_projects=projects,
             stage=TestStage.build().name,
-            changes=Changeset(
+            changeset=Changeset(
                 sha="a git SHA",
                 _files_touched={
                     "tests/projects/job/deployment/project.yml": "A",
@@ -112,7 +112,7 @@ class TestDiscovery:
             logger=self.logger,
             all_projects=projects,
             stage=TestStage.build().name,
-            changes=Changeset(
+            changeset=Changeset(
                 sha="a git SHA",
                 _files_touched={
                     "tests/projects/job/deployment/project.yml": "D",
