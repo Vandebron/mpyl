@@ -44,7 +44,9 @@ def get_file_data(
     raise ValueError(f"no process called {search_name} is found")
 
 
-def update_diagram(file_path: str, file_data, client: CamundaModelerClient) -> None:
+def update_diagram(
+    file_path: str, file_data: File, client: CamundaModelerClient
+) -> None:
     with open(file_path, "r", encoding="utf-8") as file:
         content = file.read()
 

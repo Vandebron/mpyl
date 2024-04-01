@@ -33,7 +33,6 @@ class BpmDiagramDeploy(Step):
             step_input.project_execution.project,
         )
 
-        self._logger.setLevel("DEBUG")
         project_name = step_input.project_execution.project.name
         docker_result = deploy_to_cluster(self._logger, project_name, camunda_config)
         bpm_deploy_results.append(docker_result)
