@@ -801,7 +801,7 @@ class ChartBuilder:
             chart["role"] = self.to_role(self.role)
             chart["rolebinding"] = self.to_role_binding()
 
-        prometheus = _to_prometheus_rules(self)
+        prometheus = _to_prometheus_chart(self)
 
         return chart | prometheus
 
@@ -838,13 +838,11 @@ def _to_service_components_chart(builder):
     return common_chart | ingress_https | ingress_http | service_monitor
 
 
-def _to_prometheus_rules(builder):
+def _to_prometheus_chart(builder):
     metrics = builder.project.kubernetes.metrics
     prometheus_chart = (
         {
-            "prometheus-rule": builder.to_prometheus_rule(
-                alerts=builder.project.kubernetes.metrics.alerts
-            ),
+            "prometheus-rule": builder.to_prometheus_rule(alerts=metrics.alerts),
         }
         if metrics and metrics.enabled
         else {}
