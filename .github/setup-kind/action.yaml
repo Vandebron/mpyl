@@ -1,0 +1,29 @@
+name: 'Setup Helm chart testing infrastructure'
+description: 'Creates an in-memory Kubernetes cluster with the required dependencies to test Helm charts'
+
+runs:
+  using: composite
+  steps:
+    - uses: azure/setup-helm@v3.5
+    - uses: helm/kind-action@v1.8.0
+
+    - name: 'Add extra repositories'
+      run: |
+        helm repo add traefik https://helm.traefik.io/traefik
+        helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+        helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
+        helm repo add spark-operator https://kubeflow.github.io/spark-operator
+        helm repo update
+      shell: bash
+
+    - run: helm install traefik traefik/traefik
+      shell: bash
+
+    - run: helm install kube-prometheus prometheus-community/kube-prometheus-stack
+      shell: bash
+
+    - run: helm install sealed-secrets sealed-secrets/sealed-secrets
+      shell: bash
+
+    - run: helm install spark-operator spark-operator/spark-operator
+      shell: bash

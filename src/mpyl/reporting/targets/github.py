@@ -216,7 +216,7 @@ class CommitCheck(Reporter):
             repo = self._create_github_repo_instance()
             self.start_check()
 
-            if self._check_run_id and results.has_results:
+            if self._check_run_id:
                 run = repo.get_check_run(self._check_run_id)
                 conclusion = (
                     "success" if results is None or results.is_success else "failure"
