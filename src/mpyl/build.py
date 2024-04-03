@@ -3,7 +3,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 from jsonschema import ValidationError
 from rich.console import Console
@@ -38,7 +38,7 @@ def print_status(
 
     def write_build_plan_as_json():
         """Write the build plan as a simple json file to be used by gha"""
-        simple_build_plan: dict[str, list[str]] = dict(
+        simple_build_plan: dict[str, list[dict[str, Union[str, bool]]]] = dict(
             {
                 stage.name: [
                     {
