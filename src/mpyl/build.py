@@ -1,6 +1,8 @@
 """Simple MPyL build runner"""
-
+import json
 import logging
+import os
+from pathlib import Path
 from typing import Optional
 
 from jsonschema import ValidationError
@@ -9,7 +11,7 @@ from rich.logging import RichHandler
 from rich.markdown import Markdown
 
 from .cli import CliContext, MpylCliParameters
-from .constants import DEFAULT_RUN_PROPERTIES_FILE_NAME
+from .constants import DEFAULT_RUN_PROPERTIES_FILE_NAME, BUILD_ARTIFACTS_FOLDER
 from .reporting.formatting.markdown import (
     execution_plan_as_markdown,
     run_result_to_markdown,
@@ -33,8 +35,32 @@ def print_status(
         explain_run_plan=explain_run_plan,
     )
     console = obj.console
-    console.print(f"MPyL log level is set to {run_properties.console.log_level}")
 
+    def write_build_plan_as_json():
+        """Write the build plan as a simple json file to be used by gha"""
+        simple_build_plan: dict[str, list[str]] = dict(
+            {
+                stage.name: [
+                    {
+                        "service": project_execution.project.name,
+                        "path": project_execution.project.path,
+                        "base": project_execution.project.root_path,
+                        "cached": project_execution.cached,
+                    }
+                    for project_execution in project_executions
+                ]
+                for stage, project_executions in run_properties.run_plan.items()
+            }
+        )
+        build_set_file = Path(BUILD_ARTIFACTS_FOLDER) / "build_plan.json"
+        os.makedirs(os.path.dirname(build_set_file), exist_ok=True)
+        with open(build_set_file, "w", encoding="utf-8") as file:
+            console.print(f"Writing simple json build plan to: {build_set_file}")
+            json.dump(simple_build_plan, file)
+
+    write_build_plan_as_json()
+
+    console.print(f"MPyL log level is set to {run_properties.console.log_level}")
     branch = obj.repo.get_branch
     main_branch = obj.repo.main_branch
     tag = run_properties.versioning.tag
