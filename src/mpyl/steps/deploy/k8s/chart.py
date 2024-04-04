@@ -801,7 +801,9 @@ class ChartBuilder:
             chart["role"] = self.to_role(self.role)
             chart["rolebinding"] = self.to_role_binding()
 
-        return chart
+        prometheus = _to_prometheus_chart(self)
+
+        return chart | prometheus
 
 
 def to_service_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
@@ -818,11 +820,8 @@ def _to_service_components_chart(builder):
         "service": builder.to_service(),
     }
     metrics = builder.project.kubernetes.metrics
-    prometheus_chart = (
+    service_monitor = (
         {
-            "prometheus-rule": builder.to_prometheus_rule(
-                alerts=builder.project.kubernetes.metrics.alerts
-            ),
             "service-monitor": builder.to_service_monitor(metrics=metrics),
         }
         if metrics and metrics.enabled
@@ -836,7 +835,19 @@ def _to_service_components_chart(builder):
         f"{builder.project.name}-ingress-{i}-http": route
         for i, route in enumerate(builder.to_ingress_routes(https=False))
     }
-    return common_chart | prometheus_chart | ingress_https | ingress_http
+    return common_chart | ingress_https | ingress_http | service_monitor
+
+
+def _to_prometheus_chart(builder):
+    metrics = builder.project.kubernetes.metrics
+    prometheus_chart = (
+        {
+            "prometheus-rule": builder.to_prometheus_rule(alerts=metrics.alerts),
+        }
+        if metrics and metrics.enabled
+        else {}
+    )
+    return prometheus_chart
 
 
 def to_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
