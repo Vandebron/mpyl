@@ -1,4 +1,5 @@
 """Docker related utility methods"""
+
 import json
 import logging
 import shlex
@@ -83,9 +84,11 @@ class DockerRegistryConfig:
                 provider=config.get("provider", None),
                 region=config.get("region", None),
                 cache_from_registry=cache_config.get("cacheFromRegistry", False),
-                custom_cache_config=DockerCacheConfig.from_dict(cache_config["custom"])
-                if "custom" in cache_config
-                else None,
+                custom_cache_config=(
+                    DockerCacheConfig.from_dict(cache_config["custom"])
+                    if "custom" in cache_config
+                    else None
+                ),
             )
         except KeyError as exc:
             raise KeyError(f"Docker config could not be loaded from {config}") from exc
