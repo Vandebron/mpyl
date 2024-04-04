@@ -1,5 +1,18 @@
 # Release notes
 
+## MPyL 1.6.3
+
+
+#### Build status
+- Write a simple build plan in json format to `.mpyl/build_plan.json` when using the `build status` command.
+
+#### CloudFront Kubernetes Deploy
+- Remove support for CloudFront Kubernetes Deploy step. 
+
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.6.3)
+
 ## MPyL 1.6.2
 
 
