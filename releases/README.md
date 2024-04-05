@@ -1,5 +1,31 @@
 # Release notes
 
+## MPyL 1.6.3
+
+
+#### Build status
+- Write a simple build plan in json format to `.mpyl/build_plan.json` when using the `build status` command.
+
+#### CloudFront Kubernetes Deploy
+- Remove support for CloudFront Kubernetes Deploy step. 
+
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.6.3)
+
+## MPyL 1.6.2
+
+
+#### Memory limits
+- Doubled the general memory limit for dagster repos to 1024, as agreed within the dagster guild to prevent OOM.
+
+#### Chart improvements
+- Be able to specify `alerts` in the project yaml when doing `Kubernetes Job Deploy` step
+- Create charts for these prometheus rules
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.6.2)
+
 ## MPyL 1.6.1
 
 

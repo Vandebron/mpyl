@@ -257,16 +257,21 @@ class TestKubernetesChart:
         builder = self._get_builder(get_job_project())
         assert builder.is_cron_job is False
 
-    @pytest.mark.parametrize("template", ["job", "service-account", "sealed-secrets"])
+    @pytest.mark.parametrize(
+        "template", ["job", "service-account", "sealed-secrets", "prometheus-rule"]
+    )
     def test_job_chart_roundtrip(self, template):
         builder = self._get_builder(get_job_project())
         chart = to_job_chart(builder)
         self._roundtrip(self.template_path / "job", template, chart)
 
-    def test_cron_job_chart_roundtrip(self):
+    @pytest.mark.parametrize(
+        "template", ["cronjob", "service-account", "sealed-secrets", "prometheus-rule"]
+    )
+    def test_cron_job_chart_roundtrip(self, template):
         builder = self._get_builder(get_cron_job_project())
         chart = to_cron_job_chart(builder)
-        self._roundtrip(self.template_path / "cronjob", "cronjob", chart)
+        self._roundtrip(self.template_path / "cronjob", template, chart)
 
     @pytest.mark.parametrize(
         "template",
@@ -277,6 +282,7 @@ class TestKubernetesChart:
             "role",
             "rolebinding",
             "sealed-secrets",
+            "prometheus-rule",
         ],
     )
     def test_spark_chart_roundtrip(self, template):

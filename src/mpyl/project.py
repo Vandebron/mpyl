@@ -12,6 +12,7 @@ in the `deployment/project.yml`. It defines how the source code to which it rela
 
 .. include:: ../../README-dev.md
 """
+
 import logging
 import pkgutil
 import time
@@ -397,19 +398,6 @@ class Traefik:
 
 
 @dataclass(frozen=True)
-class S3Bucket:
-    bucket: TargetProperty[str]
-    region: str
-
-    @staticmethod
-    def from_config(values: dict):
-        return S3Bucket(
-            bucket=TargetProperty.from_config(values.get("bucket", {})),
-            region=values.get("region", {}),
-        )
-
-
-@dataclass(frozen=True)
 class BPM:
     project_id: str
 
@@ -460,7 +448,6 @@ class Deployment:
     kubernetes: Optional[Kubernetes]
     dagster: Optional[Dagster]
     traefik: Optional[Traefik]
-    s3_bucket: Optional[S3Bucket]
     bpm: Optional[BPM]
 
     @staticmethod
@@ -469,7 +456,6 @@ class Deployment:
         kubernetes = values.get("kubernetes")
         dagster = values.get("dagster")
         traefik = values.get("traefik")
-        s3_bucket = values.get("s3")
         bpm = values.get("bpm")
 
         return Deployment(
@@ -478,7 +464,6 @@ class Deployment:
             kubernetes=Kubernetes.from_config(kubernetes) if kubernetes else None,
             dagster=Dagster.from_config(dagster) if dagster else None,
             traefik=Traefik.from_config(traefik) if traefik else None,
-            s3_bucket=S3Bucket.from_config(s3_bucket) if s3_bucket else None,
             bpm=BPM.from_config(bpm) if bpm else None,
         )
 
@@ -514,9 +499,11 @@ class Project:
     def to_name(self) -> ProjectName:
         return ProjectName(
             name=self.name,
-            namespace=self.deployment.namespace
-            if self.deployment and self.deployment.namespace
-            else None,
+            namespace=(
+                self.deployment.namespace
+                if self.deployment and self.deployment.namespace
+                else None
+            ),
         )
 
     @property
@@ -526,12 +513,6 @@ class Project:
                 f"Project '{self.name}' does not have kubernetes configuration"
             )
         return self.deployment.kubernetes
-
-    @property
-    def s3_bucket(self) -> S3Bucket:
-        if self.deployment is None or self.deployment.s3_bucket is None:
-            raise KeyError(f"Project '{self.name}' does not have s3 configuration")
-        return self.deployment.s3_bucket
 
     @property
     def dagster(self) -> Dagster:
@@ -599,9 +580,9 @@ class Project:
             docker=Docker.from_config(docker_config) if docker_config else None,
             build=Build.from_config(values.get("build", {})),
             deployment=Deployment.from_config(deployment) if deployment else None,
-            dependencies=Dependencies.from_config(dependencies)
-            if dependencies
-            else None,
+            dependencies=(
+                Dependencies.from_config(dependencies) if dependencies else None
+            ),
         )
 
 

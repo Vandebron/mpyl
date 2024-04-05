@@ -47,6 +47,21 @@ deployment:
           all: 1.0
         mem:
           all: 2048
+    metrics:
+      enabled: true
+      alerts:
+        - name: 'JobError'
+          expr: 'true'
+          forDuration: '1m'
+          description: 'Job has encountered errors'
+          severity: 'warning'
+        - name: "the name of the alert"
+          expr: "a prometheus expression"
+          forDuration: 0m # Fire instantly
+          severity: signup_alerting_once
+          description: |-
+            **{{ $value }}** new signup failures with reason `{{ $labels.reason }}`.
+            You can find more details in: <unrelated link>
     role:
       resources:
         - 'pods'

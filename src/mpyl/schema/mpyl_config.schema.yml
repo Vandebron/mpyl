@@ -32,8 +32,6 @@ definitions:
         "$ref": "#/definitions/Slack"
       jira:
         "$ref": "#/definitions/Jira"
-      s3:
-        "$ref": "#/definitions/s3"
       camunda:
         "$ref": "#/definitions/Camunda"
     required:
@@ -432,16 +430,6 @@ definitions:
         description: 'A pattern that extracts a ticket number from the branch name'
     required:
       - site
-  s3:
-    type: object
-    properties:
-      accessKeyId:
-        type: [ string, null ]
-      secretAccessKey:
-        type: [ string, null ]
-    dependencies:
-      accessKeyId: [ secretAccessKey ]
-      secretAccessKey: [ accessKeyId ]
   Camunda:
     type: object
     properties:
