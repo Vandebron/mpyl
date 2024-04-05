@@ -98,6 +98,8 @@ class RunProperties:
     """All projects"""
     run_plan: dict[Stage, set[ProjectExecution]]
     """Stages and projects for this run"""
+    manual_selection: bool
+    """If the run uses manual selection of projects"""
 
     @staticmethod
     def for_local_run(
@@ -118,6 +120,7 @@ class RunProperties:
             run_plan=run_plan,
             stages=stages,
             projects=all_projects,
+            manual_selection=False,
         )
 
     @staticmethod
@@ -166,6 +169,7 @@ class RunProperties:
                 for stage in run_properties["stages"]
             ],
             projects=all_projects,
+            manual_selection=False,
         )
 
     @property

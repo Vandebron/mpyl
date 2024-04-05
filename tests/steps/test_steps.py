@@ -153,6 +153,7 @@ class TestSteps:
             stages=[],
             projects=set(),
             run_plan={},
+            manual_selection=False,
         )
         with pytest.raises(ValidationError) as excinfo:
             Steps(

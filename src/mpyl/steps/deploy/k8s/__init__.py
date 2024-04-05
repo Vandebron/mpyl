@@ -264,9 +264,24 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
         rancher_config=rancher_config,
     )
 
-    helm.retrieve_installed_version(
+    installed_version = helm.retrieve_installed_version(
         logger, release_name, namespace, rancher_config.context
     )
+    tag_to_deploy = run_properties.versioning.tag
+    if (
+        tag_to_deploy is not None
+        and installed_version is not None
+        and tag_to_deploy < installed_version
+        and not run_properties.manual_selection
+    ):
+        logger.warning(
+            f"Skipping deployment of release {release_name} because a newer one is installed"
+        )
+        return Output(
+            success=True,
+            message=f"Deployment skipped because a newer version {release_name} is installed",
+        )
+
     return helm.install(
         logger,
         chart_path,
