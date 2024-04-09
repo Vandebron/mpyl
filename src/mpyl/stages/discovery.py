@@ -204,7 +204,7 @@ def find_build_set(  # pylint: disable=too-many-arguments, too-many-locals
 
     build_set: dict[Stage, set[ProjectExecution]] = {}
 
-    build_set_file = Path(BUILD_ARTIFACTS_FOLDER) / "build_plan"
+    build_set_file = Path(BUILD_ARTIFACTS_FOLDER) / "build_plan.pickle"
     if sequential and not build_all and not selected_projects:
         if not build_set_file.is_file():
             logger.warning(
