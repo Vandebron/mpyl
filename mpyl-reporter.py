@@ -57,7 +57,7 @@ def main(logger: Logger):
             versioning_identifier=run_properties.versioning.identifier,
             target=run_properties.target,
         )
-        slack_personal.send_report(run_result)
+        accumulator.add(slack_personal.send_report(run_result))
 
     jira = JiraReporter(
         config=config, branch=run_properties.versioning.branch, logger=logger
