@@ -87,7 +87,7 @@ def is_dependency_touched(
     return False
 
 
-def is_cached(
+def is_output_cached(
     logger: logging.Logger,
     project: str,
     stage: str,
@@ -181,7 +181,7 @@ def _to_project_execution(
     if stage == deploy.STAGE_NAME:
         cached = False
     else:
-        cached = is_cached(
+        cached = is_output_cached(
             logger=logger,
             project=project.name,
             stage=stage,
