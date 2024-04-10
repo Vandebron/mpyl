@@ -87,15 +87,43 @@ def is_dependency_touched(
     return False
 
 
-def is_output_cached(output: Optional[Output], cache_key: str) -> bool:
-    if (
-        output is None
-        or not output.success
-        or output.produced_artifact is None
-        or not output.produced_artifact.hash
-    ):
+def is_cached(
+    logger: logging.Logger,
+    project: str,
+    stage: str,
+    output: Optional[Output],
+    cache_key: str,
+) -> bool:
+    if output is None:
+        logger.debug(
+            f"Project {project} will execute stage {stage} again because there is no previous run"
+        )
         return False
-    return output.produced_artifact.hash == cache_key
+    if not output.success:
+        logger.debug(
+            f"Project {project} will execute stage {stage} again because the previous run was not successful"
+        )
+        return False
+    if output.produced_artifact is None:
+        logger.debug(
+            f"Project {project} will execute stage {stage} again because there was no artifact in the previous run"
+        )
+        return False
+    if not output.produced_artifact.hash:
+        logger.debug(
+            f"Project {project} will execute stage {stage} again because there is no cache key in the previous run"
+        )
+        return False
+    if output.produced_artifact.hash != cache_key:
+        logger.debug(
+            f"Project {project} will execute stage {stage} again because its content changed since the previous run"
+        )
+        return False
+
+    logger.debug(
+        f"Project {project} will skip stage {stage} because its content did not change since the previous run"
+    )
+    return True
 
 
 def hashed_changes(files: set[str]) -> str:
@@ -153,7 +181,10 @@ def _to_project_execution(
     if stage == deploy.STAGE_NAME:
         cached = False
     else:
-        cached = is_output_cached(
+        cached = is_cached(
+            logger=logger,
+            project=project.name,
+            stage=stage,
             output=Output.try_read(project.target_path, stage),
             cache_key=cache_key,
         )
