@@ -118,11 +118,16 @@ def is_output_cached(
         logger.debug(
             f"Project {project} will execute stage {stage} again because its content changed since the previous run"
         )
+        logger.debug(
+            f"Cached content for previous run: {output.produced_artifact.hash}"
+        )
+        logger.debug(f"Cached content for current run:  {cache_key}")
         return False
 
     logger.debug(
         f"Project {project} will skip stage {stage} because its content did not change since the previous run"
     )
+    logger.debug(f"Cached content for current run: {cache_key}")
     return True
 
 
@@ -159,6 +164,8 @@ def _to_project_execution(
         for changed_file in changes.files_touched()
     )
 
+    # ptab rewrite this logic to avoid having to compute hashes (expensive) when not necessary
+    #  (e.g. if stage is "Deploy")
     if is_project_modified:
         files_to_hash = set(
             filter(
@@ -171,10 +178,20 @@ def _to_project_execution(
 
         if len(files_to_hash) == 0:
             cache_key = changes.sha
+            logger.debug(
+                f"Project {project.name}: will (maybe) use revision as cache key: {cache_key}"
+            )
         else:
             cache_key = hashed_changes(files=files_to_hash)
+            logger.debug(
+                f"Project {project.name}: will (maybe) use hashed changes as cache key {cache_key}"
+            )
+
     elif is_any_dependency_touched:
         cache_key = changes.sha
+        logger.debug(
+            f"Project {project.name}: will (maybe) use revision as cache key: {cache_key}"
+        )
     else:
         return None
 
