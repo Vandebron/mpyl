@@ -46,12 +46,15 @@ class RunResult:
     def progress_fraction(self) -> float:
         unfinished = 0
         finished = 0
-        for stage, projects in self.run_plan.items():
+        for stage, project_executions in self.run_plan.items():
             finished_project_names = set(
                 map(lambda r: r.project.name, self.results_for_stage(stage))
             )
-            for project in projects:
-                if project.name in finished_project_names or project.cached:
+            for project_execution in project_executions:
+                if (
+                    project_execution.name in finished_project_names
+                    or project_execution.cached
+                ):
                     finished += 1
                 else:
                     unfinished += 1
