@@ -51,7 +51,7 @@ class RunResult:
                 map(lambda r: r.project.name, self.results_for_stage(stage))
             )
             for project in projects:
-                if project.name in finished_project_names:
+                if project.name in finished_project_names or project.cached:
                     finished += 1
                 else:
                     unfinished += 1
