@@ -30,12 +30,9 @@ class RunPlan:
         return RunPlan({stage: self.get(stage)})
 
     def for_projects(self, projects: set[Project]):
-        def only_selected_projects(executions: set[ProjectExecution]):
-            return set(filter(lambda e: e.project in projects, executions))
-
         return RunPlan(
             {
-                stage: only_selected_projects(executions)
+                stage: {e for e in executions if e.project in projects}
                 for stage, executions in self.plan.items()
             }
         )
