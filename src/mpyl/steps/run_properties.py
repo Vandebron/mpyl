@@ -20,7 +20,6 @@ def construct_run_properties(
     all_projects: Optional[set[Project]] = None,
     root_dir: Path = Path(""),
     explain_run_plan: bool = False,
-    sequential: bool = False,
 ) -> RunProperties:
     tag = cli_parameters.tag or properties["build"]["versioning"].get("tag")
     if all_projects is None or run_plan is None:
@@ -55,7 +54,6 @@ def construct_run_properties(
                     repo=repo,
                     stages=stages,
                     tag=tag,
-                    sequential=sequential,
                 )
 
     if cli_parameters.local:
@@ -86,7 +84,6 @@ def _create_run_plan(
     repo: Repository,
     stages: list[Stage],
     tag: Optional[str] = None,
-    sequential: Optional[bool] = False,
 ):
     run_plan_logger = logging.getLogger("mpyl")
     if explain_run_plan:
@@ -101,11 +98,10 @@ def _create_run_plan(
         logger=run_plan_logger,
         repository=repo,
         all_projects=all_projects,
-        stages=stages,
+        all_stages=stages,
         tag=tag,
         local=cli_parameters.local,
         build_all=cli_parameters.all,
         selected_stage=cli_parameters.stage,
         selected_project_names=selected_projects,
-        sequential=sequential,
     )

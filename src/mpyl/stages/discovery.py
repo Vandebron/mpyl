@@ -259,35 +259,24 @@ def create_run_plan(  # pylint: disable=too-many-arguments, too-many-locals
     logger: logging.Logger,
     repository: Repository,
     all_projects: set[Project],
-    stages: list[Stage],
+    all_stages: list[Stage],
     build_all: bool,
     local: bool,
     selected_project_names: list[str],
     tag: Optional[str] = None,
     selected_stage: Optional[str] = None,
-    sequential: Optional[bool] = False,
 ) -> dict[Stage, set[ProjectExecution]]:
     run_plan_file = Path(BUILD_ARTIFACTS_FOLDER) / "build_plan"
-    if sequential and not build_all and not selected_project_names:
-        if not run_plan_file.is_file():
-            logger.warning(
-                f"Sequential flag is passed, but no previous run plan found: {run_plan_file}"
-            )
-        else:
-            logger.info(f"Loading cached run plan: {run_plan_file}")
-            return _get_cached_run_plan(
-                run_plan_file=run_plan_file, selected_stage=selected_stage
-            )
 
-    elif run_plan_file.is_file():
-        logger.info(f"Deleting previous run plan: {run_plan_file}")
-        run_plan_file.unlink()
+    existing_run_plan = _load_cached_run_plan(logger, run_plan_file)
+    if existing_run_plan:
+        return existing_run_plan
 
     logger.info("Discovering run plan...")
     run_plan: dict[Stage, set[ProjectExecution]] = {}
     changeset = _get_changes(repository, local, tag)
 
-    for stage in stages:
+    for stage in all_stages:
         if selected_stage and selected_stage != stage.name:
             continue
 
@@ -324,12 +313,7 @@ def create_run_plan(  # pylint: disable=too-many-arguments, too-many-locals
         )
         run_plan.update({stage: project_executions})
 
-    if not selected_stage and not build_all and not selected_project_names:
-        os.makedirs(os.path.dirname(run_plan_file), exist_ok=True)
-        with open(run_plan_file, "wb") as file:
-            logger.info(f"Storing run plan in: {run_plan_file}")
-            pickle.dump(run_plan, file, pickle.HIGHEST_PROTOCOL)
-
+    _store_run_plan(logger, run_plan, run_plan_file)
     return run_plan
 
 
@@ -346,15 +330,23 @@ def _get_changes(repo: Repository, local: bool, tag: Optional[str] = None):
     return repo.changes_in_branch()
 
 
-def _get_cached_run_plan(
-    run_plan_file: Path, selected_stage: Optional[str]
-) -> dict[Stage, set[ProjectExecution]]:
-    with open(run_plan_file, "rb") as file:
-        full_run_plan: dict[Stage, set[ProjectExecution]] = pickle.load(file)
-        if selected_stage:
-            return {
-                stage: project_executions
-                for stage, project_executions in full_run_plan.items()
-                if stage.name == selected_stage
-            }
-        return full_run_plan
+def _load_cached_run_plan(
+    logger: logging.Logger,
+    run_plan_file: Path,
+) -> Optional[dict[Stage, set[ProjectExecution]]]:
+    if run_plan_file.is_file():
+        logger.info(f"Loading cached run plan: {run_plan_file}")
+        with open(run_plan_file, "rb") as file:
+            return pickle.load(file)
+    return None
+
+
+def _store_run_plan(
+    logger: logging.Logger,
+    run_plan: dict[Stage, set[ProjectExecution]],
+    run_plan_file: Path,
+):
+    os.makedirs(os.path.dirname(run_plan_file), exist_ok=True)
+    with open(run_plan_file, "wb") as file:
+        logger.info(f"Storing run plan in: {run_plan_file}")
+        pickle.dump(run_plan, file, pickle.HIGHEST_PROTOCOL)
