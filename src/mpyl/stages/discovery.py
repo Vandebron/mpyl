@@ -153,7 +153,7 @@ def _cache_key_from_changes_in_project(
     if len(files_to_hash) == 0:
         cache_key = changeset.sha
         logger.debug(
-            f"Project {project.name}: will (maybe) use revision as cache key: {cache_key}"
+            f"Project {project.name}: will use revision as cache key: {cache_key}"
         )
     else:
         sha256 = hashlib.sha256()
@@ -167,21 +167,20 @@ def _cache_key_from_changes_in_project(
                     sha256.update(data)
 
         cache_key = sha256.hexdigest()
-
         logger.debug(
-            f"Project {project.name}: will (maybe) use hashed changes as cache key {cache_key}"
+            f"Project {project.name}: will use hashed changes as cache key {cache_key}"
         )
 
     return cache_key
 
 
-def build_project_executions(
+def to_project_executions(
     logger: logging.Logger,
     projects: set[Project],
     stage: str,
     changeset: Changeset,
 ) -> set[ProjectExecution]:
-    def _build_project_execution(
+    def to_project_execution(
         project: Project,
     ) -> ProjectExecution:
         cache_key = _cache_key_from_changes_in_project(
@@ -199,17 +198,17 @@ def build_project_executions(
             ),
         )
 
-    return set(map(_build_project_execution, projects))
+    return set(map(to_project_execution, projects))
 
 
-def find_project_executions(
+def find_projects_to_execute(
     logger: logging.Logger,
-    projects: set[Project],
+    all_projects: set[Project],
     stage: str,
     changeset: Changeset,
     steps: Optional[StepsCollection],
 ) -> set[ProjectExecution]:
-    def _should_project_be_executed(
+    def project_execution_if_needed(
         project: Project,
     ) -> Optional[ProjectExecution]:
         if project.stages.for_stage(stage) is None:
@@ -232,7 +231,7 @@ def find_project_executions(
         elif is_any_dependency_modified:
             cache_key = changeset.sha
             logger.debug(
-                f"Project {project.name}: will (maybe) use revision as cache key: {cache_key}"
+                f"Project {project.name}: will use revision as cache key: {cache_key}"
             )
         else:
             return None
@@ -251,7 +250,7 @@ def find_project_executions(
 
     return {
         project_execution
-        for project_execution in map(_should_project_be_executed, projects)
+        for project_execution in map(project_execution_if_needed, all_projects)
         if project_execution is not None
     }
 
@@ -268,33 +267,33 @@ def create_run_plan(  # pylint: disable=too-many-arguments, too-many-locals
     selected_stage: Optional[str] = None,
     sequential: Optional[bool] = False,
 ) -> dict[Stage, set[ProjectExecution]]:
-    run_plan: dict[Stage, set[ProjectExecution]] = {}
 
-    build_set_file = Path(BUILD_ARTIFACTS_FOLDER) / "build_plan"
+    run_plan_file = Path(BUILD_ARTIFACTS_FOLDER) / "build_plan"
     if sequential and not build_all and not selected_project_names:
-        if not build_set_file.is_file():
+        if not run_plan_file.is_file():
             logger.warning(
-                f"Sequential flag is passed, but no previous build set found: {build_set_file}"
+                f"Sequential flag is passed, but no previous build set found: {run_plan_file}"
             )
         else:
-            logger.info(f"Loading cached build set: {build_set_file}")
-            return _get_cached_build_set(
-                build_set_file=build_set_file, selected_stage=selected_stage
+            logger.info(f"Loading cached build set: {run_plan_file}")
+            return _get_cached_run_plan(
+                build_plan_file=run_plan_file, selected_stage=selected_stage
             )
 
-    elif build_set_file.is_file():
-        logger.info(f"Deleting previous build set: {build_set_file}")
-        build_set_file.unlink()
+    elif run_plan_file.is_file():
+        logger.info(f"Deleting previous build set: {run_plan_file}")
+        run_plan_file.unlink()
 
-    logger.info("Discovering build set...")
+    logger.info("Discovering run plan...")
+    run_plan: dict[Stage, set[ProjectExecution]] = {}
+    changeset = _get_changes(repository, local, tag)
+
     for stage in stages:
         if selected_stage and selected_stage != stage.name:
             continue
 
-        changeset = _get_changes(repository, local, tag)
-
         if build_all:
-            project_executions = build_project_executions(
+            project_executions = to_project_executions(
                 logger=logger,
                 projects=for_stage(all_projects, stage),
                 stage=stage.name,
@@ -306,16 +305,16 @@ def create_run_plan(  # pylint: disable=too-many-arguments, too-many-locals
                 filter(lambda p: p.name in selected_project_names, all_projects)
             )
 
-            project_executions = build_project_executions(
+            project_executions = to_project_executions(
                 logger=logger,
                 projects=for_stage(projects_to_build, stage),
                 stage=stage.name,
                 changeset=changeset,
             )
         else:
-            project_executions = find_project_executions(
+            project_executions = find_projects_to_execute(
                 logger=logger,
-                projects=all_projects,
+                all_projects=all_projects,
                 stage=stage.name,
                 changeset=changeset,
                 steps=StepsCollection(logger=logging.getLogger()),
@@ -327,9 +326,9 @@ def create_run_plan(  # pylint: disable=too-many-arguments, too-many-locals
         run_plan.update({stage: project_executions})
 
     if not selected_stage and not build_all and not selected_project_names:
-        os.makedirs(os.path.dirname(build_set_file), exist_ok=True)
-        with open(build_set_file, "wb") as file:
-            logger.info(f"Storing build set in: {build_set_file}")
+        os.makedirs(os.path.dirname(run_plan_file), exist_ok=True)
+        with open(run_plan_file, "wb") as file:
+            logger.info(f"Storing build set in: {run_plan_file}")
             pickle.dump(run_plan, file, pickle.HIGHEST_PROTOCOL)
 
     return run_plan
@@ -348,15 +347,15 @@ def _get_changes(repo: Repository, local: bool, tag: Optional[str] = None):
     return repo.changes_in_branch()
 
 
-def _get_cached_build_set(
-    build_set_file: Path, selected_stage: Optional[str]
+def _get_cached_run_plan(
+    build_plan_file: Path, selected_stage: Optional[str]
 ) -> dict[Stage, set[ProjectExecution]]:
-    with open(build_set_file, "rb") as file:
-        full_build_set: dict[Stage, set[ProjectExecution]] = pickle.load(file)
+    with open(build_plan_file, "rb") as file:
+        full_run_plan: dict[Stage, set[ProjectExecution]] = pickle.load(file)
         if selected_stage:
             return {
                 stage: project_executions
-                for stage, project_executions in full_build_set.items()
+                for stage, project_executions in full_run_plan.items()
                 if stage.name == selected_stage
             }
-        return full_build_set
+        return full_run_plan

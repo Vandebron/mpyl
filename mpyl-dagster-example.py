@@ -12,7 +12,7 @@ from dagster import (
 )
 
 from mpyl.project import load_project, Project
-from mpyl.stages.discovery import find_project_executions
+from mpyl.stages.discovery import find_projects_to_execute
 from mpyl.steps import build, test, deploy
 from mpyl.steps.collection import StepsCollection
 from mpyl.steps.run_properties import construct_run_properties
@@ -80,9 +80,9 @@ def find_projects(stage: str) -> list[DynamicOutput[Project]]:
     )
     dagster_logger = get_dagster_logger()
     steps = StepsCollection(logger=dagster_logger)
-    project_executions = find_project_executions(
+    project_executions = find_projects_to_execute(
         logger=dagster_logger,
-        projects=all_projects,
+        all_projects=all_projects,
         stage=stage,
         changeset=changes_in_branch,
         steps=steps,
