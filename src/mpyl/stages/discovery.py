@@ -153,7 +153,7 @@ def _cache_key_from_changes_in_project(
     if len(files_to_hash) == 0:
         cache_key = changeset.sha
         logger.debug(
-            f"Project {project.name}: will use revision as cache key: {cache_key}"
+            f"Project {project.name}: no content changes, falling back to git revision as cache key: {cache_key}"
         )
     else:
         sha256 = hashlib.sha256()
@@ -168,7 +168,7 @@ def _cache_key_from_changes_in_project(
 
         cache_key = sha256.hexdigest()
         logger.debug(
-            f"Project {project.name}: will use hashed changes as cache key {cache_key}"
+            f"Project {project.name}: using hash of modified files as cache key {cache_key}"
         )
 
     return cache_key
@@ -231,7 +231,7 @@ def find_projects_to_execute(
         elif is_any_dependency_modified:
             cache_key = changeset.sha
             logger.debug(
-                f"Project {project.name}: will use revision as cache key: {cache_key}"
+                f"Project {project.name}: using git revision as cache key: {cache_key}"
             )
         else:
             return None
