@@ -267,7 +267,6 @@ def create_run_plan(  # pylint: disable=too-many-arguments, too-many-locals
     selected_stage: Optional[str] = None,
     sequential: Optional[bool] = False,
 ) -> dict[Stage, set[ProjectExecution]]:
-
     run_plan_file = Path(BUILD_ARTIFACTS_FOLDER) / "build_plan"
     if sequential and not build_all and not selected_project_names:
         if not run_plan_file.is_file():
