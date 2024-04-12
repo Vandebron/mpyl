@@ -184,18 +184,18 @@ def _to_project_execution(
         if len(files_to_hash) == 0:
             cache_key = changes.sha
             logger.debug(
-                f"Project {project.name}: will (maybe) use revision as cache key: {cache_key}"
+                f"Project {project.name}: using git revision as cache key: {cache_key}"
             )
         else:
             cache_key = hashed_changes(files=files_to_hash)
             logger.debug(
-                f"Project {project.name}: will (maybe) use hashed changes as cache key {cache_key}"
+                f"Project {project.name}: using hash of modified files as cache key: {cache_key}"
             )
 
     elif is_any_dependency_touched:
         cache_key = changes.sha
         logger.debug(
-            f"Project {project.name}: will (maybe) use revision as cache key: {cache_key}"
+            f"Project {project.name}: using git revision as cache key: {cache_key}"
         )
     else:
         return None
