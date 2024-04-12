@@ -14,6 +14,7 @@ from ..constants import BUILD_ARTIFACTS_FOLDER
 from ..project import Project
 from ..project import Stage
 from ..project_execution import ProjectExecution
+from ..run_plan import RunPlan
 from ..steps import deploy
 from ..steps.collection import StepsCollection
 from ..steps.models import Output, ArtifactType
@@ -255,29 +256,78 @@ def find_projects_to_execute(
     }
 
 
-def create_run_plan(  # pylint: disable=too-many-arguments, too-many-locals
+# pylint: disable=too-many-arguments
+def create_run_plan(
     logger: logging.Logger,
     repository: Repository,
     all_projects: set[Project],
     all_stages: list[Stage],
     build_all: bool,
     local: bool,
-    selected_project_names: list[str],
+    selected_projects: set[Project],
     tag: Optional[str] = None,
-    selected_stage: Optional[str] = None,
-) -> dict[Stage, set[ProjectExecution]]:
+    selected_stage: Optional[Stage] = None,
+) -> RunPlan:
     run_plan_file = Path(BUILD_ARTIFACTS_FOLDER) / "build_plan"
 
     existing_run_plan = _load_cached_run_plan(logger, run_plan_file)
     if existing_run_plan:
-        return existing_run_plan
+        return _filter_existing_run_plan(
+            run_plan=existing_run_plan,
+            selected_stage=selected_stage,
+            selected_projects=selected_projects,
+        )
 
+    run_plan = _discover_run_plan(
+        logger=logger,
+        repository=repository,
+        all_projects=all_projects,
+        all_stages=all_stages,
+        build_all=build_all,
+        local=local,
+        selected_projects=selected_projects,
+        selected_stage=selected_stage,
+        tag=tag,
+    )
+
+    _store_run_plan(logger, run_plan, run_plan_file)
+    return run_plan
+
+
+def _filter_existing_run_plan(
+    run_plan: RunPlan,
+    selected_stage: Optional[Stage],
+    selected_projects: set[Project],
+) -> RunPlan:
+    filtered_run_plan = run_plan
+
+    if selected_stage:
+        filtered_run_plan = filtered_run_plan.for_stage(selected_stage)
+
+    if selected_projects:
+        filtered_run_plan = filtered_run_plan.for_projects(selected_projects)
+
+    return filtered_run_plan
+
+
+# pylint: disable=too-many-arguments
+def _discover_run_plan(
+    logger: logging.Logger,
+    repository: Repository,
+    all_projects: set[Project],
+    all_stages: list[Stage],
+    build_all: bool,
+    local: bool,
+    selected_projects: set[Project],
+    selected_stage: Optional[Stage],
+    tag: Optional[str] = None,
+) -> RunPlan:
     logger.info("Discovering run plan...")
-    run_plan: dict[Stage, set[ProjectExecution]] = {}
+    run_plan: RunPlan = RunPlan.empty()
     changeset = _get_changes(repository, local, tag)
 
     for stage in all_stages:
-        if selected_stage and selected_stage != stage.name:
+        if selected_stage and stage != selected_stage:
             continue
 
         if build_all:
@@ -287,15 +337,10 @@ def create_run_plan(  # pylint: disable=too-many-arguments, too-many-locals
                 stage=stage.name,
                 changeset=changeset,
             )
-
-        elif selected_project_names:
-            projects_to_build = set(
-                filter(lambda p: p.name in selected_project_names, all_projects)
-            )
-
+        elif selected_projects:
             project_executions = to_project_executions(
                 logger=logger,
-                projects=for_stage(projects_to_build, stage),
+                projects=for_stage(selected_projects, stage),
                 stage=stage.name,
                 changeset=changeset,
             )
@@ -311,14 +356,13 @@ def create_run_plan(  # pylint: disable=too-many-arguments, too-many-locals
         logger.debug(
             f"Will execute projects for stage {stage.name}: {[p.name for p in project_executions]}"
         )
-        run_plan.update({stage: project_executions})
+        run_plan.add_stage(stage, project_executions)
 
-    _store_run_plan(logger, run_plan, run_plan_file)
     return run_plan
 
 
 def for_stage(projects: set[Project], stage: Stage) -> set[Project]:
-    return set(filter(lambda p: p.stages.for_stage(stage.name), projects))
+    return {p for p in projects if p.stages.for_stage(stage.name)}
 
 
 def _get_changes(repo: Repository, local: bool, tag: Optional[str] = None):
@@ -333,7 +377,7 @@ def _get_changes(repo: Repository, local: bool, tag: Optional[str] = None):
 def _load_cached_run_plan(
     logger: logging.Logger,
     run_plan_file: Path,
-) -> Optional[dict[Stage, set[ProjectExecution]]]:
+) -> Optional[RunPlan]:
     if run_plan_file.is_file():
         logger.info(f"Loading cached run plan: {run_plan_file}")
         with open(run_plan_file, "rb") as file:
@@ -343,7 +387,7 @@ def _load_cached_run_plan(
 
 def _store_run_plan(
     logger: logging.Logger,
-    run_plan: dict[Stage, set[ProjectExecution]],
+    run_plan: RunPlan,
     run_plan_file: Path,
 ):
     os.makedirs(os.path.dirname(run_plan_file), exist_ok=True)

@@ -1,6 +1,7 @@
 import tempfile
 from pathlib import Path
 
+from src.mpyl.run_plan import RunPlan
 from src.mpyl.steps import Input
 from src.mpyl.steps.deploy.k8s.chart import ChartBuilder, to_service_chart
 from src.mpyl.steps.deploy.k8s.helm import write_chart, to_chart_metadata
@@ -17,7 +18,7 @@ class TestHelm:
         step_input = Input(
             project_execution=get_project_execution(),
             run_properties=test_data.run_properties_with_plan(
-                {TestStage.deploy(): {get_project_execution()}}
+                RunPlan({TestStage.deploy(): {get_project_execution()}})
             ),
             required_artifact=output.produced_artifact,
             dry_run=True,
