@@ -37,7 +37,7 @@ def file_belongs_to_project(
     return startswith
 
 
-def is_dependency_touched(
+def is_dependency_modified(
     logger: logging.Logger,
     project: Project,
     stage: str,
@@ -138,122 +138,140 @@ def is_project_cached_for_stage(
     return cached
 
 
-def hashed_changes(files: set[str]) -> str:
-    sha256 = hashlib.sha256()
-
-    for changed_file in sorted(files):
-        with open(changed_file, "rb") as file:
-            while True:
-                data = file.read(65536)
-                if not data:
-                    break
-                sha256.update(data)
-
-    return sha256.hexdigest()
-
-
-def _to_project_execution(
+def _cache_key_from_changes_in_project(
     logger: logging.Logger,
     project: Project,
-    stage: str,
-    changes: Changeset,
-    steps: Optional[StepsCollection],
-) -> Optional[ProjectExecution]:
-    if project.stages.for_stage(stage) is None:
-        return None
-
-    is_any_dependency_touched = any(
-        is_dependency_touched(logger, project, stage, changed_file, steps)
-        for changed_file in changes.files_touched()
-    )
-    is_project_modified = any(
-        file_belongs_to_project(logger, project, changed_file)
-        for changed_file in changes.files_touched()
-    )
-
-    if is_project_modified:
-        files_to_hash = set(
-            filter(
-                lambda changed_file: file_belongs_to_project(
-                    logger, project, changed_file
-                ),
-                changes.files_touched(status={"A", "M", "R"}),
-            )
+    changeset: Changeset,
+):
+    files_to_hash = set(
+        filter(
+            lambda changed_file: file_belongs_to_project(logger, project, changed_file),
+            changeset.files_touched(status={"A", "M", "R"}),
         )
+    )
 
-        if len(files_to_hash) == 0:
-            cache_key = changes.sha
-            logger.debug(
-                f"Project {project.name}: will (maybe) use revision as cache key: {cache_key}"
-            )
-        else:
-            cache_key = hashed_changes(files=files_to_hash)
-            logger.debug(
-                f"Project {project.name}: will (maybe) use hashed changes as cache key {cache_key}"
-            )
-
-    elif is_any_dependency_touched:
-        cache_key = changes.sha
+    if len(files_to_hash) == 0:
+        cache_key = changeset.sha
         logger.debug(
             f"Project {project.name}: will (maybe) use revision as cache key: {cache_key}"
         )
     else:
-        return None
+        sha256 = hashlib.sha256()
 
-    return ProjectExecution(
-        project=project,
-        cache_key=cache_key,
-        cached=is_project_cached_for_stage(
-            logger=logger,
-            project=project.name,
-            stage=stage,
-            output=Output.try_read(project.target_path, stage),
-            cache_key=cache_key,
-        ),
-    )
+        for changed_file in sorted(files_to_hash):
+            with open(changed_file, "rb") as file:
+                while True:
+                    data = file.read(65536)
+                    if not data:
+                        break
+                    sha256.update(data)
+
+        cache_key = sha256.hexdigest()
+
+        logger.debug(
+            f"Project {project.name}: will (maybe) use hashed changes as cache key {cache_key}"
+        )
+
+    return cache_key
 
 
 def build_project_executions(
     logger: logging.Logger,
-    all_projects: set[Project],
+    projects: set[Project],
     stage: str,
-    changes: Changeset,
+    changeset: Changeset,
+) -> set[ProjectExecution]:
+    def _build_project_execution(
+        project: Project,
+    ) -> ProjectExecution:
+        cache_key = _cache_key_from_changes_in_project(
+            logger=logger, project=project, changeset=changeset
+        )
+        return ProjectExecution(
+            project=project,
+            cache_key=cache_key,
+            cached=is_project_cached_for_stage(
+                logger=logger,
+                project=project.name,
+                stage=stage,
+                output=Output.try_read(project.target_path, stage),
+                cache_key=cache_key,
+            ),
+        )
+
+    return set(map(_build_project_execution, projects))
+
+
+def find_project_executions(
+    logger: logging.Logger,
+    projects: set[Project],
+    stage: str,
+    changeset: Changeset,
     steps: Optional[StepsCollection],
 ) -> set[ProjectExecution]:
-    maybe_execution_projects = set(
-        map(
-            lambda project: _to_project_execution(
-                logger, project, stage, changes, steps
-            ),
-            all_projects,
+    def _should_project_be_executed(
+        project: Project,
+    ) -> Optional[ProjectExecution]:
+        if project.stages.for_stage(stage) is None:
+            return None
+
+        is_any_dependency_modified = any(
+            is_dependency_modified(logger, project, stage, changed_file, steps)
+            for changed_file in changeset.files_touched()
         )
-    )
+        is_project_modified = any(
+            file_belongs_to_project(logger, project, changed_file)
+            for changed_file in changeset.files_touched()
+        )
+
+        if is_project_modified:
+            cache_key = _cache_key_from_changes_in_project(
+                logger=logger, project=project, changeset=changeset
+            )
+
+        elif is_any_dependency_modified:
+            cache_key = changeset.sha
+            logger.debug(
+                f"Project {project.name}: will (maybe) use revision as cache key: {cache_key}"
+            )
+        else:
+            return None
+
+        return ProjectExecution(
+            project=project,
+            cache_key=cache_key,
+            cached=is_project_cached_for_stage(
+                logger=logger,
+                project=project.name,
+                stage=stage,
+                output=Output.try_read(project.target_path, stage),
+                cache_key=cache_key,
+            ),
+        )
+
     return {
         project_execution
-        for project_execution in maybe_execution_projects
+        for project_execution in map(_should_project_be_executed, projects)
         if project_execution is not None
     }
 
 
-def find_build_set(  # pylint: disable=too-many-arguments, too-many-locals
+def create_run_plan(  # pylint: disable=too-many-arguments, too-many-locals
     logger: logging.Logger,
     repository: Repository,
     all_projects: set[Project],
     stages: list[Stage],
     build_all: bool,
     local: bool,
+    selected_project_names: list[str],
     tag: Optional[str] = None,
     selected_stage: Optional[str] = None,
-    selected_projects: Optional[str] = None,
     sequential: Optional[bool] = False,
 ) -> dict[Stage, set[ProjectExecution]]:
-    if selected_projects:
-        projects_list = selected_projects.split(",")
-
-    build_set: dict[Stage, set[ProjectExecution]] = {}
+    run_plan: dict[Stage, set[ProjectExecution]] = {}
 
     build_set_file = Path(BUILD_ARTIFACTS_FOLDER) / "build_plan"
-    if sequential and not build_all and not selected_projects:
+    if sequential and not build_all and not selected_project_names:
         if not build_set_file.is_file():
             logger.warning(
                 f"Sequential flag is passed, but no previous build set found: {build_set_file}"
@@ -273,37 +291,48 @@ def find_build_set(  # pylint: disable=too-many-arguments, too-many-locals
         if selected_stage and selected_stage != stage.name:
             continue
 
-        if build_all or selected_projects:
-            if selected_projects:
-                all_projects = set(
-                    filter(lambda p: p.name in projects_list, all_projects)
-                )
-            projects = for_stage(all_projects, stage)
-            project_executions = {ProjectExecution.always_run(p) for p in projects}
-        else:
-            steps = StepsCollection(logger=logging.getLogger())
-            changes_in_branch = (
-                _get_changes(repository, local, tag)
-                if not selected_projects or build_all
-                else []
+        changeset = _get_changes(repository, local, tag)
+
+        if build_all:
+            project_executions = build_project_executions(
+                logger=logger,
+                projects=for_stage(all_projects, stage),
+                stage=stage.name,
+                changeset=changeset,
+            )
+
+        elif selected_project_names:
+            projects_to_build = set(
+                filter(lambda p: p.name in selected_project_names, all_projects)
             )
 
             project_executions = build_project_executions(
-                logger, all_projects, stage.name, changes_in_branch, steps
+                logger=logger,
+                projects=for_stage(projects_to_build, stage),
+                stage=stage.name,
+                changeset=changeset,
             )
-            logger.debug(
-                f"Invalidated projects for stage {stage.name}: {[p.name for p in project_executions]}"
+        else:
+            project_executions = find_project_executions(
+                logger=logger,
+                projects=all_projects,
+                stage=stage.name,
+                changeset=changeset,
+                steps=StepsCollection(logger=logging.getLogger()),
             )
 
-        build_set.update({stage: project_executions})
+        logger.debug(
+            f"Will execute projects for stage {stage.name}: {[p.name for p in project_executions]}"
+        )
+        run_plan.update({stage: project_executions})
 
-    if not selected_stage and not build_all and not selected_projects:
+    if not selected_stage and not build_all and not selected_project_names:
         os.makedirs(os.path.dirname(build_set_file), exist_ok=True)
         with open(build_set_file, "wb") as file:
             logger.info(f"Storing build set in: {build_set_file}")
-            pickle.dump(build_set, file, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(run_plan, file, pickle.HIGHEST_PROTOCOL)
 
-    return build_set
+    return run_plan
 
 
 def for_stage(projects: set[Project], stage: Stage) -> set[Project]:

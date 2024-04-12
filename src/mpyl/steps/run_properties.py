@@ -1,4 +1,5 @@
 """Module to initiate run properties"""
+
 import logging
 from pathlib import Path
 from typing import Optional
@@ -6,7 +7,7 @@ from typing import Optional
 from ..cli import MpylCliParameters
 from ..project import load_project, Stage, Project
 from ..project_execution import ProjectExecution
-from ..stages.discovery import find_build_set
+from ..stages.discovery import create_run_plan
 from ..steps.models import RunProperties
 from ..utilities.repo import Repository, RepoConfig
 
@@ -87,12 +88,17 @@ def _create_run_plan(
     tag: Optional[str] = None,
     sequential: Optional[bool] = False,
 ):
-    build_set_logger = logging.getLogger("mpyl")
+    run_plan_logger = logging.getLogger("mpyl")
     if explain_run_plan:
-        build_set_logger.setLevel("DEBUG")
+        run_plan_logger.setLevel("DEBUG")
 
-    return find_build_set(
-        logger=build_set_logger,
+    if cli_parameters.projects:
+        selected_projects = cli_parameters.projects.split(",")
+    else:
+        selected_projects = []
+
+    return create_run_plan(
+        logger=run_plan_logger,
         repository=repo,
         all_projects=all_projects,
         stages=stages,
@@ -100,6 +106,6 @@ def _create_run_plan(
         local=cli_parameters.local,
         build_all=cli_parameters.all,
         selected_stage=cli_parameters.stage,
-        selected_projects=cli_parameters.projects,
+        selected_project_names=selected_projects,
         sequential=sequential,
     )
