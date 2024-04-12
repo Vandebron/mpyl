@@ -272,16 +272,16 @@ def create_run_plan(  # pylint: disable=too-many-arguments, too-many-locals
     if sequential and not build_all and not selected_project_names:
         if not run_plan_file.is_file():
             logger.warning(
-                f"Sequential flag is passed, but no previous build set found: {run_plan_file}"
+                f"Sequential flag is passed, but no previous run plan found: {run_plan_file}"
             )
         else:
-            logger.info(f"Loading cached build set: {run_plan_file}")
+            logger.info(f"Loading cached run plan: {run_plan_file}")
             return _get_cached_run_plan(
-                build_plan_file=run_plan_file, selected_stage=selected_stage
+                run_plan_file=run_plan_file, selected_stage=selected_stage
             )
 
     elif run_plan_file.is_file():
-        logger.info(f"Deleting previous build set: {run_plan_file}")
+        logger.info(f"Deleting previous run plan: {run_plan_file}")
         run_plan_file.unlink()
 
     logger.info("Discovering run plan...")
@@ -328,7 +328,7 @@ def create_run_plan(  # pylint: disable=too-many-arguments, too-many-locals
     if not selected_stage and not build_all and not selected_project_names:
         os.makedirs(os.path.dirname(run_plan_file), exist_ok=True)
         with open(run_plan_file, "wb") as file:
-            logger.info(f"Storing build set in: {run_plan_file}")
+            logger.info(f"Storing run plan in: {run_plan_file}")
             pickle.dump(run_plan, file, pickle.HIGHEST_PROTOCOL)
 
     return run_plan
@@ -348,9 +348,9 @@ def _get_changes(repo: Repository, local: bool, tag: Optional[str] = None):
 
 
 def _get_cached_run_plan(
-    build_plan_file: Path, selected_stage: Optional[str]
+    run_plan_file: Path, selected_stage: Optional[str]
 ) -> dict[Stage, set[ProjectExecution]]:
-    with open(build_plan_file, "rb") as file:
+    with open(run_plan_file, "rb") as file:
         full_run_plan: dict[Stage, set[ProjectExecution]] = pickle.load(file)
         if selected_stage:
             return {

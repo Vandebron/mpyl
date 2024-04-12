@@ -1,4 +1,5 @@
 """Commands related to build"""
+
 import asyncio
 import pickle
 import shutil
@@ -147,7 +148,7 @@ class CustomValidation(click.Command):
     is_flag=True,
     default=False,
     required=False,
-    help="Combine results with previous run(s) and load cached build set",
+    help="Combine results with previous run(s) and load cached run plan",
 )
 @click.option(
     "--projects",

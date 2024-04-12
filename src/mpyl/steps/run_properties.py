@@ -45,9 +45,9 @@ def construct_run_properties(
                     Stage(stage["name"], stage["icon"])
                     for stage in properties["stages"]
                 ]
-                build_set_logger = logging.getLogger("mpyl")
+                run_plan_logger = logging.getLogger("mpyl")
                 if explain_run_plan:
-                    build_set_logger.setLevel("DEBUG")
+                    run_plan_logger.setLevel("DEBUG")
                 run_plan = _create_run_plan(
                     all_projects=all_projects,
                     cli_parameters=cli_parameters,
