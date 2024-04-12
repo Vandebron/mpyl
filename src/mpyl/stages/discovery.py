@@ -87,34 +87,39 @@ def is_dependency_touched(
     return False
 
 
-def is_output_cached(
+def is_project_cached_for_stage(
     logger: logging.Logger,
     project: str,
     stage: str,
     output: Optional[Output],
     cache_key: str,
 ) -> bool:
-    if output is None:
+    if stage == deploy.STAGE_NAME:
+        logger.debug(
+            f"Project {project} will execute stage {stage} again because this stage is never cached"
+        )
+        cached = False
+    elif output is None:
         logger.debug(
             f"Project {project} will execute stage {stage} again because there is no previous run"
         )
-        return False
-    if not output.success:
+        cached = False
+    elif not output.success:
         logger.debug(
             f"Project {project} will execute stage {stage} again because the previous run was not successful"
         )
-        return False
-    if output.produced_artifact is None:
+        cached = False
+    elif output.produced_artifact is None:
         logger.debug(
             f"Project {project} will execute stage {stage} again because there was no artifact in the previous run"
         )
-        return False
-    if not output.produced_artifact.hash:
+        cached = False
+    elif not output.produced_artifact.hash:
         logger.debug(
             f"Project {project} will execute stage {stage} again because there is no cache key in the previous run"
         )
-        return False
-    if output.produced_artifact.hash != cache_key:
+        cached = False
+    elif output.produced_artifact.hash != cache_key:
         logger.debug(
             f"Project {project} will execute stage {stage} again because its content changed since the previous run"
         )
@@ -122,13 +127,15 @@ def is_output_cached(
             f"Cached content for previous run: {output.produced_artifact.hash}"
         )
         logger.debug(f"Cached content for current run:  {cache_key}")
-        return False
+        cached = False
+    else:
+        logger.debug(
+            f"Project {project} will skip stage {stage} because its content did not change since the previous run"
+        )
+        logger.debug(f"Cached content for current run: {cache_key}")
+        cached = True
 
-    logger.debug(
-        f"Project {project} will skip stage {stage} because its content did not change since the previous run"
-    )
-    logger.debug(f"Cached content for current run: {cache_key}")
-    return True
+    return cached
 
 
 def hashed_changes(files: set[str]) -> str:
@@ -164,8 +171,6 @@ def _to_project_execution(
         for changed_file in changes.files_touched()
     )
 
-    # ptab rewrite this logic to avoid having to compute hashes (expensive) when not necessary
-    #  (e.g. if stage is "Deploy")
     if is_project_modified:
         files_to_hash = set(
             filter(
@@ -195,21 +200,16 @@ def _to_project_execution(
     else:
         return None
 
-    if stage == deploy.STAGE_NAME:
-        cached = False
-    else:
-        cached = is_output_cached(
+    return ProjectExecution(
+        project=project,
+        cache_key=cache_key,
+        cached=is_project_cached_for_stage(
             logger=logger,
             project=project.name,
             stage=stage,
             output=Output.try_read(project.target_path, stage),
             cache_key=cache_key,
-        )
-
-    return ProjectExecution(
-        project=project,
-        cache_key=cache_key,
-        cached=cached,
+        ),
     )
 
 
