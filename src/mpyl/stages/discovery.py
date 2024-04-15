@@ -87,15 +87,51 @@ def is_dependency_touched(
     return False
 
 
-def is_output_cached(output: Optional[Output], cache_key: str) -> bool:
-    if (
-        output is None
-        or not output.success
-        or output.produced_artifact is None
-        or not output.produced_artifact.hash
-    ):
-        return False
-    return output.produced_artifact.hash == cache_key
+def is_project_cached_for_stage(
+    logger: logging.Logger,
+    project: str,
+    stage: str,
+    output: Optional[Output],
+    cache_key: str,
+) -> bool:
+    cached = False
+
+    if stage == deploy.STAGE_NAME:
+        logger.debug(
+            f"Project {project} will execute stage {stage} again because this stage is never cached"
+        )
+    elif output is None:
+        logger.debug(
+            f"Project {project} will execute stage {stage} again because there is no previous run"
+        )
+    elif not output.success:
+        logger.debug(
+            f"Project {project} will execute stage {stage} again because the previous run was not successful"
+        )
+    elif output.produced_artifact is None:
+        logger.debug(
+            f"Project {project} will execute stage {stage} again because there was no artifact in the previous run"
+        )
+    elif not output.produced_artifact.hash:
+        logger.debug(
+            f"Project {project} will execute stage {stage} again because there is no cache key in the previous run"
+        )
+    elif output.produced_artifact.hash != cache_key:
+        logger.debug(
+            f"Project {project} will execute stage {stage} again because its content changed since the previous run"
+        )
+        logger.debug(
+            f"Hash of contents for previous run: {output.produced_artifact.hash}"
+        )
+        logger.debug(f"Hash of contents for current run:  {cache_key}")
+    else:
+        logger.debug(
+            f"Project {project} will skip stage {stage} because its content did not change since the previous run"
+        )
+        logger.debug(f"Hash of contents for current run: {cache_key}")
+        cached = True
+
+    return cached
 
 
 def hashed_changes(files: set[str]) -> str:
@@ -143,25 +179,33 @@ def _to_project_execution(
 
         if len(files_to_hash) == 0:
             cache_key = changeset.sha
+            logger.debug(
+                f"Project {project.name}: using git revision as cache key: {cache_key}"
+            )
         else:
             cache_key = hashed_changes(files=files_to_hash)
+            logger.debug(
+                f"Project {project.name}: using hash of modified files as cache key: {cache_key}"
+            )
+
     elif is_any_dependency_touched:
         cache_key = changeset.sha
+        logger.debug(
+            f"Project {project.name}: using git revision as cache key: {cache_key}"
+        )
     else:
         return None
-
-    if stage == deploy.STAGE_NAME:
-        cached = False
-    else:
-        cached = is_output_cached(
-            output=Output.try_read(project.target_path, stage),
-            cache_key=cache_key,
-        )
 
     return ProjectExecution(
         project=project,
         cache_key=cache_key,
-        cached=cached,
+        cached=is_project_cached_for_stage(
+            logger=logger,
+            project=project.name,
+            stage=stage,
+            output=Output.try_read(project.target_path, stage),
+            cache_key=cache_key,
+        ),
     )
 
 

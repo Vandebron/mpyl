@@ -1,4 +1,5 @@
 """Commands related to build"""
+
 import asyncio
 import pickle
 import shutil
@@ -458,7 +459,7 @@ def jenkins(  # pylint: disable=too-many-arguments, too-many-locals
         pass
 
 
-@build.command(help=f"Clean MPyL metadata in `{BUILD_ARTIFACTS_FOLDER}` folders")
+@build.command(help=f"Clean all MPyL metadata in `{BUILD_ARTIFACTS_FOLDER}` folders")
 @click.option(
     "--filter",
     "-f",
@@ -469,6 +470,11 @@ def jenkins(  # pylint: disable=too-many-arguments, too-many-locals
 )
 @click.pass_obj
 def clean(obj: CliContext, filter_):
+    root_path = Path(BUILD_ARTIFACTS_FOLDER)
+    if root_path.is_dir():
+        shutil.rmtree(root_path)
+        obj.console.print(f"🧹 Cleaned up {root_path}")
+
     found_projects: list[Path] = [
         Path(
             load_project(
