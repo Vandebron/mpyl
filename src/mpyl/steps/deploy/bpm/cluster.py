@@ -15,7 +15,7 @@ def deploy_diagram_to_cluster(logger: Logger, config: CamundaConfig, docker_cont
         if os.path.isdir(bpm_file_path)
         else []
     ):
-        logger.info(file_name)
+        logger.info(f"Deploying diagram: {file_name}")
         relative_file_path = os.path.relpath(
             os.path.join(bpm_file_path, file_name), volume_path
         )

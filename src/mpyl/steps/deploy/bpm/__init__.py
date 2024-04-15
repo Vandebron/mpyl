@@ -54,7 +54,6 @@ def deploy_to_modeler(
             produced_artifact=None,
         )
     except HTTPRequestError as err:
-        logger.info(err)
         return Output(
             success=False,
             message=f"Deploy BPMN diagrams to modeler for project {project_name} have http error {err}",

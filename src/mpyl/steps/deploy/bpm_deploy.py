@@ -22,7 +22,8 @@ class BpmDiagramDeploy(Step):
             ),
             produced_artifact=ArtifactType.NONE,
             required_artifact=ArtifactType.NONE,
-            # TO DO: make an artifcatype with a camunda deployed diagram link
+            # TO DO: create bpm artifact:
+            # https://vandebron.atlassian.net/browse/BPMN-293
         )
 
     def execute(self, step_input: Input) -> Output:
