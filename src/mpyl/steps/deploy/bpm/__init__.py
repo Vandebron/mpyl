@@ -62,7 +62,7 @@ def deploy_to_modeler(
     except ValueError as err:
         return Output(
             success=False,
-            message=f"Project {project_name} have value error: {err}",
+            message=f"Project {project_name} has value error: {err}",
             produced_artifact=None,
         )
 

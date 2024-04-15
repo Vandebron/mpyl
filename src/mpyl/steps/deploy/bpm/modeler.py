@@ -16,7 +16,7 @@ def deploy_diagram_to_modeler(
         if os.path.isdir(bpm_file_path)
         else []
     ):
-        logger.info(file_name)
+        logger.info(f"Updating diagram: {file_name}")
         file_info = get_file_data(file_name, project_id, client)
         file_path = os.path.join(bpm_file_path, file_name)
         update_diagram(file_path, file_info, client)
