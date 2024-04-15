@@ -95,45 +95,41 @@ def is_project_cached_for_stage(
     output: Optional[Output],
     cache_key: str,
 ) -> bool:
+    cached = False
+
     if stage == deploy.STAGE_NAME:
         logger.debug(
             f"Project {project} will execute stage {stage} again because this stage is never cached"
         )
-        cached = False
     elif output is None:
         logger.debug(
             f"Project {project} will execute stage {stage} again because there is no previous run"
         )
-        cached = False
     elif not output.success:
         logger.debug(
             f"Project {project} will execute stage {stage} again because the previous run was not successful"
         )
-        cached = False
     elif output.produced_artifact is None:
         logger.debug(
             f"Project {project} will execute stage {stage} again because there was no artifact in the previous run"
         )
-        cached = False
     elif not output.produced_artifact.hash:
         logger.debug(
             f"Project {project} will execute stage {stage} again because there is no cache key in the previous run"
         )
-        cached = False
     elif output.produced_artifact.hash != cache_key:
         logger.debug(
             f"Project {project} will execute stage {stage} again because its content changed since the previous run"
         )
         logger.debug(
-            f"Cached content for previous run: {output.produced_artifact.hash}"
+            f"Hash of contents for previous run: {output.produced_artifact.hash}"
         )
-        logger.debug(f"Cached content for current run:  {cache_key}")
-        cached = False
+        logger.debug(f"Hash of contents for current run:  {cache_key}")
     else:
         logger.debug(
             f"Project {project} will skip stage {stage} because its content did not change since the previous run"
         )
-        logger.debug(f"Cached content for current run: {cache_key}")
+        logger.debug(f"Hash of contents for current run: {cache_key}")
         cached = True
 
     return cached
