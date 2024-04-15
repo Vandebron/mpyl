@@ -80,11 +80,11 @@ def construct_run_properties(
 
 
 def _create_run_plan(
-    all_projects: set[Project],
     cli_parameters: MpylCliParameters,
+    all_projects: set[Project],
+    all_stages: list[Stage],
     explain_run_plan: bool,
     repo: Repository,
-    all_stages: list[Stage],
     tag: Optional[str] = None,
     sequential: Optional[bool] = False,
 ):
