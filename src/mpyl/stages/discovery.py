@@ -37,7 +37,7 @@ def file_belongs_to_project(
     return startswith
 
 
-def is_dependency_touched(
+def is_dependency_modified(
     logger: logging.Logger,
     project: Project,
     stage: str,
@@ -152,19 +152,19 @@ def _to_project_execution(
     logger: logging.Logger,
     project: Project,
     stage: str,
-    changes: Changeset,
+    changeset: Changeset,
     steps: Optional[StepsCollection],
 ) -> Optional[ProjectExecution]:
     if project.stages.for_stage(stage) is None:
         return None
 
-    is_any_dependency_touched = any(
-        is_dependency_touched(logger, project, stage, changed_file, steps)
-        for changed_file in changes.files_touched()
+    is_any_dependency_modified = any(
+        is_dependency_modified(logger, project, stage, changed_file, steps)
+        for changed_file in changeset.files_touched()
     )
     is_project_modified = any(
         file_belongs_to_project(logger, project, changed_file)
-        for changed_file in changes.files_touched()
+        for changed_file in changeset.files_touched()
     )
 
     if is_project_modified:
@@ -173,12 +173,12 @@ def _to_project_execution(
                 lambda changed_file: file_belongs_to_project(
                     logger, project, changed_file
                 ),
-                changes.files_touched(status={"A", "M", "R"}),
+                changeset.files_touched(status={"A", "M", "R"}),
             )
         )
 
         if len(files_to_hash) == 0:
-            cache_key = changes.sha
+            cache_key = changeset.sha
             logger.debug(
                 f"Project {project.name}: using git revision as cache key: {cache_key}"
             )
@@ -188,8 +188,8 @@ def _to_project_execution(
                 f"Project {project.name}: using hash of modified files as cache key: {cache_key}"
             )
 
-    elif is_any_dependency_touched:
-        cache_key = changes.sha
+    elif is_any_dependency_modified:
+        cache_key = changeset.sha
         logger.debug(
             f"Project {project.name}: using git revision as cache key: {cache_key}"
         )
@@ -209,17 +209,17 @@ def _to_project_execution(
     )
 
 
-def build_project_executions(
+def find_projects_to_execute(
     logger: logging.Logger,
     all_projects: set[Project],
     stage: str,
-    changes: Changeset,
+    changeset: Changeset,
     steps: Optional[StepsCollection],
 ) -> set[ProjectExecution]:
     maybe_execution_projects = set(
         map(
             lambda project: _to_project_execution(
-                logger, project, stage, changes, steps
+                logger, project, stage, changeset, steps
             ),
             all_projects,
         )
@@ -231,11 +231,11 @@ def build_project_executions(
     }
 
 
-def find_build_set(  # pylint: disable=too-many-arguments, too-many-locals
+def create_run_plan(  # pylint: disable=too-many-arguments, too-many-locals
     logger: logging.Logger,
     repository: Repository,
     all_projects: set[Project],
-    stages: list[Stage],
+    all_stages: list[Stage],
     build_all: bool,
     local: bool,
     tag: Optional[str] = None,
@@ -246,26 +246,26 @@ def find_build_set(  # pylint: disable=too-many-arguments, too-many-locals
     if selected_projects:
         projects_list = selected_projects.split(",")
 
-    build_set: dict[Stage, set[ProjectExecution]] = {}
+    run_plan: dict[Stage, set[ProjectExecution]] = {}
 
-    build_set_file = Path(BUILD_ARTIFACTS_FOLDER) / "build_plan"
+    run_plan_file = Path(BUILD_ARTIFACTS_FOLDER) / "build_plan"
     if sequential and not build_all and not selected_projects:
-        if not build_set_file.is_file():
+        if not run_plan_file.is_file():
             logger.warning(
-                f"Sequential flag is passed, but no previous build set found: {build_set_file}"
+                f"Sequential flag is passed, but no previous run plan found: {run_plan_file}"
             )
         else:
-            logger.info(f"Loading cached build set: {build_set_file}")
-            return _get_cached_build_set(
-                build_set_file=build_set_file, selected_stage=selected_stage
+            logger.info(f"Loading existing run plan: {run_plan_file}")
+            return _load_existing_run_plan(
+                run_plan_file=run_plan_file, selected_stage=selected_stage
             )
 
-    elif build_set_file.is_file():
-        logger.info(f"Deleting previous build set: {build_set_file}")
-        build_set_file.unlink()
+    elif run_plan_file.is_file():
+        logger.info(f"Deleting previous run plan file: {run_plan_file}")
+        run_plan_file.unlink()
 
-    logger.info("Discovering build set...")
-    for stage in stages:
+    logger.info("Discovering run plan...")
+    for stage in all_stages:
         if selected_stage and selected_stage != stage.name:
             continue
 
@@ -284,22 +284,22 @@ def find_build_set(  # pylint: disable=too-many-arguments, too-many-locals
                 else []
             )
 
-            project_executions = build_project_executions(
+            project_executions = find_projects_to_execute(
                 logger, all_projects, stage.name, changes_in_branch, steps
             )
             logger.debug(
                 f"Invalidated projects for stage {stage.name}: {[p.name for p in project_executions]}"
             )
 
-        build_set.update({stage: project_executions})
+        run_plan.update({stage: project_executions})
 
     if not selected_stage and not build_all and not selected_projects:
-        os.makedirs(os.path.dirname(build_set_file), exist_ok=True)
-        with open(build_set_file, "wb") as file:
-            logger.info(f"Storing build set in: {build_set_file}")
-            pickle.dump(build_set, file, pickle.HIGHEST_PROTOCOL)
+        os.makedirs(os.path.dirname(run_plan_file), exist_ok=True)
+        with open(run_plan_file, "wb") as file:
+            logger.info(f"Storing run plan in: {run_plan_file}")
+            pickle.dump(run_plan, file, pickle.HIGHEST_PROTOCOL)
 
-    return build_set
+    return run_plan
 
 
 def for_stage(projects: set[Project], stage: Stage) -> set[Project]:
@@ -315,15 +315,15 @@ def _get_changes(repo: Repository, local: bool, tag: Optional[str] = None):
     return repo.changes_in_branch()
 
 
-def _get_cached_build_set(
-    build_set_file: Path, selected_stage: Optional[str]
+def _load_existing_run_plan(
+    run_plan_file: Path, selected_stage: Optional[str]
 ) -> dict[Stage, set[ProjectExecution]]:
-    with open(build_set_file, "rb") as file:
-        full_build_set: dict[Stage, set[ProjectExecution]] = pickle.load(file)
+    with open(run_plan_file, "rb") as file:
+        full_run_plan: dict[Stage, set[ProjectExecution]] = pickle.load(file)
         if selected_stage:
             return {
                 stage: project_executions
-                for stage, project_executions in full_build_set.items()
+                for stage, project_executions in full_run_plan.items()
                 if stage.name == selected_stage
             }
-        return full_build_set
+        return full_run_plan
