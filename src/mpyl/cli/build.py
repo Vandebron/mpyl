@@ -40,6 +40,7 @@ from ..constants import (
     BUILD_ARTIFACTS_FOLDER,
 )
 from ..project import load_project, Target
+from ..run_plan import RunPlan
 from ..steps.deploy.k8s.deploy_config import DeployConfig
 from ..steps.models import RunProperties
 from ..steps.run import RunResult
@@ -97,7 +98,7 @@ def build(ctx, config, properties, verbose):
     console_config = construct_run_properties(
         properties=parsed_properties,
         config=parsed_config,
-        run_plan={},
+        run_plan=RunPlan.empty(),
         all_projects=set(),
     ).console
     console = create_console_logger(
@@ -517,7 +518,7 @@ def pull(obj: CliContext, tag: str, pr: int, path: Path):
     run_properties = construct_run_properties(
         config=obj.config,
         properties=obj.run_properties,
-        run_plan={},
+        run_plan=RunPlan.empty(),
         all_projects=set(),
     )
     target_branch = __get_target_branch(run_properties, tag, pr)
@@ -565,7 +566,7 @@ def push(
     run_properties = construct_run_properties(
         config=obj.config,
         properties=obj.run_properties,
-        run_plan={},
+        run_plan=RunPlan.empty(),
         all_projects=set(),
     )
     target_branch = __get_target_branch(run_properties, tag, pr)

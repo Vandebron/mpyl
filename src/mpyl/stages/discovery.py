@@ -14,6 +14,7 @@ from ..constants import BUILD_ARTIFACTS_FOLDER
 from ..project import Project
 from ..project import Stage
 from ..project_execution import ProjectExecution
+from ..run_plan import RunPlan
 from ..steps import deploy
 from ..steps.collection import StepsCollection
 from ..steps.models import Output, ArtifactType
@@ -242,11 +243,11 @@ def create_run_plan(  # pylint: disable=too-many-arguments, too-many-locals
     selected_stage: Optional[str] = None,
     selected_projects: Optional[str] = None,
     sequential: Optional[bool] = False,
-) -> dict[Stage, set[ProjectExecution]]:
+) -> RunPlan:
     if selected_projects:
         projects_list = selected_projects.split(",")
 
-    run_plan: dict[Stage, set[ProjectExecution]] = {}
+    run_plan: RunPlan = RunPlan.empty()
 
     run_plan_file = Path(BUILD_ARTIFACTS_FOLDER) / "build_plan"
     if sequential and not build_all and not selected_projects:
@@ -291,7 +292,7 @@ def create_run_plan(  # pylint: disable=too-many-arguments, too-many-locals
                 f"Invalidated projects for stage {stage.name}: {[p.name for p in project_executions]}"
             )
 
-        run_plan.update({stage: project_executions})
+        run_plan.add_stage(stage, project_executions)
 
     if not selected_stage and not build_all and not selected_projects:
         os.makedirs(os.path.dirname(run_plan_file), exist_ok=True)
@@ -317,13 +318,15 @@ def _get_changes(repo: Repository, local: bool, tag: Optional[str] = None):
 
 def _load_existing_run_plan(
     run_plan_file: Path, selected_stage: Optional[str]
-) -> dict[Stage, set[ProjectExecution]]:
+) -> RunPlan:
     with open(run_plan_file, "rb") as file:
-        full_run_plan: dict[Stage, set[ProjectExecution]] = pickle.load(file)
+        full_run_plan: RunPlan = pickle.load(file)
         if selected_stage:
-            return {
-                stage: project_executions
-                for stage, project_executions in full_run_plan.items()
-                if stage.name == selected_stage
-            }
+            return RunPlan(
+                {
+                    stage: project_executions
+                    for stage, project_executions in full_run_plan.items()
+                    if stage.name == selected_stage
+                }
+            )
         return full_run_plan

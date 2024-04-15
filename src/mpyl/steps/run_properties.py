@@ -6,7 +6,7 @@ from typing import Optional
 
 from ..cli import MpylCliParameters
 from ..project import load_project, Stage, Project
-from ..project_execution import ProjectExecution
+from ..run_plan import RunPlan
 from ..stages.discovery import create_run_plan
 from ..steps.models import RunProperties
 from ..utilities.repo import Repository, RepoConfig
@@ -16,7 +16,7 @@ def construct_run_properties(
     config: dict,
     properties: dict,
     cli_parameters: MpylCliParameters = MpylCliParameters(),
-    run_plan: Optional[dict[Stage, set[ProjectExecution]]] = None,
+    run_plan: Optional[RunPlan] = None,
     all_projects: Optional[set[Project]] = None,
     root_dir: Path = Path(""),
     explain_run_plan: bool = False,
