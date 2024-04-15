@@ -49,11 +49,11 @@ def construct_run_properties(
                 if explain_run_plan:
                     run_plan_logger.setLevel("DEBUG")
                 run_plan = _create_run_plan(
-                    all_projects=all_projects,
                     cli_parameters=cli_parameters,
+                    all_projects=all_projects,
+                    all_stages=stages,
                     explain_run_plan=explain_run_plan,
                     repo=repo,
-                    stages=stages,
                     tag=tag,
                     sequential=sequential,
                 )
@@ -84,7 +84,7 @@ def _create_run_plan(
     cli_parameters: MpylCliParameters,
     explain_run_plan: bool,
     repo: Repository,
-    stages: list[Stage],
+    all_stages: list[Stage],
     tag: Optional[str] = None,
     sequential: Optional[bool] = False,
 ):
@@ -96,7 +96,7 @@ def _create_run_plan(
         logger=run_plan_logger,
         repository=repo,
         all_projects=all_projects,
-        all_stages=stages,
+        all_stages=all_stages,
         tag=tag,
         local=cli_parameters.local,
         build_all=cli_parameters.all,
