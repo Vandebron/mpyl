@@ -38,7 +38,7 @@ def print_status(
     console = obj.console
 
     def write_run_plan_as_json():
-        """Write the run plan as a simple JSON file to be used by gha"""
+        """Write the run plan as a simple JSON file to be used by Github Actions"""
         simple_run_plan: dict[str, list[dict[str, Union[str, bool]]]] = dict(
             {
                 stage.name: [
@@ -140,7 +140,7 @@ def run_mpyl(
             logger.info("Nothing to do. Exiting..")
             return run_result
 
-        logger.info("Build plan:")
+        logger.info("Run plan:")
         console.print(Markdown(f"\n\n{run_result_to_markdown(run_result)}"))
 
         if reporter:

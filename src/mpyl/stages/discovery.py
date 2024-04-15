@@ -266,7 +266,7 @@ def create_run_plan(
 ) -> RunPlan:
     run_plan_file = Path(BUILD_ARTIFACTS_FOLDER) / "build_plan"
 
-    existing_run_plan = _load_cached_run_plan(logger, run_plan_file)
+    existing_run_plan = _load_existing_run_plan(logger, run_plan_file)
     if existing_run_plan:
         return _filter_existing_run_plan(
             run_plan=existing_run_plan,
@@ -370,12 +370,12 @@ def _get_changes(repo: Repository, local: bool, tag: Optional[str] = None):
     return repo.changes_in_branch()
 
 
-def _load_cached_run_plan(
+def _load_existing_run_plan(
     logger: logging.Logger,
     run_plan_file: Path,
 ) -> Optional[RunPlan]:
     if run_plan_file.is_file():
-        logger.info(f"Loading cached run plan: {run_plan_file}")
+        logger.info(f"Loading existing run plan: {run_plan_file}")
         with open(run_plan_file, "rb") as file:
             return pickle.load(file)
     return None

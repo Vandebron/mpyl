@@ -149,7 +149,7 @@ class CustomValidation(click.Command):
     is_flag=True,
     default=False,
     required=False,
-    help="Combine results with previous run(s) and load cached run plan",
+    help="Combine results with previous run(s) and load existing run plan",
 )
 @click.option(
     "--projects",
