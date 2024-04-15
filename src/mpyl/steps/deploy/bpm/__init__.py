@@ -36,7 +36,7 @@ def deploy_to_cluster(
 def deploy_to_modeler(
     logger: Logger, project_name: str, config: CamundaConfig
 ) -> Output:
-    credentials = config.modeler_credentials.__dict__
+    credentials = config.modeler_credentials.to_dict()
     camunda_client = CamundaModelerClient(
         config.modeler_api.base_url,
         config.modeler_api.token_url,

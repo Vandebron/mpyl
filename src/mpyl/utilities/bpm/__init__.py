@@ -34,6 +34,14 @@ class CamundaModelerCredentials:
             audience=str(credentials.get("audience")),
         )
 
+    def to_dict(self):
+        return {
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
+            "grant_type": self.grant_type,
+            "audience": self.audience,
+        }
+
 
 @dataclass(frozen=True)
 class CamundaZeebeCredentials:
