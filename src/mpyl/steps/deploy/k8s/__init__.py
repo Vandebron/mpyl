@@ -1,4 +1,5 @@
 """Kubernetes deployment related helper methods"""
+
 import datetime
 import os
 from dataclasses import dataclass
@@ -103,9 +104,19 @@ def upsert_namespace(
     namespaces = api.list_namespace(field_selector=f"metadata.name={namespace}")
 
     if len(namespaces.items) == 0 and not dry_run:
-        api.create_namespace(
-            client.V1Namespace(api_version="v1", kind="Namespace", metadata=meta_data)
-        )
+        try:
+            api.create_namespace(
+                client.V1Namespace(
+                    api_version="v1", kind="Namespace", metadata=meta_data
+                )
+            )
+        except ApiException as error:
+            # when concurrently deploying multiple services of the same PR, we can sometimes still try to create a
+            # namespace that already exists. if that happens, ignore the error
+            if error.status == 409:
+                logger.info(f"Found namespace {namespace}")
+            else:
+                raise error
     else:
         logger.info(f"Found namespace {namespace}")
 
