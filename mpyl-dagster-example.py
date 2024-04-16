@@ -25,7 +25,9 @@ ROOT_PATH = "./"
 
 def execute_step(proj: Project, stage: str, dry_run: bool = True) -> StepResult:
     config = parse_config(Path(f"{ROOT_PATH}mpyl_config.yml"))
-    run_properties = construct_run_properties(config=config, properties={}, run_plan={})
+    run_properties = construct_run_properties(
+        config=config, properties={}, run_plan=RunPlan.empty()
+    )
     dagster_logger = get_dagster_logger()
     executor = Steps(dagster_logger, run_properties)
     step_result = executor.execute(stage, proj, dry_run)

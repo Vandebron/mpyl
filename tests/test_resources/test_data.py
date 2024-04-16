@@ -11,6 +11,7 @@ from src.mpyl.constants import (
 )
 from src.mpyl.project import load_project, Target, Project, Stages, Stage
 from src.mpyl.project_execution import ProjectExecution
+from src.mpyl.run_plan import RunPlan
 from src.mpyl.steps.models import (
     RunProperties,
     Output,
@@ -30,7 +31,7 @@ properties_values = parse_config(resource_path / DEFAULT_RUN_PROPERTIES_FILE_NAM
 RUN_PROPERTIES = construct_run_properties(
     config=config_values,
     properties=properties_values,
-    run_plan={},
+    run_plan=RunPlan.empty(),
     all_projects=set(),
     root_dir=resource_path,
 )
@@ -99,7 +100,7 @@ def safe_load_project(name: str) -> Project:
     return load_project(resource_path, Path(name), True, False, True)
 
 
-def run_properties_with_plan(plan: dict[Stage, set[ProjectExecution]]) -> RunProperties:
+def run_properties_with_plan(plan: RunPlan) -> RunProperties:
     run_properties = construct_run_properties(
         config=config_values,
         properties=properties_values,
@@ -111,7 +112,9 @@ def run_properties_with_plan(plan: dict[Stage, set[ProjectExecution]]) -> RunPro
 
 
 def run_properties_prod_with_plan() -> RunProperties:
-    plan = {TestStage.deploy(): {ProjectExecution.always_run(get_minimal_project())}}
+    plan = RunPlan(
+        {TestStage.deploy(): {ProjectExecution.always_run(get_minimal_project())}}
+    )
     run_properties_prod = construct_run_properties(
         config=config_values,
         properties=properties_values,
