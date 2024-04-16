@@ -80,7 +80,11 @@ class TestMarkdownReporting:
                         revision="revision",
                         producing_step="Jest",
                         spec=JunitTestSpec(
-                            str(self.test_resource_path), "http://localhost/tests"
+                            test_output_path=str(self.test_resource_path),
+                            test_results_url="http://localhost/tests",
+                            test_results_summary=TestRunSummary(
+                                tests=99, failures=1, errors=0, skipped=0
+                            ),
                         ),
                     ),
                 ),
@@ -99,7 +103,11 @@ class TestMarkdownReporting:
                         revision="revision",
                         producing_step="Cypress",
                         spec=JunitTestSpec(
-                            str(self.test_resource_path), "https://cypress.io"
+                            test_output_path=str(self.test_resource_path),
+                            test_results_url="https://cypress.io",
+                            test_results_summary=TestRunSummary(
+                                tests=3, failures=1, errors=0, skipped=0
+                            ),
                         ),
                     ),
                 ),

@@ -100,8 +100,7 @@ class TestDocker(Step):
                 push_to_registry(self._logger, docker_registry, tag)
 
             spec = cast(JunitTestSpec, artifact.spec)
-            suite = to_test_suites(spec)
-            summary = sum_suites(suite)
+            summary = sum_suites(to_test_suites(spec))
             spec.test_results_summary = summary
 
             output = Output(

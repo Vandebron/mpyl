@@ -132,7 +132,11 @@ def _collect_test_specs(step_results: list[StepResult]) -> dict[str, JunitTestSp
 def _collect_test_results(
     test_artifacts: dict[str, JunitTestSpec]
 ) -> dict[str, TestRunSummary]:
-    return {k: v.test_results_summary for k, v in test_artifacts.items()}
+    return {
+        k: v.test_results_summary
+        for k, v in test_artifacts.items()
+        if v.test_results_summary
+    }
 
 
 def _collect_unique_test_artifacts_with_url(
