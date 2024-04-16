@@ -1,4 +1,5 @@
 """Class that handles remote caching of build artifacts"""
+
 import abc
 import os
 import shutil
@@ -10,7 +11,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Optional
 
-from git import GitCommandError
+from git.exc import GitCommandError
 from github import Github
 
 from ..cli.commands.build.jenkins import get_token

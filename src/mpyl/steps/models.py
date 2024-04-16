@@ -1,4 +1,5 @@
 """ Model representation of run-specific configuration. """
+
 import pkgutil
 from dataclasses import dataclass
 from enum import Enum
@@ -10,6 +11,7 @@ from ruamel.yaml import YAML, yaml_object  # type: ignore
 from . import deploy
 from ..project import Project, Stage, Target
 from ..project_execution import ProjectExecution
+from ..run_plan import RunPlan
 from ..validation import validate
 
 yaml = YAML()
@@ -96,13 +98,13 @@ class RunProperties:
     """All stage definitions"""
     projects: set[Project]
     """All projects"""
-    run_plan: dict[Stage, set[ProjectExecution]]
+    run_plan: RunPlan
     """Stages and projects for this run"""
 
     @staticmethod
     def for_local_run(
         config: dict,
-        run_plan: dict[Stage, set[ProjectExecution]],
+        run_plan: RunPlan,
         revision: str,
         branch: Optional[str],
         stages: list[Stage],
@@ -124,7 +126,7 @@ class RunProperties:
     def from_configuration(
         run_properties: dict,
         config: dict,
-        run_plan: dict[Stage, set[ProjectExecution]],
+        run_plan: RunPlan,
         all_projects: set[Project],
         cli_tag: Optional[str] = None,
         root_dir: Path = Path("."),

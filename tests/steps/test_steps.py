@@ -11,6 +11,7 @@ from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME, BUILD_ARTIFACTS_FOLDER
 from src.mpyl.project import Project, Stages, Target, Dependencies
 from src.mpyl.project_execution import ProjectExecution
 from src.mpyl.projects.versioning import yaml_to_string
+from src.mpyl.run_plan import RunPlan
 from src.mpyl.steps import build, postdeploy
 from src.mpyl.steps.collection import StepsCollection
 from src.mpyl.steps.deploy.k8s import RenderedHelmChartSpec
@@ -152,7 +153,7 @@ class TestSteps:
             console=ConsoleProperties("INFO", False, 130),
             stages=[],
             projects=set(),
-            run_plan={},
+            run_plan=RunPlan.empty(),
         )
         with pytest.raises(ValidationError) as excinfo:
             Steps(

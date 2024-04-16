@@ -1,4 +1,5 @@
 """Commands related to build"""
+
 import asyncio
 import pickle
 import shutil
@@ -41,6 +42,7 @@ from ..constants import (
     RUN_RESULT_FILE_GLOB,
 )
 from ..project import load_project, Target
+from ..run_plan import RunPlan
 from ..steps.deploy.k8s.deploy_config import DeployConfig
 from ..steps.models import RunProperties
 from ..steps.run_properties import construct_run_properties
@@ -97,7 +99,7 @@ def build(ctx, config, properties, verbose):
     console_config = construct_run_properties(
         properties=parsed_properties,
         config=parsed_config,
-        run_plan={},
+        run_plan=RunPlan.empty(),
         all_projects=set(),
     ).console
     console = create_console_logger(
@@ -148,7 +150,7 @@ class CustomValidation(click.Command):
     is_flag=True,
     default=False,
     required=False,
-    help="Combine results with previous run(s) and load cached build set",
+    help="Combine results with previous run(s) and load existing run plan",
 )
 @click.option(
     "--projects",
@@ -454,7 +456,7 @@ def jenkins(  # pylint: disable=too-many-arguments, too-many-locals
         pass
 
 
-@build.command(help=f"Clean MPyL metadata in `{BUILD_ARTIFACTS_FOLDER}` folders")
+@build.command(help=f"Clean all MPyL metadata in `{BUILD_ARTIFACTS_FOLDER}` folders")
 @click.option(
     "--filter",
     "-f",
@@ -465,6 +467,11 @@ def jenkins(  # pylint: disable=too-many-arguments, too-many-locals
 )
 @click.pass_obj
 def clean(obj: CliContext, filter_):
+    root_path = Path(BUILD_ARTIFACTS_FOLDER)
+    if root_path.is_dir():
+        shutil.rmtree(root_path)
+        obj.console.print(f"🧹 Cleaned up {root_path}")
+
     found_projects: list[Path] = [
         Path(
             load_project(
@@ -507,7 +514,7 @@ def pull(obj: CliContext, tag: str, pr: int, path: Path):
     run_properties = construct_run_properties(
         config=obj.config,
         properties=obj.run_properties,
-        run_plan={},
+        run_plan=RunPlan.empty(),
         all_projects=set(),
     )
     target_branch = __get_target_branch(run_properties, tag, pr)
@@ -555,7 +562,7 @@ def push(
     run_properties = construct_run_properties(
         config=obj.config,
         properties=obj.run_properties,
-        run_plan={},
+        run_plan=RunPlan.empty(),
         all_projects=set(),
     )
     target_branch = __get_target_branch(run_properties, tag, pr)

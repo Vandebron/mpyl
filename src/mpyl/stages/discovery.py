@@ -14,6 +14,7 @@ from ..constants import BUILD_ARTIFACTS_FOLDER
 from ..project import Project
 from ..project import Stage
 from ..project_execution import ProjectExecution
+from ..run_plan import RunPlan
 from ..steps import deploy
 from ..steps.collection import StepsCollection
 from ..steps.models import Output, ArtifactType
@@ -37,7 +38,7 @@ def file_belongs_to_project(
     return startswith
 
 
-def is_dependency_touched(
+def is_dependency_modified(
     logger: logging.Logger,
     project: Project,
     stage: str,
@@ -87,15 +88,51 @@ def is_dependency_touched(
     return False
 
 
-def is_output_cached(output: Optional[Output], cache_key: str) -> bool:
-    if (
-        output is None
-        or not output.success
-        or output.produced_artifact is None
-        or not output.produced_artifact.hash
-    ):
-        return False
-    return output.produced_artifact.hash == cache_key
+def is_project_cached_for_stage(
+    logger: logging.Logger,
+    project: str,
+    stage: str,
+    output: Optional[Output],
+    cache_key: str,
+) -> bool:
+    cached = False
+
+    if stage == deploy.STAGE_NAME:
+        logger.debug(
+            f"Project {project} will execute stage {stage} again because this stage is never cached"
+        )
+    elif output is None:
+        logger.debug(
+            f"Project {project} will execute stage {stage} again because there is no previous run"
+        )
+    elif not output.success:
+        logger.debug(
+            f"Project {project} will execute stage {stage} again because the previous run was not successful"
+        )
+    elif output.produced_artifact is None:
+        logger.debug(
+            f"Project {project} will execute stage {stage} again because there was no artifact in the previous run"
+        )
+    elif not output.produced_artifact.hash:
+        logger.debug(
+            f"Project {project} will execute stage {stage} again because there is no cache key in the previous run"
+        )
+    elif output.produced_artifact.hash != cache_key:
+        logger.debug(
+            f"Project {project} will execute stage {stage} again because its content changed since the previous run"
+        )
+        logger.debug(
+            f"Hash of contents for previous run: {output.produced_artifact.hash}"
+        )
+        logger.debug(f"Hash of contents for current run:  {cache_key}")
+    else:
+        logger.debug(
+            f"Project {project} will skip stage {stage} because its content did not change since the previous run"
+        )
+        logger.debug(f"Hash of contents for current run: {cache_key}")
+        cached = True
+
+    return cached
 
 
 def hashed_changes(files: set[str]) -> str:
@@ -116,19 +153,19 @@ def _to_project_execution(
     logger: logging.Logger,
     project: Project,
     stage: str,
-    changes: Changeset,
+    changeset: Changeset,
     steps: Optional[StepsCollection],
 ) -> Optional[ProjectExecution]:
     if project.stages.for_stage(stage) is None:
         return None
 
-    is_any_dependency_touched = any(
-        is_dependency_touched(logger, project, stage, changed_file, steps)
-        for changed_file in changes.files_touched()
+    is_any_dependency_modified = any(
+        is_dependency_modified(logger, project, stage, changed_file, steps)
+        for changed_file in changeset.files_touched()
     )
     is_project_modified = any(
         file_belongs_to_project(logger, project, changed_file)
-        for changed_file in changes.files_touched()
+        for changed_file in changeset.files_touched()
     )
 
     if is_project_modified:
@@ -137,45 +174,53 @@ def _to_project_execution(
                 lambda changed_file: file_belongs_to_project(
                     logger, project, changed_file
                 ),
-                changes.files_touched(status={"A", "M", "R"}),
+                changeset.files_touched(status={"A", "M", "R"}),
             )
         )
 
         if len(files_to_hash) == 0:
-            cache_key = changes.sha
+            cache_key = changeset.sha
+            logger.debug(
+                f"Project {project.name}: using git revision as cache key: {cache_key}"
+            )
         else:
             cache_key = hashed_changes(files=files_to_hash)
-    elif is_any_dependency_touched:
-        cache_key = changes.sha
+            logger.debug(
+                f"Project {project.name}: using hash of modified files as cache key: {cache_key}"
+            )
+
+    elif is_any_dependency_modified:
+        cache_key = changeset.sha
+        logger.debug(
+            f"Project {project.name}: using git revision as cache key: {cache_key}"
+        )
     else:
         return None
-
-    if stage == deploy.STAGE_NAME:
-        cached = False
-    else:
-        cached = is_output_cached(
-            output=Output.try_read(project.target_path, stage),
-            cache_key=cache_key,
-        )
 
     return ProjectExecution(
         project=project,
         cache_key=cache_key,
-        cached=cached,
+        cached=is_project_cached_for_stage(
+            logger=logger,
+            project=project.name,
+            stage=stage,
+            output=Output.try_read(project.target_path, stage),
+            cache_key=cache_key,
+        ),
     )
 
 
-def build_project_executions(
+def find_projects_to_execute(
     logger: logging.Logger,
     all_projects: set[Project],
     stage: str,
-    changes: Changeset,
+    changeset: Changeset,
     steps: Optional[StepsCollection],
 ) -> set[ProjectExecution]:
     maybe_execution_projects = set(
         map(
             lambda project: _to_project_execution(
-                logger, project, stage, changes, steps
+                logger, project, stage, changeset, steps
             ),
             all_projects,
         )
@@ -187,41 +232,41 @@ def build_project_executions(
     }
 
 
-def find_build_set(  # pylint: disable=too-many-arguments, too-many-locals
+def create_run_plan(  # pylint: disable=too-many-arguments, too-many-locals
     logger: logging.Logger,
     repository: Repository,
     all_projects: set[Project],
-    stages: list[Stage],
+    all_stages: list[Stage],
     build_all: bool,
     local: bool,
     tag: Optional[str] = None,
     selected_stage: Optional[str] = None,
     selected_projects: Optional[str] = None,
     sequential: Optional[bool] = False,
-) -> dict[Stage, set[ProjectExecution]]:
+) -> RunPlan:
     if selected_projects:
         projects_list = selected_projects.split(",")
 
-    build_set: dict[Stage, set[ProjectExecution]] = {}
+    run_plan: RunPlan = RunPlan.empty()
 
-    build_set_file = Path(BUILD_ARTIFACTS_FOLDER) / "build_plan.pickle"
+    run_plan_file = Path(BUILD_ARTIFACTS_FOLDER) / "build_plan.pickle"
     if sequential and not build_all and not selected_projects:
-        if not build_set_file.is_file():
+        if not run_plan_file.is_file():
             logger.warning(
-                f"Sequential flag is passed, but no previous build set found: {build_set_file}"
+                f"Sequential flag is passed, but no previous run plan found: {run_plan_file}"
             )
         else:
-            logger.info(f"Loading cached build set: {build_set_file}")
-            return _get_cached_build_set(
-                build_set_file=build_set_file, selected_stage=selected_stage
+            logger.info(f"Loading existing run plan: {run_plan_file}")
+            return _load_existing_run_plan(
+                run_plan_file=run_plan_file, selected_stage=selected_stage
             )
 
-    elif build_set_file.is_file():
-        logger.info(f"Deleting previous build set: {build_set_file}")
-        build_set_file.unlink()
+    elif run_plan_file.is_file():
+        logger.info(f"Deleting previous run plan file: {run_plan_file}")
+        run_plan_file.unlink()
 
-    logger.info("Discovering build set...")
-    for stage in stages:
+    logger.info("Discovering run plan...")
+    for stage in all_stages:
         if selected_stage and selected_stage != stage.name:
             continue
 
@@ -240,22 +285,22 @@ def find_build_set(  # pylint: disable=too-many-arguments, too-many-locals
                 else []
             )
 
-            project_executions = build_project_executions(
+            project_executions = find_projects_to_execute(
                 logger, all_projects, stage.name, changes_in_branch, steps
             )
             logger.debug(
                 f"Invalidated projects for stage {stage.name}: {[p.name for p in project_executions]}"
             )
 
-        build_set.update({stage: project_executions})
+        run_plan.add_stage(stage, project_executions)
 
     if not selected_stage and not build_all and not selected_projects:
-        os.makedirs(os.path.dirname(build_set_file), exist_ok=True)
-        with open(build_set_file, "wb") as file:
-            logger.info(f"Storing build set in: {build_set_file}")
-            pickle.dump(build_set, file, pickle.HIGHEST_PROTOCOL)
+        os.makedirs(os.path.dirname(run_plan_file), exist_ok=True)
+        with open(run_plan_file, "wb") as file:
+            logger.info(f"Storing run plan in: {run_plan_file}")
+            pickle.dump(run_plan, file, pickle.HIGHEST_PROTOCOL)
 
-    return build_set
+    return run_plan
 
 
 def for_stage(projects: set[Project], stage: Stage) -> set[Project]:
@@ -271,15 +316,17 @@ def _get_changes(repo: Repository, local: bool, tag: Optional[str] = None):
     return repo.changes_in_branch()
 
 
-def _get_cached_build_set(
-    build_set_file: Path, selected_stage: Optional[str]
-) -> dict[Stage, set[ProjectExecution]]:
-    with open(build_set_file, "rb") as file:
-        full_build_set: dict[Stage, set[ProjectExecution]] = pickle.load(file)
+def _load_existing_run_plan(
+    run_plan_file: Path, selected_stage: Optional[str]
+) -> RunPlan:
+    with open(run_plan_file, "rb") as file:
+        full_run_plan: RunPlan = pickle.load(file)
         if selected_stage:
-            return {
-                stage: project_executions
-                for stage, project_executions in full_build_set.items()
-                if stage.name == selected_stage
-            }
-        return full_build_set
+            return RunPlan(
+                {
+                    stage: project_executions
+                    for stage, project_executions in full_run_plan.items()
+                    if stage.name == selected_stage
+                }
+            )
+        return full_run_plan

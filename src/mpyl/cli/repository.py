@@ -1,4 +1,5 @@
 """Commands related to the VCS (git) repository"""
+
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -11,6 +12,7 @@ from . import (
     create_console_logger,
 )
 from ..constants import DEFAULT_CONFIG_FILE_NAME, DEFAULT_RUN_PROPERTIES_FILE_NAME
+from ..run_plan import RunPlan
 from ..steps.run_properties import construct_run_properties
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
@@ -62,7 +64,7 @@ def status(obj: RepoContext):
     run_properties = construct_run_properties(
         config=config,
         properties=parse_config(obj.run_properties),
-        run_plan={},
+        run_plan=RunPlan.empty(),
         all_projects=set(),
     )
     versioning = run_properties.versioning
@@ -160,10 +162,12 @@ def init(obj: RepoContext, url: str, pull: int, branch: str, pristine: bool):
 
     console.log("Preparing repository for a new run...")
 
-    with Repository.from_shallow_diff_clone(
-        branch.replace("refs/heads/", ""), url, "main", obj.config, Path(".")
-    ) if pristine else Repository(
-        config=RepoConfig.from_config(parse_config(obj.config))
+    with (
+        Repository.from_shallow_diff_clone(
+            branch.replace("refs/heads/", ""), url, "main", obj.config, Path(".")
+        )
+        if pristine
+        else Repository(config=RepoConfig.from_config(parse_config(obj.config)))
     ) as repo:
         config = parse_config(obj.config)
         if not repo.remote_url:
@@ -178,7 +182,7 @@ def init(obj: RepoContext, url: str, pull: int, branch: str, pristine: bool):
         properties = construct_run_properties(
             config=config,
             properties=parse_config(obj.run_properties),
-            run_plan={},
+            run_plan=RunPlan.empty(),
             all_projects=set(),
         )
         pr_number = pull or properties.versioning.pr_number
