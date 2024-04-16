@@ -7,9 +7,9 @@ from ruamel.yaml import YAML  # type: ignore
 from src.mpyl.project import load_project
 from src.mpyl.projects.find import load_projects
 from src.mpyl.stages.discovery import (
-    build_project_executions,
+    find_projects_to_execute,
     is_project_cached_for_stage,
-    is_dependency_touched,
+    is_dependency_modified,
 )
 from src.mpyl.steps import ArtifactType
 from src.mpyl.steps import Output
@@ -38,7 +38,7 @@ class TestDiscovery:
             projects = set(load_projects(repo.root_dir, repo.find_projects()))
             assert (
                 len(
-                    build_project_executions(
+                    find_projects_to_execute(
                         self.logger,
                         projects,
                         build.STAGE_NAME,
@@ -50,7 +50,7 @@ class TestDiscovery:
             )
             assert (
                 len(
-                    build_project_executions(
+                    find_projects_to_execute(
                         self.logger,
                         projects,
                         test.STAGE_NAME,
@@ -62,7 +62,7 @@ class TestDiscovery:
             )
             assert (
                 len(
-                    build_project_executions(
+                    find_projects_to_execute(
                         self.logger,
                         projects,
                         deploy.STAGE_NAME,
@@ -80,11 +80,11 @@ class TestDiscovery:
             "tests/projects/sbt-service/deployment/project.yml",
         ]
         projects = set(load_projects(root_test_path.parent, project_paths))
-        project_executions = build_project_executions(
+        project_executions = find_projects_to_execute(
             logger=self.logger,
             all_projects=projects,
             stage=TestStage.build().name,
-            changes=Changeset(
+            changeset=Changeset(
                 sha="a git SHA",
                 _files_touched={
                     "tests/projects/job/deployment/project.yml": "A",
@@ -108,11 +108,11 @@ class TestDiscovery:
             "tests/projects/sbt-service/deployment/project.yml",
         ]
         projects = set(load_projects(root_test_path.parent, project_paths))
-        project_executions = build_project_executions(
+        project_executions = find_projects_to_execute(
             logger=self.logger,
             all_projects=projects,
             stage=TestStage.build().name,
-            changes=Changeset(
+            changeset=Changeset(
                 sha="a git SHA",
                 _files_touched={
                     "tests/projects/job/deployment/project.yml": "D",
@@ -130,7 +130,7 @@ class TestDiscovery:
         )
 
     def test_should_correctly_check_root_path(self):
-        assert not is_dependency_touched(
+        assert not is_dependency_modified(
             self.logger,
             load_project(
                 test_resource_path,
@@ -213,21 +213,21 @@ class TestDiscovery:
             touched_files = {"tests/projects/overriden-project/file.py": "A"}
             projects = load_projects(repo.root_dir, repo.find_projects())
             assert len(projects) == 12
-            projects_for_build = build_project_executions(
+            projects_for_build = find_projects_to_execute(
                 self.logger,
                 projects,
                 build.STAGE_NAME,
                 Changeset("revision", touched_files),
                 self.steps,
             )
-            projects_for_test = build_project_executions(
+            projects_for_test = find_projects_to_execute(
                 self.logger,
                 projects,
                 test.STAGE_NAME,
                 Changeset("revision", touched_files),
                 self.steps,
             )
-            projects_for_deploy = build_project_executions(
+            projects_for_deploy = find_projects_to_execute(
                 self.logger,
                 projects,
                 deploy.STAGE_NAME,
