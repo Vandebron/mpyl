@@ -85,10 +85,10 @@ class TestSbt(Step):
         test_result = self._test(step_input=step_input, sbt_config=sbt_config)
 
         if test_result.produced_artifact:
-            suite = to_test_suites(
-                cast(JunitTestSpec, test_result.produced_artifact.spec)
-            )
+            spec = cast(JunitTestSpec, test_result.produced_artifact.spec)
+            suite = to_test_suites(spec)
             summary = sum_suites(suite)
+            spec.test_results_summary = summary
             return Output(
                 success=summary.is_success,
                 message=f"Tests results produced for {project.name} ({summary})",

@@ -13,17 +13,10 @@ yaml = YAML()
 
 
 @yaml_object(yaml)
-@dataclass
-class JunitTestSpec(ArtifactSpec):
-    yaml_tag = "!JunitTestSpec"
-    test_output_path: str
-    test_results_url: Optional[str] = None
-    test_results_url_name: Optional[str] = None
-
-
 @dataclass(frozen=True)
 class TestRunSummary:
     __test__ = False
+    yaml_tag = "!TestRunSummary"
     tests: int
     failures: int
     errors: int
@@ -32,6 +25,16 @@ class TestRunSummary:
     @property
     def is_success(self):
         return self.errors == 0 and self.failures == 0
+
+
+@yaml_object(yaml)
+@dataclass
+class JunitTestSpec(ArtifactSpec):
+    yaml_tag = "!JunitTestSpec"
+    test_output_path: str
+    test_results_url: Optional[str] = None
+    test_results_url_name: Optional[str] = None
+    test_results_summary: Optional[TestRunSummary] = None
 
 
 def to_test_suites(artifact: JunitTestSpec) -> list[TestSuite]:

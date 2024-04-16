@@ -99,8 +99,10 @@ class TestDocker(Step):
             if not step_input.dry_run and docker_registry.cache_from_registry:
                 push_to_registry(self._logger, docker_registry, tag)
 
-            suite = to_test_suites(cast(JunitTestSpec, artifact.spec))
+            spec = cast(JunitTestSpec, artifact.spec)
+            suite = to_test_suites(spec)
             summary = sum_suites(suite)
+            spec.test_results_summary = summary
 
             output = Output(
                 success=summary.is_success,
