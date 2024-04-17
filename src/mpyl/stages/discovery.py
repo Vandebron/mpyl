@@ -397,9 +397,9 @@ def _load_existing_run_plan(
 def _store_run_plan(
     logger: logging.Logger,
     run_plan: RunPlan,
-    run_plan_file: Path,
+    run_plan_file_path: Path,
 ):
-    os.makedirs(os.path.dirname(run_plan_file), exist_ok=True)
-    with open(run_plan_file, "wb") as file:
-        logger.info(f"Storing run plan in: {run_plan_file}")
+    os.makedirs(os.path.dirname(run_plan_file_path), exist_ok=True)
+    with open(run_plan_file_path, "wb") as file:
+        logger.info(f"Storing run plan in: {run_plan_file_path}")
         pickle.dump(run_plan, file, pickle.HIGHEST_PROTOCOL)
