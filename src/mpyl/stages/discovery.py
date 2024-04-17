@@ -249,7 +249,7 @@ def create_run_plan(  # pylint: disable=too-many-arguments, too-many-locals
 
     run_plan: RunPlan = RunPlan.empty()
 
-    run_plan_file = Path(RUN_ARTIFACTS_FOLDER) / "run_plan"
+    run_plan_file = Path(RUN_ARTIFACTS_FOLDER) / "run_plan.pickle"
     if sequential and not build_all and not selected_projects:
         if not run_plan_file.is_file():
             logger.warning(

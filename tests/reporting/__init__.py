@@ -8,7 +8,7 @@ from src.mpyl.steps.models import Output, Artifact, ArtifactType
 from src.mpyl.steps.run import RunResult
 from src.mpyl.steps.run_properties import construct_run_properties
 from src.mpyl.steps.steps import StepResult
-from src.mpyl.utilities.junit import JunitTestSpec
+from src.mpyl.utilities.junit import JunitTestSpec, TestRunSummary
 from tests import root_test_path
 from tests.test_resources import test_data
 from tests.test_resources.test_data import (
@@ -84,7 +84,11 @@ def append_results(result: RunResult) -> None:
                     revision="revision",
                     producing_step="Docker Test",
                     spec=JunitTestSpec(
-                        str(test_resource_path), "http://localhost/tests"
+                        test_output_path=str(test_resource_path),
+                        test_results_url="http://localhost/tests",
+                        test_results_summary=TestRunSummary(
+                            tests=51, failures=1, errors=0, skipped=0
+                        ),
                     ),
                 ),
             ),

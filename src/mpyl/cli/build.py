@@ -4,6 +4,7 @@ import asyncio
 import pickle
 import shutil
 import sys
+import uuid
 from pathlib import Path
 from typing import Optional, cast, Sequence
 
@@ -38,12 +39,12 @@ from ..constants import (
     DEFAULT_CONFIG_FILE_NAME,
     DEFAULT_RUN_PROPERTIES_FILE_NAME,
     RUN_ARTIFACTS_FOLDER,
+    RUN_RESULT_FILE_GLOB,
 )
 from ..project import load_project, Target
 from ..run_plan import RunPlan
 from ..steps.deploy.k8s.deploy_config import DeployConfig
 from ..steps.models import RunProperties
-from ..steps.run import RunResult
 from ..steps.run_properties import construct_run_properties
 from ..utilities.github import GithubConfig
 from ..utilities.pyaml_env import parse_config
@@ -176,9 +177,10 @@ def run(
     projects,
     dryrun_,
 ):  # pylint: disable=invalid-name
-    run_result_file = Path(RUN_ARTIFACTS_FOLDER) / "run_result"
-    if not sequential and run_result_file.is_file():
-        run_result_file.unlink()
+    run_result_files = list(Path(RUN_ARTIFACTS_FOLDER).glob(RUN_RESULT_FILE_GLOB))
+    if not sequential:
+        for run_result_file in run_result_files:
+            run_result_file.unlink()
 
     asyncio.run(warn_if_update(obj.console))
 
@@ -214,13 +216,7 @@ def run(
     )
 
     Path(RUN_ARTIFACTS_FOLDER).mkdir(parents=True, exist_ok=True)
-
-    if sequential and run_result_file.is_file():
-        with open(run_result_file, "rb") as file:
-            previous_result: RunResult = pickle.load(file)
-            run_result.update_run_plan(previous_result.run_plan)
-            run_result.extend(previous_result.results)
-
+    run_result_file = Path(BUILD_ARTIFACTS_FOLDER) / f"run_result-{uuid.uuid4()}.pickle"
     with open(run_result_file, "wb") as file:
         pickle.dump(run_result, file, pickle.HIGHEST_PROTOCOL)
 
