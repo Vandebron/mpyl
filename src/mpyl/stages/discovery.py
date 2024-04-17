@@ -208,7 +208,7 @@ def find_projects_to_execute(
     changeset: Changeset,
     steps: Optional[StepsCollection],
 ) -> set[ProjectExecution]:
-    def project_execution_if_needed(
+    def build_project_execution(
         project: Project,
     ) -> Optional[ProjectExecution]:
         if project.stages.for_stage(stage) is None:
@@ -260,7 +260,7 @@ def find_projects_to_execute(
 
     return {
         project_execution
-        for project_execution in map(project_execution_if_needed, all_projects)
+        for project_execution in map(build_project_execution, all_projects)
         if project_execution is not None
     }
 
@@ -385,11 +385,11 @@ def _get_changes(repo: Repository, local: bool, tag: Optional[str] = None):
 
 def _load_existing_run_plan(
     logger: logging.Logger,
-    run_plan_file: Path,
+    run_plan_file_path: Path,
 ) -> Optional[RunPlan]:
-    if run_plan_file.is_file():
-        logger.info(f"Loading existing run plan: {run_plan_file}")
-        with open(run_plan_file, "rb") as file:
+    if run_plan_file_path.is_file():
+        logger.info(f"Loading existing run plan: {run_plan_file_path}")
+        with open(run_plan_file_path, "rb") as file:
             return pickle.load(file)
     return None
 
