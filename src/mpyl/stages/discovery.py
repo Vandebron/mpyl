@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-from ..constants import BUILD_ARTIFACTS_FOLDER
+from ..constants import RUN_ARTIFACTS_FOLDER
 from ..project import Project
 from ..project import Stage
 from ..project_execution import ProjectExecution
@@ -277,7 +277,7 @@ def create_run_plan(
     tag: Optional[str] = None,
     selected_stage: Optional[Stage] = None,
 ) -> RunPlan:
-    run_plan_file = Path(BUILD_ARTIFACTS_FOLDER) / "build_plan"
+    run_plan_file = Path(RUN_ARTIFACTS_FOLDER) / "run_plan.pickle"
 
     existing_run_plan = _load_existing_run_plan(logger, run_plan_file)
     if existing_run_plan:

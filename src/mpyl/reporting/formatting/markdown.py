@@ -1,11 +1,8 @@
 """
 Markdown run result formatters
 """
-import itertools
 import operator
 from typing import cast, Optional
-
-from junitparser import TestSuite
 
 from ...project import Stage
 from ...project_execution import ProjectExecution
@@ -13,12 +10,7 @@ from ...steps import Output, ArtifactType
 from ...steps.deploy.k8s import DeployedHelmAppSpec
 from ...steps.run import RunResult
 from ...steps.steps import StepResult
-from ...utilities.junit import (
-    TestRunSummary,
-    sum_suites,
-    to_test_suites,
-    JunitTestSpec,
-)
+from ...utilities.junit import TestRunSummary, JunitTestSpec
 
 
 def summary_to_markdown(summary: TestRunSummary):
@@ -72,13 +64,17 @@ def markdown_for_stage(run_result: RunResult, stage: Stage):
 
     result = f"{stage.icon} {stage.name.capitalize()}:  \n{__to_oneliner(step_results, plan)}  \n"
     test_artifacts: dict[str, JunitTestSpec] = _collect_test_specs(step_results)
-    test_results: dict[str, list[TestSuite]] = _collect_test_results(test_artifacts)
+    test_results: dict[str, TestRunSummary] = _collect_test_results(test_artifacts)
 
     if test_results:
-        test_suites = list(
-            itertools.chain.from_iterable([value for _, value in test_results.items()])
+        test_summaries = [value for _, value in test_results.items()]
+        combined_summary = TestRunSummary(
+            tests=sum(s.tests for s in test_summaries),
+            failures=sum(s.failures for s in test_summaries),
+            errors=sum(s.errors for s in test_summaries),
+            skipped=sum(s.skipped for s in test_summaries),
         )
-        result += to_markdown_test_report(test_suites)
+        result += f"{summary_to_markdown(combined_summary)}"
         unique_artifacts = _collect_unique_test_artifacts_with_url(test_artifacts)
 
         for unique_artifact in unique_artifacts:
@@ -120,11 +116,6 @@ def execution_plan_as_markdown(run_result: RunResult):
     return result
 
 
-def to_markdown_test_report(suites: list[TestSuite]):
-    total_tests = sum_suites(suites)
-    return f"{summary_to_markdown(total_tests)}"
-
-
 def _collect_test_specs(step_results: list[StepResult]) -> dict[str, JunitTestSpec]:
     return {
         res.output.produced_artifact.producing_step: cast(
@@ -140,8 +131,12 @@ def _collect_test_specs(step_results: list[StepResult]) -> dict[str, JunitTestSp
 
 def _collect_test_results(
     test_artifacts: dict[str, JunitTestSpec]
-) -> dict[str, list[TestSuite]]:
-    return {k: to_test_suites(v) for k, v in test_artifacts.items()}
+) -> dict[str, TestRunSummary]:
+    return {
+        k: v.test_results_summary
+        for k, v in test_artifacts.items()
+        if v.test_results_summary
+    }
 
 
 def _collect_unique_test_artifacts_with_url(
