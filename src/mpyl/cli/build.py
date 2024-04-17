@@ -37,7 +37,7 @@ from ..build import print_status, run_mpyl
 from ..constants import (
     DEFAULT_CONFIG_FILE_NAME,
     DEFAULT_RUN_PROPERTIES_FILE_NAME,
-    BUILD_ARTIFACTS_FOLDER,
+    RUN_ARTIFACTS_FOLDER,
 )
 from ..project import load_project, Target
 from ..run_plan import RunPlan
@@ -176,7 +176,7 @@ def run(
     projects,
     dryrun_,
 ):  # pylint: disable=invalid-name
-    run_result_file = Path(BUILD_ARTIFACTS_FOLDER) / "run_result"
+    run_result_file = Path(RUN_ARTIFACTS_FOLDER) / "run_result"
     if not sequential and run_result_file.is_file():
         run_result_file.unlink()
 
@@ -213,7 +213,7 @@ def run(
         run_properties=run_properties, cli_parameters=parameters, reporter=None
     )
 
-    Path(BUILD_ARTIFACTS_FOLDER).mkdir(parents=True, exist_ok=True)
+    Path(RUN_ARTIFACTS_FOLDER).mkdir(parents=True, exist_ok=True)
 
     if sequential and run_result_file.is_file():
         with open(run_result_file, "rb") as file:
@@ -460,7 +460,7 @@ def jenkins(  # pylint: disable=too-many-arguments, too-many-locals
         pass
 
 
-@build.command(help=f"Clean all MPyL metadata in `{BUILD_ARTIFACTS_FOLDER}` folders")
+@build.command(help=f"Clean all MPyL metadata in `{RUN_ARTIFACTS_FOLDER}` folders")
 @click.option(
     "--filter",
     "-f",
@@ -471,7 +471,7 @@ def jenkins(  # pylint: disable=too-many-arguments, too-many-locals
 )
 @click.pass_obj
 def clean(obj: CliContext, filter_):
-    root_path = Path(BUILD_ARTIFACTS_FOLDER)
+    root_path = Path(RUN_ARTIFACTS_FOLDER)
     if root_path.is_dir():
         shutil.rmtree(root_path)
         obj.console.print(f"🧹 Cleaned up {root_path}")

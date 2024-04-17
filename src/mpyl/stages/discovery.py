@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-from ..constants import BUILD_ARTIFACTS_FOLDER
+from ..constants import RUN_ARTIFACTS_FOLDER
 from ..project import Project
 from ..project import Stage
 from ..project_execution import ProjectExecution
@@ -249,7 +249,7 @@ def create_run_plan(  # pylint: disable=too-many-arguments, too-many-locals
 
     run_plan: RunPlan = RunPlan.empty()
 
-    run_plan_file = Path(BUILD_ARTIFACTS_FOLDER) / "build_plan"
+    run_plan_file = Path(RUN_ARTIFACTS_FOLDER) / "run_plan"
     if sequential and not build_all and not selected_projects:
         if not run_plan_file.is_file():
             logger.warning(
