@@ -216,7 +216,7 @@ def run(
     )
 
     Path(RUN_ARTIFACTS_FOLDER).mkdir(parents=True, exist_ok=True)
-    run_result_file = Path(BUILD_ARTIFACTS_FOLDER) / f"run_result-{uuid.uuid4()}.pickle"
+    run_result_file = Path(RUN_ARTIFACTS_FOLDER) / f"run_result-{uuid.uuid4()}.pickle"
     with open(run_result_file, "wb") as file:
         pickle.dump(run_result, file, pickle.HIGHEST_PROTOCOL)
 
