@@ -24,7 +24,7 @@ from .post_docker_build import AfterBuildDocker
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType, input_to_artifact
 from . import STAGE_NAME
-from ...constants import BUILD_ARTIFACTS_FOLDER
+from ...constants import RUN_ARTIFACTS_FOLDER
 from ...utilities import replace_pr_number
 from ...utilities.docker import (
     DockerConfig,
@@ -38,7 +38,7 @@ from ...utilities.docker import (
     full_image_path_for_project,
 )
 
-DOCKER_IGNORE_DEFAULT = ["**/target/*", f"**/{BUILD_ARTIFACTS_FOLDER}/*"]
+DOCKER_IGNORE_DEFAULT = ["**/target/*", f"**/{RUN_ARTIFACTS_FOLDER}/*"]
 
 
 class BuildDocker(Step):

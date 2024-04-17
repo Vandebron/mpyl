@@ -12,7 +12,7 @@ from rich.logging import RichHandler
 from rich.markdown import Markdown
 
 from .cli import CliContext, MpylCliParameters
-from .constants import DEFAULT_RUN_PROPERTIES_FILE_NAME, BUILD_ARTIFACTS_FOLDER
+from .constants import DEFAULT_RUN_PROPERTIES_FILE_NAME, RUN_ARTIFACTS_FOLDER
 from .reporting.formatting.markdown import (
     execution_plan_as_markdown,
     run_result_to_markdown,
@@ -53,7 +53,7 @@ def print_status(
                 for stage, project_executions in run_properties.run_plan.items()
             }
         )
-        run_plan_file = Path(BUILD_ARTIFACTS_FOLDER) / "build_plan.json"
+        run_plan_file = Path(RUN_ARTIFACTS_FOLDER) / "run_plan.json"
         os.makedirs(os.path.dirname(run_plan_file), exist_ok=True)
         with open(run_plan_file, "w", encoding="utf-8") as file:
             console.print(f"Writing simple JSON run plan to: {run_plan_file}")
