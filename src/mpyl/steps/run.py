@@ -9,10 +9,11 @@ from .models import RunProperties
 from .steps import StepResult, ExecutionException
 from ..project import Stage
 from ..project_execution import ProjectExecution
+from ..run_plan import RunPlan
 
 
 class RunResult:
-    _run_plan: dict[Stage, set[ProjectExecution]]
+    _run_plan: RunPlan
     _results: list[StepResult]
     _run_properties: RunProperties
     _exception: Optional[ExecutionException]
@@ -46,12 +47,15 @@ class RunResult:
     def progress_fraction(self) -> float:
         unfinished = 0
         finished = 0
-        for stage, projects in self.run_plan.items():
+        for stage, project_executions in self.run_plan.items():
             finished_project_names = set(
                 map(lambda r: r.project.name, self.results_for_stage(stage))
             )
-            for project in projects:
-                if project.name in finished_project_names:
+            for project_execution in project_executions:
+                if (
+                    project_execution.name in finished_project_names
+                    or project_execution.cached
+                ):
                     finished += 1
                 else:
                     unfinished += 1
@@ -75,7 +79,7 @@ class RunResult:
         return self._run_properties
 
     @property
-    def run_plan(self) -> dict[Stage, set[ProjectExecution]]:
+    def run_plan(self) -> RunPlan:
         return self._run_plan
 
     @property
@@ -100,7 +104,7 @@ class RunResult:
     def extend(self, results: list[StepResult]):
         self._results.extend(results)
 
-    def update_run_plan(self, run_plan: dict[Stage, set[ProjectExecution]]):
+    def update_run_plan(self, run_plan: RunPlan):
         self._run_plan.update(run_plan)
 
     @property

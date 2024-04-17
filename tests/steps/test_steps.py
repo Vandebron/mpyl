@@ -7,10 +7,11 @@ from jsonschema import ValidationError
 from pyaml_env import parse_config
 from ruamel.yaml import YAML  # type: ignore
 
-from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME, BUILD_ARTIFACTS_FOLDER
+from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME, RUN_ARTIFACTS_FOLDER
 from src.mpyl.project import Project, Stages, Target, Dependencies
 from src.mpyl.project_execution import ProjectExecution
 from src.mpyl.projects.versioning import yaml_to_string
+from src.mpyl.run_plan import RunPlan
 from src.mpyl.steps import build, postdeploy
 from src.mpyl.steps.collection import StepsCollection
 from src.mpyl.steps.deploy.k8s import RenderedHelmChartSpec
@@ -67,7 +68,7 @@ class TestSteps:
     def test_write_output(self):
         build_yaml = yaml_to_string(self.docker_image, yaml)
         assert_roundtrip(
-            test_resource_path / "deployment" / BUILD_ARTIFACTS_FOLDER / "build.yml",
+            test_resource_path / "deployment" / RUN_ARTIFACTS_FOLDER / "build.yml",
             build_yaml,
         )
 
@@ -85,7 +86,7 @@ class TestSteps:
         )
 
         assert_roundtrip(
-            test_resource_path / "deployment" / BUILD_ARTIFACTS_FOLDER / "deploy.yml",
+            test_resource_path / "deployment" / RUN_ARTIFACTS_FOLDER / "deploy.yml",
             yaml_to_string(output, yaml),
         )
 
@@ -152,7 +153,7 @@ class TestSteps:
             console=ConsoleProperties("INFO", False, 130),
             stages=[],
             projects=set(),
-            run_plan={},
+            run_plan=RunPlan.empty(),
         )
         with pytest.raises(ValidationError) as excinfo:
             Steps(

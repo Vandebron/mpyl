@@ -26,7 +26,7 @@ import jsonschema
 from mypy.checker import Generic
 from ruamel.yaml import YAML
 
-from .constants import BUILD_ARTIFACTS_FOLDER
+from .constants import RUN_ARTIFACTS_FOLDER
 from .validation import validate
 
 T = TypeVar("T")
@@ -556,7 +556,7 @@ class Project:
 
     @property
     def target_path(self) -> str:
-        return str(Path(self.deployment_path, BUILD_ARTIFACTS_FOLDER))
+        return str(Path(self.deployment_path, RUN_ARTIFACTS_FOLDER))
 
     @property
     def test_containers_path(self) -> str:

@@ -1,4 +1,5 @@
 """Class that handles remote caching of build artifacts"""
+
 import abc
 import os
 import shutil
@@ -10,11 +11,11 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Optional
 
-from git import GitCommandError
+from git.exc import GitCommandError
 from github import Github
 
 from ..cli.commands.build.jenkins import get_token
-from ..constants import BUILD_ARTIFACTS_FOLDER
+from ..constants import RUN_ARTIFACTS_FOLDER
 from ..project import Project, Target, load_project
 from ..steps.deploy.k8s.deploy_config import DeployConfig, get_namespace
 from ..steps.models import RunProperties
@@ -57,7 +58,7 @@ class BuildCacheTransformer(PathTransformer):
     def transform_for_read(self, project_path: str) -> Path:
         return Path(
             project_path.replace(
-                Project.project_yaml_path(), f"deployment/{BUILD_ARTIFACTS_FOLDER}"
+                Project.project_yaml_path(), f"deployment/{RUN_ARTIFACTS_FOLDER}"
             )
         )
 

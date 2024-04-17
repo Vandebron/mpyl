@@ -8,6 +8,7 @@ from src.mpyl.constants import (
     DEFAULT_CONFIG_FILE_NAME,
     DEFAULT_RUN_PROPERTIES_FILE_NAME,
 )
+from src.mpyl.run_plan import RunPlan
 from src.mpyl.steps.models import VersioningProperties
 from src.mpyl.steps.run_properties import construct_run_properties
 from src.mpyl.utilities.pyaml_env import parse_config
@@ -30,7 +31,7 @@ class TestModels:
                 properties=parse_config(
                     self.resource_path / "run_properties_invalid.yml"
                 ),
-                run_plan={},
+                run_plan=RunPlan.empty(),
                 all_projects=set(),
                 root_dir=self.resource_path,
             )
@@ -45,7 +46,7 @@ class TestModels:
         run_properties = construct_run_properties(
             config=self.config_values,
             properties=valid_run_properties_values,
-            run_plan={},
+            run_plan=RunPlan.empty(),
             all_projects=set(),
             root_dir=self.resource_path,
         )
