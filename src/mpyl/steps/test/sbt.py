@@ -66,7 +66,7 @@ class TestSbt(Step):
             summary = sum_suites(suite)
             spec.test_results_summary = summary
             return Output(
-                success=summary.is_success,
+                success=test_result.success,
                 message=f"Tests results produced for {project.name} ({summary})",
                 produced_artifact=test_result.produced_artifact,
             )
@@ -81,6 +81,7 @@ class TestSbt(Step):
                 [
                     f"project {project_name}",
                     "coverageOn" if config.test_with_coverage else None,
+                    "test",
                     "coverageOff" if config.test_with_coverage else None,
                 ],
             )
