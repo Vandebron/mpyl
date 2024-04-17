@@ -7,7 +7,7 @@ from pathlib import Path
 from rich.console import Console
 from rich.logging import RichHandler
 
-from mpyl.constants import BUILD_ARTIFACTS_FOLDER, RUN_RESULT_FILE_GLOB
+from mpyl.constants import RUN_ARTIFACTS_FOLDER, RUN_RESULT_FILE_GLOB
 from mpyl.reporting.targets import ReportAccumulator
 from mpyl.reporting.targets.github import CommitCheck
 from mpyl.reporting.targets.github import PullRequestReporter
@@ -20,7 +20,7 @@ from mpyl.utilities.pyaml_env import parse_config
 
 
 def main(logger: Logger):
-    run_result_files = list(Path(BUILD_ARTIFACTS_FOLDER).glob(RUN_RESULT_FILE_GLOB))
+    run_result_files = list(Path(RUN_ARTIFACTS_FOLDER).glob(RUN_RESULT_FILE_GLOB))
     if len(run_result_files) == 0:
         logger.info(
             f"Run result file(s) {RUN_RESULT_FILE_GLOB} not found. Nothing to report."

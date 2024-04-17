@@ -38,7 +38,7 @@ from ..build import print_status, run_mpyl
 from ..constants import (
     DEFAULT_CONFIG_FILE_NAME,
     DEFAULT_RUN_PROPERTIES_FILE_NAME,
-    BUILD_ARTIFACTS_FOLDER,
+    RUN_ARTIFACTS_FOLDER,
     RUN_RESULT_FILE_GLOB,
 )
 from ..project import load_project, Target
@@ -177,7 +177,7 @@ def run(
     projects,
     dryrun_,
 ):  # pylint: disable=invalid-name
-    run_result_files = list(Path(BUILD_ARTIFACTS_FOLDER).glob(RUN_RESULT_FILE_GLOB))
+    run_result_files = list(Path(RUN_ARTIFACTS_FOLDER).glob(RUN_RESULT_FILE_GLOB))
     if not sequential:
         for run_result_file in run_result_files:
             run_result_file.unlink()
@@ -215,8 +215,8 @@ def run(
         run_properties=run_properties, cli_parameters=parameters, reporter=None
     )
 
-    Path(BUILD_ARTIFACTS_FOLDER).mkdir(parents=True, exist_ok=True)
-    run_result_file = Path(BUILD_ARTIFACTS_FOLDER) / f"run_result-{uuid.uuid4()}.pickle"
+    Path(RUN_ARTIFACTS_FOLDER).mkdir(parents=True, exist_ok=True)
+    run_result_file = Path(RUN_ARTIFACTS_FOLDER) / f"run_result-{uuid.uuid4()}.pickle"
     with open(run_result_file, "wb") as file:
         pickle.dump(run_result, file, pickle.HIGHEST_PROTOCOL)
 
@@ -456,7 +456,7 @@ def jenkins(  # pylint: disable=too-many-arguments, too-many-locals
         pass
 
 
-@build.command(help=f"Clean all MPyL metadata in `{BUILD_ARTIFACTS_FOLDER}` folders")
+@build.command(help=f"Clean all MPyL metadata in `{RUN_ARTIFACTS_FOLDER}` folders")
 @click.option(
     "--filter",
     "-f",
@@ -467,7 +467,7 @@ def jenkins(  # pylint: disable=too-many-arguments, too-many-locals
 )
 @click.pass_obj
 def clean(obj: CliContext, filter_):
-    root_path = Path(BUILD_ARTIFACTS_FOLDER)
+    root_path = Path(RUN_ARTIFACTS_FOLDER)
     if root_path.is_dir():
         shutil.rmtree(root_path)
         obj.console.print(f"🧹 Cleaned up {root_path}")
