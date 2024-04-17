@@ -139,7 +139,7 @@ def _cache_key_from_changes_in_project(
     logger: logging.Logger,
     project: Project,
     changeset: Changeset,
-):
+) -> Optional[str]:
     files_to_hash = set(
         filter(
             lambda changed_file: file_belongs_to_project(logger, project, changed_file),
@@ -148,27 +148,19 @@ def _cache_key_from_changes_in_project(
     )
 
     if len(files_to_hash) == 0:
-        cache_key = changeset.sha
-        logger.debug(
-            f"Project {project.name}: no content changes, falling back to git revision as cache key: {cache_key}"
-        )
-    else:
-        sha256 = hashlib.sha256()
+        return None
 
-        for changed_file in sorted(files_to_hash):
-            with open(changed_file, "rb") as file:
-                while True:
-                    data = file.read(65536)
-                    if not data:
-                        break
-                    sha256.update(data)
+    sha256 = hashlib.sha256()
 
-        cache_key = sha256.hexdigest()
-        logger.debug(
-            f"Project {project.name}: using hash of modified files as cache key {cache_key}"
-        )
+    for changed_file in sorted(files_to_hash):
+        with open(changed_file, "rb") as file:
+            while True:
+                data = file.read(65536)
+                if not data:
+                    break
+                sha256.update(data)
 
-    return cache_key
+    return sha256.hexdigest()
 
 
 def to_project_executions(
@@ -183,6 +175,17 @@ def to_project_executions(
         cache_key = _cache_key_from_changes_in_project(
             logger=logger, project=project, changeset=changeset
         )
+
+        if cache_key:
+            logger.debug(
+                f"Project {project.name}: using hash of modified files as cache key {cache_key}"
+            )
+        else:
+            logger.debug(
+                f"Project {project.name}: no content changes, falling back to revision as cache key: {changeset.sha}"
+            )
+            cache_key = changeset.sha
+
         return ProjectExecution(
             project=project,
             cache_key=cache_key,
@@ -224,6 +227,16 @@ def find_projects_to_execute(
             cache_key = _cache_key_from_changes_in_project(
                 logger=logger, project=project, changeset=changeset
             )
+            if cache_key:
+                logger.debug(
+                    f"Project {project.name}: using hash of modified files as cache key {cache_key}"
+                )
+            else:
+                logger.debug(
+                    f"Project {project.name}: no content changes, falling back to revision as"
+                    f" cache key: {changeset.sha}"
+                )
+                cache_key = changeset.sha
 
         elif is_any_dependency_modified:
             cache_key = changeset.sha
