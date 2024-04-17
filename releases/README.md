@@ -1,5 +1,17 @@
 # Release notes
 
+## MPyL 1.6.4
+
+
+#### Run results
+- Account for parallel runs when reading and writing the run results
+- Test results are now also added to the output artifact instead of just to a file 
+
+
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.6.4)
+
 ## MPyL 1.6.3
 
 
