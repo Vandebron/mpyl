@@ -29,6 +29,37 @@ from tests.test_resources.test_data import TestStage
 yaml = YAML()
 
 
+@contextlib.contextmanager
+def _caching_for(
+    project: str,
+    stage: Stage = TestStage.build(),
+    hashed_contents: str = "e993ba4f2b2ae2c4840e1eed1414baa812932319d332b0d169365b0885ec2d6c",
+):
+    path = f"tests/projects/{project}/deployment/{RUN_ARTIFACTS_FOLDER}"
+
+    if not os.path.isdir(path):
+        os.makedirs(path)
+
+    try:
+        Output(
+            success=True,
+            message="a test output",
+            produced_artifact=Artifact(
+                artifact_type=ArtifactType.DOCKER_IMAGE,
+                revision="a git revision",
+                producing_step="a step",
+                spec=DockerImageSpec(image="docker-image-path"),
+                hash=hashed_contents,
+            ),
+        ).write(
+            target_path=path,
+            stage=stage.name,
+        )
+        yield path
+    finally:
+        shutil.rmtree(path)
+
+
 class TestDiscovery:
     logger = logging.getLogger(__name__)
     steps = StepsCollection(logger=logger)
@@ -40,7 +71,9 @@ class TestDiscovery:
     projects = set(load_projects(root_test_path.parent, project_paths))
 
     def _helper_find_projects_to_execute(
-        self, stage: Stage, files_touched: dict[str, str]
+        self,
+        files_touched: dict[str, str],
+        stage: Stage = TestStage.build(),
     ):
         return find_projects_to_execute(
             logger=self.logger,
@@ -52,35 +85,6 @@ class TestDiscovery:
             ),
             steps=self.steps,
         )
-
-    @staticmethod
-    @contextlib.contextmanager
-    def _setup_caching(
-        project: str, stage: Stage, hashed_contents: str = "a test hash"
-    ):
-        path = f"tests/projects/{project}/deployment/{RUN_ARTIFACTS_FOLDER}"
-
-        if not os.path.isdir(path):
-            os.makedirs(path)
-
-        try:
-            Output(
-                success=True,
-                message="a test output",
-                produced_artifact=Artifact(
-                    artifact_type=ArtifactType.DOCKER_IMAGE,
-                    revision="a git revision",
-                    producing_step="a step",
-                    spec=DockerImageSpec(image="docker-image-path"),
-                    hash=hashed_contents,
-                ),
-            ).write(
-                target_path=path,
-                stage=stage.name,
-            )
-            yield path
-        finally:
-            shutil.rmtree(path)
 
     def test_find_projects_to_execute_for_each_stage(self):
         with test_data.get_repo() as repo:
@@ -130,10 +134,7 @@ class TestDiscovery:
             )
 
     def test_stage_with_files_changed(self):
-        stage = TestStage.build()
-
         project_executions = self._helper_find_projects_to_execute(
-            stage=stage,
             files_touched={
                 "tests/projects/job/deployment/project.yml": "M",
             },
@@ -143,15 +144,8 @@ class TestDiscovery:
         assert not job_execution.cached
 
     def test_stage_with_files_changed_and_existing_cache(self):
-        stage = TestStage.build()
-
-        with self._setup_caching(
-            project="job",
-            stage=stage,
-            hashed_contents="e993ba4f2b2ae2c4840e1eed1414baa812932319d332b0d169365b0885ec2d6c",
-        ):
+        with _caching_for(project="job"):
             project_executions = self._helper_find_projects_to_execute(
-                stage=stage,
                 files_touched={
                     "tests/projects/job/deployment/project.yml": "M",
                 },
@@ -163,14 +157,8 @@ class TestDiscovery:
             assert job_execution.cached
 
     def test_stage_with_files_changed_but_filtered(self):
-        stage = TestStage.build()
-        with self._setup_caching(
-            project="job",
-            stage=stage,
-            hashed_contents="e993ba4f2b2ae2c4840e1eed1414baa812932319d332b0d169365b0885ec2d6c",
-        ):
+        with _caching_for(project="job"):
             project_executions = self._helper_find_projects_to_execute(
-                stage=stage,
                 files_touched={
                     "tests/projects/job/deployment/project.yml": "D",
                 },
@@ -182,24 +170,25 @@ class TestDiscovery:
             assert not job_execution.cached
 
     def test_stage_with_build_dependency_changed(self):
-        project_executions = self._helper_find_projects_to_execute(
-            stage=TestStage.build(),
-            files_touched={
-                "tests/projects/sbt-service/src/main/scala/vandebron/mpyl/Main.scala": "M"
-            },
-        )
+        with _caching_for(project="job"):
+            project_executions = self._helper_find_projects_to_execute(
+                files_touched={
+                    "tests/projects/sbt-service/src/main/scala/vandebron/mpyl/Main.scala": "M"
+                },
+            )
 
-        # both job and sbt-service should be executed
-        assert len(project_executions) == 2
+            # both job and sbt-service should be executed
+            assert len(project_executions) == 2
 
-        job_execution = next(p for p in project_executions if p.project.name == "job")
+            job_execution = next(
+                p for p in project_executions if p.project.name == "job"
+            )
 
-        # a build dependency changed, so this project should always run
-        assert not job_execution.cached
+            # a build dependency changed, so this project should always run
+            assert not job_execution.cached
 
     def test_stage_with_test_dependency_changed(self):
         project_executions = self._helper_find_projects_to_execute(
-            stage=TestStage.build(),
             files_touched={"tests/projects/service/file.py": "M"},
         )
 
@@ -208,27 +197,23 @@ class TestDiscovery:
         assert not {p for p in project_executions if p.project.name == "job"}
 
     def test_stage_with_files_changed_and_dependency_changed(self):
-        stage = TestStage.build()
-        with self._setup_caching(
-            project="job",
-            stage=stage,
-            hashed_contents="e993ba4f2b2ae2c4840e1eed1414baa812932319d332b0d169365b0885ec2d6c",
-        ):
+        with _caching_for(project="job"):
             project_executions = self._helper_find_projects_to_execute(
-                stage=stage,
                 files_touched={
                     "tests/projects/job/deployment/project.yml": "M",
                     "tests/projects/sbt-service/src/main/scala/vandebron/mpyl/Main.scala": "M",
                 },
             )
 
-        # both job and sbt-service should be executed
-        assert len(project_executions) == 2
+            # both job and sbt-service should be executed
+            assert len(project_executions) == 2
 
-        job_execution = next(p for p in project_executions if p.project.name == "job")
+            job_execution = next(
+                p for p in project_executions if p.project.name == "job"
+            )
 
-        # a build dependency changed, so this project should always run even if there's a cached version available
-        assert not job_execution.cached
+            # a build dependency changed, so this project should always run even if there's a cached version available
+            assert not job_execution.cached
 
     def test_should_correctly_check_root_path(self):
         assert not is_dependency_modified(
