@@ -38,7 +38,7 @@ class TestDagster:
 
     def test_generate_correct_values_yaml_with_service_account_override(self):
         step_input = Input(
-            ProjectExecution.always_run(
+            ProjectExecution.run(
                 project=load_project(
                     test_resource_path, self.resource_path / "project.yml", True
                 )
@@ -64,7 +64,7 @@ class TestDagster:
 
     def test_generate_correct_values_yaml_with_production_target(self):
         step_input = Input(
-            ProjectExecution.always_run(
+            ProjectExecution.run(
                 project=load_project(
                     test_resource_path, Path(self.resource_path, "project.yml"), True
                 ),
@@ -88,7 +88,7 @@ class TestDagster:
 
     def test_generate_correct_values_yaml_without_service_account_override(self):
         step_input = Input(
-            ProjectExecution.always_run(
+            ProjectExecution.run(
                 project=load_project(
                     test_resource_path, Path(self.resource_path, "project.yml"), True
                 )
@@ -115,7 +115,7 @@ class TestDagster:
     def test_generate_with_sealed_secret_as_extra_manifest(self):
         project_folder = self.config_resource_path / ".." / self.dagster_project_folder
         step_input = Input(
-            ProjectExecution.always_run(
+            ProjectExecution.run(
                 project=load_project(
                     self.config_resource_path,
                     project_folder / "project_with_sealed_secret.yml",

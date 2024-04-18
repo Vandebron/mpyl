@@ -1,4 +1,5 @@
 """ Step that runs relevant cypress tests in the post deploy stage """
+
 import os
 from logging import Logger
 
