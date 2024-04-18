@@ -1,10 +1,14 @@
+import contextlib
 import logging
+import os
+import shutil
 from pathlib import Path
 from typing import Optional
 
 from ruamel.yaml import YAML  # type: ignore
 
-from src.mpyl.project import load_project
+from src.mpyl.constants import RUN_ARTIFACTS_FOLDER
+from src.mpyl.project import load_project, Stage
 from src.mpyl.projects.find import load_projects
 from src.mpyl.stages.discovery import (
     find_projects_to_execute,
@@ -28,13 +32,65 @@ yaml = YAML()
 class TestDiscovery:
     logger = logging.getLogger(__name__)
     steps = StepsCollection(logger=logger)
+    project_paths = [
+        "tests/projects/job/deployment/project.yml",
+        "tests/projects/service/deployment/project.yml",
+        "tests/projects/sbt-service/deployment/project.yml",
+    ]
+    projects = set(load_projects(root_test_path.parent, project_paths))
 
-    def test_should_find_invalidated_test_dependencies(self):
+    def _helper_find_projects_to_execute(
+        self, stage: Stage, files_touched: dict[str, str]
+    ):
+        return find_projects_to_execute(
+            logger=self.logger,
+            all_projects=self.projects,
+            stage=stage.name,
+            changeset=Changeset(
+                sha="a git SHA",
+                _files_touched=files_touched,
+            ),
+            steps=self.steps,
+        )
+
+    @staticmethod
+    @contextlib.contextmanager
+    def _setup_caching(
+        project: str, stage: Stage, hashed_contents: str = "a test hash"
+    ):
+        path = f"tests/projects/{project}/deployment/{RUN_ARTIFACTS_FOLDER}"
+
+        if not os.path.isdir(path):
+            os.makedirs(path)
+
+        try:
+            Output(
+                success=True,
+                message="a test output",
+                produced_artifact=Artifact(
+                    artifact_type=ArtifactType.DOCKER_IMAGE,
+                    revision="a git revision",
+                    producing_step="a step",
+                    spec=DockerImageSpec(image="docker-image-path"),
+                    hash=hashed_contents,
+                ),
+            ).write(
+                target_path=path,
+                stage=stage.name,
+            )
+            yield path
+        finally:
+            shutil.rmtree(path)
+
+    def test_find_projects_to_execute_for_each_stage(self):
         with test_data.get_repo() as repo:
-            touched_files = {
-                "tests/projects/service/file.py": "A",
-                "tests/some_file.txt": "A",
-            }
+            changeset = Changeset(
+                sha="revision",
+                _files_touched={
+                    "tests/projects/service/file.py": "A",
+                    "tests/some_file.txt": "A",
+                },
+            )
             projects = set(load_projects(repo.root_dir, repo.find_projects()))
             assert (
                 len(
@@ -42,7 +98,7 @@ class TestDiscovery:
                         self.logger,
                         projects,
                         build.STAGE_NAME,
-                        Changeset("revision", touched_files),
+                        changeset,
                         self.steps,
                     )
                 )
@@ -54,7 +110,7 @@ class TestDiscovery:
                         self.logger,
                         projects,
                         test.STAGE_NAME,
-                        Changeset("revision", touched_files),
+                        changeset,
                         self.steps,
                     )
                 )
@@ -66,68 +122,113 @@ class TestDiscovery:
                         self.logger,
                         projects,
                         deploy.STAGE_NAME,
-                        Changeset("revision", touched_files),
+                        changeset,
                         self.steps,
                     )
                 )
                 == 1
             )
 
-    def test_build_project_executions(self):
-        project_paths = [
-            "tests/projects/job/deployment/project.yml",
-            "tests/projects/service/deployment/project.yml",
-            "tests/projects/sbt-service/deployment/project.yml",
-        ]
-        projects = set(load_projects(root_test_path.parent, project_paths))
-        project_executions = find_projects_to_execute(
-            logger=self.logger,
-            all_projects=projects,
-            stage=TestStage.build().name,
-            changeset=Changeset(
-                sha="a git SHA",
-                _files_touched={
-                    "tests/projects/job/deployment/project.yml": "A",
-                    "tests/projects/job/deployment/deleted-file": "D",
-                    "some_other_unrelated_file.txt": "A",
-                },
-            ),
-            steps=self.steps,
-        )
-        assert 1 == len(project_executions)
-        assert project_executions.pop().project == load_project(
-            root_test_path.parent,
-            Path("tests/projects/job/deployment/project.yml"),
-            strict=False,
-        )
+    def test_stage_with_files_changed(self):
+        stage = TestStage.build()
 
-    def test_build_project_executions_when_all_files_filtered(self):
-        project_paths = [
-            "tests/projects/job/deployment/project.yml",
-            "tests/projects/service/deployment/project.yml",
-            "tests/projects/sbt-service/deployment/project.yml",
-        ]
-        projects = set(load_projects(root_test_path.parent, project_paths))
-        project_executions = find_projects_to_execute(
-            logger=self.logger,
-            all_projects=projects,
-            stage=TestStage.build().name,
-            changeset=Changeset(
-                sha="a git SHA",
-                _files_touched={
+        project_executions = self._helper_find_projects_to_execute(
+            stage=stage,
+            files_touched={
+                "tests/projects/job/deployment/project.yml": "M",
+            },
+        )
+        assert len(project_executions) == 1
+        job_execution = next(p for p in project_executions if p.project.name == "job")
+        assert not job_execution.cached
+
+    def test_stage_with_files_changed_and_existing_cache(self):
+        stage = TestStage.build()
+
+        with self._setup_caching(
+            project="job",
+            stage=stage,
+            hashed_contents="e993ba4f2b2ae2c4840e1eed1414baa812932319d332b0d169365b0885ec2d6c",
+        ):
+            project_executions = self._helper_find_projects_to_execute(
+                stage=stage,
+                files_touched={
+                    "tests/projects/job/deployment/project.yml": "M",
+                },
+            )
+            assert len(project_executions) == 1
+            job_execution = next(
+                p for p in project_executions if p.project.name == "job"
+            )
+            assert job_execution.cached
+
+    def test_stage_with_files_changed_but_filtered(self):
+        stage = TestStage.build()
+        with self._setup_caching(
+            project="job",
+            stage=stage,
+            hashed_contents="e993ba4f2b2ae2c4840e1eed1414baa812932319d332b0d169365b0885ec2d6c",
+        ):
+            project_executions = self._helper_find_projects_to_execute(
+                stage=stage,
+                files_touched={
                     "tests/projects/job/deployment/project.yml": "D",
                 },
-            ),
-            steps=self.steps,
+            )
+            assert len(project_executions) == 1
+            job_execution = next(
+                p for p in project_executions if p.project.name == "job"
+            )
+            assert not job_execution.cached
+
+    def test_stage_with_build_dependency_changed(self):
+        project_executions = self._helper_find_projects_to_execute(
+            stage=TestStage.build(),
+            files_touched={
+                "tests/projects/sbt-service/src/main/scala/vandebron/mpyl/Main.scala": "M"
+            },
         )
-        assert 1 == len(project_executions)
-        execution = project_executions.pop()
-        assert execution.cache_key == "a git SHA"
-        assert execution.project == load_project(
-            root_test_path.parent,
-            Path("tests/projects/job/deployment/project.yml"),
-            strict=False,
+
+        # both job and sbt-service should be executed
+        assert len(project_executions) == 2
+
+        job_execution = next(p for p in project_executions if p.project.name == "job")
+
+        # a build dependency changed, so this project should always run
+        assert not job_execution.cached
+
+    def test_stage_with_test_dependency_changed(self):
+        project_executions = self._helper_find_projects_to_execute(
+            stage=TestStage.build(),
+            files_touched={"tests/projects/service/file.py": "M"},
         )
+
+        # job should not be executed because it wasn't modified and service is only a test dependency
+        assert len(project_executions) == 1
+        assert not {p for p in project_executions if p.project.name == "job"}
+
+    def test_stage_with_files_changed_and_dependency_changed(self):
+        stage = TestStage.build()
+        with self._setup_caching(
+            project="job",
+            stage=stage,
+            hashed_contents="e993ba4f2b2ae2c4840e1eed1414baa812932319d332b0d169365b0885ec2d6c",
+        ):
+            project_executions = self._helper_find_projects_to_execute(
+                stage=stage,
+                files_touched={
+                    "tests/projects/job/deployment/project.yml": "M",
+                    "tests/projects/sbt-service/src/main/scala/vandebron/mpyl/Main.scala": "M",
+                },
+            )
+
+        # both job and sbt-service should be executed
+        assert len(project_executions) == 2
+
+        job_execution = next(p for p in project_executions if p.project.name == "job")
+
+        # a build dependency changed, so this project should always run even if there's a cached version available
+        assert not job_execution.cached
 
     def test_should_correctly_check_root_path(self):
         assert not is_dependency_modified(
