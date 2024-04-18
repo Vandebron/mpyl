@@ -32,6 +32,8 @@ definitions:
         "$ref": "#/definitions/Slack"
       jira:
         "$ref": "#/definitions/Jira"
+      camunda:
+        "$ref": "#/definitions/Camunda"
     required:
       - vcs
       - docker
@@ -428,6 +430,67 @@ definitions:
         description: 'A pattern that extracts a ticket number from the branch name'
     required:
       - site
+  Camunda:
+    type: object
+    properties:
+      modelerAPI:
+        type: object
+        properties:
+          baseUrl:
+            type: string
+          tokenUrl:
+            type: string
+        required: [ "baseUrl", "tokenUrl" ]
+      modelerCredentials:
+        type: object
+        properties:
+          clientId:
+            type: string
+          clientSecret:
+            type: string
+          grantType:
+            type: string
+          audience:
+            type: string
+        required: [ "clientId", "clientSecret", "grantType", "audience" ]
+      zeebeCredentials:
+        type: object
+        properties:
+          pr:
+            "$ref": "#/definitions/CamundaCluster"
+          test:
+            "$ref": "#/definitions/CamundaCluster"
+          acceptance:
+            "$ref": "#/definitions/CamundaCluster"
+          production:
+            "$ref": "#/definitions/CamundaCluster"
+        required: [ 'pr', 'test', 'acceptance', 'production' ]
+      camundaDeploymentPath:
+        type: object
+        properties:
+          diagramResourcesPath:
+            type: string
+          dockerDirectoryPath:
+            type: string
+          dockerFilePath:
+            type: string
+          bpmProjectPath:
+            type: string
+        required: [ 'diagramResourcesPath', 'dockerDirectoryPath', 'dockerFilePath', 'bpmProjectPath' ]
+    required:
+      - modelerAPI
+      - modelerCredentials
+      - zeebeCredentials
+      - camundaDeploymentPath
+  CamundaCluster:
+    type: object
+    properties:
+      clusterId:
+        type: string
+      clientId:
+        type: string
+      clientSecret:
+        type: string
   Dagster:
     title: Dagster
     type: object
