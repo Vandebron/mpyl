@@ -20,7 +20,6 @@ def construct_run_properties(
     all_projects: Optional[set[Project]] = None,
     root_dir: Path = Path(""),
     explain_run_plan: bool = False,
-    sequential: bool = False,
 ) -> RunProperties:
     tag = cli_parameters.tag or properties["build"]["versioning"].get("tag")
     if all_projects is None or run_plan is None:
@@ -55,7 +54,6 @@ def construct_run_properties(
                     explain_run_plan=explain_run_plan,
                     repo=repo,
                     tag=tag,
-                    sequential=sequential,
                 )
 
     if cli_parameters.local:
@@ -86,11 +84,24 @@ def _create_run_plan(
     explain_run_plan: bool,
     repo: Repository,
     tag: Optional[str] = None,
-    sequential: Optional[bool] = False,
 ):
     run_plan_logger = logging.getLogger("mpyl")
     if explain_run_plan:
         run_plan_logger.setLevel("DEBUG")
+
+    if cli_parameters.stage:
+        selected_stage = next(
+            (stage for stage in all_stages if stage.name == cli_parameters.stage), None
+        )
+    else:
+        selected_stage = None
+
+    if cli_parameters.projects:
+        selected_projects = {
+            p for p in all_projects if p.name in cli_parameters.projects.split(",")
+        }
+    else:
+        selected_projects = set()
 
     return create_run_plan(
         logger=run_plan_logger,
@@ -100,7 +111,6 @@ def _create_run_plan(
         tag=tag,
         local=cli_parameters.local,
         build_all=cli_parameters.all,
-        selected_stage=cli_parameters.stage,
-        selected_projects=cli_parameters.projects,
-        sequential=sequential,
+        selected_stage=selected_stage,
+        selected_projects=selected_projects,
     )

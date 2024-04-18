@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from .project import Stage
+from .project import Project, Stage
 from .project_execution import ProjectExecution
 
 
@@ -25,3 +25,14 @@ class RunPlan:
 
     def items(self):
         return self.plan.items()
+
+    def for_stage(self, stage: Stage) -> "RunPlan":
+        return RunPlan({stage: self.get(stage)})
+
+    def for_projects(self, projects: set[Project]):
+        return RunPlan(
+            {
+                stage: {e for e in executions if e.project in projects}
+                for stage, executions in self.plan.items()
+            }
+        )
