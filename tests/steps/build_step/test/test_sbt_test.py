@@ -11,44 +11,14 @@ class TestBuildSbt:
     step_input = Input(get_project_execution(), test_data.RUN_PROPERTIES, None)
     sbt_config = SbtConfig.from_config(config=step_input.run_properties.config)
 
-    def test_sbt_test_compile_command_should_be_properly_constructed(self):
-        command = TestSbt._construct_sbt_command(
-            self.step_input.project_execution.name,
-            self.sbt_config,
-            True,
-        )
-        assert " ".join(command) == (
-            "sbt -v -J-Xmx4G -J-Xms4G -J-XX:+UseG1GC -J-XX:+CMSClassUnloadingEnabled "
-            "-J-Xss2M -Duser.timezone=GMT -Djline.terminal=jline.UnixTerminal project "
-            "dockertest; coverageOn; test:compile; coverageOff"
-        )
-
     def test_sbt_test_test_command_should_be_properly_constructed(self):
         command = TestSbt._construct_sbt_command(
-            self.step_input.project_execution.name,
-            self.sbt_config,
-            False,
+            self.step_input.project_execution.name, self.sbt_config
         )
         assert " ".join(command) == (
             "sbt -v -J-Xmx4G -J-Xms4G -J-XX:+UseG1GC -J-XX:+CMSClassUnloadingEnabled "
             "-J-Xss2M -Duser.timezone=GMT -Djline.terminal=jline.UnixTerminal project "
             "dockertest; coverageOn; test; coverageOff"
-        )
-
-    def test_sbt_test_compile_without_coverage_but_with_client_command_should_be_properly_constructed(
-        self,
-    ):
-        sbt_config = self.sbt_config
-        sbt_config_with_coverage = dataclasses.replace(
-            sbt_config, test_with_coverage=False, test_with_client=True, verbose=False
-        )
-        command = TestSbt._construct_sbt_command(
-            self.step_input.project_execution.name, sbt_config_with_coverage, True
-        )
-        assert " ".join(command) == (
-            "sbtn -J-Xmx4G -J-Xms4G -J-XX:+UseG1GC -J-XX:+CMSClassUnloadingEnabled "
-            "-J-Xss2M -Duser.timezone=GMT -Djline.terminal=jline.UnixTerminal project "
-            "dockertest; test:compile"
         )
 
     def test_sbt_test_test_without_coverage_but_with_client_command_should_be_properly_constructed(
@@ -59,7 +29,7 @@ class TestBuildSbt:
             sbt_config, test_with_coverage=False, test_with_client=True, verbose=False
         )
         command = TestSbt._construct_sbt_command(
-            self.step_input.project_execution.name, sbt_config_with_coverage, False
+            self.step_input.project_execution.name, sbt_config_with_coverage
         )
         assert " ".join(command) == (
             "sbtn -J-Xmx4G -J-Xms4G -J-XX:+UseG1GC -J-XX:+CMSClassUnloadingEnabled "

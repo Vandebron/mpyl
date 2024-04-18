@@ -37,32 +37,8 @@ class TestSbt(Step):
         )
 
     def _test(self, step_input: Input, sbt_config: SbtConfig) -> Output:
-        command_compile = self._construct_sbt_command(
-            project_name=step_input.project_execution.name,
-            config=sbt_config,
-            compile_test=True,
-        )
-        compile_outcome = custom_check_output(
-            logger=self._logger, command=command_compile, use_print=True
-        )
-        if not compile_outcome.success:
-            if sbt_config.test_with_coverage:
-                coverage_off_command = sbt_config.to_command(
-                    sbt_config.test_with_client, ["coverageOff"]
-                )
-                custom_check_output(
-                    logger=self._logger, command=coverage_off_command, use_print=True
-                )
-            return Output(
-                success=False,
-                message=f"Tests failed to compile for {step_input.project_execution.name}",
-                produced_artifact=None,
-            )
-
         command_test = self._construct_sbt_command(
-            project_name=step_input.project_execution.name,
-            config=sbt_config,
-            compile_test=False,
+            project_name=step_input.project_execution.name, config=sbt_config
         )
         run_outcome = custom_check_output(
             logger=self._logger, command=command_test, use_print=True
@@ -90,7 +66,7 @@ class TestSbt(Step):
             summary = sum_suites(suite)
             spec.test_results_summary = summary
             return Output(
-                success=summary.is_success,
+                success=test_result.success and summary.is_success,
                 message=f"Tests results produced for {project.name} ({summary})",
                 produced_artifact=test_result.produced_artifact,
             )
@@ -98,16 +74,14 @@ class TestSbt(Step):
         return test_result
 
     @staticmethod
-    def _construct_sbt_command(
-        project_name: str, config: SbtConfig, compile_test: bool
-    ):
+    def _construct_sbt_command(project_name: str, config: SbtConfig):
         command = list(
             filter(
                 None,
                 [
                     f"project {project_name}",
                     "coverageOn" if config.test_with_coverage else None,
-                    f"test{':compile' if compile_test else ''}",
+                    "test",
                     "coverageOff" if config.test_with_coverage else None,
                 ],
             )
