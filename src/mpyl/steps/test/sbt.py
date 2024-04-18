@@ -66,7 +66,7 @@ class TestSbt(Step):
             summary = sum_suites(suite)
             spec.test_results_summary = summary
             return Output(
-                success=test_result.success,
+                success=test_result.success and summary.is_success,
                 message=f"Tests results produced for {project.name} ({summary})",
                 produced_artifact=test_result.produced_artifact,
             )
