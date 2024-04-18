@@ -1,6 +1,5 @@
 """This module contains the ProjectExecution class."""
 
-import uuid
 from dataclasses import dataclass
 from typing import Optional
 
