@@ -1,6 +1,7 @@
 """This module contains the ProjectExecution class."""
-import uuid
+
 from dataclasses import dataclass
+from typing import Optional
 
 from .project import Project
 
@@ -8,14 +9,25 @@ from .project import Project
 @dataclass(frozen=True)
 class ProjectExecution:
     project: Project
-    cache_key: str
+    hashed_changes: Optional[str]
     cached: bool
 
     @staticmethod
-    def always_run(project: Project):
-        """Create a ProjectExecution for a project that will always run, regardless of caching"""
+    def create(project: Project, cached: bool, hashed_changes: Optional[str] = None):
+        if cached:
+            return ProjectExecution.skip(project, hashed_changes)
+        return ProjectExecution.run(project, hashed_changes)
+
+    @staticmethod
+    def skip(project: Project, hashed_changes: Optional[str] = None):
         return ProjectExecution(
-            project=project, cache_key=uuid.uuid4().hex, cached=False
+            project=project, hashed_changes=hashed_changes, cached=True
+        )
+
+    @staticmethod
+    def run(project: Project, hashed_changes: Optional[str] = None):
+        return ProjectExecution(
+            project=project, hashed_changes=hashed_changes, cached=False
         )
 
     @property

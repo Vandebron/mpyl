@@ -7,6 +7,7 @@ from pyaml_env import parse_config
 from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME
 from src.mpyl.project import Target, Project
 from src.mpyl.project_execution import ProjectExecution
+from src.mpyl.run_plan import RunPlan
 from src.mpyl.steps.deploy.k8s import cluster_config, render_manifests
 from src.mpyl.steps.deploy.k8s.chart import (
     ChartBuilder,
@@ -58,15 +59,17 @@ class TestKubernetesChart:
 
     @staticmethod
     def _get_builder(project: Project, run_properties=None):
-        project_execution = ProjectExecution.always_run(project)
+        project_execution = ProjectExecution.run(project)
 
         if not run_properties:
             project_executions = {project_execution}
-            run_plan = {
-                TestStage.build(): project_executions,
-                TestStage.test(): project_executions,
-                TestStage.deploy(): project_executions,
-            }
+            run_plan = RunPlan(
+                {
+                    TestStage.build(): project_executions,
+                    TestStage.test(): project_executions,
+                    TestStage.deploy(): project_executions,
+                }
+            )
             run_properties = test_data.run_properties_with_plan(plan=run_plan)
 
         required_artifact = Artifact(

@@ -1,12 +1,13 @@
 """Module to initiate run properties"""
+
 import logging
 from pathlib import Path
 from typing import Optional
 
 from ..cli import MpylCliParameters
 from ..project import load_project, Stage, Project
-from ..project_execution import ProjectExecution
-from ..stages.discovery import find_build_set
+from ..run_plan import RunPlan
+from ..stages.discovery import create_run_plan
 from ..steps.models import RunProperties
 from ..utilities.repo import Repository, RepoConfig
 
@@ -15,11 +16,10 @@ def construct_run_properties(
     config: dict,
     properties: dict,
     cli_parameters: MpylCliParameters = MpylCliParameters(),
-    run_plan: Optional[dict[Stage, set[ProjectExecution]]] = None,
+    run_plan: Optional[RunPlan] = None,
     all_projects: Optional[set[Project]] = None,
     root_dir: Path = Path(""),
     explain_run_plan: bool = False,
-    sequential: bool = False,
 ) -> RunProperties:
     tag = cli_parameters.tag or properties["build"]["versioning"].get("tag")
     if all_projects is None or run_plan is None:
@@ -44,17 +44,16 @@ def construct_run_properties(
                     Stage(stage["name"], stage["icon"])
                     for stage in properties["stages"]
                 ]
-                build_set_logger = logging.getLogger("mpyl")
+                run_plan_logger = logging.getLogger("mpyl")
                 if explain_run_plan:
-                    build_set_logger.setLevel("DEBUG")
+                    run_plan_logger.setLevel("DEBUG")
                 run_plan = _create_run_plan(
-                    all_projects=all_projects,
                     cli_parameters=cli_parameters,
+                    all_projects=all_projects,
+                    all_stages=stages,
                     explain_run_plan=explain_run_plan,
                     repo=repo,
-                    stages=stages,
                     tag=tag,
-                    sequential=sequential,
                 )
 
     if cli_parameters.local:
@@ -79,27 +78,39 @@ def construct_run_properties(
 
 
 def _create_run_plan(
-    all_projects: set[Project],
     cli_parameters: MpylCliParameters,
+    all_projects: set[Project],
+    all_stages: list[Stage],
     explain_run_plan: bool,
     repo: Repository,
-    stages: list[Stage],
     tag: Optional[str] = None,
-    sequential: Optional[bool] = False,
 ):
-    build_set_logger = logging.getLogger("mpyl")
+    run_plan_logger = logging.getLogger("mpyl")
     if explain_run_plan:
-        build_set_logger.setLevel("DEBUG")
+        run_plan_logger.setLevel("DEBUG")
 
-    return find_build_set(
-        logger=build_set_logger,
+    if cli_parameters.stage:
+        selected_stage = next(
+            (stage for stage in all_stages if stage.name == cli_parameters.stage), None
+        )
+    else:
+        selected_stage = None
+
+    if cli_parameters.projects:
+        selected_projects = {
+            p for p in all_projects if p.name in cli_parameters.projects.split(",")
+        }
+    else:
+        selected_projects = set()
+
+    return create_run_plan(
+        logger=run_plan_logger,
         repository=repo,
         all_projects=all_projects,
-        stages=stages,
+        all_stages=all_stages,
         tag=tag,
         local=cli_parameters.local,
         build_all=cli_parameters.all,
-        selected_stage=cli_parameters.stage,
-        selected_projects=cli_parameters.projects,
-        sequential=sequential,
+        selected_stage=selected_stage,
+        selected_projects=selected_projects,
     )

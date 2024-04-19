@@ -2,12 +2,13 @@ from datetime import datetime
 
 from src.mpyl.project import Stages, Project
 from src.mpyl.project_execution import ProjectExecution
+from src.mpyl.run_plan import RunPlan
 from src.mpyl.steps.deploy.k8s import DeployedHelmAppSpec
 from src.mpyl.steps.models import Output, Artifact, ArtifactType
 from src.mpyl.steps.run import RunResult
 from src.mpyl.steps.run_properties import construct_run_properties
 from src.mpyl.steps.steps import StepResult
-from src.mpyl.utilities.junit import JunitTestSpec
+from src.mpyl.utilities.junit import JunitTestSpec, TestRunSummary
 from tests import root_test_path
 from tests.test_resources import test_data
 from tests.test_resources.test_data import (
@@ -34,17 +35,17 @@ def create_test_result_with_plan() -> RunResult:
         run_properties=construct_run_properties(
             config=config_values,
             properties=properties_values,
-            run_plan={
-                TestStage.build(): {
-                    ProjectExecution.always_run(p) for p in build_projects
-                },
-                TestStage.test(): {
-                    ProjectExecution.always_run(p) for p in test_projects
-                },
-                TestStage.deploy(): {
-                    ProjectExecution.always_run(p) for p in deploy_projects
-                },
-            },
+            run_plan=RunPlan(
+                {
+                    TestStage.build(): {
+                        ProjectExecution.run(p) for p in build_projects
+                    },
+                    TestStage.test(): {ProjectExecution.run(p) for p in test_projects},
+                    TestStage.deploy(): {
+                        ProjectExecution.run(p) for p in deploy_projects
+                    },
+                }
+            ),
             all_projects=set(),
             root_dir=resource_path,
         ),
@@ -81,7 +82,11 @@ def append_results(result: RunResult) -> None:
                     revision="revision",
                     producing_step="Docker Test",
                     spec=JunitTestSpec(
-                        str(test_resource_path), "http://localhost/tests"
+                        test_output_path=str(test_resource_path),
+                        test_results_url="http://localhost/tests",
+                        test_results_summary=TestRunSummary(
+                            tests=51, failures=1, errors=0, skipped=0
+                        ),
                     ),
                 ),
             ),

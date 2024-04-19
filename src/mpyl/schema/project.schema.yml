@@ -87,6 +87,7 @@ properties:
           - Renew Lets Encrypt Deploy
           - Helm Deploy
           - Dagster Deploy
+          - BPM Diagram Deploy
       postdeploy:
         description: Additional steps that can be done after the project has been deployed.
         examples:
@@ -271,6 +272,17 @@ properties:
             type: string
             examples:
               - /python/my_project/dagster/repo.py
+      bpm:
+        additionalProperties: false
+        type: object
+        required:
+          - projectId
+        properties:
+          projectId:
+            description: >-
+              project Id where diagram is stored in Camunda Modeler,
+              you can find this value from Camunda Saas url when open the project
+            type: string
     minProperties: 1
     required:
       - namespace
