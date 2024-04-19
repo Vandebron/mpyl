@@ -45,7 +45,7 @@ class AfterBuildDocker(Step):
             revision=properties.versioning.revision,
             producing_step=self.meta.name,
             spec=DockerImageSpec(image=full_image_path),
-            hash=step_input.project_execution.cache_key,
+            hash=step_input.project_execution.hashed_changes,
         )
 
         if step_input.dry_run:

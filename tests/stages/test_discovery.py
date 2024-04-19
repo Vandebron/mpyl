@@ -28,12 +28,16 @@ from tests.test_resources.test_data import TestStage
 
 yaml = YAML()
 
+HASHED_CHANGES_OF_JOB = (
+    "e993ba4f2b2ae2c4840e1eed1414baa812932319d332b0d169365b0885ec2d6c"
+)
+
 
 @contextlib.contextmanager
 def _caching_for(
     project: str,
     stage: Stage = TestStage.build(),
-    hashed_contents: str = "e993ba4f2b2ae2c4840e1eed1414baa812932319d332b0d169365b0885ec2d6c",
+    hashed_contents: str = HASHED_CHANGES_OF_JOB,
 ):
     path = f"tests/projects/{project}/deployment/{RUN_ARTIFACTS_FOLDER}"
 
@@ -142,6 +146,7 @@ class TestDiscovery:
         assert len(project_executions) == 1
         job_execution = next(p for p in project_executions if p.project.name == "job")
         assert not job_execution.cached
+        assert job_execution.hashed_changes == HASHED_CHANGES_OF_JOB
 
     def test_stage_with_files_changed_and_existing_cache(self):
         with _caching_for(project="job"):
@@ -155,6 +160,7 @@ class TestDiscovery:
                 p for p in project_executions if p.project.name == "job"
             )
             assert job_execution.cached
+            assert job_execution.hashed_changes == HASHED_CHANGES_OF_JOB
 
     def test_stage_with_files_changed_but_filtered(self):
         with _caching_for(project="job"):
@@ -168,6 +174,8 @@ class TestDiscovery:
                 p for p in project_executions if p.project.name == "job"
             )
             assert not job_execution.cached
+            # all modified files are filtered out, no hash in current run
+            assert not job_execution.hashed_changes
 
     def test_stage_with_build_dependency_changed(self):
         with _caching_for(project="job"):
@@ -186,6 +194,8 @@ class TestDiscovery:
 
             # a build dependency changed, so this project should always run
             assert not job_execution.cached
+            # no files changes in the current run
+            assert not job_execution.hashed_changes
 
     def test_stage_with_test_dependency_changed(self):
         project_executions = self._helper_find_projects_to_execute(
@@ -214,6 +224,7 @@ class TestDiscovery:
 
             # a build dependency changed, so this project should always run even if there's a cached version available
             assert not job_execution.cached
+            assert job_execution.hashed_changes == HASHED_CHANGES_OF_JOB
 
     def test_should_correctly_check_root_path(self):
         assert not is_dependency_modified(
@@ -228,14 +239,14 @@ class TestDiscovery:
         )
 
     def test_is_stage_cached(self):
-        cache_key = "a generated test hash"
+        hashed_changes = "a generated test hash"
 
         test_artifact = Artifact(
             artifact_type=ArtifactType.DOCKER_IMAGE,
             revision="revision",
             producing_step="step",
             spec=DockerImageSpec(image="image"),
-            hash=cache_key,
+            hash=hashed_changes,
         )
 
         def create_test_output(
@@ -251,7 +262,7 @@ class TestDiscovery:
             project="a test project",
             stage="deploy",
             output=create_test_output(),
-            cache_key=cache_key,
+            hashed_changes=hashed_changes,
         ), "should not be cached if the stage is deploy"
 
         assert not is_project_cached_for_stage(
@@ -259,7 +270,7 @@ class TestDiscovery:
             project="a test project",
             stage="a test stage",
             output=None,
-            cache_key=cache_key,
+            hashed_changes=hashed_changes,
         ), "should not be cached if no output"
 
         assert not is_project_cached_for_stage(
@@ -267,7 +278,7 @@ class TestDiscovery:
             project="a test project",
             stage="a test stage",
             output=create_test_output(success=False),
-            cache_key=cache_key,
+            hashed_changes=hashed_changes,
         ), "should not be cached if output is not successful"
 
         assert not is_project_cached_for_stage(
@@ -275,7 +286,7 @@ class TestDiscovery:
             project="a test project",
             stage="a test stage",
             output=create_test_output(artifact=None),
-            cache_key=cache_key,
+            hashed_changes=hashed_changes,
         ), "should not be cached if no artifact produced"
 
         assert not is_project_cached_for_stage(
@@ -283,7 +294,15 @@ class TestDiscovery:
             project="a test project",
             stage="a test stage",
             output=create_test_output(),
-            cache_key="a hash that doesn't match",
+            hashed_changes=None,
+        ), "should not be cached if there are no changes in the current run"
+
+        assert not is_project_cached_for_stage(
+            logger=self.logger,
+            project="a test project",
+            stage="a test stage",
+            output=create_test_output(),
+            hashed_changes="a hash that doesn't match",
         ), "should not be cached if hash doesn't match"
 
         assert is_project_cached_for_stage(
@@ -291,7 +310,7 @@ class TestDiscovery:
             project="a test project",
             stage="a test stage",
             output=create_test_output(),
-            cache_key=cache_key,
+            hashed_changes=hashed_changes,
         ), "should be cached if hash matches"
 
     def test_listing_override_files(self):

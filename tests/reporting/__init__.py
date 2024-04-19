@@ -38,13 +38,11 @@ def create_test_result_with_plan() -> RunResult:
             run_plan=RunPlan(
                 {
                     TestStage.build(): {
-                        ProjectExecution.always_run(p) for p in build_projects
+                        ProjectExecution.run(p) for p in build_projects
                     },
-                    TestStage.test(): {
-                        ProjectExecution.always_run(p) for p in test_projects
-                    },
+                    TestStage.test(): {ProjectExecution.run(p) for p in test_projects},
                     TestStage.deploy(): {
-                        ProjectExecution.always_run(p) for p in deploy_projects
+                        ProjectExecution.run(p) for p in deploy_projects
                     },
                 }
             ),

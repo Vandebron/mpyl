@@ -93,49 +93,53 @@ def is_project_cached_for_stage(
     project: str,
     stage: str,
     output: Optional[Output],
-    cache_key: str,
+    hashed_changes: Optional[str],
 ) -> bool:
     cached = False
 
     if stage == deploy.STAGE_NAME:
         logger.debug(
-            f"Project {project} will execute stage {stage} again because this stage is never cached"
+            f"Project {project} will execute stage {stage} because this stage is never cached"
         )
     elif output is None:
         logger.debug(
-            f"Project {project} will execute stage {stage} again because there is no previous run"
+            f"Project {project} will execute stage {stage} because there is no previous run"
         )
     elif not output.success:
         logger.debug(
-            f"Project {project} will execute stage {stage} again because the previous run was not successful"
+            f"Project {project} will execute stage {stage} because the previous run was not successful"
         )
     elif output.produced_artifact is None:
         logger.debug(
-            f"Project {project} will execute stage {stage} again because there was no artifact in the previous run"
+            f"Project {project} will execute stage {stage} because there was no artifact in the previous run"
         )
     elif not output.produced_artifact.hash:
         logger.debug(
-            f"Project {project} will execute stage {stage} again because there is no cache key in the previous run"
+            f"Project {project} will execute stage {stage} because there are no hashed changes for the previous run"
         )
-    elif output.produced_artifact.hash != cache_key:
+    elif not hashed_changes:
         logger.debug(
-            f"Project {project} will execute stage {stage} again because its content changed since the previous run"
+            f"Project {project} will execute stage {stage} because there are no hashed changes for the current run"
+        )
+    elif output.produced_artifact.hash != hashed_changes:
+        logger.debug(
+            f"Project {project} will execute stage {stage} because its content changed since the previous run"
         )
         logger.debug(
-            f"Hash of contents for previous run: {output.produced_artifact.hash}"
+            f"Hashed changes for the previous run: {output.produced_artifact.hash}"
         )
-        logger.debug(f"Hash of contents for current run:  {cache_key}")
+        logger.debug(f"Hashed changes for the current run:  {hashed_changes}")
     else:
         logger.debug(
             f"Project {project} will skip stage {stage} because its content did not change since the previous run"
         )
-        logger.debug(f"Hash of contents for current run: {cache_key}")
+        logger.debug(f"Hashed changes for the current run: {hashed_changes}")
         cached = True
 
     return cached
 
 
-def _cache_key_from_changes_in_project(
+def _hash_changes_in_project(
     logger: logging.Logger,
     project: Project,
     changeset: Changeset,
@@ -172,30 +176,20 @@ def to_project_executions(
     def to_project_execution(
         project: Project,
     ) -> ProjectExecution:
-        cache_key = _cache_key_from_changes_in_project(
+        hashed_changes = _hash_changes_in_project(
             logger=logger, project=project, changeset=changeset
         )
 
-        if cache_key:
-            logger.debug(
-                f"Project {project.name}: using hash of modified files as cache key {cache_key}"
-            )
-        else:
-            logger.debug(
-                f"Project {project.name}: no content changes, falling back to revision as cache key: {changeset.sha}"
-            )
-            cache_key = changeset.sha
-
-        return ProjectExecution(
+        return ProjectExecution.create(
             project=project,
-            cache_key=cache_key,
             cached=is_project_cached_for_stage(
                 logger=logger,
                 project=project.name,
                 stage=stage,
                 output=Output.try_read(project.target_path, stage),
-                cache_key=cache_key,
+                hashed_changes=hashed_changes,
             ),
+            hashed_changes=hashed_changes,
         )
 
     return set(map(to_project_execution, projects))
@@ -227,39 +221,31 @@ def find_projects_to_execute(
             logger.debug(
                 f"Project {project} will execute stage {stage} because a dependency was modified"
             )
-            # pylint: disable=fixme
-            # FIXME ptab we should still calculate a hash (in case files changed) to speed up a possible next build
-            # this will come in a following PR
-            return ProjectExecution.always_run(project)
 
-        if is_project_modified:
-            cache_key = _cache_key_from_changes_in_project(
-                logger=logger, project=project, changeset=changeset
-            )
-            if cache_key:
-                logger.debug(
-                    f"Project {project.name}: using hash of modified files as cache key {cache_key}"
+            if is_project_modified:
+                hashed_changes = _hash_changes_in_project(
+                    logger=logger, project=project, changeset=changeset
                 )
             else:
-                # pylint: disable=fixme
-                # FIXME ptab using revision as a cache_key makes no sense, as we will never check against
-                #  that commit again. Would be simpler just to fallback to the UUID generation here for consistency.
-                logger.debug(
-                    f"Project {project.name}: no content changes, falling back to revision as"
-                    f" cache key: {changeset.sha}"
-                )
-                cache_key = changeset.sha
+                hashed_changes = None
 
-            return ProjectExecution(
+            return ProjectExecution.run(project, hashed_changes)
+
+        if is_project_modified:
+            hashed_changes = _hash_changes_in_project(
+                logger=logger, project=project, changeset=changeset
+            )
+
+            return ProjectExecution.create(
                 project=project,
-                cache_key=cache_key,
                 cached=is_project_cached_for_stage(
                     logger=logger,
                     project=project.name,
                     stage=stage,
                     output=Output.try_read(project.target_path, stage),
-                    cache_key=cache_key,
+                    hashed_changes=hashed_changes,
                 ),
+                hashed_changes=hashed_changes,
             )
 
         return None

@@ -59,7 +59,7 @@ class TestKubernetesChart:
 
     @staticmethod
     def _get_builder(project: Project, run_properties=None):
-        project_execution = ProjectExecution.always_run(project)
+        project_execution = ProjectExecution.run(project)
 
         if not run_properties:
             project_executions = {project_execution}
