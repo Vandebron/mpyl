@@ -243,7 +243,7 @@ def find_projects_to_execute(
             else:
                 # pylint: disable=fixme
                 # FIXME ptab using revision as a cache_key makes no sense, as we will never check against
-                #  that commit against. Would be simpler just to fallback to the UUID generation here for consistency.
+                #  that commit again. Would be simpler just to fallback to the UUID generation here for consistency.
                 logger.debug(
                     f"Project {project.name}: no content changes, falling back to revision as"
                     f" cache key: {changeset.sha}"
