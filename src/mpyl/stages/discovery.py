@@ -223,6 +223,15 @@ def find_projects_to_execute(
             for changed_file in changeset.files_touched()
         )
 
+        if is_any_dependency_modified:
+            logger.debug(
+                f"Project {project} will execute stage {stage} because a dependency was modified"
+            )
+            # pylint: disable=fixme
+            # FIXME ptab we should still calculate a hash (in case files changed) to speed up a possible next build
+            # this will come in a following PR
+            return ProjectExecution.always_run(project)
+
         if is_project_modified:
             cache_key = _cache_key_from_changes_in_project(
                 logger=logger, project=project, changeset=changeset
@@ -232,31 +241,28 @@ def find_projects_to_execute(
                     f"Project {project.name}: using hash of modified files as cache key {cache_key}"
                 )
             else:
+                # pylint: disable=fixme
+                # FIXME ptab using revision as a cache_key makes no sense, as we will never check against
+                #  that commit again. Would be simpler just to fallback to the UUID generation here for consistency.
                 logger.debug(
                     f"Project {project.name}: no content changes, falling back to revision as"
                     f" cache key: {changeset.sha}"
                 )
                 cache_key = changeset.sha
 
-        elif is_any_dependency_modified:
-            cache_key = changeset.sha
-            logger.debug(
-                f"Project {project.name}: using git revision as cache key: {cache_key}"
-            )
-        else:
-            return None
-
-        return ProjectExecution(
-            project=project,
-            cache_key=cache_key,
-            cached=is_project_cached_for_stage(
-                logger=logger,
-                project=project.name,
-                stage=stage,
-                output=Output.try_read(project.target_path, stage),
+            return ProjectExecution(
+                project=project,
                 cache_key=cache_key,
-            ),
-        )
+                cached=is_project_cached_for_stage(
+                    logger=logger,
+                    project=project.name,
+                    stage=stage,
+                    output=Output.try_read(project.target_path, stage),
+                    cache_key=cache_key,
+                ),
+            )
+
+        return None
 
     return {
         project_execution
