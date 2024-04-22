@@ -243,6 +243,7 @@ def run(
     required=False,
     help="Stage to get status for",
 )
+@click.option("--tag", "-t", help="Tag to build", type=click.STRING, required=False)
 @click.option("--explain", "-e", is_flag=True, help="Explain the current run plan")
 @click.pass_obj
 def status(obj: CliContext, all_, projects, stage, explain):
