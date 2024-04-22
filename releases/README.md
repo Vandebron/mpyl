@@ -1,5 +1,18 @@
 # Release notes
 
+## MPyL 1.6.5
+
+
+#### Tests
+- Execute a single sbt `test` command instead of `test:compile` and `test:test` sequentially (removes the need for the experimental thin client)
+
+### Dependency management
+- Always re-execute a stage for a project when one or more of their dependencies are modified
+- Produce a hash of the modified files even when the stage is cached (so a follow-up commit can be cached)
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.6.5)
+
 ## MPyL 1.6.4
 
 
