@@ -64,7 +64,7 @@ def print_status(
     console.print(f"MPyL log level is set to {run_properties.console.log_level}")
     branch = obj.repo.get_branch
     main_branch = obj.repo.main_branch
-    tag = run_properties.versioning.tag
+    tag = cli_params.tag or run_properties.versioning.tag
 
     if tag is None:
         if run_properties.versioning.branch and not obj.repo.get_branch:
