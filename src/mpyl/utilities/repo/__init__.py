@@ -200,9 +200,6 @@ class Repository:  # pylint: disable=too-many-public-methods
             return "/".join(parts)
         return f"origin/{self.main_branch}"
 
-    def fit_for_tag_build(self, tag: str) -> bool:
-        return len(self.changes_in_tagged_commit(tag).files_touched()) > 0
-
     def __get_filter_patterns(self):
         return ["--"] + [f":!{pattern}" for pattern in self.config.ignore_patterns]
 

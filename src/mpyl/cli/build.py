@@ -196,15 +196,6 @@ def run(
     )
     obj.console.log(parameters)
 
-    if tag and not obj.repo.fit_for_tag_build(tag):
-        obj.console.print(
-            Markdown(
-                f"Current state of repo is not fit for building tag `{tag}`."
-                f"Validate the status of the repo by running `mpyl repo status`."
-            )
-        )
-        sys.exit(1)
-
     run_properties = construct_run_properties(
         config=obj.config,
         properties=obj.run_properties,
