@@ -200,9 +200,6 @@ class Repository:  # pylint: disable=too-many-public-methods
             return "/".join(parts)
         return f"origin/{self.main_branch}"
 
-    def fit_for_tag_build(self, tag: str) -> bool:
-        return len(self.changes_in_tagged_commit(tag).files_touched()) > 0
-
     def __get_filter_patterns(self):
         return ["--"] + [f":!{pattern}" for pattern in self.config.ignore_patterns]
 
@@ -231,32 +228,19 @@ class Repository:  # pylint: disable=too-many-public-methods
             untracked_files=set(self._repo.untracked_files),
         )
 
-    def changes_in_tagged_commit(self, current_tag: str) -> Changeset:
-        current_revision = self._repo.head.commit
-        curr_rev_tag = self._repo.git.tag(current_revision, points_at=True)
-        logging.debug(f"Current revision: {current_revision} tag: {curr_rev_tag}")
+    def changes_in_tagged_commit(self, tag: str) -> Changeset:
+        head_commit = self._repo.head.commit
+        tag_commit = self._repo.tag(f"refs/tags/{tag}").commit
+        logging.debug(f"HEAD revision: {head_commit}, tag revision: {tag_commit}")
 
-        if curr_rev_tag != current_tag:
-            logging.error(f"HEAD is at {curr_rev_tag} not at expected `{current_tag}`")
-            return Changeset.empty(self.get_sha)
-
-        return self.changes_in_merge_commit()
-
-    def changes_in_merge_commit(self) -> Changeset:
-        parent_revs = self._repo.head.commit.parents
-        if not parent_revs:
+        if head_commit != tag_commit:
             logging.error(
-                "HEAD is not at merge commit, cannot determine changed files."
+                f"HEAD is at {head_commit} not at expected {tag_commit} for tag `{tag}`"
             )
             return Changeset.empty(self.get_sha)
-        logging.debug(f"Parent revisions: {parent_revs}")
-        files_changed = set(
-            self._repo.git.diff(
-                f"{str(parent_revs[0])}..{str(self._repo.head.commit)}",
-                name_status=True,
-            ).splitlines()
-        )
-        return Changeset.from_diff(sha=str(self.get_sha), diff=files_changed)
+
+        diff = set(self._repo.git.diff(f"{tag}^..{tag}", name_status=True).splitlines())
+        return Changeset.from_diff(sha=tag_commit.hexsha, diff=diff)
 
     def create_branch(self, branch_name: str):
         return self._repo.git.checkout("-b", f"{branch_name}")
