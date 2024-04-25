@@ -231,18 +231,16 @@ class Repository:  # pylint: disable=too-many-public-methods
     def changes_in_tagged_commit(self, tag: str) -> Changeset:
         head_commit = self._repo.head.commit
         tag_commit = self._repo.tag(f"refs/tags/{tag}").commit
-        logging.debug(
-            f"HEAD revision: {str(head_commit)}, tag revision: {str(tag_commit)}"
-        )
+        logging.debug(f"HEAD revision: {head_commit}, tag revision: {tag_commit}")
 
         if head_commit != tag_commit:
             logging.error(
-                f"HEAD is at {str(head_commit)} not at expected {str(tag_commit)} for tag `{tag}`"
+                f"HEAD is at {head_commit} not at expected {tag_commit} for tag `{tag}`"
             )
             return Changeset.empty(self.get_sha)
 
         diff = set(self._repo.git.diff(f"{tag}^..{tag}", name_status=True).splitlines())
-        return Changeset.from_diff(sha=str(tag_commit), diff=diff)
+        return Changeset.from_diff(sha=tag_commit.hexsha, diff=diff)
 
     def create_branch(self, branch_name: str):
         return self._repo.git.checkout("-b", f"{branch_name}")
