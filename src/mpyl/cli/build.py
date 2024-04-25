@@ -243,14 +243,15 @@ def run(
     required=False,
     help="Stage to get status for",
 )
+@click.option("--tag", "-t", help="Tag to build", type=click.STRING, required=False)
 @click.option("--explain", "-e", is_flag=True, help="Explain the current run plan")
 @click.pass_obj
-def status(obj: CliContext, all_, projects, stage, explain):
+def status(obj: CliContext, all_, projects, stage, tag, explain):
     upgrade_check = None
     try:
         upgrade_check = asyncio.wait_for(warn_if_update(obj.console), timeout=3)
         parameters = MpylCliParameters(
-            local=sys.stdout.isatty(), all=all_, projects=projects, stage=stage
+            local=sys.stdout.isatty(), all=all_, projects=projects, stage=stage, tag=tag
         )
         print_status(obj, parameters, explain)
     except asyncio.exceptions.TimeoutError:
