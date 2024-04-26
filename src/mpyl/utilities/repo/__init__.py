@@ -2,7 +2,7 @@
 `mpyl.utilities.repo.Repository` is a facade for the Version Control System.
 At this moment Git is the only supported VCS.
 """
-
+import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
@@ -228,19 +228,29 @@ class Repository:  # pylint: disable=too-many-public-methods
             untracked_files=set(self._repo.untracked_files),
         )
 
-    def changes_in_tagged_commit(self, tag: str) -> Changeset:
+    def changes_in_tagged_commit(self, logger: logging.Logger, tag: str) -> Changeset:
         head_commit = self._repo.head.commit
         tag_commit = self._repo.tag(f"refs/tags/{tag}").commit
-        logging.debug(f"HEAD revision: {head_commit}, tag revision: {tag_commit}")
+        logger.debug(f"HEAD revision: {head_commit}, tag revision: {tag_commit}")
 
         if head_commit != tag_commit:
-            logging.error(
+            logger.error(
                 f"HEAD is at {head_commit} not at expected {tag_commit} for tag `{tag}`"
             )
             return Changeset.empty(self.get_sha)
 
         diff = set(self._repo.git.diff(f"{tag}^..{tag}", name_status=True).splitlines())
         return Changeset.from_diff(sha=tag_commit.hexsha, diff=diff)
+
+    def changes_from_file(
+        self, logger: logging.Logger, changed_files_path: str
+    ) -> Changeset:
+        with open(changed_files_path, "r", encoding="utf-8") as file:
+            logger.debug(
+                f"Creating Changeset based on changed files in {changed_files_path}"
+            )
+            changed_files = json.load(file)
+            return Changeset(sha=self.get_sha, _files_touched=changed_files)
 
     def create_branch(self, branch_name: str):
         return self._repo.git.checkout("-b", f"{branch_name}")

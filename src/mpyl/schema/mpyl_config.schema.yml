@@ -166,6 +166,9 @@ definitions:
     type: object
     additionalProperties: false
     properties:
+      changedFilesPath:
+        type: string
+        description: "Path to the file that contains the changed files"
       git:
         "$ref": "#/definitions/Git"
       github:
