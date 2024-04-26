@@ -1,4 +1,5 @@
 vcs:
+  changedFilesPath: !ENV ${CHANGED_FILES_PATH}
   git:
     mainBranch: 'main'
     ignorePatterns: ['*.md', '*.svg']
