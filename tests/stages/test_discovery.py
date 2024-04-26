@@ -90,6 +90,14 @@ class TestDiscovery:
             steps=self.steps,
         )
 
+    def test_changed_files_from_file(self):
+        with test_data.get_repo() as repo:
+            changeset = repo.changes_from_file(
+                self.logger, "tests/test_resources/repository/changed_files.json"
+            )
+            assert len(changeset._files_touched) == 1
+            assert "tests/projects/job/src/hello-world.py" in changeset._files_touched
+
     def test_find_projects_to_execute_for_each_stage(self):
         with test_data.get_repo() as repo:
             changeset = Changeset(
