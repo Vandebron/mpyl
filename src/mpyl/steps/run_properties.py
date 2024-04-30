@@ -47,6 +47,7 @@ def construct_run_properties(
                 run_plan_logger = logging.getLogger("mpyl")
                 if explain_run_plan:
                     run_plan_logger.setLevel("DEBUG")
+                changed_files_path = config["vcs"].get("changedFilesPath", None)
                 run_plan = _create_run_plan(
                     cli_parameters=cli_parameters,
                     all_projects=all_projects,
@@ -54,6 +55,7 @@ def construct_run_properties(
                     explain_run_plan=explain_run_plan,
                     repo=repo,
                     tag=tag,
+                    changed_files_path=changed_files_path,
                 )
 
     if cli_parameters.local:
@@ -84,6 +86,7 @@ def _create_run_plan(
     explain_run_plan: bool,
     repo: Repository,
     tag: Optional[str] = None,
+    changed_files_path: Optional[str] = None,
 ):
     run_plan_logger = logging.getLogger("mpyl")
     if explain_run_plan:
@@ -113,4 +116,5 @@ def _create_run_plan(
         build_all=cli_parameters.all,
         selected_stage=selected_stage,
         selected_projects=selected_projects,
+        changed_files_path=changed_files_path,
     )

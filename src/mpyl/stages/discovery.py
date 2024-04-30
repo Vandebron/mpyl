@@ -147,7 +147,7 @@ def _hash_changes_in_project(
     files_to_hash = set(
         filter(
             lambda changed_file: file_belongs_to_project(logger, project, changed_file),
-            changeset.files_touched(status={"A", "M", "R"}),
+            changeset.files_touched(status={"A", "M", "R", "C"}),
         )
     )
 
@@ -268,6 +268,7 @@ def create_run_plan(
     selected_projects: set[Project],
     tag: Optional[str] = None,
     selected_stage: Optional[Stage] = None,
+    changed_files_path: Optional[str] = None,
 ) -> RunPlan:
     run_plan_file = Path(RUN_ARTIFACTS_FOLDER) / "run_plan.pickle"
 
@@ -289,6 +290,7 @@ def create_run_plan(
         selected_projects=selected_projects,
         selected_stage=selected_stage,
         tag=tag,
+        changed_files_path=changed_files_path,
     )
 
     _store_run_plan(logger, run_plan, run_plan_file)
@@ -322,10 +324,17 @@ def _discover_run_plan(
     selected_projects: set[Project],
     selected_stage: Optional[Stage],
     tag: Optional[str] = None,
+    changed_files_path: Optional[str] = None,
 ) -> RunPlan:
     logger.info("Discovering run plan...")
     run_plan: RunPlan = RunPlan.empty()
-    changeset = _get_changes(repository, local, tag)
+    changeset = _get_changes(
+        logger=logger,
+        repo=repository,
+        local=local,
+        tag=tag,
+        changed_files_path=changed_files_path,
+    )
 
     for stage in all_stages:
         if selected_stage and stage != selected_stage:
@@ -366,11 +375,21 @@ def for_stage(projects: set[Project], stage: Stage) -> set[Project]:
     return {p for p in projects if p.stages.for_stage(stage.name)}
 
 
-def _get_changes(repo: Repository, local: bool, tag: Optional[str] = None):
+def _get_changes(
+    logger: logging.Logger,
+    repo: Repository,
+    local: bool,
+    tag: Optional[str] = None,
+    changed_files_path: Optional[str] = None,
+):
+    if changed_files_path:
+        return repo.changes_from_file(
+            logger=logger, changed_files_path=changed_files_path
+        )
     if local:
         return repo.changes_in_branch_including_local()
     if tag:
-        return repo.changes_in_tagged_commit(tag)
+        return repo.changes_in_tagged_commit(logger=logger, tag=tag)
 
     return repo.changes_in_branch()
 
