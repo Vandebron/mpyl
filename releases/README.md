@@ -1,5 +1,18 @@
 # Release notes
 
+## MPyL 1.6.6
+
+
+#### Pass changed files
+- Allow to pass a .json of changed files to determine the run plan
+- The file format has to be a list/dict of `{"path/to/file": "change_type"}`, where `change_type` is one of `["A", "C", "D", "M", "R"]`
+
+#### Run plan
+- Add the maintainers field to the run plan json
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.6.6)
+
 ## MPyL 1.6.5
 
 
