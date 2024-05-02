@@ -34,7 +34,7 @@ def deploy_to_cluster(
 
 
 def deploy_to_modeler(
-    logger: Logger, project_name: str, config: CamundaConfig
+    logger: Logger, project_name: str, config: CamundaConfig, pr_number: str
 ) -> Output:
     credentials = config.modeler_credentials.to_dict()
     camunda_client = CamundaModelerClient(
@@ -45,7 +45,7 @@ def deploy_to_modeler(
     bpm_file_path = config.depolyment_path.bpm_diagram_folder_path
     try:
         deploy_diagram_to_modeler(
-            logger, bpm_file_path, config.project_id, camunda_client
+            logger, bpm_file_path, config.project_id, camunda_client, pr_number
         )
     except AuthorizationError:
         return Output(

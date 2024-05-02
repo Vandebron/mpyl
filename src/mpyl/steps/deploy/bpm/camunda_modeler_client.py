@@ -47,3 +47,7 @@ class CamundaModelerClient:
     def update_file_in_modeler(self, file_id, data):
         endpoint = f"files/{file_id}"
         return self.http.patch(endpoint=endpoint, json=data).json()
+
+    def create_milestone_in_modeler(self, data):
+        endpoint = "milestones"
+        return self.http.post(endpoint=endpoint, json=data).json()

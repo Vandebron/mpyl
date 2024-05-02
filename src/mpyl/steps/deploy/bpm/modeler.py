@@ -1,6 +1,7 @@
 """Camunda modeler related methods to deploy diagrams"""
 
 import os
+from datetime import datetime
 from logging import Logger
 from collections import namedtuple
 from .camunda_modeler_client import CamundaModelerClient
@@ -9,7 +10,11 @@ File = namedtuple("File", ["name", "file_id", "revision"])
 
 
 def deploy_diagram_to_modeler(
-    logger: Logger, bpm_file_path: str, project_id: str, client: CamundaModelerClient
+    logger: Logger,
+    bpm_file_path: str,
+    project_id: str,
+    client: CamundaModelerClient,
+    pr_number: str,
 ) -> None:
     for file_name in (
         [fn for fn in os.listdir(bpm_file_path) if fn.endswith(".bpmn")]
@@ -20,6 +25,7 @@ def deploy_diagram_to_modeler(
         file_info = get_file_data(file_name, project_id, client)
         file_path = os.path.join(bpm_file_path, file_name)
         update_diagram(file_path, file_info, client)
+        create_milestone(file_info, pr_number, client)
 
 
 def get_file_data(
@@ -57,3 +63,17 @@ def update_diagram(
             "revision": file_data.revision,
         }
         client.update_file_in_modeler(file_data.file_id, request)
+
+
+def create_milestone(
+    file_data: File, pr_number: str, client: CamundaModelerClient
+) -> None:
+    current_date_time = datetime.now()
+    formatted_date_time = current_date_time.strftime("%Y%m%d%H%M")
+    milestone_name = formatted_date_time + "-" + pr_number
+    request = {
+        "name": milestone_name,
+        "fileId": file_data.file_id,
+    }
+
+    client.create_milestone_in_modeler(request)
