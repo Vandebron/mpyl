@@ -42,8 +42,7 @@ def custom_check_output(
                     f"Process {command_argument} does not have an stdout"
                 )
 
-            while process.poll() is None:
-                line = process.stdout.readline().rstrip()
+            for line in process.stdout:
                 if use_print:
                     print(line)
                 else:
