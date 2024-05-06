@@ -43,11 +43,10 @@ def custom_check_output(
                 )
 
             for line in process.stdout:
-                stripped_line = line.rstrip()
                 if use_print:
-                    print(stripped_line)
+                    print(line)
                 else:
-                    logger.info(try_parse_ansi(stripped_line))
+                    logger.info(try_parse_ansi(line))
 
             success = process.wait() == 0
             if not success:
