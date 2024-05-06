@@ -42,16 +42,13 @@ def custom_check_output(
                     f"Process {command_argument} does not have an stdout"
                 )
 
-            for line in iter(process.stdout.readline, ""):
-                if line:
-                    stripped_line = line.rstrip()
-                    if use_print:
-                        print(stripped_line)
-                    else:
-                        logger.info(try_parse_ansi(stripped_line))
+            for line in process.stdout:
+                stripped_line = line.rstrip()
+                if use_print:
+                    print(stripped_line)
+                else:
+                    logger.info(try_parse_ansi(stripped_line))
 
-                if process.poll() is not None:
-                    break
             success = process.wait() == 0
             if not success:
                 if process.stderr:
