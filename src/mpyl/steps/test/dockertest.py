@@ -12,6 +12,7 @@ The test results need to be written to a folder named `$WORKDIR/target/test-repo
 
 
 """
+
 from logging import Logger
 from typing import cast
 
@@ -72,9 +73,9 @@ class TestDocker(Step):
             raise ValueError("docker.testTarget must be specified")
 
         tag = docker_image_tag(step_input) + "-test"
-        project = step_input.project
+        project = step_input.project_execution.project
         dockerfile = docker_file_path(project=project, docker_config=docker_config)
-        docker_registry_config = registry_for_project(docker_config, step_input.project)
+        docker_registry_config = registry_for_project(docker_config, project)
         success = build(
             logger=self._logger,
             root_path=docker_config.root_folder,
@@ -84,7 +85,7 @@ class TestDocker(Step):
             registry_config=docker_registry_config,
             build_args=get_default_build_args(
                 full_image_path_for_project(step_input),
-                step_input.project.maintainer,
+                project.maintainer,
                 step_input.run_properties.versioning.identifier,
             ),
         )
@@ -94,12 +95,13 @@ class TestDocker(Step):
             artifact = self.extract_test_results(
                 self._logger, project, container, step_input
             )
-            docker_registry = registry_for_project(docker_config, step_input.project)
+            docker_registry = registry_for_project(docker_config, project)
             if not step_input.dry_run and docker_registry.cache_from_registry:
                 push_to_registry(self._logger, docker_registry, tag)
 
-            suite = to_test_suites(cast(JunitTestSpec, artifact.spec))
-            summary = sum_suites(suite)
+            spec = cast(JunitTestSpec, artifact.spec)
+            summary = sum_suites(to_test_suites(spec))
+            spec.test_results_summary = summary
 
             output = Output(
                 success=summary.is_success,

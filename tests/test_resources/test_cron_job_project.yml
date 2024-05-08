@@ -24,12 +24,28 @@ deployment:
       all: --env test
     job:
       cron:
-        suspend: true
-        schedule: "0 22 * * *"
-        timeZone: "Europe/Amsterdam"
-        successfulJobsHistoryLimit: 3
-        failedJobsHistoryLimit: 1
-        concurrencyPolicy: Allow
+        all:
+          suspend: true
+          schedule: "0 22 * * *"
+          timeZone: "Europe/Amsterdam"
+          successfulJobsHistoryLimit: 3
+          failedJobsHistoryLimit: 1
+          concurrencyPolicy: Allow
+    metrics:
+      enabled: true
+      alerts:
+        - name: 'JobError'
+          expr: 'true'
+          forDuration: '1m'
+          description: 'Job has encountered errors'
+          severity: 'warning'
+        - name: "the name of the alert"
+          expr: "a prometheus expression"
+          forDuration: 0m # Fire instantly
+          severity: signup_alerting_once
+          description: |-
+            **{{ $value }}** new signup failures with reason `{{ $labels.reason }}`.
+            You can find more details in: <unrelated link>
 dependencies:
   test:
     - tests/projects/service/file.py

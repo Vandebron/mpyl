@@ -1,7 +1,7 @@
 name: job
 description: "A job"
 maintainer: ["MPyL"]
-mpylVersion: 1.0.10
+mpylVersion: 1.4.18
 stages:
   build: "Docker Build"
   test: "Echo Test"
@@ -9,10 +9,16 @@ stages:
 deployment:
   namespace: job
   kubernetes:
+    rancher:
+      projectId:
+        all: "p-11111"
     job:
       cron:
-        schedule: "0 22 * * *"
-        timeZone: "Europe/Amsterdam"
+        all:
+          schedule: "0 22 * * *"
+          timeZone: "Europe/Amsterdam"
 dependencies:
+  build:
+    - tests/projects/sbt-service/src/
   test:
     - tests/projects/service/file.py

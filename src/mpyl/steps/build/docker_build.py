@@ -17,6 +17,7 @@ to a folder named `$WORKDIR/target/test-reports/`.
 .. include:: ../../../../tests/projects/service/deployment/Dockerfile-mpl
 ```
 """
+
 import os
 from logging import Logger
 
@@ -24,7 +25,8 @@ from .post_docker_build import AfterBuildDocker
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType, input_to_artifact
 from . import STAGE_NAME
-from ...constants import BUILD_ARTIFACTS_FOLDER
+from ...constants import RUN_ARTIFACTS_FOLDER
+from ...utilities import replace_pr_number
 from ...utilities.docker import (
     DockerConfig,
     build,
@@ -37,7 +39,7 @@ from ...utilities.docker import (
     full_image_path_for_project,
 )
 
-DOCKER_IGNORE_DEFAULT = ["**/target/*", f"**/{BUILD_ARTIFACTS_FOLDER}/*"]
+DOCKER_IGNORE_DEFAULT = ["**/target/*", f"**/{RUN_ARTIFACTS_FOLDER}/*"]
 
 
 class BuildDocker(Step):
@@ -65,10 +67,12 @@ class BuildDocker(Step):
 
         image_tag = docker_image_tag(step_input)
         dockerfile = docker_file_path(
-            project=step_input.project, docker_config=docker_config
+            project=step_input.project_execution.project, docker_config=docker_config
         )
 
-        docker_registry_config = registry_for_project(docker_config, step_input.project)
+        docker_registry_config = registry_for_project(
+            docker_config, step_input.project_execution.project
+        )
         if not step_input.dry_run:
             # log in to registry, because we may need to pull in a base image
             login(logger=self._logger, registry_config=docker_registry_config)
@@ -79,12 +83,15 @@ class BuildDocker(Step):
 
         build_args: dict[str, str] = get_default_build_args(
             full_image_path_for_project(step_input),
-            step_input.project.maintainer,
+            step_input.project_execution.project.maintainer,
             step_input.run_properties.versioning.identifier,
         )
-        if build_config := step_input.project.build:
+        if build_config := step_input.project_execution.project.build:
             build_args |= {
-                arg.key: arg.get_value(step_input.run_properties.target)
+                arg.key: replace_pr_number(
+                    arg.get_value(step_input.run_properties.target),
+                    step_input.run_properties.versioning.pr_number,
+                )
                 for arg in build_config.args.plain
             }
 
@@ -95,11 +102,11 @@ class BuildDocker(Step):
                 set(os.environ).union(set(build_args.keys()))
             ):
                 self._logger.error(
-                    f"Project {step_input.project.name} requires {missing} environment variable(s) to be set"
+                    f"Project {step_input.project_execution.name} requires {missing} environment variable(s) to be set"
                 )
                 return Output(
                     success=False,
-                    message=f"Failed to build docker image for {step_input.project.name}",
+                    message=f"Failed to build docker image for {step_input.project_execution.name}",
                     produced_artifact=None,
                 )
 
@@ -118,18 +125,20 @@ class BuildDocker(Step):
             build_args=build_args,
         )
         artifact = input_to_artifact(
-            ArtifactType.DOCKER_IMAGE, step_input, spec=DockerImageSpec(image=image_tag)
+            artifact_type=ArtifactType.DOCKER_IMAGE,
+            step_input=step_input,
+            spec=DockerImageSpec(image=image_tag),
         )
 
         if success:
             return Output(
                 success=True,
-                message=f"Built {step_input.project.name}",
+                message=f"Built {step_input.project_execution.name}",
                 produced_artifact=artifact,
             )
 
         return Output(
             success=False,
-            message=f"Failed to build docker image for {step_input.project.name}",
+            message=f"Failed to build docker image for {step_input.project_execution.name}",
             produced_artifact=None,
         )

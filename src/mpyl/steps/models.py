@@ -10,6 +10,8 @@ from ruamel.yaml import YAML, yaml_object  # type: ignore
 
 from . import deploy
 from ..project import Project, Stage, Target
+from ..project_execution import ProjectExecution
+from ..run_plan import RunPlan
 from ..validation import validate
 
 yaml = YAML()
@@ -96,13 +98,13 @@ class RunProperties:
     """All stage definitions"""
     projects: set[Project]
     """All projects"""
-    run_plan: dict[Stage, set[Project]]
+    run_plan: RunPlan
     """Stages and projects for this run"""
 
     @staticmethod
     def for_local_run(
         config: dict,
-        run_plan: dict[Stage, set[Project]],
+        run_plan: RunPlan,
         revision: str,
         branch: Optional[str],
         stages: list[Stage],
@@ -124,14 +126,15 @@ class RunProperties:
     def from_configuration(
         run_properties: dict,
         config: dict,
-        run_plan: dict[Stage, set[Project]],
+        run_plan: RunPlan,
         all_projects: set[Project],
-        cli_tag: Optional[str],
+        cli_tag: Optional[str] = None,
+        root_dir: Path = Path("."),
     ):
         build_dict = pkgutil.get_data(__name__, "../schema/run_properties.schema.yml")
 
         if build_dict:
-            validate(run_properties, build_dict.decode("utf-8"))
+            validate(run_properties, build_dict.decode("utf-8"), root_dir)
 
         build = run_properties["build"]
         versioning_config = build["versioning"]
@@ -168,10 +171,10 @@ class RunProperties:
         )
 
     @property
-    def projects_to_deploy(self):
+    def projects_to_deploy(self) -> set[ProjectExecution]:
         return next(
-            project
-            for stage, project in self.run_plan.items()
+            project_execution
+            for stage, project_execution in self.run_plan.items()
             if stage.name == deploy.STAGE_NAME
         )
 
@@ -226,12 +229,13 @@ class Artifact:
     revision: str
     producing_step: str
     spec: ArtifactSpec
+    hash: Optional[str] = None
 
 
 @yaml_object(yaml)
 @dataclass(frozen=True)
 class Input:
-    project: Project
+    project_execution: ProjectExecution
     run_properties: RunProperties
     """Run specific properties"""
     required_artifact: Optional[Artifact] = None
@@ -240,7 +244,9 @@ class Input:
     def as_spec(self, spec_type: Type[ArtifactSpec]):
         """Returns the artifact spec as type :param typ:"""
         if self.required_artifact is None:
-            raise ValueError(f"Artifact required for {self.project.name} not set")
+            raise ValueError(
+                f"Artifact required for {self.project_execution.name} not set"
+            )
         return cast(spec_type, self.required_artifact.spec)  # type: ignore
 
 
@@ -275,6 +281,7 @@ def input_to_artifact(
     return Artifact(
         artifact_type=artifact_type,
         revision=step_input.run_properties.versioning.revision,
-        producing_step=step_input.project.name,
+        hash=step_input.project_execution.hashed_changes,
+        producing_step=step_input.project_execution.name,
         spec=spec,
     )

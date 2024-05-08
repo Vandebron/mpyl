@@ -1,12 +1,18 @@
 """Docker related utility methods"""
+
+import json
 import logging
 import shlex
 import shutil
 from dataclasses import dataclass
+from enum import Enum
 from logging import Logger
 from pathlib import Path
 from traceback import print_exc
 from typing import Dict, Optional, Iterator, cast, Union
+
+import boto3
+from botocore.config import Config
 from python_on_whales import docker, Image, Container, DockerException
 from python_on_whales.exceptions import NoSuchContainer
 from ruamel.yaml import yaml_object, YAML
@@ -61,6 +67,8 @@ class DockerRegistryConfig:
     organization: Optional[str]
     user_name: str
     password: str
+    provider: Optional[str]
+    region: Optional[str]
     cache_from_registry: bool
     custom_cache_config: Optional[DockerCacheConfig]
 
@@ -73,10 +81,14 @@ class DockerRegistryConfig:
                 user_name=config["userName"],
                 organization=config.get("organization", None),
                 password=config["password"],
+                provider=config.get("provider", None),
+                region=config.get("region", None),
                 cache_from_registry=cache_config.get("cacheFromRegistry", False),
-                custom_cache_config=DockerCacheConfig.from_dict(cache_config["custom"])
-                if "custom" in cache_config
-                else None,
+                custom_cache_config=(
+                    DockerCacheConfig.from_dict(cache_config["custom"])
+                    if "custom" in cache_config
+                    else None
+                ),
             )
         except KeyError as exc:
             raise KeyError(f"Docker config could not be loaded from {config}") from exc
@@ -108,24 +120,20 @@ class DockerConfig:
             raise KeyError(f"Docker config could not be loaded from {config}") from exc
 
 
-def execute_with_stream(
-    logger: Logger,
-    container: Container,
-    command: str,
-    task_name: str,
-    multiprocess: bool = False,
-):
-    if multiprocess:  # Logger settings need to be re-applied in each process
-        logger.setLevel(logging.INFO)
-        logger.handlers.clear()
+@dataclass(frozen=True)
+class Provider(Enum):
+    AWS = "aws"
+    AZURE = "azure"
 
+
+def execute_with_stream(
+    logger: Logger, container: Container, command: str, task_name: str
+):
     result = cast(
         Iterator[tuple[str, bytes]],
         container.execute(command=shlex.split(command), stream=True),
     )
     result_list = stream_docker_logging(logger, result, task_name)
-
-    logger.handlers.clear()
 
     return result_list
 
@@ -156,7 +164,7 @@ def stream_docker_logging(
 def docker_image_tag(step_input: Input) -> str:
     git = step_input.run_properties.versioning
     tag = git.tag if git.tag else f"pr-{git.pr_number}"
-    return f"{step_input.project.name.lower()}:{tag}".replace("/", "_")
+    return f"{step_input.project_execution.name.lower()}:{tag}".replace("/", "_")
 
 
 def get_default_build_args(
@@ -170,11 +178,12 @@ def get_default_build_args(
 
 
 def docker_registry_path(docker_config: DockerRegistryConfig, image_name: str) -> str:
-    path_components = [
-        docker_config.host_name,
-        docker_config.organization,
-        image_name,
-    ]
+    path_components = [docker_config.host_name, docker_config.organization, image_name]
+    return "/".join([c for c in path_components if c]).lower()
+
+
+def ecr_repository_path(host_name: str, image_name: str) -> str:
+    path_components = [host_name.split("/", 1)[1], image_name.split(":", 1)[0]]
     return "/".join([c for c in path_components if c]).lower()
 
 
@@ -182,7 +191,9 @@ def full_image_path_for_project(step_input: Input) -> str:
     docker_config: DockerConfig = DockerConfig.from_dict(
         step_input.run_properties.config
     )
-    docker_registry = registry_for_project(docker_config, step_input.project)
+    docker_registry = registry_for_project(
+        docker_config, step_input.project_execution.project
+    )
 
     image_name = docker_image_tag(step_input)
     return (
@@ -200,6 +211,10 @@ def push_to_registry(
 
     login(logger=logger, registry_config=docker_config)
     full_image_path = docker_registry_path(docker_config, image_name)
+
+    if docker_config.provider == Provider.AWS.value:  # pylint: disable=no-member
+        repo_path = ecr_repository_path(docker_config.host_name, image_name)
+        create_ecr_repo_if_needed(logger, docker_config, repo_path)
     docker.image.tag(image, full_image_path)
     docker.image.push(full_image_path, quiet=False)
 
@@ -317,11 +332,23 @@ def build(
 
 def login(logger: Logger, registry_config: DockerRegistryConfig) -> None:
     logger.info(f"Logging in with user '{registry_config.user_name}'")
-    docker.login(
-        server=f"https://{registry_config.host_name}",
-        username=registry_config.user_name,
-        password=registry_config.password,
-    )
+    if registry_config.provider == Provider.AZURE.value:  # pylint: disable=no-member
+        docker.login(
+            server=f"https://{registry_config.host_name}",
+            username=registry_config.user_name,
+            password=registry_config.password,
+        )
+    elif registry_config.provider == Provider.AWS.value:  # pylint: disable=no-member
+        docker.login_ecr(
+            aws_access_key_id=registry_config.user_name,
+            aws_secret_access_key=registry_config.password,
+            region_name=registry_config.region,
+            registry=registry_config.host_name,
+        )
+    else:
+        raise ValueError(
+            f"Docker config has no container registry provider with name {registry_config.provider}"
+        )
     logger.debug(f"Logged in as '{registry_config.user_name}'")
 
 
@@ -336,3 +363,34 @@ def remove_container(logger: Logger, container: Container) -> None:
     logger.debug(f"Removing container {container.id}")
     docker.remove(container.id)
     logger.info(f"Removed container {container.id}")
+
+
+def create_ecr_repo_if_needed(
+    logger: Logger, registry_config: DockerRegistryConfig, repo: str
+):
+    ecr_config = Config(
+        region_name=registry_config.region,
+        signature_version="v4",
+        retries={"max_attempts": 10, "mode": "standard"},
+    )
+    ecr_client = boto3.client(
+        "ecr",
+        config=ecr_config,
+        aws_access_key_id=registry_config.user_name,
+        aws_secret_access_key=registry_config.password,
+    )
+    try:
+        ecr_client.describe_repositories(
+            repositoryNames=[
+                repo.lower(),
+            ]
+        )
+        logger.info(f"Repository '{repo}' exists.")
+    except ecr_client.exceptions.RepositoryNotFoundException:
+        logger.info(f"Repository '{repo}' not found. Creating...")
+        ecr_client.create_repository(
+            repositoryName=repo.lower(),
+            imageScanningConfiguration={"scanOnPush": True},
+            imageTagMutability="MUTABLE",
+            encryptionConfiguration={"encryptionType": "AES256"},
+        )

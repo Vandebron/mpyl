@@ -22,8 +22,10 @@ class TestSkip(Step):
         )
 
     def execute(self, step_input: Input) -> Output:
-        self._logger.info(f"Skip test stage for project {step_input.project.name}")
+        self._logger.info(
+            f"Skip test stage for project {step_input.project_execution.name}"
+        )
         return Output(
             success=True,
-            message=f"Skipped test stage for project {step_input.project.name}",
+            message=f"Skipped test stage for project {step_input.project_execution.name}",
         )

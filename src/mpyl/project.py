@@ -26,7 +26,7 @@ import jsonschema
 from mypy.checker import Generic
 from ruamel.yaml import YAML
 
-from .constants import BUILD_ARTIFACTS_FOLDER
+from .constants import RUN_ARTIFACTS_FOLDER
 from .validation import validate
 
 T = TypeVar("T")
@@ -138,33 +138,22 @@ class EnvCredential:
 
 @dataclass(frozen=True)
 class StageSpecificProperty(Generic[T]):
-    build: Optional[T]
-    test: Optional[T]
-    deploy: Optional[T]
-    postdeploy: Optional[T]
+    stages: dict[str, Optional[T]]
 
     def for_stage(self, stage: str) -> Optional[T]:
-        if stage == "build":
-            return self.build
-        if stage == "test":
-            return self.test
-        if stage == "deploy":
-            return self.deploy
-        if stage == "postdeploy":
-            return self.postdeploy
-        raise KeyError(f"Unknown stage: {stage}")
+        if stage not in self.stages.keys():
+            return None
+        return self.stages[stage]
 
 
 @dataclass(frozen=True)
 class Stages(StageSpecificProperty[str]):
+    def all(self) -> dict[str, Optional[str]]:
+        return self.stages
+
     @staticmethod
     def from_config(values: dict):
-        return Stages(
-            build=values.get("build"),
-            test=values.get("test"),
-            deploy=values.get("deploy"),
-            postdeploy=values.get("postdeploy"),
-        )
+        return Stages(values)
 
 
 @dataclass(frozen=True)
@@ -173,15 +162,12 @@ class Dependencies(StageSpecificProperty[set[str]]):
         deps_for_stage = self.for_stage(stage)
         return deps_for_stage if deps_for_stage else set()
 
+    def all(self) -> dict[str, set[str]]:
+        return {key: self.set_for_stage(key) for key in self.stages.keys()}
+
     @staticmethod
     def from_config(values: dict):
-        build_deps = set(values.get("build", []))
-        return Dependencies(
-            build=build_deps,
-            test=build_deps | set(values.get("test", [])),
-            deploy=build_deps | set(values.get("deploy", [])),
-            postdeploy=set(values.get("postdeploy", [])),
-        )
+        return Dependencies(values)
 
 
 @dataclass(frozen=True)
@@ -293,7 +279,7 @@ class Resources:
 
 @dataclass(frozen=True)
 class Job:
-    cron: dict
+    cron: TargetProperty[dict]
     job: dict
     spark: dict
 
@@ -302,14 +288,26 @@ class Job:
         if not values:
             return None
         return Job(
-            cron=values.get("cron", {}),
+            cron=TargetProperty.from_config(values.get("cron", {})),
             job=without_keys(values, {"cron"}),
             spark=values.get("spark", {}),
         )
 
 
 @dataclass(frozen=True)
+class Rancher:
+    project_id: TargetProperty[dict]
+
+    @staticmethod
+    def from_config(values: dict):
+        return Rancher(
+            project_id=TargetProperty.from_config(values.get("projectId", {}))
+        )
+
+
+@dataclass(frozen=True)
 class Kubernetes:
+    rancher: Optional[Rancher]
     port_mappings: dict[int, int]
     liveness_probe: Optional[Probe]
     startup_probe: Optional[Probe]
@@ -321,10 +319,12 @@ class Kubernetes:
     command: Optional[TargetProperty[str]]
     args: Optional[TargetProperty[str]]
     labels: Optional[list[KeyValueProperty]]
+    deployment_strategy: Optional[dict]
 
     @staticmethod
     def from_config(values: dict):
         return Kubernetes(
+            rancher=Rancher.from_config(values.get("rancher", {})),
             port_mappings=values.get("portMappings", {}),
             liveness_probe=Probe.from_config(values.get("livenessProbe", {})),
             startup_probe=Probe.from_config(values.get("startupProbe", {})),
@@ -336,6 +336,7 @@ class Kubernetes:
             command=TargetProperty.from_config(values.get("command", {})),
             args=TargetProperty.from_config(values.get("args", {})),
             labels=list(map(KeyValueProperty.from_config, values.get("labels", []))),
+            deployment_strategy=values.get("deploymentStrategy", {}),
         )
 
 
@@ -343,9 +344,10 @@ class Kubernetes:
 class TraefikHost:
     host: TargetProperty[str]
     service_port: Optional[int]
+    has_swagger: bool
     tls: Optional[TargetProperty[str]]
     whitelists: TargetProperty[list[str]]
-    priority: Optional[int]
+    priority: Optional[TargetProperty[int]]
     insecure: bool
 
     @staticmethod
@@ -353,9 +355,10 @@ class TraefikHost:
         return TraefikHost(
             host=TargetProperty.from_config(values.get("host", {})),
             service_port=values.get("servicePort"),
+            has_swagger=values.get("hasSwagger", True),
             tls=TargetProperty.from_config(values.get("tls", {})),
             whitelists=TargetProperty.from_config(values.get("whitelists", {})),
-            priority=values.get("priority"),
+            priority=TargetProperty.from_config(values.get("priority", {})),
             insecure=values.get("insecure", False),
         )
 
@@ -395,15 +398,13 @@ class Traefik:
 
 
 @dataclass(frozen=True)
-class S3Bucket:
-    bucket: TargetProperty[str]
-    region: str
+class BPM:
+    project_id: str
 
     @staticmethod
     def from_config(values: dict):
-        return S3Bucket(
-            bucket=TargetProperty.from_config(values.get("bucket", {})),
-            region=values.get("region", {}),
+        return BPM(
+            project_id=values.get("projectId", ""),
         )
 
 
@@ -448,7 +449,7 @@ class Deployment:
     kubernetes: Optional[Kubernetes]
     dagster: Optional[Dagster]
     traefik: Optional[Traefik]
-    s3_bucket: Optional[S3Bucket]
+    bpm: Optional[BPM]
 
     @staticmethod
     def from_config(values: dict):
@@ -456,7 +457,7 @@ class Deployment:
         kubernetes = values.get("kubernetes")
         dagster = values.get("dagster")
         traefik = values.get("traefik")
-        s3_bucket = values.get("s3")
+        bpm = values.get("bpm")
         cluster = values.get("cluster")
 
         return Deployment(
@@ -466,7 +467,7 @@ class Deployment:
             kubernetes=Kubernetes.from_config(kubernetes) if kubernetes else None,
             dagster=Dagster.from_config(dagster) if dagster else None,
             traefik=Traefik.from_config(traefik) if traefik else None,
-            s3_bucket=S3Bucket.from_config(s3_bucket) if s3_bucket else None,
+            bpm=BPM.from_config(bpm) if bpm else None,
         )
 
 
@@ -501,9 +502,11 @@ class Project:
     def to_name(self) -> ProjectName:
         return ProjectName(
             name=self.name,
-            namespace=self.deployment.namespace
-            if self.deployment and self.deployment.namespace
-            else None,
+            namespace=(
+                self.deployment.namespace
+                if self.deployment and self.deployment.namespace
+                else None
+            ),
         )
 
     @property
@@ -515,16 +518,16 @@ class Project:
         return self.deployment.kubernetes
 
     @property
-    def s3_bucket(self) -> S3Bucket:
-        if self.deployment is None or self.deployment.s3_bucket is None:
-            raise KeyError(f"Project '{self.name}' does not have s3 configuration")
-        return self.deployment.s3_bucket
-
-    @property
     def dagster(self) -> Dagster:
         if self.deployment is None or self.deployment.dagster is None:
             raise KeyError(f"Project '{self.name}' does not have dagster configuration")
         return self.deployment.dagster
+
+    @property
+    def bpm(self) -> BPM:
+        if self.deployment is None or self.deployment.bpm is None:
+            raise KeyError(f"Project '{self.name}' does not have bpm configuration")
+        return self.deployment.bpm
 
     @property
     def resources(self) -> Resources:
@@ -556,7 +559,7 @@ class Project:
 
     @property
     def target_path(self) -> str:
-        return str(Path(self.deployment_path, BUILD_ARTIFACTS_FOLDER))
+        return str(Path(self.deployment_path, RUN_ARTIFACTS_FOLDER))
 
     @property
     def test_containers_path(self) -> str:
@@ -580,22 +583,23 @@ class Project:
             docker=Docker.from_config(docker_config) if docker_config else None,
             build=Build.from_config(values.get("build", {})),
             deployment=Deployment.from_config(deployment) if deployment else None,
-            dependencies=Dependencies.from_config(dependencies)
-            if dependencies
-            else None,
+            dependencies=(
+                Dependencies.from_config(dependencies) if dependencies else None
+            ),
         )
 
 
-def validate_project(yaml_values: dict) -> dict:
+def validate_project(yaml_values: dict, root_dir: Path) -> dict:
     """
-    :file the file to validate
+    :type yaml_values: the yaml dictionary to validate
+    :type root_dir: the root dir
     :return: the validated schema
     :raises `jsonschema.exceptions.ValidationError` when validation fails
     """
     template = pkgutil.get_data(__name__, "schema/project.schema.yml")
     if not template:
         raise ValueError("Schema project.schema.yml not found in package")
-    validate(yaml_values, template.decode("utf-8"))
+    validate(yaml_values, template.decode("utf-8"), root_dir)
 
     return yaml_values
 
@@ -632,7 +636,7 @@ def load_project(
 ) -> Project:
     """
     Load a `project.yml` to `Project` data class
-    :param root_dir: root source directory
+    :param root_dir: is the root of the project path. It contains the mpyl_config.yml and run_properties.yml files
     :param project_path: relative path from `root_dir` to the `project.yml`
     :param strict: indicates whether the schema should be validated
     :param log: indicates whether problems should be logged as warning
@@ -649,7 +653,7 @@ def load_project(
             parent_yaml_values: Optional[dict] = load_possible_parent(full_path, safe)
             yaml_values = merge_dicts(yaml_values, parent_yaml_values, True)
             if strict:
-                validate_project(yaml_values)
+                validate_project(yaml_values, root_dir=root_dir)
             project = Project.from_config(yaml_values, project_path)
             logging.debug(
                 f"Loaded project {project.path} in {(time.time() - start) * 1000} ms"

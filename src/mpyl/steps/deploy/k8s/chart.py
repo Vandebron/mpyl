@@ -12,7 +12,6 @@ from kubernetes.client import (
     V1DeploymentSpec,
     V1ObjectMeta,
     V1PodSpec,
-    V1RollingUpdateDeployment,
     V1LabelSelector,
     V1ContainerPort,
     V1EnvVar,
@@ -169,6 +168,7 @@ class DeploymentDefaults:
     traefik_defaults: dict
     white_lists: DefaultWhitelists
     image_pull_secrets: dict
+    deployment_strategy: dict
 
     @staticmethod
     def from_config(config: dict):
@@ -184,6 +184,7 @@ class DeploymentDefaults:
             traefik_defaults=deployment_values.get("traefik", {}),
             white_lists=DefaultWhitelists.from_config(config.get("whiteLists", {})),
             image_pull_secrets=kubernetes.get("imagePullSecrets", {}),
+            deployment_strategy=config["kubernetes"]["deploymentStrategy"],
         )
 
 
@@ -200,10 +201,11 @@ class ChartBuilder:
     config_defaults: DeploymentDefaults
     namespace: str
     role: Optional[dict]
+    deployment_strategy: Optional[dict]
 
     def __init__(self, step_input: Input):
         self.step_input = step_input
-        project = self.step_input.project
+        project = self.step_input.project_execution.project
         self.project = project
         if project.deployment is None:
             raise AttributeError("deployment field should be set")
@@ -228,13 +230,13 @@ class ChartBuilder:
             run_properties=step_input.run_properties, project=project
         )
         self.role = project.kubernetes.role
+        self.deployment_strategy = project.kubernetes.deployment_strategy
 
     def _to_labels(self) -> dict:
         run_properties = self.step_input.run_properties
         app_labels = {
             "name": self.release_name,
             "app.kubernetes.io/version": run_properties.versioning.identifier,
-            "app.kubernetes.io/managed-by": "Helm",
             "app.kubernetes.io/name": self.release_name,
             "app.kubernetes.io/instance": self.release_name,
         }
@@ -395,7 +397,7 @@ class ChartBuilder:
         )
 
     def to_cron_job(self) -> V1CronJob:
-        values = self.project.job.cron
+        values = self.project.job.cron.get_value(self.target)
         job_template = V1JobTemplateSpec(spec=self.to_job().spec)
         template_dict = to_dict(job_template)
         values["jobTemplate"] = template_dict
@@ -412,7 +414,7 @@ class ChartBuilder:
     def to_spark_application(self) -> V1SparkApplication:
         return V1SparkApplication(
             metadata=self._to_object_meta(),
-            schedule=self._get_job().cron["schedule"],
+            schedule=self._get_job().cron.get_value(self.target)["schedule"],
             body=to_spark_body(
                 project_name=self.release_name,
                 env_vars=get_env_variables(self.project, self.target),
@@ -534,7 +536,6 @@ class ChartBuilder:
 
         def to_metadata(host: HostWrapper) -> V1ObjectMeta:
             metadata = self._to_object_meta(name=host.full_name)
-            # metadata.annotations = host.white_lists
             metadata.annotations = {
                 k: ", ".join(v) for k, v in host.white_lists.items()
             }
@@ -694,6 +695,12 @@ class ChartBuilder:
         }
         return raw_env_vars
 
+    def get_sealed_secret_as_env_vars(self) -> list[V1EnvVar]:
+        sealed_secrets_for_target = list(
+            filter(lambda v: v.get_value(self.target) is not None, self.sealed_secrets)
+        )
+        return self._create_sealed_secret_env_vars(sealed_secrets_for_target)
+
     def _get_env_vars(self):
         raw_env_vars = self.extract_raw_env(self.target, self.env)
         pr_identifier = (
@@ -703,8 +710,11 @@ class ChartBuilder:
         )
         processed_env_vars = substitute_namespaces(
             raw_env_vars,
-            {p.to_name for p in self.step_input.run_properties.projects},
-            {p.to_name for p in self.step_input.run_properties.projects_to_deploy},
+            {project.to_name for project in self.step_input.run_properties.projects},
+            {
+                project_execution.project.to_name
+                for project_execution in self.step_input.run_properties.projects_to_deploy
+            },
             pr_identifier,
         )
 
@@ -712,17 +722,13 @@ class ChartBuilder:
             V1EnvVar(name=key, value=value) for key, value in processed_env_vars.items()
         ]
 
-        sealed_secrets_for_target = list(
-            filter(lambda v: v.get_value(self.target) is not None, self.sealed_secrets)
-        )
-        sealed_secrets = self._create_sealed_secret_env_vars(sealed_secrets_for_target)
         secrets = self._create_secret_env_vars(self.secrets)
 
-        return env_vars + sealed_secrets + secrets
+        return env_vars + self.get_sealed_secret_as_env_vars() + secrets
 
     @property
     def is_cron_job(self) -> bool:
-        return len(self._get_job().cron.keys()) > 0
+        return self._get_job().cron is not None
 
     def to_deployment(self) -> V1Deployment:
         ports = [
@@ -762,7 +768,11 @@ class ChartBuilder:
         )
 
         instances = resources.instances if resources.instances else defaults.instances
-
+        merged_config = {
+            **self.config_defaults.deployment_strategy,
+            **(self.deployment_strategy or {}),
+        }
+        strategy = ChartBuilder._to_k8s_model(merged_config, V1DeploymentStrategy)
         return V1Deployment(
             api_version="apps/v1",
             kind="Deployment",
@@ -781,12 +791,7 @@ class ChartBuilder:
                         service_account_name=self.release_name,
                     ),
                 ),
-                strategy=V1DeploymentStrategy(
-                    rolling_update=V1RollingUpdateDeployment(
-                        max_surge="25%", max_unavailable="25%"
-                    ),
-                    type="RollingUpdate",
-                ),
+                strategy=strategy,
                 selector=self._to_selector(),
             ),
         )
@@ -801,7 +806,9 @@ class ChartBuilder:
             chart["role"] = self.to_role(self.role)
             chart["rolebinding"] = self.to_role_binding()
 
-        return chart
+        prometheus = _to_prometheus_chart(self)
+
+        return chart | prometheus
 
 
 def to_service_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
@@ -818,11 +825,8 @@ def _to_service_components_chart(builder):
         "service": builder.to_service(),
     }
     metrics = builder.project.kubernetes.metrics
-    prometheus_chart = (
+    service_monitor = (
         {
-            "prometheus-rule": builder.to_prometheus_rule(
-                alerts=builder.project.kubernetes.metrics.alerts
-            ),
             "service-monitor": builder.to_service_monitor(metrics=metrics),
         }
         if metrics and metrics.enabled
@@ -836,7 +840,19 @@ def _to_service_components_chart(builder):
         f"{builder.project.name}-ingress-{i}-http": route
         for i, route in enumerate(builder.to_ingress_routes(https=False))
     }
-    return common_chart | prometheus_chart | ingress_https | ingress_http
+    return common_chart | ingress_https | ingress_http | service_monitor
+
+
+def _to_prometheus_chart(builder):
+    metrics = builder.project.kubernetes.metrics
+    prometheus_chart = (
+        {
+            "prometheus-rule": builder.to_prometheus_rule(alerts=metrics.alerts),
+        }
+        if metrics and metrics.enabled
+        else {}
+    )
+    return prometheus_chart
 
 
 def to_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:

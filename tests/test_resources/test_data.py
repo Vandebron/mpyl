@@ -3,19 +3,22 @@ import os
 from pathlib import Path
 
 from attr import dataclass
+from git import Repo
 
 from src.mpyl.constants import (
     DEFAULT_CONFIG_FILE_NAME,
     DEFAULT_RUN_PROPERTIES_FILE_NAME,
 )
 from src.mpyl.project import load_project, Target, Project, Stages, Stage
+from src.mpyl.project_execution import ProjectExecution
+from src.mpyl.run_plan import RunPlan
 from src.mpyl.steps.models import (
     RunProperties,
     Output,
     ArtifactType,
     Artifact,
 )
-from src.mpyl.steps.run_properties import initiate_run_properties
+from src.mpyl.steps.run_properties import construct_run_properties
 from src.mpyl.utilities.docker import DockerImageSpec
 from src.mpyl.utilities.pyaml_env import parse_config
 from src.mpyl.utilities.repo import Repository, RepoConfig
@@ -25,8 +28,12 @@ resource_path = root_test_path / "test_resources"
 config_values = parse_config(resource_path / DEFAULT_CONFIG_FILE_NAME)
 properties_values = parse_config(resource_path / DEFAULT_RUN_PROPERTIES_FILE_NAME)
 
-RUN_PROPERTIES = initiate_run_properties(
-    config=config_values, properties=properties_values, run_plan={}, all_projects=set()
+RUN_PROPERTIES = construct_run_properties(
+    config=config_values,
+    properties=properties_values,
+    run_plan=RunPlan.empty(),
+    all_projects=set(),
+    root_dir=resource_path,
 )
 
 RUN_PROPERTIES_PROD = dataclasses.replace(
@@ -61,8 +68,20 @@ def get_project() -> Project:
     return safe_load_project("test_project.yml")
 
 
+def get_project_execution() -> ProjectExecution:
+    return ProjectExecution.run(get_project())
+
+
+def get_deployment_strategy_project() -> Project:
+    return safe_load_project("test_project_deployment_strategy.yml")
+
+
 def get_minimal_project() -> Project:
     return safe_load_project("test_minimal_project.yml")
+
+
+def get_project_without_swagger() -> Project:
+    return safe_load_project("test_project_without_swagger.yml")
 
 
 def get_job_project() -> Project:
@@ -81,8 +100,8 @@ def safe_load_project(name: str) -> Project:
     return load_project(resource_path, Path(name), True, False, True)
 
 
-def run_properties_with_plan(plan: dict[Stage, set[Project]]) -> RunProperties:
-    run_properties = initiate_run_properties(
+def run_properties_with_plan(plan: RunPlan) -> RunProperties:
+    run_properties = construct_run_properties(
         config=config_values,
         properties=properties_values,
         run_plan=plan,
@@ -93,8 +112,8 @@ def run_properties_with_plan(plan: dict[Stage, set[Project]]) -> RunProperties:
 
 
 def run_properties_prod_with_plan() -> RunProperties:
-    plan = {TestStage.deploy(): {get_minimal_project()}}
-    run_properties_prod = initiate_run_properties(
+    plan = RunPlan({TestStage.deploy(): {ProjectExecution.run(get_minimal_project())}})
+    run_properties_prod = construct_run_properties(
         config=config_values,
         properties=properties_values,
         run_plan=plan,
@@ -116,6 +135,7 @@ def get_output() -> Output:
         produced_artifact=Artifact(
             artifact_type=ArtifactType.DOCKER_IMAGE,
             revision="123",
+            hash="a generated hash",
             producing_step="Producing Step",
             spec=DockerImageSpec(image="image:latest"),
         ),
@@ -134,7 +154,7 @@ def get_project_with_stages(stage_config: dict, path: str = "", maintainers=None
 class MockRepository(Repository):
     def __init__(self, config: RepoConfig):
         self._config = config
-        self._root_dir = "."
+        self._repo = Repo(Path("."))
 
     def __enter__(self):
         return self
@@ -143,7 +163,7 @@ class MockRepository(Repository):
         return self
 
     def find_projects(self, folder_pattern: str = "") -> list[str]:
-        projects = Path(self.root_dir).glob(
+        projects = Path(os.path.basename(root_test_path)).glob(
             f"*{folder_pattern}*/{Project.project_yaml_path()}"
         )
         return sorted(map(str, projects))

@@ -1,10 +1,9 @@
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   labels:
     name: minimalservice
     app.kubernetes.io/version: 20230829-1234
-    app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: minimalservice
     app.kubernetes.io/instance: minimalservice
     maintainers: MPyL

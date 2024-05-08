@@ -1,21 +1,22 @@
 """Kubernetes deployment related helper methods"""
+
 import datetime
 import os
 from dataclasses import dataclass
-from enum import Enum
 from logging import Logger
 from pathlib import Path
 from typing import Optional
 
+import yaml as dict_to_yaml_str
 from kubernetes import config, client
 from kubernetes.client import V1ConfigMap, ApiException, V1Deployment
 from ruamel.yaml import yaml_object, YAML
-import yaml as dict_to_yaml_str
 
+from .deploy_config import DeployConfig, DeployAction, get_namespace
 from .helm import write_helm_chart, GENERATED_WARNING
 from ...deploy.k8s.resources import CustomResourceDefinition
 from ...models import RunProperties, input_to_artifact, ArtifactType, ArtifactSpec
-from ....project import Project, Target, ProjectName
+from ....project import ProjectName, Target
 from ....steps import Input, Output
 from ....steps.deploy.k8s import helm
 from ....steps.deploy.k8s.cluster import (
@@ -24,6 +25,8 @@ from ....steps.deploy.k8s.cluster import (
     get_cluster_config_for_project,
 )
 from ....steps.deploy.k8s.resources import to_yaml
+from ....utilities import replace_pr_number
+from ....utilities.repo import RepoConfig
 
 yaml = YAML()
 
@@ -47,34 +50,6 @@ class RenderedHelmChartSpec(ArtifactSpec):
 class KubernetesManifestSpec(ArtifactSpec):
     yaml_tag = "!KubernetesManifestSpec"
     manifest_file_path: str
-
-
-@dataclass(frozen=True)
-class DeployAction(Enum):
-    HELM_DEPLOY = "HelmDeploy"
-    HELM_DRY_RUN = "HelmDryRun"
-    HELM_TEMPLATE = "HelmTemplate"
-    KUBERNETES_MANIFEST = "KubectlManifest"
-
-
-@dataclass(frozen=True)
-class DeployConfig:
-    action: DeployAction
-    output_path: str
-
-    @staticmethod
-    def from_config(values: dict):
-        kube_config = values["kubernetes"]
-        action: str = kube_config.get("deployAction", "HelmDeploy")
-        output_path = kube_config.get("outputPath", "target/kubernetes")
-        return DeployConfig(action=DeployAction(action), output_path=output_path)  # type: ignore
-
-
-def get_namespace(run_properties: RunProperties, project: Project) -> str:
-    if run_properties.target == Target.PULL_REQUEST:
-        return run_properties.versioning.identifier
-
-    return get_namespace_from_project(project) or project.name
 
 
 def rollout_restart_deployment(
@@ -109,16 +84,10 @@ def rollout_restart_deployment(
         )
 
 
-def get_namespace_from_project(project: Project) -> Optional[str]:
-    if project.deployment and project.deployment.namespace:
-        return project.deployment.namespace
-
-    return None
-
-
 def upsert_namespace(
     logger: Logger,
     namespace: str,
+    project_id: str,
     dry_run: bool,
     run_properties: RunProperties,
     cluster_config: ClusterConfig,
@@ -129,13 +98,25 @@ def upsert_namespace(
     )
     api = client.CoreV1Api()
 
-    meta_data = get_namespace_metadata(namespace, cluster_config)
+    meta_data = rancher_namespace_metadata(
+        namespace=namespace, rancher_config=rancher_config, project_id=project_id
+    )
     namespaces = api.list_namespace(field_selector=f"metadata.name={namespace}")
 
     if len(namespaces.items) == 0 and not dry_run:
-        api.create_namespace(
-            client.V1Namespace(api_version="v1", kind="Namespace", metadata=meta_data)
-        )
+        try:
+            api.create_namespace(
+                client.V1Namespace(
+                    api_version="v1", kind="Namespace", metadata=meta_data
+                )
+            )
+        except ApiException as error:
+            # when concurrently deploying multiple services of the same PR, we can sometimes still try to create a
+            # namespace that already exists. if that happens, ignore the error
+            if error.status == 409:
+                logger.info(f"Found namespace {namespace}")
+            else:
+                raise error
     else:
         logger.info(f"Found namespace {namespace}")
 
@@ -153,12 +134,12 @@ def render_crd(name: str, crd: CustomResourceDefinition):
 
 
 def write_manifest(
-    release_name: str, target_path: Path, chart: dict[str, CustomResourceDefinition]
+    target_path: Path, chart: dict[str, CustomResourceDefinition]
 ) -> Path:
     if not target_path.exists():
         os.makedirs(target_path, exist_ok=True)
     manifests = render_manifests(chart)
-    manifest_file = target_path / f"{release_name}-manifest.yml"
+    manifest_file = target_path / "manifest.yaml"
     manifest_file.write_text(manifests, "utf-8")
     return manifest_file
 
@@ -213,25 +194,37 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
     logger: Logger,
     chart: dict[str, CustomResourceDefinition],
     step_input: Input,
-    target: Target,
     release_name: str,
     delete_existing: bool = False,
 ) -> Output:
     run_properties = step_input.run_properties
-    project = step_input.project
+    project = step_input.project_execution.project
+    deployment_config = DeployConfig.from_config(values=run_properties.config)
 
-    deploy_config = DeployConfig.from_config(run_properties.config)
-
-    action = deploy_config.action.value
+    action = deployment_config.action.value
     if action == DeployAction.KUBERNETES_MANIFEST.value:  # pylint: disable=no-member
-        path = Path(project.root_path, deploy_config.output_path)
-        file_path = write_manifest(release_name, path, chart)
+        path = Path(project.root_path, deployment_config.output_path)
+        file_path = write_manifest(target_path=path, chart=chart)
 
         artifact = input_to_artifact(
-            ArtifactType.KUBERNETES_MANIFEST,
-            step_input,
+            artifact_type=ArtifactType.KUBERNETES_MANIFEST,
+            step_input=step_input,
             spec=KubernetesManifestSpec(str(file_path)),
         )
+
+        cluster = (
+            "test"
+            if run_properties.target in (Target.PULL_REQUEST_BASE, Target.PULL_REQUEST)
+            else run_properties.target.name.lower()
+        )  # Can't re-use get_argo_folder_name function for now because of circular imports
+        deployment_details = (
+            f"cluster: {cluster}\n"
+            + f"repository: {RepoConfig.from_config(run_properties.config).repo_credentials.name}\n"
+            + f"revision: {run_properties.versioning.revision}\n"
+            + f"tag: {run_properties.versioning.identifier}\n"
+        )
+        with Path(path / "deployment.yaml").open(mode="w+", encoding="utf-8") as file:
+            file.write(deployment_details)
 
         return Output(
             success=True,
@@ -257,24 +250,31 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
         )
 
     namespace = get_namespace(run_properties, project)
-
-    cluster_config: ClusterConfig = get_cluster_config_for_project(
-        target, run_properties, project
-    )
-
     dry_run = (
         step_input.dry_run
         or action == DeployAction.HELM_DRY_RUN.value  # pylint: disable=no-member
     )
+    project_id: str = (
+        project.deployment.kubernetes.rancher.project_id.get_value(
+            target=run_properties.target
+        )
+        if project.deployment
+        and project.deployment.kubernetes
+        and project.deployment.kubernetes.rancher
+        and project.deployment.kubernetes.rancher.project_id
+        else ""
+    )
+    rancher_config: ClusterConfig = cluster_config(run_properties)
+
     upsert_namespace(
-        logger,
-        namespace,
-        dry_run,
-        run_properties,
-        cluster_config,
+        logger=logger,
+        namespace=namespace,
+        project_id=project_id,
+        dry_run=dry_run,
+        run_properties=run_properties,
+        rancher_config=rancher_config,
     )
 
-    upsert_namespace(logger, namespace, dry_run, run_properties, cluster_config)
     return helm.install(
         logger,
         chart_path,
@@ -304,7 +304,7 @@ def substitute_namespaces(
 
     When the env var is substituted, first the referenced service (serviceName) is looked up in the list of projects.
     If it is part of the deploy set, and we're in deploying to target PullRequest,
-    the namespace is subsituted with the PR namespace (pr-XXXX).
+    the namespace is substituted with the PR namespace (pr-XXXX).
     Else is substituted with the namespace of the referenced project.
 
     Note that the name of the service in the env var is case-sensitive!
@@ -335,10 +335,6 @@ def substitute_namespaces(
                 replaced_namespace = replace_namespace(
                     value, project.name, linked_project_namespace
                 )
-                updated_pr = (
-                    replaced_namespace.replace("{PR-NUMBER}", str(pr_identifier))
-                    if pr_identifier
-                    else replaced_namespace
-                )
+                updated_pr = replace_pr_number(replaced_namespace, pr_identifier)
                 env[key] = updated_pr
     return env

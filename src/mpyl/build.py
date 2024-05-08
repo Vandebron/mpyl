@@ -1,7 +1,10 @@
 """Simple MPyL build runner"""
 
+import json
 import logging
-from typing import Optional
+import os
+from pathlib import Path
+from typing import Optional, Union
 
 from jsonschema import ValidationError
 from rich.console import Console
@@ -9,7 +12,7 @@ from rich.logging import RichHandler
 from rich.markdown import Markdown
 
 from .cli import CliContext, MpylCliParameters
-from .constants import DEFAULT_RUN_PROPERTIES_FILE_NAME
+from .constants import DEFAULT_RUN_PROPERTIES_FILE_NAME, RUN_ARTIFACTS_FOLDER
 from .reporting.formatting.markdown import (
     execution_plan_as_markdown,
     run_result_to_markdown,
@@ -17,22 +20,52 @@ from .reporting.formatting.markdown import (
 from .reporting.targets import Reporter
 from .steps import deploy
 from .steps.collection import StepsCollection
-from .steps.models import RunProperties
+from .steps.models import RunProperties, Output
 from .steps.run import RunResult
-from .steps.run_properties import initiate_run_properties
-from .steps.steps import Steps, ExecutionException
+from .steps.run_properties import construct_run_properties
+from .steps.steps import Steps, ExecutionException, StepResult
 
 
-def print_status(obj: CliContext, cli_params: MpylCliParameters):
-    run_properties = initiate_run_properties(
-        config=obj.config, properties=obj.run_properties, cli_parameters=cli_params
+def print_status(
+    obj: CliContext, cli_params: MpylCliParameters, explain_run_plan: bool
+):
+    run_properties = construct_run_properties(
+        config=obj.config,
+        properties=obj.run_properties,
+        cli_parameters=cli_params,
+        explain_run_plan=explain_run_plan,
     )
     console = obj.console
-    console.print(f"MPyL log level is set to {run_properties.console.log_level}")
 
+    def write_run_plan_as_json():
+        """Write the run plan as a simple JSON file to be used by Github Actions"""
+        simple_run_plan: dict[str, list[dict[str, Union[str, bool]]]] = dict(
+            {
+                stage.name: [
+                    {
+                        "service": project_execution.project.name,
+                        "path": project_execution.project.path,
+                        "base": project_execution.project.root_path,
+                        "cached": project_execution.cached,
+                        "maintainers": project_execution.project.maintainer,
+                    }
+                    for project_execution in project_executions
+                ]
+                for stage, project_executions in run_properties.run_plan.items()
+            }
+        )
+        run_plan_file = Path(RUN_ARTIFACTS_FOLDER) / "run_plan.json"
+        os.makedirs(os.path.dirname(run_plan_file), exist_ok=True)
+        with open(run_plan_file, "w", encoding="utf-8") as file:
+            console.print(f"Writing simple JSON run plan to: {run_plan_file}")
+            json.dump(simple_run_plan, file)
+
+    write_run_plan_as_json()
+
+    console.print(f"MPyL log level is set to {run_properties.console.log_level}")
     branch = obj.repo.get_branch
     main_branch = obj.repo.main_branch
-    tag = run_properties.versioning.tag
+    tag = cli_params.tag or run_properties.versioning.tag
 
     if tag is None:
         if run_properties.versioning.branch and not obj.repo.get_branch:
@@ -56,7 +89,7 @@ def print_status(obj: CliContext, cli_params: MpylCliParameters):
         console.print(Markdown(f"**Tag:** `{version.tag}` at `{revision}`. "))
     else:
         base_revision_specification = (
-            f"at `{base_revision}`"
+            f"`{main_branch}` at `{base_revision}`"
             if base_revision
             else f"not present. Earliest revision: `{obj.repo.root_commit_hex}` (grafted)."
         )
@@ -108,7 +141,7 @@ def run_mpyl(
             logger.info("Nothing to do. Exiting..")
             return run_result
 
-        logger.info("Build plan:")
+        logger.info("Run plan:")
         console.print(Markdown(f"\n\n{run_result_to_markdown(run_result)}"))
 
         if reporter:
@@ -152,18 +185,28 @@ def run_build(
     dry_run: bool = True,
 ):
     try:
-        for stage, projects in accumulator.run_plan.items():
-            for proj in projects:
-                result = executor.execute(stage.name, proj, dry_run)
+        for stage, project_executions in accumulator.run_plan.items():
+            for project_execution in project_executions:
+                if project_execution.cached:
+                    logging.info(
+                        f"Skipping {project_execution.name} for stage {stage.name} because it is cached"
+                    )
+                    result = StepResult(
+                        stage=stage,
+                        project=project_execution.project,
+                        output=Output(success=True, message="This step was cached"),
+                    )
+                else:
+                    result = executor.execute(stage.name, project_execution, dry_run)
                 accumulator.append(result)
                 if reporter:
                     reporter.send_report(accumulator)
 
                 if not result.output.success and stage.name == deploy.STAGE_NAME:
-                    logging.warning(f"Deployment failed for {proj.name}")
+                    logging.warning(f"Deployment failed for {project_execution.name}")
                     return accumulator
 
-            if accumulator.failed_result:
+            if accumulator.failed_results:
                 logging.warning(f"One of the builds failed at Stage {stage.name}")
                 return accumulator
         return accumulator

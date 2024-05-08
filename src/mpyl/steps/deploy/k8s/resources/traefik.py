@@ -8,6 +8,7 @@ from kubernetes.client import V1ObjectMeta
 
 from . import CustomResourceDefinition
 from .....project import TraefikHost, Target
+from .....utilities import replace_pr_number
 
 
 @dataclass(frozen=True)
@@ -40,8 +41,7 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
             host = host.replace("{SERVICE-NAME}", name)
             host = host.replace("{namespace}", namespace)
             host = host.replace("{CLUSTER-ENV}", cluster_env)
-            if pr_number:
-                return host.replace("{PR-NUMBER}", str(pr_number))
+            host = replace_pr_number(host, pr_number)
             return host
 
         route: dict[str, Any] = {
@@ -61,7 +61,7 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
         }
 
         if host.traefik_host.priority:
-            route |= {"priority": host.traefik_host.priority}
+            route |= {"priority": host.traefik_host.priority.get_value(target)}
 
         tls: dict[str, Union[str, dict]] = {
             "secretName": host.tls if host.tls else "le-prod-wildcard-cert"
@@ -70,7 +70,7 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
             tls |= {"options": {"name": "insecure-ciphers", "namespace": "traefik"}}
 
         super().__init__(
-            api_version="traefik.containo.us/v1alpha1",
+            api_version="traefik.io/v1alpha1",
             kind="IngressRoute",
             metadata=metadata,
             spec={
@@ -85,7 +85,7 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
 class V1AlphaMiddleware(CustomResourceDefinition):
     def __init__(self, metadata: V1ObjectMeta, source_ranges: list[str]):
         super().__init__(
-            api_version="traefik.containo.us/v1alpha1",
+            api_version="traefik.io/v1alpha1",
             kind="Middleware",
             metadata=metadata,
             spec={"ipWhiteList": {"sourceRange": source_ranges}},

@@ -190,11 +190,11 @@ jobs:
       - name: Install MPyL
         run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_And_Upload.outputs.mpylVersion }}
 
-      - name: Initialize repo
-        run: mpyl repo init -b ${{ github.ref }} -u https://${{ env.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git -p
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Repo status
-        run: mpyl repo status
+      - uses: Vandebron/mpyl/.github/setup-kind@main
 
       - name: Check mpyl health
         run: mpyl health --ci
@@ -206,16 +206,10 @@ jobs:
         run: mpyl projects upgrade
 
       - name: Build status
-        run: mpyl build status
-
-      - name: Force change
-        run: echo "To force a change " >> tests/projects/service/change.txt
-
-      - name: Build status with change
-        run: mpyl build status
+        run: mpyl build status --all
 
       - name: Build run
-        run: mpyl build run
+        run: mpyl build run --all
         env:
           SOME_CREDENTIAL: credential
 
@@ -237,15 +231,15 @@ jobs:
       - name: Install MPyL
         run: pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mpyl==${{ needs.Build_And_Upload.outputs.mpylVersion }}
 
-      - name: Initialize repo
-        run: mpyl repo init -b ${{ github.ref }} -u https://${{ env.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git -p
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: Vandebron/mpyl/.github/setup-kind@main
 
       - name: Get head revision
         id: headRevision
         run: echo "headRevision=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-
-      - name: Repo status
-        run: mpyl repo status
 
       - name: Build status
         run: mpyl build status
@@ -269,11 +263,6 @@ jobs:
 
       - name: Tag merge
         run: git tag -a v${{ needs.Build_And_Upload.outputs.mpylVersion }} -m "Tagging v${{ needs.Build_And_Upload.outputs.mpylVersion }}"
-
-      - name: Repo status after merge
-        env:
-          TAG_NAME: v${{ needs.Build_And_Upload.outputs.mpylVersion }}
-        run: mpyl repo status
 
       - name: Show build status
         env:

@@ -40,20 +40,22 @@ class BuildSbt(Step):
         image_name = docker_image_tag(step_input)
         command = self._construct_sbt_command(step_input, image_name)
 
-        output = custom_check_output(self.logger, command=command)
+        output = custom_check_output(
+            logger=self.logger, command=command, use_print=True
+        )
         artifact = input_to_artifact(
             ArtifactType.DOCKER_IMAGE, step_input, DockerImageSpec(image=image_name)
         )
         if output.success:
             return Output(
                 success=True,
-                message=f"Built {step_input.project.name}",
+                message=f"Built {step_input.project_execution.name}",
                 produced_artifact=artifact,
             )
 
         return Output(
             success=False,
-            message=f"Failed to build sbt project for {step_input.project.name}",
+            message=f"Failed to build sbt project for {step_input.project_execution.name}",
             produced_artifact=None,
         )
 
@@ -67,7 +69,7 @@ class BuildSbt(Step):
         commands: list[str] = [
             command
             for command in [
-                f"project {step_input.project.name}",
+                f"project {step_input.project_execution.name}",
                 f'set docker / imageNames := Seq(ImageName("{image_name}"))',
                 check_fmt,
                 "docker",

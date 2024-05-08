@@ -32,8 +32,8 @@ definitions:
         "$ref": "#/definitions/Slack"
       jira:
         "$ref": "#/definitions/Jira"
-      s3:
-        "$ref": "#/definitions/s3"
+      camunda:
+        "$ref": "#/definitions/Camunda"
     required:
       - vcs
       - docker
@@ -119,13 +119,11 @@ definitions:
       - mainCluster
       - clusters
     properties:
+      deploymentStrategy:
+        $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.apps.v1.DeploymentStrategy'
       deployAction:
         type: string
-        enum:
-          - 'HelmDeploy'
-          - 'HelmDryRun'
-          - 'HelmTemplate'
-          - 'KubectlManifest'
+        pattern: ((HelmDeploy)|(HelmDryrun)|(HelmTemplate)|(KubectlManifest))|(!ENV.*)
         description: >-
           Defines the action to take in the deploy step. Defaults to helmDeploy. 
           If set to HelmDeploy, the helm chart will be deployed to the cluster.
@@ -135,7 +133,7 @@ definitions:
         default: 'HelmDeploy'
       outputPath:
         type: string
-        default: target/kubernetes
+        default: .mpyl/kubernetes
         description: >-
           The path to the folder where the rendered helm chart or kubectl manifest will be written.
           Defaults to target/kubernetes under the root folder of the project.
@@ -153,6 +151,7 @@ definitions:
         type: array
         items:
           "$ref": "#/definitions/NamedCluster"
+    required: [ deploymentStrategy ]
   Clusters:
     type: object
     additionalProperties: false
@@ -186,24 +185,30 @@ definitions:
     properties:
       clusterId:
         type: string
-      projectId:
-        type: string
       clusterEnv:
         type: string
       context:
         type: string
-    required: [ clusterId, projectId, clusterEnv, context ]
+    required: [ clusterId, clusterEnv, context ]
   VCS:
     type: object
     additionalProperties: false
     properties:
+      changedFilesPath:
+        type: [ string, null ]
+        description: "Path to the file that contains the changed files"
       git:
         "$ref": "#/definitions/Git"
       github:
         "$ref": "#/definitions/Github"
-      artifactRepository:
+      cachingRepository:
         description: "The repository where the build artifacts are persisted"
         "$ref": "#/definitions/Git"
+      argoRepository:
+        description: "The argocd repository that contains the kubernetes manifests"
+        "$ref": "#/definitions/Git"
+      argoGithub:
+        "$ref": "#/definitions/Github"
     required:
       - git
       - github
@@ -319,6 +324,15 @@ definitions:
       userName:
         type: string
       password:
+        type: string
+      provider:
+        enum:
+          - 'aws'
+          - 'azure'
+        description: >-
+          Defines the container registry provider. Defaults to aws.
+        default: 'aws'
+      region:
         type: string
       cache:
         type: object
@@ -447,16 +461,67 @@ definitions:
         description: 'A pattern that extracts a ticket number from the branch name'
     required:
       - site
-  s3:
+  Camunda:
     type: object
     properties:
-      accessKeyId:
-        type: [ string, null ]
-      secretAccessKey:
-        type: [ string, null ]
-    dependencies:
-      accessKeyId: [ secretAccessKey ]
-      secretAccessKey: [ accessKeyId ]
+      modelerAPI:
+        type: object
+        properties:
+          baseUrl:
+            type: string
+          tokenUrl:
+            type: string
+        required: [ "baseUrl", "tokenUrl" ]
+      modelerCredentials:
+        type: object
+        properties:
+          clientId:
+            type: string
+          clientSecret:
+            type: string
+          grantType:
+            type: string
+          audience:
+            type: string
+        required: [ "clientId", "clientSecret", "grantType", "audience" ]
+      zeebeCredentials:
+        type: object
+        properties:
+          pr:
+            "$ref": "#/definitions/CamundaCluster"
+          test:
+            "$ref": "#/definitions/CamundaCluster"
+          acceptance:
+            "$ref": "#/definitions/CamundaCluster"
+          production:
+            "$ref": "#/definitions/CamundaCluster"
+        required: [ 'pr', 'test', 'acceptance', 'production' ]
+      camundaDeploymentPath:
+        type: object
+        properties:
+          diagramResourcesPath:
+            type: string
+          dockerDirectoryPath:
+            type: string
+          dockerFilePath:
+            type: string
+          bpmProjectPath:
+            type: string
+        required: [ 'diagramResourcesPath', 'dockerDirectoryPath', 'dockerFilePath', 'bpmProjectPath' ]
+    required:
+      - modelerAPI
+      - modelerCredentials
+      - zeebeCredentials
+      - camundaDeploymentPath
+  CamundaCluster:
+    type: object
+    properties:
+      clusterId:
+        type: string
+      clientId:
+        type: string
+      clientSecret:
+        type: string
   Dagster:
     title: Dagster
     type: object

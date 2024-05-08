@@ -13,7 +13,9 @@ class TestMpylSchema:
 
     def test_schema_load(self):
         os.environ["CHANGE_ID"] = "123"
-        project = load_project(Path(""), self.resource_path / "test_project.yml")
+        project = load_project(
+            self.resource_path, self.resource_path / "test_project.yml"
+        )
 
         assert project.name == "dockertest"
         assert project.maintainer, ["Marketplace", "Energy Trading"]
@@ -35,10 +37,10 @@ class TestMpylSchema:
         ), "should start with"
 
         assert project.dependencies is not None
-        assert project.dependencies.build == {"test/docker/"}
-        assert project.dependencies.test == {"test/docker/", "test2/docker/"}
-        assert project.dependencies.deploy == {"test/docker/"}
-        assert project.dependencies.postdeploy == {"specs/*.js"}
+        assert project.dependencies.for_stage("build") == ["test/docker/"]
+        assert project.dependencies.for_stage("test") == ["test2/docker/"]
+        assert project.dependencies.for_stage("deploy") is None
+        assert project.dependencies.for_stage("postdeploy") == ["specs/*.js"]
 
         assert project.deployment.kubernetes is not None
         assert project.deployment.kubernetes.port_mappings == {8080: 80}
@@ -74,15 +76,21 @@ class TestMpylSchema:
 
     def test_schema_load_validation(self):
         with pytest.raises(ValidationError) as exc:
-            load_project(Path(""), self.resource_path / "test_project_invalid.yml")
-        assert exc.value.message == "'maintainer' is a dependency of 'deployment'"
+            load_project(
+                self.resource_path, self.resource_path / "test_project_invalid.yml"
+            )
+        assert exc.value.message == "'maintainer' is a required property"
 
     def test_target_by_value(self):
         target = Target(Target.PULL_REQUEST)
         assert target == Target.PULL_REQUEST
 
     def test_root_path(self):
-        project = load_project(Path("/test"), self.resource_path / "test_project.yml")
-        assert project.path == str(
-            Path(project.root_path) / self.resource_path / "test_project.yml"
+        project = load_project(self.resource_path, Path("test_project.yml"))
+        assert project.path == "test_project.yml"
+
+    def test_dynamic_stages(self):
+        project = load_project(
+            self.resource_path / "dynamic_stages", Path("test_project.yml")
         )
+        assert project.path == "test_project.yml"

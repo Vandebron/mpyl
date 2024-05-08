@@ -28,7 +28,7 @@ class EphemeralDockerDeploy(Step):
 
     def execute(self, step_input: Input) -> Output:
         env_variables = get_env_variables(
-            step_input.project, step_input.run_properties.target
+            step_input.project_execution.project, step_input.run_properties.target
         )
         full_image_path = full_image_path_for_project(step_input)
 
@@ -39,6 +39,6 @@ class EphemeralDockerDeploy(Step):
 
         return Output(
             success=True,
-            message=f"Deployed project {step_input.project.name}",
+            message=f"Deployed project {step_input.project_execution.name}",
             produced_artifact=None,
         )

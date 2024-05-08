@@ -7,6 +7,7 @@ list in this module.
 
 """
 import copy
+import numbers
 import pkgutil
 import re
 from abc import ABC
@@ -112,6 +113,45 @@ class Upgrader(ABC):
         return previous_dict
 
 
+class ProjectUpgraderOneFour20(Upgrader):
+    target_version = "1.4.20"
+
+    def upgrade(self, previous_dict: ordereddict) -> ordereddict:
+        hosts = previous_dict.get("deployment", {}).get("traefik", {}).get("hosts", [])
+        for host in hosts:
+            if priority := host.get("priority", None):
+                if isinstance(priority, numbers.Number) or not any(
+                    env in priority
+                    for env in ["all", "pr", "test", "acceptance", "production"]
+                ):
+                    host["priority"] = {}
+                    host["priority"]["all"] = priority
+
+        return previous_dict
+
+
+class ProjectUpgraderOneFour18(Upgrader):
+    target_version = "1.4.18"
+
+    def upgrade(self, previous_dict: ordereddict) -> ordereddict:
+        return previous_dict  # To account for the project id upgrade that couldn't be committed
+
+
+class ProjectUpgraderOneFour15(Upgrader):
+    target_version = "1.4.15"
+
+    def upgrade(self, previous_dict: ordereddict) -> ordereddict:
+        job = previous_dict.get("deployment", {}).get("kubernetes", {}).get("job", {})
+        if cron := job.get("cron", None):
+            if not any(
+                env in cron for env in ["all", "pr", "test", "acceptance", "production"]
+            ):
+                job["cron"] = {}
+                job["cron"]["all"] = cron
+
+        return previous_dict
+
+
 class ProjectUpgraderOne31(Upgrader):
     target_version = "1.3.1"
 
@@ -161,6 +201,9 @@ PROJECT_UPGRADERS = [
     ProjectUpgraderOne10(),
     ProjectUpgraderOne11(),
     ProjectUpgraderOne31(),
+    ProjectUpgraderOneFour15(),
+    ProjectUpgraderOneFour18(),
+    ProjectUpgraderOneFour20(),
 ]
 
 

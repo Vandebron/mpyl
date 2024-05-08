@@ -6,7 +6,8 @@ from logging import Logger
 from typing import Optional
 
 from . import Step, IPluginRegistry
-from ..project import Stage
+from ..project import Stage, Project
+from ..steps import ArtifactType
 
 
 class StepsCollection:
@@ -28,7 +29,7 @@ class StepsCollection:
             self.__load_steps_in_module(".", alternative_library_location)
             location = alternative_library_location
 
-        logger.info(f"Loaded {len(IPluginRegistry.plugins)} executors from {location}")
+        logger.debug(f"Loaded {len(IPluginRegistry.plugins)} executors from {location}")
         if not IPluginRegistry.plugins:
             logger.warning(f"No executors found. Check {location} for plugins.")
 
@@ -55,6 +56,17 @@ class StepsCollection:
 
         for modname in module_names:
             importlib.import_module(modname)
+
+    def get_stage_for_producing_artifact(
+        self, project: Project, artifact: ArtifactType
+    ) -> Optional[str]:
+        for stage, step in project.stages.all().items():
+            if step is not None:
+                executor = self.get_executor(Stage(stage, "icon"), step)
+                if executor is not None:
+                    if executor.produced_artifact == artifact:
+                        return stage
+        return None
 
     def get_executor(self, stage: Stage, step_name: str) -> Optional[Step]:
         executors = filter(

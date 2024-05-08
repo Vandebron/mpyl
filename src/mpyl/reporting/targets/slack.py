@@ -47,6 +47,7 @@ from slack_sdk.models.blocks import (
 
 from . import Reporter, ReportOutcome
 from ..formatting.markdown import run_result_to_markdown
+from ...project import Target
 from ...steps.models import RunProperties
 from ...steps.run import RunResult
 
@@ -55,9 +56,9 @@ def to_slack_markdown(markdown: str) -> str:
     regex_replace = (
         (re.compile(r"\[(.*?)\]\((.*?)\)"), r"<\2|\1>"),
         (re.compile(r"^- ", flags=re.M), "• "),
-        (re.compile(r"^  - ", flags=re.M), "  ◦ "),
-        (re.compile(r"^    - ", flags=re.M), "    ⬩ "),
-        (re.compile(r"^      - ", flags=re.M), "    ◽ "),
+        (re.compile(r"^ {2}- ", flags=re.M), "  ◦ "),
+        (re.compile(r"^ {4}- ", flags=re.M), "    ⬩ "),
+        (re.compile(r"^ {6}- ", flags=re.M), "    ◽ "),
         (re.compile(r"^#+ (.+)$", flags=re.M), r"*\1*"),
         (re.compile(r"\*\*"), "*"),
         (re.compile(r"~~"), "~"),
@@ -94,13 +95,14 @@ class SlackOutcome(ReportOutcome):
 class SlackReporter(Reporter):
     _icons: SlackIcons
     _message_identifier: Optional[MessageIdentifier]
+    ICON_ROBOT = ":robot_face:"
 
     def __init__(
         self,
         config: dict,
         channel: Optional[str],
         versioning_identifier: str,
-        target: str,
+        target: Target,
         message_identifier: Optional[MessageIdentifier] = None,
     ):
         slack_config = config.get("slack")
@@ -108,7 +110,7 @@ class SlackReporter(Reporter):
             raise ValueError("slack config not set")
         self._client = WebClient(token=slack_config["botToken"])
         self._channel = channel
-        self._title = f"MPyL run for {versioning_identifier} on {target}"
+        self._title = f"MPyL run for {versioning_identifier} on {str(target)}"
         icons = slack_config["icons"]
         self._icons = SlackIcons(
             success=icons["success"],
@@ -142,7 +144,7 @@ class SlackReporter(Reporter):
                 self._client.chat_update(
                     channel=self._message_identifier.channel_id,
                     ts=self._message_identifier.time_stamp,
-                    icon_emoji=":robot_face:",
+                    icon_emoji=self.ICON_ROBOT,
                     mrkdwn=True,
                     blocks=blocks,
                     text=body,
@@ -151,7 +153,7 @@ class SlackReporter(Reporter):
 
             response = self._client.chat_postMessage(
                 channel=self._channel,
-                icon_emoji=":robot_face:",
+                icon_emoji=self.ICON_ROBOT,
                 mrkdwn=True,
                 blocks=blocks,
                 text=body,
@@ -179,7 +181,7 @@ class SlackReporter(Reporter):
         self._client.chat_update(
             channel=self._message_identifier.channel_id,
             ts=self._message_identifier.time_stamp,
-            icon_emoji=":robot_face:",
+            icon_emoji=self.ICON_ROBOT,
             mrkdwn=True,
             blocks=blocks,
             text=body,

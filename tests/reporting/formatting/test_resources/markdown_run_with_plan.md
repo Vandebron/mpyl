@@ -4,7 +4,10 @@ For _dockertest_ at stage _build_
 
 Build failed
 
-🏗️ ~~dockertest~~, *test*  
-📋 *test*  
+🏗️ Build:  
+~~dockertest~~, *test*  
+📋 Test:  
+*test*  
 🧪 51 ❌ 1 💔 0 🙈 0 [Docker Test](http://localhost/tests)  
-🚀 *[test](https://some.location.com)*  
+🚀 Deploy:  
+*[test](https://some.location.com)*  

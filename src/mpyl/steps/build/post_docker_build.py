@@ -35,14 +35,17 @@ class AfterBuildDocker(Step):
 
         properties = step_input.run_properties
         docker_config: DockerConfig = DockerConfig.from_dict(properties.config)
-        docker_registry = registry_for_project(docker_config, step_input.project)
+        docker_registry = registry_for_project(
+            docker_config, step_input.project_execution.project
+        )
 
         full_image_path = docker_registry_path(docker_registry, image_name)
         artifact = Artifact(
-            ArtifactType.DOCKER_IMAGE,
-            properties.versioning.revision,
-            self.meta.name,
-            DockerImageSpec(image=full_image_path),
+            artifact_type=ArtifactType.DOCKER_IMAGE,
+            revision=properties.versioning.revision,
+            producing_step=self.meta.name,
+            spec=DockerImageSpec(image=full_image_path),
+            hash=step_input.project_execution.hashed_changes,
         )
 
         if step_input.dry_run:

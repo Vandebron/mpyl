@@ -4,7 +4,7 @@
 ## PR comment
 Pipeline results can be reported in the form of an update to the PR body or user comment on the pull request,
 using the `PullRequestReporter` class.
-The mode of update is determined by the `update_stategy` parameter in the constructor.
+The mode of update is determined by the `update_strategy` parameter in the constructor.
 You are recommended to use a bot account as the authenticated user.
 
 ### Installation instructions
@@ -62,7 +62,7 @@ class GithubOutcome(ReportOutcome):
     pass
 
 
-class GithubUpdateStategy(Enum):
+class GithubUpdateStrategy(Enum):
     BODY = "body"
     COMMENT = "comment"
 
@@ -76,14 +76,14 @@ class PullRequestReporter(Reporter):
         compose_function: Callable[
             [RunResult, Optional[dict]], str
         ] = compose_message_body,
-        update_stategy: GithubUpdateStategy = GithubUpdateStategy.BODY,
+        update_strategy: GithubUpdateStrategy = GithubUpdateStrategy.BODY,
     ):
         self._raw_config = config
         self._config = GithubConfig.from_config(config)
         self.git_repository = Repository(RepoConfig.from_config(config))
         self.compose_function = compose_function
-        self.update_strategy: GithubUpdateStategy = update_stategy
-        self.body_separator = "----"
+        self.update_strategy: GithubUpdateStrategy = update_strategy
+        self.body_separator = "----\n"
 
     def _get_pull_request(
         self, repo: GithubRepository, run_properties: RunProperties
@@ -97,7 +97,7 @@ class PullRequestReporter(Reporter):
         return None
 
     def _update_pr(self) -> Callable[[PullRequest, RunResult], None]:
-        if self.update_strategy == GithubUpdateStategy.COMMENT:
+        if self.update_strategy == GithubUpdateStrategy.COMMENT:
             return self._change_pr_comment
         return self._change_pr_body
 
@@ -216,7 +216,7 @@ class CommitCheck(Reporter):
             repo = self._create_github_repo_instance()
             self.start_check()
 
-            if self._check_run_id and results.has_results:
+            if self._check_run_id:
                 run = repo.get_check_run(self._check_run_id)
                 conclusion = (
                     "success" if results is None or results.is_success else "failure"
@@ -227,8 +227,6 @@ class CommitCheck(Reporter):
                     conclusion=conclusion,
                     output=self._to_output(results),
                 )
-
-                return GithubOutcome(success=results.is_success)
 
             return GithubOutcome(success=True)
 

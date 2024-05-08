@@ -13,17 +13,10 @@ yaml = YAML()
 
 
 @yaml_object(yaml)
-@dataclass
-class JunitTestSpec(ArtifactSpec):
-    yaml_tag = "!JunitTestSpec"
-    test_output_path: str
-    test_results_url: Optional[str] = None
-    test_results_url_name: Optional[str] = None
-
-
 @dataclass(frozen=True)
 class TestRunSummary:
     __test__ = False
+    yaml_tag = "!TestRunSummary"
     tests: int
     failures: int
     errors: int
@@ -34,13 +27,25 @@ class TestRunSummary:
         return self.errors == 0 and self.failures == 0
 
 
+@yaml_object(yaml)
+@dataclass
+class JunitTestSpec(ArtifactSpec):
+    yaml_tag = "!JunitTestSpec"
+    test_output_path: str
+    test_results_url: Optional[str] = None
+    test_results_url_name: Optional[str] = None
+    test_results_summary: Optional[TestRunSummary] = None
+
+
 def to_test_suites(artifact: JunitTestSpec) -> list[TestSuite]:
     junit_result_path = artifact.test_output_path
 
     xml = JUnitXml()
-    for file_name in [
-        fn for fn in os.listdir(junit_result_path) if fn.endswith(".xml")
-    ]:
+    for file_name in (
+        [fn for fn in os.listdir(junit_result_path) if fn.endswith(".xml")]
+        if os.path.isdir(junit_result_path)
+        else []
+    ):
         xml += JUnitXml.fromfile(Path(junit_result_path, file_name).as_posix())
 
     suites = [TestSuite.fromelem(s) for s in xml]

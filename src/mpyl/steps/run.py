@@ -6,12 +6,14 @@ import operator
 from typing import Optional
 
 from .models import RunProperties
-from ..project import Stage, Project
 from .steps import StepResult, ExecutionException
+from ..project import Stage
+from ..project_execution import ProjectExecution
+from ..run_plan import RunPlan
 
 
 class RunResult:
-    _run_plan: dict[Stage, set[Project]]
+    _run_plan: RunPlan
     _results: list[StepResult]
     _run_properties: RunProperties
     _exception: Optional[ExecutionException]
@@ -27,7 +29,7 @@ class RunResult:
         if self._exception:
             return "❗ Failed with exception"
         if self.is_in_progress:
-            return "🏗️ Building"
+            return "🛠️ Building"
         if not self.has_results:
             return "🦥 Nothing to do"
         if self._results_success():
@@ -36,19 +38,24 @@ class RunResult:
         return "❌ Failed"
 
     @property
-    def failed_result(self) -> Optional[StepResult]:
-        return next((r for r in self._results if not r.output.success), None)
+    def failed_results(self) -> Optional[list[StepResult]]:
+        failed_results = list((r for r in self._results if not r.output.success))
+
+        return failed_results if len(failed_results) > 0 else None
 
     @property
     def progress_fraction(self) -> float:
         unfinished = 0
         finished = 0
-        for stage, projects in self.run_plan.items():
+        for stage, project_executions in self.run_plan.items():
             finished_project_names = set(
                 map(lambda r: r.project.name, self.results_for_stage(stage))
             )
-            for project in projects:
-                if project.name in finished_project_names:
+            for project_execution in project_executions:
+                if (
+                    project_execution.name in finished_project_names
+                    or project_execution.cached
+                ):
                     finished += 1
                 else:
                     unfinished += 1
@@ -72,12 +79,20 @@ class RunResult:
         return self._run_properties
 
     @property
-    def run_plan(self) -> dict[Stage, set[Project]]:
+    def run_plan(self) -> RunPlan:
         return self._run_plan
 
     @property
     def has_run_plan_projects(self) -> bool:
-        return not all(len(projects) == 0 for stage, projects in self.run_plan.items())
+        """
+        We create a ProjectExecution for every project that is changed in the branch we're building, HOWEVER we also
+        know per-project whether it's cached or not. In this function we should read that value to exclude projects
+        that don't need rebuilding.
+        """
+        return not all(
+            len(project_execution) == 0
+            for stage, project_execution in self.run_plan.items()
+        )
 
     @property
     def results(self) -> list[StepResult]:
@@ -89,7 +104,7 @@ class RunResult:
     def extend(self, results: list[StepResult]):
         self._results.extend(results)
 
-    def update_run_plan(self, run_plan: dict[Stage, set[Project]]):
+    def update_run_plan(self, run_plan: RunPlan):
         self._run_plan.update(run_plan)
 
     @property
@@ -122,9 +137,7 @@ class RunResult:
             [res for res in self._results if res.stage == stage]
         )
 
-    def plan_for_stage(self, stage: Stage) -> set[Project]:
-        plan: Optional[set[Project]] = self.run_plan.get(stage)
-        if plan:
-            return plan
+    def plan_for_stage(self, stage: Stage) -> set[ProjectExecution]:
+        plan: Optional[set[ProjectExecution]] = self.run_plan.get(stage)
 
-        return set()
+        return plan or set()

@@ -4,7 +4,7 @@ stages:
   build: Docker Build
   test: Docker Test
   deploy: Kubernetes Deploy
-mpylVersion: 1.0.10
+mpylVersion: 1.4.20
 maintainer: ['MPyL']
 build:
   args:
@@ -28,6 +28,14 @@ deployment:
         acceptance: "Acceptance"
         production: "Production"
   kubernetes:
+    deploymentStrategy:
+      rollingUpdate:
+        maxSurge: "25%"
+        maxUnavailable: "25%"
+      type: "RollingUpdate"
+    rancher:
+      projectId:
+        all: "p-11111"
     livenessProbe:
       path:
         all: /health
@@ -42,9 +50,9 @@ deployment:
         all: 1
       limit:
         cpus:
-          all: 0.5
+          all: 0.1
         mem:
-          all: 1024
+          all: 128
   traefik:
     hosts:
       - host:
@@ -58,4 +66,5 @@ deployment:
       - host:
           all: "Host(`some.other.host.com`)"
         servicePort: 4091
-        priority: 1000
+        priority:
+          all: 1000

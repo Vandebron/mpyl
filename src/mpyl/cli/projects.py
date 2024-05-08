@@ -22,6 +22,7 @@ from ..cli.commands.projects.lint import (
     _assert_correct_project_linkup,
     _lint_whitelisting_rules,
     __detail_wrong_substitutions,
+    _assert_project_ids,
 )
 from ..cli.commands.projects.upgrade import check_upgrade
 from ..constants import DEFAULT_CONFIG_FILE_NAME
@@ -88,9 +89,8 @@ def list_projects(obj: ProjectsContext):
     found_projects = obj.cli.repo.find_projects(obj.filter)
 
     for proj in found_projects:
-        if OVERRIDE_PATTERN not in proj:
-            project = load_project(obj.cli.repo.root_dir, Path(proj), False)
-            obj.cli.console.print(Markdown(f"{proj} `{project.name}`"))
+        project = load_project(obj.cli.repo.root_dir, Path(proj), False)
+        obj.cli.console.print(Markdown(f"{proj} `{project.name}`"))
 
 
 @projects.command(name="names", help="List found project names")
@@ -102,7 +102,6 @@ def list_project_names(obj: ProjectsContext):
         [
             load_project(obj.cli.repo.root_dir, Path(proj), False).name
             for proj in found_projects
-            if OVERRIDE_PATTERN not in proj
         ]
     )
 
@@ -165,40 +164,58 @@ def lint(obj: ProjectsContext):
         if obj.filter != ""
         else loaded_projects
     )
-    _assert_unique_project_names(
-        console=obj.cli.console,
+
+    console = obj.cli.console
+    failed = False
+
+    duplicates = _assert_unique_project_names(
+        console=console,
         all_projects=all_projects,
     )
+    if duplicates:
+        console.print(
+            f"  ❌ Found {len(duplicates)} duplicate project names: {duplicates}"
+        )
+        failed = True
+    else:
+        console.print("  ✅ No duplicate project names found")
 
-    obj.cli.console.print("")
-    obj.cli.console.print("Running extended checks...")
+    missing_project_ids = _assert_project_ids(
+        console=console, all_projects=all_projects
+    )
+    if missing_project_ids:
+        console.print(
+            f"  ❌ Found {len(missing_project_ids)} projects without a project id: {missing_project_ids}"
+        )
+        failed = True
+    else:
+        console.print("  ✅ All kubernetes projects have a project id")
 
-    failed = False
     wrong_substitutions = _assert_correct_project_linkup(
-        console=obj.cli.console,
+        console=console,
         target=Target.PULL_REQUEST,
         projects=loaded_projects,
         all_projects=all_projects,
         pr_identifier=123,
     )
     if len(wrong_substitutions) == 0:
-        obj.cli.console.print("  ✅ No wrong namespace substitutions found")
+        console.print("  ✅ No wrong namespace substitutions found")
     else:
         failed = True
-        __detail_wrong_substitutions(obj.cli.console, all_projects, wrong_substitutions)
+        __detail_wrong_substitutions(console, all_projects, wrong_substitutions)
 
     for target in Target:
         wrong_whitelists = _lint_whitelisting_rules(
-            console=obj.cli.console,
+            console=console,
             projects=loaded_projects,
             config=obj.cli.config,
             target=target,
         )
         if len(wrong_whitelists) == 0:
-            obj.cli.console.print("  ✅ No undefined whitelists found")
+            console.print("  ✅ No undefined whitelists found")
         else:
             for project, diff in wrong_whitelists:
-                obj.cli.console.log(
+                console.log(
                     f"  ❌ Project {project.name} has undefined whitelists: {diff}"
                 )
                 failed = True
@@ -244,7 +261,7 @@ def upgrade(obj: ProjectsContext, apply: bool):
             status.stop()
             status.console.print(
                 Markdown(
-                    f"Upgraded {number_of_upgrades} projects. Validate with `mpyl projects lint --extended`"
+                    f"Upgraded {number_of_upgrades} projects. Validate with `mpyl projects lint`"
                 )
             )
 

@@ -1,7 +1,7 @@
 name: 'sparkJob'
 description: 'Job to enrich charge session with total amount earned'
 maintainer: ['MPyL']
-mpylVersion: 1.4.0
+mpylVersion: 1.0.9
 stages:
   build: Sbt Build
   test: Sbt Test
@@ -29,7 +29,8 @@ deployment:
       activeDeadlineSeconds:
         all: 86400
       cron:
-        schedule: "0 7 * * *"
+        all:
+          schedule: "0 7 * * *"
       spark:
         mainClass: "sparkjob.sparkJobMain"
         mainApplicationFile: "local:///app/sparkjob-assembly-1.0.jar"
@@ -38,9 +39,9 @@ deployment:
         all: 2
       limit:
         cpus:
-          all: 1.0
+          all: 0.1
         mem:
-          all: 2048
+          all: 128
     role:
       resources:
         - 'pods'

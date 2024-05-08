@@ -6,6 +6,8 @@ from pyaml_env import parse_config
 
 from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME
 from src.mpyl.project import Target, Project
+from src.mpyl.project_execution import ProjectExecution
+from src.mpyl.run_plan import RunPlan
 from src.mpyl.steps.deploy.k8s import render_manifests, get_cluster_config_for_project
 from src.mpyl.steps.deploy.k8s.chart import (
     ChartBuilder,
@@ -24,11 +26,13 @@ from tests.test_resources import test_data
 from tests.test_resources.test_data import (
     assert_roundtrip,
     get_project,
+    get_deployment_strategy_project,
     get_job_project,
     get_spark_project,
     get_cron_job_project,
     get_minimal_project,
     TestStage,
+    get_project_execution,
 )
 
 
@@ -55,23 +59,29 @@ class TestKubernetesChart:
 
     @staticmethod
     def _get_builder(project: Project, run_properties=None):
+        project_execution = ProjectExecution.run(project)
+
         if not run_properties:
-            projects = {project}
-            run_plan = {
-                TestStage.build(): projects,
-                TestStage.test(): projects,
-                TestStage.deploy(): projects,
-            }
+            project_executions = {project_execution}
+            run_plan = RunPlan(
+                {
+                    TestStage.build(): project_executions,
+                    TestStage.test(): project_executions,
+                    TestStage.deploy(): project_executions,
+                }
+            )
             run_properties = test_data.run_properties_with_plan(plan=run_plan)
+
         required_artifact = Artifact(
             artifact_type=ArtifactType.DOCKER_IMAGE,
             revision="revision",
             producing_step="build_docker_Step",
             spec=DockerImageSpec("registry/image:123"),
         )
+
         return ChartBuilder(
             step_input=Input(
-                project,
+                project_execution=project_execution,
                 run_properties=run_properties,
                 required_artifact=required_artifact,
             ),
@@ -117,16 +127,12 @@ class TestKubernetesChart:
 
     def test_load_cluster_config(self):
         step_input = Input(
-            get_project(),
+            get_project_execution(),
             test_data.RUN_PROPERTIES,
             required_artifact=test_data.get_output().produced_artifact,
             dry_run=True,
         )
-        config = get_cluster_config_for_project(
-            step_input.run_properties.target,
-            step_input.run_properties,
-            project=test_data.get_minimal_project(),
-        )
+        config = cluster_config(step_input.run_properties)
         assert config.cluster_env == "test"
 
     def test_load_cluster_config_with_project_override(self):
@@ -218,8 +224,13 @@ class TestKubernetesChart:
         assert_roundtrip(
             self.k8s_resources_path / "templates" / "manifest.yaml",
             manifest,
-            overwrite=False,
         )
+
+    def test_deployment_strategy_roundtrip(self):
+        project = get_deployment_strategy_project()
+        builder = self._get_builder(project)
+        chart = to_service_chart(builder)
+        self._roundtrip(self.template_path / "deployment", "deployment", chart)
 
     def test_default_ingress(self):
         project = get_minimal_project()
@@ -259,16 +270,27 @@ class TestKubernetesChart:
             == "https://test.host.nl"
         )
 
-    @pytest.mark.parametrize("template", ["job", "service-account", "sealed-secrets"])
+    def test_is_cron_job(self):
+        cron_builder = self._get_builder(get_cron_job_project())
+        assert cron_builder.is_cron_job is True
+        builder = self._get_builder(get_job_project())
+        assert builder.is_cron_job is False
+
+    @pytest.mark.parametrize(
+        "template", ["job", "service-account", "sealed-secrets", "prometheus-rule"]
+    )
     def test_job_chart_roundtrip(self, template):
         builder = self._get_builder(get_job_project())
         chart = to_job_chart(builder)
         self._roundtrip(self.template_path / "job", template, chart)
 
-    def test_cron_job_chart_roundtrip(self):
+    @pytest.mark.parametrize(
+        "template", ["cronjob", "service-account", "sealed-secrets", "prometheus-rule"]
+    )
+    def test_cron_job_chart_roundtrip(self, template):
         builder = self._get_builder(get_cron_job_project())
         chart = to_cron_job_chart(builder)
-        self._roundtrip(self.template_path / "cronjob", "cronjob", chart)
+        self._roundtrip(self.template_path / "cronjob", template, chart)
 
     @pytest.mark.parametrize(
         "template",
@@ -279,9 +301,25 @@ class TestKubernetesChart:
             "role",
             "rolebinding",
             "sealed-secrets",
+            "prometheus-rule",
         ],
     )
     def test_spark_chart_roundtrip(self, template):
         builder = self._get_builder(get_spark_project())
         chart = to_spark_job_chart(builder)
         self._roundtrip(self.template_path / "spark", template, chart)
+
+    def test_get_endpoint(self):
+        project_with_swagger = get_project()
+        builder_with_swagger = self._get_builder(project_with_swagger)
+
+        endpoint_with_swagger = DeployKubernetes.get_endpoint(builder_with_swagger)
+        assert endpoint_with_swagger == "/swagger/index.html"
+
+        project_without_swagger = test_data.get_project_without_swagger()
+        builder_without_swagger = self._get_builder(project_without_swagger)
+
+        endpoint_without_swagger = DeployKubernetes.get_endpoint(
+            builder_without_swagger
+        )
+        assert endpoint_without_swagger == "/"

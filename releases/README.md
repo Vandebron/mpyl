@@ -1,5 +1,286 @@
 # Release notes
 
+## MPyL 1.6.6
+
+
+#### Pass changed files
+- Allow to pass a .json of changed files to determine the run plan
+- The file format has to be a list/dict of `{"path/to/file": "change_type"}`, where `change_type` is one of `["A", "C", "D", "M", "R"]`
+
+#### Run plan
+- Add the maintainers field to the run plan json
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.6.6)
+
+## MPyL 1.6.5
+
+
+#### Tests
+- Execute a single sbt `test` command instead of `test:compile` and `test:test` sequentially (removes the need for the experimental thin client)
+
+### Dependency management
+- Always re-execute a stage for a project when one or more of their dependencies are modified
+- Produce a hash of the modified files even when the stage is cached (so a follow-up commit can be cached)
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.6.5)
+
+## MPyL 1.6.4
+
+
+#### Run results
+- Account for parallel runs when reading and writing the run results
+- Test results are now also added to the output artifact instead of just to a file
+
+### Run plan
+- The run plan file is now written to `.mpyl/run_plan.pickle` and `.mpyl/run_plan.json` (replaces the old confusing `build_plan` name)
+
+### Other changes
+- The root `.mpyl` folder is now also cleaned up as part of `mpyl build clean`
+- Do not fail the build when trying to create a Kubernetes namespace that already exists
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.6.4)
+
+## MPyL 1.6.3
+
+
+#### Build status
+- Write a simple build plan in json format to `.mpyl/build_plan.json` when using the `build status` command.
+
+#### CloudFront Kubernetes Deploy
+- Remove support for CloudFront Kubernetes Deploy step. 
+
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.6.3)
+
+## MPyL 1.6.2
+
+
+#### Memory limits
+- Doubled the general memory limit for dagster repos to 1024, as agreed within the dagster guild to prevent OOM.
+
+#### Chart improvements
+- Be able to specify `alerts` in the project yaml when doing `Kubernetes Job Deploy` step
+- Create charts for these prometheus rules
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.6.2)
+
+## MPyL 1.6.1
+
+
+#### Bugfixes
+- Do not try to hash deleted or renamed files when building a cache key
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.6.1)
+
+## MPyL 1.6.0
+
+
+#### Improvements
+- Implement a different way to determine the build plan
+- Change the layout of the build plan print to improve transparency
+- Allow passing --stage to the build status command
+
+#### Build set caching
+Store the build set in disk and read it back when `--sequential` is passed as a parameter, preventing us to rebuild the plan on subsequent
+stages. Which means there is no need to diff with the main branch, thus no need to fetch the entire main branch history
+before running mpyl.
+This is a significant performance improvement as you only need to do a clone with full history for the first stage,
+and run all others using a shallow clone (much faster to check out on repositories with many commits).
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.6.0)
+
+## MPyL 1.5.1
+
+
+#### Bugfixes
+- Always add changes to the build plan for the deploy stage
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.5.1)
+
+## MPyL 1.5.0
+
+
+#### Argocd
+
+Add support for an argocd repository and workflow:
+- Can be toggled on by setting `kubernetes.deployAction` to 'KubectlManifest' in the `mpyl_config.yaml` file.
+- An `argoRepository` and `argoGithub` object have been added to the `vcs` section in the `mpyl_config.yaml` file to
+  configure the argocd repository and github repository.
+- The `manifest.yaml` file will be created during the deploy step.
+- The command to push the k8s manifests to the argocd repository is `mpyl build artifacts push --artifact-type argo`. 
+- An additional `deployment.yaml` file will be created in the push command, it contains some extra metadata for argocd.
+- A pull request will be created in the configured argocd repository with the created k8s manifest files.
+- The folder in the argocd repo structure has the following pattern: `k8s-manifests/{project_name}/{target}/{namespace}/*.yaml`.
+
+#### Manual selection
+Include project overrides in list of projects.
+
+#### Multiple deploy targets
+
+Allow multiple deploy targets when using the jenkins cli command.
+
+
+#### Stage configuration
+
+MPyL can be configured to use an arbitrary set of build stages. Typical CI/CD stages are `build`, `test` or `deploy`.
+See `mpyl.steps` for the steps that come bundled and how to define and register your own.
+
+<details>
+  <summary>Example stage configuration</summary>
+```yaml
+.. include:: mpyl_stages.schema.yml
+```
+</details>
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.5.0)
+
+## MPyL 1.4.20
+
+
+#### Traefik priority rules per environment
+
+You can now configure Traefik route priorities per environment:
+
+```yaml
+deployment:
+  traefik:
+    hosts:
+      - host:
+          all: "Host(`host1.example.com`)"
+          servicePort: 1234
+          priority:
+            all: 10
+      - host:
+          all: "Host(`host2.example.com`)"
+          servicePort: 1235
+          priority:
+            pr: 20
+            test: 30
+            acceptance: 40
+            production: 50
+```
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.20)
+
+## MPyL 1.4.19
+
+
+#### ECR repo
+- New ECR repositories now allow for mutable image tags
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.19)
+
+## MPyL 1.4.18
+
+
+#### Project id
+Project id is now a required property for non override project.yml's that have a deploy stage defined. It can/will be used
+for rbac purposes in rancher.
+
+#### Deployment strategy
+Make deployment strategy configurable in `project.yml` and `mpyl_config.yml`:
+
+```yaml
+kubernetes:
+  deploymentStrategy:
+    rollingUpdate:
+      maxUnavailable: "25%"
+      maxSurge: "25%"
+    type: "RollingUpdate"
+```
+
+#### Cache repo
+- Fix bug when pushing artifacts
+
+#### ECR repo
+- Create ECR repository if it doesn't exist
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.18)
+
+## MPyL 1.4.17
+
+
+#### Bugfixes
+- Fix updating of pr body's that include "----"
+- Don't fail the Github pr body update function based on the mpyl run result
+- Fix loading of custom `ExecutionException` with pickle
+- Add a retry on the artifact caching push to avoid issues on parallel runs
+- Fix the cypress docker image
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.17)
+
+## MPyL 1.4.16
+
+
+#### Bugfixes
+- Fix non-cron jobs deployments
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.16)
+
+## MPyL 1.4.15
+
+
+#### Add AWS ECR
+- MPyL can now push/pull images to/from AWS ECR. Check mpyl_config file to set this.
+
+#### Enhancements
+- Adds the optional `hasSwagger` field to enhance PR descriptions. This update ensures accurate URL display for services that do not use Swagger
+
+#### Manual build improvements
+- Do not get changes from the remote repository when doing manual build
+
+#### Cron job improvements
+- Allow cron jobs to be configured per environment
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.15)
+
+## MPyL 1.4.14
+
+
+#### Sealed Secrets and Dagster Deploy
+- The DagsterDeploy step now supports sealed secrets.
+- The Dagster UserCode helm chart is deployed with an extra manifest that contains the sealed secrets that are manually sealed and documented in the `project.yml`
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.14)
+
+## MPyL 1.4.13
+
+
+#### Ship typing information
+- MPyL can now be type checked via `mypy`.
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.13)
+
+## MPyL 1.4.12
+
+
+#### Enhancements
+- Several small code improvements
+- Improve sbt test step
+
+#### Bug Fixes
+- Fix `mpyl build clean` command for override projects
+- Fix test results collection on compile errors for sbt test
+- Make sure sbt test coverage always gets turned off again
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.4.12)
+
 ## MPyL 1.4.11
 
 
