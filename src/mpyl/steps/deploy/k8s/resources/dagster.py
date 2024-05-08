@@ -78,6 +78,7 @@ def to_user_code_values(
                         "tag": run_properties.versioning.identifier,
                         "repository": f"{docker_registry.host_name}/{project.name}",
                     },
+                    "labels": builder.to_labels(),
                     "includeConfigInLaunchedRuns": {"enabled": True},
                     "name": release_name,
                     "port": 3030,

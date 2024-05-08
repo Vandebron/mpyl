@@ -231,7 +231,7 @@ class ChartBuilder:
         self.role = project.kubernetes.role
         self.deployment_strategy = project.kubernetes.deployment_strategy
 
-    def _to_labels(self) -> dict:
+    def to_labels(self) -> dict:
         run_properties = self.step_input.run_properties
         app_labels = {
             "name": self.release_name,
@@ -264,7 +264,7 @@ class ChartBuilder:
     ) -> V1ObjectMeta:
         return V1ObjectMeta(
             name=name if name else self.release_name,
-            labels=self._to_labels(),
+            labels=self.to_labels(),
             annotations=annotations,
         )
 
@@ -343,7 +343,7 @@ class ChartBuilder:
             metadata=V1ObjectMeta(
                 annotations=self._to_annotations(),
                 name=self.release_name,
-                labels=self._to_labels(),
+                labels=self.to_labels(),
             ),
             spec=V1ServiceSpec(
                 type="ClusterIP",
@@ -774,7 +774,7 @@ class ChartBuilder:
             metadata=V1ObjectMeta(
                 annotations=self._to_annotations(),
                 name=self.release_name,
-                labels=self._to_labels(),
+                labels=self.to_labels(),
             ),
             spec=V1DeploymentSpec(
                 replicas=instances.get_value(target=self.target),
