@@ -132,12 +132,16 @@ class TestKubernetesChart:
             required_artifact=test_data.get_output().produced_artifact,
             dry_run=True,
         )
-        config = cluster_config(step_input.run_properties)
+        config = get_cluster_config_for_project(
+            Target.PULL_REQUEST_BASE,
+            step_input.run_properties,
+            project=test_data.get_project(),
+        )
         assert config.cluster_env == "test"
 
     def test_load_cluster_config_with_project_override(self):
         step_input = Input(
-            get_project(),
+            get_project_execution(),
             test_data.RUN_PROPERTIES,
             required_artifact=test_data.get_output().produced_artifact,
             dry_run=True,
