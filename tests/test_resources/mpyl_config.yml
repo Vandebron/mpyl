@@ -63,7 +63,7 @@ kubernetes:
       maxUnavailable: "25%"
       maxSurge: "25%"
     type: "RollingUpdate"
-  mainCluster:
+  defaultCluster:
     pr: 'test'
     test: 'test'
     acceptance: 'acce'

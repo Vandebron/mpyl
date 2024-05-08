@@ -222,7 +222,7 @@ class ConfigUpgraderOne412(Upgrader):
                     kubernetes["clusters"] = named_clusters
                     kubernetes.pop("rancher")
 
-                    kubernetes["mainCluster"] = {
+                    kubernetes["defaultCluster"] = {
                         env: next(
                             (
                                 c["clusterEnv"]

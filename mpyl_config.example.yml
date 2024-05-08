@@ -107,7 +107,7 @@ kubernetes:
       maxSurge: "25%"
     type: "RollingUpdate"
   deployAction: HelmDeploy
-  mainCluster:
+  defaultCluster:
     pr: 'K8S-Test'
     test: 'K8S-Test'
     acceptance: 'K8S-Acceptance'

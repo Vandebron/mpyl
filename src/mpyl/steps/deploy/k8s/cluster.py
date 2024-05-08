@@ -43,7 +43,7 @@ def get_cluster_config_for_project(
     ]
 
     default_cluster_name: str = TargetProperty.from_config(
-        kubernetes_config["mainCluster"]
+        kubernetes_config["defaultCluster"]
     ).get_value(target)
 
     default_cluster: ClusterConfig = next(

@@ -116,7 +116,7 @@ definitions:
     type: object
     additionalProperties: false
     required:
-      - mainCluster
+      - defaultCluster
       - clusters
       - deploymentStrategy
     properties:
@@ -138,7 +138,7 @@ definitions:
         description: >-
           The path to the folder where the rendered helm chart or kubectl manifest will be written.
           Defaults to target/kubernetes under the root folder of the project.
-      mainCluster:
+      defaultCluster:
         type: object
         description: Main cluster to deploy to. Can be overriden in the project.yaml
         properties:

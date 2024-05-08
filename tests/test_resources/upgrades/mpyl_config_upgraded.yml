@@ -74,7 +74,7 @@ kubernetes:
       projectId: p-33333
       clusterEnv: prd
       context: digital-k8s-prod
-  mainCluster:
+  defaultCluster:
     pr: MISSING
     test: test
     acceptance: MISSING
