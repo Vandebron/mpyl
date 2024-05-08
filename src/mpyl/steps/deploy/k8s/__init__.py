@@ -98,9 +98,7 @@ def upsert_namespace(
     )
     api = client.CoreV1Api()
 
-    meta_data = rancher_namespace_metadata(
-        namespace=namespace, rancher_config=rancher_config, project_id=project_id
-    )
+    meta_data = get_namespace_metadata(namespace, cluster_config)
     namespaces = api.list_namespace(field_selector=f"metadata.name={namespace}")
 
     if len(namespaces.items) == 0 and not dry_run:
@@ -264,7 +262,10 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
         and project.deployment.kubernetes.rancher.project_id
         else ""
     )
-    rancher_config: ClusterConfig = cluster_config(run_properties)
+
+    cluster_config: ClusterConfig = get_cluster_config_for_project(
+        run_properties, project
+    )
 
     upsert_namespace(
         logger=logger,
@@ -272,7 +273,7 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
         project_id=project_id,
         dry_run=dry_run,
         run_properties=run_properties,
-        rancher_config=rancher_config,
+        cluster_config=cluster_config,
     )
 
     return helm.install(

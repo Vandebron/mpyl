@@ -66,7 +66,9 @@ class DeployDagster(Step):
         Deploys the docker image produced in the build stage as a Dagster user-code-deployment
         """
         properties = step_input.run_properties
-        context = cluster_config(properties).context
+        context = get_cluster_config_for_project(
+            step_input.run_properties, step_input.project_execution.project
+        ).cluster_env
         dagster_config: DagsterConfig = DagsterConfig.from_dict(properties.config)
         dagster_deploy_results = []
 

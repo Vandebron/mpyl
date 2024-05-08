@@ -27,10 +27,10 @@ class ClusterConfig:
 
 
 def get_cluster_config_for_project(
-    target: Target, run_properties: RunProperties, project: Project
+    run_properties: RunProperties, project: Project
 ) -> ClusterConfig:
     cluster_override = (
-        project.deployment.cluster.get_value(target)
+        project.deployment.cluster.get_value(run_properties.target)
         if project.deployment and project.deployment.cluster
         else None
     )
@@ -44,7 +44,7 @@ def get_cluster_config_for_project(
 
     default_cluster_name: str = TargetProperty.from_config(
         kubernetes_config["defaultCluster"]
-    ).get_value(target)
+    ).get_value(run_properties.target)
 
     default_cluster: ClusterConfig = next(
         cluster for cluster in clusters if cluster.name == default_cluster_name

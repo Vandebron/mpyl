@@ -513,7 +513,7 @@ class ChartBuilder:
     def to_ingress_routes(self, https: bool) -> list[V1AlphaIngressRoute]:
         hosts = self.create_host_wrappers()
         cluster_env = get_cluster_config_for_project(
-            self.target, self.step_input.run_properties, self.project
+            self.step_input.run_properties, self.project
         ).cluster_env
         return [
             V1AlphaIngressRoute(
