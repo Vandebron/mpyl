@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Optional, Any
 
 from ...models import RunProperties
-from ....project import Target, TargetProperty, Project
+from ....project import TargetProperty, Project
 
 
 @dataclass(frozen=True)
