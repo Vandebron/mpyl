@@ -10,7 +10,6 @@ from ....project import TargetProperty, Project
 @dataclass(frozen=True)
 class ClusterConfig:
     name: str
-    project_id: Optional[str]
     cluster_id: Optional[str]
     cluster_env: str
     context: str
@@ -19,7 +18,6 @@ class ClusterConfig:
     def from_config(config: dict):
         return ClusterConfig(
             name=config["name"],
-            project_id=config.get("clusterId"),
             cluster_id=config.get("clusterId"),
             cluster_env=config["clusterEnv"],
             context=config["context"],
@@ -63,18 +61,20 @@ def get_cluster_config_for_project(
     return cluster_for_env
 
 
-def get_namespace_metadata(namespace: str, cluster_config: ClusterConfig):
+def get_namespace_metadata(
+    namespace: str, cluster_config: ClusterConfig, project_id: str
+):
     metadata: dict[str, Any] = {
         "name": namespace,
     }
 
-    if cluster_config.project_id and cluster_config.cluster_id:
+    if cluster_config.cluster_id:
         metadata["annotations"] = {
-            "field.cattle.io/projectId": f"{cluster_config.cluster_id}:{cluster_config.project_id}",
+            "field.cattle.io/projectId": f"{cluster_config.cluster_id}:{project_id}",
             "lifecycle.cattle.io/create.namespace-auth": "true",
         }
         metadata["labels"] = {
-            "field.cattle.io/projectId": cluster_config.project_id,
+            "field.cattle.io/projectId": project_id,
             "kubernetes.io/metadata.name": namespace,
         }
 

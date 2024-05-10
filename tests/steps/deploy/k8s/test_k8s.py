@@ -133,9 +133,8 @@ class TestKubernetesChart:
             dry_run=True,
         )
         config = get_cluster_config_for_project(
-            Target.PULL_REQUEST_BASE,
             step_input.run_properties,
-            project=test_data.get_project(),
+            test_data.get_minimal_project(),
         )
         assert config.cluster_env == "test"
 
@@ -147,7 +146,6 @@ class TestKubernetesChart:
             dry_run=True,
         )
         config = get_cluster_config_for_project(
-            step_input.run_properties.target,
             step_input.run_properties,
             project=test_data.get_project(),
         )

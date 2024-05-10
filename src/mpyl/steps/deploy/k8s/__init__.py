@@ -87,6 +87,7 @@ def rollout_restart_deployment(
 def upsert_namespace(
     logger: Logger,
     namespace: str,
+    project_id: str,
     dry_run: bool,
     run_properties: RunProperties,
     cluster_config: ClusterConfig,
@@ -97,7 +98,7 @@ def upsert_namespace(
     )
     api = client.CoreV1Api()
 
-    meta_data = get_namespace_metadata(namespace, cluster_config)
+    meta_data = get_namespace_metadata(namespace, cluster_config, project_id)
     namespaces = api.list_namespace(field_selector=f"metadata.name={namespace}")
 
     if len(namespaces.items) == 0 and not dry_run:
@@ -269,6 +270,7 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
     upsert_namespace(
         logger=logger,
         namespace=namespace,
+        project_id=project_id,
         dry_run=dry_run,
         run_properties=run_properties,
         cluster_config=cluster_config,
