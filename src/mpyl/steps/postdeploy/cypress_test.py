@@ -134,7 +134,7 @@ class CypressTest(Step):
         self, volume_path: str, cypress_config: CypressConfig
     ) -> Container:
         custom_image_tag = "mpyl/cypress"
-        docker.build(
+        docker.buildx.build(
             context_path=volume_path,
             tags=[custom_image_tag],
             file=f"{volume_path}/Dockerfile-mpyl",

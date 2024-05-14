@@ -34,7 +34,7 @@ def deploy_diagram_to_cluster(logger: Logger, config: CamundaConfig, docker_cont
 def get_docker_container(config: CamundaConfig) -> Container:
     volume_path = os.path.join(os.getcwd(), config.depolyment_path.bpm_project_path)
     custom_image_tag = "mpyl/bpmn"
-    docker.build(
+    docker.buildx.build(
         context_path=volume_path,
         tags=[custom_image_tag],
         file=f"{volume_path}{config.depolyment_path.docker_file_path}",
