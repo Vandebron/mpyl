@@ -149,7 +149,7 @@ class CypressTest(Step):
             image=custom_image_tag,
             interactive=True,
             detach=True,
-            volumes=[
+            mounts=[
                 (volume_path, "/cypress"),
             ]
             + config_paths,
