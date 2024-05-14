@@ -12,7 +12,7 @@ kubernetes = "==27.2.0"
 junitparser = "==2.8.0"
 pyjwt = "==2.5.0" # forced downgrade due to https://stackoverflow.com/questions/33198428/jwt-module-object-has-no-attribute-encode
 cryptography = "==39.0.2"
-python-on-whales = "==0.64.3"
+python-on-whales = "==0.71.0"
 pygithub = "==1.58.2"
 slack-sdk = "==3.21.3"
 atlassian-python-api = "==3.39.0"
