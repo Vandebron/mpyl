@@ -13,7 +13,7 @@ from src.mpyl.projects.find import load_projects
 from src.mpyl.stages.discovery import (
     find_projects_to_execute,
     is_project_cached_for_stage,
-    is_dependency_modified,
+    is_file_a_dependency,
 )
 from src.mpyl.steps import ArtifactType
 from src.mpyl.steps import Output
@@ -235,7 +235,7 @@ class TestDiscovery:
             assert job_execution.hashed_changes == HASHED_CHANGES_OF_JOB
 
     def test_should_correctly_check_root_path(self):
-        assert not is_dependency_modified(
+        assert not is_file_a_dependency(
             self.logger,
             load_project(
                 test_resource_path,
