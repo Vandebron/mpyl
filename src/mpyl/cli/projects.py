@@ -149,6 +149,7 @@ def show_project(ctx, name):
 
 @projects.command(help="Validate the yaml of changed projects against their schema")
 @click.pass_obj
+# pylint: disable=too-many-branches
 def lint(obj: ProjectsContext):
     loaded_projects = _check_and_load_projects(
         console=obj.cli.console,
