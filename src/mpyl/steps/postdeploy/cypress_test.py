@@ -65,8 +65,9 @@ class CypressTest(Step):
                     f"{cypress_config.ci_build_id}-{step_input.project_execution.name}"
                 )
                 run_command = (
-                    f'bash -c "Xvfb :10$MACHINE & XDG_CONFIG_HOME=/tmp/cyhome$MACHINE '
-                    f"DISPLAY=:10$MACHINE  yarn cypress run --spec '{specs_string}' --ci-build-id "
+                    'bash -c "Xvfb :10$MACHINE & XDG_CONFIG_HOME=/tmp/cyhome$MACHINE '
+                    f"DISPLAY=:10$MACHINE CYPRESS_KEEPER_TOKEN={os.environ['CYPRESS_KEEPER_TOKEN']} "
+                    f"yarn cypress run --spec '{specs_string}' --ci-build-id "
                     f"{ci_build_id} --parallel --reporter-options "
                     f'"mochaFile={reports_folder}/[hash].xml" --record --key '
                     'b6a2aab1-0b80-4ca0-a56c-1c8d98a8189c || true "'
