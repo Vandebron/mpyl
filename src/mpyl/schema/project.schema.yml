@@ -445,6 +445,22 @@ definitions:
         type: boolean
       priority:
         $ref: '#/definitions/dtapNumberValue'
+      additionalRoute:
+        type: object
+        additionalProperties: false
+        properties:
+          name:
+            type: string
+          host:
+            $ref: '#/definitions/dtapValue'
+          middlewares:
+            type: array
+            items:
+              type: string
+          entryPoints:
+            type: array
+            items:
+              type: string
   livenessProbe:
     type: object
     additionalProperties: true
