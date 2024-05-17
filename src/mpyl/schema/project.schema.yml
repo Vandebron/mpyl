@@ -331,10 +331,6 @@ definitions:
     properties:
       enabled:
         type: boolean
-      clusterSpecific:
-        type: array
-        items:
-          $ref: '#/definitions/traefikClusterSpecific'
       hosts:
         type: array
         items:
@@ -449,28 +445,6 @@ definitions:
         type: boolean
       priority:
         $ref: '#/definitions/dtapNumberValue'
-      cluster:
-        type: string
-  traefikClusterSpecific:
-    type: object
-    additionalProperties: false
-    properties:
-      name:
-        type: string
-      entryPoints:
-        type: object
-        additionalProperties: false
-        properties:
-          https:
-            type: array
-            items:
-              type: string
-          http:
-            type: array
-            items:
-              type: string
-      middleware:
-        type: string
   livenessProbe:
     type: object
     additionalProperties: true

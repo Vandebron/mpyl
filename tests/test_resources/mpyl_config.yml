@@ -89,17 +89,6 @@ project: # default values
   deployment:
     traefik:
       enabled: true
-      clusterSpecific:
-        - name: 'FirstCluster'
-          entryPoints:
-            https: [ 'firstClusterHttps' ]
-            http: [ ]
-          middleware: 'first-cluster-middleware@kubernetescrd'
-        - name: 'SecondCluster'
-          entryPoints:
-            https: [ 'secondClusterHttps' ]
-            http: [ 'secondClusterHttp' ]
-          middleware: 'first-cluster-middleware@kubernetescrd'
       hosts:
         - host:
             pr: "Host(`{SERVICE-NAME}-{PR-NUMBER}.{CLUSTER-ENV}-backend.nl`)"
@@ -111,7 +100,6 @@ project: # default values
           whitelists:
             all: [ "VPN" ]
           insecure: false
-          cluster: FirstCluster
     kubernetes:
       imagePullSecrets:
         - name: 'acme-registry'
