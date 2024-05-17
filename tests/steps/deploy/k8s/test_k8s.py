@@ -163,6 +163,8 @@ class TestKubernetesChart:
             pr_number=1234,
             namespace="pr-1234",
             cluster_env="test",
+            middlewares_override=[],
+            entrypoints_override=[],
         )
         route.spec["tls"] = {"secretName": 1234}
 
@@ -191,7 +193,6 @@ class TestKubernetesChart:
             "dockertest-ingress-1-https",
             "dockertest-ingress-1-http",
             "dockertest-ingress-intracloud-https-0",
-            "dockertest-ingress-intracloud-https-1",
             "dockertest-ingress-0-whitelist",
             "dockertest-ingress-1-whitelist",
             "prometheus-rule",
@@ -214,7 +215,6 @@ class TestKubernetesChart:
             "dockertest-ingress-1-https",
             "dockertest-ingress-1-http",
             "dockertest-ingress-intracloud-https-0",
-            "dockertest-ingress-intracloud-https-1",
             "dockertest-ingress-0-whitelist",
             "dockertest-ingress-1-whitelist",
             "prometheus-rule",
