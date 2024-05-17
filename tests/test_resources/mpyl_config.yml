@@ -100,6 +100,17 @@ project: # default values
           whitelists:
             all: [ "VPN" ]
           insecure: false
+    additionalTraefikRoutes:
+      - name: "ingress-intracloud-https"
+        clusterEnv:
+          pr: "test-other"
+          test: "test-other"
+          acceptance: "acce-other"
+          production: "acce-other"
+        middlewares:
+          - "intracloud-middleware@kubernetescrd"
+        entrypoints:
+          - "intracloud"
     kubernetes:
       imagePullSecrets:
         - name: 'acme-registry'

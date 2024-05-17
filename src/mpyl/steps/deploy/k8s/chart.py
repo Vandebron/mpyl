@@ -77,6 +77,7 @@ from ....project import (
     Alert,
     KeyValueRef,
     Metrics,
+    TraefikAdditionalRoute,
 )
 from ....utilities.docker import DockerImageSpec
 
@@ -169,6 +170,7 @@ class DeploymentDefaults:
     white_lists: DefaultWhitelists
     image_pull_secrets: dict
     deployment_strategy: dict
+    additional_routes: list[TraefikAdditionalRoute]
 
     @staticmethod
     def from_config(config: dict):
@@ -176,6 +178,7 @@ class DeploymentDefaults:
         if deployment_values is None:
             raise KeyError("Configuration should have project.deployment section")
         kubernetes = deployment_values.get("kubernetes", {})
+        additional_routes = deployment_values.get("additionalTraefikRoutes", None)
         return DeploymentDefaults(
             resources_defaults=ResourceDefaults.from_config(kubernetes["resources"]),
             liveness_probe_defaults=kubernetes["livenessProbe"],
@@ -185,6 +188,11 @@ class DeploymentDefaults:
             white_lists=DefaultWhitelists.from_config(config.get("whiteLists", {})),
             image_pull_secrets=kubernetes.get("imagePullSecrets", {}),
             deployment_strategy=config["kubernetes"]["deploymentStrategy"],
+            additional_routes=(
+                list(map(TraefikAdditionalRoute.from_config, additional_routes))
+                if additional_routes
+                else []
+            ),
         )
 
 
@@ -506,7 +514,16 @@ class ChartBuilder:
                 white_lists=to_white_list(host.whitelists),
                 tls=host.tls.get_value(self.target) if host.tls else None,
                 insecure=host.insecure,
-                additional_route=host.additional_route,
+                additional_route=next(
+                    (
+                        r
+                        for r in self.config_defaults.additional_routes
+                        if r.name == host.additional_route
+                    ),
+                    None,
+                )
+                if host.additional_route
+                else None,
             )
             for idx, host in enumerate(hosts if hosts else default_hosts)
         ]
@@ -538,7 +555,9 @@ class ChartBuilder:
         hosts = self.create_host_wrappers()
         return [
             V1AlphaIngressRoute(
-                metadata=self._to_object_meta(name=f"{host.additional_route.name}-{i}"),
+                metadata=self._to_object_meta(
+                    name=f"{self.project.name}-{host.additional_route.name}-{i}"
+                ),
                 host=host,
                 target=self.target,
                 namespace=get_namespace(self.step_input.run_properties, self.project),

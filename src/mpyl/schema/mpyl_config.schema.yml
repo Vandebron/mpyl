@@ -407,8 +407,28 @@ definitions:
         properties:
           traefik:
             "$ref": "project.schema.yml#/definitions/traefik"
+          additionalTraefikRoutes:
+            "$ref": "#/definitions/AdditionalTraefikRoutes"
           kubernetes:
             "$ref": "project.schema.yml#/definitions/kubernetes"
+  AdditionalTraefikRoutes:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+        clusterEnv:
+          $ref: 'project.schema.yml#/definitions/dtapValue'
+        middlewares:
+          type: array
+          items:
+            type: string
+        entrypoints:
+          type: array
+          items:
+            type: string
   Slack:
     type: object
     additionalProperties: false

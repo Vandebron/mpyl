@@ -115,17 +115,7 @@ deployment:
         whitelists:
           test:
             - "Test"
-        additionalRoute:
-          name: "dockertest-ingress-intracloud-https"
-          clusterEnv:
-            pr: "test-other"
-            test: "test-other"
-            acceptance: "acce-other"
-            production: "acce-other"
-          middlewares:
-            - "intracloud-middleware@kubernetescrd"
-          entrypoints:
-            - "intracloud"
+        additionalRoute: "ingress-intracloud-https"
       - host:
           all: "Host(`some.other.host.com`)"
         servicePort: 4091

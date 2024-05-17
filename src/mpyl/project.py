@@ -368,7 +368,7 @@ class TraefikHost:
     whitelists: TargetProperty[list[str]]
     priority: Optional[TargetProperty[int]]
     insecure: bool
-    additional_route: Optional[TraefikAdditionalRoute]
+    additional_route: Optional[str]
 
     @staticmethod
     def from_config(values: dict):
@@ -380,9 +380,7 @@ class TraefikHost:
             whitelists=TargetProperty.from_config(values.get("whitelists", {})),
             priority=TargetProperty.from_config(values.get("priority", {})),
             insecure=values.get("insecure", False),
-            additional_route=TraefikAdditionalRoute.from_config(
-                values.get("additionalRoute", None)
-            ),
+            additional_route=values.get("additionalRoute", None),
         )
 
 

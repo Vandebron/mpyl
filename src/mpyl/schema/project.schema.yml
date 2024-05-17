@@ -446,21 +446,7 @@ definitions:
       priority:
         $ref: '#/definitions/dtapNumberValue'
       additionalRoute:
-        type: object
-        additionalProperties: false
-        properties:
-          name:
-            type: string
-          clusterEnv:
-            $ref: '#/definitions/dtapValue'
-          middlewares:
-            type: array
-            items:
-              type: string
-          entrypoints:
-            type: array
-            items:
-              type: string
+        type: string
   livenessProbe:
     type: object
     additionalProperties: true
