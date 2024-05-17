@@ -506,6 +506,7 @@ class ChartBuilder:
                 white_lists=to_white_list(host.whitelists),
                 tls=host.tls.get_value(self.target) if host.tls else None,
                 insecure=host.insecure,
+                additionalRoute=host.additionalRoute,
             )
             for idx, host in enumerate(hosts if hosts else default_hosts)
         ]
@@ -515,6 +516,7 @@ class ChartBuilder:
         cluster_env = get_cluster_config_for_project(
             self.step_input.run_properties, self.project
         ).cluster_env
+        additional_routes = self.to_additional_routes(hosts)
         return [
             V1AlphaIngressRoute(
                 metadata=self._to_object_meta(
@@ -529,6 +531,25 @@ class ChartBuilder:
                 cluster_env=cluster_env,
             )
             for i, host in enumerate(hosts)
+        ] + additional_routes
+
+    def to_additional_routes(
+        self, hosts: list[HostWrapper]
+    ) -> list[V1AlphaIngressRoute]:
+        return [
+            V1AlphaIngressRoute(
+                metadata=self._to_object_meta(name=host.additionalRoute.name),
+                host=host,
+                target=self.target,
+                namespace=get_namespace(self.step_input.run_properties, self.project),
+                pr_number=self.step_input.run_properties.versioning.pr_number,
+                https=True,
+                cluster_env=host.additionalRoute.clusterEnv.get_value(self.target),
+                middlewares=host.additionalRoute.middlewares,
+                entrypoints=host.additionalRoute.entrypoints,
+            )
+            for host in hosts
+            if host.additionalRoute
         ]
 
     def to_middlewares(self) -> dict[str, V1AlphaMiddleware]:

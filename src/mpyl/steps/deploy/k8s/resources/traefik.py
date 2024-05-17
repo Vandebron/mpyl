@@ -7,7 +7,7 @@ from typing import Optional, Union, Any
 from kubernetes.client import V1ObjectMeta
 
 from . import CustomResourceDefinition
-from .....project import TraefikHost, Target
+from .....project import TraefikHost, Target, TraefikAdditionalRoute
 from .....utilities import replace_pr_number
 
 
@@ -19,6 +19,7 @@ class HostWrapper:
     service_port: int
     white_lists: dict[str, list[str]]
     tls: Optional[str]
+    additionalRoute: Optional[TraefikAdditionalRoute]
     insecure: bool = False
 
     @property
@@ -35,6 +36,8 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
         namespace: str,
         cluster_env: str,
         pr_number: Optional[int],
+        middlewares: list[str],
+        entrypoints: list[str],
         https: bool = True,
     ):
         def _interpolate_names(host: str, name: str, cluster_env: str) -> str:
@@ -43,6 +46,15 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
             host = host.replace("{CLUSTER-ENV}", cluster_env)
             host = replace_pr_number(host, pr_number)
             return host
+
+        combined_middlewares = (
+            [
+                {"name": "traefik-https-redirect@kubernetescrd"} if not https else None,
+                {"name": host.full_name},
+            ]
+            if len(middlewares) == 0
+            else [{"name": m for m in middlewares}]
+        )
 
         route: dict[str, Any] = {
             "kind": "Rule",
@@ -54,10 +66,7 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
             "services": [
                 {"name": host.name, "kind": "Service", "port": host.service_port}
             ],
-            "middlewares": [
-                {"name": "traefik-https-redirect@kubernetescrd"} if not https else None,
-                {"name": host.full_name},
-            ],
+            "middlewares": combined_middlewares,
         }
 
         if host.traefik_host.priority:
@@ -69,13 +78,17 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
         if host.insecure:
             tls |= {"options": {"name": "insecure-ciphers", "namespace": "traefik"}}
 
+        combined_entrypoints = (
+            ["websecure" if https else "web"] if len(entrypoints) == 0 else entrypoints
+        )
+
         super().__init__(
             api_version="traefik.io/v1alpha1",
             kind="IngressRoute",
             metadata=metadata,
             spec={
                 "routes": [route],
-                "entryPoints": ["websecure" if https else "web"],
+                "entryPoints": combined_entrypoints,
                 "tls": tls if https else None,
             },
             schema="traefik.ingress.schema.yml",

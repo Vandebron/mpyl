@@ -451,7 +451,7 @@ definitions:
         properties:
           name:
             type: string
-          host:
+          clusterEnv:
             $ref: '#/definitions/dtapValue'
           middlewares:
             type: array
