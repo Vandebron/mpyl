@@ -19,7 +19,7 @@ class HostWrapper:
     service_port: int
     white_lists: dict[str, list[str]]
     tls: Optional[str]
-    additionalRoute: Optional[TraefikAdditionalRoute]
+    additional_route: Optional[TraefikAdditionalRoute]
     insecure: bool = False
 
     @property
@@ -36,8 +36,8 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
         namespace: str,
         cluster_env: str,
         pr_number: Optional[int],
-        middlewares: list[str],
-        entrypoints: list[str],
+        middlewares_override: list[str],
+        entrypoints_override: list[str],
         https: bool = True,
     ):
         def _interpolate_names(host: str, name: str, cluster_env: str) -> str:
@@ -52,8 +52,8 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
                 {"name": "traefik-https-redirect@kubernetescrd"} if not https else None,
                 {"name": host.full_name},
             ]
-            if len(middlewares) == 0
-            else [{"name": m for m in middlewares}]
+            if len(middlewares_override) == 0
+            else [{"name": m for m in middlewares_override}]
         )
 
         route: dict[str, Any] = {
@@ -79,7 +79,9 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
             tls |= {"options": {"name": "insecure-ciphers", "namespace": "traefik"}}
 
         combined_entrypoints = (
-            ["websecure" if https else "web"] if len(entrypoints) == 0 else entrypoints
+            ["websecure" if https else "web"]
+            if len(entrypoints_override) == 0
+            else entrypoints_override
         )
 
         super().__init__(

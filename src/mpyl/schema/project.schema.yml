@@ -457,7 +457,7 @@ definitions:
             type: array
             items:
               type: string
-          entryPoints:
+          entrypoints:
             type: array
             items:
               type: string

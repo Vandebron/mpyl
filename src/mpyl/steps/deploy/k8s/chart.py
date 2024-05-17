@@ -506,7 +506,7 @@ class ChartBuilder:
                 white_lists=to_white_list(host.whitelists),
                 tls=host.tls.get_value(self.target) if host.tls else None,
                 insecure=host.insecure,
-                additionalRoute=host.additionalRoute,
+                additional_route=host.additional_route,
             )
             for idx, host in enumerate(hosts if hosts else default_hosts)
         ]
@@ -516,7 +516,6 @@ class ChartBuilder:
         cluster_env = get_cluster_config_for_project(
             self.step_input.run_properties, self.project
         ).cluster_env
-        additional_routes = self.to_additional_routes(hosts)
         return [
             V1AlphaIngressRoute(
                 metadata=self._to_object_meta(
@@ -529,27 +528,28 @@ class ChartBuilder:
                 pr_number=self.step_input.run_properties.versioning.pr_number,
                 https=https,
                 cluster_env=cluster_env,
+                middlewares_override=[],
+                entrypoints_override=[],
             )
             for i, host in enumerate(hosts)
-        ] + additional_routes
+        ]
 
-    def to_additional_routes(
-        self, hosts: list[HostWrapper]
-    ) -> list[V1AlphaIngressRoute]:
+    def to_additional_routes(self) -> list[V1AlphaIngressRoute]:
+        hosts = self.create_host_wrappers()
         return [
             V1AlphaIngressRoute(
-                metadata=self._to_object_meta(name=host.additionalRoute.name),
+                metadata=self._to_object_meta(name=f"{host.additional_route.name}-{i}"),
                 host=host,
                 target=self.target,
                 namespace=get_namespace(self.step_input.run_properties, self.project),
                 pr_number=self.step_input.run_properties.versioning.pr_number,
                 https=True,
-                cluster_env=host.additionalRoute.clusterEnv.get_value(self.target),
-                middlewares=host.additionalRoute.middlewares,
-                entrypoints=host.additionalRoute.entrypoints,
+                cluster_env=host.additional_route.cluster_env.get_value(self.target),
+                middlewares_override=host.additional_route.middlewares,
+                entrypoints_override=host.additional_route.entrypoints,
             )
-            for host in hosts
-            if host.additionalRoute
+            for i, host in enumerate(hosts)
+            if host.additional_route
         ]
 
     def to_middlewares(self) -> dict[str, V1AlphaMiddleware]:
@@ -861,7 +861,17 @@ def _to_service_components_chart(builder):
         f"{builder.project.name}-ingress-{i}-http": route
         for i, route in enumerate(builder.to_ingress_routes(https=False))
     }
-    return common_chart | ingress_https | ingress_http | service_monitor
+    additional_routes = {
+        route.metadata.name: route
+        for i, route in enumerate(builder.to_additional_routes())
+    }
+    return (
+        common_chart
+        | ingress_https
+        | ingress_http
+        | additional_routes
+        | service_monitor
+    )
 
 
 def _to_prometheus_chart(builder):

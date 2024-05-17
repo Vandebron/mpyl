@@ -343,17 +343,19 @@ class Kubernetes:
 @dataclass(frozen=True)
 class TraefikAdditionalRoute:
     name: str
-    clusterEnv: TargetProperty[str]
+    cluster_env: TargetProperty[str]
     middlewares: list[str]
     entrypoints: list[str]
 
     @staticmethod
     def from_config(values: dict):
+        if not values:
+            return None
         return TraefikAdditionalRoute(
-            name=values.get("name", ""),
-            clusterEnv=TargetProperty.from_config(values.get("host", {})),
-            middlewares=values.get("middlewares", []),
-            entrypoints=values.get("entrypoints", []),
+            name=values.get("name"),
+            cluster_env=TargetProperty.from_config(values.get("clusterEnv")),
+            middlewares=values.get("middlewares"),
+            entrypoints=values.get("entrypoints"),
         )
 
 
@@ -366,7 +368,7 @@ class TraefikHost:
     whitelists: TargetProperty[list[str]]
     priority: Optional[TargetProperty[int]]
     insecure: bool
-    additionalRoute: Optional[TraefikAdditionalRoute]
+    additional_route: Optional[TraefikAdditionalRoute]
 
     @staticmethod
     def from_config(values: dict):
@@ -378,8 +380,8 @@ class TraefikHost:
             whitelists=TargetProperty.from_config(values.get("whitelists", {})),
             priority=TargetProperty.from_config(values.get("priority", {})),
             insecure=values.get("insecure", False),
-            additionalRoute=TraefikAdditionalRoute.from_config(
-                values.get("additionalRoute", {})
+            additional_route=TraefikAdditionalRoute.from_config(
+                values.get("additionalRoute", None)
             ),
         )
 
