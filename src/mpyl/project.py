@@ -352,10 +352,10 @@ class TraefikAdditionalRoute:
         if not values:
             return None
         return TraefikAdditionalRoute(
-            name=values.get("name"),
-            cluster_env=TargetProperty.from_config(values.get("clusterEnv")),
-            middlewares=values.get("middlewares"),
-            entrypoints=values.get("entrypoints"),
+            name=values.get("name", {}),
+            cluster_env=TargetProperty.from_config(values.get("clusterEnv", {})),
+            middlewares=values.get("middlewares", {}),
+            entrypoints=values.get("entrypoints", {}),
         )
 
 

@@ -28,7 +28,7 @@ class HostWrapper:
 
 
 class V1AlphaIngressRoute(CustomResourceDefinition):
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         metadata: V1ObjectMeta,
         host: HostWrapper,
