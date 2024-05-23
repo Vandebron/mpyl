@@ -1,4 +1,5 @@
 """Commands related to projects and how they relate"""
+
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -23,6 +24,7 @@ from ..cli.commands.projects.lint import (
     _lint_whitelisting_rules,
     __detail_wrong_substitutions,
     _assert_project_ids,
+    _assert_no_self_dependencies,
 )
 from ..cli.commands.projects.upgrade import check_upgrade
 from ..constants import DEFAULT_CONFIG_FILE_NAME
@@ -147,6 +149,7 @@ def show_project(ctx, name):
 
 @projects.command(help="Validate the yaml of changed projects against their schema")
 @click.pass_obj
+# pylint: disable=too-many-branches
 def lint(obj: ProjectsContext):
     loaded_projects = _check_and_load_projects(
         console=obj.cli.console,
@@ -219,6 +222,17 @@ def lint(obj: ProjectsContext):
                     f"  ❌ Project {project.name} has undefined whitelists: {diff}"
                 )
                 failed = True
+
+    projects_with_self_dependencies = _assert_no_self_dependencies(
+        console, all_projects
+    )
+
+    if len(projects_with_self_dependencies) == 0:
+        console.print("  ✅ No project with a dependency on itself found")
+    else:
+        for project in projects_with_self_dependencies:
+            console.print(f"  ❌ Project {project.name} has a dependency on itself")
+        failed = True
 
     if failed:
         click.get_current_context().exit(1)
