@@ -1,4 +1,5 @@
 """Helper methods for linting projects for correctness are found here"""
+
 import itertools
 from dataclasses import dataclass
 from pathlib import Path
@@ -178,3 +179,17 @@ def _lint_whitelisting_rules(
                     wrong_whitelists.append((project, diff))
 
     return wrong_whitelists
+
+
+def _assert_no_self_dependencies(console: Console, all_projects: list[Project]):
+    console.print("")
+    console.print("Checking for projects depending on themselves:")
+
+    projects_with_self_dependencies = []
+
+    for project in all_projects:
+        if project.dependencies:
+            if project.name in project.dependencies.all().keys():
+                projects_with_self_dependencies.append(project)
+
+    return projects_with_self_dependencies
