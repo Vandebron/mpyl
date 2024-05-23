@@ -12,7 +12,7 @@ from rich.logging import RichHandler
 from rich.markdown import Markdown
 
 from .cli import CliContext, MpylCliParameters
-from .constants import DEFAULT_RUN_PROPERTIES_FILE_NAME, RUN_ARTIFACTS_FOLDER
+from .constants import RUN_ARTIFACTS_FOLDER
 from .reporting.formatting.markdown import (
     execution_plan_as_markdown,
     run_result_to_markdown,
@@ -36,10 +36,11 @@ def print_status(
         explain_run_plan=explain_run_plan,
     )
     console = obj.console
+    logger = logging.getLogger("mpyl")
 
     def write_run_plan_as_json():
         """Write the run plan as a simple JSON file to be used by Github Actions"""
-        simple_run_plan: dict[str, list[dict[str, Union[str, bool]]]] = dict(
+        simple_run_plan: dict[str, list[dict[str, Union[str, bool, list[str]]]]] = dict(
             {
                 stage.name: [
                     {
@@ -51,59 +52,26 @@ def print_status(
                     }
                     for project_execution in project_executions
                 ]
-                for stage, project_executions in run_properties.run_plan.items()
+                for stage, project_executions in run_properties.run_plan.full_plan.items()
             }
         )
         run_plan_file = Path(RUN_ARTIFACTS_FOLDER) / "run_plan.json"
         os.makedirs(os.path.dirname(run_plan_file), exist_ok=True)
         with open(run_plan_file, "w", encoding="utf-8") as file:
-            console.print(f"Writing simple JSON run plan to: {run_plan_file}")
+            logger.info(f"Writing simple JSON run plan to: {run_plan_file}")
             json.dump(simple_run_plan, file)
 
     write_run_plan_as_json()
 
-    console.print(f"MPyL log level is set to {run_properties.console.log_level}")
-    branch = obj.repo.get_branch
-    main_branch = obj.repo.main_branch
-    tag = cli_params.tag or run_properties.versioning.tag
-
-    if tag is None:
-        if run_properties.versioning.branch and not obj.repo.get_branch:
-            console.print("Current branch is detached.")
-        else:
-            console.log(
-                Markdown(
-                    f"Branch not specified at `build.versioning.branch` in _{DEFAULT_RUN_PROPERTIES_FILE_NAME}_, "
-                    f"falling back to git: _{obj.repo.get_branch}_"
-                )
-            )
-
-        if branch == main_branch:
-            console.log(f"On main branch ({branch}), cannot determine build status")
-            return
-
-    version = run_properties.versioning
-    revision = version.revision or obj.repo.get_sha
-    base_revision = obj.repo.base_revision
-    if tag:
-        console.print(Markdown(f"**Tag:** `{version.tag}` at `{revision}`. "))
-    else:
-        base_revision_specification = (
-            f"`{main_branch}` at `{base_revision}`"
-            if base_revision
-            else f"not present. Earliest revision: `{obj.repo.root_commit_hex}` (grafted)."
-        )
-        console.print(
-            Markdown(f"**Branch:** `{branch}`. Base {base_revision_specification}. ")
-        )
+    logger.info(f"MPyL log level is set to {run_properties.console.log_level}")
 
     result = RunResult(run_properties=run_properties)
-    if result.has_run_plan_projects:
+    if result.has_run_plan_projects():
         console.print(
             Markdown("**Execution plan:**  \n" + execution_plan_as_markdown(result))
         )
     else:
-        console.print("No changes detected, nothing to do.")
+        logger.info("No changes detected, nothing to do.")
 
 
 FORMAT = "%(name)s  %(message)s"
@@ -137,7 +105,7 @@ def run_mpyl(
     try:
         run_result = RunResult(run_properties=run_properties)
 
-        if not run_result.has_run_plan_projects:
+        if not run_result.has_run_plan_projects(include_cached_projects=False):
             logger.info("Nothing to do. Exiting..")
             return run_result
 
@@ -154,10 +122,11 @@ def run_mpyl(
             )
 
             run_result = run_build(
-                run_result,
-                steps,
-                reporter,
-                cli_parameters.dryrun or cli_parameters.local,
+                logger=logger,
+                accumulator=run_result,
+                executor=steps,
+                reporter=reporter,
+                dry_run=cli_parameters.dryrun or cli_parameters.local,
             )
         except ValidationError as exc:
             console.log(
@@ -179,16 +148,17 @@ def run_mpyl(
 
 
 def run_build(
+    logger: logging.Logger,
     accumulator: RunResult,
     executor: Steps,
     reporter: Optional[Reporter] = None,
     dry_run: bool = True,
 ):
     try:
-        for stage, project_executions in accumulator.run_plan.items():
+        for stage, project_executions in accumulator.run_plan.selected_plan.items():
             for project_execution in project_executions:
                 if project_execution.cached:
-                    logging.info(
+                    logger.info(
                         f"Skipping {project_execution.name} for stage {stage.name} because it is cached"
                     )
                     result = StepResult(
@@ -203,11 +173,11 @@ def run_build(
                     reporter.send_report(accumulator)
 
                 if not result.output.success and stage.name == deploy.STAGE_NAME:
-                    logging.warning(f"Deployment failed for {project_execution.name}")
+                    logger.warning(f"Deployment failed for {project_execution.name}")
                     return accumulator
 
             if accumulator.failed_results:
-                logging.warning(f"One of the builds failed at Stage {stage.name}")
+                logger.warning(f"One of the builds failed at Stage {stage.name}")
                 return accumulator
         return accumulator
     except ExecutionException as exc:

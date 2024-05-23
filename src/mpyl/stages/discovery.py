@@ -274,11 +274,11 @@ def create_run_plan(
 
     existing_run_plan = _load_existing_run_plan(logger, run_plan_file)
     if existing_run_plan:
-        return _filter_existing_run_plan(
-            run_plan=existing_run_plan,
-            selected_stage=selected_stage,
-            selected_projects=selected_projects,
-        )
+        if selected_stage:
+            existing_run_plan.selected_stage = selected_stage
+        if selected_projects:
+            existing_run_plan.selected_projects = selected_projects
+        return existing_run_plan
 
     run_plan = _discover_run_plan(
         logger=logger,
@@ -295,22 +295,6 @@ def create_run_plan(
 
     _store_run_plan(logger, run_plan, run_plan_file)
     return run_plan
-
-
-def _filter_existing_run_plan(
-    run_plan: RunPlan,
-    selected_stage: Optional[Stage],
-    selected_projects: set[Project],
-) -> RunPlan:
-    filtered_run_plan = run_plan
-
-    if selected_stage:
-        filtered_run_plan = filtered_run_plan.for_stage(selected_stage)
-
-    if selected_projects:
-        filtered_run_plan = filtered_run_plan.for_projects(selected_projects)
-
-    return filtered_run_plan
 
 
 # pylint: disable=too-many-arguments

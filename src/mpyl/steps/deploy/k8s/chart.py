@@ -59,6 +59,7 @@ from .resources.traefik import (
     V1AlphaMiddleware,
     HostWrapper,
 )  # pylint: disable = no-name-in-module
+from ... import deploy
 from ...models import Input
 from ....project import (
     Project,
@@ -77,6 +78,7 @@ from ....project import (
     KeyValueRef,
     Metrics,
 )
+from ....project_execution import ProjectExecution
 from ....utilities.docker import DockerImageSpec
 
 yaml = YAML()
@@ -703,20 +705,25 @@ class ChartBuilder:
             if self.step_input.run_properties.versioning.tag
             else self.step_input.run_properties.versioning.pr_number
         )
-        processed_env_vars = substitute_namespaces(
-            raw_env_vars,
-            {project.to_name for project in self.step_input.run_properties.projects},
-            {
-                project_execution.project.to_name
-                for project_execution in self.step_input.run_properties.projects_to_deploy
-            },
-            pr_identifier,
+        all_deploy_project_executions: set[ProjectExecution] = next(
+            project_executions
+            for stage, project_executions in self.step_input.run_properties.run_plan.full_plan.items()
+            if stage.name == deploy.STAGE_NAME
         )
-
+        processed_env_vars = substitute_namespaces(
+            env_vars=raw_env_vars,
+            all_projects={
+                project.to_name for project in self.step_input.run_properties.projects
+            },
+            projects_to_deploy={
+                project_execution.project.to_name
+                for project_execution in all_deploy_project_executions
+            },
+            pr_identifier=pr_identifier,
+        )
         env_vars = [
             V1EnvVar(name=key, value=value) for key, value in processed_env_vars.items()
         ]
-
         secrets = self._create_secret_env_vars(self.secrets)
 
         return env_vars + self.get_sealed_secret_as_env_vars() + secrets

@@ -47,6 +47,7 @@ class TestBuildCommand:
     run_properties_path = root_test_path / "test_resources/run_properties.yml"
     runner = CliRunner()
     add_commands()
+    logger = logging.getLogger()
 
     def test_run_build_without_plan_should_be_successful(self):
         run_properties = RUN_PROPERTIES
@@ -56,7 +57,7 @@ class TestBuildCommand:
             run_properties,
             StepsCollection(logging.getLogger()),
         )
-        result = run_build(accumulator, executor, None)
+        result = run_build(self.logger, accumulator, executor, None)
         assert not result.has_results
         assert result.is_success
         assert result.status_line == "🦥 Nothing to do"
@@ -78,7 +79,7 @@ class TestBuildCommand:
             run_properties,
             collection,
         )
-        result = run_build(accumulator, executor, None)
+        result = run_build(self.logger, accumulator, executor, None)
         assert result.exception is None
         assert result.status_line == "✅ Successful"
         assert result.is_success
@@ -101,7 +102,7 @@ class TestBuildCommand:
         collection = StepsCollection(logger)
         executor = Steps(logger, run_properties, collection)
 
-        result = run_build(accumulator, executor, None)
+        result = run_build(self.logger, accumulator, executor, None)
         assert not result.has_results
         assert result.status_line == "❗ Failed with exception"
 
