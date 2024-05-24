@@ -82,7 +82,7 @@ class RunResult:
         return self._run_plan
 
     def has_run_plan_projects(self, include_cached_projects: bool = True) -> bool:
-        for _stage, project_executions in self.run_plan.selected_plan.items():
+        for project_executions in self.run_plan.selected_plan.values():
             for project_execution in project_executions:
                 if include_cached_projects or not project_execution.cached:
                     return True
