@@ -7,11 +7,13 @@ from .project_execution import ProjectExecution
 
 class RunPlan:
     full_plan: dict[Stage, set[ProjectExecution]]
-    _selected_stages: Optional[Stage] = None
-    _selected_projects: Optional[set[Project]] = None
+    _selected_stages: Optional[Stage]
+    _selected_projects: Optional[set[Project]]
 
     def __init__(self, full_plan: dict[Stage, set[ProjectExecution]]):
         self.full_plan = full_plan
+        self._selected_stages = None
+        self._selected_projects = None
 
     @staticmethod
     def empty() -> "RunPlan":
