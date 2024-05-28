@@ -1,17 +1,17 @@
 """This module contains the RunPlan class."""
-from dataclasses import dataclass
 from typing import Optional
 
 from .project import Project, Stage
 from .project_execution import ProjectExecution
 
 
-@dataclass()
 class RunPlan:
     full_plan: dict[Stage, set[ProjectExecution]]
     _selected_stages: Optional[Stage] = None
     _selected_projects: Optional[set[Project]] = None
-    _selected_plan: Optional[dict[Stage, set[ProjectExecution]]] = None
+
+    def __init__(self, full_plan: dict[Stage, set[ProjectExecution]]):
+        self.full_plan = full_plan
 
     @staticmethod
     def empty() -> "RunPlan":
@@ -38,21 +38,21 @@ class RunPlan:
         if not self.selected_stage and not self._selected_projects:
             return self.full_plan
 
-        self._selected_plan = {}
+        selected_plan = {}
         for stage, executions in self.full_plan.items():
             if self.selected_stage and stage != self.selected_stage:
                 continue
 
-            self._selected_plan[stage] = executions
+            selected_plan[stage] = executions
 
             if self.selected_projects:
-                self._selected_plan[stage] = {
+                selected_plan[stage] = {
                     execution
                     for execution in executions
                     if execution.project in self.selected_projects
                 }
 
-        return self._selected_plan
+        return selected_plan
 
     def add_stage(self, stage: Stage, executions: set[ProjectExecution]):
         self.full_plan.update({stage: executions})
