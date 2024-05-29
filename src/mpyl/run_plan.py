@@ -22,16 +22,14 @@ class RunPlan:
     def select_stage(self, stage: Stage) -> "RunPlan":
         return RunPlan(
             full_plan=self.full_plan,
-            selected_plan={stage: self.full_plan.get(stage, set())},
+            selected_plan={stage: self.get_projects_for_stage(stage)},
         )
 
     def select_projects(self, projects: set[Project]) -> "RunPlan":
         selected_plan = {}
 
-        for stage, executions in self.full_plan.items():
-            selected_plan[stage] = {
-                execution for execution in executions if execution.project in projects
-            }
+        for stage, executions in self.selected_plan.items():
+            selected_plan[stage] = {p for p in executions if p.project in projects}
 
         return RunPlan(
             full_plan=self.full_plan,

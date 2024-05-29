@@ -280,7 +280,9 @@ def create_run_plan(
             existing_run_plan = existing_run_plan.select_stage(selected_stage)
             logger.debug(f"Run plan: {existing_run_plan}")
         if selected_projects:
-            logger.info(f"Selecting projects from existing plan: {selected_projects}")
+            logger.info(
+                f"Selecting projects from existing plan: {(p.name for p in selected_projects)}"
+            )
             existing_run_plan = existing_run_plan.select_projects(selected_projects)
             logger.debug(f"Run plan: {existing_run_plan}")
         return existing_run_plan
