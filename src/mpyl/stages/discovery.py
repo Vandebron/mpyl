@@ -274,10 +274,15 @@ def create_run_plan(
 
     existing_run_plan = _load_existing_run_plan(logger, run_plan_file)
     if existing_run_plan:
+        logger.debug(f"Run plan: {existing_run_plan}")
         if selected_stage:
+            logger.info(f"Selecting stage from existing plan: {selected_stage}")
             existing_run_plan = existing_run_plan.select_stage(selected_stage)
+            logger.debug(f"Run plan: {existing_run_plan}")
         if selected_projects:
+            logger.info(f"Selecting projects from existing plan: {selected_projects}")
             existing_run_plan = existing_run_plan.select_projects(selected_projects)
+            logger.debug(f"Run plan: {existing_run_plan}")
         return existing_run_plan
 
     run_plan = _discover_run_plan(
