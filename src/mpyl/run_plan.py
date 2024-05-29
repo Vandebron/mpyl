@@ -29,7 +29,7 @@ class RunPlan:
         selected_plan = {}
 
         for stage, executions in self.selected_plan.items():
-            selected_plan[stage] = {p for p in executions if p.project in projects}
+            selected_plan[stage] = {e for e in executions if e.project in projects}
 
         return RunPlan(
             full_plan=self.full_plan,
