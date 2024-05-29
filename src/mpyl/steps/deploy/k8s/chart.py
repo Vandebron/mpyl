@@ -2,6 +2,7 @@
 Data classes for the composition of Custom Resource Definitions.
 More info: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/
 """
+
 import itertools
 from dataclasses import dataclass
 from typing import Optional
@@ -78,7 +79,6 @@ from ....project import (
     KeyValueRef,
     Metrics,
 )
-from ....project_execution import ProjectExecution
 from ....utilities.docker import DockerImageSpec
 
 yaml = YAML()
@@ -421,20 +421,20 @@ class ChartBuilder:
                 env_vars=get_env_variables(self.project, self.target),
                 spark=self._get_job().spark,
                 image=self._get_image(),
-                command=self.project.kubernetes.command.get_value(self.target).split(
-                    " "
-                )
-                if self.project.kubernetes.command
-                else None,
+                command=(
+                    self.project.kubernetes.command.get_value(self.target).split(" ")
+                    if self.project.kubernetes.command
+                    else None
+                ),
                 env_secret_key_refs={
                     s.key: {"key": s.key, "name": self.release_name}
                     for s in self.sealed_secrets
                 },
-                num_replicas=self.project.kubernetes.resources.instances.get_value(
-                    self.target
-                )
-                if self.project.kubernetes.resources.instances
-                else 1,
+                num_replicas=(
+                    self.project.kubernetes.resources.instances.get_value(self.target)
+                    if self.project.kubernetes.resources.instances
+                    else 1
+                ),
             ),
         )
 
@@ -501,9 +501,11 @@ class ChartBuilder:
                 traefik_host=host,
                 name=self.release_name,
                 index=idx,
-                service_port=host.service_port
-                if host.service_port
-                else self.__find_default_port(),
+                service_port=(
+                    host.service_port
+                    if host.service_port
+                    else self.__find_default_port()
+                ),
                 white_lists=to_white_list(host.whitelists),
                 tls=host.tls.get_value(self.target) if host.tls else None,
                 insecure=host.insecure,
@@ -705,11 +707,7 @@ class ChartBuilder:
             if self.step_input.run_properties.versioning.tag
             else self.step_input.run_properties.versioning.pr_number
         )
-        all_deploy_project_executions: set[ProjectExecution] = next(
-            project_executions
-            for stage, project_executions in self.step_input.run_properties.run_plan.full_plan.items()
-            if stage.name == deploy.STAGE_NAME
-        )
+
         processed_env_vars = substitute_namespaces(
             env_vars=raw_env_vars,
             all_projects={
@@ -717,7 +715,9 @@ class ChartBuilder:
             },
             projects_to_deploy={
                 project_execution.project.to_name
-                for project_execution in all_deploy_project_executions
+                for project_execution in self.step_input.run_properties.run_plan.get_projects_for_stage_name(
+                    deploy.STAGE_NAME, use_full_plan=True
+                )
             },
             pr_identifier=pr_identifier,
         )

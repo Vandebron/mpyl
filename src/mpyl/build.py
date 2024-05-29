@@ -38,35 +38,32 @@ def print_status(
     console = obj.console
     logger = logging.getLogger("mpyl")
 
-    def write_run_plan_as_json():
-        """Write the run plan as a simple JSON file to be used by Github Actions"""
-        simple_run_plan: dict[str, list[dict[str, Union[str, bool, list[str]]]]] = dict(
-            {
-                stage.name: [
-                    {
-                        "service": project_execution.project.name,
-                        "path": project_execution.project.path,
-                        "base": project_execution.project.root_path,
-                        "cached": project_execution.cached,
-                        "maintainers": project_execution.project.maintainer,
-                    }
-                    for project_execution in project_executions
-                ]
-                for stage, project_executions in run_properties.run_plan.full_plan.items()
-            }
-        )
-        run_plan_file = Path(RUN_ARTIFACTS_FOLDER) / "run_plan.json"
-        os.makedirs(os.path.dirname(run_plan_file), exist_ok=True)
-        with open(run_plan_file, "w", encoding="utf-8") as file:
-            logger.info(f"Writing simple JSON run plan to: {run_plan_file}")
-            json.dump(simple_run_plan, file)
-
-    write_run_plan_as_json()
+    # Write the run plan as a simple JSON file to be used by Github Actions
+    simple_run_plan: dict[str, list[dict[str, Union[str, bool, list[str]]]]] = dict(
+        {
+            stage.name: [
+                {
+                    "service": project_execution.project.name,
+                    "path": project_execution.project.path,
+                    "base": project_execution.project.root_path,
+                    "cached": project_execution.cached,
+                    "maintainers": project_execution.project.maintainer,
+                }
+                for project_execution in project_executions
+            ]
+            for stage, project_executions in run_properties.run_plan.full_plan.items()
+        }
+    )
+    run_plan_file = Path(RUN_ARTIFACTS_FOLDER) / "run_plan.json"
+    os.makedirs(os.path.dirname(run_plan_file), exist_ok=True)
+    with open(run_plan_file, "w", encoding="utf-8") as file:
+        logger.info(f"Writing simple JSON run plan to: {run_plan_file}")
+        json.dump(simple_run_plan, file)
 
     logger.info(f"MPyL log level is set to {run_properties.console.log_level}")
 
     result = RunResult(run_properties=run_properties)
-    if result.has_run_plan_projects():
+    if result.has_projects_to_run(include_cached_projects=True):
         console.print(
             Markdown("**Execution plan:**  \n" + execution_plan_as_markdown(result))
         )
@@ -105,7 +102,7 @@ def run_mpyl(
     try:
         run_result = RunResult(run_properties=run_properties)
 
-        if not run_result.has_run_plan_projects(include_cached_projects=False):
+        if not run_result.has_projects_to_run(include_cached_projects=False):
             logger.info("Nothing to do. Exiting..")
             return run_result
 

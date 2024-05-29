@@ -81,12 +81,8 @@ class RunResult:
     def run_plan(self) -> RunPlan:
         return self._run_plan
 
-    def has_run_plan_projects(self, include_cached_projects: bool = True) -> bool:
-        return any(
-            include_cached_projects or not project_execution.cached
-            for project_executions in self.run_plan.selected_plan.values()
-            for project_execution in project_executions
-        )
+    def has_projects_to_run(self, include_cached_projects: bool = True) -> bool:
+        return self.run_plan.has_projects_to_run(include_cached_projects)
 
     @property
     def results(self) -> list[StepResult]:
@@ -118,7 +114,7 @@ class RunResult:
     @property
     def is_in_progress(self):
         return (
-            self.has_run_plan_projects(include_cached_projects=False)
+            self.run_plan.has_projects_to_run(include_cached_projects=False)
             and self.is_success
             and not self.is_finished
         )

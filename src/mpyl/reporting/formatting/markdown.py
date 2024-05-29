@@ -1,6 +1,7 @@
 """
 Markdown run result formatters
 """
+
 import operator
 from typing import cast, Optional
 
@@ -60,7 +61,7 @@ def __to_oneliner(
 
 def markdown_for_stage(run_result: RunResult, stage: Stage):
     step_results: list[StepResult] = run_result.results_for_stage(stage)
-    plan = run_result.run_plan.selected_plan.get(stage)
+    plan = run_result.run_plan.get_projects_for_stage(stage)
     if not step_results and not plan:
         return ""
 

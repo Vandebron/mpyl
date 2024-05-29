@@ -63,7 +63,7 @@ class TestKubernetesChart:
 
         if not run_properties:
             project_executions = {project_execution}
-            run_plan = RunPlan(
+            run_plan = RunPlan.from_plan(
                 {
                     TestStage.build(): project_executions,
                     TestStage.test(): project_executions,

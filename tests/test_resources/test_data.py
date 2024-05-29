@@ -112,7 +112,9 @@ def run_properties_with_plan(plan: RunPlan) -> RunProperties:
 
 
 def run_properties_prod_with_plan() -> RunProperties:
-    plan = RunPlan({TestStage.deploy(): {ProjectExecution.run(get_minimal_project())}})
+    plan = RunPlan.from_plan(
+        {TestStage.deploy(): {ProjectExecution.run(get_minimal_project())}}
+    )
     run_properties_prod = construct_run_properties(
         config=config_values,
         properties=properties_values,

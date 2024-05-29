@@ -1,63 +1,85 @@
 """This module contains the RunPlan class."""
-from typing import Optional
+
+from dataclasses import dataclass
 
 from .project import Project, Stage
 from .project_execution import ProjectExecution
 
 
+@dataclass(frozen=True)
 class RunPlan:
     full_plan: dict[Stage, set[ProjectExecution]]
-    _selected_stages: Optional[Stage]
-    _selected_projects: Optional[set[Project]]
+    selected_plan: dict[Stage, set[ProjectExecution]]
 
-    def __init__(self, full_plan: dict[Stage, set[ProjectExecution]]):
-        self.full_plan = full_plan
-        self._selected_stages = None
-        self._selected_projects = None
+    @classmethod
+    def empty(cls) -> "RunPlan":
+        return cls(full_plan={}, selected_plan={})
 
-    @staticmethod
-    def empty() -> "RunPlan":
-        return RunPlan(full_plan={})
+    @classmethod
+    def from_plan(cls, plan: dict[Stage, set[ProjectExecution]]) -> "RunPlan":
+        return cls(full_plan=plan, selected_plan=plan)
 
-    @property
-    def selected_stage(self) -> Optional[Stage]:
-        return self._selected_stages
+    def select_stage(self, stage: Stage) -> "RunPlan":
+        return RunPlan(
+            full_plan=self.full_plan,
+            selected_plan={stage: self.full_plan.get(stage, set())},
+        )
 
-    @selected_stage.setter
-    def selected_stage(self, stage: Stage):
-        self._selected_stages = stage
-
-    @property
-    def selected_projects(self) -> Optional[set[Project]]:
-        return self._selected_projects
-
-    @selected_projects.setter
-    def selected_projects(self, projects: set[Project]):
-        self._selected_projects = projects
-
-    @property
-    def selected_plan(self) -> dict[Stage, set[ProjectExecution]]:
-        if not self.selected_stage and not self._selected_projects:
-            return self.full_plan
-
+    def select_projects(self, projects: set[Project]) -> "RunPlan":
         selected_plan = {}
+
         for stage, executions in self.full_plan.items():
-            if self.selected_stage and stage != self.selected_stage:
-                continue
+            selected_plan[stage] = {
+                execution for execution in executions if execution.project in projects
+            }
 
-            selected_plan[stage] = executions
-
-            if self.selected_projects:
-                selected_plan[stage] = {
-                    execution
-                    for execution in executions
-                    if execution.project in self.selected_projects
-                }
-
-        return selected_plan
-
-    def add_stage(self, stage: Stage, executions: set[ProjectExecution]):
-        self.full_plan.update({stage: executions})
+        return RunPlan(
+            full_plan=self.full_plan,
+            selected_plan=selected_plan,
+        )
 
     def update(self, run_plan: "RunPlan"):
         self.full_plan.update(run_plan.full_plan)
+        self.selected_plan.update(run_plan.selected_plan)
+
+    def has_projects_to_run(
+        self, include_cached_projects: bool, use_full_plan: bool = False
+    ) -> bool:
+        return any(
+            include_cached_projects or not project_execution.cached
+            for project_execution in self.get_all_projects(use_full_plan)
+        )
+
+    def get_all_projects(self, use_full_plan: bool = False) -> set[ProjectExecution]:
+        def flatten(plan: dict[Stage, set[ProjectExecution]]):
+            return {
+                project_execution
+                for project_executions in plan.values()
+                for project_execution in project_executions
+            }
+
+        if use_full_plan:
+            return flatten(self.full_plan)
+        return flatten(self.selected_plan)
+
+    def get_projects_for_stage(
+        self, stage: Stage, use_full_plan: bool = False
+    ) -> set[ProjectExecution]:
+        if use_full_plan:
+            return self.full_plan.get(stage, set())
+        return self.selected_plan.get(stage, set())
+
+    def get_projects_for_stage_name(
+        self, stage_name: str, use_full_plan: bool = False
+    ) -> set[ProjectExecution]:
+        def find_stage(plan: dict[Stage, set[ProjectExecution]]):
+            iterator = (
+                project_executions
+                for stage, project_executions in plan.items()
+                if stage.name == stage_name
+            )
+            return next(iterator, set())
+
+        if use_full_plan:
+            return find_stage(self.full_plan)
+        return find_stage(self.selected_plan)

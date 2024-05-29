@@ -64,7 +64,7 @@ class TestBuildCommand:
 
     def test_run_build_with_plan_should_execute_successfully(self):
         project_executions = {ProjectExecution.run(get_minimal_project())}
-        run_plan = RunPlan(
+        run_plan = RunPlan.from_plan(
             {
                 TestStage.build(): project_executions,
                 TestStage.test(): project_executions,
@@ -88,7 +88,7 @@ class TestBuildCommand:
 
     def test_run_build_throwing_step_should_be_handled(self):
         projects = {get_project_with_stages({"build": "Throwing Build"})}
-        run_plan = RunPlan(
+        run_plan = RunPlan.from_plan(
             {TestStage.build(): {ProjectExecution.run(p) for p in projects}}
         )
         run_properties = construct_run_properties(
