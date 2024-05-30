@@ -274,11 +274,16 @@ def create_run_plan(
 
     existing_run_plan = _load_existing_run_plan(logger, run_plan_file)
     if existing_run_plan:
-        return _filter_existing_run_plan(
-            run_plan=existing_run_plan,
-            selected_stage=selected_stage,
-            selected_projects=selected_projects,
-        )
+        logger.debug(f"Run plan: {existing_run_plan}")
+        if selected_stage:
+            existing_run_plan = existing_run_plan.select_stage(selected_stage)
+            logger.info(f"Selected stage: {selected_stage.name}")
+            logger.debug(f"Run plan: {existing_run_plan}")
+        if selected_projects:
+            existing_run_plan = existing_run_plan.select_projects(selected_projects)
+            logger.info(f"Selected projects: {set(p.name for p in selected_projects)}")
+            logger.debug(f"Run plan: {existing_run_plan}")
+        return existing_run_plan
 
     run_plan = _discover_run_plan(
         logger=logger,
@@ -297,22 +302,6 @@ def create_run_plan(
     return run_plan
 
 
-def _filter_existing_run_plan(
-    run_plan: RunPlan,
-    selected_stage: Optional[Stage],
-    selected_projects: set[Project],
-) -> RunPlan:
-    filtered_run_plan = run_plan
-
-    if selected_stage:
-        filtered_run_plan = filtered_run_plan.for_stage(selected_stage)
-
-    if selected_projects:
-        filtered_run_plan = filtered_run_plan.for_projects(selected_projects)
-
-    return filtered_run_plan
-
-
 # pylint: disable=too-many-arguments
 def _discover_run_plan(
     logger: logging.Logger,
@@ -327,7 +316,6 @@ def _discover_run_plan(
     changed_files_path: Optional[str] = None,
 ) -> RunPlan:
     logger.info("Discovering run plan...")
-    run_plan: RunPlan = RunPlan.empty()
     changeset = _get_changes(
         logger=logger,
         repo=repository,
@@ -336,10 +324,9 @@ def _discover_run_plan(
         changed_files_path=changed_files_path,
     )
 
-    for stage in all_stages:
-        if selected_stage and stage != selected_stage:
-            continue
+    plan = {}
 
+    def add_projects_to_plan(stage: Stage):
         if build_all:
             project_executions = to_project_executions(
                 logger=logger,
@@ -366,9 +353,15 @@ def _discover_run_plan(
         logger.debug(
             f"Will execute projects for stage {stage.name}: {[p.name for p in project_executions]}"
         )
-        run_plan.add_stage(stage, project_executions)
+        plan.update({stage: project_executions})
 
-    return run_plan
+    if selected_stage:
+        add_projects_to_plan(selected_stage)
+    else:
+        for stage in all_stages:
+            add_projects_to_plan(stage)
+
+    return RunPlan.from_plan(plan)
 
 
 def for_stage(projects: set[Project], stage: Stage) -> set[Project]:

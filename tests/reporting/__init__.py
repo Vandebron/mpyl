@@ -35,7 +35,7 @@ def create_test_result_with_plan() -> RunResult:
         run_properties=construct_run_properties(
             config=config_values,
             properties=properties_values,
-            run_plan=RunPlan(
+            run_plan=RunPlan.from_plan(
                 {
                     TestStage.build(): {
                         ProjectExecution.run(p) for p in build_projects
