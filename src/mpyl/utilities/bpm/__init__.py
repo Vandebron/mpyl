@@ -2,7 +2,9 @@
 
 import os
 from dataclasses import dataclass
-from ...project import Project, Target, TargetProperty
+
+from ...steps.models import RunProperties
+from ...project import Project, TargetProperty
 
 
 @dataclass(frozen=True)
@@ -84,10 +86,11 @@ class CamundaConfig:
     zeebe_credentials: CamundaZeebeCredentials
     depolyment_path: CamundaDeploymentPath
     project_id: str
+    pr_number: str
 
     @staticmethod
-    def from_config(config: dict, target: Target, project: Project):
-        camunda_config = config.get("camunda")
+    def from_config(properties: RunProperties, project: Project):
+        camunda_config = properties.config.get("camunda")
         if not camunda_config:
             raise KeyError("Camunda section needs to be defined in mpyl_config.yml")
 
@@ -95,7 +98,7 @@ class CamundaConfig:
         modeler_credentials = camunda_config.get("modelerCredentials")
         zeebe_credentials = TargetProperty.from_config(
             camunda_config.get("zeebeCredentials")
-        ).get_value(target)
+        ).get_value(properties.target)
         deploy_path = camunda_config.get("camundaDeploymentPath")
         return CamundaConfig(
             modeler_api=CamundaModelerAPI.from_config(modeler_urls),
@@ -107,4 +110,5 @@ class CamundaConfig:
                 deploy_path, project.root_path
             ),
             project_id=str(project.bpm.project_id),
+            pr_number=str(properties.versioning.pr_number),
         )

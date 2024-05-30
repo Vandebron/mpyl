@@ -17,13 +17,16 @@ class CypressConfig:
         if not cypress_config:
             raise KeyError("Cypress section needs to be defined in mpyl_config.yml")
 
+        ci_build_id = (
+            cypress_config.get("ciBuildId", None)
+            or f"local{str(uuid.uuid4().int)[:10]}"
+        ).replace(" ", "")
+
         return CypressConfig(
             cypress_source_code_path=cypress_config.get("cypressSourceCodePath"),
             record_key=cypress_config.get("recordKey"),
             kubectl_config_path=cypress_config.get(
                 "kubectlConfigPath", "~/.kube/config"
             ),
-            ci_build_id=cypress_config.get(
-                "ciBuildId", f"local{str(uuid.uuid4().int)[:10]}"
-            ).replace(" ", ""),
+            ci_build_id=ci_build_id,
         )
