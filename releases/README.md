@@ -1,5 +1,16 @@
 # Release notes
 
+## MPyL 1.6.7
+
+
+#### Improvements
+- Improve dependency linting: projects cannot depend on themselves
+- General logging improvements
+- Improved `BPM Diagram Deploy` step
+- Cypress code improvements
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.6.7)
+
 ## MPyL 1.6.6
 
 
