@@ -105,7 +105,6 @@ def build(ctx, config, properties, verbose):
     console = create_console_logger(
         show_path=console_config.show_paths,
         verbose=verbose,
-        max_width=console_config.width,
     )
 
     repo = ctx.with_resource(Repository(config=RepoConfig.from_config(parsed_config)))

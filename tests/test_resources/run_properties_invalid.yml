@@ -12,5 +12,4 @@ build:
     branch: !ENV ${CHANGE_BRANCH:feature/some-branch}
     pr_number: !ENV ${CHANGE_ID:123}
   console:
-    width: 0
     logLevel: INFO

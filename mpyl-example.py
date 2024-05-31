@@ -134,7 +134,6 @@ if __name__ == "__main__":
     parsed_args = parser.parse_args()
     console = Console(
         markup=False,
-        width=None if parsed_args.local else 200,
         no_color=False,
         log_path=False,
         color_system="256",

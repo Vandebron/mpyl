@@ -150,7 +150,7 @@ class TestSteps:
             target=Target.PULL_REQUEST,
             versioning=VersioningProperties("", "feature/ARC-123", 1, None),
             config=config_values,
-            console=ConsoleProperties("INFO", False, 130),
+            console=ConsoleProperties("INFO", False),
             stages=[],
             projects=set(),
             run_plan=RunPlan.empty(),

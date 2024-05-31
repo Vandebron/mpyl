@@ -96,12 +96,9 @@ def get_version():
 FORMAT = "%(message)s"
 
 
-def create_console_logger(
-    show_path: bool, verbose: bool, max_width: Optional[int] = None
-) -> Console:
+def create_console_logger(show_path: bool, verbose: bool) -> Console:
     console = Console(
         markup=True,
-        width=max_width if (max_width is not None and max_width > 0) else None,
         no_color=False,
         log_path=False,
         log_time=False,

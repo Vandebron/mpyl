@@ -15,4 +15,3 @@ build:
     tag: !ENV ${TAG_NAME}
   console:
     logLevel: INFO
-    width: 160

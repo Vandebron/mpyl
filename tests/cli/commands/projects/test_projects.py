@@ -17,7 +17,7 @@ class TestProjects:
         assert maybe_readme is None
 
         table_lines = [
-            line.text for line in create_console_logger(True, False, None).render(table)
+            line.text for line in create_console_logger(True, False).render(table)
         ]
         assert_roundtrip(
             self.test_formatting_resource_path / "project_console.txt",

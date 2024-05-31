@@ -26,7 +26,6 @@ if __name__ == "__main__":
 
     console = Console(
         markup=False,
-        width=200,
         no_color=False,
         log_path=False,
         color_system="256",

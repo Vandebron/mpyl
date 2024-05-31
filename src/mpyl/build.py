@@ -82,7 +82,6 @@ def run_mpyl(
     console_properties = run_properties.console
     console = Console(
         markup=False,
-        width=None if cli_parameters.local else console_properties.width,
         no_color=False,
         log_path=False,
         color_system="256",
