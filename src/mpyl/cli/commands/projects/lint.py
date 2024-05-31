@@ -192,15 +192,13 @@ def _assert_no_self_dependencies(console: Console, all_projects: list[Project]):
             print(f"checking dependencies for {project.name}: {project.root_path}")
             for paths in project.dependencies.all().values():
                 for path in paths:
-                    print(path)
+                    print(f"   {path}")
             if any(
-                path.startswith(project.root_path)
+                path.startswith(project.root_path.rstrip("/"))
                 for paths in project.dependencies.all().values()
                 for path in paths
             ):
                 print(f"FOUND SELF DEPENDENCY: {project.name}")
                 projects_with_self_dependencies.append(project)
-
-    print(projects_with_self_dependencies)
 
     return projects_with_self_dependencies

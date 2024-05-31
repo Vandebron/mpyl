@@ -226,7 +226,6 @@ def lint(obj: ProjectsContext):
     projects_with_self_dependencies = _assert_no_self_dependencies(
         console, all_projects
     )
-
     if len(projects_with_self_dependencies) == 0:
         console.print("  ✅ No project with a dependency on itself found")
     else:
