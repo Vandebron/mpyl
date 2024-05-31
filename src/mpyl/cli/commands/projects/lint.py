@@ -190,7 +190,7 @@ def _assert_no_self_dependencies(console: Console, all_projects: list[Project]):
     for project in all_projects:
         console.print(f"checking {project.name}")
         if project.dependencies:
-            console.printn(f"dependencies: {project.dependencies.all().keys()}")
+            console.print(f"dependencies: {project.dependencies.all().keys()}")
             if project.name in project.dependencies.all().keys():
                 projects_with_self_dependencies.append(project)
 
