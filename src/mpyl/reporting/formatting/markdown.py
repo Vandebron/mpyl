@@ -1,6 +1,7 @@
 """
 Markdown run result formatters
 """
+
 import operator
 from typing import cast, Optional
 
@@ -44,7 +45,9 @@ def wrap_project_name(project_execution: ProjectExecution, result: list[StepResu
     return f"{encapsulation}{project_name}{' (cached)' if project_execution.cached else ''}{encapsulation}"
 
 
-def __to_oneliner(result: list[StepResult], plan: set[ProjectExecution]) -> str:
+def __to_oneliner(
+    result: list[StepResult], plan: Optional[set[ProjectExecution]]
+) -> str:
     project_names: list[str] = []
     if plan:
         sorted_plans = sorted(plan, key=operator.attrgetter("name"))
@@ -58,7 +61,7 @@ def __to_oneliner(result: list[StepResult], plan: set[ProjectExecution]) -> str:
 
 def markdown_for_stage(run_result: RunResult, stage: Stage):
     step_results: list[StepResult] = run_result.results_for_stage(stage)
-    plan = run_result.plan_for_stage(stage)
+    plan = run_result.run_plan.get_projects_for_stage(stage)
     if not step_results and not plan:
         return ""
 

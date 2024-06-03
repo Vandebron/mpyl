@@ -8,7 +8,6 @@ from typing import Optional, cast, Type
 
 from ruamel.yaml import YAML, yaml_object  # type: ignore
 
-from . import deploy
 from ..project import Project, Stage, Target
 from ..project_execution import ProjectExecution
 from ..run_plan import RunPlan
@@ -168,14 +167,6 @@ class RunProperties:
                 for stage in run_properties["stages"]
             ],
             projects=all_projects,
-        )
-
-    @property
-    def projects_to_deploy(self) -> set[ProjectExecution]:
-        return next(
-            project_execution
-            for stage, project_execution in self.run_plan.items()
-            if stage.name == deploy.STAGE_NAME
         )
 
     def to_stage(self, stage_name: str) -> Stage:

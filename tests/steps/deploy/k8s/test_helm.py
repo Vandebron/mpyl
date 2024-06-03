@@ -18,7 +18,7 @@ class TestHelm:
         step_input = Input(
             project_execution=get_project_execution(),
             run_properties=test_data.run_properties_with_plan(
-                RunPlan({TestStage.deploy(): {get_project_execution()}})
+                RunPlan.from_plan({TestStage.deploy(): {get_project_execution()}})
             ),
             required_artifact=output.produced_artifact,
             dry_run=True,

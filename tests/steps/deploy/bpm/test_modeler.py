@@ -1,7 +1,13 @@
 import unittest
 from unittest.mock import Mock, patch, mock_open
+from datetime import datetime
 import requests
-from src.mpyl.steps.deploy.bpm.modeler import File, get_file_data, update_diagram
+from src.mpyl.steps.deploy.bpm.modeler import (
+    File,
+    get_file_data,
+    update_diagram,
+    create_milestone,
+)
 from src.mpyl.steps.deploy.bpm.camunda_modeler_client import CamundaModelerClient
 
 
@@ -88,6 +94,32 @@ class TestModeler(unittest.TestCase):
             headers={"Authorization": "Bearer eyJhbG..."},
             params=None,
             data=None,
+        )
+
+    @patch("requests.Session")
+    @patch("requests.post")
+    @patch("src.mpyl.steps.deploy.bpm.modeler.datetime")
+    def test_create_milestone_succeed(self, mock_dt, mock_post, mock_session):
+        fixed_time = datetime(2024, 5, 5, 10, 10, 12)
+        mock_dt.now.return_value = fixed_time
+
+        self.setup_mock_data(mock_post, mock_session, {})
+
+        client = CamundaModelerClient(
+            "https://modeler.test.camunda.io/api/v1/",
+            "https://test.com/oauth/token",
+            {},
+        )
+
+        create_milestone(File("example process", "camundaUUID", 2), "123", client)
+
+        mock_session.return_value.request.assert_called_once_with(
+            "POST",
+            "https://modeler.test.camunda.io/api/v1/milestones",
+            params=None,
+            data=None,
+            json={"name": "202405051010-123", "fileId": "camundaUUID"},
+            headers={"Authorization": "Bearer eyJhbG..."},
         )
 
     def setup_mock_data(self, mock_post, mock_session, expected_data) -> None:

@@ -29,8 +29,7 @@ class BpmDiagramDeploy(Step):
     def execute(self, step_input: Input) -> Output:
         bpm_deploy_results = []
         camunda_config = CamundaConfig.from_config(
-            step_input.run_properties.config,
-            step_input.run_properties.target,
+            step_input.run_properties,
             step_input.project_execution.project,
         )
 
