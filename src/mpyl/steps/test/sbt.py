@@ -80,8 +80,8 @@ class TestSbt(Step):
             filter(
                 None,
                 [
-                    f"project {project_name}",
                     "pullRemoteCache" if config.remote_cache else None,
+                    f"project {project_name}",
                     "coverageOn" if config.test_with_coverage else None,
                     "test",
                     "coverageOff" if config.test_with_coverage else None,

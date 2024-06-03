@@ -70,8 +70,8 @@ class BuildSbt(Step):
         commands: list[str] = [
             command
             for command in [
-                f"project {step_input.project_execution.name}",
                 "pullRemoteCache" if config.remote_cache else None,
+                f"project {step_input.project_execution.name}",
                 f'set docker / imageNames := Seq(ImageName("{image_name}"))',
                 check_fmt,
                 "docker",

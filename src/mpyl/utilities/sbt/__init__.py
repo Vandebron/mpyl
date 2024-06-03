@@ -33,7 +33,7 @@ class SbtConfig:
             test_with_client=(
                 str(sbt_config.get("clientMode", {}).get("test")).lower() == "true"
             ),
-            remote_cache=str(sbt_config.get("remoteCache")).lower() == "true",
+            remote_cache=str(sbt_config["remoteCache"]).lower() == "true",
         )
 
     def to_command(self, client_mode: bool, sbt_commands: list[str]):
