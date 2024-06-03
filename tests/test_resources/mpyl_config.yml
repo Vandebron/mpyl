@@ -41,6 +41,7 @@ sbt:
   verbose: true
   javaOpts: '-Xmx4G -Xms4G -XX:+UseG1GC -XX:+CMSClassUnloadingEnabled -Xss2M'
   sbtOpts: 'user.timezone=GMT jline.terminal=jline.UnixTerminal'
+  remoteCache: true
 whiteLists:
   default: [ "VPN" ]
   addresses:

@@ -66,16 +66,18 @@ class BuildSbt(Step):
             if step_input.run_properties.target == Target.PULL_REQUEST
             else None
         )
+        config = SbtConfig.from_config(config=step_input.run_properties.config)
         commands: list[str] = [
             command
             for command in [
                 f"project {step_input.project_execution.name}",
+                "pullRemoteCache" if config.remote_cache else None,
                 f'set docker / imageNames := Seq(ImageName("{image_name}"))',
                 check_fmt,
                 "docker",
+                "pushRemoteCache" if config.remote_cache else None,
             ]
             if command is not None
         ]
-        config = SbtConfig.from_config(config=step_input.run_properties.config)
         command = config.to_command(config.build_with_client, commands)
         return command

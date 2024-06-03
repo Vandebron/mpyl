@@ -13,6 +13,7 @@ class SbtConfig:
     verbose: bool
     build_with_client: bool
     test_with_client: bool
+    remote_cache: bool
 
     @staticmethod
     def from_config(config: dict):
@@ -32,6 +33,7 @@ class SbtConfig:
             test_with_client=(
                 str(sbt_config.get("clientMode", {}).get("test")).lower() == "true"
             ),
+            remote_cache=str(sbt_config.get("remoteCache")).lower() == "true",
         )
 
     def to_command(self, client_mode: bool, sbt_commands: list[str]):

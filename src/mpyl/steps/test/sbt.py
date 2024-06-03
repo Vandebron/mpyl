@@ -1,4 +1,5 @@
 """A step to compile and run tests for an SBT project"""
+
 from logging import Logger
 from typing import cast
 
@@ -80,9 +81,11 @@ class TestSbt(Step):
                 None,
                 [
                     f"project {project_name}",
+                    "pullRemoteCache" if config.remote_cache else None,
                     "coverageOn" if config.test_with_coverage else None,
                     "test",
                     "coverageOff" if config.test_with_coverage else None,
+                    "pushRemoteCache" if config.remote_cache else None,
                 ],
             )
         )

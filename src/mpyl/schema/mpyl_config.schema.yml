@@ -356,6 +356,9 @@ definitions:
           test:
             type: boolean
             default: true
+      remoteCache:
+        type: boolean
+        default: false
     required:
       - command
       - clientCommand

@@ -18,7 +18,7 @@ class TestBuildSbt:
         assert " ".join(command) == (
             "sbt -v -J-Xmx4G -J-Xms4G -J-XX:+UseG1GC -J-XX:+CMSClassUnloadingEnabled "
             "-J-Xss2M -Duser.timezone=GMT -Djline.terminal=jline.UnixTerminal project "
-            "dockertest; coverageOn; test; coverageOff"
+            "dockertest; pullRemoteCache; coverageOn; test; coverageOff; pushRemoteCache"
         )
 
     def test_sbt_test_test_without_coverage_but_with_client_command_should_be_properly_constructed(
@@ -26,7 +26,11 @@ class TestBuildSbt:
     ):
         sbt_config = self.sbt_config
         sbt_config_with_coverage = dataclasses.replace(
-            sbt_config, test_with_coverage=False, test_with_client=True, verbose=False
+            sbt_config,
+            test_with_coverage=False,
+            test_with_client=True,
+            verbose=False,
+            remote_cache=False,
         )
         command = TestSbt._construct_sbt_command(
             self.step_input.project_execution.name, sbt_config_with_coverage
