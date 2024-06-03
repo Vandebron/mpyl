@@ -10,7 +10,7 @@ class TestBuildSbt:
         command = BuildSbt._construct_sbt_command(step_input, "imagename:latest")
         assert " ".join(command) == (
             "sbt -v -J-Xmx4G -J-Xms4G -J-XX:+UseG1GC -J-XX:+CMSClassUnloadingEnabled "
-            "-J-Xss2M -Duser.timezone=GMT -Djline.terminal=jline.UnixTerminal project "
-            'dockertest; pullRemoteCache; set docker / imageNames := Seq(ImageName("imagename:latest")); '
+            "-J-Xss2M -Duser.timezone=GMT -Djline.terminal=jline.UnixTerminal pullRemoteCache; "
+            'project dockertest; set docker / imageNames := Seq(ImageName("imagename:latest")); '
             "scalafmtCheckAll; docker; pushRemoteCache"
         )
