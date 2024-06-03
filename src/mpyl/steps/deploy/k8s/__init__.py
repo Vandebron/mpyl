@@ -98,7 +98,9 @@ def upsert_namespace(
     )
     api = client.CoreV1Api()
 
-    meta_data = get_namespace_metadata(namespace, cluster_config, project_id)
+    meta_data = get_namespace_metadata(
+        namespace=namespace, cluster_config=cluster_config, project_id=project_id
+    )
     namespaces = api.list_namespace(field_selector=f"metadata.name={namespace}")
 
     if len(namespaces.items) == 0 and not dry_run:

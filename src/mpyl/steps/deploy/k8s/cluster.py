@@ -27,7 +27,7 @@ class ClusterConfig:
 def get_cluster_config_for_project(
     run_properties: RunProperties, project: Project
 ) -> ClusterConfig:
-    cluster_override = (
+    cluster_override_name = (
         project.deployment.cluster.get_value(run_properties.target)
         if project.deployment and project.deployment.cluster
         else None
@@ -53,12 +53,16 @@ def get_cluster_config_for_project(
             f"Default cluster {default_cluster_name} not found in list of clusters"
         )
 
-    cluster_for_env = next(
-        (cluster for cluster in clusters if cluster.name == cluster_override),
-        default_cluster,
+    cluster_override = next(
+        (cluster for cluster in clusters if cluster.name == cluster_override_name), None
     )
 
-    return cluster_for_env
+    if cluster_override_name and not cluster_override:
+        raise ValueError(
+            f"Cluster override {cluster_override_name} not found in list of clusters"
+        )
+
+    return cluster_override if cluster_override else default_cluster
 
 
 def get_namespace_metadata(

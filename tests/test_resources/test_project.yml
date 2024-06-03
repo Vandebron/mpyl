@@ -5,7 +5,7 @@ stages:
   test: Docker Test
   deploy: Kubernetes Deploy
   postdeploy: Cypress Test
-mpylVersion: 1.6.7
+mpylVersion: 1.4.20
 maintainer: ['MPyL']
 build:
   args:

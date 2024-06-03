@@ -140,7 +140,7 @@ definitions:
           Defaults to target/kubernetes under the root folder of the project.
       defaultCluster:
         type: object
-        description: Main cluster to deploy to. Can be overriden in the project.yaml
+        description: Default cluster to deploy to. Can be overriden in the project.yaml
         properties:
           test:
             type: string

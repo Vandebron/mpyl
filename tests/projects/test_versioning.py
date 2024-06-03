@@ -21,7 +21,7 @@ class TestVersioning:
     test_resources_path = root_test_path / "test_resources"
     upgrades_path = test_resources_path / "upgrades"
     diff_path = upgrades_path / "diff"
-    latest_release_file = "test_project_1_6_7.yml"
+    latest_release_file = "test_project_1_4_20.yml"
 
     @staticmethod
     def __roundtrip(

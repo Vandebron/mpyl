@@ -113,8 +113,8 @@ class Upgrader(ABC):
         return previous_dict
 
 
-class ProjectUpgraderOneSix7(Upgrader):
-    target_version = "1.6.7"
+class ProjectUpgraderOneFour20(Upgrader):
+    target_version = "1.4.20"
 
     def upgrade(self, previous_dict: ordereddict) -> ordereddict:
         hosts = previous_dict.get("deployment", {}).get("traefik", {}).get("hosts", [])
@@ -203,7 +203,7 @@ PROJECT_UPGRADERS = [
     ProjectUpgraderOne31(),
     ProjectUpgraderOneFour15(),
     ProjectUpgraderOneFour18(),
-    ProjectUpgraderOneSix7(),
+    ProjectUpgraderOneFour20(),
 ]
 
 
