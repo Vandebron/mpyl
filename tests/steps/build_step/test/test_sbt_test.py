@@ -17,8 +17,8 @@ class TestBuildSbt:
         )
         assert " ".join(command) == (
             "sbt -v -J-Xmx4G -J-Xms4G -J-XX:+UseG1GC -J-XX:+CMSClassUnloadingEnabled "
-            "-J-Xss2M -Duser.timezone=GMT -Djline.terminal=jline.UnixTerminal pullRemoteCache; "
-            "project dockertest; coverageOn; test; coverageOff; pushRemoteCache"
+            "-J-Xss2M -Duser.timezone=GMT -Djline.terminal=jline.UnixTerminal Test / pullRemoteCache; "
+            "project dockertest; coverageOn; test; coverageOff; Test / pushRemoteCache"
         )
 
     def test_sbt_test_test_without_coverage_but_with_client_command_should_be_properly_constructed(
