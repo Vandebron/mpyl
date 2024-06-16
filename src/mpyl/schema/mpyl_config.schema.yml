@@ -301,6 +301,7 @@ definitions:
         enum:
           - 'aws'
           - 'azure'
+          - 'docker'
         description: >-
           Defines the container registry provider. Defaults to aws.
         default: 'aws'
