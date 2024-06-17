@@ -8,8 +8,8 @@ jobs:
     name: 🧽 Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         id: cache-dependencies
         with:
           python-version: '3.9'
@@ -37,8 +37,8 @@ jobs:
     name: 🧐 Check types
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         id: cache-dependencies
         with:
           python-version: '3.9'
@@ -63,8 +63,8 @@ jobs:
     name: 🧪 Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         id: cache-dependencies
         with:
           python-version: '3.9'
@@ -120,8 +120,8 @@ jobs:
     outputs:
       mpylVersion: ${{ steps.version.outputs.mpylVersion }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         id: cache-dependencies
         with:
           python-version: '3.9'
@@ -179,7 +179,7 @@ jobs:
     env:
       MPYL_CONFIG_PATH: mpyl_config.example.yml
     steps:
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.9'
 
@@ -220,7 +220,7 @@ jobs:
     env:
       MPYL_CONFIG_PATH: mpyl_config.example.yml
     steps:
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.9'
 
