@@ -4,8 +4,8 @@ description: 'Creates an in-memory Kubernetes cluster with the required dependen
 runs:
   using: composite
   steps:
-    - uses: azure/setup-helm@v3.5
-    - uses: helm/kind-action@v1.8.0
+    - uses: azure/setup-helm@v4.2.0
+    - uses: helm/kind-action@v1.10.0
 
     - name: 'Add extra repositories'
       run: |
