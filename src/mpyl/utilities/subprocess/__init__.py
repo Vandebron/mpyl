@@ -36,7 +36,9 @@ def custom_check_output(
             )
             return Output(success=True, message=out)
 
-        with subprocess.Popen(command, stdout=subprocess.PIPE, text=True) as process:
+        with subprocess.Popen(
+            command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+        ) as process:
             if not process.stdout:
                 raise RuntimeError(
                     f"Process {command_argument} does not have an stdout"
@@ -44,9 +46,9 @@ def custom_check_output(
 
             for line in process.stdout:
                 if use_print:
-                    print(line)
+                    print(line.rstrip())
                 else:
-                    logger.info(try_parse_ansi(line))
+                    logger.info(try_parse_ansi(line.rstrip()))
 
             success = process.wait() == 0
             if not success:
