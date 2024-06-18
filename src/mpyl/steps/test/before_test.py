@@ -11,7 +11,13 @@ from python_on_whales.components.container.models import ContainerHealthcheckRes
 from . import STAGE_NAME
 from .. import Step, Meta
 from ..models import Input, Output, ArtifactType
-from ...utilities.docker import stream_docker_logging, DockerComposeConfig
+from ...utilities.docker import (
+    stream_docker_logging,
+    DockerComposeConfig,
+    registry_for_project,
+    login,
+    DockerConfig,
+)
 
 
 @dataclass(frozen=True)
@@ -51,6 +57,13 @@ class IntegrationTestBefore(Step):
         if not os.path.exists(compose_file):
             return Output(success=True, message="No containers to start")
 
+        docker_registry_config = registry_for_project(
+            DockerConfig.from_dict(step_input.run_properties.config),
+            step_input.project_execution.project,
+        )
+        # log in to registry, because we may need to pull in a base image
+        login(logger=self._logger, registry_config=docker_registry_config)
+
         config = DockerComposeConfig.from_yaml(step_input.run_properties.config)
 
         self._logger.debug(f"Starting containers in {compose_file}")
@@ -60,9 +73,10 @@ class IntegrationTestBefore(Step):
         docker_client.compose.up(detach=True, color=True, quiet=False)
 
         goal_reached: bool = False
-        logs = docker_client.compose.logs(stream=True)
         stream_docker_logging(
-            logger=self._logger, generator=logs, task_name=f"Start {compose_file}"
+            logger=self._logger,
+            generator=docker_client.compose.logs(stream=True),
+            task_name=f"Start {compose_file}",
         )
 
         poll = 0
