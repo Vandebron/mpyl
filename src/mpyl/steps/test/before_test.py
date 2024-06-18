@@ -57,12 +57,13 @@ class IntegrationTestBefore(Step):
         if not os.path.exists(compose_file):
             return Output(success=True, message="No containers to start")
 
-        docker_registry_config = registry_for_project(
-            DockerConfig.from_dict(step_input.run_properties.config),
-            step_input.project_execution.project,
-        )
-        # log in to registry, because we may need to pull in a base image
-        login(logger=self._logger, registry_config=docker_registry_config)
+        if not step_input.dry_run:
+            docker_registry_config = registry_for_project(
+                DockerConfig.from_dict(step_input.run_properties.config),
+                step_input.project_execution.project,
+            )
+            # log in to registry, because we may need to pull in a base image
+            login(logger=self._logger, registry_config=docker_registry_config)
 
         config = DockerComposeConfig.from_yaml(step_input.run_properties.config)
 
