@@ -3,6 +3,8 @@
 import json
 import logging
 import os
+import time
+import datetime
 from pathlib import Path
 from typing import Optional, Union
 
@@ -99,6 +101,7 @@ def run_mpyl(
     )
     print(f"Log level is set to {log_level}")
     logger = logging.getLogger("mpyl")
+    start_time = time.time()
     try:
         run_result = RunResult(run_properties=run_properties)
 
@@ -135,6 +138,7 @@ def run_mpyl(
             console.log(f"Exception during build execution: {exc}")
             console.print_exception()
 
+        console.log(f"Completed in {datetime.timedelta(time.time() - start_time)}")
         console.print(Markdown(run_result_to_markdown(run_result)))
         return run_result
 
