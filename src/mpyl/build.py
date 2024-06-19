@@ -138,7 +138,9 @@ def run_mpyl(
             console.log(f"Exception during build execution: {exc}")
             console.print_exception()
 
-        console.log(f"Completed in {datetime.timedelta(time.time() - start_time)}")
+        console.log(
+            f"Completed in {datetime.timedelta(seconds=time.time() - start_time)}"
+        )
         console.print(Markdown(run_result_to_markdown(run_result)))
         return run_result
 
