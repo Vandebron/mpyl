@@ -284,24 +284,9 @@ properties:
     type: object
     additionalProperties: false
     properties:
-      triggerjob:
+      specs:
         additionalProperties: false
-        type: object
-        required:
-          - jobs
-        properties:
-          jobs:
-            type: object
-            additionalProperties: false
-            properties:
-              pr:
-                type: array
-              test:
-                type: array
-              acceptance:
-                type: array
-              production:
-                type: array
+        type: array
   dependencies:
     $ref: 'mpyl_stages.schema.yml#/definitions/dependencies'
 definitions:
