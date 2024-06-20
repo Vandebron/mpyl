@@ -124,6 +124,7 @@ class DockerConfig:
 class Provider(Enum):
     AWS = "aws"
     AZURE = "azure"
+    DOCKER = "docker"
 
 
 def execute_with_stream(
@@ -332,22 +333,18 @@ def build(
 
 def login(logger: Logger, registry_config: DockerRegistryConfig) -> None:
     logger.info(f"Logging in with user '{registry_config.user_name}'")
-    if registry_config.provider == Provider.AZURE.value:  # pylint: disable=no-member
+    if registry_config.provider != Provider.AWS.value:  # pylint: disable=no-member
         docker.login(
             server=f"https://{registry_config.host_name}",
             username=registry_config.user_name,
             password=registry_config.password,
         )
-    elif registry_config.provider == Provider.AWS.value:  # pylint: disable=no-member
+    else:
         docker.login_ecr(
             aws_access_key_id=registry_config.user_name,
             aws_secret_access_key=registry_config.password,
             region_name=registry_config.region,
             registry=registry_config.host_name,
-        )
-    else:
-        raise ValueError(
-            f"Docker config has no container registry provider with name {registry_config.provider}"
         )
     logger.debug(f"Logged in as '{registry_config.user_name}'")
 
