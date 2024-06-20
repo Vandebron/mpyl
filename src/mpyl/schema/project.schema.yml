@@ -280,7 +280,7 @@ properties:
     minProperties: 1
     required:
       - namespace
-  postdeployment:
+  postdeploy:
     type: object
     additionalProperties: false
     properties:
