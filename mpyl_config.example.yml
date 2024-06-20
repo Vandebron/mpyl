@@ -96,10 +96,6 @@ whiteLists:
       test: ['1.2.3.4']
       acceptance: ['2.3.4.5']
       production: ['3.4.5.6']
-cypress:
-  recordKey: ''
-  cypressSourceCodePath: 'tests/test_resources/cypress'
-  kubectlConfigPath: !ENV ${KUBECONFIG:~/.kube/config}
 kubernetes:
   deploymentStrategy:
     rollingUpdate:

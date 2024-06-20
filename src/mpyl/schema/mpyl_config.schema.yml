@@ -18,8 +18,6 @@ definitions:
         "$ref": "#/definitions/Dagster"
       whiteLists:
         "$ref": "#/definitions/Whitelists"
-      cypress:
-        "$ref": "#/definitions/Cypress"
       kubernetes:
         "$ref": "#/definitions/Kubernetes"
       project:
@@ -94,24 +92,6 @@ definitions:
               items:
                 minItems: 1
                 type: string
-  Cypress:
-    type: object
-    additionalProperties: false
-    properties:
-      cypressSourceCodePath:
-        type: string
-        description: 'Path to cypress source code'
-      recordKey:
-        type: string
-        description: 'Key for recording runs to cypress dashboard'
-      kubectlConfigPath:
-        type: string
-        description: 'Path to kubectl config file'
-      ciBuildId:
-        type: [ string, null ]
-        description: 'Build id for cypress dashboard'
-    required:
-      - cypressSourceCodePath
   Kubernetes:
     type: object
     additionalProperties: false
