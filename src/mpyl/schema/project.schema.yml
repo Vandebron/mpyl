@@ -78,24 +78,18 @@ properties:
           - Docker Deploy
           - Deploy From Docker Container
           - Echo Deploy
-          - NUC Deploy
           - Kubernetes Deploy
-          - Echo Kubernetes Deploy
           - Kubernetes Job Deploy
-          - Kubernetes Job Template Deploy
           - Kubernetes Spark Job Deploy
-          - Renew Lets Encrypt Deploy
-          - Helm Deploy
           - Dagster Deploy
           - BPM Diagram Deploy
       postdeploy:
         description: Additional steps that can be done after the project has been deployed.
         examples:
-          - TriggerJenkinsJob PostDeploy
+          - Skip Postdeploy
         type: string
         enum:
-          - TriggerJenkinsJob PostDeploy
-          - Cypress Test
+          - Skip Postdeploy
     minProperties: 1
   docker:
     description: Defines docker repository and it's credentials
