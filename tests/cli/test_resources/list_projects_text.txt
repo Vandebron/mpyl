@@ -1,4 +1,3 @@
-tests/projects/cypress/deployment/project.yml [1;36;40mcypress[0m                           
 tests/projects/dagster-user-code/deployment/project.yml                         
 [1;36;40mexample-dagster-user-code[0m                                                       
 tests/projects/ephemeral/deployment/project.yml [1;36;40mkong-sync[0m                       
