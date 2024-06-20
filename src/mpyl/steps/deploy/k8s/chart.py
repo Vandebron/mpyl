@@ -560,7 +560,7 @@ class ChartBuilder:
         return [
             V1AlphaIngressRoute(
                 metadata=self._to_object_meta(
-                    name=f"{self.project.name}-{host.additional_route.name}-{i}"
+                    name=f"{self.release_name}-{host.additional_route.name}-{i}"
                 ),
                 host=host,
                 target=self.target,
