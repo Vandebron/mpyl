@@ -90,6 +90,7 @@ properties:
         type: string
         enum:
           - Skip Postdeploy
+          - Cypress Test
     minProperties: 1
   docker:
     description: Defines docker repository and it's credentials
