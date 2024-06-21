@@ -102,11 +102,6 @@ project: # default values
           insecure: false
     additionalTraefikRoutes:
       - name: "ingress-intracloud-https"
-        clusterEnv:
-          pr: "test-other"
-          test: "test-other"
-          acceptance: "acce-other"
-          production: "acce-other"
         middlewares:
           - "intracloud-middleware@kubernetescrd"
         entrypoints:

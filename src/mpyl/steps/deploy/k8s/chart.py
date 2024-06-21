@@ -557,6 +557,9 @@ class ChartBuilder:
 
     def to_additional_routes(self) -> list[V1AlphaIngressRoute]:
         hosts = self.create_host_wrappers()
+        cluster_env = get_cluster_config_for_project(
+            self.step_input.run_properties, self.project
+        ).cluster_env
         return [
             V1AlphaIngressRoute(
                 metadata=self._to_object_meta(
@@ -567,7 +570,7 @@ class ChartBuilder:
                 namespace=get_namespace(self.step_input.run_properties, self.project),
                 pr_number=self.step_input.run_properties.versioning.pr_number,
                 https=True,
-                cluster_env=host.additional_route.cluster_env.get_value(self.target),
+                cluster_env=cluster_env,
                 middlewares_override=host.additional_route.middlewares,
                 entrypoints_override=host.additional_route.entrypoints,
             )

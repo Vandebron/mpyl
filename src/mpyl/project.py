@@ -343,7 +343,6 @@ class Kubernetes:
 @dataclass(frozen=True)
 class TraefikAdditionalRoute:
     name: str
-    cluster_env: TargetProperty[str]
     middlewares: list[str]
     entrypoints: list[str]
 
@@ -353,7 +352,6 @@ class TraefikAdditionalRoute:
             return None
         return TraefikAdditionalRoute(
             name=values.get("name", {}),
-            cluster_env=TargetProperty.from_config(values.get("clusterEnv", {})),
             middlewares=values.get("middlewares", {}),
             entrypoints=values.get("entrypoints", {}),
         )
