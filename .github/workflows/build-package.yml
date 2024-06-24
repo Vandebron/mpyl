@@ -194,7 +194,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: Vandebron/mpyl/.github/setup-kind@main
+      - uses: ./.github/setup-kind
         with:
           traefik-version: 2.11.2
           prometheus-version: 2.42.0
