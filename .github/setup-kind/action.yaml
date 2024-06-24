@@ -2,17 +2,17 @@ name: 'Setup Helm chart testing infrastructure'
 description: 'Creates an in-memory Kubernetes cluster with the required dependencies to test Helm charts'
 
 inputs:
-  traefik-version:
-    description: The version of Traefik to install
+  traefik-chart-version:
+    description: The version of the Traefik Helm chart to install
     required: true
-  prometheus-version:
-    description: The version of Prometheus to install
+  prometheus-chart-version:
+    description: The version of the Prometheus Helm chart to install
     required: true
-  sealed-secrets-version:
-    description: The version of Sealed Secrets to install
+  sealed-secrets-chart-version:
+    description: The version of the Sealed Secrets Helm chart to install
     required: true
-  spark-operator-version:
-    description: The version of Spark Operator to install
+  spark-operator-chart-version:
+    description: The version of the Spark Operator Helm chart to install
     required: true
 
 runs:
@@ -33,19 +33,19 @@ runs:
     - run: helm install traefik traefik/traefik --version "$VERSION"
       shell: bash
       env:
-        VERSION: ${{ inputs.traefik-version }}
+        VERSION: ${{ inputs.traefik-chart-version }}
 
     - run: helm install kube-prometheus prometheus-community/kube-prometheus-stack --version "$VERSION"
       shell: bash
       env:
-        VERSION: ${{ inputs.prometheus-version }}
+        VERSION: ${{ inputs.prometheus-chart-version }}
 
     - run: helm install sealed-secrets sealed-secrets/sealed-secrets --version "$VERSION"
       shell: bash
       env:
-        VERSION: ${{ inputs.sealed-secrets-version }}
+        VERSION: ${{ inputs.sealed-secrets-chart-version }}
 
     - run: helm install spark-operator spark-operator/spark-operator --version "$VERSION"
       shell: bash
       env:
-        VERSION: ${{ inputs.spark-operator-version }}
+        VERSION: ${{ inputs.spark-operator-chart-version }}
