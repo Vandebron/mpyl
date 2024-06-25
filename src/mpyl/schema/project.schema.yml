@@ -282,12 +282,18 @@ properties:
     required:
       - namespace
   postdeploy:
-    type: object
     additionalProperties: false
+    type: object
+    required:
+      - specs
+      - recordKey
     properties:
       specs:
         additionalProperties: false
         type: array
+      recordKey:
+        additionalProperties: false
+        type: string
   dependencies:
     $ref: 'mpyl_stages.schema.yml#/definitions/dependencies'
 definitions:
