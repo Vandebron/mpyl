@@ -341,6 +341,23 @@ class Kubernetes:
 
 
 @dataclass(frozen=True)
+class TraefikAdditionalRoute:
+    name: str
+    middlewares: list[str]
+    entrypoints: list[str]
+
+    @staticmethod
+    def from_config(values: Optional[dict]):
+        if not values:
+            return None
+        return TraefikAdditionalRoute(
+            name=values.get("name", {}),
+            middlewares=values.get("middlewares", {}),
+            entrypoints=values.get("entrypoints", {}),
+        )
+
+
+@dataclass(frozen=True)
 class TraefikHost:
     host: TargetProperty[str]
     service_port: Optional[int]
@@ -349,6 +366,7 @@ class TraefikHost:
     whitelists: TargetProperty[list[str]]
     priority: Optional[TargetProperty[int]]
     insecure: bool
+    additional_route: Optional[str]
 
     @staticmethod
     def from_config(values: dict):
@@ -360,6 +378,7 @@ class TraefikHost:
             whitelists=TargetProperty.from_config(values.get("whitelists", {})),
             priority=TargetProperty.from_config(values.get("priority", {})),
             insecure=values.get("insecure", False),
+            additional_route=values.get("additionalRoute", None),
         )
 
 
@@ -393,7 +412,7 @@ class Traefik:
     def from_config(values: dict):
         hosts = values.get("hosts")
         return Traefik(
-            hosts=(list(map(TraefikHost.from_config, hosts) if hosts else []))
+            hosts=(list(map(TraefikHost.from_config, hosts) if hosts else [])),
         )
 
 
@@ -443,6 +462,7 @@ class Build:
 
 @dataclass(frozen=True)
 class Deployment:
+    cluster: Optional[TargetProperty[str]]
     namespace: Optional[str]
     properties: Properties
     kubernetes: Optional[Kubernetes]
@@ -457,8 +477,10 @@ class Deployment:
         dagster = values.get("dagster")
         traefik = values.get("traefik")
         bpm = values.get("bpm")
+        cluster = values.get("cluster")
 
         return Deployment(
+            cluster=TargetProperty.from_config(cluster) if cluster else None,
             namespace=values.get("namespace"),
             properties=Properties.from_config(props) if props else None,
             kubernetes=Kubernetes.from_config(kubernetes) if kubernetes else None,

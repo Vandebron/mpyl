@@ -115,6 +115,10 @@ definitions:
   Kubernetes:
     type: object
     additionalProperties: false
+    required:
+      - defaultCluster
+      - clusters
+      - deploymentStrategy
     properties:
       deploymentStrategy:
         $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.apps.v1.DeploymentStrategy'
@@ -134,24 +138,48 @@ definitions:
         description: >-
           The path to the folder where the rendered helm chart or kubectl manifest will be written.
           Defaults to target/kubernetes under the root folder of the project.
-      rancher:
+      defaultCluster:
         type: object
-        additionalProperties: false
+        description: Default cluster to deploy to. Can be overriden in the project.yaml
         properties:
-          cluster:
-            "$ref": "#/definitions/RancherClusters"
-    required: [ deploymentStrategy ]
-  RancherClusters:
+          test:
+            type: string
+          acceptance:
+            type: string
+          production:
+            type: string
+      clusters:
+        type: array
+        items:
+          "$ref": "#/definitions/NamedCluster"
+  Clusters:
     type: object
     additionalProperties: false
     properties:
       test:
-        "$ref": "#/definitions/RancherCluster"
+        "$ref": "#/definitions/Cluster"
       acceptance:
-        "$ref": "#/definitions/RancherCluster"
+        "$ref": "#/definitions/Cluster"
       production:
-        "$ref": "#/definitions/RancherCluster"
-  RancherCluster:
+        "$ref": "#/definitions/Cluster"
+  NamedCluster:
+    type: object
+    additionalProperties: false
+    properties:
+      name:
+        type: string
+      clusterId:
+        type: string
+        description: Rancher specific cluster ID
+      projectId:
+        type: string
+        description: Rancher specific project ID
+      clusterEnv:
+        type: string
+      context:
+        type: string
+    required: [ name, clusterEnv, context ]
+  Cluster:
     type: object
     additionalProperties: false
     properties:
@@ -380,8 +408,39 @@ definitions:
         properties:
           traefik:
             "$ref": "project.schema.yml#/definitions/traefik"
+          additionalTraefikRoutes:
+            "$ref": "#/definitions/AdditionalTraefikRoutes"
+          traefikDefaults:
+            "$ref": "#/definitions/TraefikDefaults"
           kubernetes:
             "$ref": "project.schema.yml#/definitions/kubernetes"
+  AdditionalTraefikRoutes:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+        clusterEnv:
+          $ref: 'project.schema.yml#/definitions/dtapValue'
+        middlewares:
+          type: array
+          items:
+            type: string
+        entrypoints:
+          type: array
+          items:
+            type: string
+  TraefikDefaults:
+    type: object
+    additionalProperties: false
+    properties:
+      httpMiddleware:
+        type: string
+      tls:
+        type: string
+    required: ['httpMiddleware', 'tls']
   Slack:
     type: object
     additionalProperties: false

@@ -283,6 +283,20 @@ properties:
               project Id where diagram is stored in Camunda Modeler,
               you can find this value from Camunda Saas url when open the project
             type: string
+      cluster:
+        type: object
+        additionalProperties: false
+        properties:
+          pr:
+            type: string
+          test:
+            type: string
+          acceptance:
+            type: string
+          production:
+            type: string
+          all:
+            type: string
     minProperties: 1
     required:
       - namespace
@@ -431,6 +445,8 @@ definitions:
         type: boolean
       priority:
         $ref: '#/definitions/dtapNumberValue'
+      additionalRoute:
+        type: string
   livenessProbe:
     type: object
     additionalProperties: true
