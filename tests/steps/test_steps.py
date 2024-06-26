@@ -142,9 +142,7 @@ class TestSteps:
 
     def test_should_return_error_if_config_invalid(self):
         config_values = parse_config(self.resource_path / DEFAULT_CONFIG_FILE_NAME)
-        config_values["kubernetes"]["rancher"]["cluster"]["test"][
-            "invalid"
-        ] = "somevalue"
+        config_values["kubernetes"]["clusters"][0]["name"] = {}
         properties = RunProperties(
             details=RUN_PROPERTIES.details,
             target=Target.PULL_REQUEST,
@@ -161,7 +159,7 @@ class TestSteps:
                 properties=properties,
                 root_dir=self.resource_path,
             )
-        assert "('invalid' was unexpected)" in excinfo.value.message
+        assert "{} is not of type 'string'" in excinfo.value.message
 
     def test_should_succeed_if_executor_is_known(self):
         project = test_data.get_project_with_stages({"build": "Echo Build"})

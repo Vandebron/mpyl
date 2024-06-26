@@ -105,7 +105,7 @@ deployment:
   traefik:
     hosts:
       - host:
-          pr: "Host(`payments-{PR-NUMBER}.test.nl`)"
+          pr: "Host(`payments-{PR-NUMBER}.{CLUSTER-ENV}.nl`)"
           test: "Host(`payments.test.nl`)"
           acceptance: "Host(`payments.acceptance1.nl`)"
           production: "Host(`payments.nl`)"
@@ -115,6 +115,7 @@ deployment:
         whitelists:
           test:
             - "Test"
+        additionalRoute: "ingress-intracloud-https"
       - host:
           all: "Host(`some.other.host.com`)"
         servicePort: 4091
