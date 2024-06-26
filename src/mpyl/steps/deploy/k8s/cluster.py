@@ -27,12 +27,6 @@ class ClusterConfig:
 def get_cluster_config_for_project(
     run_properties: RunProperties, project: Project
 ) -> ClusterConfig:
-    cluster_override_name = (
-        project.deployment.cluster.get_value(run_properties.target)
-        if project.deployment and project.deployment.cluster
-        else None
-    )
-
     kubernetes_config = run_properties.config["kubernetes"]
 
     clusters = [
@@ -44,14 +38,11 @@ def get_cluster_config_for_project(
         kubernetes_config["defaultCluster"]
     ).get_value(run_properties.target)
 
-    default_cluster: ClusterConfig = next(
-        cluster for cluster in clusters if cluster.name == default_cluster_name
+    cluster_override_name = (
+        project.deployment.cluster.get_value(run_properties.target)
+        if project.deployment and project.deployment.cluster
+        else None
     )
-
-    if not default_cluster:
-        raise ValueError(
-            f"Default cluster {default_cluster_name} not found in list of clusters"
-        )
 
     cluster_override = next(
         (cluster for cluster in clusters if cluster.name == cluster_override_name), None
@@ -62,7 +53,20 @@ def get_cluster_config_for_project(
             f"Cluster override {cluster_override_name} not found in list of clusters"
         )
 
+    default_cluster: ClusterConfig = __get_default_cluster(
+        clusters, default_cluster_name
+    )
+
+    if not default_cluster:
+        raise ValueError(
+            f"Default cluster {default_cluster_name} not found in list of clusters"
+        )
+
     return cluster_override if cluster_override else default_cluster
+
+
+def __get_default_cluster(clusters, default_cluster_name):
+    return next(cluster for cluster in clusters if cluster.name == default_cluster_name)
 
 
 def get_namespace_metadata(

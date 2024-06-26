@@ -520,9 +520,9 @@ class ChartBuilder:
                 insecure=host.insecure,
                 additional_route=next(
                     (
-                        r
-                        for r in self.config_defaults.additional_routes
-                        if r.name == host.additional_route
+                        route
+                        for route in self.config_defaults.additional_routes
+                        if route.name == host.additional_route
                     ),
                     None,
                 )

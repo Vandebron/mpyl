@@ -347,7 +347,7 @@ class TraefikAdditionalRoute:
     entrypoints: list[str]
 
     @staticmethod
-    def from_config(values: dict):
+    def from_config(values: Optional[dict]):
         if not values:
             return None
         return TraefikAdditionalRoute(
