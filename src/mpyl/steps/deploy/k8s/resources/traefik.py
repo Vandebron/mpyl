@@ -1,6 +1,7 @@
 """
 This module contains the traefik ingress route CRD.
 """
+
 from dataclasses import dataclass
 from typing import Optional, Union, Any
 
@@ -85,7 +86,7 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
         )
 
         super().__init__(
-            api_version="traefik.io/v1alpha1",
+            api_version="traefik.containo.us/v1alpha1",
             kind="IngressRoute",
             metadata=metadata,
             spec={
@@ -100,7 +101,7 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
 class V1AlphaMiddleware(CustomResourceDefinition):
     def __init__(self, metadata: V1ObjectMeta, source_ranges: list[str]):
         super().__init__(
-            api_version="traefik.io/v1alpha1",
+            api_version="traefik.containo.us/v1alpha1",
             kind="Middleware",
             metadata=metadata,
             spec={"ipWhiteList": {"sourceRange": source_ranges}},
