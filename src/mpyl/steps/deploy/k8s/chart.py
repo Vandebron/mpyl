@@ -150,7 +150,7 @@ class DefaultWhitelists:
     addresses: list[DefaultWhitelistAddress]
 
     @staticmethod
-    def from_config(values: dict):
+    def from_config(values: Optional[dict]):
         if values is None:
             return None
         return DefaultWhitelists(
@@ -159,6 +159,21 @@ class DefaultWhitelists:
                 DefaultWhitelistAddress.from_config(address)
                 for address in values["addresses"]
             ],
+        )
+
+
+@dataclass(frozen=True)
+class TraefikConfig:
+    http_middleware: str
+    tls: str
+
+    @staticmethod
+    def from_config(values: Optional[dict]):
+        if not values:
+            return None
+        return TraefikConfig(
+            http_middleware=values["httpMiddleware"],
+            tls=values["tls"],
         )
 
 
@@ -173,6 +188,7 @@ class DeploymentDefaults:
     image_pull_secrets: dict
     deployment_strategy: dict
     additional_routes: list[TraefikAdditionalRoute]
+    traefik_config: TraefikConfig
 
     @staticmethod
     def from_config(config: dict):
@@ -181,6 +197,9 @@ class DeploymentDefaults:
             raise KeyError("Configuration should have project.deployment section")
         kubernetes = deployment_values.get("kubernetes", {})
         additional_routes = deployment_values.get("additionalTraefikRoutes", None)
+        traefik_config = TraefikConfig.from_config(
+            deployment_values.get("traefikDefaults", None)
+        )
         return DeploymentDefaults(
             resources_defaults=ResourceDefaults.from_config(kubernetes["resources"]),
             liveness_probe_defaults=kubernetes["livenessProbe"],
@@ -195,6 +214,7 @@ class DeploymentDefaults:
                 if additional_routes
                 else []
             ),
+            traefik_config=traefik_config,
         )
 
 
@@ -551,6 +571,8 @@ class ChartBuilder:
                 cluster_env=cluster_env,
                 middlewares_override=[],
                 entrypoints_override=[],
+                http_middleware=self.config_defaults.traefik_config.http_middleware,
+                default_tls=self.config_defaults.traefik_config.http_middleware,
             )
             for i, host in enumerate(hosts)
         ]
@@ -573,6 +595,8 @@ class ChartBuilder:
                 cluster_env=cluster_env,
                 middlewares_override=host.additional_route.middlewares,
                 entrypoints_override=host.additional_route.entrypoints,
+                http_middleware=self.config_defaults.traefik_config.http_middleware,
+                default_tls=self.config_defaults.traefik_config.http_middleware,
             )
             for i, host in enumerate(hosts)
             if host.additional_route

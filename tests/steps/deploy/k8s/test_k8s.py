@@ -165,6 +165,8 @@ class TestKubernetesChart:
             cluster_env="test",
             middlewares_override=[],
             entrypoints_override=[],
+            http_middleware="http",
+            default_tls="default",
         )
         route.spec["tls"] = {"secretName": 1234}
 

@@ -410,6 +410,8 @@ definitions:
             "$ref": "project.schema.yml#/definitions/traefik"
           additionalTraefikRoutes:
             "$ref": "#/definitions/AdditionalTraefikRoutes"
+          traefikDefaults:
+            "$ref": "#/definitions/TraefikDefaults"
           kubernetes:
             "$ref": "project.schema.yml#/definitions/kubernetes"
   AdditionalTraefikRoutes:
@@ -430,6 +432,15 @@ definitions:
           type: array
           items:
             type: string
+  TraefikDefaults:
+    type: object
+    additionalProperties: false
+    properties:
+      httpMiddleware:
+        type: string
+      tls:
+        type: string
+    required: ['httpMiddleware', 'tls']
   Slack:
     type: object
     additionalProperties: false

@@ -196,3 +196,6 @@ project: # default values
           - "intracloud-middleware@kubernetescrd"
         entrypoints:
           - "intracloud"
+    traefikDefaults:
+      httpMiddleware: "traefik-https-redirect@kubernetescrd"
+      tls: "le-custom-prod-wildcard-cert"

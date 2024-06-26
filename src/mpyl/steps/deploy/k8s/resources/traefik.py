@@ -39,6 +39,8 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
         pr_number: Optional[int],
         middlewares_override: list[str],
         entrypoints_override: list[str],
+        http_middleware: str,
+        default_tls: str,
         https: bool = True,
     ):
         def _interpolate_names(host: str, name: str, cluster_env: str) -> str:
@@ -50,7 +52,7 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
 
         combined_middlewares = (
             [
-                {"name": "traefik-https-redirect@kubernetescrd"} if not https else None,
+                {"name": http_middleware} if not https else None,
                 {"name": host.full_name},
             ]
             if len(middlewares_override) == 0
@@ -74,8 +76,9 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
             route |= {"priority": host.traefik_host.priority.get_value(target)}
 
         tls: dict[str, Union[str, dict]] = {
-            "secretName": host.tls if host.tls else "le-prod-wildcard-cert"
+            "secretName": host.tls if host.tls else default_tls
         }
+
         if host.insecure:
             tls |= {"options": {"name": "insecure-ciphers", "namespace": "traefik"}}
 
