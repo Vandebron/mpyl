@@ -1,5 +1,15 @@
 # Release notes
 
+## MPyL 1.6.9
+
+
+#### Cypress postdeploy
+- Remove the cypress postdeploy step
+- Slightly change the postdeploy config to align with other stages
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.6.9)
+
 ## MPyL 1.6.8
 
 
