@@ -1,5 +1,15 @@
 # Release notes
 
+## MPyL 1.6.10
+
+
+#### Deploy existing jobs
+- Fix the helm list cmd function to include the kube-context flag
+- Fixes the issue where existing jobs wouldn't be found and thus not deleted
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.6.10)
+
 ## MPyL 1.6.9
 
 
