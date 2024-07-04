@@ -112,5 +112,5 @@ class CamundaConfig:
             ),
             project_id=str(project.bpm.project_id),
             pr_number=str(properties.versioning.pr_number),
-            target=properties.target
+            target=properties.target,
         )
