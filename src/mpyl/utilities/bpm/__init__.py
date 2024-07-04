@@ -4,7 +4,7 @@ import os
 from dataclasses import dataclass
 
 from ...steps.models import RunProperties
-from ...project import Project, TargetProperty
+from ...project import Project, Target, TargetProperty
 
 
 @dataclass(frozen=True)
@@ -87,6 +87,7 @@ class CamundaConfig:
     depolyment_path: CamundaDeploymentPath
     project_id: str
     pr_number: str
+    target: Target
 
     @staticmethod
     def from_config(properties: RunProperties, project: Project):
@@ -111,4 +112,5 @@ class CamundaConfig:
             ),
             project_id=str(project.bpm.project_id),
             pr_number=str(properties.versioning.pr_number),
+            target=properties.target
         )
