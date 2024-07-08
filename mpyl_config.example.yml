@@ -96,10 +96,6 @@ whiteLists:
       test: ['1.2.3.4']
       acceptance: ['2.3.4.5']
       production: ['3.4.5.6']
-cypress:
-  recordKey: ''
-  cypressSourceCodePath: 'tests/test_resources/cypress'
-  kubectlConfigPath: !ENV ${KUBECONFIG:~/.kube/config}
 kubernetes:
   deploymentStrategy:
     rollingUpdate:
@@ -107,20 +103,27 @@ kubernetes:
       maxSurge: "25%"
     type: "RollingUpdate"
   deployAction: HelmDeploy
-  rancher:
-    cluster:
-      test:
-        clusterId: c-acme
-        clusterEnv: test
-        context: kind-chart-testing
-      acceptance:
-        clusterId: c-acme
-        clusterEnv: acce
-        context: acme-k8s-acce
-      production:
-        clusterId: c-acme
-        clusterEnv: prd
-        context: acme-k8s-prod
+  defaultCluster:
+    pr: 'K8S-Test'
+    test: 'K8S-Test'
+    acceptance: 'K8S-Acceptance'
+    production: 'K8S-Production'
+  clusters:
+    - name: K8S-Test
+      clusterId: c-acme
+      projectId: p-acme
+      clusterEnv: test
+      context: kind-chart-testing
+    - name: K8S-Acceptance
+      clusterId: c-acme
+      projectId: p-acme
+      clusterEnv: acce
+      context: acme-k8s-acce
+    - name: K8S-Production
+      clusterId: c-acme
+      projectId: p-lb52t
+      clusterEnv: prod
+      context: acme-k8s-prod
 project: # default values
   allowedMaintainers: [ 'Team1', 'Team2', 'MPyL' ]
   deployment:
@@ -169,12 +172,26 @@ project: # default values
       enabled: true
       hosts:
         - host:
-            pr: "Host(`{SERVICE-NAME}-{PR-NUMBER}.test-backend.nl`)"
-            test: "Host(`{namespace}-{SERVICE-NAME}.test-backend.nl`)"
-            acceptance: "Host(`{namespace}-{SERVICE-NAME}.acce-backend.nl`)"
-            production: "Host(`{namespace}-{SERVICE-NAME}.prod-backend.nl`)"
+            pr: "Host(`{SERVICE-NAME}-{PR-NUMBER}.{CLUSTER-ENV}-backend.nl`)"
+            test: "Host(`{namespace}-{SERVICE-NAME}.{CLUSTER-ENV}-backend.nl`)"
+            acceptance: "Host(`{namespace}-{SERVICE-NAME}.{CLUSTER-ENV}-backend.nl`)"
+            production: "Host(`{namespace}-{SERVICE-NAME}.{CLUSTER-ENV}-backend.nl`)"
           tls:
             all: "le-custom-prod-wildcard-cert"
           insecure: false
           whitelists:
             all: [ "VPN" ]
+    additionalTraefikRoutes:
+      - name: "ingress-intracloud-https"
+        clusterEnv:
+          pr: "test-other"
+          test: "test-other"
+          acceptance: "acce-other"
+          production: "acce-other"
+        middlewares:
+          - "intracloud-middleware@kubernetescrd"
+        entrypoints:
+          - "intracloud"
+    traefikDefaults:
+      httpMiddleware: "traefik-https-redirect@kubernetescrd"
+      tls: "le-custom-prod-wildcard-cert"

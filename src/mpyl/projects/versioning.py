@@ -207,8 +207,38 @@ PROJECT_UPGRADERS = [
 ]
 
 
+class ConfigUpgraderOne412(Upgrader):
+    target_version = "1.4.12"
+
+    def upgrade(self, previous_dict: ordereddict) -> ordereddict:
+        if kubernetes := previous_dict.get("kubernetes"):
+            if rancher := kubernetes.get("rancher"):
+                if cluster := rancher.get("cluster"):
+                    envs = ["pr", "test", "acceptance", "production"]
+
+                    clusters = [cluster.get(env) for env in envs if cluster.get(env)]
+                    named_clusters = [{"name": c["clusterEnv"], **c} for c in clusters]
+
+                    kubernetes["clusters"] = named_clusters
+                    kubernetes.pop("rancher")
+
+                    kubernetes["defaultCluster"] = {
+                        env: next(
+                            (
+                                c["clusterEnv"]
+                                for c in named_clusters
+                                if c["name"] == env
+                            ),
+                            "MISSING",
+                        )
+                        for env in envs
+                    }
+
+        return previous_dict
+
+
 class ConfigUpgraderOne31(Upgrader):
-    target_version = "1.3.0"
+    target_version = "1.3.1"
 
     def upgrade(self, previous_dict: ordereddict) -> ordereddict:
         whitelists = previous_dict.get("whiteLists", {})
@@ -265,6 +295,7 @@ CONFIG_UPGRADERS = [
     ConfigUpgraderOne9(),
     ConfigUpgraderOne30(),
     ConfigUpgraderOne31(),
+    ConfigUpgraderOne412(),
 ]
 
 

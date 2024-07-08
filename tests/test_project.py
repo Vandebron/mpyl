@@ -61,7 +61,7 @@ class TestMpylSchema:
         )
         assert (
             host.host.get_value(Target.PULL_REQUEST)
-            == "Host(`payments-{PR-NUMBER}.test.nl`)"
+            == "Host(`payments-{PR-NUMBER}.{CLUSTER-ENV}.nl`)"
         )
         assert host.tls
         assert (

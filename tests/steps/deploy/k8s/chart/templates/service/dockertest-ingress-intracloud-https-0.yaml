@@ -10,7 +10,7 @@ metadata:
     maintainer: MPyL
     version: pr-1234
     revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
-  name: dockertest-ingress-0-https
+  name: dockertest-ingress-intracloud-https-0
 spec:
   routes:
   - kind: Rule
@@ -20,9 +20,9 @@ spec:
       kind: Service
       port: 8080
     middlewares:
-    - name: dockertest-ingress-0-whitelist
+    - name: intracloud-middleware@kubernetescrd
   entryPoints:
-  - websecure
+  - intracloud
   tls:
     secretName: le-custom-prod-wildcard-cert
     options:

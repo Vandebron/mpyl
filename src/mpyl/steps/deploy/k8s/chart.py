@@ -44,6 +44,7 @@ from kubernetes.client import (
 from ruamel.yaml import YAML
 
 from . import substitute_namespaces, get_namespace
+from .cluster import get_cluster_config_for_project
 from .resources import (
     CustomResourceDefinition,
     to_dict,
@@ -78,6 +79,7 @@ from ....project import (
     Alert,
     KeyValueRef,
     Metrics,
+    TraefikAdditionalRoute,
 )
 from ....utilities.docker import DockerImageSpec
 
@@ -148,7 +150,7 @@ class DefaultWhitelists:
     addresses: list[DefaultWhitelistAddress]
 
     @staticmethod
-    def from_config(values: dict):
+    def from_config(values: Optional[dict]):
         if values is None:
             return None
         return DefaultWhitelists(
@@ -157,6 +159,21 @@ class DefaultWhitelists:
                 DefaultWhitelistAddress.from_config(address)
                 for address in values["addresses"]
             ],
+        )
+
+
+@dataclass(frozen=True)
+class TraefikConfig:
+    http_middleware: str
+    tls: str
+
+    @staticmethod
+    def from_config(values: Optional[dict]):
+        if not values:
+            return None
+        return TraefikConfig(
+            http_middleware=values["httpMiddleware"],
+            tls=values["tls"],
         )
 
 
@@ -170,6 +187,8 @@ class DeploymentDefaults:
     white_lists: DefaultWhitelists
     image_pull_secrets: dict
     deployment_strategy: dict
+    additional_routes: list[TraefikAdditionalRoute]
+    traefik_config: TraefikConfig
 
     @staticmethod
     def from_config(config: dict):
@@ -177,6 +196,10 @@ class DeploymentDefaults:
         if deployment_values is None:
             raise KeyError("Configuration should have project.deployment section")
         kubernetes = deployment_values.get("kubernetes", {})
+        additional_routes = deployment_values.get("additionalTraefikRoutes", None)
+        traefik_config = TraefikConfig.from_config(
+            deployment_values.get("traefikDefaults", None)
+        )
         return DeploymentDefaults(
             resources_defaults=ResourceDefaults.from_config(kubernetes["resources"]),
             liveness_probe_defaults=kubernetes["livenessProbe"],
@@ -186,6 +209,12 @@ class DeploymentDefaults:
             white_lists=DefaultWhitelists.from_config(config.get("whiteLists", {})),
             image_pull_secrets=kubernetes.get("imagePullSecrets", {}),
             deployment_strategy=config["kubernetes"]["deploymentStrategy"],
+            additional_routes=(
+                list(map(TraefikAdditionalRoute.from_config, additional_routes))
+                if additional_routes
+                else []
+            ),
+            traefik_config=traefik_config,
         )
 
 
@@ -509,12 +538,25 @@ class ChartBuilder:
                 white_lists=to_white_list(host.whitelists),
                 tls=host.tls.get_value(self.target) if host.tls else None,
                 insecure=host.insecure,
+                additional_route=next(
+                    (
+                        route
+                        for route in self.config_defaults.additional_routes
+                        if route.name == host.additional_route
+                    ),
+                    None,
+                )
+                if host.additional_route
+                else None,
             )
             for idx, host in enumerate(hosts if hosts else default_hosts)
         ]
 
     def to_ingress_routes(self, https: bool) -> list[V1AlphaIngressRoute]:
         hosts = self.create_host_wrappers()
+        cluster_env = get_cluster_config_for_project(
+            self.step_input.run_properties, self.project
+        ).cluster_env
         return [
             V1AlphaIngressRoute(
                 metadata=self._to_object_meta(
@@ -526,8 +568,38 @@ class ChartBuilder:
                 namespace=get_namespace(self.step_input.run_properties, self.project),
                 pr_number=self.step_input.run_properties.versioning.pr_number,
                 https=https,
+                cluster_env=cluster_env,
+                middlewares_override=[],
+                entrypoints_override=[],
+                http_middleware=self.config_defaults.traefik_config.http_middleware,
+                default_tls=self.config_defaults.traefik_config.http_middleware,
             )
             for i, host in enumerate(hosts)
+        ]
+
+    def to_additional_routes(self) -> list[V1AlphaIngressRoute]:
+        hosts = self.create_host_wrappers()
+        cluster_env = get_cluster_config_for_project(
+            self.step_input.run_properties, self.project
+        ).cluster_env
+        return [
+            V1AlphaIngressRoute(
+                metadata=self._to_object_meta(
+                    name=f"{self.release_name}-{host.additional_route.name}-{i}"
+                ),
+                host=host,
+                target=self.target,
+                namespace=get_namespace(self.step_input.run_properties, self.project),
+                pr_number=self.step_input.run_properties.versioning.pr_number,
+                https=True,
+                cluster_env=cluster_env,
+                middlewares_override=host.additional_route.middlewares,
+                entrypoints_override=host.additional_route.entrypoints,
+                http_middleware=self.config_defaults.traefik_config.http_middleware,
+                default_tls=self.config_defaults.traefik_config.http_middleware,
+            )
+            for i, host in enumerate(hosts)
+            if host.additional_route
         ]
 
     def to_middlewares(self) -> dict[str, V1AlphaMiddleware]:
@@ -842,7 +914,17 @@ def _to_service_components_chart(builder):
         f"{builder.project.name}-ingress-{i}-http": route
         for i, route in enumerate(builder.to_ingress_routes(https=False))
     }
-    return common_chart | ingress_https | ingress_http | service_monitor
+    additional_routes = {
+        route.metadata.name: route
+        for i, route in enumerate(builder.to_additional_routes())
+    }
+    return (
+        common_chart
+        | ingress_https
+        | ingress_http
+        | additional_routes
+        | service_monitor
+    )
 
 
 def _to_prometheus_chart(builder):

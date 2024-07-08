@@ -8,11 +8,11 @@ from pyaml_env import parse_config
 from ruamel.yaml import YAML  # type: ignore
 
 from src.mpyl.constants import DEFAULT_CONFIG_FILE_NAME, RUN_ARTIFACTS_FOLDER
-from src.mpyl.project import Project, Stages, Target, Dependencies
+from src.mpyl.project import Project, Stages, Target
 from src.mpyl.project_execution import ProjectExecution
 from src.mpyl.projects.versioning import yaml_to_string
 from src.mpyl.run_plan import RunPlan
-from src.mpyl.steps import build, postdeploy
+from src.mpyl.steps import build
 from src.mpyl.steps.collection import StepsCollection
 from src.mpyl.steps.deploy.k8s import RenderedHelmChartSpec
 from src.mpyl.steps.models import (
@@ -142,9 +142,7 @@ class TestSteps:
 
     def test_should_return_error_if_config_invalid(self):
         config_values = parse_config(self.resource_path / DEFAULT_CONFIG_FILE_NAME)
-        config_values["kubernetes"]["rancher"]["cluster"]["test"][
-            "invalid"
-        ] = "somevalue"
+        config_values["kubernetes"]["clusters"][0]["name"] = {}
         properties = RunProperties(
             details=RUN_PROPERTIES.details,
             target=Target.PULL_REQUEST,
@@ -161,7 +159,7 @@ class TestSteps:
                 properties=properties,
                 root_dir=self.resource_path,
             )
-        assert "('invalid' was unexpected)" in excinfo.value.message
+        assert "{} is not of type 'string'" in excinfo.value.message
 
     def test_should_succeed_if_executor_is_known(self):
         project = test_data.get_project_with_stages({"build": "Echo Build"})
@@ -211,23 +209,3 @@ class TestSteps:
         )
         assert not result.output.success
         assert result.output.message == "Stage 'build' not defined on project 'test'"
-
-    @pytest.mark.skip(reason="Very slow test")
-    def test_should_run_post_deploy_cypress_step(self):
-        stages = Stages.from_config({"postdeploy": "Cypress Test"})
-        project = Project(
-            "test",
-            "Test project",
-            "",
-            stages,
-            [],
-            None,
-            None,
-            None,
-            Dependencies.from_config({"postdeploy": ["specs/*.js"]}),
-        )
-        result = self.executor.execute(
-            stage=postdeploy.STAGE_NAME,
-            project_execution=ProjectExecution.run(project),
-        )
-        assert result.output.success

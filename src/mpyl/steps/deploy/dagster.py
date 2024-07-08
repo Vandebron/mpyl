@@ -14,12 +14,12 @@ from .k8s import (
     helm,
     get_config_map,
     rollout_restart_deployment,
-    cluster_config,
     replace_config_map,
     update_config_map_field,
     get_version_of_deployment,
 )
 from .k8s.chart import ChartBuilder
+from .k8s.cluster import get_cluster_config_for_project
 from .k8s.helm import write_chart
 from .k8s.resources.dagster import to_user_code_values, to_grpc_server_entry, Constants
 from .. import Step, Meta, ArtifactType, Input, Output
@@ -66,7 +66,9 @@ class DeployDagster(Step):
         Deploys the docker image produced in the build stage as a Dagster user-code-deployment
         """
         properties = step_input.run_properties
-        context = cluster_config(properties).context
+        context = get_cluster_config_for_project(
+            step_input.run_properties, step_input.project_execution.project
+        ).cluster_env
         dagster_config: DagsterConfig = DagsterConfig.from_dict(properties.config)
         dagster_deploy_results = []
 

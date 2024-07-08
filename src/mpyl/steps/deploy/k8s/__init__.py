@@ -19,10 +19,10 @@ from ...models import RunProperties, input_to_artifact, ArtifactType, ArtifactSp
 from ....project import ProjectName, Target
 from ....steps import Input, Output
 from ....steps.deploy.k8s import helm
-from ....steps.deploy.k8s.rancher import (
-    cluster_config,
-    rancher_namespace_metadata,
+from ....steps.deploy.k8s.cluster import (
+    get_namespace_metadata,
     ClusterConfig,
+    get_cluster_config_for_project,
 )
 from ....steps.deploy.k8s.resources import to_yaml
 from ....utilities import replace_pr_number
@@ -90,16 +90,16 @@ def upsert_namespace(
     project_id: str,
     dry_run: bool,
     run_properties: RunProperties,
-    rancher_config: ClusterConfig,
+    cluster_config: ClusterConfig,
 ) -> None:
-    config.load_kube_config(context=rancher_config.context)
+    config.load_kube_config(context=cluster_config.context)
     logger.info(
-        f"Deploying target {run_properties.target} and k8s context {rancher_config.context}"
+        f"Deploying target {run_properties.target} and k8s context {cluster_config.context}"
     )
     api = client.CoreV1Api()
 
-    meta_data = rancher_namespace_metadata(
-        namespace=namespace, rancher_config=rancher_config, project_id=project_id
+    meta_data = get_namespace_metadata(
+        namespace=namespace, cluster_config=cluster_config, project_id=project_id
     )
     namespaces = api.list_namespace(field_selector=f"metadata.name={namespace}")
 
@@ -264,7 +264,10 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
         and project.deployment.kubernetes.rancher.project_id
         else ""
     )
-    rancher_config: ClusterConfig = cluster_config(run_properties)
+
+    cluster_config: ClusterConfig = get_cluster_config_for_project(
+        run_properties, project
+    )
 
     upsert_namespace(
         logger=logger,
@@ -272,7 +275,7 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
         project_id=project_id,
         dry_run=dry_run,
         run_properties=run_properties,
-        rancher_config=rancher_config,
+        cluster_config=cluster_config,
     )
 
     return helm.install(
@@ -281,7 +284,7 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
         dry_run,
         release_name,
         namespace,
-        rancher_config.context,
+        cluster_config.context,
         delete_existing,
     )
 
