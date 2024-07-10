@@ -3,12 +3,10 @@
 """
 
 from logging import Logger
-from typing import Optional
 
 from .post_docker_build import AfterBuildDocker
 from .. import Step, Meta
 from . import STAGE_NAME
-from ...project import Target
 from ...steps.models import (
     ArtifactType,
     Input,
@@ -61,17 +59,11 @@ class BuildSbt(Step):
 
     @staticmethod
     def _construct_sbt_command(step_input: Input, image_name: str):
-        check_fmt: Optional[str] = (
-            "scalafmtCheckAll"
-            if step_input.run_properties.target == Target.PULL_REQUEST
-            else None
-        )
         commands: list[str] = [
             command
             for command in [
                 f"project {step_input.project_execution.name}",
                 f'set docker / imageNames := Seq(ImageName("{image_name}"))',
-                check_fmt,
                 "docker",
             ]
             if command is not None
