@@ -13,5 +13,4 @@ Commands:
   lint     Validate the yaml of changed projects against their schema
   list     List found projects
   names    List found project names
-  show     Show details of a project
   upgrade  Upgrade projects to conform with the latest schema

@@ -9,7 +9,6 @@ from ruamel.yaml import YAML  # type: ignore
 
 from src.mpyl.constants import RUN_ARTIFACTS_FOLDER
 from src.mpyl.project import load_project, Stage
-from src.mpyl.projects.find import load_projects
 from src.mpyl.stages.discovery import (
     find_projects_to_execute,
     is_project_cached_for_stage,
@@ -23,6 +22,7 @@ from src.mpyl.steps.models import Artifact
 from src.mpyl.utilities.docker import DockerImageSpec
 from src.mpyl.utilities.repo import Changeset
 from tests import root_test_path, test_resource_path
+from tests.projects.find import load_projects
 from tests.test_resources import test_data
 from tests.test_resources.test_data import TestStage
 

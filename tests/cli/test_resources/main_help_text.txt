@@ -9,4 +9,3 @@ Commands:
   build     Pipeline build commands
   health    Health check
   projects  Commands related to MPyL project configurations (project.yml)
-  version   Version information

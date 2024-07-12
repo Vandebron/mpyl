@@ -8,10 +8,7 @@ list in this module.
 """
 import copy
 import numbers
-import pkgutil
-import re
 from abc import ABC
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Generator
 from typing import Optional
@@ -23,85 +20,6 @@ from ..utilities.yaml import yaml_to_string, load_for_roundtrip, yaml_for_roundt
 
 VERSION_FIELD = "mpylVersion"
 BASE_RELEASE = "1.0.8"
-
-
-@dataclass
-class Release:
-    major: int
-    minor: int
-    patch: int
-    release_candidate: Optional[int] = None
-
-    @staticmethod
-    def from_string(version: str):
-        parts = version.split(".")
-        minor_parts = parts[2].split("rc")
-        return Release(
-            int(parts[0]),
-            int(parts[1]),
-            int(minor_parts[0]),
-            int(minor_parts[1]) if len(minor_parts) > 1 else None,
-        )
-
-    def __str__(self):
-        return f"{self.major}.{self.minor}.{self.patch}" + (
-            f"rc{self.release_candidate}" if self.release_candidate else ""
-        )
-
-
-def get_releases() -> list[Release]:
-    embedded_releases = pkgutil.get_data(__name__, "releases/releases.txt")
-    if not embedded_releases:
-        raise ValueError("File releases/releases.txt not found in package")
-    releases = embedded_releases.decode("utf-8").strip().splitlines()
-    return list(reversed(list(map(Release.from_string, releases))))
-
-
-def get_latest_release() -> Release:
-    return get_releases()[0]
-
-
-def add_release(release: Release) -> None:
-    releases_path = Path(__file__).parent / "releases/releases.txt"
-    with open(releases_path, "a", encoding="utf-8") as releases_file:
-        releases_file.write(str(f"\n{release}"))
-
-
-def get_release_notes_base_path():
-    return Path(__file__).parent.parent.parent.parent / "releases"
-
-
-def get_release_notes_readme_path():
-    return get_release_notes_base_path() / "README.md"
-
-
-def get_release_notes_path(release: Release):
-    return get_release_notes_base_path() / "notes" / f"{release}.md"
-
-
-def render_release_notes() -> str:
-    without_rcs = [rel for rel in get_releases() if rel.release_candidate is None]
-    combined = "# Release notes\n\n"
-    for release in without_rcs:
-        combined += f"## MPyL {release}\n\n"
-
-        file = f"{release}.md"
-        notes = get_release_notes_path(release)
-        if notes.exists():
-            combined += "\n"
-            text = notes.read_text("utf-8")
-
-            if (
-                re.match("^# ", text)
-                or re.match("^## ", text)
-                or re.match("^### ", text)
-            ):
-                raise ValueError(
-                    f"{file} should not contain #, ## or ### because it messes up the TOC"
-                )
-            combined += text + "\n\n"
-        combined += f"Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/{release})\n\n"
-    return combined
 
 
 class Upgrader(ABC):

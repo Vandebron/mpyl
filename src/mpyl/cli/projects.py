@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import click
-from click import ParamType, Argument
+from click import ParamType
 from click.shell_completion import CompletionItem
 from rich.markdown import Markdown
 from rich.prompt import Confirm
@@ -16,7 +16,6 @@ from . import (
     create_console_logger,
     parse_config_from_supplied_location,
 )
-from .commands.projects.formatting import print_project
 from ..cli.commands.projects.lint import (
     _check_and_load_projects,
     _assert_unique_project_names,
@@ -28,7 +27,7 @@ from ..cli.commands.projects.lint import (
 )
 from ..cli.commands.projects.upgrade import check_upgrade
 from ..constants import DEFAULT_CONFIG_FILE_NAME
-from ..project import load_project, Project, Target, get_project_root_dir
+from ..project import load_project, Target, get_project_root_dir
 from ..projects.versioning import (
     check_upgrades_needed,
     upgrade_file,
@@ -123,28 +122,6 @@ class ProjectPath(ParamType):
         return [
             CompletionItem(value=get_project_root_dir(proj)) for proj in found_projects
         ]
-
-
-@projects.command(name="show", help="Show details of a project")
-@click.argument("name", required=True, type=ProjectPath())
-@click.pass_context
-def show_project(ctx, name):
-    obj = ctx.obj
-    project_path = f"{name}/{Project.project_yaml_path()}"
-    if not (obj.cli.repo.root_dir / project_path).exists():
-        obj.cli.console.print(
-            Markdown(
-                f"Project `{name}` not found. 👉 Finding projects is much easier with [auto completion]"
-                f"(https://vandebron.github.io/mpyl/mpyl.html#mpyl-cli) enabled."
-            )
-        )
-        complete = ProjectPath().shell_complete(
-            ctx, Argument(param_decls=["--name"]), name
-        )
-        obj.cli.console.print("Did you mean one of these?")
-        obj.cli.console.print([file.value for file in complete])
-        return
-    print_project(obj.cli.repo, obj.cli.console, project_path)
 
 
 @projects.command(help="Validate the yaml of changed projects against their schema")

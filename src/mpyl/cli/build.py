@@ -6,15 +6,8 @@ import shutil
 import sys
 import uuid
 from pathlib import Path
-from typing import Optional, cast, Sequence
 
 import click
-import questionary
-from click import ParamType
-from click.shell_completion import CompletionItem
-from github import Github
-from github.GitRelease import GitRelease
-from questionary import Choice
 from rich.console import Console
 from rich.markdown import Markdown
 
@@ -23,17 +16,9 @@ from . import (
     CONFIG_PATH_HELP,
     check_updates,
     get_meta_version,
-    parse_config_from_supplied_location,
     MpylCliParameters,
 )
 from . import create_console_logger
-from .commands.build.artifacts import prepare_artifacts_repo, branch_name
-from .commands.build.jenkins import JenkinsRunParameters, run_jenkins, get_token
-from ..artifacts.build_artifacts import (
-    ManifestPathTransformer,
-    BuildCacheTransformer,
-    ArtifactType,
-)
 from ..build import print_status, run_mpyl
 from ..constants import (
     DEFAULT_CONFIG_FILE_NAME,
@@ -41,12 +26,9 @@ from ..constants import (
     RUN_ARTIFACTS_FOLDER,
     RUN_RESULT_FILE_GLOB,
 )
-from ..project import load_project, Target
+from ..project import load_project
 from ..run_plan import RunPlan
-from ..steps.deploy.k8s.deploy_config import DeployConfig
-from ..steps.models import RunProperties
 from ..steps.run_properties import construct_run_properties
-from ..utilities.github import GithubConfig
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
 
@@ -252,201 +234,6 @@ def status(obj: CliContext, all_, projects, stage, tag, explain):
             asyncio.get_event_loop().run_until_complete(upgrade_check)
 
 
-class Pipeline(ParamType):
-    name = "pipeline"
-
-    def shell_complete(self, ctx: click.Context, param, incomplete: str):
-        config: dict = parse_config_from_supplied_location(ctx, param)
-
-        pipelines: dict[str, str] = config["jenkins"]["pipelines"]
-
-        return [
-            CompletionItem(value=pl[0], help=pl[1])
-            for pl in pipelines.items()
-            if incomplete in pl[0]
-        ]
-
-
-def select_tag(ctx) -> str:
-    console = Console()
-    with console.status("Fetching tags...") as spinner:
-        github_config = GithubConfig.from_config(ctx.obj.config)
-        github = Github(login_or_token=get_token(github_config))
-
-        repo = github.get_repo(github_config.repository)
-
-        def to_choice(git_release: GitRelease):
-            title = (
-                git_release.title
-                + " "
-                + git_release.body.split("* ")[-1].splitlines()[0]
-            )
-            return Choice(title=title, value=git_release.title)
-
-        choices = map(to_choice, repo.get_releases())
-        user_name = github.get_user().login
-
-        def by_choice(choice: Choice):
-            # prioritize own tags
-            if user_name in str(choice.title):
-                return f"9{choice.value}"
-            return choice.value
-
-        sorted_choices = sorted(choices, key=by_choice, reverse=True)
-
-        spinner.stop()
-        release_id = questionary.select(
-            "Which tag do you want to release?",
-            show_selected=True,
-            choices=sorted_choices,
-        ).ask()
-        release = repo.get_release(release_id)
-        return release.tag_name
-
-
-def select_targets() -> list[str]:
-    return questionary.checkbox(
-        "Which environment do you want to deploy to?",
-        choices=[
-            Choice(title=t.name, value=t.name)  # pylint: disable=no-member
-            for t in [Target.PULL_REQUEST_BASE, Target.ACCEPTANCE, Target.PRODUCTION]
-        ],
-    ).ask()
-
-
-def ask_for_tag_input(ctx, _param, value) -> Optional[str]:
-    if value == "not_set":
-        return None
-    if value == "prompt":
-        return select_tag(ctx)
-    return value
-
-
-@build.command(help="Run a multi branch pipeline build on Jenkins")
-@click.option(
-    "--user",
-    "-u",
-    help="Authentication API user. Can be set via env var JENKINS_USER",
-    envvar="JENKINS_USER",
-    type=click.STRING,
-    required=True,
-)
-@click.option(
-    "--password",
-    "-p",
-    help="Authentication API password. Can be set via env var JENKINS_PASSWORD",
-    envvar="JENKINS_PASSWORD",
-    type=click.STRING,
-    required=True,
-)
-@click.option(
-    "--pipeline",
-    "-pl",
-    help="The pipeline to run. Must be one of the pipelines listed in `jenkins.pipelines`. "
-    "Default value is `jenkins.defaultPipeline`",
-    type=Pipeline(),
-    required=False,
-)
-@click.option(
-    "--version",
-    "-v",
-    help="A specific version on https://pypi.org/project/mpyl/ to use for the build.",
-    type=click.STRING,
-    required=False,
-)
-@click.option(
-    "--test",
-    "-t",
-    help="The version supplied by `--version` should be considered from the Test PyPi mirror at"
-    " https://test.pypi.org/project/mpyl/.",
-    is_flag=True,
-    default=False,
-    required=False,
-)
-@click.option(
-    "--arguments",
-    "-a",
-    multiple=True,
-    help="A series of arguments to pass to the pipeline. Note that will run within the pipenv in jenkins. "
-    "To execute `mpyl build status`, pass `-a run -a mpyl -a build -a status`",
-)
-@click.option(
-    "--background",
-    "-bg",
-    help="Starts Jenkins build in a 'fire and forget' fashion. "
-    "Can be set via env var MPYL_JENKINS_BACKGROUND",
-    envvar="MPYL_JENKINS_BACKGROUND",
-    is_flag=True,
-    default=False,
-)
-@click.option(
-    "--silent",
-    "-s",
-    help="Indicates whether to show Jenkins' logging or not. "
-    "Can be set via env var MPYL_JENKINS_SILENT",
-    envvar="MPYL_JENKINS_SILENT",
-    is_flag=True,
-    default=False,
-)
-@click.option(
-    "--tag",
-    is_flag=False,
-    flag_value="prompt",
-    default="not_set",
-    callback=ask_for_tag_input,
-)
-@click.pass_context
-def jenkins(  # pylint: disable=too-many-arguments, too-many-locals
-    ctx,
-    user,
-    password,
-    pipeline,
-    version,
-    test,
-    arguments,
-    background,
-    silent,
-    tag,
-):
-    try:
-        asyncio.run(warn_if_update(ctx.obj.console))
-        if "jenkins" not in ctx.obj.config:
-            ctx.obj.console.print(
-                "No Jenkins configuration found in config file. "
-                "Please add a `jenkins` section to your MPyL config file."
-            )
-            sys.exit(0)
-        jenkins_config = ctx.obj.config["jenkins"]
-
-        selected_pipeline = pipeline if pipeline else jenkins_config["defaultPipeline"]
-        pipeline_parameters = (
-            {"TEST": "true" if test else "false", "VERSION": version} if version else {}
-        )
-        if arguments:
-            pipeline_parameters["BUILD_PARAMS"] = " ".join(arguments)
-
-        targets = (
-            select_targets()
-            if tag
-            else [Target.PULL_REQUEST.name]  # pylint: disable=no-member
-        )
-        for target in targets:
-            run_argument = JenkinsRunParameters(
-                jenkins_user=user,
-                jenkins_password=password,
-                config=ctx.obj.config,
-                pipeline=selected_pipeline,
-                pipeline_parameters=pipeline_parameters,
-                verbose=not silent or ctx.obj.verbose,
-                follow=not background,
-                tag=tag,
-                tag_target=getattr(Target, target) if tag else None,
-            )
-            run_jenkins(run_argument)
-    except asyncio.exceptions.TimeoutError:
-        pass
-
-
 @build.command(help=f"Clean all MPyL metadata in `{RUN_ARTIFACTS_FOLDER}` folders")
 @click.option(
     "--filter",
@@ -479,135 +266,3 @@ def clean(obj: CliContext, filter_):
             obj.console.print(f"🧹 Cleaned up {target_path}")
     else:
         obj.console.print("Nothing to clean")
-
-
-@build.group(
-    "artifacts",
-    help="Commands related to artifacts like build cache and k8s manifests",
-)
-def artifacts():  # no implementation, only for nesting command
-    pass
-
-
-@artifacts.command(help="Pull build artifacts from remote artifact repository")
-@click.option("--tag", "-t", type=click.STRING, help="Tag to build", required=False)
-@click.option("--pr", type=click.INT, help="PR number to fetch", required=False)
-@click.option(
-    "--path",
-    "-p",
-    type=click.Path(exists=False),
-    help="Path within repository to copy artifacts from",
-    default=Path("tmp"),
-    required=False,
-)
-@click.pass_obj
-def pull(obj: CliContext, tag: str, pr: int, path: Path):
-    run_properties = construct_run_properties(
-        config=obj.config,
-        properties=obj.run_properties,
-        run_plan=RunPlan.empty(),
-        all_projects=set(),
-    )
-    target_branch = __get_target_branch(run_properties, tag, pr)
-
-    build_artifacts = prepare_artifacts_repo(
-        obj=obj, repo_path=path, artifact_type=ArtifactType.CACHE
-    )
-    build_artifacts.pull(
-        branch=branch_name(
-            identifier=target_branch,
-            artifact_type=ArtifactType.CACHE,
-            target=run_properties.target,
-        )
-    )
-
-
-@artifacts.command(help="Push build artifacts to remote artifact repository")
-@click.option("--tag", "-t", type=click.STRING, help="Tag to build", required=False)
-@click.option("--pr", type=click.INT, help="PR number to fetch", required=False)
-@click.option(
-    "--path",
-    "-p",
-    type=click.Path(exists=False),
-    help="Path within repository to copy artifacts to",
-    required=False,
-)
-@click.option(
-    "--artifact-type",
-    "-a",
-    type=click.Choice(
-        cast(Sequence[str], ArtifactType)
-    ),  # Click does accept this enum type but mypy doesn't
-    help="The type of artifact to store. Either build metadata from `.mpyl` "
-    "folders or k8s manifests to be deployed by ArgoCD",
-    required=True,
-)
-@click.pass_obj
-def push(
-    obj: CliContext,
-    tag: Optional[str],
-    pr: Optional[int],
-    path: Path,
-    artifact_type: ArtifactType,
-):
-    run_properties = construct_run_properties(
-        config=obj.config,
-        properties=obj.run_properties,
-        run_plan=RunPlan.empty(),
-        all_projects=set(),
-    )
-    target_branch = __get_target_branch(run_properties, tag, pr)
-    if path is None:
-        path = Path("tmp") if artifact_type == ArtifactType.CACHE else Path(".")
-
-    build_artifacts = prepare_artifacts_repo(
-        obj=obj, repo_path=path, artifact_type=artifact_type
-    )
-    deploy_config = DeployConfig.from_config(obj.config)
-
-    transformer = (
-        ManifestPathTransformer(
-            deploy_config=deploy_config, run_properties=run_properties
-        )
-        if artifact_type == ArtifactType.ARGO
-        else BuildCacheTransformer()
-    )
-
-    github_config = None
-    if artifact_type == ArtifactType.ARGO:
-        github = obj.config["vcs"]["argoGithub"]
-        github_config = GithubConfig.from_github_config(github=github)
-
-    build_artifacts.push(
-        branch=branch_name(
-            identifier=target_branch,
-            artifact_type=artifact_type,
-            target=run_properties.target,
-        ),
-        revision=obj.repo.get_sha,
-        repository_url=obj.repo.remote_url if obj.repo.remote_url else "",
-        project_paths=obj.repo.find_projects(),
-        path_transformer=transformer,
-        run_properties=run_properties,
-        github_config=github_config,
-    )
-
-
-def __get_target_branch(
-    run_properties: RunProperties, tag: Optional[str], pr: Optional[int]
-) -> str:
-    effective_tag = tag or run_properties.versioning.tag
-    effective_pr = pr or run_properties.versioning.pr_number
-    if effective_tag is None and effective_pr is None:
-        raise click.ClickException(
-            "Either pr or tag must be specified, either as a flag or in the run properties"
-        )
-
-    if effective_tag:
-        return effective_tag
-
-    return f"PR-{effective_pr}"
-
-
-if __name__ == "__main__":
-    build()  # pylint: disable=no-value-for-parameter

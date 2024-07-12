@@ -46,53 +46,12 @@ class TestCli:
             result.output,
         )
 
-    def test_show_project_not_found_output(self):
-        result = self.runner.invoke(
-            main_group,
-            ["projects", "-c", str(self.config_path), "show", "job"],
-        )
-        assert re.match(r"Project .* not found", result.output)
-
-    def test_show_project_output(self):
-        result = self.runner.invoke(
-            main_group,
-            ["projects", "-c", str(self.config_path), "show", "tests/projects/job"],
-        )
-        assert_roundtrip(self.resource_path / "show_project_text.txt", result.output)
-
     def test_list_projects_output(self):
         result = self.runner.invoke(
             main_group,
             ["projects", "-c", str(self.config_path), "list"],
         )
         assert_roundtrip(self.resource_path / "list_projects_text.txt", result.output)
-
-    def test_version_print(self):
-        result = self.runner.invoke(
-            main_group,
-            ["version"],
-        )
-
-        if platform.system() == "Darwin":
-            regex = r"MPyL \d+\.\d+\.\d+"
-        else:
-            regex = r"MPyL \(local\)"
-
-        assert re.match(regex, result.output)
-
-    @pytest.mark.skipif(
-        condition=platform.system() != "Darwin",
-        reason="mpyl distribution is not available in github action",
-    )
-    def test_verbose_version_print(self):
-        result = self.runner.invoke(
-            main_group,
-            ["version", "-v"],
-        )
-        assert_roundtrip(
-            self.resource_path / "metadata_text.txt",
-            re.sub(r"Version: .*", "Version: {version}", result.output, re.M),
-        )
 
     def test_create_console(self):
         console = create_console_logger(show_path=False, verbose=True, max_width=135)

@@ -2,9 +2,9 @@
 from pathlib import Path
 from typing import Optional
 
-from . import ProjectWithDependents, Protocol, Contract, Dependency
-from ..project import Project, load_project
-from ..steps import test
+from src.mpyl.project import Project, load_project
+from src.mpyl.projects import ProjectWithDependents, Protocol, Contract, Dependency
+from src.mpyl.steps import test
 
 
 def load_projects(
