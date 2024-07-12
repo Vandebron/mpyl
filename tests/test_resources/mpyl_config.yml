@@ -108,6 +108,9 @@ project: # default values
       httpMiddleware: "traefik-https-redirect@kubernetescrd"
       tls: "le-custom-prod-wildcard-cert"
     kubernetes:
+      rancher:
+        projectId:
+          all: test1234
       imagePullSecrets:
         - name: 'acme-registry'
       job:

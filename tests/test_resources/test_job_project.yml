@@ -18,6 +18,9 @@ deployment:
         acceptance: "Acceptance"
         production: "Production"
   kubernetes:
+    rancher:
+      projectId:
+        all: test1234
     command:
       all: python run.py
     args:
