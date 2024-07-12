@@ -25,6 +25,9 @@ deployment:
       - key: ELASTICSEARCH_HOST
         all: "elastic-es-http.elastic"
   kubernetes:
+    rancher:
+      projectId:
+        all: test1234
     job:
       activeDeadlineSeconds:
         all: 86400

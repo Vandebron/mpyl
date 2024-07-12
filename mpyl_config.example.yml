@@ -128,6 +128,9 @@ project: # default values
   allowedMaintainers: [ 'Team1', 'Team2', 'MPyL' ]
   deployment:
     kubernetes:
+      rancher:
+        projectId:
+          all: invalidId
       imagePullSecrets:
         - name: 'acme-registry'
       job:

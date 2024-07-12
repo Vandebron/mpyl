@@ -28,6 +28,9 @@ deployment:
       - key: SEALED_SECRET
         all: "hash"
   kubernetes:
+    rancher:
+      projectId:
+        all: test1234
     job:
       activeDeadlineSeconds:
         all: 86400
