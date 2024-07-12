@@ -731,10 +731,14 @@ definitions:
         type: string
   kubernetes:
     type: object
+    required:
+      - rancher
     additionalProperties: false
     properties:
       rancher:
         type: object
+        required:
+          - projectId
         properties:
           projectId:
             description: >-

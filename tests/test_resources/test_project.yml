@@ -63,6 +63,9 @@ deployment:
             divisor: 0.5
             resource: limits.memory
   kubernetes:
+    rancher:
+      projectId:
+        all: test1234
     job:
       cron:
         all:
