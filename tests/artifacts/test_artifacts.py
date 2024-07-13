@@ -30,8 +30,8 @@ class TestTransformer(PathTransformer):
     def artifact_type(self) -> ArtifactType:
         return cast(ArtifactType, "test_type")
 
-    def transform_for_read(self, project_path: str) -> Path:
-        return Path(self.root_folder, project_path).parent
+    def transform_for_read(self, project_yaml_path: str) -> Path:
+        return Path(self.root_folder, project_yaml_path).parent
 
     def transform_for_write(self, artifact_path: str, project: Project) -> Path:
         return Path(relpath(artifact_path, root_test_path))
