@@ -280,17 +280,20 @@ class Repository:  # pylint: disable=too-many-public-methods
     def remote_branch_exists(self, branch_name: str) -> bool:
         return self._repo.git.ls_remote("origin", branch_name) != ""
 
-    def find_projects(self, folder_pattern: str = "") -> list[str]:
+    def find_projects(
+        self, folder_pattern: str = "", config_folder: str = "deployment"
+    ) -> list[str]:
         """returns a set of all project.yml files
-        :type folder_pattern: project paths are filtered on this pattern
+        :param folder_pattern: project paths are filtered on this pattern
+        :param config_folder: the folder that holds the `project.yml` file
         """
         projects = set(
             self._repo.git.ls_files(
-                f"*{folder_pattern}*{Project.project_yaml_path()}"
+                f"*{folder_pattern}*/{config_folder}/{Project.project_yaml_file_name()}"
             ).splitlines()
         ) | set(
             self._repo.git.ls_files(
-                f"*{folder_pattern}*{Project.project_overrides_yml_pattern()}"
+                f"*{folder_pattern}*/{config_folder}/{Project.project_overrides_yaml_file_pattern()}"
             ).splitlines()
         )
         return sorted(projects)

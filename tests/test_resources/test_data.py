@@ -164,9 +164,11 @@ class MockRepository(Repository):
     def __exit__(self, exc_type, exc_val, exc_tb):
         return self
 
-    def find_projects(self, folder_pattern: str = "") -> list[str]:
+    def find_projects(
+        self, folder_pattern: str = "", config_folder: str = "deployment"
+    ) -> list[str]:
         projects = Path(os.path.basename(root_test_path)).glob(
-            f"*{folder_pattern}*/{Project.project_yaml_path()}"
+            f"*{folder_pattern}*/{config_folder}/{Project.project_yaml_file_name()}"
         )
         return sorted(map(str, projects))
 
