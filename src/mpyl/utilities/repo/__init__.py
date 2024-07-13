@@ -1,4 +1,5 @@
-""" Defines information about the repository, any changes made to it and the containing projects.
+"""
+Defines information about the repository, any changes made to it and the containing projects.
 `mpyl.utilities.repo.Repository` is a facade for the Version Control System.
 At this moment Git is the only supported VCS.
 """
@@ -6,10 +7,9 @@ import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 from urllib.parse import urlparse
 
-from git import Git, Repo, Remote
+from git import Git, Repo
 from git.objects import Commit
 from gitdb.exc import BadName
 
@@ -22,7 +22,7 @@ class Changeset:
     """Git hash for this revision"""
     _files_touched: dict[str, str]
 
-    def files_touched(self, status: Optional[set[str]] = None):
+    def files_touched(self, status: set[str] | None = None):
         if not status or len(status) == 0:
             return set(self._files_touched.keys())
 
@@ -105,7 +105,7 @@ class RepoConfig:
 
     @staticmethod
     def from_git_config(git_config: dict):
-        maybe_remote_config = git_config.get("remote", None)
+        maybe_remote_config = git_config.get("remote")
         return RepoConfig(
             main_branch=git_config["mainBranch"],
             ignore_patterns=git_config.get("ignorePatterns", []),
@@ -118,7 +118,7 @@ class RepoConfig:
 
 
 class Repository:  # pylint: disable=too-many-public-methods
-    def __init__(self, config: RepoConfig, repo: Optional[Repo] = None):
+    def __init__(self, config: RepoConfig, repo: Repo | None = None):
         self.config = config
         self._repo = repo or Repo(path=Git().rev_parse("--show-toplevel"))
 
@@ -158,12 +158,12 @@ class Repository:  # pylint: disable=too-many-public-methods
         return self._repo.head.commit.hexsha
 
     @property
-    def get_branch(self) -> Optional[str]:
+    def get_branch(self) -> str | None:
         if self._repo.head.is_detached:
             return None
         return self._repo.active_branch.name
 
-    def _safe_ref_parse(self, branch: str) -> Optional[Commit]:
+    def _safe_ref_parse(self, branch: str) -> Commit | None:
         try:
             return self._repo.rev_parse(branch)
         except BadName as exc:
@@ -175,12 +175,12 @@ class Repository:  # pylint: disable=too-many-public-methods
         return self._repo.git.rev_list("--max-parents=0", "HEAD").splitlines()[-1]
 
     @property
-    def base_revision(self) -> Optional[Commit]:
+    def base_revision(self) -> Commit | None:
         main = self.main_origin_branch
         return self._safe_ref_parse(main)
 
     @property
-    def remote_url(self) -> Optional[str]:
+    def remote_url(self) -> str | None:
         if self._repo.remotes:
             return self._repo.remote().url
         return None
@@ -245,7 +245,7 @@ class Repository:  # pylint: disable=too-many-public-methods
     def changes_from_file(
         self, logger: logging.Logger, changed_files_path: str
     ) -> Changeset:
-        with open(changed_files_path, "r", encoding="utf-8") as file:
+        with open(changed_files_path, encoding="utf-8") as file:
             logger.debug(
                 f"Creating Changeset based on changed files in {changed_files_path}"
             )
@@ -280,18 +280,22 @@ class Repository:  # pylint: disable=too-many-public-methods
     def remote_branch_exists(self, branch_name: str) -> bool:
         return self._repo.git.ls_remote("origin", branch_name) != ""
 
-    def find_projects(self, folder_pattern: str = "") -> list[str]:
-        """returns a set of all project.yml files
-        :type folder_pattern: project paths are filtered on this pattern
+    def find_projects(
+        self, folder_pattern: str = "", config_folder: str = "deployment"
+    ) -> list[str]:
+        """
+        returns a set of all project.yml files
+        :param folder_pattern: project paths are filtered on this pattern
+        :param config_folder: the folder that holds the `project.yml` file
         """
         projects = set(
             self._repo.git.ls_files(
-                f"*{folder_pattern}*{Project.project_yaml_path()}",
+                f"*{folder_pattern}*/{config_folder}/{Project.project_yaml_file_name()}",
                 recurse_submodules=True,
             ).splitlines()
         ) | set(
             self._repo.git.ls_files(
-                f"*{folder_pattern}*{Project.project_overrides_yml_pattern()}",
+                f"*{folder_pattern}*/{config_folder}/{Project.project_overrides_yaml_file_pattern()}",
                 recurse_submodules=True,
             ).splitlines()
         )

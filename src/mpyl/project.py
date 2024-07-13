@@ -562,12 +562,12 @@ class Project:
         return self.kubernetes.job
 
     @staticmethod
-    def project_yaml_path() -> str:
-        return "deployment/project.yml"
+    def project_yaml_file_name() -> str:
+        return "project.yml"
 
     @staticmethod
-    def project_overrides_yml_pattern() -> str:
-        return "deployment/project-override-*.yml"
+    def project_overrides_yaml_file_pattern() -> str:
+        return "project-override-*.yml"
 
     @property
     def root_path(self) -> str:
@@ -638,9 +638,9 @@ def load_possible_parent(
     full_path: Path,
     safe: bool = False,
 ) -> Optional[dict]:
-    parent_project_path = full_path.parents[1] / Project.project_yaml_path()
+    parent_project_path = full_path.parent / Project.project_yaml_file_name()
     if (
-        str(full_path).endswith(Project.project_yaml_path())
+        str(full_path).endswith(Project.project_yaml_file_name())
         or not parent_project_path.exists()
     ):
         return None
