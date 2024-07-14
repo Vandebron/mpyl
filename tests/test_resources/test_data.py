@@ -144,7 +144,9 @@ def get_output() -> Output:
     )
 
 
-def get_project_with_stages(stage_config: dict, path: str = "", maintainers=None):
+def get_project_with_stages(
+    stage_config: dict, path: str = "deployment/project.yml", maintainers=None
+):
     if maintainers is None:
         maintainers = ["Team1", "Team2"]
     stages = Stages.from_config(stage_config)
