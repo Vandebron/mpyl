@@ -6,6 +6,7 @@ import logging
 import os
 import time
 from pathlib import Path
+from typing import Union, Optional
 
 from jsonschema import ValidationError
 from rich.console import Console
@@ -61,7 +62,7 @@ def write_run_plan(run_properties: RunProperties):
 
     for stage, executions in run_properties.run_plan.full_plan.items():
         for execution in executions:
-            stages: list[dict[str, str | bool]] = run_plan.get(
+            stages: list[dict[str, Union[str, bool]]] = run_plan.get(
                 execution.project.name, {}
             ).get("stages", [])
             stages.append({"name": stage.name, "cached": execution.cached})
@@ -89,7 +90,7 @@ def write_run_plan(run_properties: RunProperties):
 def run_mpyl(
     run_properties: RunProperties,
     cli_parameters: MpylCliParameters,
-    reporter: Reporter | None,
+    reporter: Optional[Reporter],
 ) -> RunResult:
     console_properties = run_properties.console
     console = Console(
@@ -164,7 +165,7 @@ def run_build(
     logger: logging.Logger,
     accumulator: RunResult,
     executor: Steps,
-    reporter: Reporter | None = None,
+    reporter: Optional[Reporter] = None,
     dry_run: bool = True,
 ):
     try:

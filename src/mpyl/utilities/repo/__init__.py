@@ -7,6 +7,7 @@ import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional, Union
 from urllib.parse import urlparse
 
 from git import Git, Repo
@@ -22,7 +23,7 @@ class Changeset:
     """Git hash for this revision"""
     _files_touched: dict[str, str]
 
-    def files_touched(self, status: set[str] | None = None):
+    def files_touched(self, status: Optional[set[str]] = None):
         if not status or len(status) == 0:
             return set(self._files_touched.keys())
 
@@ -120,7 +121,7 @@ class RepoConfig:
 
 
 class Repository:  # pylint: disable=too-many-public-methods
-    def __init__(self, config: RepoConfig, repo: Repo | None = None):
+    def __init__(self, config: RepoConfig, repo: Union[Repo, None] = None):
         self.config = config
         self._repo = repo or Repo(path=Git().rev_parse("--show-toplevel"))
 
@@ -160,12 +161,12 @@ class Repository:  # pylint: disable=too-many-public-methods
         return self._repo.head.commit.hexsha
 
     @property
-    def get_branch(self) -> str | None:
+    def get_branch(self) -> Optional[str]:
         if self._repo.head.is_detached:
             return None
         return self._repo.active_branch.name
 
-    def _safe_ref_parse(self, branch: str) -> Commit | None:
+    def _safe_ref_parse(self, branch: str) -> Union[Commit, None]:
         try:
             return self._repo.rev_parse(branch)
         except BadName as exc:
@@ -177,12 +178,12 @@ class Repository:  # pylint: disable=too-many-public-methods
         return self._repo.git.rev_list("--max-parents=0", "HEAD").splitlines()[-1]
 
     @property
-    def base_revision(self) -> Commit | None:
+    def base_revision(self) -> Union[Commit, None]:
         main = self.main_origin_branch
         return self._safe_ref_parse(main)
 
     @property
-    def remote_url(self) -> str | None:
+    def remote_url(self) -> Optional[str]:
         if self._repo.remotes:
             return self._repo.remote().url
         return None
@@ -287,14 +288,17 @@ class Repository:  # pylint: disable=too-many-public-methods
         returns a set of all project.yml files
         :param folder_pattern: project paths are filtered on this pattern
         """
-        project_folder_pattern = f"*{folder_pattern}*/{self.config.project_sub_folder}"
-        projects = set(
-            self._repo.git.ls_files(
-                f"{project_folder_pattern}/{Project.project_yaml_file_name()}"
-            ).splitlines()
-        ) | set(
-            self._repo.git.ls_files(
-                f"{project_folder_pattern}/{Project.project_overrides_yaml_file_pattern()}"
-            ).splitlines()
-        )
-        return sorted(projects)
+        folder = f"*{folder_pattern}*/{self.config.project_sub_folder}"
+        projects_pattern = f"{folder}/{Project.project_yaml_file_name()}"
+        overrides_pattern = f"{folder}/{Project.project_overrides_yaml_file_pattern()}"
+
+        def files(pattern: str):
+            return set(self._repo.git.ls_files(pattern).splitlines())
+
+        def deleted(pattern: str):
+            return set(self._repo.git.ls_files("-d", pattern).splitlines())
+
+        projects = files(projects_pattern) | files(overrides_pattern)
+        deleted = deleted(projects_pattern) | deleted(overrides_pattern)
+
+        return sorted(projects - deleted)

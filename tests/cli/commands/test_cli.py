@@ -56,7 +56,13 @@ class TestCli:
     def test_show_project_output(self):
         result = self.runner.invoke(
             main_group,
-            ["projects", "-c", str(self.config_path), "show", "tests/projects/job"],
+            [
+                "projects",
+                "-c",
+                str(self.config_path),
+                "show",
+                "tests/projects/job/deployment/project.yml",
+            ],
         )
         assert_roundtrip(self.resource_path / "show_project_text.txt", result.output)
 
