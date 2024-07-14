@@ -164,7 +164,7 @@ class TestSteps:
     def test_should_succeed_if_executor_is_known(self):
         project = test_data.get_project_with_stages(
             stage_config={"build": "Echo Build"},
-            path="",
+            path=str(self.resource_path / "metapath" / "project.yml"),
         )
         result = self.executor.execute(
             stage=build.STAGE_NAME,
