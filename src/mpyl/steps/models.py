@@ -249,16 +249,16 @@ class Output:
     produced_artifact: Optional[Artifact] = None
 
     @staticmethod
-    def path(target_path: str, stage: str):
+    def path(target_path: Path, stage: str):
         return Path(target_path, f"{stage}.yml")
 
-    def write(self, target_path: str, stage: str):
+    def write(self, target_path: Path, stage: str):
         Path(target_path).mkdir(parents=True, exist_ok=True)
         with Output.path(target_path, stage).open(mode="w+", encoding="utf-8") as file:
             yaml.dump(self, file)
 
     @staticmethod
-    def try_read(target_path: str, stage: str):
+    def try_read(target_path: Path, stage: str):
         path = Output.path(target_path, stage)
         if path.exists():
             with open(path, encoding="utf-8") as file:

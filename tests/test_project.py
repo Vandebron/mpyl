@@ -91,21 +91,21 @@ class TestMpylSchema:
         assert self.project.path == "test_projects/test_project.yml"
 
     def test_project_root_path(self):
-        assert self.project.root_path == "./"
+        assert self.project.root_path == Path("./")
 
     def test_project_deployment_path(self):
-        assert self.project.deployment_path == "test_projects"
+        assert self.project.deployment_path == Path("test_projects")
 
     def test_project_target_path(self):
-        assert self.project.target_path == "test_projects/.mpyl"
+        assert self.project.target_path == Path("test_projects/.mpyl")
 
     def test_project_test_containers_path(self):
-        assert (
-            self.project.test_containers_path == "test_projects/docker-compose-test.yml"
+        assert self.project.test_containers_path == Path(
+            "test_projects/docker-compose-test.yml"
         )
 
     def test_project_test_report_path(self):
-        assert self.project.test_report_path == "target/test-reports"
+        assert self.project.test_report_path == Path("target/test-reports")
 
     def test_project_yaml_file_name(self):
         assert self.project.project_yaml_file_name() == "project.yml"

@@ -56,7 +56,7 @@ def _caching_for(
                 hash=hashed_contents,
             ),
         ).write(
-            target_path=path,
+            target_path=Path(path),
             stage=stage.name,
         )
         yield path

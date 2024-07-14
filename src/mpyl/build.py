@@ -45,7 +45,7 @@ def print_status(
                 {
                     "service": project_execution.project.name,
                     "path": project_execution.project.path,
-                    "base": project_execution.project.root_path,
+                    "base": str(project_execution.project.root_path),
                     "cached": project_execution.cached,
                     "maintainers": project_execution.project.maintainer,
                 }
