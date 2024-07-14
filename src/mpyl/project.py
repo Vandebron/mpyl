@@ -571,11 +571,11 @@ class Project:
 
     @property
     def root_path(self) -> str:
-        return get_project_root_dir(self.path)
+        return str(Path(self.path).parent.parent) + "/"
 
     @property
     def deployment_path(self) -> str:
-        return str(Path(self.root_path, "deployment"))
+        return str(Path(self.path).parent)
 
     @property
     def target_path(self) -> str:
@@ -623,10 +623,6 @@ def validate_project(yaml_values: dict, root_dir: Path) -> dict:
     validate(yaml_values, template.decode("utf-8"), root_dir)
 
     return yaml_values
-
-
-def get_project_root_dir(project_path: str) -> str:
-    return str(Path(project_path).parent.parent) + "/"
 
 
 def load_possible_parent(

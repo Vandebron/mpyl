@@ -65,7 +65,7 @@ def get_config_values() -> dict:
 
 
 def get_project() -> Project:
-    return safe_load_project("test_project.yml")
+    return safe_load_project("test_projects/test_project.yml")
 
 
 def get_project_execution() -> ProjectExecution:
@@ -73,27 +73,27 @@ def get_project_execution() -> ProjectExecution:
 
 
 def get_deployment_strategy_project() -> Project:
-    return safe_load_project("test_project_deployment_strategy.yml")
+    return safe_load_project("test_projects/test_project_deployment_strategy.yml")
 
 
 def get_minimal_project() -> Project:
-    return safe_load_project("test_minimal_project.yml")
+    return safe_load_project("test_projects/test_minimal_project.yml")
 
 
 def get_project_without_swagger() -> Project:
-    return safe_load_project("test_project_without_swagger.yml")
+    return safe_load_project("test_projects/test_project_without_swagger.yml")
 
 
 def get_job_project() -> Project:
-    return safe_load_project("test_job_project.yml")
+    return safe_load_project("test_projects/test_job_project.yml")
 
 
 def get_cron_job_project() -> Project:
-    return safe_load_project("test_cron_job_project.yml")
+    return safe_load_project("test_projects/test_cron_job_project.yml")
 
 
 def get_spark_project() -> Project:
-    return safe_load_project("test_spark_project.yml")
+    return safe_load_project("test_projects/test_spark_project.yml")
 
 
 def safe_load_project(name: str) -> Project:
