@@ -39,7 +39,9 @@ class TestTransformer(PathTransformer):
 
 class TestArtifacts:
     config_path = test_resource_path / "mpyl_config.yml"
-    project = load_project(Path(""), test_resource_path / "test_project.yml")
+    project = load_project(
+        test_resource_path, Path("test_projects", "test_project.yml")
+    )
 
     artifact_repo_config = RepoConfig(
         main_branch="main",
@@ -85,7 +87,9 @@ class TestArtifacts:
 
     def test_copy_folders(self):
         with TemporaryDirectory() as tmp_repo_dir:
-            project_paths = [str(test_resource_path / Path("test_project.yml"))]
+            project_paths = [
+                str(test_resource_path / Path("test_projects", "test_project.yml"))
+            ]
             copied_files = self.artifacts.copy_files(
                 project_paths, Path(tmp_repo_dir), TestTransformer(root_test_path)
             )
