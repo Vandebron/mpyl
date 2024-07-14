@@ -90,22 +90,19 @@ class TestMpylSchema:
         assert self.project.path == "test_project.yml"
 
     def test_project_root_path(self):
-        assert self.project.root_path == "test_project.yml"
+        assert self.project.root_path == "./"
 
     def test_project_deployment_path(self):
-        assert self.project.deployment_path == "test_project.yml/deployment"
+        assert self.project.deployment_path == "deployment"
 
     def test_project_target_path(self):
-        assert self.project.target_path == "test_project.yml/deployment/.mpyl"
+        assert self.project.target_path == "deployment/.mpyl"
 
     def test_project_test_containers_path(self):
-        assert (
-            self.project.test_containers_path
-            == "test_project.yml/deployment/docker-compose-test.yml"
-        )
+        assert self.project.test_containers_path == "deployment/docker-compose-test.yml"
 
     def test_project_test_report_path(self):
-        assert self.project.test_report_path == "test_project.yml/target/test-reports"
+        assert self.project.test_report_path == "target/test-reports"
 
     def test_project_yaml_file_name(self):
         assert self.project.project_yaml_file_name() == "project.yml"
