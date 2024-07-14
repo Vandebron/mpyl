@@ -286,14 +286,17 @@ class Repository:  # pylint: disable=too-many-public-methods
         """returns a set of all project.yml files
         :param folder_pattern: project paths are filtered on this pattern
         """
-        project_folder_pattern = f"*{folder_pattern}*/{self.config.project_sub_folder}"
-        projects = set(
-            self._repo.git.ls_files(
-                f"{project_folder_pattern}/{Project.project_yaml_file_name()}"
-            ).splitlines()
-        ) | set(
-            self._repo.git.ls_files(
-                f"{project_folder_pattern}/{Project.project_overrides_yaml_file_pattern()}"
-            ).splitlines()
-        )
-        return sorted(projects)
+        folder = f"*{folder_pattern}*/{self.config.project_sub_folder}"
+        projects_pattern = f"{folder}/{Project.project_yaml_file_name()}"
+        overrides_pattern = f"{folder}/{Project.project_overrides_yaml_file_pattern()}"
+
+        def files(pattern: str):
+            return set(self._repo.git.ls_files(pattern).splitlines())
+
+        def deleted(pattern: str):
+            return set(self._repo.git.ls_files("-d", pattern).splitlines())
+
+        projects = files(projects_pattern) | files(overrides_pattern)
+        deleted = deleted(projects_pattern) | deleted(overrides_pattern)
+
+        return sorted(projects - deleted)

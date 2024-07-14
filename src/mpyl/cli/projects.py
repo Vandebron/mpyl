@@ -1,5 +1,4 @@
 """Commands related to projects and how they relate"""
-import glob
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -28,7 +27,7 @@ from ..cli.commands.projects.lint import (
 )
 from ..cli.commands.projects.upgrade import check_upgrade
 from ..constants import DEFAULT_CONFIG_FILE_NAME
-from ..project import load_project, Target, Project
+from ..project import load_project, Target
 from ..projects.versioning import (
     check_upgrades_needed,
     upgrade_file,
@@ -129,9 +128,8 @@ class ProjectPath(ParamType):
 def show_project(ctx, name):
     obj = ctx.obj
 
-    root_dir = obj.cli.repo.root_dir
-    project_files = glob.glob(f"{root_dir}/{name}/*/{Project.project_yaml_file_name()}")
-    if len(project_files) == 0:
+    project_file = Path(name)
+    if not (obj.cli.repo.root_dir / project_file).exists():
         obj.cli.console.print(
             Markdown(
                 f"Project `{name}` not found. 👉 Finding projects is much easier with [auto completion]"
@@ -145,9 +143,7 @@ def show_project(ctx, name):
         obj.cli.console.print([file.value for file in complete])
         return
 
-    print_project(
-        obj.cli.repo, obj.cli.console, Path(project_files[0]).relative_to(root_dir)
-    )
+    print_project(obj.cli.repo, obj.cli.console, project_file)
 
 
 @projects.command(help="Validate the yaml of changed projects against their schema")
