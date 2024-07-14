@@ -1,12 +1,11 @@
 """Simple MPyL build runner"""
 
+import datetime
 import json
 import logging
 import os
 import time
-import datetime
 from pathlib import Path
-from typing import Optional, Union
 
 from jsonschema import ValidationError
 from rich.console import Console
@@ -22,10 +21,10 @@ from .reporting.formatting.markdown import (
 from .reporting.targets import Reporter
 from .steps import deploy
 from .steps.collection import StepsCollection
-from .steps.models import RunProperties, Output
+from .steps.models import Output, RunProperties
 from .steps.run import RunResult
 from .steps.run_properties import construct_run_properties
-from .steps.steps import Steps, ExecutionException, StepResult
+from .steps.steps import ExecutionException, StepResult, Steps
 
 
 def print_status(
@@ -62,7 +61,7 @@ def write_run_plan(run_properties: RunProperties):
 
     for stage, executions in run_properties.run_plan.full_plan.items():
         for execution in executions:
-            stages: list[dict[str, Union[str, bool]]] = run_plan.get(
+            stages: list[dict[str, str | bool]] = run_plan.get(
                 execution.project.name, {}
             ).get("stages", [])
             stages.append({"name": stage.name, "cached": execution.cached})
@@ -90,7 +89,7 @@ def write_run_plan(run_properties: RunProperties):
 def run_mpyl(
     run_properties: RunProperties,
     cli_parameters: MpylCliParameters,
-    reporter: Optional[Reporter],
+    reporter: Reporter | None,
 ) -> RunResult:
     console_properties = run_properties.console
     console = Console(
@@ -165,7 +164,7 @@ def run_build(
     logger: logging.Logger,
     accumulator: RunResult,
     executor: Steps,
-    reporter: Optional[Reporter] = None,
+    reporter: Reporter | None = None,
     dry_run: bool = True,
 ):
     try:

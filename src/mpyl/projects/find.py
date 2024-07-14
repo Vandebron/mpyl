@@ -17,7 +17,7 @@ def find_by_contract_dep(
     dep: str, projects: list[ProjectWithDependents]
 ) -> Optional[ProjectWithDependents]:
     for project in projects:
-        if project.project.root_path.replace("./", "") in dep:
+        if str(project.project.root_path) in dep:
             return project
     return None
 

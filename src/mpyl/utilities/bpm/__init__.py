@@ -3,8 +3,8 @@
 import os
 from dataclasses import dataclass
 
-from ...steps.models import RunProperties
 from ...project import Project, Target, TargetProperty
+from ...steps.models import RunProperties
 
 
 @dataclass(frozen=True)
@@ -108,7 +108,7 @@ class CamundaConfig:
             ),
             zeebe_credentials=CamundaZeebeCredentials.from_config(zeebe_credentials),
             deployment_path=CamundaDeploymentPath.from_config(
-                deploy_path, project.root_path
+                deploy_path, str(project.root_path)
             ),
             project_id=str(project.bpm.project_id),
             pr_number=str(properties.versioning.pr_number),

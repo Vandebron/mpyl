@@ -570,24 +570,24 @@ class Project:
         return "project-override-*.yml"
 
     @property
-    def root_path(self) -> str:
-        return str(Path(self.path).parent.parent) + "/"
+    def root_path(self) -> Path:
+        return Path(self.path).parent.parent
 
     @property
-    def deployment_path(self) -> str:
-        return str(Path(self.path).parent)
+    def deployment_path(self) -> Path:
+        return Path(self.path).parent
 
     @property
-    def target_path(self) -> str:
-        return str(Path(self.deployment_path, RUN_ARTIFACTS_FOLDER))
+    def target_path(self) -> Path:
+        return self.deployment_path / RUN_ARTIFACTS_FOLDER
 
     @property
-    def test_containers_path(self) -> str:
-        return str(Path(self.deployment_path, "docker-compose-test.yml"))
+    def test_containers_path(self) -> Path:
+        return self.deployment_path / "docker-compose-test.yml"
 
     @property
-    def test_report_path(self) -> str:
-        return str(Path(self.root_path, "target/test-reports"))
+    def test_report_path(self) -> Path:
+        return Path(self.root_path) / "target/test-reports"
 
     @staticmethod
     def from_config(values: dict, project_path: Path):
