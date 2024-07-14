@@ -96,6 +96,7 @@ class RepoCredentials:
 class RepoConfig:
     main_branch: str
     ignore_patterns: list[str]
+    project_sub_folder: str
     repo_credentials: RepoCredentials
 
     @staticmethod
@@ -105,10 +106,11 @@ class RepoConfig:
 
     @staticmethod
     def from_git_config(git_config: dict):
-        maybe_remote_config = git_config.get("remote")
+        maybe_remote_config = git_config.get("remote", {})
         return RepoConfig(
             main_branch=git_config["mainBranch"],
             ignore_patterns=git_config.get("ignorePatterns", []),
+            project_sub_folder=git_config.get("projectSubFolder", "deployment"),
             repo_credentials=(
                 RepoCredentials.from_config(maybe_remote_config)
                 if maybe_remote_config
@@ -280,23 +282,19 @@ class Repository:  # pylint: disable=too-many-public-methods
     def remote_branch_exists(self, branch_name: str) -> bool:
         return self._repo.git.ls_remote("origin", branch_name) != ""
 
-    def find_projects(
-        self, folder_pattern: str = "", config_folder: str = "deployment"
-    ) -> list[str]:
+    def find_projects(self, folder_pattern: str = "") -> list[str]:
         """
         returns a set of all project.yml files
         :param folder_pattern: project paths are filtered on this pattern
-        :param config_folder: the folder that holds the `project.yml` file
         """
+        project_folder_pattern = f"*{folder_pattern}*/{self.config.project_sub_folder}"
         projects = set(
             self._repo.git.ls_files(
-                f"*{folder_pattern}*/{config_folder}/{Project.project_yaml_file_name()}",
-                recurse_submodules=True,
+                f"{project_folder_pattern}/{Project.project_yaml_file_name()}"
             ).splitlines()
         ) | set(
             self._repo.git.ls_files(
-                f"*{folder_pattern}*/{config_folder}/{Project.project_overrides_yaml_file_pattern()}",
-                recurse_submodules=True,
+                f"{project_folder_pattern}/{Project.project_overrides_yaml_file_pattern()}"
             ).splitlines()
         )
         return sorted(projects)

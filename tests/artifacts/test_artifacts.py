@@ -46,6 +46,7 @@ class TestArtifacts:
     artifact_repo_config = RepoConfig(
         main_branch="main",
         ignore_patterns=[],
+        project_sub_folder="deployment",
         repo_credentials=RepoCredentials(
             name="Vandebron/mpyl",
             url=f"https://{os.environ.get('GITHUB_CREDS')}@github.com/SamTheisens/mpyl-example-argocd.git",
