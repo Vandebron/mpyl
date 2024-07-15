@@ -46,7 +46,7 @@ def deploy_to_modeler(
     pr_number = config.pr_number
     try:
         deploy_diagram_to_modeler(
-            logger, bpm_file_path, config.project_id, camunda_client, pr_number
+            logger, bpm_file_path, config, camunda_client, pr_number
         )
     except AuthorizationError:
         return Output(
