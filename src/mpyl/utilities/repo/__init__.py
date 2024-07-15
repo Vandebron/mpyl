@@ -9,9 +9,7 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import urlparse
 
-from git import Git, Repo, Remote
-from git.objects import Commit
-from gitdb.exc import BadName
+from git import Git, Repo
 
 from ...project import Project
 
@@ -131,28 +129,6 @@ class Repository:  # pylint: disable=too-many-public-methods
             raise exc_val
         return self
 
-    @staticmethod
-    def from_clone(config: RepoConfig, repo_path: Path):
-        creds = config.repo_credentials
-        if not creds:
-            raise ValueError("Cannot clone repository without credentials")
-
-        if user_name := creds.user_name is None:
-            return Repository(
-                config=config,
-                repo=Repo.clone_from(url=creds.ssh_url, to_path=repo_path),
-            )
-
-        repo = Repo.clone_from(
-            url=creds.to_url_with_credentials,
-            to_path=repo_path,
-        )
-        with repo.config_writer() as writer:
-            writer.set_value("user", "name", user_name)
-            writer.set_value("user", "email", creds.email or "somebody@somewhere.com")
-
-        return Repository(config=config, repo=repo)
-
     @property
     def get_sha(self):
         return self._repo.head.commit.hexsha
@@ -162,28 +138,6 @@ class Repository:  # pylint: disable=too-many-public-methods
         if self._repo.head.is_detached:
             return None
         return self._repo.active_branch.name
-
-    def _safe_ref_parse(self, branch: str) -> Optional[Commit]:
-        try:
-            return self._repo.rev_parse(branch)
-        except BadName as exc:
-            logging.debug(f"Does not exist: {exc}")
-            return None
-
-    @property
-    def root_commit_hex(self) -> str:
-        return self._repo.git.rev_list("--max-parents=0", "HEAD").splitlines()[-1]
-
-    @property
-    def base_revision(self) -> Optional[Commit]:
-        main = self.main_origin_branch
-        return self._safe_ref_parse(main)
-
-    @property
-    def remote_url(self) -> Optional[str]:
-        if self._repo.remotes:
-            return self._repo.remote().url
-        return None
 
     @property
     def root_dir(self) -> Path:
@@ -251,34 +205,6 @@ class Repository:  # pylint: disable=too-many-public-methods
             )
             changed_files = json.load(file)
             return Changeset(sha=self.get_sha, _files_touched=changed_files)
-
-    def create_branch(self, branch_name: str):
-        return self._repo.git.checkout("-b", f"{branch_name}")
-
-    @property
-    def has_changes(self) -> bool:
-        return self._repo.is_dirty(untracked_files=True)
-
-    def stage(self, path: str):
-        return self._repo.git.add(path)
-
-    def commit(self, message: str):
-        return self._repo.git.commit("-m", message)
-
-    def pull(self):
-        return self._repo.git.pull()
-
-    def add_note(self, note: str):
-        return self._repo.git.notes("add", "-m", note)
-
-    def push(self, branch: str):
-        return self._repo.git.push("--set-upstream", "origin", branch)
-
-    def checkout_branch(self, branch_name: str):
-        self._repo.git.switch(branch_name)
-
-    def remote_branch_exists(self, branch_name: str) -> bool:
-        return self._repo.git.ls_remote("origin", branch_name) != ""
 
     def find_projects(self, folder_pattern: str = "") -> list[str]:
         """returns a set of all project.yml files

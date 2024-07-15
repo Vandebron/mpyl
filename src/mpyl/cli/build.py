@@ -128,13 +128,6 @@ class CustomValidation(click.Command):
     help="Stage to run",
 )
 @click.option(
-    "--sequential",
-    is_flag=True,
-    default=False,
-    required=False,
-    help="Combine results with previous run(s) and load existing run plan",
-)
-@click.option(
     "--projects",
     "-p",
     type=str,
@@ -155,14 +148,12 @@ def run(
     all_,
     tag,
     stage,
-    sequential,
     projects,
     dryrun_,
 ):  # pylint: disable=invalid-name
     run_result_files = list(Path(RUN_ARTIFACTS_FOLDER).glob(RUN_RESULT_FILE_GLOB))
-    if not sequential:
-        for run_result_file in run_result_files:
-            run_result_file.unlink()
+    for run_result_file in run_result_files:
+        run_result_file.unlink()
 
     asyncio.run(warn_if_update(obj.console))
 
