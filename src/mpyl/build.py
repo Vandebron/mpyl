@@ -48,6 +48,7 @@ def print_status(
                     "base": project_execution.project.root_path,
                     "cached": project_execution.cached,
                     "maintainers": project_execution.project.maintainer,
+                    "build_tool": project_execution.project.build_tool,
                 }
                 for project_execution in project_executions
             ]

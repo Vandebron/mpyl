@@ -2,6 +2,7 @@ name: ocpp
 maintainer: [ 'MPyL' ]
 description: 'Deployment of ocpp'
 mpylVersion: 1.0.10
+buildTool: other
 stages:
   build: Echo Build
   test: Echo Test

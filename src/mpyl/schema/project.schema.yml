@@ -6,6 +6,7 @@ required:
   - stages
   - description
   - maintainer
+  - buildTool
 additionalProperties: false
 dependencies:
   deployment:
@@ -36,6 +37,14 @@ properties:
       type: string
     uniqueItems: true
     minItems: 1
+  buildTool:
+    description: >-
+      The tool used to build this project with
+    type: string
+    enum:
+      - sbt
+      - yarn
+      - other
   stages:
     $id: '#/properties/stages'
     description: Defines which steps should be executed at each stage

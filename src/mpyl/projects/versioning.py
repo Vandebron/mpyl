@@ -92,9 +92,9 @@ def render_release_notes() -> str:
             text = notes.read_text("utf-8")
 
             if (
-                re.match("^# ", text)
-                or re.match("^## ", text)
-                or re.match("^### ", text)
+                    re.match("^# ", text)
+                    or re.match("^## ", text)
+                    or re.match("^### ", text)
             ):
                 raise ValueError(
                     f"{file} should not contain #, ## or ### because it messes up the TOC"
@@ -113,6 +113,14 @@ class Upgrader(ABC):
         return previous_dict
 
 
+class ProjectUpgraderOneSeven0(Upgrader):
+    target_version = "1.7.0"
+
+    def upgrade(self, previous_dict: ordereddict) -> ordereddict:
+        previous_dict.insert(4, "buildTool", "other")
+        return previous_dict
+
+
 class ProjectUpgraderOneFour20(Upgrader):
     target_version = "1.4.20"
 
@@ -121,8 +129,8 @@ class ProjectUpgraderOneFour20(Upgrader):
         for host in hosts:
             if priority := host.get("priority", None):
                 if isinstance(priority, numbers.Number) or not any(
-                    env in priority
-                    for env in ["all", "pr", "test", "acceptance", "production"]
+                        env in priority
+                        for env in ["all", "pr", "test", "acceptance", "production"]
                 ):
                     host["priority"] = {}
                     host["priority"]["all"] = priority
@@ -144,7 +152,7 @@ class ProjectUpgraderOneFour15(Upgrader):
         job = previous_dict.get("deployment", {}).get("kubernetes", {}).get("job", {})
         if cron := job.get("cron", None):
             if not any(
-                env in cron for env in ["all", "pr", "test", "acceptance", "production"]
+                    env in cron for env in ["all", "pr", "test", "acceptance", "production"]
             ):
                 job["cron"] = {}
                 job["cron"]["all"] = cron
@@ -204,6 +212,7 @@ PROJECT_UPGRADERS = [
     ProjectUpgraderOneFour15(),
     ProjectUpgraderOneFour18(),
     ProjectUpgraderOneFour20(),
+    ProjectUpgraderOneSeven0(),
 ]
 
 
@@ -343,7 +352,7 @@ PROPERTIES_UPGRADERS = [
 
 
 def get_entry_upgrader_index(
-    current_version: str, upgraders: list[Upgrader]
+        current_version: str, upgraders: list[Upgrader]
 ) -> Optional[int]:
     next_index = next(
         (i for i, v in enumerate(upgraders) if v.target_version == current_version),
@@ -357,7 +366,7 @@ def __get_version(project: dict) -> str:
 
 
 def upgrade_to_latest(
-    to_upgrade: ordereddict, upgraders: list[Upgrader]
+        to_upgrade: ordereddict, upgraders: list[Upgrader]
 ) -> ordereddict:
     upgrade_index = get_entry_upgrader_index(__get_version(to_upgrade), upgraders)
     if upgrade_index is None:
@@ -398,14 +407,14 @@ def pretty_print(diff: DeepDiff) -> str:
 
 
 def check_upgrades_needed(
-    file_path: list[Path], upgraders: list[Upgrader]
+        file_path: list[Path], upgraders: list[Upgrader]
 ) -> Generator[tuple[Path, DeepDiff], None, None]:
     for path in file_path:
         yield check_upgrade_needed(path, upgraders)
 
 
 def check_upgrade_needed(
-    file_path: Path, upgraders: list[Upgrader]
+        file_path: Path, upgraders: list[Upgrader]
 ) -> tuple[Path, Optional[DeepDiff]]:
     loaded, _ = load_for_roundtrip(file_path)
     upgraded = upgrade_to_latest(loaded, upgraders)

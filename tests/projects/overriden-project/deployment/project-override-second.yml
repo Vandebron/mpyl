@@ -1,6 +1,7 @@
 name: ocpp-second
 maintainer: ['MPyL']
 mpylVersion: 1.0.9
+buildTool: other
 stages:
   deploy: Echo Deploy
 deployment:

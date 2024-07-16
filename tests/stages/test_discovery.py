@@ -29,7 +29,7 @@ from tests.test_resources.test_data import TestStage
 yaml = YAML()
 
 HASHED_CHANGES_OF_JOB = (
-    "e993ba4f2b2ae2c4840e1eed1414baa812932319d332b0d169365b0885ec2d6c"
+    "9c18872a7cdd56572d5c086f8eab8798eb14767b5e576906270400e5afdc384c"
 )
 
 

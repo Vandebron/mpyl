@@ -5,6 +5,7 @@ stages:
   test: Docker Test
   deploy: Kubernetes Deploy
 mpylVersion: 1.4.20
+buildTool: yarn
 maintainer: ['MPyL']
 build:
   args:

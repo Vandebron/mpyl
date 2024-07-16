@@ -1,6 +1,7 @@
 name: job
 description: "A job"
 maintainer: ["MPyL"]
+buildTool: other
 stages:
   build: "Docker Build"
   test: "Echo Test"

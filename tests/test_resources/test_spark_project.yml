@@ -1,6 +1,7 @@
 name: 'sparkJob'
 description: 'Job to enrich charge session with total amount earned'
 maintainer: [ 'MPyL' ]
+buildTool: sbt
 stages:
   build: Sbt Build
   test: Sbt Test

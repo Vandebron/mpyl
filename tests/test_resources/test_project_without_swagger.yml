@@ -5,6 +5,7 @@ stages:
   test: Echo Test
   deploy: Echo Deploy
 maintainer: [ 'MPyL' ]
+buildTool: other
 build:
   args:
     plain:

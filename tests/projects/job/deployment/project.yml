@@ -2,6 +2,7 @@ name: job
 description: "A job"
 maintainer: ["MPyL"]
 mpylVersion: 1.4.18
+buildTool: other
 stages:
   build: "Docker Build"
   test: "Echo Test"

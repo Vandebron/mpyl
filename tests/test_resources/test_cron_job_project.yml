@@ -5,6 +5,7 @@ stages:
   build: "Docker Build"
   test: "Echo Test"
   deploy: "Kubernetes Job Deploy"
+buildTool: other
 deployment:
   namespace: "job"
   properties:
