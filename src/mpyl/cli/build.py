@@ -8,14 +8,10 @@ import uuid
 from pathlib import Path
 
 import click
-from rich.console import Console
-from rich.markdown import Markdown
 
 from . import (
     CliContext,
     CONFIG_PATH_HELP,
-    check_updates,
-    get_meta_version,
     MpylCliParameters,
 )
 from . import create_console_logger
@@ -31,18 +27,6 @@ from ..run_plan import RunPlan
 from ..steps.run_properties import construct_run_properties
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
-
-
-async def warn_if_update(console: Console):
-    version = get_meta_version()
-    update = await check_updates(meta=version)
-    if update:
-        console.print(
-            Markdown(
-                f"⚠️  **You can upgrade from {version} to {update} :** `pip install -U mpyl=={update}`. "
-                f"After upgrading, you may need to run `mpyl projects upgrade` to upgrade your projects."
-            )
-        )
 
 
 @click.group("build")
@@ -155,8 +139,6 @@ def run(
     for run_result_file in run_result_files:
         run_result_file.unlink()
 
-    asyncio.run(warn_if_update(obj.console))
-
     parameters = MpylCliParameters(
         local=not ci,
         pull_main=all_,
@@ -211,18 +193,13 @@ def run(
 @click.option("--explain", "-e", is_flag=True, help="Explain the current run plan")
 @click.pass_obj
 def status(obj: CliContext, all_, projects, stage, tag, explain):
-    upgrade_check = None
     try:
-        upgrade_check = asyncio.wait_for(warn_if_update(obj.console), timeout=3)
         parameters = MpylCliParameters(
             local=sys.stdout.isatty(), all=all_, projects=projects, stage=stage, tag=tag
         )
         print_status(obj, parameters, explain)
     except asyncio.exceptions.TimeoutError:
         pass
-    finally:
-        if upgrade_check:
-            asyncio.get_event_loop().run_until_complete(upgrade_check)
 
 
 @build.command(help=f"Clean all MPyL metadata in `{RUN_ARTIFACTS_FOLDER}` folders")
