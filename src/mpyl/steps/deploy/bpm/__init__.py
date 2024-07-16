@@ -3,7 +3,7 @@
 from logging import Logger
 from python_on_whales import DockerException
 from ..bpm.camunda_modeler_client import CamundaModelerClient
-from ..bpm.cluster import deploy_diagram_to_cluster, get_docker_container
+from ..bpm.cluster import deploy_diagram_to_cluster
 from ..bpm.modeler import deploy_diagram_to_modeler
 from ....utilities.bpm import CamundaConfig
 from ....utilities.http_client.exceptions import HTTPRequestError, AuthorizationError
@@ -13,18 +13,7 @@ from ...models import Output
 def deploy_to_cluster(
     logger: Logger, project_name: str, config: CamundaConfig
 ) -> Output:
-    docker_container = get_docker_container(config)
-    try:
-        deploy_diagram_to_cluster(logger, config, docker_container)
-    except DockerException:
-        return Output(
-            success=False,
-            message=f"Deploy BPMN diagrams to cluster for project {project_name} have one or more failures",
-            produced_artifact=None,
-        )
-    finally:
-        docker_container.stop()
-        docker_container.remove()
+    deploy_diagram_to_cluster(logger, config)
 
     return Output(
         success=True,
