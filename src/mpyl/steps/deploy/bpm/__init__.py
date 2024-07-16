@@ -31,7 +31,7 @@ def deploy_to_modeler(
         config.modeler_api.token_url,
         credentials,
     )
-    bpm_file_path = config.depolyment_path.bpm_diagram_folder_path
+    bpm_file_path = config.deployment_path.bpm_diagram_folder_path
     pr_number = config.pr_number
     try:
         deploy_diagram_to_modeler(
