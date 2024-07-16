@@ -4,7 +4,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 from jsonschema import ValidationError
 from rich.console import Console
@@ -56,11 +56,11 @@ FORMAT = "%(name)s  %(message)s"
 
 
 def write_run_plan(run_properties: RunProperties):
-    run_plan = {}
+    run_plan: dict = {}
 
     for stage, executions in run_properties.run_plan.full_plan.items():
         for execution in executions:
-            stages: list[dict[str, bool]] = run_plan.get(
+            stages: list[dict[str, Union[str, bool]]] = run_plan.get(
                 execution.project.name, {}
             ).get("stages", [])
             stages.append({"name": stage.name, "cached": execution.cached})
