@@ -92,9 +92,9 @@ def render_release_notes() -> str:
             text = notes.read_text("utf-8")
 
             if (
-                    re.match("^# ", text)
-                    or re.match("^## ", text)
-                    or re.match("^### ", text)
+                re.match("^# ", text)
+                or re.match("^## ", text)
+                or re.match("^### ", text)
             ):
                 raise ValueError(
                     f"{file} should not contain #, ## or ### because it messes up the TOC"
@@ -129,8 +129,8 @@ class ProjectUpgraderOneFour20(Upgrader):
         for host in hosts:
             if priority := host.get("priority", None):
                 if isinstance(priority, numbers.Number) or not any(
-                        env in priority
-                        for env in ["all", "pr", "test", "acceptance", "production"]
+                    env in priority
+                    for env in ["all", "pr", "test", "acceptance", "production"]
                 ):
                     host["priority"] = {}
                     host["priority"]["all"] = priority
@@ -152,7 +152,7 @@ class ProjectUpgraderOneFour15(Upgrader):
         job = previous_dict.get("deployment", {}).get("kubernetes", {}).get("job", {})
         if cron := job.get("cron", None):
             if not any(
-                    env in cron for env in ["all", "pr", "test", "acceptance", "production"]
+                env in cron for env in ["all", "pr", "test", "acceptance", "production"]
             ):
                 job["cron"] = {}
                 job["cron"]["all"] = cron
@@ -352,7 +352,7 @@ PROPERTIES_UPGRADERS = [
 
 
 def get_entry_upgrader_index(
-        current_version: str, upgraders: list[Upgrader]
+    current_version: str, upgraders: list[Upgrader]
 ) -> Optional[int]:
     next_index = next(
         (i for i, v in enumerate(upgraders) if v.target_version == current_version),
@@ -366,7 +366,7 @@ def __get_version(project: dict) -> str:
 
 
 def upgrade_to_latest(
-        to_upgrade: ordereddict, upgraders: list[Upgrader]
+    to_upgrade: ordereddict, upgraders: list[Upgrader]
 ) -> ordereddict:
     upgrade_index = get_entry_upgrader_index(__get_version(to_upgrade), upgraders)
     if upgrade_index is None:
@@ -414,7 +414,7 @@ def check_upgrades_needed(
 
 
 def check_upgrade_needed(
-        file_path: Path, upgraders: list[Upgrader]
+    file_path: Path, upgraders: list[Upgrader]
 ) -> tuple[Path, Optional[DeepDiff]]:
     loaded, _ = load_for_roundtrip(file_path)
     upgraded = upgrade_to_latest(loaded, upgraders)
