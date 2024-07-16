@@ -84,7 +84,7 @@ class CamundaConfig:
     modeler_api: CamundaModelerAPI
     modeler_credentials: CamundaModelerCredentials
     zeebe_credentials: CamundaZeebeCredentials
-    depolyment_path: CamundaDeploymentPath
+    deployment_path: CamundaDeploymentPath
     project_id: str
     pr_number: str
     target: Target
@@ -107,7 +107,7 @@ class CamundaConfig:
                 modeler_credentials
             ),
             zeebe_credentials=CamundaZeebeCredentials.from_config(zeebe_credentials),
-            depolyment_path=CamundaDeploymentPath.from_config(
+            deployment_path=CamundaDeploymentPath.from_config(
                 deploy_path, project.root_path
             ),
             project_id=str(project.bpm.project_id),
