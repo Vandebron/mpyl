@@ -13,9 +13,9 @@ SUBPROCESS_FAILED = "Subprocess failed"
 def custom_check_output(
     logger: Logger,
     command: Union[str, list[str]],
+    environment_variables: Union[dict[str, str], None] = None,
     capture_stdout: bool = False,
     use_print: bool = False,
-    environment_variables: dict[str, str] = dict[None, None],
 ) -> Output:
     """
     Wrapper around subprocess.Popen

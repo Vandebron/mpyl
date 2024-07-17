@@ -28,4 +28,6 @@ def deploy_diagram_to_cluster(logger: Logger, config: CamundaConfig):
             "ZEEBE_CLIENT_SECRET": config.zeebe_credentials.client_secret,
         }
 
-        custom_check_output(logger, command, environment_variables=environment_variables)
+        custom_check_output(
+            logger, command, environment_variables=environment_variables
+        )
