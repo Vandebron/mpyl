@@ -70,8 +70,8 @@ def write_run_plan(run_properties: RunProperties):
                     execution.project.name: {
                         "service": execution.project.name,
                         "path": execution.project.path,
-                        "deployment": execution.project.deployment_path,
-                        "base": execution.project.root_path,
+                        "deployment_path": execution.project.deployment_path,
+                        "base_path": execution.project.root_path,
                         "maintainers": execution.project.maintainer,
                         "build_tool": execution.project.build_tool,
                         "stages": stages,
