@@ -96,6 +96,7 @@ class RepoCredentials:
 class RepoConfig:
     main_branch: str
     ignore_patterns: list[str]
+    project_sub_folder: str
     repo_credentials: RepoCredentials
 
     @staticmethod
@@ -105,10 +106,11 @@ class RepoConfig:
 
     @staticmethod
     def from_git_config(git_config: dict):
-        maybe_remote_config = git_config.get("remote", None)
+        maybe_remote_config = git_config.get("remote", {})
         return RepoConfig(
             main_branch=git_config["mainBranch"],
             ignore_patterns=git_config.get("ignorePatterns", []),
+            project_sub_folder=git_config.get("projectSubFolder", "deployment"),
             repo_credentials=(
                 RepoCredentials.from_config(maybe_remote_config)
                 if maybe_remote_config
@@ -282,15 +284,19 @@ class Repository:  # pylint: disable=too-many-public-methods
 
     def find_projects(self, folder_pattern: str = "") -> list[str]:
         """returns a set of all project.yml files
-        :type folder_pattern: project paths are filtered on this pattern
+        :param folder_pattern: project paths are filtered on this pattern
         """
-        projects = set(
-            self._repo.git.ls_files(
-                f"*{folder_pattern}*{Project.project_yaml_path()}"
-            ).splitlines()
-        ) | set(
-            self._repo.git.ls_files(
-                f"*{folder_pattern}*{Project.project_overrides_yml_pattern()}"
-            ).splitlines()
-        )
-        return sorted(projects)
+        folder = f"*{folder_pattern}*/{self.config.project_sub_folder}"
+        projects_pattern = f"{folder}/{Project.project_yaml_file_name()}"
+        overrides_pattern = f"{folder}/{Project.project_overrides_yaml_file_pattern()}"
+
+        def files(pattern: str):
+            return set(self._repo.git.ls_files(pattern).splitlines())
+
+        def deleted(pattern: str):
+            return set(self._repo.git.ls_files("-d", pattern).splitlines())
+
+        projects = files(projects_pattern) | files(overrides_pattern)
+        deleted = deleted(projects_pattern) | deleted(overrides_pattern)
+
+        return sorted(projects - deleted)

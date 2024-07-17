@@ -12,9 +12,7 @@ class TestProjects:
 
     def test_should_render_project_details_to_console(self):
         project = get_project()
-        table, maybe_readme = project_to_markdown(ProjectWithDependents(project, {}))
-
-        assert maybe_readme is None
+        table, _ = project_to_markdown(ProjectWithDependents(project, {}))
 
         table_lines = [
             line.text for line in create_console_logger(True, False, None).render(table)

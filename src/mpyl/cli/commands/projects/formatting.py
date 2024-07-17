@@ -14,8 +14,8 @@ from ....projects.find import load_projects, find_dependencies
 from ....utilities.yaml import yaml_to_string, yaml_for_roundtrip
 
 
-def print_project(repo: Repository, console: Console, project_path: str):
-    project = load_project(repo.root_dir, Path(project_path), False)
+def print_project(repo: Repository, console: Console, project_path: Path):
+    project = load_project(repo.root_dir, project_path, False)
     other_projects = load_projects(repo.root_dir, repo.find_projects())
 
     with_dependencies = find_dependencies(project, other_projects)

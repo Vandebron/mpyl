@@ -43,7 +43,7 @@ class TestSteps:
 
     docker_image = get_output()
     build_project = test_data.get_project_with_stages(
-        {"build": "Echo Build"}, path=str(resource_path)
+        {"build": "Echo Build"}, path=str(resource_path / "deployment" / "project.yml")
     )
 
     @staticmethod
@@ -162,7 +162,10 @@ class TestSteps:
         assert "{} is not of type 'string'" in excinfo.value.message
 
     def test_should_succeed_if_executor_is_known(self):
-        project = test_data.get_project_with_stages({"build": "Echo Build"})
+        project = test_data.get_project_with_stages(
+            stage_config={"build": "Echo Build"},
+            path=str(self.resource_path / "metapath" / "project.yml"),
+        )
         result = self.executor.execute(
             stage=build.STAGE_NAME,
             project_execution=ProjectExecution.run(project),

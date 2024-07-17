@@ -30,8 +30,8 @@ class TestTransformer(PathTransformer):
     def artifact_type(self) -> ArtifactType:
         return cast(ArtifactType, "test_type")
 
-    def transform_for_read(self, project_path: str) -> Path:
-        return Path(self.root_folder, project_path).parent
+    def transform_for_read(self, project_yaml_path: str) -> Path:
+        return Path(self.root_folder, project_yaml_path).parent
 
     def transform_for_write(self, artifact_path: str, project: Project) -> Path:
         return Path(relpath(artifact_path, root_test_path))
@@ -39,11 +39,14 @@ class TestTransformer(PathTransformer):
 
 class TestArtifacts:
     config_path = test_resource_path / "mpyl_config.yml"
-    project = load_project(Path(""), test_resource_path / "test_project.yml")
+    project = load_project(
+        test_resource_path, Path("test_projects", "test_project.yml")
+    )
 
     artifact_repo_config = RepoConfig(
         main_branch="main",
         ignore_patterns=[],
+        project_sub_folder="deployment",
         repo_credentials=RepoCredentials(
             name="Vandebron/mpyl",
             url=f"https://{os.environ.get('GITHUB_CREDS')}@github.com/SamTheisens/mpyl-example-argocd.git",
@@ -85,7 +88,9 @@ class TestArtifacts:
 
     def test_copy_folders(self):
         with TemporaryDirectory() as tmp_repo_dir:
-            project_paths = [str(test_resource_path / Path("test_project.yml"))]
+            project_paths = [
+                str(test_resource_path / Path("test_projects", "test_project.yml"))
+            ]
             copied_files = self.artifacts.copy_files(
                 project_paths, Path(tmp_repo_dir), TestTransformer(root_test_path)
             )

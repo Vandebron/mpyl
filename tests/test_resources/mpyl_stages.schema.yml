@@ -8,12 +8,6 @@ definitions:
       - "test"
       - "deploy"
       - "postdeploy"
-  bla:
-    name:
-      type: string
-      enum:
-        - kak
-        - hoi
   dependencies:
     type: object
     properties:

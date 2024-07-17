@@ -43,7 +43,7 @@ class PathTransformer(ABC):
         pass
 
     @abc.abstractmethod
-    def transform_for_read(self, project_path: str) -> Path:
+    def transform_for_read(self, project_yaml_path: str) -> Path:
         pass
 
     @abc.abstractmethod
@@ -55,12 +55,8 @@ class BuildCacheTransformer(PathTransformer):
     def artifact_type(self) -> ArtifactType:
         return ArtifactType.CACHE
 
-    def transform_for_read(self, project_path: str) -> Path:
-        return Path(
-            project_path.replace(
-                Project.project_yaml_path(), f"deployment/{RUN_ARTIFACTS_FOLDER}"
-            )
-        )
+    def transform_for_read(self, project_yaml_path: str) -> Path:
+        return Path(Path(project_yaml_path).parent, RUN_ARTIFACTS_FOLDER)
 
     def transform_for_write(self, artifact_path: str, project: Project) -> Path:
         return Path(artifact_path)
@@ -77,12 +73,9 @@ class ManifestPathTransformer(PathTransformer):
         self.deploy_config = deploy_config
         self.run_properties = run_properties
 
-    def transform_for_read(self, project_path: str) -> Path:
-        return Path(
-            project_path.replace(
-                Project.project_yaml_path(), self.deploy_config.output_path
-            )
-        )
+    def transform_for_read(self, project_yaml_path: str) -> Path:
+        project_folder = Path(project_yaml_path).parent.parent
+        return Path(project_folder, self.deploy_config.output_path)
 
     def transform_for_write(self, artifact_path: str, project: Project) -> Path:
         argo_folder_name = get_argo_folder_name(target=self.run_properties.target)
