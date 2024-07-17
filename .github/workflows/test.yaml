@@ -1,0 +1,17 @@
+name: test
+on:
+  workflow_dispatch:
+  push:
+
+
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run mpyl
+        uses: ./.github/run-mpyl
+        with:
+          mpyl-command: build status
