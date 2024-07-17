@@ -15,6 +15,7 @@ def custom_check_output(
     command: Union[str, list[str]],
     capture_stdout: bool = False,
     use_print: bool = False,
+    environment_variables: dict[str, str] = None,
 ) -> Output:
     """
     Wrapper around subprocess.Popen
@@ -37,7 +38,7 @@ def custom_check_output(
             return Output(success=True, message=out)
 
         with subprocess.Popen(
-            command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+            command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=environment_variables
         ) as process:
             if not process.stdout:
                 raise RuntimeError(

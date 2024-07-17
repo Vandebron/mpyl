@@ -1,9 +1,9 @@
 """Camunda cluster related docker commands to deploy diagrams"""
 
 import os
-import subprocess
 from logging import Logger
 from ....utilities.bpm import CamundaConfig
+from ....utilities.subprocess import custom_check_output
 
 
 def deploy_diagram_to_cluster(logger: Logger, config: CamundaConfig):
@@ -20,11 +20,12 @@ def deploy_diagram_to_cluster(logger: Logger, config: CamundaConfig):
             os.path.join(bpm_file_path, file_name), volume_path
         )
 
-        envs = {
+        command = f"zbctl deploy {relative_file_path}"
+
+        environment_variables = {
             "ZEEBE_ADDRESS": config.zeebe_credentials.cluster_id,
             "ZEEBE_CLIENT_ID": config.zeebe_credentials.client_id,
-            "ZEEBE_CLIENT_SECRET": config.zeebe_credentials.client_secret,
+            "ZEEBE_CLIENT_SECRET": config.zeebe_credentials.client
         }
-        subprocess.run(
-            ["zbctl", "deploy", relative_file_path], env=envs, check=True, shell=True
-        )
+
+        custom_check_output(logger, command, environment_variables)
