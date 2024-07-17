@@ -25,4 +25,6 @@ def deploy_diagram_to_cluster(logger: Logger, config: CamundaConfig):
             "ZEEBE_CLIENT_ID": config.zeebe_credentials.client_id,
             "ZEEBE_CLIENT_SECRET": config.zeebe_credentials.client_secret,
         }
-        subprocess.run(["zbctl", "deploy", relative_file_path], env=envs, check=True, shell=True)
+        subprocess.run(
+            ["zbctl", "deploy", relative_file_path], env=envs, check=True, shell=True
+        )
