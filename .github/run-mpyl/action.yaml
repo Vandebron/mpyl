@@ -1,0 +1,12 @@
+name: mpyl
+description: Action to run mpyl from a docker container
+inputs:
+  mpyl-command:
+    description: The mpyl command to run
+    required: false  # set to true later
+    default: build status
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.mpyl-command }}
