@@ -25,7 +25,7 @@ def deploy_diagram_to_cluster(logger: Logger, config: CamundaConfig):
         environment_variables = {
             "ZEEBE_ADDRESS": config.zeebe_credentials.cluster_id,
             "ZEEBE_CLIENT_ID": config.zeebe_credentials.client_id,
-            "ZEEBE_CLIENT_SECRET": config.zeebe_credentials.client
+            "ZEEBE_CLIENT_SECRET": config.zeebe_credentials.client_secret,
         }
 
-        custom_check_output(logger, command, environment_variables)
+        custom_check_output(logger, command, environment_variables=environment_variables)
