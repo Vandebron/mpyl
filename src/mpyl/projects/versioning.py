@@ -117,7 +117,8 @@ class ProjectUpgraderOneSeven0(Upgrader):
     target_version = "1.7.0"
 
     def upgrade(self, previous_dict: ordereddict) -> ordereddict:
-        previous_dict.insert(4, "buildTool", "other")
+        if "buildTool" not in previous_dict:
+            previous_dict.insert(4, "buildTool", "other")
         return previous_dict
 
 

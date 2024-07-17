@@ -5,7 +5,7 @@ stages:
   test: Docker Test
   deploy: Kubernetes Deploy
   postdeploy: Skip Postdeploy
-mpylVersion: "1.7.0"
+mpylVersion: 1.7.0
 buildTool: other
 maintainer: ['MPyL']
 build:

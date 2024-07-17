@@ -1,6 +1,6 @@
 name: 'sparkJob-first'
 maintainer: ['MPyL']
-mpylVersion: "1.7.0"
+mpylVersion: 1.7.0
 buildTool: sbt
 stages:
   deploy: Kubernetes Spark Job Deploy
