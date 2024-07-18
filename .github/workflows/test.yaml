@@ -14,4 +14,4 @@ jobs:
       - name: Run mpyl
         uses: ./.github/run-mpyl
         with:
-          mpyl-command: build status
+          mpyl-command: build -c mpyl_config.example.yml status

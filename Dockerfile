@@ -9,18 +9,23 @@ ENV PYTHONUNBUFFERED=1
 
 RUN apt-get -y update && apt-get -y install git
 
+# Switch to mpyl source code directory
 WORKDIR /app/mpyl
 
 COPY requirements.txt requirements.txt
 
+# Install the dependencies.
 RUN python -m pip install -r requirements.txt
 
 # Copy the source code into the container.
 COPY src/mpyl ./
 
+# Set pythonpath for mpyl
 ENV PYTHONPATH=/app
 
+# Switch to the directory of the calling repo
 WORKDIR /repo
+COPY entrypoint.sh ../entrypoint.sh
 
 # Run the application.
-ENTRYPOINT ["python", "/app/mpyl/__main__.py"]
+ENTRYPOINT ["/entrypoint.sh"]

@@ -9,6 +9,5 @@ inputs:
 runs:
   using: docker
   image: ../../Dockerfile
-  pre-entrypoint: docker cp $(pwd):/repo
   args:
     - ${{ inputs.mpyl-command }}
