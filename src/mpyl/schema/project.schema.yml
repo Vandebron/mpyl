@@ -36,6 +36,13 @@ properties:
       type: string
     uniqueItems: true
     minItems: 1
+  pipeline:
+    description: The pipeline this project will be built with
+    type: string
+    enum:
+      - sbt
+      - yarn
+      - other
   stages:
     $id: '#/properties/stages'
     description: Defines which steps should be executed at each stage
