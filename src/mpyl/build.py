@@ -80,6 +80,7 @@ def write_run_plan(run_properties: RunProperties):
                     }
                 }
             )
+            print(f"ptab pipeline for {execution.project.name}: {execution.project.pipeline}")
 
     run_plan_file = Path(RUN_ARTIFACTS_FOLDER) / "run_plan.json"
     os.makedirs(os.path.dirname(run_plan_file), exist_ok=True)
