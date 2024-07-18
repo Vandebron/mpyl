@@ -591,9 +591,6 @@ class Project:
 
     @staticmethod
     def from_config(values: dict, project_path: Path):
-        logging.warning(f"ptab values: {values}")
-        logging.warning(f"ptab pipeline: {values.get('pipeline')}")
-
         docker_config = values.get("docker")
         deployment = values.get("deployment")
         dependencies = values.get("dependencies")

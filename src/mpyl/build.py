@@ -72,16 +72,13 @@ def write_run_plan(run_properties: RunProperties):
                     execution.project.name: {
                         "service": execution.project.name,
                         "path": execution.project.path,
-                        "deployment_path": execution.project.deployment_path,
+                        "artifacts_path": execution.project.target_path,
                         "base_path": execution.project.root_path,
                         "maintainers": execution.project.maintainer,
                         "pipeline": execution.project.pipeline,
                         "stages": stages,
                     }
                 }
-            )
-            logging.warning(
-                f"ptab pipeline for {execution.project.name}: {execution.project.pipeline}"
             )
 
     run_plan_file = Path(RUN_ARTIFACTS_FOLDER) / "run_plan.json"
