@@ -17,4 +17,3 @@ omit =
     src/mpyl/steps/deploy/ephemeral_docker_deploy.py
     src/mpyl/steps/deploy/kubernetes.py
     src/mpyl/steps/deploy/k8s/kubectl.py
-    src/mpyl/steps/postdeploy/cypress_test.py

@@ -36,6 +36,13 @@ properties:
       type: string
     uniqueItems: true
     minItems: 1
+  pipeline:
+    description: The pipeline this project will be built with
+    type: string
+    enum:
+      - sbt
+      - yarn
+      - other
   stages:
     $id: '#/properties/stages'
     description: Defines which steps should be executed at each stage
@@ -78,23 +85,18 @@ properties:
           - Docker Deploy
           - Deploy From Docker Container
           - Echo Deploy
-          - NUC Deploy
           - Kubernetes Deploy
-          - Echo Kubernetes Deploy
           - Kubernetes Job Deploy
-          - Kubernetes Job Template Deploy
           - Kubernetes Spark Job Deploy
-          - Renew Lets Encrypt Deploy
-          - Helm Deploy
           - Dagster Deploy
           - BPM Diagram Deploy
       postdeploy:
         description: Additional steps that can be done after the project has been deployed.
         examples:
-          - TriggerJenkinsJob PostDeploy
+          - Skip Postdeploy
         type: string
         enum:
-          - TriggerJenkinsJob PostDeploy
+          - Skip Postdeploy
           - Cypress Test
     minProperties: 1
   docker:
@@ -283,31 +285,36 @@ properties:
               project Id where diagram is stored in Camunda Modeler,
               you can find this value from Camunda Saas url when open the project
             type: string
+      cluster:
+        type: object
+        additionalProperties: false
+        properties:
+          pr:
+            type: string
+          test:
+            type: string
+          acceptance:
+            type: string
+          production:
+            type: string
+          all:
+            type: string
     minProperties: 1
     required:
       - namespace
-  postdeployment:
-    type: object
+  postdeploy:
     additionalProperties: false
+    type: object
+    required:
+      - specs
+      - recordKey
     properties:
-      triggerjob:
+      specs:
         additionalProperties: false
-        type: object
-        required:
-          - jobs
-        properties:
-          jobs:
-            type: object
-            additionalProperties: false
-            properties:
-              pr:
-                type: array
-              test:
-                type: array
-              acceptance:
-                type: array
-              production:
-                type: array
+        type: array
+      recordKey:
+        additionalProperties: false
+        type: string
   dependencies:
     $ref: 'mpyl_stages.schema.yml#/definitions/dependencies'
 definitions:
@@ -431,6 +438,8 @@ definitions:
         type: boolean
       priority:
         $ref: '#/definitions/dtapNumberValue'
+      additionalRoute:
+        type: string
   livenessProbe:
     type: object
     additionalProperties: true
@@ -729,10 +738,14 @@ definitions:
         type: string
   kubernetes:
     type: object
+    required:
+      - rancher
     additionalProperties: false
     properties:
       rancher:
         type: object
+        required:
+          - projectId
         properties:
           projectId:
             description: >-

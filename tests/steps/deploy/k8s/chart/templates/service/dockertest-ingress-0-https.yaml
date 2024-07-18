@@ -1,4 +1,4 @@
-apiVersion: traefik.io/v1alpha1
+apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
   labels:
@@ -14,7 +14,7 @@ metadata:
 spec:
   routes:
   - kind: Rule
-    match: Host(`payments-1234.test.nl`)
+    match: Host(`payments-1234.test-other.nl`)
     services:
     - name: dockertest
       kind: Service

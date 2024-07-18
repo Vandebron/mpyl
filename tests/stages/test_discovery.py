@@ -325,7 +325,7 @@ class TestDiscovery:
         with test_data.get_repo() as repo:
             touched_files = {"tests/projects/overriden-project/file.py": "A"}
             projects = load_projects(repo.root_dir, repo.find_projects())
-            assert len(projects) == 12
+            assert len(projects) == 11
             projects_for_build = find_projects_to_execute(
                 self.logger,
                 projects,

@@ -1,10 +1,13 @@
 """Camunda modeler related methods to deploy diagrams"""
 
 import os
+from collections import namedtuple
 from datetime import datetime
 from logging import Logger
-from collections import namedtuple
+
 from .camunda_modeler_client import CamundaModelerClient
+from ....project import Target
+from ....utilities.bpm import CamundaConfig
 
 File = namedtuple("File", ["name", "file_id", "revision"])
 
@@ -12,7 +15,7 @@ File = namedtuple("File", ["name", "file_id", "revision"])
 def deploy_diagram_to_modeler(
     logger: Logger,
     bpm_file_path: str,
-    project_id: str,
+    config: CamundaConfig,
     client: CamundaModelerClient,
     pr_number: str,
 ) -> None:
@@ -22,10 +25,11 @@ def deploy_diagram_to_modeler(
         else []
     ):
         logger.info(f"Updating diagram: {file_name}")
-        file_info = get_file_data(file_name, project_id, client)
+        file_info = get_file_data(file_name, config.project_id, client)
         file_path = os.path.join(bpm_file_path, file_name)
         update_diagram(file_path, file_info, client)
-        create_milestone(file_info, pr_number, client)
+        if config.target == Target.PULL_REQUEST_BASE:
+            create_milestone(file_info, pr_number, client)
 
 
 def get_file_data(

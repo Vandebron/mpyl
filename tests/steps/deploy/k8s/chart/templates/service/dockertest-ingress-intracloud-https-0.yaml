@@ -2,26 +2,29 @@ apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
   labels:
-    name: minimalservice
+    name: dockertest
     app.kubernetes.io/version: pr-1234
-    app.kubernetes.io/name: minimalservice
-    app.kubernetes.io/instance: minimalservice
+    app.kubernetes.io/name: dockertest
+    app.kubernetes.io/instance: dockertest
     maintainers: MPyL
     maintainer: MPyL
     version: pr-1234
     revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
-  name: minimalservice-ingress-0-https
+  name: dockertest-ingress-intracloud-https-0
 spec:
   routes:
   - kind: Rule
-    match: Host(`minimalservice-1234.test-backend.nl`)
+    match: Host(`payments-1234.test-other.nl`)
     services:
-    - name: minimalservice
+    - name: dockertest
       kind: Service
       port: 8080
     middlewares:
-    - name: minimalservice-ingress-0-whitelist
+    - name: intracloud-middleware@kubernetescrd
   entryPoints:
-  - websecure
+  - intracloud
   tls:
     secretName: le-custom-prod-wildcard-cert
+    options:
+      name: insecure-ciphers
+      namespace: traefik

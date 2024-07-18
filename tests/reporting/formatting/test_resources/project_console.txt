@@ -9,6 +9,6 @@
 │             │  build: Docker Build                                           │
 │             │  test: Docker Test                                             │
 │             │  deploy: Kubernetes Deploy                                     │
-│             │  postdeploy: Cypress Test                                      │
+│             │  postdeploy: Skip Postdeploy                                   │
 │             │                                                                │
 └─────────────┴────────────────────────────────────────────────────────────────┘
