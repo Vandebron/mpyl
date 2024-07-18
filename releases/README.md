@@ -1,5 +1,18 @@
 # Release notes
 
+## MPyL 1.6.11
+
+
+#### Project.yml changes
+- Make projectId field mandatory to prevent rbac issues in rancher
+- Add optional field for project type
+
+#### Camunda
+- Some small changes and bugfixes to the camunda step logic
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.6.11)
+
 ## MPyL 1.6.10
 
 
