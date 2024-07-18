@@ -501,6 +501,7 @@ class Project:
     name: str
     description: str
     path: str
+    pipeline: Optional[str]
     stages: Stages
     maintainer: list[str]
     docker: Optional[Docker]
@@ -597,6 +598,7 @@ class Project:
             name=values["name"],
             description=values["description"],
             path=str(project_path),
+            pipeline=values.get("pipeline"),
             stages=Stages.from_config(values.get("stages", {})),
             maintainer=values.get("maintainer", []),
             docker=Docker.from_config(docker_config) if docker_config else None,

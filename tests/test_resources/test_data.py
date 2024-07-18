@@ -149,7 +149,7 @@ def get_project_with_stages(stage_config: dict, path: str = "", maintainers=None
         maintainers = ["Team1", "Team2"]
     stages = Stages.from_config(stage_config)
     return Project(
-        "test", "Test project", path, stages, maintainers, None, None, None, None
+        "test", "Test project", path, None, stages, maintainers, None, None, None, None
     )
 
 
