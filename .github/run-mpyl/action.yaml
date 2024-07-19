@@ -9,8 +9,5 @@ inputs:
 runs:
   using: docker
   image: ../../Dockerfile
-  env:
-    CHANGED_FILES_PATH: ${{ runner.temp }}/changed_files.json
-
   args:
     - ${{ inputs.mpyl-command }}
