@@ -37,31 +37,12 @@ def print_status(
         cli_parameters=cli_params,
         explain_run_plan=explain_run_plan,
     )
-    console = obj.console
-    logger = logging.getLogger("mpyl")
 
     # Write the run plan as a simple JSON file to be used by Github Actions
-    simple_run_plan: dict[str, list[dict[str, Union[str, bool, list[str]]]]] = dict(
-        {
-            stage.name: [
-                {
-                    "service": project_execution.project.name,
-                    "path": project_execution.project.path,
-                    "base": project_execution.project.root_path,
-                    "cached": project_execution.cached,
-                    "maintainers": project_execution.project.maintainer,
-                }
-                for project_execution in project_executions
-            ]
-            for stage, project_executions in run_properties.run_plan.full_plan.items()
-        }
-    )
-    run_plan_file = Path(RUN_ARTIFACTS_FOLDER) / "run_plan.json"
-    os.makedirs(os.path.dirname(run_plan_file), exist_ok=True)
-    with open(run_plan_file, "w", encoding="utf-8") as file:
-        logger.info(f"Writing simple JSON run plan to: {run_plan_file}")
-        json.dump(simple_run_plan, file)
+    write_run_plan(run_properties)
 
+    console = obj.console
+    logger = logging.getLogger("mpyl")
     logger.info(f"MPyL log level is set to {run_properties.console.log_level}")
 
     result = RunResult(run_properties=run_properties)
@@ -74,6 +55,36 @@ def print_status(
 
 
 FORMAT = "%(name)s  %(message)s"
+
+
+def write_run_plan(run_properties: RunProperties):
+    run_plan: dict = {}
+
+    for stage, executions in run_properties.run_plan.full_plan.items():
+        for execution in executions:
+            stages: list[dict[str, Union[str, bool]]] = run_plan.get(
+                execution.project.name, {}
+            ).get("stages", [])
+            stages.append({"name": stage.name, "cached": execution.cached})
+
+            run_plan.update(
+                {
+                    execution.project.name: {
+                        "service": execution.project.name,
+                        "path": execution.project.path,
+                        "artifacts_path": execution.project.target_path,
+                        "base_path": execution.project.root_path,
+                        "maintainers": execution.project.maintainer,
+                        "pipeline": execution.project.pipeline,
+                        "stages": stages,
+                    }
+                }
+            )
+
+    run_plan_file = Path(RUN_ARTIFACTS_FOLDER) / "run_plan.json"
+    os.makedirs(os.path.dirname(run_plan_file), exist_ok=True)
+    with open(run_plan_file, "w", encoding="utf-8") as file:
+        json.dump(list(run_plan.values()), file)
 
 
 def run_mpyl(
