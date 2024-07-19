@@ -1,5 +1,7 @@
 #!/bin/bash
 
+git config --global --add safe.directory /github/workspace
+
 args=("$@")
 command="python /app/mpyl/__main__.py"
 
