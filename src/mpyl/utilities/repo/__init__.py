@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 
 from git import Git, Repo
 
+from ..subprocess import custom_check_output
 from ...project import Project
 
 
@@ -118,6 +119,10 @@ class RepoConfig:
 class Repository:  # pylint: disable=too-many-public-methods
     def __init__(self, config: RepoConfig, repo: Optional[Repo] = None):
         self.config = config
+        custom_check_output(
+            logger=logging.Logger("Git"),
+            command="git config --global --add safe.directory /github/workspace'",
+        )
         self._repo = repo or Repo(path=Git().rev_parse("--show-toplevel"))
 
     def __enter__(self):
