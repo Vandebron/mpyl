@@ -1,5 +1,16 @@
 # Release notes
 
+## MPyL 1.7.0
+
+
+#### Project.yml changes
+- Add a `pipeline` field to select which pipeline to run (e.g. which Github Actions workflow) to use for a specific project
+
+### Run plan output
+- changed the format of the run plan JSON file to make parsing easier, reduce the amount of redundant values and consequently the size of the file
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.7.0)
+
 ## MPyL 1.6.11
 
 
