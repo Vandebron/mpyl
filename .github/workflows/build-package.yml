@@ -274,6 +274,9 @@ jobs:
       - name: Tag merge
         run: git tag -a v${{ needs.Build_And_Upload.outputs.mpylVersion }} -m "Tagging v${{ needs.Build_And_Upload.outputs.mpylVersion }}"
 
+      - name: Remove old build plan
+        run: mpyl build clean
+
       - name: Show build status
         env:
           TAG_NAME: v${{ needs.Build_And_Upload.outputs.mpylVersion }}
