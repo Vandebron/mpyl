@@ -77,7 +77,7 @@ sbt:
   clientCommand: 'sbtn'
   testWithCoverage: !ENV ${SBT_RUN_WITH_COVERAGE:false}
   verbose: false
-  javaOpts: '-Xmx4G -Xms4G -XX:+UseG1GC -XX:+CMSClassUnloadingEnabled -Xss2M'
+  javaOpts: '-Xmx4G -Xms4G -XX:+UseG1GC -Xss2M'
   sbtOpts: 'user.timezone=GMT jline.terminal=jline.UnixTerminal'
   clientMode:
     build: false
