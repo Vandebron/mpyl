@@ -16,7 +16,7 @@ from .deploy_config import DeployConfig, DeployAction, get_namespace
 from .helm import write_helm_chart, GENERATED_WARNING
 from ...deploy.k8s.resources import CustomResourceDefinition
 from ...models import RunProperties, input_to_artifact, ArtifactType, ArtifactSpec
-from ....project import ProjectName, Target
+from ....project import ProjectName
 from ....steps import Input, Output
 from ....steps.deploy.k8s import helm
 from ....steps.deploy.k8s.cluster import (
@@ -26,7 +26,6 @@ from ....steps.deploy.k8s.cluster import (
 )
 from ....steps.deploy.k8s.resources import to_yaml
 from ....utilities import replace_pr_number
-from ....utilities.repo import RepoConfig
 
 yaml = YAML()
 
@@ -205,26 +204,11 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
     if action == DeployAction.KUBERNETES_MANIFEST.value:  # pylint: disable=no-member
         path = Path(project.root_path, deployment_config.output_path)
         file_path = write_manifest(target_path=path, chart=chart)
-
         artifact = input_to_artifact(
             artifact_type=ArtifactType.KUBERNETES_MANIFEST,
             step_input=step_input,
             spec=KubernetesManifestSpec(str(file_path)),
         )
-
-        cluster = (
-            "test"
-            if run_properties.target in (Target.PULL_REQUEST_BASE, Target.PULL_REQUEST)
-            else run_properties.target.name.lower()
-        )  # Can't re-use get_argo_folder_name function for now because of circular imports
-        deployment_details = (
-            f"cluster: {cluster}\n"
-            + f"repository: {RepoConfig.from_config(run_properties.config).repo_credentials.name}\n"
-            + f"revision: {run_properties.versioning.revision}\n"
-            + f"tag: {run_properties.versioning.identifier}\n"
-        )
-        with Path(path / "deployment.yaml").open(mode="w+", encoding="utf-8") as file:
-            file.write(deployment_details)
 
         return Output(
             success=True,

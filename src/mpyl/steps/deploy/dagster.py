@@ -69,6 +69,7 @@ class DeployDagster(Step):
         context = get_cluster_config_for_project(
             step_input.run_properties, step_input.project_execution.project
         ).cluster_env
+        print("context: ", context)
         dagster_config: DagsterConfig = DagsterConfig.from_dict(properties.config)
         dagster_deploy_results = []
 
