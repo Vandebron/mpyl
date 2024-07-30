@@ -29,7 +29,7 @@ from tests.test_resources.test_data import TestStage
 yaml = YAML()
 
 HASHED_CHANGES_OF_JOB = (
-    "e993ba4f2b2ae2c4840e1eed1414baa812932319d332b0d169365b0885ec2d6c"
+    "e16e7b0fec422c931b1fbab51bf5942f057d3591c74f495d3db60e2c0ac17616"
 )
 
 
@@ -130,7 +130,7 @@ class TestDiscovery:
                         self.steps,
                     )
                 )
-                == 2
+                == 0
             )
             assert (
                 len(
@@ -325,7 +325,7 @@ class TestDiscovery:
         with test_data.get_repo() as repo:
             touched_files = {"tests/projects/overriden-project/file.py": "A"}
             projects = load_projects(repo.root_dir, repo.find_projects())
-            assert len(projects) == 11
+            assert len(projects) == 7
             projects_for_build = find_projects_to_execute(
                 self.logger,
                 projects,

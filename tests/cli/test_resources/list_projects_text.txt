@@ -1,6 +1,5 @@
 tests/projects/dagster-user-code/deployment/project.yml                         
 [1;36;40mexample-dagster-user-code[0m                                                       
-tests/projects/ephemeral/deployment/project.yml [1;36;40mkong-sync[0m                       
 tests/projects/job/deployment/project.yml [1;36;40mjob[0m                                   
 tests/projects/overriden-project/deployment/project-override-first.yml          
 [1;36;40mocpp-first[0m                                                                      
@@ -9,6 +8,3 @@ tests/projects/overriden-project/deployment/project-override-second.yml
 tests/projects/overriden-project/deployment/project.yml [1;36;40mocpp[0m                    
 tests/projects/sbt-service/deployment/project.yml [1;36;40msbtservice[0m                    
 tests/projects/service/deployment/project.yml [1;36;40mnodeservice[0m                       
-tests/projects/spark-job/deployment/project-override-first.yml [1;36;40msparkJob-first[0m   
-tests/projects/spark-job/deployment/project-override-second.yml [1;36;40msparkJob-second[0m 
-tests/projects/spark-job/deployment/project.yml [1;36;40msparkJob[0m                        

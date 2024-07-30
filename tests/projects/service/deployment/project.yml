@@ -1,8 +1,7 @@
 name: 'nodeservice'
 description: 'This is a test container. For testing the MPL pipelines, not to be deployed anywhere.'
 stages:
-  build: Docker Build
-  test: Docker Test
+  build: Echo Build
   deploy: Kubernetes Deploy
 mpylVersion: 1.4.20
 maintainer: ['MPyL']

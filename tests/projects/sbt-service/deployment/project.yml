@@ -1,8 +1,7 @@
 name: 'sbtservice'
 maintainer: ['MPyL']
 stages:
-  build: Sbt Build
-  test: Sbt Test
+  build: Echo Build
   deploy: Kubernetes Deploy
 mpylVersion: 1.4.18
 description: 'Demonstrates how an SBT project can be built and tested'

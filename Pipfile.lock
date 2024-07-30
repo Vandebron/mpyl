@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "5f61544c513c0e27f9b18086c5f97752862a6b01772f9844ab8b01c4d1edc708"
+            "sha256": "288872c635ca5a9e6feb2108e82a4a826f569ce207fb4cde5ef6230c72763d30"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -808,11 +808,11 @@
         },
         "python-on-whales": {
             "hashes": [
-                "sha256:075fcd89ca6018c274f13791e5579bf2fa7c46808a3161c2686a4984510c3d1c",
-                "sha256:6adb4ac0486dbdab663c491952c1b1007e6599f9db333fbf07e2ad943f7bc847"
+                "sha256:092b440f43a34bbe90536b82a41ae3c199018dfc66d7e0dc52d4d659b82683c2",
+                "sha256:280da91724ae728ac2baf503584938ecfdee2f83bb88e65413eed14b1fe74d41"
             ],
             "index": "pypi",
-            "version": "==0.64.3"
+            "version": "==0.72.0"
         },
         "pyyaml": {
             "hashes": [
@@ -1538,11 +1538,11 @@
         },
         "croniter": {
             "hashes": [
-                "sha256:f1f8ca0af64212fbe99b1bee125ee5a1b53a9c1b433968d8bca8817b79d237f3",
-                "sha256:fdbb44920944045cc323db54599b321325141d82d14fa7453bc0699826bbe9ed"
+                "sha256:745b22960bb21ead6d79b25c0e849fffd2fe65215a944def6b235d4c72688b98",
+                "sha256:92fcad6a4eb9749fa9cad2bba18916520b49408f6282a02aeac0dcda0586f7df"
             ],
             "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 3.3'",
-            "version": "==2.0.5"
+            "version": "==3.0.0"
         },
         "dagit": {
             "hashes": [
@@ -1858,11 +1858,11 @@
         },
         "importlib-metadata": {
             "hashes": [
-                "sha256:15584cf2b1bf449d98ff8a6ff1abef57bf20f3ac6454f431736cd3e660921b2f",
-                "sha256:188bd24e4c346d3f0a933f275c2fec67050326a856b9a359881d7c2a697e8812"
+                "sha256:3cd29f739ed65973840b068e3132135ce954c254d48b5b640484467ef7ab3c8c",
+                "sha256:fcdcb1d5ead7bdf3dd32657bb94ebe9d2aabfe89a19782ddc32da5041d6ebfb4"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==8.0.0"
+            "version": "==8.1.0"
         },
         "iniconfig": {
             "hashes": [
@@ -2605,11 +2605,11 @@
         },
         "setuptools": {
             "hashes": [
-                "sha256:f171bab1dfbc86b132997f26a119f6056a57950d058587841a0082e8830f9dc5",
-                "sha256:fe384da74336c398e0d956d1cae0669bc02eed936cdb1d49b57de1990dc11ffc"
+                "sha256:032d42ee9fb536e33087fb66cac5f840eb9391ed05637b3f2a76a7c8fb477936",
+                "sha256:33874fdc59b3188304b2e7c80d9029097ea31627180896fb549c578ceb8a0855"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==70.3.0"
+            "version": "==71.1.0"
         },
         "six": {
             "hashes": [
@@ -2681,11 +2681,11 @@
         },
         "starlette": {
             "hashes": [
-                "sha256:6fe59f29268538e5d0d182f2791a479a0c64638e6935d1c6989e63fb2699c6ee",
-                "sha256:9af890290133b79fc3db55474ade20f6220a364a0402e0b556e7cd5e1e093823"
+                "sha256:42688a287165bd6acc53068457b5cbf28a3204110b704930411728a633f0f7b8",
+                "sha256:890e89d9b1b367bad6fd11a6e191f40d03504df1ff55fd15674a3b35a122990e"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==0.37.2"
+            "version": "==0.38.1"
         },
         "tabulate": {
             "hashes": [
@@ -2872,11 +2872,11 @@
                 "standard"
             ],
             "hashes": [
-                "sha256:cd17daa7f3b9d7a24de3617820e634d0933b69eed8e33a516071174427238c81",
-                "sha256:d46cd8e0fd80240baffbcd9ec1012a712938754afcf81bce56c024c1656aece8"
+                "sha256:0d114d0831ff1adbf231d358cbf42f17333413042552a624ea6a9b4c33dcfd81",
+                "sha256:94a3608da0e530cea8f69683aa4126364ac18e3826b6630d1a65f4638aade503"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==0.30.1"
+            "version": "==0.30.3"
         },
         "uvloop": {
             "hashes": [

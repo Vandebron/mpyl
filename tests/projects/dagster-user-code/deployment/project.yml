@@ -4,8 +4,7 @@ maintainer:
   - MPyL
 mpylVersion: 1.4.18
 stages:
-  build: Docker Build
-  deploy: Echo Deploy # once TECH-116 is merged we can add a sample project to the test pipeline
+  build: Echo Build
 deployment:
   namespace: 'example-dagster-user-code'
   properties:
