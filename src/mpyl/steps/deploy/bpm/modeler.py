@@ -1,13 +1,13 @@
 """Camunda modeler related methods to deploy diagrams"""
 
 import os
+from collections import namedtuple
 from datetime import datetime
 from logging import Logger
-from collections import namedtuple
 
+from .camunda_modeler_client import CamundaModelerClient
 from ....project import Target
 from ....utilities.bpm import CamundaConfig
-from .camunda_modeler_client import CamundaModelerClient
 
 File = namedtuple("File", ["name", "file_id", "revision"])
 
