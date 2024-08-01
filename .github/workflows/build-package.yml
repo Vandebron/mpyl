@@ -124,13 +124,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: ./.github/setup-kind
-        with:
-          traefik-chart-version: 27.0.2
-          prometheus-chart-version: 60.3.0
-          sealed-secrets-chart-version: 2.7.3
-          spark-operator-chart-version: 1.1.25
-
       - name: Check mpyl health
         uses: ./.github/run-mpyl
         with:
@@ -151,11 +144,10 @@ jobs:
         with:
           mpyl-command: build status --all
 
-# TODO: this will only work again if we have kind within the container
-#      - name: Run deploy
-#        uses: ./.github/run-mpyl
-#        with:
-#          mpyl-command: build run --all
+      - name: Run deploy
+        uses: ./.github/run-mpyl
+        with:
+          mpyl-command: build run --all
 
   Integration_Test_Tag:
     name: Test tag
@@ -166,13 +158,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - uses: ./.github/setup-kind
-        with:
-          traefik-chart-version: 27.0.2
-          prometheus-chart-version: 60.3.0
-          sealed-secrets-chart-version: 2.7.3
-          spark-operator-chart-version: 1.1.25
 
       - name: Get head revision
         id: headRevision
@@ -215,11 +200,42 @@ jobs:
         with:
           mpyl-command: build status
 
-# TODO: this will only work again if we have kind within the container
-#      - name: Run tag build
-#        uses: ./.github/run-mpyl
-#        env:
-#          TAG_NAME: v${{ needs.Build_And_Upload.outputs.mpylVersion }}
-#        with:
-#          mpyl-command: build run --all
+      - name: Run tag build
+        uses: ./.github/run-mpyl
+        env:
+          TAG_NAME: v${{ needs.Build_And_Upload.outputs.mpylVersion }}
+        with:
+          mpyl-command: build run --all
 
+  Push_Image:
+    name: Push MPyL Image
+    needs:
+      - Lint
+      - TypeCheck
+      - Test
+      - Integration_Test_PR
+      - Integration_Test_Tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ECR_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_ECR_SECRET_ACCESS_KEY }}
+          aws-region: eu-central-1
+      - uses: aws-actions/amazon-ecr-login@v2
+        id: ecr-login
+
+      - uses: int128/create-ecr-repository-action@v1
+        with:
+          repository: vandebron/gh-mpyl
+
+      - name: Push image
+        uses: docker/build-push-action@v6
+        with:
+          file: Dockerfile
+          tags: ${{ steps.ecr-login.outputs.registry }}/vandebron/gh-mpyl:latest
+          cache-from: ${{ steps.ecr-login.outputs.registry }}/vandebron/gh-mpyl:latest
+          cache-to: type=inline
+          push: true

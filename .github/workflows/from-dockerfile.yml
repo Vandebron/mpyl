@@ -1,0 +1,17 @@
+name: from-dockerfile
+on:
+  workflow_dispatch:
+
+jobs:
+  trial:
+    name: Run from Dockerfile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check mpyl health
+        uses: ./.github/run-mpyl
+        with:
+          mpyl-command: health
