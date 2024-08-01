@@ -20,9 +20,9 @@ def deploy_diagram_to_cluster(logger: Logger, config: CamundaConfig):
 
         command = (
             f"zbctl deploy {relative_file_path} "
-            "--address {config.zeebe_credentials.cluster_id} "
-            "--clientId {config.zeebe_credentials.client_id} "
-            "--clientSecret {config.zeebe_credentials.client_secret}"
+            f"--address {config.zeebe_credentials.cluster_id} "
+            f"--clientId {config.zeebe_credentials.client_id} "
+            f"--clientSecret {config.zeebe_credentials.client_secret}"
         )
 
         custom_check_output(logger, command)
