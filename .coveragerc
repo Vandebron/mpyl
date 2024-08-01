@@ -4,16 +4,8 @@ omit =
     src/mpyl/build.py
     src/mpyl/reporting/targets/*
     src/mpyl/cli/commands/*
-    src/mpyl/utilities/jenkins/runner.py
-    src/mpyl/utilities/docker/__init__.py
-    src/mpyl/steps/build/docker_after_build.py
-    src/mpyl/steps/build/docker_build.py
-    src/mpyl/steps/build/post_docker_build.py
     src/mpyl/steps/test/after_test.py
     src/mpyl/steps/test/before_test.py
-    src/mpyl/steps/test/dockertest.py
-    src/mpyl/steps/test/sbt.py
     src/mpyl/steps/deploy/dagster.py
-    src/mpyl/steps/deploy/ephemeral_docker_deploy.py
     src/mpyl/steps/deploy/kubernetes.py
     src/mpyl/steps/deploy/k8s/kubectl.py

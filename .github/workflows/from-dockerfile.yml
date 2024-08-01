@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  trial:
+  example:
     name: Run from Dockerfile
     runs-on: ubuntu-latest
     steps:
