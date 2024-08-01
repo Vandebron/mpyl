@@ -8,6 +8,6 @@ inputs:
 
 runs:
   using: docker
-  image: gh-mpyl:latest
+  image: 410954653531.dkr.ecr.eu-central-1.amazonaws.com/vandebron/gh-mpyl:latest
   args:
     - ${{ inputs.mpyl-command }}
