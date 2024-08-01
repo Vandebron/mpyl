@@ -13,7 +13,6 @@ SUBPROCESS_FAILED = "Subprocess failed"
 def custom_check_output(
     logger: Logger,
     command: Union[str, list[str]],
-    environment_variables: Optional[dict[str, str]] = None,
     capture_stdout: bool = False,
     use_print: bool = False,
 ) -> Output:
@@ -42,7 +41,6 @@ def custom_check_output(
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
-            env=environment_variables,
         ) as process:
             if not process.stdout:
                 raise RuntimeError(

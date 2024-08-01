@@ -20,14 +20,11 @@ def deploy_diagram_to_cluster(logger: Logger, config: CamundaConfig):
             os.path.join(bpm_file_path, file_name), volume_path
         )
 
-        command = f"zbctl deploy {relative_file_path}"
-
-        environment_variables = {
-            "ZEEBE_ADDRESS": config.zeebe_credentials.cluster_id,
-            "ZEEBE_CLIENT_ID": config.zeebe_credentials.client_id,
-            "ZEEBE_CLIENT_SECRET": config.zeebe_credentials.client_secret,
-        }
-
-        custom_check_output(
-            logger, command, environment_variables=environment_variables
+        command = (
+            f"zbctl deploy {relative_file_path} "
+            "--address {config.zeebe_credentials.cluster_id} "
+            "--clientId {config.zeebe_credentials.client_id} "
+            "--clientSecret {config.zeebe_credentials.client_secret}"
         )
+
+        custom_check_output(logger, command)
