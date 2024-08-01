@@ -15,7 +15,10 @@ def deploy_diagram_to_cluster(logger: Logger, config: CamundaConfig):
         if os.path.isdir(bpm_file_path)
         else []
     ):
-        relative_file_path = os.path.join(bpm_file_path, file_name, volume_path)
+        logger.info(f"Deploying {file_name}")
+        logger.info(f"Volume path: {volume_path}")
+        logger.info(f"BPM file path: {bpm_file_path}")
+        relative_file_path = os.path.join(volume_path, bpm_file_path, file_name)
 
         logger.info(f"Deploying {relative_file_path}")
 
