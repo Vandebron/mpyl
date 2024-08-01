@@ -1,8 +1,10 @@
 """Bpm deployment related helper methods"""
 
 from logging import Logger
+import os
+
+from mpyl.utilities.subprocess import custom_check_output
 from ..bpm.camunda_modeler_client import CamundaModelerClient
-from ..bpm.cluster import deploy_diagram_to_cluster
 from ..bpm.modeler import deploy_diagram_to_modeler
 from ....utilities.bpm import CamundaConfig
 from ....utilities.http_client.exceptions import HTTPRequestError, AuthorizationError
@@ -12,7 +14,35 @@ from ...models import Output
 def deploy_to_cluster(
     logger: Logger, project_name: str, config: CamundaConfig
 ) -> Output:
-    deploy_diagram_to_cluster(logger, config)
+    bpm_file_path = config.deployment_path.bpm_diagram_folder_path
+
+    for file_name in (
+        [fn for fn in os.listdir(bpm_file_path) if fn.endswith(".bpmn")]
+        if os.path.isdir(bpm_file_path)
+        else []
+    ):
+        relative_file_path = os.path.join(bpm_file_path, file_name)
+
+        logger.info(f"Deploying {relative_file_path}")
+
+        command = (
+            f"zbctl deploy {relative_file_path} "
+            f"--address {config.zeebe_credentials.cluster_id} "
+            f"--clientId {config.zeebe_credentials.client_id} "
+            f"--clientSecret {config.zeebe_credentials.client_secret}"
+        )
+
+        output = custom_check_output(logger, command)
+
+        if output.success is False:
+            return Output(
+                success=False,
+                message=(
+                    f"Deployment of BPM diagrams to cluster for project {project_name} "
+                    f"failed with {output.message}"
+                ),
+                produced_artifact=None,
+            )
 
     return Output(
         success=True,
