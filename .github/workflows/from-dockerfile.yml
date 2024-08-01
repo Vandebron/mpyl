@@ -1,6 +1,6 @@
 name: from-dockerfile
 on:
-  push:
+  workflow_dispatch:
 
 jobs:
   trial:
@@ -15,4 +15,3 @@ jobs:
         uses: ./.github/run-mpyl
         with:
           mpyl-command: health
-          image: ../../Dockerfile

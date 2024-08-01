@@ -1,6 +1,6 @@
 name: from-image
 on:
-  push:
+  workflow_dispatch:
 
 jobs:
   trial:
@@ -19,7 +19,6 @@ jobs:
       - uses: aws-actions/amazon-ecr-login@v2
 
       - name: Check mpyl health
-        uses: ./.github/run-mpyl
+        uses: ./.github/run-mpyl2
         with:
           mpyl-command: health
-          image: gh-mpyl:latest

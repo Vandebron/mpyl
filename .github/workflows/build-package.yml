@@ -225,12 +225,17 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_ECR_SECRET_ACCESS_KEY }}
           aws-region: eu-central-1
       - uses: aws-actions/amazon-ecr-login@v2
+        id: ecr-login
+
+      - uses: int128/create-ecr-repository-action@v1
+        with:
+          repository: vandebron/gh-mpyl
 
       - name: Push image
         uses: docker/build-push-action@v6
         with:
           file: Dockerfile
-          tags: gh-mpyl:latest
-          cache-from: gh-mpyl:latest
+          tags: ${{ steps.ecr-login.outputs.registry }}/vandebron/gh-mpyl:latest
+          cache-from: ${{ steps.ecr-login.outputs.registry }}/vandebron/gh-mpyl:latest
           cache-to: type=inline
           push: true

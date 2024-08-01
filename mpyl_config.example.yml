@@ -65,7 +65,7 @@ kubernetes:
       maxUnavailable: "25%"
       maxSurge: "25%"
     type: "RollingUpdate"
-  deployAction: HelmDeploy
+  deployAction: KubectlManifest
   defaultCluster:
     pr: 'K8S-Test'
     test: 'K8S-Test'
