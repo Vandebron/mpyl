@@ -2,7 +2,7 @@
 
 import subprocess
 from logging import Logger
-from typing import Union, Optional
+from typing import Union
 
 from ..logging import try_parse_ansi
 from ...steps.models import Output

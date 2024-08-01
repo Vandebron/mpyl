@@ -15,10 +15,9 @@ def deploy_diagram_to_cluster(logger: Logger, config: CamundaConfig):
         if os.path.isdir(bpm_file_path)
         else []
     ):
-        logger.info(f"Deploying diagram: {file_name}")
-        relative_file_path = os.path.relpath(
-            os.path.join(bpm_file_path, file_name), volume_path
-        )
+        relative_file_path = os.path.join(bpm_file_path, file_name, volume_path)
+
+        logger.info(f"Deploying {relative_file_path}")
 
         command = (
             f"zbctl deploy {relative_file_path} "
