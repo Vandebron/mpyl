@@ -2,7 +2,7 @@
 
 import subprocess
 from logging import Logger
-from typing import Union
+from typing import Union, Optional
 
 from ..logging import try_parse_ansi
 from ...steps.models import Output
@@ -13,7 +13,7 @@ SUBPROCESS_FAILED = "Subprocess failed"
 def custom_check_output(
     logger: Logger,
     command: Union[str, list[str]],
-    environment_variables: Union[dict[str, str], None] = None,
+    environment_variables: Optional[dict[str, str]] = None,
     capture_stdout: bool = False,
     use_print: bool = False,
 ) -> Output:
