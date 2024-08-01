@@ -5,9 +5,12 @@ inputs:
   mpyl-command:
     description: The mpyl command to run
     required: true
+  image:
+    description: The docker image to use
+    default: ../../Dockerfile
 
 runs:
   using: docker
-  image: ../../Dockerfile
+  image: ${{ inputs.image }}
   args:
     - ${{ inputs.mpyl-command }}

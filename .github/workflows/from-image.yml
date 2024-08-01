@@ -1,0 +1,25 @@
+name: from-image
+on:
+  push:
+
+jobs:
+  trial:
+    name: Run from image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ECR_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_ECR_SECRET_ACCESS_KEY }}
+          aws-region: eu-central-1
+      - uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Check mpyl health
+        uses: ./.github/run-mpyl
+        with:
+          mpyl-command: health
+          image: gh-mpyl:latest
