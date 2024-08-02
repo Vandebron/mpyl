@@ -37,10 +37,6 @@ Create a pull request.
 gh pr create --draft
 ```
 If you use MPyL in a github action, a build will be triggered automatically and the results will be reported there.
-If you use jenkins as your CI tool, you can trigger a build on your pull request:
-```shell
-mpyl build jenkins
-```
 
 ### Command structure
 
@@ -60,13 +56,6 @@ or `lint`.
 </details>
 
 <details>
-  <summary>Repo</summary>
-```
-.. include:: tests/cli/test_resources/repo_help_text.txt
-```
-</details>
-
-<details>
   <summary>Build</summary>
 ```
 .. include:: tests/cli/test_resources/build_help_text.txt
@@ -77,7 +66,7 @@ or `lint`.
 
 MPyL can be configured through a file that adheres to the `mpyl_config.yml`
 [schema](https://vandebron.github.io/mpyl/schema/mpyl_config.schema.yml).  
-Which configuration fields need to be set depends on your usecase. The error messages that you
+Which configuration fields need to be set depends on your use case. The error messages that you
 encounter while using the cli may guide you through the process.
 Note that the included `mpyl_config.example.yml` is just an example.
 
@@ -92,8 +81,6 @@ will be absent in the resulting configuration dictionary.
 .. include:: mpyl_config.example.yml
 ```
 </details>
-
-
 
 Check the [schema](https://vandebron.github.io/mpyl/schema/run_properties.schema.yml) for `run_properties.yml`, which contains detailed
 documentation and can be used to enable on-the-fly validation and auto-completion in your IDE.
@@ -206,21 +193,12 @@ jobs:
       - name: Install MPyL
         run: pip install 'mpyl==<latest_version>'
 
-      - name: Initialize repo
-        run: mpyl repo init --branch ${{ github.ref }} --url https://${{ env.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git --pristine
-
       - name: Print execution plan
         run: mpyl build status
 
       - name: Build run
         run: mpyl build run
 ```
-The `--pristine` flag in the `mpyl repo init` command will clone the repository into the current *empty* workspace, using
-```shell
-git clone --shallow-exclude main --single-branch --branch <branch_name> https://github.com/<org>/<repo>.git
-```
-This will result in a shallow clone of the repository, containing only the files that are relevant for the current
-pull request.
 
 ### Dagster
 Although [dagster](https://dagster.io/)'s primary focus is data processing and lineage, it can be used as a runner for MPyL.
@@ -283,44 +261,9 @@ These files speed up subsequent runs by preventing steps from being executed whe
 mpyl build clean
 ```
 
-##### Remote caching
-To preserve intermediate build results between runs, you can use the
-```shell
-mpyl build artifacts push
-```
-command at the end of a run. This will push the `.mpyl` folder to the remote repository configured in `mpyl_config.yml`
-```yaml
-vcs:
-  cachingRepository:
-      mainBranch: 'main'
-      remote:
-        url: 'https://github.com/acme/artifact-repo.git'
-        userName: !ENV ${GIT_CREDENTIALS_USR}
-        password: !ENV ${GIT_CREDENTIALS_PSW}
-        email: "employee@acme.com"
-```
-To pull the previously pushed artifacts, use
-```shell
-mpyl build artifacts pull
-```
-at the beginning of your run.
-
-## ..report the outcome of a pipeline run
-
-MPyL comes with built-in reporters for *Github*, *Jira* and *Slack*. See `mpyl.reporting.targets` how to configure
-them and for instructions on how to create your own reporter.
-
 ## ..create a custom step
 
 See `mpyl.steps`.
-
-## ..create a build step
-
-### Building a docker image
-
-If the output of your build step is a docker image, you can use the `mpyl.steps.build.docker_after_build` step to
-make sure the resulting image is tagged, pushed to the registry and made available as an artifact for
-later (deploy) steps.
 
 ## ..create a test step
 

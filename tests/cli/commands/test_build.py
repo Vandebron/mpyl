@@ -1,4 +1,5 @@
 import logging
+import shutil
 
 from click.testing import CliRunner
 
@@ -83,8 +84,10 @@ class TestBuildCommand:
         assert result.exception is None
         assert result.status_line == "✅ Successful"
         assert result.is_success
-
         assert result.exception is None
+
+        # Cleanup the created folder & files
+        shutil.rmtree(project_executions.pop().project.root_path)
 
     def test_run_build_throwing_step_should_be_handled(self):
         projects = {get_project_with_stages({"build": "Throwing Build"})}

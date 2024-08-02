@@ -4,7 +4,7 @@
 
 1. Clone the mpyl repo
  ```shell
- gh repo clone Vandebron/mpyl
+ gh repo clone Vandebron/gh-mpyl
  ```
 
 2. Install dependencies

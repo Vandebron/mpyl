@@ -1,3 +1,0 @@
-A	projects/a/this-file-was-added
-R100	projects/b/this-was-the-old-name	projects/b/this-file-was-renamed
-D	projects/c/this-file-was-removed

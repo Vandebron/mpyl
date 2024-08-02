@@ -1,2 +1,0 @@
-MPyL log level is set to INFO
-Branch not specified at [1;36;40mbuild.versioning.branch[0m in [3mrun_properties.yml[0m, falling

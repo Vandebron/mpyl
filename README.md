@@ -59,20 +59,9 @@ The following technologies are expected to be present on the local OS:
 MPyL is extensible and has a minimal footprint. Having said that, batteries for the following technologies are included.
 
 ##### CI/CD
-###### Build
-- [Docker](https://www.docker.com/) `mpyl.steps.build.dockerbuild`
-- [Scala (SBT)](https://www.scala-sbt.org/) `mpyl.steps.build.sbt`
-- [Jenkins](https://www.jenkins.io/)  `mpyl.cli.commands.build.jenkins` and
-  `mpyl.utilities.jenkins.runner.JenkinsRunner`
-
 ###### Testing
 - [Junit](https://junit.org/) `mpyl.steps.models.ArtifactType.JUNIT_TESTS`
 
 ###### Deployment
 - [K8S](https://kubernetes.io/) `mpyl.steps.deploy.kubernetes`
 - [Helm](https://helm.sh/) `mpyl.steps.deploy.k8s.helm`
-
-##### Reporting
-- [Jira](https://www.atlassian.com) `mpyl.reporting.targets.jira`
-- [Github](https://github.com/) `mpyl.reporting.targets.github`
-- [Slack](https://slack.com/) `mpyl.reporting.targets.slack`

@@ -1,6 +1,5 @@
 """Docker related utility methods"""
 
-import json
 import logging
 import shlex
 import shutil

@@ -79,7 +79,7 @@ properties:
             enum: [ "NOTSET", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL" ]
             default: "INFO"
       versioning:
-        description:
+        description: Versioning information
         type: object
         additionalProperties: false
         required:

@@ -1,3 +1,0 @@
-.github/workflows/build-mpyl-pipeline.yml
-projects/sbt-service/src/main/scala/vandebron/mpyl/Main.scala
-projects/service/src/sum.js

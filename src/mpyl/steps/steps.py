@@ -263,7 +263,6 @@ class Steps:
     ) -> StepResult:
         """
         :param stage: the stage to execute
-        :param project: the project metadata
         :param project_execution: the project execution information
         :param dry_run: indicates whether artifacts should be submitted or deployed for real
         :return: StepResult
