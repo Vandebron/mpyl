@@ -1,5 +1,15 @@
 # Release notes
 
+## MPyL 1.7.1
+
+
+#### BPM Diagram deploy remove Docker dependency
+- Remove the usage of Docker when deploying BPM diagrams
+- Instead, rely on the tool being pre-installed in the cluster (similar to Scala etc.)
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.7.1)
+
 ## MPyL 1.7.0
 
 

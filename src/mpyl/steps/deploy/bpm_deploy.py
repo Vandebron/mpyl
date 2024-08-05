@@ -34,9 +34,9 @@ class BpmDiagramDeploy(Step):
         )
 
         project_name = step_input.project_execution.project.name
-        docker_result = deploy_to_cluster(self._logger, project_name, camunda_config)
-        bpm_deploy_results.append(docker_result)
-        if docker_result.success:
+        result = deploy_to_cluster(self._logger, project_name, camunda_config)
+        bpm_deploy_results.append(result)
+        if result.success:
             modeler_result = deploy_to_modeler(
                 self._logger, project_name, camunda_config
             )
