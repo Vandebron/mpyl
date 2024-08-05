@@ -286,11 +286,13 @@ class Repository:  # pylint: disable=too-many-public-methods
         """
         projects = set(
             self._repo.git.ls_files(
-                f"*{folder_pattern}*{Project.project_yaml_path()}"
+                f"*{folder_pattern}*{Project.project_yaml_path()}",
+                recurse_submodules=True,
             ).splitlines()
         ) | set(
             self._repo.git.ls_files(
-                f"*{folder_pattern}*{Project.project_overrides_yml_pattern()}"
+                f"*{folder_pattern}*{Project.project_overrides_yml_pattern()}",
+                recurse_submodules=True,
             ).splitlines()
         )
         return sorted(projects)
