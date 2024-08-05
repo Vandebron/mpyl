@@ -3,7 +3,7 @@
 from logging import Logger
 import os
 
-from mpyl.utilities.subprocess import custom_check_output
+from ....utilities.subprocess import custom_check_output
 from ..bpm.camunda_modeler_client import CamundaModelerClient
 from ..bpm.modeler import deploy_diagram_to_modeler
 from ....utilities.bpm import CamundaConfig
@@ -34,7 +34,7 @@ def deploy_to_cluster(
 
         output = custom_check_output(logger, command)
 
-        if output.success is False:
+        if not output.success:
             return Output(
                 success=False,
                 message=(

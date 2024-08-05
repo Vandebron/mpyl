@@ -37,10 +37,7 @@ def custom_check_output(
             return Output(success=True, message=out)
 
         with subprocess.Popen(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
+            command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
         ) as process:
             if not process.stdout:
                 raise RuntimeError(
