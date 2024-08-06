@@ -5,9 +5,18 @@ inputs:
   mpyl-command:
     description: The mpyl command to run
     required: true
+  mpyl-config-path:
+    description: The path to the mpyl config file
+    default: mpyl_config.yml
+  changed-files-path:
+    description: The path to the file containing the changed files
+    required: false
 
 runs:
   using: docker
   image: ../../Dockerfile
   args:
     - ${{ inputs.mpyl-command }}
+  env:
+    MPYL_CONFIG_PATH: ${{ inputs.mpyl-config-path }}
+    CHANGED_FILES_PATH: ${{ inputs.changed-files-path }}
