@@ -12,9 +12,9 @@ The test results need to be written to a folder named `$WORKDIR/target/test-repo
 
 
 """
-import os
 from logging import Logger
 from typing import cast
+import os
 
 from python_on_whales import Container
 
@@ -66,7 +66,9 @@ class TestDocker(Step):
             after=IntegrationTestAfter(logger),
         )
 
-    def execute(self, step_input: Input) -> Output:
+    def execute(  # pylint: disable=too-many-arguments, too-many-locals
+        self, step_input: Input
+    ) -> Output:
         docker_config = DockerConfig.from_dict(step_input.run_properties.config)
         test_target = docker_config.test_target
         if not test_target:
