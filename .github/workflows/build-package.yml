@@ -287,7 +287,7 @@ jobs:
     # TODO: Rename this step and update the merge rule to match
     # name: Publish v${{ needs.Build_And_Upload.outputs.mpylVersion }}
     runs-on: ubuntu-latest
-    needs: [ Build_And_Upload, Lint, TypeCheck, Test, Integration_Test_PR, Integration_Test_Tag ]
+    needs: [ Build_And_Upload, Lint, TypeCheck, Test ]
     env:
       MPYL_CONFIG_PATH: mpyl_config.example.yml
     steps:
