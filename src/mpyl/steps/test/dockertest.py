@@ -12,6 +12,7 @@ The test results need to be written to a folder named `$WORKDIR/target/test-repo
 
 
 """
+import os
 from logging import Logger
 from typing import cast
 
@@ -75,6 +76,19 @@ class TestDocker(Step):
         project = step_input.project_execution.project
         dockerfile = docker_file_path(project=project, docker_config=docker_config)
         docker_registry_config = registry_for_project(docker_config, project)
+
+        build_args: dict[str, str] = get_default_build_args(
+            full_image_path_for_project(step_input),
+            project.maintainer,
+            step_input.run_properties.versioning.identifier,
+        )
+
+        if build_config := step_input.project_execution.project.build:
+            build_args |= {
+                arg.key: os.environ[arg.secret_id]
+                for arg in build_config.args.credentials
+            }
+
         success = build(
             logger=self._logger,
             root_path=docker_config.root_folder,
@@ -82,11 +96,7 @@ class TestDocker(Step):
             image_tag=tag,
             target=test_target,
             registry_config=docker_registry_config,
-            build_args=get_default_build_args(
-                full_image_path_for_project(step_input),
-                project.maintainer,
-                step_input.run_properties.versioning.identifier,
-            ),
+            build_args=build_args,
         )
 
         if success:
