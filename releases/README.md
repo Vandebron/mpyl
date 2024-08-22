@@ -2,6 +2,11 @@
 
 ## MPyL 1.7.2
 
+
+#### Docker test fix
+- Ensure the docker test step uses build args
+
+
 Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.7.2)
 
 ## MPyL 1.7.1
