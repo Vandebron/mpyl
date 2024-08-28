@@ -16,7 +16,7 @@ runs:
   using: docker
   image: ../../Dockerfile
   args:
-    - ${{ inputs.command }}
+    - ${{ inputs.command }} ${{ env.ACTIONS_RUNNER_DEBUG == 'true' && '--verbose' || '' }}
   env:
     MPYL_CONFIG_PATH: ${{ inputs.config-path }}
     CHANGED_FILES_PATH: ${{ inputs.changed-files-path }}
