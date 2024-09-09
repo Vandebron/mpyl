@@ -26,7 +26,7 @@ questionary = "==2.0.1"
 toml = "==0.10.2"
 boto3 = "==1.26.140"
 deepdiff = "==6.4.1"
-requests = "==2.31.0"
+requests = "==2.32.2"
 
 [dev-packages]
 types-jsonschema = "==4.17.0.1"
