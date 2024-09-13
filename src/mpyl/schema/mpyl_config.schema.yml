@@ -220,6 +220,10 @@ definitions:
         default: [ ".md", "*.svg" ]
         items:
           type: string
+      projectSubFolder:
+        description: "The project subfolder in which the `project.yml` file resides"
+        type: string
+        default: "deployment"
     required:
       - mainBranch
     title: Git

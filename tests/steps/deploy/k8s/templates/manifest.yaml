@@ -336,7 +336,7 @@ spec:
     - alert: the name of the alert
       annotations:
         description: |-
-          **{{ "{{" }} $value }}** new signup failures with reason `{{ "{{" }} $labels.reason }}`.
+          **{{ $value }}** new signup failures with reason `{{ $labels.reason }}`.
           You can find more details in: <unrelated link>
       expr: a prometheus expression
       for: 0m

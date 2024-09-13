@@ -562,32 +562,32 @@ class Project:
         return self.kubernetes.job
 
     @staticmethod
-    def project_yaml_path() -> str:
-        return "deployment/project.yml"
+    def project_yaml_file_name() -> str:
+        return "project.yml"
 
     @staticmethod
-    def project_overrides_yml_pattern() -> str:
-        return "deployment/project-override-*.yml"
+    def project_overrides_yaml_file_pattern() -> str:
+        return "project-override-*.yml"
 
     @property
-    def root_path(self) -> str:
-        return get_project_root_dir(self.path)
+    def root_path(self) -> Path:
+        return Path(self.path).parent.parent
 
     @property
-    def deployment_path(self) -> str:
-        return str(Path(self.root_path, "deployment"))
+    def deployment_path(self) -> Path:
+        return Path(self.path).parent
 
     @property
-    def target_path(self) -> str:
-        return str(Path(self.deployment_path, RUN_ARTIFACTS_FOLDER))
+    def target_path(self) -> Path:
+        return self.deployment_path / RUN_ARTIFACTS_FOLDER
 
     @property
-    def test_containers_path(self) -> str:
-        return str(Path(self.deployment_path, "docker-compose-test.yml"))
+    def test_containers_path(self) -> Path:
+        return self.deployment_path / "docker-compose-test.yml"
 
     @property
-    def test_report_path(self) -> str:
-        return str(Path(self.root_path, "target/test-reports"))
+    def test_report_path(self) -> Path:
+        return Path(self.root_path) / "target/test-reports"
 
     @staticmethod
     def from_config(values: dict, project_path: Path):
@@ -625,22 +625,13 @@ def validate_project(yaml_values: dict, root_dir: Path) -> dict:
     return yaml_values
 
 
-def get_project_root_dir(project_path: str) -> str:
-    if project_path.endswith(".yml"):
-        try:
-            return str(Path(project_path).parents[1]) + "/"
-        except IndexError:
-            pass
-    return project_path
-
-
 def load_possible_parent(
     full_path: Path,
     safe: bool = False,
 ) -> Optional[dict]:
-    parent_project_path = full_path.parents[1] / Project.project_yaml_path()
+    parent_project_path = full_path.parent / Project.project_yaml_file_name()
     if (
-        str(full_path).endswith(Project.project_yaml_path())
+        str(full_path).endswith(Project.project_yaml_file_name())
         or not parent_project_path.exists()
     ):
         return None

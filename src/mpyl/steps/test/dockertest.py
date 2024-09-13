@@ -145,6 +145,7 @@ class TestDocker(Step):
             artifact_type=ArtifactType.JUNIT_TESTS,
             step_input=step_input,
             spec=JunitTestSpec(
-                project.test_report_path, step_input.run_properties.details.tests_url
+                str(project.test_report_path),
+                step_input.run_properties.details.tests_url,
             ),
         )

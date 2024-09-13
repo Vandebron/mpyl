@@ -1,5 +1,4 @@
 """Commands related to projects and how they relate"""
-
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -28,7 +27,7 @@ from ..cli.commands.projects.lint import (
 )
 from ..cli.commands.projects.upgrade import check_upgrade
 from ..constants import DEFAULT_CONFIG_FILE_NAME
-from ..project import load_project, Project, Target, get_project_root_dir
+from ..project import load_project, Target
 from ..projects.versioning import (
     check_upgrades_needed,
     upgrade_file,
@@ -120,9 +119,7 @@ class ProjectPath(ParamType):
             Repository(config=RepoConfig.from_config(parsed_config))
         )
         found_projects = repo.find_projects(incomplete)
-        return [
-            CompletionItem(value=get_project_root_dir(proj)) for proj in found_projects
-        ]
+        return [CompletionItem(value=proj) for proj in found_projects]
 
 
 @projects.command(name="show", help="Show details of a project")
@@ -130,8 +127,9 @@ class ProjectPath(ParamType):
 @click.pass_context
 def show_project(ctx, name):
     obj = ctx.obj
-    project_path = f"{name}/{Project.project_yaml_path()}"
-    if not (obj.cli.repo.root_dir / project_path).exists():
+
+    project_file = Path(name)
+    if not (obj.cli.repo.root_dir / project_file).exists():
         obj.cli.console.print(
             Markdown(
                 f"Project `{name}` not found. 👉 Finding projects is much easier with [auto completion]"
@@ -144,7 +142,8 @@ def show_project(ctx, name):
         obj.cli.console.print("Did you mean one of these?")
         obj.cli.console.print([file.value for file in complete])
         return
-    print_project(obj.cli.repo, obj.cli.console, project_path)
+
+    print_project(obj.cli.repo, obj.cli.console, project_file)
 
 
 @projects.command(help="Validate the yaml of changed projects against their schema")

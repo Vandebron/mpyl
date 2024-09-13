@@ -1,5 +1,24 @@
 # Release notes
 
+## MPyL 1.7.3
+
+
+#### Fix Dagster Kubernetes deployments
+- Fixed an issue where Dagster Kubernetes deployments were using the wrong `mpyl_config` value for their Kubernetes context
+    - Old scenario: used `cluster_env` 
+    - New scenario: uses `context`
+    - This change makes sure the correct Kubernetes context is now chosen while deploying
+
+#### Revert fix on PrometheusRules alerts description
+- A fix was added to allow for variable interpolation in PrometheusRules alerts description.
+- As this fix was only added for Helm deployments, and we are now using ArgoCD, this fix is no longer needed and has been reverted.
+
+#### Various dependencies upgraded
+- Various dependencies have been upgraded
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.7.3)
+
 ## MPyL 1.7.2
 
 

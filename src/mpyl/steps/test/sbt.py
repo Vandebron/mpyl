@@ -94,7 +94,7 @@ class TestSbt(Step):
             artifact_type=ArtifactType.JUNIT_TESTS,
             step_input=step_input,
             spec=JunitTestSpec(
-                f"{project.test_report_path}",
+                str(project.test_report_path),
                 step_input.run_properties.details.tests_url,
             ),
         )

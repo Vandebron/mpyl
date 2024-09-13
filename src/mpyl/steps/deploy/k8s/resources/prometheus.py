@@ -30,8 +30,7 @@ def _alerts_to_rules(alerts: list[Alert]) -> list[dict]:
         {
             "alert": alert.name,
             "annotations": {
-                # To prevent {{ .. }} being replaced as Helm template -> https://stackoverflow.com/a/64694592/8376486
-                "description": alert.description.replace("{{", '{{ "{{" }}'),
+                "description": alert.description,
             },
             "expr": alert.expr,
             "for": alert.for_duration,
