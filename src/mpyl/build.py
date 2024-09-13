@@ -72,8 +72,8 @@ def write_run_plan(run_properties: RunProperties):
                     execution.project.name: {
                         "service": execution.project.name,
                         "path": execution.project.path,
-                        "artifacts_path": execution.project.target_path,
-                        "base_path": execution.project.root_path,
+                        "artifacts_path": str(execution.project.target_path),
+                        "base_path": str(execution.project.root_path),
                         "maintainers": execution.project.maintainer,
                         "pipeline": execution.project.pipeline,
                         "stages": stages,
@@ -187,7 +187,7 @@ def run_build(
                     reporter.send_report(accumulator)
 
                 if not result.output.success and stage.name == deploy.STAGE_NAME:
-                    logger.warning(f"Deployment failed for {project_execution.name}")
+                    logger.warning(f"{stage} failed for {project_execution.name}")
                     return accumulator
 
             if accumulator.failed_results:
