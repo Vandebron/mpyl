@@ -238,7 +238,7 @@ def docker_file_path(project: Project, docker_config: DockerConfig):
 
 
 def docker_copy(
-    logger: Logger, container_path: str, dst_path: str, container: Container
+    logger: Logger, container_path: str, dst_path: Path, container: Container
 ):
     """
     Copies the contents of the specified path within the container to a locally created destination
@@ -249,7 +249,7 @@ def docker_copy(
     :param container: the container to copy from
     """
     shutil.rmtree(dst_path, ignore_errors=True)
-    Path(dst_path).mkdir(parents=True, exist_ok=True)
+    dst_path.mkdir(parents=True, exist_ok=True)
 
     if not docker.container.exists(container.id):
         raise ValueError(f"Container {container.id} does not exist")
