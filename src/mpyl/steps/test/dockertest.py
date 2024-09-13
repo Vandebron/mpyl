@@ -15,6 +15,7 @@ The test results need to be written to a folder named `$WORKDIR/target/test-repo
 import os
 from logging import Logger
 from typing import cast
+import os
 
 from python_on_whales import Container
 
