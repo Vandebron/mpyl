@@ -4,7 +4,6 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/tests/projects/gradle/gradle-multi-module.tests.projects.gradle.main.iml" filepath="$PROJECT_DIR$/.idea/modules/tests/projects/gradle/gradle-multi-module.tests.projects.gradle.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/tests/projects/gradle/gradle-multi-module.tests.projects.gradle.test.iml" filepath="$PROJECT_DIR$/.idea/modules/tests/projects/gradle/gradle-multi-module.tests.projects.gradle.test.iml" />
-      <module fileurl="file://$PROJECT_DIR$/mpyl.iml" filepath="$PROJECT_DIR$/mpyl.iml" />
     </modules>
   </component>
 </project>

@@ -214,7 +214,7 @@ jobs:
         run: mpyl build status --all
 
       - name: Build run
-        run: mpyl build run --all
+        run: python plugin-run.py
         env:
           SOME_CREDENTIAL: credential
 
