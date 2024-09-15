@@ -14,3 +14,9 @@ watcherTasks.xml
 kubernetes-settings.xml
 # GitHub Copilot persisted chat sessions
 /copilot/chatSessions
+compiler.xml
+gradle.xml
+jarRepositories.xml
+kotlinc.xml
+ruff.xml
+modules.xml
