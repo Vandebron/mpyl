@@ -1,6 +1,8 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
   labels:
     name: job
     app.kubernetes.io/version: pr-1234
