@@ -22,9 +22,6 @@ deployments:
     repository: docker_host/example-dagster-user-code
   labels:
     name: example-dagster-user-code
-    app.kubernetes.io/version: 20230829-1234
-    app.kubernetes.io/name: example-dagster-user-code
-    app.kubernetes.io/instance: example-dagster-user-code
     maintainers: MPyL
     maintainer: MPyL
     version: 20230829-1234

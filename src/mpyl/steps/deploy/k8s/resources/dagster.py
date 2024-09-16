@@ -1,6 +1,7 @@
 """
 This module contains the Dagster user-code-deployment values conversion
 """
+
 from dataclasses import dataclass
 from typing import Optional
 
@@ -78,7 +79,11 @@ def to_user_code_values(
                         "tag": run_properties.versioning.identifier,
                         "repository": f"{docker_registry.host_name}/{project.name}",
                     },
-                    "labels": builder.to_labels(),
+                    "labels": {
+                        k: v
+                        for k, v in builder.to_labels().items()
+                        if not k.startswith("app.")
+                    },
                     "includeConfigInLaunchedRuns": {"enabled": True},
                     "name": release_name,
                     "port": 3030,
