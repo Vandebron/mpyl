@@ -422,7 +422,11 @@ class ChartBuilder:
         return V1Job(
             api_version="batch/v1",
             kind="Job",
-            metadata=self._to_object_meta(),
+            metadata=self._to_object_meta(
+                annotations={
+                    "argocd.argoproj.io/sync-options": "Force=true,Replace=true"
+                }
+            ),
             spec=spec,
         )
 
