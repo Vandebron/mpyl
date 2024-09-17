@@ -1,6 +1,7 @@
 from logging import Logger
 
 from src.mpyl.steps import Step, Meta, ArtifactType, Input, Output
+from src.mpyl.steps.models import input_to_artifact, ArchiveSpec
 from src.mpyl.utilities.subprocess import custom_check_output
 
 
@@ -21,7 +22,7 @@ class BuildGradle(Step):
                 version="0.0.1",
                 stage="build",
             ),
-            produced_artifact=ArtifactType.NONE,
+            produced_artifact=ArtifactType.ARCHIVE,
             required_artifact=ArtifactType.NONE,
         )
 
@@ -29,10 +30,20 @@ class BuildGradle(Step):
         execution = step_input.project_execution
         name = execution.name
         self._logger.info(f"Building project {name}")
-        project_name = str(execution.project.root_path).replace("/", ":")
+        path = execution.project.root_path
+        project_name = str(path).replace("/", ":")
 
         run_outcome = run_gradle(self._logger, project_name, "bootJar")
 
+        archive_path = path / "build" / "libs" / f"{path.name}.jar"
+        artifact = input_to_artifact(
+            ArtifactType.ARCHIVE,
+            step_input,
+            spec=ArchiveSpec(archive_path=f"{archive_path}"),
+        )
+
         return Output(
-            success=run_outcome.success, message=f"Built {name}", produced_artifact=None
+            success=run_outcome.success,
+            message=f"Built {name}",
+            produced_artifact=artifact,
         )
