@@ -14,4 +14,9 @@ springBoot {
 
 dependencies {
     implementation(libs.spring.boot.starter)
+    testImplementation(kotlin("test"))
+}
+
+tasks.test {
+    useJUnitPlatform()
 }

@@ -14,6 +14,7 @@ The test results need to be written to a folder named `$WORKDIR/target/test-repo
 """
 import os
 from logging import Logger
+from pathlib import Path
 from typing import cast
 
 from python_on_whales import Container
@@ -110,9 +111,14 @@ class TestDocker(Step):
             if not step_input.dry_run and docker_registry.cache_from_registry:
                 push_to_registry(self._logger, docker_registry, tag)
 
-            spec = cast(JunitTestSpec, artifact.spec)
-            summary = sum_suites(to_test_suites(spec))
-            spec.test_results_summary = summary
+            junit_spec: JunitTestSpec = cast(JunitTestSpec, artifact.spec)
+
+            summary = sum_suites(
+                to_test_suites(
+                    Path(junit_spec.test_output_path)  # pylint: disable=no-member
+                )
+            )
+            junit_spec.test_results_summary = summary
 
             output = Output(
                 success=summary.is_success,
