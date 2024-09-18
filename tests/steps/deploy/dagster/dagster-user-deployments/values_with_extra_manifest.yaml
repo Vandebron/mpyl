@@ -24,6 +24,12 @@ deployments:
     - name: bigdataregistry
     tag: pr-1234
     repository: docker_host/example-dagster-user-code
+  labels:
+    name: example-dagster-user-code
+    maintainers: MPyL
+    maintainer: MPyL
+    version: pr-1234
+    revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
   includeConfigInLaunchedRuns:
     enabled: true
   name: example-dagster-user-code-pr-1234
