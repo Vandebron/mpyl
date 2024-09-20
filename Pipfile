@@ -46,7 +46,7 @@ coverage = "==7.2.2"
 black = "==23.3.0"
 
 [requires]
-python_version = "3.9"
+python_version = "3.11"
 
 [scripts]
 cli = "python src/mpyl/__main__.py"
