@@ -36,7 +36,7 @@ twine = "==5.1.1"
 types-six = "==1.16.21.4"
 dagit = "==1.2.6"
 dagster = "==1.2.6"
-pylint = "==2.17.0"
+pylint = "==3.2.7"
 pytest = "==7.2.1"
 pytest-xdist = "==3.3.1"
 pdoc = "==14.0.0"
@@ -44,6 +44,7 @@ sqlalchemy = "<2.0.0" # forced downgrade https://github.com/dagster-io/dagster/d
 coverage = "==7.2.2"
 'black[d]' = "==23.3.0"
 black = "==23.3.0"
+dill = "*"
 
 [requires]
 python_version = "3.11"
