@@ -33,7 +33,7 @@ class VersioningProperties:
         return self.tag if self.tag else f"pr-{self.pr_number}"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=False)
 class RunContext:
     build_id: str
     """Uniquely identifies the run. Typically a monotonically increasing number"""
@@ -78,7 +78,7 @@ class ConsoleProperties:
 
 
 @yaml_object(yaml)
-@dataclass(frozen=True)
+@dataclass(frozen=False)
 class RunProperties:
     """Contains information that is specific to a particular run of the pipeline"""
 
@@ -177,7 +177,7 @@ class RunProperties:
 
 
 @yaml_object(yaml)
-@dataclass(frozen=True)
+@dataclass(frozen=False)
 class ArtifactType(Enum):
     def __eq__(self, other):
         return self.value == other.value
@@ -214,7 +214,7 @@ class ArtifactSpec:
 
 
 @yaml_object(yaml)
-@dataclass(frozen=True)
+@dataclass(frozen=False)
 class Artifact:
     artifact_type: ArtifactType
     revision: str
@@ -224,7 +224,7 @@ class Artifact:
 
 
 @yaml_object(yaml)
-@dataclass(frozen=True)
+@dataclass(frozen=False)
 class Input:
     project_execution: ProjectExecution
     run_properties: RunProperties

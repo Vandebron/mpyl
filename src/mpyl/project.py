@@ -627,7 +627,7 @@ def validate_project(yaml_values: dict, root_dir: Path) -> dict:
 
 def load_possible_parent(
     full_path: Path,
-    safe: bool = False,
+    loader: YAML,
 ) -> Optional[dict]:
     parent_project_path = full_path.parent / Project.project_yaml_file_name()
     if (
@@ -636,7 +636,7 @@ def load_possible_parent(
     ):
         return None
     with open(parent_project_path, encoding="utf-8") as file:
-        return YAML(typ=None if safe else "unsafe").load(file)
+        return loader.load(file)
 
 
 def load_project(
@@ -661,8 +661,9 @@ def load_project(
     with open(full_path, encoding="utf-8") as file:
         try:
             start = time.time()
-            yaml_values: dict = YAML(typ=None if safe else "unsafe").load(file)
-            parent_yaml_values: Optional[dict] = load_possible_parent(full_path, safe)
+            loader: YAML = YAML(typ=None if safe else "unsafe")
+            yaml_values: dict = loader.load(file)
+            parent_yaml_values: Optional[dict] = load_possible_parent(full_path, loader)
             yaml_values = merge_dicts(yaml_values, parent_yaml_values, True)
             if strict:
                 validate_project(yaml_values, root_dir=root_dir)

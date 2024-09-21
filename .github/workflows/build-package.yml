@@ -12,7 +12,7 @@ jobs:
       - uses: actions/setup-python@v5
         id: cache-dependencies
         with:
-          python-version: '3.9'
+          python-version: '3.11'
           cache: 'pipenv'
           cache-dependency-path: |
             Pipfile.lock
@@ -41,7 +41,7 @@ jobs:
       - uses: actions/setup-python@v5
         id: cache-dependencies
         with:
-          python-version: '3.9'
+          python-version: '3.11'
           cache: 'pipenv'
           cache-dependency-path: |
             Pipfile.lock
@@ -67,7 +67,7 @@ jobs:
       - uses: actions/setup-python@v5
         id: cache-dependencies
         with:
-          python-version: '3.9'
+          python-version: '3.11'
           cache: 'pipenv'
           cache-dependency-path: |
             Pipfile.lock
@@ -124,7 +124,7 @@ jobs:
       - uses: actions/setup-python@v5
         id: cache-dependencies
         with:
-          python-version: '3.9'
+          python-version: '3.11'
           cache: 'pipenv'
           cache-dependency-path: |
             Pipfile.lock
@@ -181,7 +181,7 @@ jobs:
     steps:
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.11'
 
       - name: Prefetch MPyL
         continue-on-error: true
@@ -227,7 +227,7 @@ jobs:
     steps:
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.11'
 
       - name: Prefetch MPyL Attempt
         continue-on-error: true

@@ -13,7 +13,7 @@ yaml = YAML()
 
 
 @yaml_object(yaml)
-@dataclass(frozen=True)
+@dataclass(frozen=False)
 class TestRunSummary:
     __test__ = False
     yaml_tag = "!TestRunSummary"
