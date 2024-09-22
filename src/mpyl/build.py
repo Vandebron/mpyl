@@ -39,7 +39,8 @@ def print_status(
     )
 
     # Write the run plan as a simple JSON file to be used by Github Actions
-    write_run_plan(run_properties)
+    if not cli_params.local:
+        write_run_plan(run_properties)
 
     console = obj.console
     logger = logging.getLogger("mpyl")
