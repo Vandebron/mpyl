@@ -50,7 +50,7 @@ dill = "==0.3.8"
 python_version = "3.11"
 
 [scripts]
-cli = "python src/mpyl/__main__.py"
+cli = "python run.py"
 cli-ext = "bash -c \"python $(dirname \\$PIPENV_PIPFILE)/src/mpyl/__main__.py $(echo $0) $(echo $@)\""
 build = "python setup.py bdist_wheel"
 create-graph = "pyreverse -o png src/mpyl"
