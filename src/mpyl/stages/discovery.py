@@ -298,7 +298,8 @@ def create_run_plan(
         changed_files_path=changed_files_path,
     )
 
-    _store_run_plan(logger, run_plan, run_plan_file)
+    if not local:
+        _store_run_plan(logger, run_plan, run_plan_file)
     return run_plan
 
 
