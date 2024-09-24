@@ -110,7 +110,7 @@ spec:
       serviceAccountName: dockertest
 ---
 # dockertest-ingress-0-http
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   labels:
@@ -138,7 +138,7 @@ spec:
   - web
 ---
 # dockertest-ingress-0-https
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   labels:
@@ -170,7 +170,7 @@ spec:
       namespace: traefik
 ---
 # dockertest-ingress-0-whitelist
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   annotations:
@@ -186,12 +186,12 @@ metadata:
     revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
   name: dockertest-ingress-0-whitelist
 spec:
-  ipWhiteList:
+  ipAllowList:
     sourceRange:
     - 10.0.0.1
 ---
 # dockertest-ingress-1-http
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   labels:
@@ -220,7 +220,7 @@ spec:
   - web
 ---
 # dockertest-ingress-1-https
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   labels:
@@ -250,7 +250,7 @@ spec:
     secretName: le-other-prod-wildcard-cert
 ---
 # dockertest-ingress-1-whitelist
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   annotations:
@@ -268,7 +268,7 @@ metadata:
     revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
   name: dockertest-ingress-1-whitelist
 spec:
-  ipWhiteList:
+  ipAllowList:
     sourceRange:
     - 10.0.0.1
     - 1.2.3.0
@@ -276,7 +276,7 @@ spec:
     - 1.2.3.4
 ---
 # dockertest-ingress-intracloud-https-0
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   labels:
