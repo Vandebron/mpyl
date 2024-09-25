@@ -196,7 +196,7 @@ jobs:
 
       - uses: ./.github/setup-kind
         with:
-          traefik-chart-version: 31.1.1
+          traefik-chart-version: 27.0.2
           prometheus-chart-version: 60.3.0
           sealed-secrets-chart-version: 2.7.3
           spark-operator-chart-version: 1.1.25
@@ -242,7 +242,7 @@ jobs:
 
       - uses: ./.github/setup-kind
         with:
-          traefik-chart-version: 31.1.1
+          traefik-chart-version: 27.0.2
           prometheus-chart-version: 60.3.0
           sealed-secrets-chart-version: 2.7.3
           spark-operator-chart-version: 1.1.25
