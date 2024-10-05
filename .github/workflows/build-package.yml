@@ -202,7 +202,7 @@ jobs:
           spark-operator-chart-version: 1.1.25
 
       - name: Check mpyl health
-        run: mpyl health --ci
+        run: mpyl health
 
       - name: Lint projects
         run: mpyl projects lint

@@ -1,4 +1,6 @@
-"""GitHub related utility methods"""
+"""GitHub related utility methods."""
+
+import subprocess
 from dataclasses import dataclass
 from typing import Optional
 
@@ -64,3 +66,18 @@ def get_pr_for_branch(repo: Repository, branch: str) -> PullRequest:
         )
 
     return pull_request
+
+
+def get_token(github_config: GithubConfig):
+    if github_config.token:
+        return github_config.token
+    return (
+        subprocess.run(
+            ["gh", "auth", "token"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=True,
+        )
+        .stdout.decode("utf-8")
+        .strip()
+    )

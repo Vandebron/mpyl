@@ -14,12 +14,11 @@ from typing import Optional
 from git.exc import GitCommandError
 from github import Github
 
-from ..cli.commands.build.jenkins import get_token
 from ..constants import RUN_ARTIFACTS_FOLDER
 from ..project import Project, Target, load_project
 from ..steps.deploy.k8s.deploy_config import DeployConfig, get_namespace
 from ..steps.models import RunProperties
-from ..utilities.github import GithubConfig
+from ..utilities.github import GithubConfig, get_token
 from ..utilities.repo import Repository, RepoConfig
 
 

@@ -22,8 +22,6 @@ definitions:
         "$ref": "#/definitions/Kubernetes"
       project:
         "$ref": "#/definitions/Project"
-      jenkins:
-        "$ref": "#/definitions/Jenkins"
       sbt:
         "$ref": "#/definitions/Sbt"
       slack:
@@ -444,19 +442,6 @@ definitions:
     required:
       - botToken
       - icons
-  Jenkins:
-    type: object
-    additionalProperties: false
-    required: [ 'url' ]
-    properties:
-      url:
-        type: [ string ]
-        format: url
-      pipelines:
-        type: object
-        additionalProperties: { "type": "string" }
-      defaultPipeline:
-        type: string
   Jira:
     type: object
     additionalProperties: false
