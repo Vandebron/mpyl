@@ -8,10 +8,9 @@ from importlib.metadata import version as version_meta
 from pathlib import Path
 from typing import Optional
 
-import aiohttp
 import click
 import requests
-from aiohttp import ClientConnectorError, ClientTimeout
+
 from click import BadParameter
 from rich.console import Console
 from rich.logging import RichHandler
@@ -43,17 +42,24 @@ class MpylCliParameters:
     dryrun: bool = True
 
 
+async def load_url(test: bool = False):
+    try:
+        return requests.get(
+            f"https://{'test.' if test else ''}pypi.org/pypi/mpyl/json", timeout=10
+        ).json()
+    except (
+        requests.exceptions.Timeout,
+        IOError,
+    ):
+        return {}
+
+
 async def get_publication_info(test: bool = False) -> dict:
     try:
-        async with aiohttp.ClientSession(timeout=ClientTimeout(total=10)) as session:
-            async with session.get(
-                f"https://{'test.' if test else ''}pypi.org/pypi/mpyl/json"
-            ) as response:
-                return await response.json()
+        return await load_url(test)
     except (
         asyncio.exceptions.TimeoutError,
         asyncio.exceptions.CancelledError,
-        ClientConnectorError,
         requests.exceptions.RequestException,
     ):
         return {}
