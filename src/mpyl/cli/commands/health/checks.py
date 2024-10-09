@@ -3,10 +3,8 @@
 import asyncio
 import os
 import pkgutil
-import shutil
 import sys
 from pathlib import Path
-from subprocess import CalledProcessError
 from typing import Optional
 
 import jsonschema
@@ -15,7 +13,6 @@ from rich.console import Console
 from rich.markdown import Markdown
 from rich.prompt import Confirm
 
-from ..build.jenkins import get_token
 from ....cli import get_latest_publication, get_meta_version
 from ....constants import (
     DEFAULT_CONFIG_FILE_NAME,
@@ -30,8 +27,6 @@ from ....projects.versioning import (
     upgrade_file,
     PROPERTIES_UPGRADERS,
 )
-from ....utilities.github import GithubConfig
-from ....utilities.jenkins import JenkinsConfig
 from ....utilities.pyaml_env import parse_config
 from ....validation import validate
 
@@ -51,9 +46,7 @@ class HealthConsole:
         self.console.print(Markdown(text))
 
 
-def perform_health_checks(
-    bare_console: Console, is_ci: bool = False, perform_upgrade: bool = False
-):
+def perform_health_checks(bare_console: Console, perform_upgrade: bool = False):
     console = HealthConsole(bare_console)
     load_dotenv(Path(".env"))
 
@@ -102,72 +95,6 @@ def perform_health_checks(
             schema_path="../../../schema/mpyl_config.schema.yml",
             upgraders=CONFIG_UPGRADERS,
             perform_upgrade=perform_upgrade,
-        )
-
-    if not is_ci:
-        console.title("Jenkins")
-        __check_jenkins(console)
-
-
-def __check_jenkins(console: HealthConsole):
-    path = os.environ.get("MPYL_CONFIG_PATH", default=DEFAULT_CONFIG_FILE_NAME)
-    if not os.path.exists(path):
-        console.check(f"Configuration not found at: `{path}`", success=False)
-        return
-
-    parsed = parse_config(Path(path))
-
-    try:
-        jenkins_conf = JenkinsConfig.from_config(parsed)
-        console.check(
-            f"Jenkins configured for pipeline `{jenkins_conf.default_pipeline}` "
-            f"at [{jenkins_conf.url}]({jenkins_conf.url})",
-            success=True,
-        )
-    except KeyError as exc:
-        console.check(f"Jenkins not (correctly) configured: {exc}", success=False)
-        return
-
-    gh_is_installed = shutil.which("gh")
-    if gh_is_installed:
-        console.check("Github cli client `gh` installed", success=True)
-    else:
-        console.check(
-            "Github cli client `gh` not found. Install via [https://cli.github.com/](https://cli.github.com/) "
-            "and run `gh auth login`",
-            success=False,
-        )
-
-    if gh_is_installed:
-        try:
-            get_token(GithubConfig.from_config(parsed))
-            console.check("Github token found", success=True)
-        except KeyError:
-            console.check(
-                "Config invalid, cannot determine github configuration", success=False
-            )
-        except CalledProcessError:
-            console.check(
-                "Github token not found. Log in with `gh auth login`", success=False
-            )
-
-    if os.environ.get("JENKINS_USER"):
-        console.check("Jenkins user set", success=True)
-    else:
-        jenkins_url = (
-            f"{JenkinsConfig.from_config(parsed).url}user/me@vandebron.nl/configure"
-        )
-        message = (
-            f"Jenkins user not set via JENKINS_USER env var. Create a user API token in Jenkins"
-            f" (user:password) API token: {jenkins_url}"
-        )
-        console.check(message, success=False)
-
-    if os.environ.get("JENKINS_PASSWORD"):
-        console.check("Jenkins password set", success=True)
-    else:
-        console.check(
-            "Jenkins password not set via JENKINS_PASSWORD env var", success=False
         )
 
 

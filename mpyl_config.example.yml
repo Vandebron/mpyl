@@ -67,12 +67,6 @@ docker:
   compose:
     periodSeconds: 2
     failureThreshold: 20
-jenkins:
-  url: 'https://acme.infra.nl/'
-  pipelines:
-    some-pipeline: 'Acme Pipeline - Main'
-    mpyl-test: 'MPyL Pipeline - Test'
-  defaultPipeline: 'mpyl-test'
 sbt:
   command: 'sbt'
   clientCommand: 'sbtn'

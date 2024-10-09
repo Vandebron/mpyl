@@ -28,7 +28,6 @@ from . import (
 )
 from . import create_console_logger
 from .commands.build.artifacts import prepare_artifacts_repo, branch_name
-from .commands.build.jenkins import JenkinsRunParameters, run_jenkins, get_token
 from ..artifacts.build_artifacts import (
     ManifestPathTransformer,
     BuildCacheTransformer,
@@ -46,7 +45,7 @@ from ..run_plan import RunPlan
 from ..steps.deploy.k8s.deploy_config import DeployConfig
 from ..steps.models import RunProperties
 from ..steps.run_properties import construct_run_properties
-from ..utilities.github import GithubConfig
+from ..utilities.github import GithubConfig, get_token
 from ..utilities.pyaml_env import parse_config
 from ..utilities.repo import Repository, RepoConfig
 
@@ -320,131 +319,6 @@ def ask_for_tag_input(ctx, _param, value) -> Optional[str]:
     if value == "prompt":
         return select_tag(ctx)
     return value
-
-
-@build.command(help="Run a multi branch pipeline build on Jenkins")
-@click.option(
-    "--user",
-    "-u",
-    help="Authentication API user. Can be set via env var JENKINS_USER",
-    envvar="JENKINS_USER",
-    type=click.STRING,
-    required=True,
-)
-@click.option(
-    "--password",
-    "-p",
-    help="Authentication API password. Can be set via env var JENKINS_PASSWORD",
-    envvar="JENKINS_PASSWORD",
-    type=click.STRING,
-    required=True,
-)
-@click.option(
-    "--pipeline",
-    "-pl",
-    help="The pipeline to run. Must be one of the pipelines listed in `jenkins.pipelines`. "
-    "Default value is `jenkins.defaultPipeline`",
-    type=Pipeline(),
-    required=False,
-)
-@click.option(
-    "--version",
-    "-v",
-    help="A specific version on https://pypi.org/project/mpyl/ to use for the build.",
-    type=click.STRING,
-    required=False,
-)
-@click.option(
-    "--test",
-    "-t",
-    help="The version supplied by `--version` should be considered from the Test PyPi mirror at"
-    " https://test.pypi.org/project/mpyl/.",
-    is_flag=True,
-    default=False,
-    required=False,
-)
-@click.option(
-    "--arguments",
-    "-a",
-    multiple=True,
-    help="A series of arguments to pass to the pipeline. Note that will run within the pipenv in jenkins. "
-    "To execute `mpyl build status`, pass `-a run -a mpyl -a build -a status`",
-)
-@click.option(
-    "--background",
-    "-bg",
-    help="Starts Jenkins build in a 'fire and forget' fashion. "
-    "Can be set via env var MPYL_JENKINS_BACKGROUND",
-    envvar="MPYL_JENKINS_BACKGROUND",
-    is_flag=True,
-    default=False,
-)
-@click.option(
-    "--silent",
-    "-s",
-    help="Indicates whether to show Jenkins' logging or not. "
-    "Can be set via env var MPYL_JENKINS_SILENT",
-    envvar="MPYL_JENKINS_SILENT",
-    is_flag=True,
-    default=False,
-)
-@click.option(
-    "--tag",
-    is_flag=False,
-    flag_value="prompt",
-    default="not_set",
-    callback=ask_for_tag_input,
-)
-@click.pass_context
-def jenkins(  # pylint: disable=too-many-arguments, too-many-locals
-    ctx,
-    user,
-    password,
-    pipeline,
-    version,
-    test,
-    arguments,
-    background,
-    silent,
-    tag,
-):
-    try:
-        asyncio.run(warn_if_update(ctx.obj.console))
-        if "jenkins" not in ctx.obj.config:
-            ctx.obj.console.print(
-                "No Jenkins configuration found in config file. "
-                "Please add a `jenkins` section to your MPyL config file."
-            )
-            sys.exit(0)
-        jenkins_config = ctx.obj.config["jenkins"]
-
-        selected_pipeline = pipeline if pipeline else jenkins_config["defaultPipeline"]
-        pipeline_parameters = (
-            {"TEST": "true" if test else "false", "VERSION": version} if version else {}
-        )
-        if arguments:
-            pipeline_parameters["BUILD_PARAMS"] = " ".join(arguments)
-
-        targets = (
-            select_targets()
-            if tag
-            else [Target.PULL_REQUEST.name]  # pylint: disable=no-member
-        )
-        for target in targets:
-            run_argument = JenkinsRunParameters(
-                jenkins_user=user,
-                jenkins_password=password,
-                config=ctx.obj.config,
-                pipeline=selected_pipeline,
-                pipeline_parameters=pipeline_parameters,
-                verbose=not silent or ctx.obj.verbose,
-                follow=not background,
-                tag=tag,
-                tag_target=getattr(Target, target) if tag else None,
-            )
-            run_jenkins(run_argument)
-    except asyncio.exceptions.TimeoutError:
-        pass
 
 
 @build.command(help=f"Clean all MPyL metadata in `{RUN_ARTIFACTS_FOLDER}` folders")
