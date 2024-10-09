@@ -53,11 +53,6 @@ properties:
           - Sbt Build
           - Docker Build
         type: string
-        enum:
-          - Sbt Build
-          - Docker Build
-          - Skip Build
-          - Echo Build
       test:
         description: >-
           Output needs to be a junit test result file
@@ -66,34 +61,17 @@ properties:
           - Sbt Test
           - Docker Test
         type: string
-        enum:
-          - Docker Test
-          - Sbt Test
-          - Skip Test
-          - Echo Test
       deploy:
         $id: '#/properties/stages/deploy'
         description: Deploys the artifacts created in the build stage
         examples:
           - Kubernetes Deploy
         type: string
-        enum:
-          - Docker Deploy
-          - Deploy From Docker Container
-          - Echo Deploy
-          - Kubernetes Deploy
-          - Kubernetes Job Deploy
-          - Kubernetes Spark Job Deploy
-          - Dagster Deploy
-          - BPM Diagram Deploy
       postdeploy:
         description: Additional steps that can be done after the project has been deployed.
         examples:
           - Skip Postdeploy
         type: string
-        enum:
-          - Skip Postdeploy
-          - Cypress Test
     minProperties: 1
   docker:
     description: Defines docker repository and it's credentials

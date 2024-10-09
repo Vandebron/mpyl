@@ -10,7 +10,7 @@ jobs:
       - uses: actions/setup-python@v5
         id: install-python
         with:
-          python-version: '3.9'
+          python-version: '3.11'
 
       - name: Install pipenv
         run: pip install pipenv

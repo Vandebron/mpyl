@@ -1,6 +1,7 @@
 """
 Simple run result formatters
 """
+from pathlib import Path
 from typing import cast
 
 from ...steps.models import ArtifactType
@@ -26,7 +27,7 @@ def to_string(run_result: RunResult) -> str:
 def to_test_report(artifact: JunitTestSpec) -> str:
     """Gather the test suites and their results."""
     test_result = []
-    suites = to_test_suites(artifact)
+    suites = to_test_suites(Path(artifact.test_output_path))
     total_tests = sum_suites(suites)
     test_result.append(f"{total_tests} \n\n")
     for suite in suites:

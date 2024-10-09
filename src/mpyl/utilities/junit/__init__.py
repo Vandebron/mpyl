@@ -37,9 +37,7 @@ class JunitTestSpec(ArtifactSpec):
     test_results_summary: Optional[TestRunSummary] = None
 
 
-def to_test_suites(artifact: JunitTestSpec) -> list[TestSuite]:
-    junit_result_path = artifact.test_output_path
-
+def to_test_suites(junit_result_path: Path) -> list[TestSuite]:
     xml = JUnitXml()
     for file_name in (
         [fn for fn in os.listdir(junit_result_path) if fn.endswith(".xml")]

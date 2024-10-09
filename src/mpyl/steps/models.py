@@ -205,6 +205,8 @@ class ArtifactType(Enum):
     """A helm chart written to a folder"""
     KUBERNETES_MANIFEST = 6
     """"A k8s manifest writen to a file"""
+    ARCHIVE = 7
+    """"An artifact archive e.g. .jar, .tar, .zip"""
 
 
 @yaml_object(yaml)
@@ -221,6 +223,13 @@ class Artifact:
     producing_step: str
     spec: ArtifactSpec
     hash: Optional[str] = None
+
+
+@yaml_object(yaml)
+@dataclass
+class ArchiveSpec(ArtifactSpec):
+    yaml_tag = "!ArchiveSpec"
+    archive_path: str
 
 
 @yaml_object(yaml)

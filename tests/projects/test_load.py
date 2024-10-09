@@ -27,6 +27,6 @@ class TestProjectLoad:
                 map(lambda d: (d.name, d), dependencies)
             )
 
-            assert len(dependencies) == 11
+            assert len(dependencies) == 12
             assert len(deps["job"].dependent_projects) == 1
             assert len(deps["sbtservice"].dependent_projects) == 0

@@ -1,5 +1,6 @@
 """A step to compile and run tests for an SBT project"""
 from logging import Logger
+from pathlib import Path
 from typing import cast
 
 from . import STAGE_NAME
@@ -62,7 +63,7 @@ class TestSbt(Step):
 
         if test_result.produced_artifact:
             spec = cast(JunitTestSpec, test_result.produced_artifact.spec)
-            suite = to_test_suites(spec)
+            suite = to_test_suites(Path(spec.test_output_path))
             summary = sum_suites(suite)
             spec.test_results_summary = summary
             return Output(

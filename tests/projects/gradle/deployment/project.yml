@@ -1,0 +1,7 @@
+name: 'gradle1'
+maintainer: ['MPyL']
+stages:
+  build: Gradle Build
+  test: Gradle Test
+mpylVersion: 1.0.10
+description: 'Demonstrates gradle build via plugin'
