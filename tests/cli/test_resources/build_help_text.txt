@@ -12,6 +12,5 @@ Options:
 Commands:
   artifacts  Commands related to artifacts like build cache and k8s manifests
   clean      Clean all MPyL metadata in `.mpyl` folders
-  jenkins    Run a multi branch pipeline build on Jenkins
   run        Run an MPyL build
   status     The status of the current local branch from MPyL's perspective
