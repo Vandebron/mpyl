@@ -1,5 +1,20 @@
 # Release notes
 
+## MPyL 1.7.5
+
+
+
+#### Demonstrate MPyL plugin mechanism.
+MPyL allows steps to be implemented outside and registered via a [plugin mechanism](https://vandebron.github.io/mpyl/mpyl/steps.html)
+
+Creating steps outside the MPyL library gives a much quicker roundtrip, 
+because you can build and test steps locally in the repo in which you're using MPyL.
+
+The mechanism is demonstrated in [plugin-run.py](../../plugin-run.py) which imports two
+[Gradle](https://gradle.org/) build steps defined in [plugins/gradle.py](../../plugins/gradle.py).
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.7.5)
+
 ## MPyL 1.7.4
 
 
