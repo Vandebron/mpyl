@@ -14,4 +14,4 @@ jobs:
       - name: Check mpyl health
         uses: ./.github/run-mpyl
         with:
-          mpyl-command: health
+          command: health
