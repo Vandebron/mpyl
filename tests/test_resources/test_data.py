@@ -92,10 +92,6 @@ def get_cron_job_project() -> Project:
     return safe_load_project("test_projects/test_cron_job_project.yml")
 
 
-def get_spark_project() -> Project:
-    return safe_load_project("test_projects/test_spark_project.yml")
-
-
 def safe_load_project(name: str) -> Project:
     return load_project(resource_path, Path(name), True, False)
 

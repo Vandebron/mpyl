@@ -281,7 +281,6 @@ class Resources:
 class Job:
     cron: TargetProperty[dict]
     job: dict
-    spark: dict
 
     @staticmethod
     def from_config(values: dict):
@@ -290,7 +289,6 @@ class Job:
         return Job(
             cron=TargetProperty.from_config(values.get("cron", {})),
             job=without_keys(values, {"cron"}),
-            spark=values.get("spark", {}),
         )
 
 

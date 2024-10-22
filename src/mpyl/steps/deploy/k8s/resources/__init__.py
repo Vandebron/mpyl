@@ -1,7 +1,8 @@
 """
 Custom Resource Definitions, allow you to create custom k8s resources, besides the default ones.
-This is useful for example when you want to configure a specific operator, like Spark or sealed secrets.
+This is useful for example when you want to configure a specific operator, like sealed secrets.
 """
+
 import pkgutil
 from typing import Optional
 
@@ -117,9 +118,11 @@ def to_dict(obj, skip_none=False):
         elif isinstance(value, dict):
             result[key] = dict(  # type: ignore
                 map(
-                    lambda item: (item[0], to_dict(item[1], skip_none))
-                    if hasattr(item[1], "to_dict")
-                    else item,
+                    lambda item: (
+                        (item[0], to_dict(item[1], skip_none))
+                        if hasattr(item[1], "to_dict")
+                        else item
+                    ),
                     value.items(),
                 )
             )

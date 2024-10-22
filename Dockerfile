@@ -7,7 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # the application crashes without emitting any logs due to buffering.
 ENV PYTHONUNBUFFERED=1
 
-RUN apt-get -y update && apt-get -y install git
+RUN apt-get -y update && apt-get -y install git helm
 
 # Switch to mpyl source code directory
 WORKDIR /app/mpyl

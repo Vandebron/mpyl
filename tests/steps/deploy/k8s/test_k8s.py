@@ -14,7 +14,6 @@ from src.mpyl.steps.deploy.k8s.chart import (
     to_service_chart,
     to_job_chart,
     to_cron_job_chart,
-    to_spark_job_chart,
 )
 from src.mpyl.steps.deploy.k8s.resources import to_yaml, CustomResourceDefinition
 from src.mpyl.steps.deploy.k8s.resources.traefik import V1AlphaIngressRoute
@@ -28,7 +27,6 @@ from tests.test_resources.test_data import (
     get_project,
     get_deployment_strategy_project,
     get_job_project,
-    get_spark_project,
     get_cron_job_project,
     get_minimal_project,
     TestStage,
@@ -299,23 +297,6 @@ class TestKubernetesChart:
         builder = self._get_builder(get_cron_job_project())
         chart = to_cron_job_chart(builder)
         self._roundtrip(self.template_path / "cronjob", template, chart)
-
-    @pytest.mark.parametrize(
-        "template",
-        [
-            "spark",
-            "service-account",
-            "config-map",
-            "role",
-            "rolebinding",
-            "sealed-secrets",
-            "prometheus-rule",
-        ],
-    )
-    def test_spark_chart_roundtrip(self, template):
-        builder = self._get_builder(get_spark_project())
-        chart = to_spark_job_chart(builder)
-        self._roundtrip(self.template_path / "spark", template, chart)
 
     def test_get_endpoint(self):
         project_with_swagger = get_project()
