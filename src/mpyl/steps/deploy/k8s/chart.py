@@ -34,7 +34,6 @@ from kubernetes.client import (
     V1CronJob,
     V1CronJobSpec,
     V1JobTemplateSpec,
-    V1ConfigMap,
     V1Role,
     V1RoleBinding,
     V1PolicyRule,
@@ -51,11 +50,6 @@ from .resources import (
 )  # pylint: disable = no-name-in-module
 from .resources.prometheus import V1PrometheusRule, V1ServiceMonitor
 from .resources.sealed_secret import V1SealedSecret
-from .resources.spark import (
-    to_spark_body,
-    get_spark_config_map_data,
-    V1SparkApplication,
-)
 from .resources.traefik import (
     V1AlphaIngressRoute,
     V1AlphaMiddleware,
@@ -75,7 +69,6 @@ from ....project import (
     Job,
     Traefik,
     TraefikHost,
-    get_env_variables,
     Alert,
     KeyValueRef,
     Metrics,
@@ -446,40 +439,6 @@ class ChartBuilder:
             spec=v1_cron_job_spec,
         )
 
-    def to_spark_application(self) -> V1SparkApplication:
-        return V1SparkApplication(
-            metadata=self._to_object_meta(),
-            schedule=self._get_job().cron.get_value(self.target)["schedule"],
-            body=to_spark_body(
-                project_name=self.release_name,
-                env_vars=get_env_variables(self.project, self.target),
-                spark=self._get_job().spark,
-                image=self._get_image(),
-                command=(
-                    self.project.kubernetes.command.get_value(self.target).split(" ")
-                    if self.project.kubernetes.command
-                    else None
-                ),
-                env_secret_key_refs={
-                    s.key: {"key": s.key, "name": self.release_name}
-                    for s in self.sealed_secrets
-                },
-                num_replicas=(
-                    self.project.kubernetes.resources.instances.get_value(self.target)
-                    if self.project.kubernetes.resources.instances
-                    else 1
-                ),
-            ),
-        )
-
-    def to_spark_config_map(self) -> V1ConfigMap:
-        return V1ConfigMap(
-            api_version="v1",
-            kind="ConfigMap",
-            data=get_spark_config_map_data(),
-            metadata=self._to_object_meta(),
-        )
-
     def to_prometheus_rule(self, alerts: list[Alert]) -> V1PrometheusRule:
         return V1PrometheusRule(
             metadata=self._to_object_meta(
@@ -543,16 +502,18 @@ class ChartBuilder:
                 white_lists=to_white_list(host.whitelists),
                 tls=host.tls.get_value(self.target) if host.tls else None,
                 insecure=host.insecure,
-                additional_route=next(
-                    (
-                        route
-                        for route in self.config_defaults.additional_routes
-                        if route.name == host.additional_route
-                    ),
-                    None,
-                )
-                if host.additional_route
-                else None,
+                additional_route=(
+                    next(
+                        (
+                            route
+                            for route in self.config_defaults.additional_routes
+                            if route.name == host.additional_route
+                        ),
+                        None,
+                    )
+                    if host.additional_route
+                    else None
+                ),
             )
             for idx, host in enumerate(hosts if hosts else default_hosts)
         ]
@@ -950,10 +911,3 @@ def to_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
 
 def to_cron_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
     return builder.to_common_chart() | {"cronjob": builder.to_cron_job()}
-
-
-def to_spark_job_chart(builder: ChartBuilder) -> dict[str, CustomResourceDefinition]:
-    return builder.to_common_chart() | {
-        "spark": builder.to_spark_application(),
-        "config-map": builder.to_spark_config_map(),
-    }

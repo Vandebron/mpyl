@@ -832,19 +832,6 @@ definitions:
                 $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.batch.v1.CronJobSpec'
               all:
                 $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.batch.v1.CronJobSpec'
-          spark:
-            description: >-
-              Spark job. Requires google spark operator to be installed.
-              https://github.com/GoogleCloudPlatform/spark-on-k8s-operator
-            type: object
-            additionalProperties: false
-            properties:
-              mainClass:
-                description: 'MainClass is the fully-qualified main class of the Spark application.'
-                type: string
-              mainApplicationFile:
-                description: 'MainFile is the path to a bundled JAR, Python, or R file of the application.'
-                type: string
       role:
         $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.rbac.v1.PolicyRule'
       metrics:

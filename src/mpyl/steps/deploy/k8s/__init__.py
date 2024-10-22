@@ -223,7 +223,7 @@ def deploy_helm_chart(  # pylint: disable=too-many-locals
     if action == DeployAction.HELM_TEMPLATE.value:  # pylint: disable=no-member
         template_path = helm.template(logger, chart_path, release_name)
         artifact = input_to_artifact(
-            ArtifactType.KUBERNETES_MANIFEST,
+            ArtifactType.HELM_CHART,
             step_input,
             spec=RenderedHelmChartSpec(str(template_path)),
         )
