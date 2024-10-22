@@ -24,10 +24,10 @@ class StepsCollection:
         )
         location = default_library_location
 
-        self.__load_steps_in_module(".", location)
-        if not IPluginRegistry.plugins:
-            self.__load_steps_in_module(".", alternative_library_location)
-            location = alternative_library_location
+        self.__load_steps_in_module(logger, ".", location)
+
+        self.__load_steps_in_module(logger, ".", alternative_library_location)
+        location = alternative_library_location
 
         logger.debug(f"Loaded {len(IPluginRegistry.plugins)} executors from {location}")
         if not IPluginRegistry.plugins:
@@ -42,20 +42,27 @@ class StepsCollection:
             self._step_executors.add(step_instance)
 
     @staticmethod
-    def __load_steps_in_module(module_root: str, base_path: str) -> None:
-        module = importlib.import_module(module_root, base_path)
+    def __load_steps_in_module(
+        logger: Logger, module_root: str, base_path: str
+    ) -> None:
+        try:
+            module = importlib.import_module(module_root, base_path)
 
-        module_names = [
-            modname
-            for _, modname, _ in pkgutil.walk_packages(
-                path=module.__path__,
-                prefix=module.__name__ + ".",
-                onerror=lambda x: None,
-            )
-        ]
+            module_names = [
+                modname
+                for _, modname, _ in pkgutil.walk_packages(
+                    path=module.__path__,
+                    prefix=module.__name__ + ".",
+                    onerror=lambda x: None,
+                )
+            ]
 
-        for modname in module_names:
-            importlib.import_module(modname)
+            for modname in module_names:
+                importlib.import_module(modname)
+            return None
+        except ModuleNotFoundError as exc:
+            logger.debug(f"Module {module_root} at {base_path} not found {exc}")
+            return None
 
     def get_stage_for_producing_artifact(
         self, project: Project, artifact: ArtifactType

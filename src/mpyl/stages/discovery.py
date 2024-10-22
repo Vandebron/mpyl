@@ -28,7 +28,7 @@ class DeploySet:
 
 
 def file_belongs_to_project(project: Project, path: str) -> bool:
-    return path.startswith(project.root_path)
+    return path.startswith(str(project.root_path))
 
 
 def is_file_in_project(logger: logging.Logger, project: Project, path: str) -> bool:
@@ -298,7 +298,8 @@ def create_run_plan(
         changed_files_path=changed_files_path,
     )
 
-    _store_run_plan(logger, run_plan, run_plan_file)
+    if not local:
+        _store_run_plan(logger, run_plan, run_plan_file)
     return run_plan
 
 

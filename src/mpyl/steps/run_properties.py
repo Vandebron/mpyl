@@ -33,7 +33,6 @@ def construct_run_properties(
                             project_path=Path(p),
                             strict=False,
                             log=True,
-                            safe=True,
                         ),
                         project_paths,
                     )

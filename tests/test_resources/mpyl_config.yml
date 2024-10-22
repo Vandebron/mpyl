@@ -6,23 +6,6 @@ vcs:
       userName: !ENV ${GIT_CREDENTIALS_USR:git-user}
       password: !ENV ${GIT_CREDENTIALS_PSW:git-password}
       email: !ENV ${GIT_EMAIL_ADDRESS:somebody@somewhere}
-  github:
-    repository: 'Vandebron/mpyl'
-    token: !ENV ${GITHUB_TOKEN}
-    app:
-      privateKeyPath: 'mpyl-pipeline.private-key.pem'
-      appId: '295700'
-slack:
-  botToken: !ENV ${SLACK_TOKEN}
-  icons:
-    building: '60fpsparrot'
-    success: 'thug-parrot'
-    failure: 'sadparrot'
-jira:
-  site: 'https://atlassian.net'
-  userName: !ENV ${JIRA_USER_PASSWORD_USR:jira_user}
-  password: !ENV ${JIRA_USER_PASSWORD_PSW:jira_password}
-  ticketPattern: '[A-Za-z]{2,}-\d+'
 docker:
   defaultRegistry: !ENV ${DOCKER_HOST_NAME:docker_host}
   registries:

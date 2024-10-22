@@ -1,7 +1,5 @@
-import platform
 import re
 
-import pytest
 from click.testing import CliRunner
 
 from src.mpyl import main_group, add_commands

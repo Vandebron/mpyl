@@ -218,6 +218,7 @@ class DeploymentDefaults:
         )
 
 
+# pylint: disable = too-many-public-methods
 class ChartBuilder:
     step_input: Input
     project: Project
@@ -262,7 +263,7 @@ class ChartBuilder:
         self.role = project.kubernetes.role
         self.deployment_strategy = project.kubernetes.deployment_strategy
 
-    def _to_labels(self) -> dict:
+    def to_labels(self) -> dict:
         run_properties = self.step_input.run_properties
         app_labels = {
             "name": self.release_name,
@@ -295,7 +296,7 @@ class ChartBuilder:
     ) -> V1ObjectMeta:
         return V1ObjectMeta(
             name=name if name else self.release_name,
-            labels=self._to_labels(),
+            labels=self.to_labels(),
             annotations=annotations,
         )
 
@@ -374,7 +375,7 @@ class ChartBuilder:
             metadata=V1ObjectMeta(
                 annotations=self._to_annotations(),
                 name=self.release_name,
-                labels=self._to_labels(),
+                labels=self.to_labels(),
             ),
             spec=V1ServiceSpec(
                 type="ClusterIP",
@@ -422,7 +423,11 @@ class ChartBuilder:
         return V1Job(
             api_version="batch/v1",
             kind="Job",
-            metadata=self._to_object_meta(),
+            metadata=self._to_object_meta(
+                annotations={
+                    "argocd.argoproj.io/sync-options": "Force=true,Replace=true"
+                }
+            ),
             spec=spec,
         )
 
@@ -853,7 +858,7 @@ class ChartBuilder:
             metadata=V1ObjectMeta(
                 annotations=self._to_annotations(),
                 name=self.release_name,
-                labels=self._to_labels(),
+                labels=self.to_labels(),
             ),
             spec=V1DeploymentSpec(
                 replicas=instances.get_value(target=self.target),

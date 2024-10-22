@@ -1,12 +1,12 @@
 """Simple MPyL build runner"""
 
+import datetime
 import json
 import logging
 import os
 import time
-import datetime
 from pathlib import Path
-from typing import Optional, Union
+from typing import Union, Optional
 
 from jsonschema import ValidationError
 from rich.console import Console
@@ -22,10 +22,10 @@ from .reporting.formatting.markdown import (
 from .reporting.targets import Reporter
 from .steps import deploy
 from .steps.collection import StepsCollection
-from .steps.models import RunProperties, Output
+from .steps.models import Output, RunProperties
 from .steps.run import RunResult
 from .steps.run_properties import construct_run_properties
-from .steps.steps import Steps, ExecutionException, StepResult
+from .steps.steps import ExecutionException, StepResult, Steps
 
 
 def print_status(
@@ -39,7 +39,8 @@ def print_status(
     )
 
     # Write the run plan as a simple JSON file to be used by Github Actions
-    write_run_plan(run_properties)
+    if not cli_params.local:
+        write_run_plan(run_properties)
 
     console = obj.console
     logger = logging.getLogger("mpyl")
@@ -72,8 +73,8 @@ def write_run_plan(run_properties: RunProperties):
                     execution.project.name: {
                         "service": execution.project.name,
                         "path": execution.project.path,
-                        "artifacts_path": execution.project.target_path,
-                        "base_path": execution.project.root_path,
+                        "artifacts_path": str(execution.project.target_path),
+                        "base_path": str(execution.project.root_path),
                         "maintainers": execution.project.maintainer,
                         "pipeline": execution.project.pipeline,
                         "stages": stages,
@@ -187,7 +188,7 @@ def run_build(
                     reporter.send_report(accumulator)
 
                 if not result.output.success and stage.name == deploy.STAGE_NAME:
-                    logger.warning(f"Deployment failed for {project_execution.name}")
+                    logger.warning(f"{stage} failed for {project_execution.name}")
                     return accumulator
 
             if accumulator.failed_results:

@@ -1,5 +1,4 @@
 """Commands related to projects and how they relate"""
-
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -27,7 +26,7 @@ from ..cli.commands.projects.lint import (
 )
 from ..cli.commands.projects.upgrade import check_upgrade
 from ..constants import DEFAULT_CONFIG_FILE_NAME
-from ..project import load_project, Target, get_project_root_dir
+from ..project import load_project, Target
 from ..projects.versioning import (
     check_upgrades_needed,
     upgrade_file,
@@ -119,9 +118,7 @@ class ProjectPath(ParamType):
             Repository(config=RepoConfig.from_config(parsed_config))
         )
         found_projects = repo.find_projects(incomplete)
-        return [
-            CompletionItem(value=get_project_root_dir(proj)) for proj in found_projects
-        ]
+        return [CompletionItem(value=proj) for proj in found_projects]
 
 
 @projects.command(help="Validate the yaml of changed projects against their schema")

@@ -110,7 +110,7 @@ spec:
       serviceAccountName: dockertest
 ---
 # dockertest-ingress-0-http
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   labels:
@@ -138,7 +138,7 @@ spec:
   - web
 ---
 # dockertest-ingress-0-https
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   labels:
@@ -170,7 +170,7 @@ spec:
       namespace: traefik
 ---
 # dockertest-ingress-0-whitelist
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   annotations:
@@ -186,12 +186,12 @@ metadata:
     revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
   name: dockertest-ingress-0-whitelist
 spec:
-  ipWhiteList:
+  ipAllowList:
     sourceRange:
     - 10.0.0.1
 ---
 # dockertest-ingress-1-http
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   labels:
@@ -220,7 +220,7 @@ spec:
   - web
 ---
 # dockertest-ingress-1-https
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   labels:
@@ -250,7 +250,7 @@ spec:
     secretName: le-other-prod-wildcard-cert
 ---
 # dockertest-ingress-1-whitelist
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   annotations:
@@ -268,7 +268,7 @@ metadata:
     revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
   name: dockertest-ingress-1-whitelist
 spec:
-  ipWhiteList:
+  ipAllowList:
     sourceRange:
     - 10.0.0.1
     - 1.2.3.0
@@ -276,7 +276,7 @@ spec:
     - 1.2.3.4
 ---
 # dockertest-ingress-intracloud-https-0
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   labels:
@@ -336,7 +336,7 @@ spec:
     - alert: the name of the alert
       annotations:
         description: |-
-          **{{ "{{" }} $value }}** new signup failures with reason `{{ "{{" }} $labels.reason }}`.
+          **{{ $value }}** new signup failures with reason `{{ $labels.reason }}`.
           You can find more details in: <unrelated link>
       expr: a prometheus expression
       for: 0m
@@ -401,7 +401,8 @@ metadata:
   name: dockertest
 spec:
   encryptedData:
-    SOME_SEALED_SECRET_ENV: AgCA5/qvMMp/qOyXA62f/4k89gB9vk/G9pwLzMwUH9ytqP97ml9V7+shq01Khkgz638uJz8UTff92cU2iq3yLAiElAEdQb0lwBCvG7qMXSeTkmCpZVJc8+oLbAC2m6IX3qXYFiOzwCrvrFiyPf1vxZGMcedJf0+13938yFyrPnnCH+DZGLReFWtJfp5POcvktaz9tv4kAz4LCvvwvFgPVeO3fxM2PDnegvbX7K2ojwftaFoyu0rOBylQaUsMGZd9KcFxuPnY6RXSrGh5lbyFHRZRy3RtrsWGy7Vh/vwMRjeHM3ORN4WeLQXpCRpvegD7bngXmR9yFuuD9FLDw/Wapllhv1sRX4uP2C9Fghdp005g/8iQ8IUHbC/7Rp967xs9YU6UO3kIURCQabvXpmDQ7kNbAcnDjilBY4WR8Wcsu3KJRA6dcpiZhhuQ7JbKNtySGhnRtzDuamuFUXTx8qkiegB0I8Db7Fd9K2I4bOuqhHoEgp9miQEWkd60rO5vcOqeuGzZE12ZN8XB8Iq4/QRWWafl8pjKrDf+r9ASFHUt2eAnvzK6GkGrZzZ2NRCew2csPU5V0iodkHZL+OpKQQ181J7YuJ4spziyOkzIBRRGwkrxfLmVAt5r6B5gcSsU30iOkHmbSgE37uDJAiSJmsnkzrkWARTKzEYGgvJcxKxI0ftsx5SggHCItSdnKlNBQ23bSTTdCKM1kJe0eHWHKg==
+    SOME_SEALED_SECRET_ENV: 
+      AgCA5/qvMMp/qOyXA62f/4k89gB9vk/G9pwLzMwUH9ytqP97ml9V7+shq01Khkgz638uJz8UTff92cU2iq3yLAiElAEdQb0lwBCvG7qMXSeTkmCpZVJc8+oLbAC2m6IX3qXYFiOzwCrvrFiyPf1vxZGMcedJf0+13938yFyrPnnCH+DZGLReFWtJfp5POcvktaz9tv4kAz4LCvvwvFgPVeO3fxM2PDnegvbX7K2ojwftaFoyu0rOBylQaUsMGZd9KcFxuPnY6RXSrGh5lbyFHRZRy3RtrsWGy7Vh/vwMRjeHM3ORN4WeLQXpCRpvegD7bngXmR9yFuuD9FLDw/Wapllhv1sRX4uP2C9Fghdp005g/8iQ8IUHbC/7Rp967xs9YU6UO3kIURCQabvXpmDQ7kNbAcnDjilBY4WR8Wcsu3KJRA6dcpiZhhuQ7JbKNtySGhnRtzDuamuFUXTx8qkiegB0I8Db7Fd9K2I4bOuqhHoEgp9miQEWkd60rO5vcOqeuGzZE12ZN8XB8Iq4/QRWWafl8pjKrDf+r9ASFHUt2eAnvzK6GkGrZzZ2NRCew2csPU5V0iodkHZL+OpKQQ181J7YuJ4spziyOkzIBRRGwkrxfLmVAt5r6B5gcSsU30iOkHmbSgE37uDJAiSJmsnkzrkWARTKzEYGgvJcxKxI0ftsx5SggHCItSdnKlNBQ23bSTTdCKM1kJe0eHWHKg==
 ---
 # service
 apiVersion: v1

@@ -33,7 +33,7 @@ class VersioningProperties:
         return self.tag if self.tag else f"pr-{self.pr_number}"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=False)
 class RunContext:
     build_id: str
     """Uniquely identifies the run. Typically a monotonically increasing number"""
@@ -78,7 +78,7 @@ class ConsoleProperties:
 
 
 @yaml_object(yaml)
-@dataclass(frozen=True)
+@dataclass(frozen=False)
 class RunProperties:
     """Contains information that is specific to a particular run of the pipeline"""
 
@@ -177,7 +177,7 @@ class RunProperties:
 
 
 @yaml_object(yaml)
-@dataclass(frozen=True)
+@dataclass(frozen=False)
 class ArtifactType(Enum):
     def __eq__(self, other):
         return self.value == other.value
@@ -205,6 +205,8 @@ class ArtifactType(Enum):
     """A helm chart written to a folder"""
     KUBERNETES_MANIFEST = 6
     """"A k8s manifest writen to a file"""
+    ARCHIVE = 7
+    """"An artifact archive e.g. .jar, .tar, .zip"""
 
 
 @yaml_object(yaml)
@@ -214,7 +216,7 @@ class ArtifactSpec:
 
 
 @yaml_object(yaml)
-@dataclass(frozen=True)
+@dataclass(frozen=False)
 class Artifact:
     artifact_type: ArtifactType
     revision: str
@@ -224,7 +226,14 @@ class Artifact:
 
 
 @yaml_object(yaml)
-@dataclass(frozen=True)
+@dataclass
+class ArchiveSpec(ArtifactSpec):
+    yaml_tag = "!ArchiveSpec"
+    archive_path: str
+
+
+@yaml_object(yaml)
+@dataclass(frozen=False)
 class Input:
     project_execution: ProjectExecution
     run_properties: RunProperties
@@ -249,16 +258,16 @@ class Output:
     produced_artifact: Optional[Artifact] = None
 
     @staticmethod
-    def path(target_path: str, stage: str):
+    def path(target_path: Path, stage: str):
         return Path(target_path, f"{stage}.yml")
 
-    def write(self, target_path: str, stage: str):
+    def write(self, target_path: Path, stage: str):
         Path(target_path).mkdir(parents=True, exist_ok=True)
         with Output.path(target_path, stage).open(mode="w+", encoding="utf-8") as file:
             yaml.dump(self, file)
 
     @staticmethod
-    def try_read(target_path: str, stage: str):
+    def try_read(target_path: Path, stage: str):
         path = Output.path(target_path, stage)
         if path.exists():
             with open(path, encoding="utf-8") as file:

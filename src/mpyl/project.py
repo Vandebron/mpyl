@@ -562,32 +562,32 @@ class Project:
         return self.kubernetes.job
 
     @staticmethod
-    def project_yaml_path() -> str:
-        return "deployment/project.yml"
+    def project_yaml_file_name() -> str:
+        return "project.yml"
 
     @staticmethod
-    def project_overrides_yml_pattern() -> str:
-        return "deployment/project-override-*.yml"
+    def project_overrides_yaml_file_pattern() -> str:
+        return "project-override-*.yml"
 
     @property
-    def root_path(self) -> str:
-        return get_project_root_dir(self.path)
+    def root_path(self) -> Path:
+        return Path(self.path).parent.parent
 
     @property
-    def deployment_path(self) -> str:
-        return str(Path(self.root_path, "deployment"))
+    def deployment_path(self) -> Path:
+        return Path(self.path).parent
 
     @property
-    def target_path(self) -> str:
-        return str(Path(self.deployment_path, RUN_ARTIFACTS_FOLDER))
+    def target_path(self) -> Path:
+        return self.deployment_path / RUN_ARTIFACTS_FOLDER
 
     @property
-    def test_containers_path(self) -> str:
-        return str(Path(self.deployment_path, "docker-compose-test.yml"))
+    def test_containers_path(self) -> Path:
+        return self.deployment_path / "docker-compose-test.yml"
 
     @property
-    def test_report_path(self) -> str:
-        return str(Path(self.root_path, "target/test-reports"))
+    def test_report_path(self) -> Path:
+        return Path(self.root_path) / "target/test-reports"
 
     @staticmethod
     def from_config(values: dict, project_path: Path):
@@ -625,27 +625,18 @@ def validate_project(yaml_values: dict, root_dir: Path) -> dict:
     return yaml_values
 
 
-def get_project_root_dir(project_path: str) -> str:
-    if project_path.endswith(".yml"):
-        try:
-            return str(Path(project_path).parents[1]) + "/"
-        except IndexError:
-            pass
-    return project_path
-
-
 def load_possible_parent(
     full_path: Path,
-    safe: bool = False,
+    loader: YAML,
 ) -> Optional[dict]:
-    parent_project_path = full_path.parents[1] / Project.project_yaml_path()
+    parent_project_path = full_path.parent / Project.project_yaml_file_name()
     if (
-        str(full_path).endswith(Project.project_yaml_path())
+        str(full_path).endswith(Project.project_yaml_file_name())
         or not parent_project_path.exists()
     ):
         return None
     with open(parent_project_path, encoding="utf-8") as file:
-        return YAML(typ=None if safe else "unsafe").load(file)
+        return loader.load(file)
 
 
 def load_project(
@@ -653,7 +644,6 @@ def load_project(
     project_path: Path,
     strict: bool = True,
     log: bool = True,
-    safe: bool = False,
 ) -> Project:
     """
     Load a `project.yml` to `Project` data class
@@ -661,8 +651,6 @@ def load_project(
     :param project_path: relative path from `root_dir` to the `project.yml`
     :param strict: indicates whether the schema should be validated
     :param log: indicates whether problems should be logged as warning
-    :param safe: indicates that correctness should be prioritized over speed. Safe loading is important
-    when the values possibly end up in artifacts
     :return: `Project` data class
     """
     log_level = logging.WARNING if log else logging.DEBUG
@@ -670,8 +658,9 @@ def load_project(
     with open(full_path, encoding="utf-8") as file:
         try:
             start = time.time()
-            yaml_values: dict = YAML(typ=None if safe else "unsafe").load(file)
-            parent_yaml_values: Optional[dict] = load_possible_parent(full_path, safe)
+            loader: YAML = YAML()
+            yaml_values: dict = loader.load(file)
+            parent_yaml_values: Optional[dict] = load_possible_parent(full_path, loader)
             yaml_values = merge_dicts(yaml_values, parent_yaml_values, True)
             if strict:
                 validate_project(yaml_values, root_dir=root_dir)

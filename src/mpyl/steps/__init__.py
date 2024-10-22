@@ -62,6 +62,12 @@ remains type safe and mistakes are found as early as possible.
 ##### Registration with the executor
 Importing the module in which your step is defined is enough to register it.
 Steps are automatically registered with the `mpyl.steps.steps.Steps` executor via the `IPluginRegistry` metaclass.
+
+Example:
+```python
+.. include:: ../../../plugin-run.py
+```
+
 """
 from __future__ import annotations
 

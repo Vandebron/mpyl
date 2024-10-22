@@ -11,7 +11,8 @@ def main(args: argparse.Namespace):
         from src.mpyl.steps.run_properties import construct_run_properties
         from src.mpyl.utilities.pyaml_env import parse_config
         from src.mpyl.cli import MpylCliParameters
-        from mpyl.build import run_mpyl
+        from src.mpyl.build import run_mpyl
+        from plugins.gradle import BuildGradle
 
     else:
         from mpyl.steps.run_properties import construct_run_properties

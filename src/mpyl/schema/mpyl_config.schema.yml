@@ -173,16 +173,6 @@ definitions:
         description: "Path to the file that contains the changed files"
       git:
         "$ref": "#/definitions/Git"
-      github:
-        "$ref": "#/definitions/Github"
-      cachingRepository:
-        description: "The repository where the build artifacts are persisted"
-        "$ref": "#/definitions/Git"
-      argoRepository:
-        description: "The argocd repository that contains the kubernetes manifests"
-        "$ref": "#/definitions/Git"
-      argoGithub:
-        "$ref": "#/definitions/Github"
     required:
       - git
     title: VCS
@@ -213,6 +203,10 @@ definitions:
         default: [ ".md", "*.svg" ]
         items:
           type: string
+      projectSubFolder:
+        description: "The project subfolder in which the `project.yml` file resides"
+        type: string
+        default: "deployment"
     required:
       - mainBranch
     title: Git
