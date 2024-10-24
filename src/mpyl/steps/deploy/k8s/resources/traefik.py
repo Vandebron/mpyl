@@ -70,6 +70,11 @@ class V1AlphaIngressRoute(CustomResourceDefinition):
                 {"name": host.name, "kind": "Service", "port": host.service_port}
             ],
             "middlewares": combined_middlewares,
+            "syntax": (
+                host.traefik_host.syntax.get_value(target)
+                if host.traefik_host.syntax
+                else None
+            ),
         }
 
         if host.traefik_host.priority:

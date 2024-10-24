@@ -414,6 +414,9 @@ definitions:
         $ref: '#/definitions/dtapNumberValue'
       additionalRoute:
         type: string
+      syntax:
+        description: Traefik version syntax to use
+        $ref: '#/definitions/dtapValue'
   livenessProbe:
     type: object
     additionalProperties: true
