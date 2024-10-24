@@ -21,6 +21,7 @@ spec:
       port: 8080
     middlewares:
     - name: intracloud-middleware@kubernetescrd
+    syntax: v2
   entryPoints:
   - intracloud
   tls:

@@ -21,6 +21,7 @@ spec:
       port: 8080
     middlewares:
     - name: dockertest-ingress-0-whitelist
+    syntax: v2
   entryPoints:
   - websecure
   tls:

@@ -22,5 +22,6 @@ spec:
     middlewares:
     - name: traefik-https-redirect@kubernetescrd
     - name: dockertest-ingress-0-whitelist
+    syntax: v2
   entryPoints:
   - web

@@ -131,6 +131,8 @@ deployment:
           test:
             - "Test"
         additionalRoute: "ingress-intracloud-https"
+        syntax:
+          all: v2
       - host:
           all: "Host(`some.other.host.com`)"
         servicePort: 4091
@@ -150,4 +152,6 @@ deployment:
             - "Outside-World"
         tls:
           all: "le-other-prod-wildcard-cert"
+        syntax:
+          all: v3
 
