@@ -2,9 +2,15 @@ name: mpyl
 description: Action to run mpyl from a docker container
 
 inputs:
-  command:
-    description: The mpyl command to run
+  group:
+    description: The command group to run
     required: true
+  command:
+    description: The command to run
+    required: true
+  debug:
+    description: Whether to run mpyl in debug mode
+    required: false
   config-path:
     description: The path to the mpyl config file
     default: mpyl_config.yml
@@ -16,7 +22,7 @@ runs:
   using: docker
   image: ../../Dockerfile
   args:
-    - ${{ inputs.command }}
+    - ${{ inputs.group }} ${{ inputs.debug != '' && '--verbose' || '' }} ${{ inputs.command }}
   env:
     MPYL_CONFIG_PATH: ${{ inputs.config-path }}
     CHANGED_FILES_PATH: ${{ inputs.changed-files-path }}
