@@ -1,0 +1,61 @@
+---
+name: '[CI] Release'
+
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+jobs:
+  release:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get Next Version
+        id: semver
+        uses: ietf-tools/semver-action@v1.8.0
+        with:
+          token: ${{ github.token }}
+          noVersionBumpBehavior: patch
+
+      - name: Tag version ${{ steps.semver.outputs.next }}
+        uses: actions/github-script@v7.0.1
+        with:
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/${{ steps.semver.outputs.next }}',
+              sha: context.sha
+            })
+
+      - name: Generate changelog
+        id: changelog
+        uses: requarks/changelog-action@v1.10.2
+        with:
+          token: ${{ github.token }}
+          fromTag: ${{ steps.semver.outputs.next }}
+          toTag: ${{ steps.semver.outputs.current }}
+          writeToFile: false
+          includeInvalidCommits: true
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1.14.0
+        with:
+          draft: false
+          makeLatest: true
+          tag: ${{  steps.semver.outputs.next }}
+          name: ${{ steps.semver.outputs.next }}
+          body: ${{ steps.changelog.outputs.changes }}
+          token: ${{ github.token }}
+
+      - name: Update Tags
+        env:
+          SHORT_VERSION: ${{ steps.semver.outputs.nextMajor }}
+        run: |-
+          git tag -f "${SHORT_VERSION}"
+          git push origin --tags --force
