@@ -349,9 +349,9 @@ class TraefikAdditionalRoute:
         if not values:
             return None
         return TraefikAdditionalRoute(
-            name=values.get("name", {}),
-            middlewares=values.get("middlewares", {}),
-            entrypoints=values.get("entrypoints", {}),
+            name=values.get("name", ""),
+            middlewares=values.get("middlewares", []),
+            entrypoints=values.get("entrypoints", []),
         )
 
 
@@ -365,6 +365,7 @@ class TraefikHost:
     priority: Optional[TargetProperty[int]]
     insecure: bool
     additional_route: Optional[str]
+    syntax: Optional[TargetProperty[str]]
 
     @staticmethod
     def from_config(values: dict):
@@ -377,6 +378,7 @@ class TraefikHost:
             priority=TargetProperty.from_config(values.get("priority", {})),
             insecure=values.get("insecure", False),
             additional_route=values.get("additionalRoute", None),
+            syntax=TargetProperty.from_config(values.get("syntax", {})),
         )
 
 

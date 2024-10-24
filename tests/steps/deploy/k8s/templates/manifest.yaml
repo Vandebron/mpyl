@@ -134,6 +134,7 @@ spec:
     middlewares:
     - name: traefik-https-redirect@kubernetescrd
     - name: dockertest-ingress-0-whitelist
+    syntax: v2
   entryPoints:
   - web
 ---
@@ -161,6 +162,7 @@ spec:
       port: 8080
     middlewares:
     - name: dockertest-ingress-0-whitelist
+    syntax: v2
   entryPoints:
   - websecure
   tls:
@@ -215,6 +217,7 @@ spec:
     middlewares:
     - name: traefik-https-redirect@kubernetescrd
     - name: dockertest-ingress-1-whitelist
+    syntax: v3
     priority: 1000
   entryPoints:
   - web
@@ -243,6 +246,7 @@ spec:
       port: 4091
     middlewares:
     - name: dockertest-ingress-1-whitelist
+    syntax: v3
     priority: 1000
   entryPoints:
   - websecure
@@ -299,6 +303,7 @@ spec:
       port: 8080
     middlewares:
     - name: intracloud-middleware@kubernetescrd
+    syntax: v2
   entryPoints:
   - intracloud
   tls:
