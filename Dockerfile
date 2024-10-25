@@ -1,5 +1,7 @@
-ARG PYTHON_VERSION=3.9
-FROM python:${PYTHON_VERSION}-slim AS base
+ARG PYTHON_VERSION=3.11
+FROM public.ecr.aws/vdb-public/python:${PYTHON_VERSION}-slim-bookworm AS base
+
+USER root
 
 # Prevents Python from writing pyc files.
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -26,6 +28,8 @@ ENV PYTHONPATH=/app
 # Switch to the directory of the calling repo
 WORKDIR /repo
 COPY entrypoint.sh ../entrypoint.sh
+
+USER vdbnonroot
 
 # Run the application.
 ENTRYPOINT ["/entrypoint.sh"]
