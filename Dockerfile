@@ -1,5 +1,5 @@
 ARG PYTHON_VERSION=3.11
-FROM python:${PYTHON_VERSION}-slim AS base
+FROM public.ecr.aws/vdb-public/python:${PYTHON_VERSION}-slim-bookworm AS base
 
 USER root
 
