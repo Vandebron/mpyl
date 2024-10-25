@@ -1,6 +1,8 @@
 ARG PYTHON_VERSION=3.11
 FROM python:${PYTHON_VERSION}-slim AS base
 
+USER root
+
 # Prevents Python from writing pyc files.
 ENV PYTHONDONTWRITEBYTECODE=1
 # Keeps Python from buffering stdout and stderr to avoid situations where
@@ -26,6 +28,8 @@ ENV PYTHONPATH=/app
 # Switch to the directory of the calling repo
 WORKDIR /repo
 COPY entrypoint.sh ../entrypoint.sh
+
+USER vdbnonroot
 
 # Run the application.
 ENTRYPOINT ["/entrypoint.sh"]
