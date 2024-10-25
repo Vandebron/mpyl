@@ -26,7 +26,7 @@ from ..project import load_project
 from ..run_plan import RunPlan
 from ..steps.run_properties import construct_run_properties
 from ..utilities.pyaml_env import parse_config
-from ..utilities.repo import Repository, RepoConfig
+from ..utilities.repo import Repository
 
 
 @click.group("build")
@@ -74,8 +74,7 @@ def build(ctx, config, properties, verbose):
         max_width=console_config.width,
     )
 
-    repo = ctx.with_resource(Repository(config=RepoConfig.from_config(parsed_config)))
-    ctx.obj = CliContext(parsed_config, repo, console, verbose, parsed_properties)
+    ctx.obj = CliContext(parsed_config, Repository(path=Path("")), console, verbose, parsed_properties)
 
 
 class CustomValidation(click.Command):

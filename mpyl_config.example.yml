@@ -1,14 +1,5 @@
 vcs:
   changedFilesPath: !ENV ${CHANGED_FILES_PATH}
-  git:
-    mainBranch: 'main'
-    ignorePatterns: ['*.md', '*.svg']
-    projectSubFolder: "deployment"
-    remote:
-      url: 'https://github.com/acme/repo.git'
-      userName: !ENV ${GIT_CREDENTIALS_USR}
-      password: !ENV ${GIT_CREDENTIALS_PSW}
-      email: !ENV ${GIT_EMAIL_ADDRESS:somebody@somewhere}
 dagster:
   baseNamespace: 'dagster'
   workspaceConfigMap: 'dagster-external-workspace-yaml'

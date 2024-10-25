@@ -33,7 +33,7 @@ from ..projects.versioning import (
     PROJECT_UPGRADERS,
 )
 from ..utilities.pyaml_env import parse_config
-from ..utilities.repo import Repository, RepoConfig
+from ..utilities.repo import Repository
 
 
 @dataclass
@@ -64,15 +64,10 @@ class ProjectsContext:
 @click.pass_context
 def projects(ctx, config, verbose, filter_):
     """Commands related to MPyL project configurations (project.yml)"""
-    console = create_console_logger(show_path=False, verbose=verbose, max_width=0)
-    parsed_config = parse_config(config)
     ctx.obj = ProjectsContext(
         cli=CliContext(
-            config=parsed_config,
-            repo=ctx.with_resource(
-                Repository(config=RepoConfig.from_config(parsed_config))
-            ),
-            console=console,
+            config=parse_config(config),
+            console=create_console_logger(show_path=False, verbose=verbose, max_width=0),
             verbose=verbose,
             run_properties={},
         ),
@@ -113,10 +108,7 @@ class ProjectPath(ParamType):
     name = "project_path"
 
     def shell_complete(self, ctx: click.Context, param, incomplete: str):
-        parsed_config = parse_config_from_supplied_location(ctx, param)
-        repo = ctx.with_resource(
-            Repository(config=RepoConfig.from_config(parsed_config))
-        )
+        repo = Repository(Path(""))
         found_projects = repo.find_projects(incomplete)
         return [CompletionItem(value=proj) for proj in found_projects]
 

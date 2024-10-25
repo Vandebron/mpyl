@@ -18,7 +18,7 @@ from ..run_plan import RunPlan
 from ..steps import deploy
 from ..steps.collection import StepsCollection
 from ..steps.models import Output, ArtifactType
-from ..utilities.repo import Changeset, Repository
+from ..utilities.repo import Changeset
 
 
 @dataclass(frozen=True)
@@ -260,13 +260,11 @@ def find_projects_to_execute(
 # pylint: disable=too-many-arguments
 def create_run_plan(
     logger: logging.Logger,
-    repository: Repository,
     all_projects: set[Project],
     all_stages: list[Stage],
     build_all: bool,
     local: bool,
     selected_projects: set[Project],
-    tag: Optional[str] = None,
     selected_stage: Optional[Stage] = None,
     changed_files_path: Optional[str] = None,
 ) -> RunPlan:
@@ -287,14 +285,11 @@ def create_run_plan(
 
     run_plan = _discover_run_plan(
         logger=logger,
-        repository=repository,
         all_projects=all_projects,
         all_stages=all_stages,
         build_all=build_all,
-        local=local,
         selected_projects=selected_projects,
         selected_stage=selected_stage,
-        tag=tag,
         changed_files_path=changed_files_path,
     )
 
@@ -306,25 +301,15 @@ def create_run_plan(
 # pylint: disable=too-many-arguments
 def _discover_run_plan(
     logger: logging.Logger,
-    repository: Repository,
     all_projects: set[Project],
     all_stages: list[Stage],
     build_all: bool,
-    local: bool,
     selected_projects: set[Project],
     selected_stage: Optional[Stage],
-    tag: Optional[str] = None,
     changed_files_path: Optional[str] = None,
 ) -> RunPlan:
     logger.info("Discovering run plan...")
-    changeset = _get_changes(
-        logger=logger,
-        repo=repository,
-        local=local,
-        tag=tag,
-        changed_files_path=changed_files_path,
-    )
-
+    changeset = Changeset.from_file(logger=logger, sha="FIXME ptab", changed_files_path=changed_files_path) if changed_files_path else None
     plan = {}
 
     def add_projects_to_plan(stage: Stage):
@@ -367,25 +352,6 @@ def _discover_run_plan(
 
 def for_stage(projects: set[Project], stage: Stage) -> set[Project]:
     return {p for p in projects if p.stages.for_stage(stage.name)}
-
-
-def _get_changes(
-    logger: logging.Logger,
-    repo: Repository,
-    local: bool,
-    tag: Optional[str] = None,
-    changed_files_path: Optional[str] = None,
-):
-    if changed_files_path:
-        return repo.changes_from_file(
-            logger=logger, changed_files_path=changed_files_path
-        )
-    if local:
-        return repo.changes_in_branch_including_local()
-    if tag:
-        return repo.changes_in_tagged_commit(logger=logger, tag=tag)
-
-    return repo.changes_in_branch()
 
 
 def _load_existing_run_plan(

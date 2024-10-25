@@ -15,7 +15,6 @@ from .cli.build import build
 from .cli.health import health
 from .cli.projects import projects
 from .utilities.pyaml_env import parse_config
-from .utilities.repo import RepoConfig, Repository
 
 
 def _disable_package_loggers(offending_loggers: list[str]):

@@ -171,45 +171,7 @@ definitions:
       changedFilesPath:
         type: [ string, null ]
         description: "Path to the file that contains the changed files"
-      git:
-        "$ref": "#/definitions/Git"
-    required:
-      - git
     title: VCS
-  Git:
-    type: object
-    additionalProperties: false
-    properties:
-      remote:
-        type: object
-        additionalProperties: false
-        required: [ 'url', 'userName', 'password', 'email']
-        properties:
-          url:
-            type: [ string ]
-          userName:
-            type: [ string, null ]
-          email:
-            description: "The email address to use when committing changes"
-            type: [ string, null ]
-          password:
-            type: [ string, null ]
-      mainBranch:
-        description: "The main branch of the repository, against which changes are compared"
-        type: string
-      ignorePatterns:
-        description: "Patterns to ignore when checking for changes"
-        type: array
-        default: [ ".md", "*.svg" ]
-        items:
-          type: string
-      projectSubFolder:
-        description: "The project subfolder in which the `project.yml` file resides"
-        type: string
-        default: "deployment"
-    required:
-      - mainBranch
-    title: Git
   Docker:
     type: object
     additionalProperties: false
