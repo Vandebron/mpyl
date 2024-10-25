@@ -29,7 +29,7 @@ ENV PYTHONPATH=/app
 WORKDIR /repo
 COPY entrypoint.sh ../entrypoint.sh
 
-USER vdbnonroot
+# USER vdbnonroot  # Enable again after removing git from the src code
 
 # Run the application.
 ENTRYPOINT ["/entrypoint.sh"]
