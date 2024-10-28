@@ -28,6 +28,68 @@ from ...utilities.docker import DockerConfig
 from ...utilities.helm import convert_to_helm_release_name, get_name_suffix
 
 
+class HelmTemplateDagster(Step):
+    """
+    This step only creates a dagster user code helm chart manifest but doesn't use helm to deloy the manifest, 
+    and doesn't write an entry to the dagster server's configmap
+    """
+
+    def __init__(self, logger: Logger) -> None:
+        super().__init__(
+            logger,
+            Meta(
+                name="Dagster Helm Template",
+                description="Creates a dagster user code helm chart",
+                version="0.0.1",
+                stage=STAGE_NAME,
+            ),
+            produced_artifact=ArtifactType.NONE,
+            required_artifact=ArtifactType.DOCKER_IMAGE,
+        )
+
+    # pylint: disable=R0914
+    def execute(self, step_input: Input) -> Output:
+        """
+        Creates the dagster user-code helm chart manifest and adds an server entry to dagster server's ConfigMap
+        """
+        properties = step_input.run_properties
+        context = get_cluster_config_for_project(
+            step_input.run_properties, step_input.project_execution.project
+        ).context
+        dagster_config: DagsterConfig = DagsterConfig.from_dict(properties.config)
+
+        config.load_kube_config(context=context)
+
+        name_suffix = get_name_suffix(properties)
+        release_name = convert_to_helm_release_name(
+            step_input.project_execution.name, name_suffix
+        )
+
+        builder = ChartBuilder(step_input)
+
+        user_code_deployment = to_user_code_values(
+            builder=builder,
+            release_name=release_name,
+            name_suffix=name_suffix,
+            run_properties=properties,
+            service_account_override=dagster_config.global_service_account_override,
+            docker_config=DockerConfig.from_dict(properties.config),
+        )
+
+        self._logger.debug(f"Writing user code manifest with values: {user_code_deployment}")
+
+        values_path = Path(step_input.project_execution.project.target_path)
+        self._logger.info(f"Writing Helm values to {values_path}")
+
+        write_chart(
+            chart={},
+            chart_path=values_path,
+            chart_metadata="",
+            values=user_code_deployment,
+        )
+
+        return Output(True, f"Successfully written helm chart manifest to {values_path}")
+
 class DeployDagster(Step):
     def __init__(self, logger: Logger) -> None:
         super().__init__(
