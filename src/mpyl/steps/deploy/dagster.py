@@ -90,6 +90,156 @@ class HelmTemplateDagster(Step):
 
         return Output(True, f"Successfully written helm chart manifest to {values_path}")
 
+
+class TemplateDagster(Step):
+    """
+    This step creates a dagster user code helm chart manifest and writes an entry to the dagster server's configmap
+    but doesn't use helm to deloy the manifest.
+    """
+
+    def __init__(self, logger: Logger) -> None:
+        super().__init__(
+            logger,
+            Meta(
+                name="Dagster Template",
+                description="Creates a dagster user code helm chart and adds an entry to dagster's K8s ConfigMap",
+                version="0.0.1",
+                stage=STAGE_NAME,
+            ),
+            produced_artifact=ArtifactType.NONE,
+            required_artifact=ArtifactType.DOCKER_IMAGE,
+        )
+
+    def __evaluate_results(self, results: List[Output]):
+        return (
+            reduce(
+                self.__flatten_result_messages,
+                results[1:],
+                results[0],
+            )
+            if len(results) > 1
+            else results[0]
+        )
+
+    @staticmethod
+    def __flatten_result_messages(acc: Output, curr: Output) -> Output:
+        return Output(
+            success=acc.success and curr.success,
+            message=f"{acc.message}\n{curr.message}",
+        )
+
+    # pylint: disable=R0914
+    def execute(self, step_input: Input) -> Output:
+        """
+        Creates the dagster user-code helm chart manifest and adds an server entry to dagster server's ConfigMap
+        """
+        properties = step_input.run_properties
+        context = get_cluster_config_for_project(
+            step_input.run_properties, step_input.project_execution.project
+        ).context
+        dagster_config: DagsterConfig = DagsterConfig.from_dict(properties.config)
+        dagster_template_results = []
+
+        config.load_kube_config(context=context)
+        core_api = client.CoreV1Api()
+        apps_api = client.AppsV1Api()
+
+        name_suffix = get_name_suffix(properties)
+        release_name = convert_to_helm_release_name(
+            step_input.project_execution.name, name_suffix
+        )
+
+        builder = ChartBuilder(step_input)
+
+        user_code_deployment = to_user_code_values(
+            builder=builder,
+            release_name=release_name,
+            name_suffix=name_suffix,
+            run_properties=properties,
+            service_account_override=dagster_config.global_service_account_override,
+            docker_config=DockerConfig.from_dict(properties.config),
+        )
+
+        self._logger.debug(f"Writing user code manifest with values: {user_code_deployment}")
+
+        values_path = Path(step_input.project_execution.project.target_path)
+        self._logger.info(f"Writing Helm values to {values_path}")
+
+        write_chart(
+            chart={},
+            chart_path=values_path,
+            chart_metadata="",
+            values=user_code_deployment,
+        )
+
+        if not step_input.dry_run:
+            config_map = get_config_map(
+                core_api,
+                dagster_config.base_namespace,
+                dagster_config.workspace_config_map,
+            )
+            dagster_workspace = yaml.safe_load(
+                config_map.data[dagster_config.workspace_file_key]
+            )
+
+            server_names = [
+                w["grpc_server"]["location_name"]
+                for w in dagster_workspace["load_from"]
+            ]
+
+            # If the server new (not in existing workspace.yml), we append it
+            user_code_name_to_deploy = user_code_deployment["deployments"][0]["name"]
+            if user_code_name_to_deploy not in server_names:
+                self._logger.info(
+                    f"Adding new server {user_code_name_to_deploy} to dagster's workspace.yaml"
+                )
+                dagster_workspace["load_from"].append(
+                    to_grpc_server_entry(
+                        host=user_code_name_to_deploy,
+                        port=user_code_deployment["deployments"][0]["port"],
+                        location_name=user_code_name_to_deploy,
+                    )
+                )
+                updated_config_map = update_config_map_field(
+                    config_map=config_map,
+                    field=dagster_config.workspace_file_key,
+                    data=dagster_workspace,
+                )
+                config_map_update_result = replace_config_map(
+                    core_api,
+                    dagster_config.base_namespace,
+                    dagster_config.workspace_config_map,
+                    updated_config_map,
+                )
+
+                dagster_template_results.append(config_map_update_result)
+                if config_map_update_result.success:
+                    self._logger.info(
+                        f"Successfully added {user_code_name_to_deploy} to dagster's workspace.yaml"
+                    )
+
+                    # restarting ui and daemon
+                    rollout_restart_output = rollout_restart_deployment(
+                        self._logger,
+                        apps_api,
+                        dagster_config.base_namespace,
+                        dagster_config.daemon,
+                    )
+
+                    dagster_template_results.append(rollout_restart_output)
+                    if rollout_restart_output.success:
+                        self._logger.info(rollout_restart_output.message)
+                        rollout_restart_output = rollout_restart_deployment(
+                            self._logger,
+                            apps_api,
+                            dagster_config.base_namespace,
+                            dagster_config.webserver,
+                        )
+                        dagster_template_results.append(rollout_restart_output)
+                        self._logger.info(rollout_restart_output.message)
+        return self.__evaluate_results(dagster_template_results)
+
+
 class DeployDagster(Step):
     def __init__(self, logger: Logger) -> None:
         super().__init__(
