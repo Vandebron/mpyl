@@ -30,7 +30,7 @@ from ...utilities.helm import convert_to_helm_release_name, get_name_suffix
 
 class HelmTemplateDagster(Step):
     """
-    This step only creates a dagster user code helm chart manifest but doesn't use helm to deloy the manifest, 
+    This step only creates a dagster user code helm chart manifest but doesn't use helm to deloy the manifest,
     and doesn't write an entry to the dagster server's configmap
     """
 
@@ -76,7 +76,9 @@ class HelmTemplateDagster(Step):
             docker_config=DockerConfig.from_dict(properties.config),
         )
 
-        self._logger.debug(f"Writing user code manifest with values: {user_code_deployment}")
+        self._logger.debug(
+            f"Writing user code manifest with values: {user_code_deployment}"
+        )
 
         values_path = Path(step_input.project_execution.project.target_path)
         self._logger.info(f"Writing Helm values to {values_path}")
@@ -88,7 +90,9 @@ class HelmTemplateDagster(Step):
             values=user_code_deployment,
         )
 
-        return Output(True, f"Successfully written helm chart manifest to {values_path}")
+        return Output(
+            True, f"Successfully written helm chart manifest to {values_path}"
+        )
 
 
 class TemplateDagster(Step):
@@ -160,7 +164,9 @@ class TemplateDagster(Step):
             docker_config=DockerConfig.from_dict(properties.config),
         )
 
-        self._logger.debug(f"Writing user code manifest with values: {user_code_deployment}")
+        self._logger.debug(
+            f"Writing user code manifest with values: {user_code_deployment}"
+        )
 
         values_path = Path(step_input.project_execution.project.target_path)
         self._logger.info(f"Writing Helm values to {values_path}")
