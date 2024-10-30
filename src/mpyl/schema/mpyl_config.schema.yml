@@ -24,6 +24,10 @@ definitions:
         "$ref": "#/definitions/Project"
       sbt:
         "$ref": "#/definitions/Sbt"
+      slack:
+        "$ref": "#/definitions/Slack"
+      jira:
+        "$ref": "#/definitions/Jira"
       camunda:
         "$ref": "#/definitions/Camunda"
     required:
@@ -173,6 +177,8 @@ definitions:
         description: "Path to the file that contains the changed files"
       git:
         "$ref": "#/definitions/Git"
+      github:
+        "$ref": "#/definitions/Github"
     required:
       - git
     title: VCS
@@ -210,6 +216,32 @@ definitions:
     required:
       - mainBranch
     title: Git
+  Github:
+    type: object
+    additionalProperties: false
+    properties:
+      repository:
+        type: string
+      token:
+        type: [ string, null ]
+      app:
+        type: object
+        properties:
+          privateKeyPath:
+            description: Used to authenticate with github if the app is used (https://github.com/apps/mpyl-pipeline)
+            type: string
+          privateKeyBase64Encoded:
+            description: Used to authenticate with github if the app is used (https://github.com/apps/mpyl-pipeline)
+            type: [ string, null ]
+          appId:
+            description: The id of the github app (https://github.com/apps/mpyl-pipeline) that has permission to update checks
+            type: string
+            default: 295700
+        required:
+          - appId
+    required:
+      - repository
+    title: Github
   Docker:
     type: object
     additionalProperties: false
@@ -382,6 +414,45 @@ definitions:
       tls:
         type: string
     required: ['httpMiddleware', 'tls']
+  Slack:
+    type: object
+    additionalProperties: false
+    properties:
+      botToken:
+        type: [ string, null ]
+      icons:
+        type: object
+        properties:
+          building:
+            type: string
+          success:
+            type: string
+          failure:
+            type: string
+        required: [ 'success', 'failure', 'building' ]
+    required:
+      - botToken
+      - icons
+  Jira:
+    type: object
+    additionalProperties: false
+    properties:
+      site:
+        description: "Only works with the cloud version of Jira"
+        type: [ string, null ]
+        format: uri
+      userName:
+        type: string
+      password:
+        type: string
+      token:
+        type: string
+      ticketPattern:
+        type: [ string, null ]
+        default: '[A-Za-z]{2,}-\d+'
+        description: 'A pattern that extracts a ticket number from the branch name'
+    required:
+      - site
   Camunda:
     type: object
     properties:
