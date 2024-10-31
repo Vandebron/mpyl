@@ -6,12 +6,12 @@ on:
   pull_request:
 
 jobs:
-  Lint:
+  lint:
     name: 🧽 Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-python@v5.3.0
         id: cache-dependencies
         with:
           python-version: '3.11'
@@ -35,12 +35,12 @@ jobs:
       - name: Run test code lint
         run: pipenv run lint-test
 
-  TypeCheck:
+  typeCheck:
     name: 🧐 Check types
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-python@v5.3.0
         id: cache-dependencies
         with:
           python-version: '3.11'
@@ -61,7 +61,7 @@ jobs:
       - name: Check types test
         run: pipenv run check-types-test
 
-  Test:
+  test:
     name: 🧪 Test
     runs-on: ubuntu-latest
     steps:
@@ -103,15 +103,8 @@ jobs:
           output: both
           thresholds: '79 99'
 
-      - name: Find PR number
-        uses: jwalton/gh-find-current-pr@v1
-        id: findPr
-        if: github.ref_name != 'main'
-        with:
-          state: open
-
       - name: Add Coverage PR Comment
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@v2.9.0
         with:
-          number: ${{ steps.findPr.outputs.pr }}
+          number: ${{ github.event.pull_request.number }}
           path: code-coverage-results.md
