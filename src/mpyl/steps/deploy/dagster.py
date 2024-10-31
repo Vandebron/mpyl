@@ -130,24 +130,24 @@ class DagsterBase:
         logger, apps_api, dagster_config: DagsterConfig
     ) -> List[Output]:
         # restarting ui and daemon
-        rollout_restart_server_output = rollout_restart_deployment(
+        rollout_restart_daemon_output = rollout_restart_deployment(
             logger,
             apps_api,
             dagster_config.base_namespace,
             dagster_config.daemon,
         )
 
-        if rollout_restart_server_output.success:
-            logger.info(rollout_restart_server_output.message)
-            rollout_restart_daemon_output = rollout_restart_deployment(
+        if rollout_restart_daemon_output.success:
+            logger.info(rollout_restart_daemon_output.message)
+            rollout_restart_server_output = rollout_restart_deployment(
                 logger,
                 apps_api,
                 dagster_config.base_namespace,
                 dagster_config.webserver,
             )
-            logger.info(rollout_restart_daemon_output.message)
-            return [rollout_restart_server_output, rollout_restart_daemon_output]
-        return [rollout_restart_server_output]
+            logger.info(rollout_restart_server_output.message)
+            return [rollout_restart_daemon_output, rollout_restart_server_output]
+        return [rollout_restart_daemon_output]
 
 
 class HelmTemplateDagster(Step, DagsterBase):
