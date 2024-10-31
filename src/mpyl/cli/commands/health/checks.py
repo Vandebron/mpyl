@@ -3,7 +3,6 @@
 import asyncio
 import os
 import pkgutil
-import sys
 from pathlib import Path
 from typing import Optional
 
@@ -11,21 +10,12 @@ import jsonschema
 from dotenv import load_dotenv
 from rich.console import Console
 from rich.markdown import Markdown
-from rich.prompt import Confirm
 
 from ....cli import get_latest_publication, get_meta_version
 from ....constants import (
     DEFAULT_CONFIG_FILE_NAME,
     DEFAULT_RUN_PROPERTIES_FILE_NAME,
     DEFAULT_STAGES_SCHEMA_FILE_NAME,
-)
-from ....projects.versioning import (
-    check_upgrade_needed,
-    CONFIG_UPGRADERS,
-    pretty_print,
-    Upgrader,
-    upgrade_file,
-    PROPERTIES_UPGRADERS,
 )
 from ....utilities.pyaml_env import parse_config
 from ....validation import validate
@@ -46,7 +36,7 @@ class HealthConsole:
         self.console.print(Markdown(text))
 
 
-def perform_health_checks(bare_console: Console, perform_upgrade: bool = False):
+def perform_health_checks(bare_console: Console):
     console = HealthConsole(bare_console)
     load_dotenv(Path(".env"))
 
@@ -78,8 +68,6 @@ def perform_health_checks(bare_console: Console, perform_upgrade: bool = False):
             console,
             config_file_path=properties_path,
             schema_path="../../../schema/run_properties.schema.yml",
-            upgraders=PROPERTIES_UPGRADERS,
-            perform_upgrade=perform_upgrade,
         )
 
     console.title("MPyL configuration")
@@ -93,8 +81,6 @@ def perform_health_checks(bare_console: Console, perform_upgrade: bool = False):
             console,
             config_file_path=config_path,
             schema_path="../../../schema/mpyl_config.schema.yml",
-            upgraders=CONFIG_UPGRADERS,
-            perform_upgrade=perform_upgrade,
         )
 
 
@@ -134,36 +120,12 @@ def __validate_config_path(
 
 
 def _validate_config(
-    console: HealthConsole,
-    config_file_path: Path,
-    schema_path: str,
-    upgraders: list[Upgrader],
-    perform_upgrade: bool = False,
-    root_dir=Path("."),
+    console: HealthConsole, config_file_path: Path, schema_path: str, root_dir=Path(".")
 ):
-    path, diff = check_upgrade_needed(config_file_path, upgraders)
-    pretty_diff = pretty_print(diff) if diff else ""
-    if pretty_diff == "":
-        console.check("Upgrade not necessary", success=True)
-    else:
-        console.check("Upgrade required", success=False)
-        console.print("Expected changes:")
-        console.print(pretty_diff)
-        if perform_upgrade or (sys.stdout.isatty() and Confirm.ask("Upgrade now?")):
-            upgraded = upgrade_file(path, upgraders)
-            if upgraded:
-                path.write_text(upgraded, encoding="utf-8")
-                console.check(
-                    "Upgrade successful. You may need to run `mpyl projects upgrade` still.",
-                    success=True,
-                )
-            else:
-                console.check("Could not upgrade", success=False)
-
     if load_dotenv(Path(".env")):
         console.check("Set env variables via .env file", success=True)
 
-    parsed = parse_config(path)
+    parsed = parse_config(config_file_path)
     schema_dict = pkgutil.get_data(__name__, schema_path)
     if schema_dict:
         try:
