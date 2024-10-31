@@ -1,6 +1,5 @@
 tests/projects/dagster-user-code/deployment/project.yml                         
 [1;36;40mexample-dagster-user-code[0m                                                       
-tests/projects/gradle/deployment/project.yml [1;36;40mgradle1[0m                            
 tests/projects/job/deployment/project.yml [1;36;40mjob[0m                                   
 tests/projects/overriden-project/deployment/project-override-first.yml          
 [1;36;40mocpp-first[0m                                                                      

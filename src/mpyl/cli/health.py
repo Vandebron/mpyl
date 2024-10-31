@@ -7,14 +7,7 @@ from .commands.health.checks import perform_health_checks
 
 
 @click.command("health")
-@click.option(
-    "--upgrade",
-    "-u",
-    is_flag=True,
-    default=False,
-    help="Perform config upgrades if necessary",
-)
-def health(upgrade):
+def health():
     """Health check"""
     console = create_console_logger(show_path=False, verbose=False, max_width=0)
-    perform_health_checks(console, upgrade)
+    perform_health_checks(console)

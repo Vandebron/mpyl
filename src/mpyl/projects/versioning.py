@@ -6,6 +6,7 @@ implements the `upgrade` method. This class should then be added to the `UPGRADE
 list in this module.
 
 """
+
 import copy
 import numbers
 from abc import ABC
@@ -164,9 +165,11 @@ class ConfigUpgraderOne31(Upgrader):
         if existing_addresses:
             whitelists.pop("addresses")
             new_addresses = list(
-                address
-                if address.get("values") is None
-                else {"name": address["name"], "all": address["values"]}
+                (
+                    address
+                    if address.get("values") is None
+                    else {"name": address["name"], "all": address["values"]}
+                )
                 for address in existing_addresses
             )
             previous_dict["whiteLists"].insert(1, "addresses", new_addresses)
