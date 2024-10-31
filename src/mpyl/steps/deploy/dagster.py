@@ -4,7 +4,7 @@ Step to deploy a dagster user code repository to k8s
 from functools import reduce
 from logging import Logger
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 import yaml
 from kubernetes import config, client
@@ -53,7 +53,7 @@ class DagsterBase:
     def write_user_code_manifest(
         step_input: Input,
         properties: RunProperties,
-        global_service_account_override: str,
+        global_service_account_override: Optional[str],
     ) -> Tuple[dict, Path]:
         builder = ChartBuilder(step_input)
 
@@ -183,7 +183,7 @@ class HelmTemplateDagster(Step, DagsterBase):
         config.load_kube_config(context=context)
 
         user_code_deployment, values_path = self.write_user_code_manifest(
-            step_input, properties, dagster_config.global_service_account_override or ""
+            step_input, properties, dagster_config.global_service_account_override
         )
         self._logger.debug(
             f"Written user code manifest with values: {user_code_deployment}"
@@ -228,7 +228,7 @@ class TemplateDagster(Step, DagsterBase):
         dagster_config: DagsterConfig = DagsterConfig.from_dict(properties.config)
 
         user_code_deployment, values_path = self.write_user_code_manifest(
-            step_input, properties, dagster_config.global_service_account_override or ""
+            step_input, properties, dagster_config.global_service_account_override
         )
         self._logger.debug(
             f"Written user code manifest with values: {user_code_deployment}"
@@ -312,7 +312,7 @@ class DeployDagster(Step, DagsterBase):
             return self.combine_outputs(dagster_deploy_results)
 
         user_code_deployment, values_path = self.write_user_code_manifest(
-            step_input, properties, dagster_config.global_service_account_override or ""
+            step_input, properties, dagster_config.global_service_account_override
         )
         self._logger.debug(
             f"Written user code manifest with values: {user_code_deployment}"
