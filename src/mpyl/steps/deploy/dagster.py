@@ -31,7 +31,7 @@ from ...utilities.helm import convert_to_helm_release_name, get_name_suffix
 
 
 class DagsterBase:
-    def evaluate_outputs(self, results: List[Output]) -> Output:
+    def combine_outputs(self, results: List[Output]) -> Output:
         return (
             reduce(
                 self.__flatten_output_messages,
@@ -124,6 +124,30 @@ class DagsterBase:
             message="Server name already exists in list, no addition needed",
             produced_artifact=None,
         )
+
+    @staticmethod
+    def restart_dagster_instances(
+        logger, apps_api, dagster_config: DagsterConfig
+    ) -> List[Output]:
+        # restarting ui and daemon
+        rollout_restart_server_output = rollout_restart_deployment(
+            logger,
+            apps_api,
+            dagster_config.base_namespace,
+            dagster_config.daemon,
+        )
+
+        if rollout_restart_server_output.success:
+            logger.info(rollout_restart_server_output.message)
+            rollout_restart_daemon_output = rollout_restart_deployment(
+                logger,
+                apps_api,
+                dagster_config.base_namespace,
+                dagster_config.webserver,
+            )
+            logger.info(rollout_restart_daemon_output.message)
+            return [rollout_restart_server_output, rollout_restart_daemon_output]
+        return [rollout_restart_server_output]
 
 
 class HelmTemplateDagster(Step, DagsterBase):
@@ -230,26 +254,11 @@ class TemplateDagster(Step, DagsterBase):
         )
         dagster_template_results.append(add_server_list_output)
         if add_server_list_output.success:
-            # restarting ui and daemon
-            rollout_restart_output = rollout_restart_deployment(
-                self._logger,
-                apps_api,
-                dagster_config.base_namespace,
-                dagster_config.daemon,
+            restart_outputs = self.restart_dagster_instances(
+                self._logger, apps_api, dagster_config
             )
-
-            dagster_template_results.append(rollout_restart_output)
-            if rollout_restart_output.success:
-                self._logger.info(rollout_restart_output.message)
-                rollout_restart_output = rollout_restart_deployment(
-                    self._logger,
-                    apps_api,
-                    dagster_config.base_namespace,
-                    dagster_config.webserver,
-                )
-                dagster_template_results.append(rollout_restart_output)
-                self._logger.info(rollout_restart_output.message)
-        return self.evaluate_outputs(dagster_template_results)
+            dagster_template_results.extend(restart_outputs)
+        return self.combine_outputs(dagster_template_results)
 
 
 class DeployDagster(Step, DagsterBase):
@@ -295,12 +304,12 @@ class DeployDagster(Step, DagsterBase):
         )
         dagster_deploy_results.append(add_repo_ouput)
         if not add_repo_ouput.success:
-            return self.evaluate_outputs(dagster_deploy_results)
+            return self.combine_outputs(dagster_deploy_results)
 
         update_repo_ouput = helm.update_repo(self._logger)
         dagster_deploy_results.append(update_repo_ouput)
         if not update_repo_ouput.success:
-            return self.evaluate_outputs(dagster_deploy_results)
+            return self.combine_outputs(dagster_deploy_results)
 
         user_code_deployment, values_path = self.write_user_code_manifest(
             step_input, properties, dagster_config.global_service_account_override or ""
@@ -331,23 +340,9 @@ class DeployDagster(Step, DagsterBase):
             dagster_deploy_results.append(add_to_server_list_output)
 
             if add_to_server_list_output.success:
-                # restarting ui and daemon
-                rollout_restart_output = rollout_restart_deployment(
-                    self._logger,
-                    apps_api,
-                    dagster_config.base_namespace,
-                    dagster_config.daemon,
+                restart_outputs = self.restart_dagster_instances(
+                    self._logger, apps_api, dagster_config
                 )
+                dagster_deploy_results.extend(restart_outputs)
 
-                dagster_deploy_results.append(rollout_restart_output)
-                if rollout_restart_output.success:
-                    self._logger.info(rollout_restart_output.message)
-                    rollout_restart_output = rollout_restart_deployment(
-                        self._logger,
-                        apps_api,
-                        dagster_config.base_namespace,
-                        dagster_config.webserver,
-                    )
-                    dagster_deploy_results.append(rollout_restart_output)
-                    self._logger.info(rollout_restart_output.message)
-        return self.evaluate_outputs(dagster_deploy_results)
+        return self.combine_outputs(dagster_deploy_results)
