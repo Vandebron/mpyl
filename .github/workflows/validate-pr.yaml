@@ -1,0 +1,117 @@
+---
+
+name: Validate pull requests
+
+on:
+  pull_request:
+
+jobs:
+  Lint:
+    name: 🧽 Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        id: cache-dependencies
+        with:
+          python-version: '3.11'
+          cache: 'pipenv'
+          cache-dependency-path: |
+            Pipfile.lock
+
+      - name: Install pipenv
+        run: pip install pipenv
+
+      - name: Install dependencies
+        if: steps.cache-dependencies.outputs.cache-hit != 'true'
+        run: pipenv install -d --deploy
+
+      - name: Check formatting
+        run: pipenv run format
+
+      - name: Run lint
+        run: pipenv run lint
+
+      - name: Run test code lint
+        run: pipenv run lint-test
+
+  TypeCheck:
+    name: 🧐 Check types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        id: cache-dependencies
+        with:
+          python-version: '3.11'
+          cache: 'pipenv'
+          cache-dependency-path: |
+            Pipfile.lock
+
+      - name: Install pipenv
+        run: pip install pipenv
+
+      - name: Install dependencies
+        if: steps.cache-dependencies.outputs.cache-hit != 'true'
+        run: pipenv install -d --deploy
+
+      - name: Check types
+        run: pipenv run check-types
+
+      - name: Check types test
+        run: pipenv run check-types-test
+
+  Test:
+    name: 🧪 Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        id: cache-dependencies
+        with:
+          python-version: '3.11'
+          cache: 'pipenv'
+          cache-dependency-path: |
+            Pipfile.lock
+
+      - name: Install pipenv
+        run: pip install pipenv
+
+      - name: Install dependencies
+        if: steps.cache-dependencies.outputs.cache-hit != 'true'
+        run: pipenv install -d --deploy
+
+      - name: Test
+        run: pipenv run test-ci
+
+      - name: Validate Config Example
+        run: pipenv run validate-config-example
+
+      - name: Coverage to xml
+        run: pipenv run test-ci-coverage
+
+      - name: Code Coverage Report
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: build/coverage.xml
+          badge: true
+          fail_below_min: true
+          format: markdown
+          hide_branch_rate: false
+          hide_complexity: true
+          indicators: true
+          output: both
+          thresholds: '79 99'
+
+      - name: Find PR number
+        uses: jwalton/gh-find-current-pr@v1
+        id: findPr
+        if: github.ref_name != 'main'
+        with:
+          state: open
+
+      - name: Add Coverage PR Comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          number: ${{ steps.findPr.outputs.pr }}
+          path: code-coverage-results.md
