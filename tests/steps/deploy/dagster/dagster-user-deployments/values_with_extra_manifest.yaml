@@ -2,7 +2,7 @@ serviceAccount:
   create: true
 fullnameOverride: ucd-educ-pr-1234
 imagePullSecrets:
-- aws-ecr
+- name: aws-ecr
 deployments:
 - dagsterApiGrpcArgs:
   - --python-file

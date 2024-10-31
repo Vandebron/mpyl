@@ -60,7 +60,7 @@ def to_user_code_values(
             # ucd, short for user-code-deployment
             "fullnameOverride": f"ucd-{shorten_name(project.name)}{name_suffix}",
             "imagePullSecrets": [
-                "aws-ecr",
+                {"name": "aws-ecr"},
             ],
             "deployments": [
                 {
