@@ -1,9 +1,9 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    description: This is a test container. For testing the MPL pipelines, not to be
-      deployed anywhere.
+    description: This is a test container. For testing the MPL pipelines, not to be deployed anywhere.
   labels:
     name: testdeploymentstrategyparameters
     app.kubernetes.io/version: pr-1234
@@ -39,42 +39,42 @@ spec:
       name: testdeploymentstrategyparameters
     spec:
       containers:
-      - env:
-        - name: SOME_ENV
-          value: PullRequest
-        image: registry/image:123
-        imagePullPolicy: Always
-        livenessProbe:
-          failureThreshold: 99
-          grpc:
-            port: 123
-            service: grpcService
-          httpGet:
-            path: /health
-            port: port-0
-          periodSeconds: 30
-          successThreshold: 0
-          timeoutSeconds: 20
-        name: service
-        ports:
-        - containerPort: 8080
-          name: port-0
-          protocol: TCP
-        resources:
-          limits:
-            cpu: 500m
-            memory: 1024Mi
-          requests:
-            cpu: 100m
-            memory: 512Mi
-        startupProbe:
-          failureThreshold: 60
-          httpGet:
-            path: /health
-            port: port-0
-          initialDelaySeconds: 4
-          periodSeconds: 2
-          successThreshold: 1
-          timeoutSeconds: 3
+        - env:
+            - name: SOME_ENV
+              value: PullRequest
+          image: registry/image:123
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 99
+            grpc:
+              port: 123
+              service: grpcService
+            httpGet:
+              path: /health
+              port: port-0
+            periodSeconds: 30
+            successThreshold: 0
+            timeoutSeconds: 20
+          name: service
+          ports:
+            - containerPort: 8080
+              name: port-0
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 500m
+              memory: 1024Mi
+            requests:
+              cpu: 100m
+              memory: 512Mi
+          startupProbe:
+            failureThreshold: 60
+            httpGet:
+              path: /health
+              port: port-0
+            initialDelaySeconds: 4
+            periodSeconds: 2
+            successThreshold: 1
+            timeoutSeconds: 3
       serviceAccount: testdeploymentstrategyparameters
       serviceAccountName: testdeploymentstrategyparameters

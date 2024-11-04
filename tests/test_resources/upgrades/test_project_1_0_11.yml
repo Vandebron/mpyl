@@ -1,43 +1,44 @@
-name: 'dockertest'
-description: 'This is a test container. For testing the MPL pipelines, not to be deployed anywhere.'
+---
+name: dockertest
+description: This is a test container. For testing the MPL pipelines, not to be deployed anywhere.
 stages:
   build: Docker Build
   test: Docker Test
   deploy: Kubernetes Deploy
   postdeploy: Cypress Test
 mpylVersion: 1.0.10
-maintainer: ['MPyL']
+maintainer: [MPyL]
 build:
   args:
     plain:
       - key: SOME_ENV
-        test: "Test"
-        acceptance: "Acceptance"
-        production: "Production"
+        test: Test
+        acceptance: Acceptance
+        production: Production
 dependencies:
   build:
-    - 'test/docker/'
+    - test/docker/
   postdeploy:
-    - 'specs/*.js'
+    - specs/*.js
 deployment:
-  namespace: 'dockertest'
+  namespace: dockertest
   properties:
     env:
       - key: SOME_ENV
-        pr: "PullRequest"
-        test: "Test"
-        acceptance: "Acceptance"
-        production: "Production"
+        pr: PullRequest
+        test: Test
+        acceptance: Acceptance
+        production: Production
       - key: PROD_ONLY_ENV
-        production: "Production"
+        production: Production
       - key: WITH_NAMESPACE
-        all: "minimalService.{namespace}.svc.cluster.local"
+        all: minimalService.{namespace}.svc.cluster.local
     sealedSecret:
       - key: SOME_SEALED_SECRET_ENV
-        pr: "AgCA5/qvMMp/qOyXA62f/4k89gB9vk/G9pwLzMwUH9ytqP97ml9V7+shq01Khkgz638uJz8UTff92cU2iq3yLAiElAEdQb0lwBCvG7qMXSeTkmCpZVJc8+oLbAC2m6IX3qXYFiOzwCrvrFiyPf1vxZGMcedJf0+13938yFyrPnnCH+DZGLReFWtJfp5POcvktaz9tv4kAz4LCvvwvFgPVeO3fxM2PDnegvbX7K2ojwftaFoyu0rOBylQaUsMGZd9KcFxuPnY6RXSrGh5lbyFHRZRy3RtrsWGy7Vh/vwMRjeHM3ORN4WeLQXpCRpvegD7bngXmR9yFuuD9FLDw/Wapllhv1sRX4uP2C9Fghdp005g/8iQ8IUHbC/7Rp967xs9YU6UO3kIURCQabvXpmDQ7kNbAcnDjilBY4WR8Wcsu3KJRA6dcpiZhhuQ7JbKNtySGhnRtzDuamuFUXTx8qkiegB0I8Db7Fd9K2I4bOuqhHoEgp9miQEWkd60rO5vcOqeuGzZE12ZN8XB8Iq4/QRWWafl8pjKrDf+r9ASFHUt2eAnvzK6GkGrZzZ2NRCew2csPU5V0iodkHZL+OpKQQ181J7YuJ4spziyOkzIBRRGwkrxfLmVAt5r6B5gcSsU30iOkHmbSgE37uDJAiSJmsnkzrkWARTKzEYGgvJcxKxI0ftsx5SggHCItSdnKlNBQ23bSTTdCKM1kJe0eHWHKg=="
-        test: "AgCA5/qvMMp/qOyXA62f/4k89gB9vk/G9pwLzMwUH9ytqP97ml9V7+shq01Khkgz638uJz8UTff92cU2iq3yLAiElAEdQb0lwBCvG7qMXSeTkmCpZVJc8+oLbAC2m6IX3qXYFiOzwCrvrFiyPf1vxZGMcedJf0+13938yFyrPnnCH+DZGLReFWtJfp5POcvktaz9tv4kAz4LCvvwvFgPVeO3fxM2PDnegvbX7K2ojwftaFoyu0rOBylQaUsMGZd9KcFxuPnY6RXSrGh5lbyFHRZRy3RtrsWGy7Vh/vwMRjeHM3ORN4WeLQXpCRpvegD7bngXmR9yFuuD9FLDw/Wapllhv1sRX4uP2C9Fghdp005g/8iQ8IUHbC/7Rp967xs9YU6UO3kIURCQabvXpmDQ7kNbAcnDjilBY4WR8Wcsu3KJRA6dcpiZhhuQ7JbKNtySGhnRtzDuamuFUXTx8qkiegB0I8Db7Fd9K2I4bOuqhHoEgp9miQEWkd60rO5vcOqeuGzZE12ZN8XB8Iq4/QRWWafl8pjKrDf+r9ASFHUt2eAnvzK6GkGrZzZ2NRCew2csPU5V0iodkHZL+OpKQQ181J7YuJ4spziyOkzIBRRGwkrxfLmVAt5r6B5gcSsU30iOkHmbSgE37uDJAiSJmsnkzrkWARTKzEYGgvJcxKxI0ftsx5SggHCItSdnKlNBQ23bSTTdCKM1kJe0eHWHKg=="
-        acceptance: "Acceptance"
-        production: "Production"
+        pr: AgCA5/qvMMp/qOyXA62f/4k89gB9vk/G9pwLzMwUH9ytqP97ml9V7+shq01Khkgz638uJz8UTff92cU2iq3yLAiElAEdQb0lwBCvG7qMXSeTkmCpZVJc8+oLbAC2m6IX3qXYFiOzwCrvrFiyPf1vxZGMcedJf0+13938yFyrPnnCH+DZGLReFWtJfp5POcvktaz9tv4kAz4LCvvwvFgPVeO3fxM2PDnegvbX7K2ojwftaFoyu0rOBylQaUsMGZd9KcFxuPnY6RXSrGh5lbyFHRZRy3RtrsWGy7Vh/vwMRjeHM3ORN4WeLQXpCRpvegD7bngXmR9yFuuD9FLDw/Wapllhv1sRX4uP2C9Fghdp005g/8iQ8IUHbC/7Rp967xs9YU6UO3kIURCQabvXpmDQ7kNbAcnDjilBY4WR8Wcsu3KJRA6dcpiZhhuQ7JbKNtySGhnRtzDuamuFUXTx8qkiegB0I8Db7Fd9K2I4bOuqhHoEgp9miQEWkd60rO5vcOqeuGzZE12ZN8XB8Iq4/QRWWafl8pjKrDf+r9ASFHUt2eAnvzK6GkGrZzZ2NRCew2csPU5V0iodkHZL+OpKQQ181J7YuJ4spziyOkzIBRRGwkrxfLmVAt5r6B5gcSsU30iOkHmbSgE37uDJAiSJmsnkzrkWARTKzEYGgvJcxKxI0ftsx5SggHCItSdnKlNBQ23bSTTdCKM1kJe0eHWHKg==
+        test: AgCA5/qvMMp/qOyXA62f/4k89gB9vk/G9pwLzMwUH9ytqP97ml9V7+shq01Khkgz638uJz8UTff92cU2iq3yLAiElAEdQb0lwBCvG7qMXSeTkmCpZVJc8+oLbAC2m6IX3qXYFiOzwCrvrFiyPf1vxZGMcedJf0+13938yFyrPnnCH+DZGLReFWtJfp5POcvktaz9tv4kAz4LCvvwvFgPVeO3fxM2PDnegvbX7K2ojwftaFoyu0rOBylQaUsMGZd9KcFxuPnY6RXSrGh5lbyFHRZRy3RtrsWGy7Vh/vwMRjeHM3ORN4WeLQXpCRpvegD7bngXmR9yFuuD9FLDw/Wapllhv1sRX4uP2C9Fghdp005g/8iQ8IUHbC/7Rp967xs9YU6UO3kIURCQabvXpmDQ7kNbAcnDjilBY4WR8Wcsu3KJRA6dcpiZhhuQ7JbKNtySGhnRtzDuamuFUXTx8qkiegB0I8Db7Fd9K2I4bOuqhHoEgp9miQEWkd60rO5vcOqeuGzZE12ZN8XB8Iq4/QRWWafl8pjKrDf+r9ASFHUt2eAnvzK6GkGrZzZ2NRCew2csPU5V0iodkHZL+OpKQQ181J7YuJ4spziyOkzIBRRGwkrxfLmVAt5r6B5gcSsU30iOkHmbSgE37uDJAiSJmsnkzrkWARTKzEYGgvJcxKxI0ftsx5SggHCItSdnKlNBQ23bSTTdCKM1kJe0eHWHKg==
+        acceptance: Acceptance
+        production: Production
     kubernetes:
       - key: SOME_SECRET_ENV
         valueFrom:
@@ -52,18 +53,18 @@ deployment:
       - key: RESOURCE_FIELD_REFERENCE
         valueFrom:
           resourceFieldRef:
-            containerName: 'minimalService'
+            containerName: minimalService
             divisor: 0.5
             resource: limits.memory
   kubernetes:
     role:
       resources:
-        - "pods"
+        - pods
       verbs:
-        - "list"
-        - "get"
+        - list
+        - get
     cmd:
-      all: "script.sh --opt"
+      all: script.sh --opt
     livenessProbe:
       path:
         all: /health
@@ -71,20 +72,20 @@ deployment:
       failureThreshold: 99
       grpc:
         port: 123
-        service: 'grpcService'
+        service: grpcService
     portMappings:
       8080: 80
     metrics:
       enabled: true
       alerts:
-        - name: 'ServiceError'
+        - name: ServiceError
           expr: 'true'
-          forDuration: '1m'
-          description: 'Service has encountered errors'
-          severity: 'warning'
-        - name: "the name of the alert"
-          expr: "a prometheus expression"
-          forDuration: 0m # Fire instantly
+          forDuration: 1m
+          description: Service has encountered errors
+          severity: warning
+        - name: the name of the alert
+          expr: a prometheus expression
+          forDuration: 0m  # Fire instantly
           severity: signup_alerting_once
           description: |-
             **{{ $value }}** new signup failures with reason `{{ $labels.reason }}`.
@@ -105,33 +106,32 @@ deployment:
   traefik:
     hosts:
       - host:
-          pr: "Host(`payments-{PR-NUMBER}.{CLUSTER-ENV}.nl`)"
-          test: "Host(`payments.test.nl`)"
-          acceptance: "Host(`payments.acceptance1.nl`)"
-          production: "Host(`payments.nl`)"
+          pr: Host(`payments-{PR-NUMBER}.{CLUSTER-ENV}.nl`)
+          test: Host(`payments.test.nl`)
+          acceptance: Host(`payments.acceptance1.nl`)
+          production: Host(`payments.nl`)
         tls:
-          all: "le-custom-prod-wildcard-cert"
+          all: le-custom-prod-wildcard-cert
         insecure: true
         whitelists:
           test:
-            - "Test"
-        additionalRoute: "ingress-intracloud-https"
+            - Test
+        additionalRoute: ingress-intracloud-https
       - host:
-          all: "Host(`some.other.host.com`)"
+          all: Host(`some.other.host.com`)
         servicePort: 4091
         priority: 1000
         whitelists:
           pr:
-            - "K8s-Test"
-            - "VPN"
-            - "TargetSpecificWhitelist"
+            - K8s-Test
+            - VPN
+            - TargetSpecificWhitelist
           test:
-            - "K8s-Test"
-            - "VPN"
+            - K8s-Test
+            - VPN
           acceptance:
-            - "VPN"
+            - VPN
           production:
-            - "Outside-World"
+            - Outside-World
         tls:
-          all: "le-other-prod-wildcard-cert"
-
+          all: le-other-prod-wildcard-cert

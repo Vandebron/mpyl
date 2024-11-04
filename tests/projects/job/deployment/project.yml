@@ -1,21 +1,22 @@
+---
 name: job
-description: "A job"
-maintainer: ["MPyL"]
+description: A job
+maintainer: [MPyL]
 mpylVersion: 1.4.18
 stages:
   build: Echo Build
-  deploy: "Kubernetes Job Deploy"
+  deploy: Kubernetes Job Deploy
 deployment:
   namespace: job
   kubernetes:
     rancher:
       projectId:
-        all: "p-11111"
+        all: p-11111
     job:
       cron:
         all:
-          schedule: "0 22 * * *"
-          timeZone: "Europe/Amsterdam"
+          schedule: 0 22 * * *
+          timeZone: Europe/Amsterdam
 dependencies:
   build:
     - tests/projects/sbt-service/src/

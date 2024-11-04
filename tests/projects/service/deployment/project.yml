@@ -1,40 +1,41 @@
-name: 'nodeservice'
-description: 'This is a test container. For testing the MPL pipelines, not to be deployed anywhere.'
+---
+name: nodeservice
+description: This is a test container. For testing the MPL pipelines, not to be deployed anywhere.
 stages:
   build: Echo Build
   deploy: Kubernetes Deploy
 mpylVersion: 1.4.20
-maintainer: ['MPyL']
+maintainer: [MPyL]
 build:
   args:
     plain:
       - key: SOME_ENV
-        test: "Test"
-        acceptance: "Acceptance"
-        production: "Production"
+        test: Test
+        acceptance: Acceptance
+        production: Production
     credentials:
       - key: SOME_CREDENTIAL
         id: SOME_CREDENTIAL
 dependencies:
   build:
-    - 'test/docker/'
+    - test/docker/
 deployment:
-  namespace: 'nodeservice'
+  namespace: nodeservice
   properties:
     env:
       - key: SOME_ENV
-        test: "Test"
-        acceptance: "Acceptance"
-        production: "Production"
+        test: Test
+        acceptance: Acceptance
+        production: Production
   kubernetes:
     deploymentStrategy:
       rollingUpdate:
-        maxSurge: "25%"
-        maxUnavailable: "25%"
-      type: "RollingUpdate"
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
     rancher:
       projectId:
-        all: "p-11111"
+        all: p-11111
     livenessProbe:
       path:
         all: /health
@@ -55,15 +56,15 @@ deployment:
   traefik:
     hosts:
       - host:
-          pr: "Host(`nodeservice-{PR-NUMBER}.test.nl`)"
-          test: "Host(`nodeservice.test.nl`)"
-          acceptance: "Host(`nodeservice.acceptance1.nl`)"
-          production: "Host(`nodeservice.nl`)"
+          pr: Host(`nodeservice-{PR-NUMBER}.test.nl`)
+          test: Host(`nodeservice.test.nl`)
+          acceptance: Host(`nodeservice.acceptance1.nl`)
+          production: Host(`nodeservice.nl`)
         tls:
-          all: "le-custom-prod-wildcard-cert"
+          all: le-custom-prod-wildcard-cert
         insecure: true
       - host:
-          all: "Host(`some.other.host.com`)"
+          all: Host(`some.other.host.com`)
         servicePort: 4091
         priority:
           all: 1000

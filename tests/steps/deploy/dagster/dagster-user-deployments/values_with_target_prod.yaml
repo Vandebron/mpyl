@@ -1,39 +1,40 @@
+---
 global:
   serviceAccountName: global_service_account
 serviceAccount:
   create: false
 fullnameOverride: ucd-educ
 deployments:
-- dagsterApiGrpcArgs:
-  - --python-file
-  - /tests/projects/dagster-user-code/main.py
-  env:
-  - name: DEPLOY_ENV
-    value: prod
-  - name: LOGGING_LEVEL
-    value: INFO
-  envSecrets:
-  - name: some-normal-secret
-  image:
-    pullPolicy: Always
-    imagePullSecrets:
-    - name: bigdataregistry
-    tag: 20230829-1234
-    repository: docker_host/example-dagster-user-code
-  labels:
+  - dagsterApiGrpcArgs:
+      - --python-file
+      - /tests/projects/dagster-user-code/main.py
+    env:
+      - name: DEPLOY_ENV
+        value: prod
+      - name: LOGGING_LEVEL
+        value: INFO
+    envSecrets:
+      - name: some-normal-secret
+    image:
+      pullPolicy: Always
+      imagePullSecrets:
+        - name: bigdataregistry
+      tag: 20230829-1234
+      repository: docker_host/example-dagster-user-code
+    labels:
+      name: example-dagster-user-code
+      maintainers: MPyL
+      maintainer: MPyL
+      version: 20230829-1234
+      revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
+    includeConfigInLaunchedRuns:
+      enabled: true
     name: example-dagster-user-code
-    maintainers: MPyL
-    maintainer: MPyL
-    version: 20230829-1234
-    revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
-  includeConfigInLaunchedRuns:
-    enabled: true
-  name: example-dagster-user-code
-  port: 3030
-  resources:
-    requests:
-      memory: 256Mi
-      cpu: 50m
-    limits:
-      memory: 1024Mi
-      cpu: 1000m
+    port: 3030
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 50m
+      limits:
+        memory: 1024Mi
+        cpu: 1000m

@@ -1,3 +1,4 @@
+---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -13,12 +14,12 @@ metadata:
   name: dockertest-service-monitor
 spec:
   endpoints:
-  - honorLabels: true
-    path: /metrics
-    targetPort: 8080
+    - honorLabels: true
+      path: /metrics
+      targetPort: 8080
   namespaceSelector:
     matchNames:
-    - pr-1234
+      - pr-1234
   selector:
     matchLabels:
       app.kubernetes.io/name: dockertest

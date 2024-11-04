@@ -1,3 +1,4 @@
+---
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
@@ -13,23 +14,23 @@ metadata:
   name: dockertest-prometheus-rule
 spec:
   groups:
-  - name: dockertest-prometheus-rule-group
-    rules:
-    - alert: ServiceError
-      annotations:
-        description: Service has encountered errors
-      expr: 'true'
-      for: 1m
-      labels:
-        alertname: ServiceError
-        severity: warning
-    - alert: the name of the alert
-      annotations:
-        description: |-
-          **{{ $value }}** new signup failures with reason `{{ $labels.reason }}`.
-          You can find more details in: <unrelated link>
-      expr: a prometheus expression
-      for: 0m
-      labels:
-        alertname: the name of the alert
-        severity: signup_alerting_once
+    - name: dockertest-prometheus-rule-group
+      rules:
+        - alert: ServiceError
+          annotations:
+            description: Service has encountered errors
+          expr: 'true'
+          for: 1m
+          labels:
+            alertname: ServiceError
+            severity: warning
+        - alert: the name of the alert
+          annotations:
+            description: |-
+              **{{ $value }}** new signup failures with reason `{{ $labels.reason }}`.
+              You can find more details in: <unrelated link>
+          expr: a prometheus expression
+          for: 0m
+          labels:
+            alertname: the name of the alert
+            severity: signup_alerting_once

@@ -1,25 +1,26 @@
+---
 mpylVersion: 1.4.12
 vcs:
   git:
-    mainBranch: 'main'
+    mainBranch: main
     remote:
-      url: 'https://github.com/acme/repo.git'
+      url: https://github.com/acme/repo.git
       userName: !ENV ${GIT_CREDENTIALS_USR:git-user}
       password: !ENV ${GIT_CREDENTIALS_PSW:git-password}
   github:
-    repository: 'Vandebron/mpyl'
+    repository: Vandebron/mpyl
     token: !ENV ${GITHUB_TOKEN}
     app:
-      privateKeyPath: 'mpyl-pipeline.private-key.pem'
+      privateKeyPath: mpyl-pipeline.private-key.pem
       appId: '295700'
 slack:
   botToken: !ENV ${SLACK_TOKEN}
   icons:
-    building: '60fpsparrot'
-    success: 'thug-parrot'
-    failure: 'sadparrot'
+    building: 60fpsparrot
+    success: thug-parrot
+    failure: sadparrot
 jira:
-  site: 'https://atlassian.net'
+  site: https://atlassian.net
   userName: !ENV ${JIRA_USER_PASSWORD_USR:jira_user}
   password: !ENV ${JIRA_USER_PASSWORD_PSW:jira_password}
   ticketPattern: '[A-Za-z]{2,}-\d+'
@@ -30,34 +31,34 @@ docker:
       userName: !ENV ${DOCKER_REGISTRY_USR:docker_user}
       password: !ENV ${DOCKER_REGISTRY_PSW:docker_password}
   build:
-    rootFolder: '.'
-    buildTarget: 'builder'
-    testTarget: 'tester'
-    dockerFileName: 'Dockerfile-mpl'
+    rootFolder: .
+    buildTarget: builder
+    testTarget: tester
+    dockerFileName: Dockerfile-mpl
 sbt:
-  command: 'sbt'
-  clientCommand: 'sbtn'
+  command: sbt
+  clientCommand: sbtn
   testWithCoverage: !ENV ${SBT_RUN_WITH_COVERAGE:true}
   verbose: true
-  javaOpts: '-Xmx4G -Xms4G -XX:+UseG1GC -XX:+CMSClassUnloadingEnabled -Xss2M'
-  sbtOpts: 'user.timezone=GMT jline.terminal=jline.UnixTerminal'
+  javaOpts: -Xmx4G -Xms4G -XX:+UseG1GC -XX:+CMSClassUnloadingEnabled -Xss2M
+  sbtOpts: user.timezone=GMT jline.terminal=jline.UnixTerminal
 whiteLists:
-  default: ["VPN"]
+  default: [VPN]
   addresses:
-    - name: "VPN"
-      all: ["10.0.0.1"]
-    - name: 'Outside-World'
-      all: ['0.0.0.0/0']
-    - name: 'K8s-Test'
-      all: ['1.2.3.0', '1.2.3.1']
+    - name: VPN
+      all: [10.0.0.1]
+    - name: Outside-World
+      all: [0.0.0.0/0]
+    - name: K8s-Test
+      all: [1.2.3.0, 1.2.3.1]
 cypress:
-  cypressSourceCodePath: 'test_resources/cypress'
+  cypressSourceCodePath: test_resources/cypress
 kubernetes:
   deploymentStrategy:
-    type: 'RollingUpdate'
+    type: RollingUpdate
     rollingUpdate:
-      maxSurge: "25%"
-      maxUnavailable: "25%"
+      maxSurge: 25%
+      maxUnavailable: 25%
   clusters:
     - name: test
       clusterId: c-xxxxx
@@ -82,25 +83,25 @@ kubernetes:
 s3:
   accessKeyId: !ENV ${AWS_ACCESS_KEY_ID:aws_access_key_id}
   secretAccessKey: !ENV ${AWS_SECRET_ACCESS_KEY:aws_secret_access_key}
-project: # default values
-  allowedMaintainers: ['Team1', 'Team2', 'MPyL']
+project:  # default values
+  allowedMaintainers: [Team1, Team2, MPyL]
   deployment:
     traefik:
       enabled: true
       hosts:
         - host:
-            pr: "Host(`{SERVICE-NAME}-{PR-NUMBER}.test-backend.nl`)"
-            test: "Host(`{namespace}-{SERVICE-NAME}.test-backend.nl`)"
-            acceptance: "Host(`{namespace}-{SERVICE-NAME}.acce-backend.nl`)"
-            production: "Host(`{namespace}-{SERVICE-NAME}.prod-backend.nl`)"
+            pr: Host(`{SERVICE-NAME}-{PR-NUMBER}.test-backend.nl`)
+            test: Host(`{namespace}-{SERVICE-NAME}.test-backend.nl`)
+            acceptance: Host(`{namespace}-{SERVICE-NAME}.acce-backend.nl`)
+            production: Host(`{namespace}-{SERVICE-NAME}.prod-backend.nl`)
           tls:
-            all: "le-custom-prod-wildcard-cert"
+            all: le-custom-prod-wildcard-cert
           whitelists:
-            all: ["VPN"]
+            all: [VPN]
           insecure: false
     kubernetes:
       imagePullSecrets:
-        - name: 'acme-registry'
+        - name: acme-registry
       job:
         ttlSecondsAfterFinished:
           all: 3600
@@ -128,7 +129,7 @@ project: # default values
             production: 2048
       startupProbe:
         path:
-          all: '/health'
+          all: /health
         initialDelaySeconds: 4  # 0 - We expect service to rarely be up within 4 secs.
         periodSeconds: 2  # 10 - We want the service to become available as soon as possible
         timeoutSeconds: 3  # 1 - If the app is very busy during the startup stage, 1 second might be too fast
@@ -136,11 +137,11 @@ project: # default values
         failureThreshold: 60  # 3 - 4 + 60 * 2 = more than 2 minutes
       livenessProbe:
         path:
-          all: '/health'
+          all: /health
         periodSeconds: 30  # 10
         timeoutSeconds: 20  # 1 - Busy apps may momentarily have long timeouts
         successThreshold: 1  # 1
         failureThreshold: 3  # 3
       metrics:
-        path: '/metrics'
+        path: /metrics
         enabled: true

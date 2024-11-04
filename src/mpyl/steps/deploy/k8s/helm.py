@@ -19,7 +19,7 @@ def to_chart_metadata(chart_name: str, run_properties: RunProperties):
     return f"""apiVersion: v3
 name: {chart_name}
 description: |
-    A helm chart rendered by an MPyL k8s deploy step. 
+    A helm chart rendered by an MPyL k8s deploy step.
     The version of this chart is the version of the MPyL release used to create this chart
 type: application
 version: {mpyl_version}

@@ -2,7 +2,7 @@
 
 ➕ root['stages']['postdeploy'] -> `Cypress Test`
 
-➕ root['deployment']['traefik']['hosts'] -> 
+➕ root['deployment']['traefik']['hosts'] ->
 ```
   - host:
       all: "Host(`some.other.host.com`)"
@@ -23,7 +23,7 @@
 ```
 ➖ root['deployment']['namespace'] -> `namespace`
 
-➖ root['deployment']['traefik']['host'] -> 
+➖ root['deployment']['traefik']['host'] ->
 ```
 all: "Host(`some.other.host.com`)"
 servicePort: 4091

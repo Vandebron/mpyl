@@ -1,9 +1,9 @@
+---
 apiVersion: v1
 kind: Service
 metadata:
   annotations:
-    description: This is a test container. For testing the MPL pipelines, not to be
-      deployed anywhere.
+    description: This is a test container. For testing the MPL pipelines, not to be deployed anywhere.
   labels:
     name: dockertest
     app.kubernetes.io/version: pr-1234
@@ -16,10 +16,10 @@ metadata:
   name: dockertest
 spec:
   ports:
-  - name: 8080-webservice-port
-    port: 8080
-    protocol: TCP
-    targetPort: 80
+    - name: 8080-webservice-port
+      port: 8080
+      protocol: TCP
+      targetPort: 80
   selector:
     app.kubernetes.io/instance: dockertest
     app.kubernetes.io/name: dockertest

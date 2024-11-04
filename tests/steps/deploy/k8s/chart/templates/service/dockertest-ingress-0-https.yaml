@@ -1,3 +1,4 @@
+---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
@@ -13,17 +14,17 @@ metadata:
   name: dockertest-ingress-0-https
 spec:
   routes:
-  - kind: Rule
-    match: Host(`payments-1234.test-other.nl`)
-    services:
-    - name: dockertest
-      kind: Service
-      port: 8080
-    middlewares:
-    - name: dockertest-ingress-0-whitelist
-    syntax: v2
+    - kind: Rule
+      match: Host(`payments-1234.test-other.nl`)
+      services:
+        - name: dockertest
+          kind: Service
+          port: 8080
+      middlewares:
+        - name: dockertest-ingress-0-whitelist
+      syntax: v2
   entryPoints:
-  - websecure
+    - websecure
   tls:
     secretName: le-custom-prod-wildcard-cert
     options:

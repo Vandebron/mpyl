@@ -1,6 +1,7 @@
+---
 name: ocpp
-maintainer: [ 'MPyL' ]
-description: 'Deployment of ocpp'
+maintainer: [MPyL]
+description: Deployment of ocpp
 mpylVersion: 1.0.10
 stages:
   build: Echo Build
@@ -10,10 +11,10 @@ deployment:
   properties:
     env:
       - key: DEPLOY_ENV
-        pr: "Test"
-        test: "Test"
-        acceptance: "Acceptance"
-        production: "Production"
+        pr: Test
+        test: Test
+        acceptance: Acceptance
+        production: Production
   kubernetes:
     rancher:
       projectId:

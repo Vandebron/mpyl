@@ -1,3 +1,4 @@
+---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
@@ -13,15 +14,15 @@ metadata:
   name: minimalservice-ingress-0-https
 spec:
   routes:
-  - kind: Rule
-    match: Host(`mpyl-minimalservice.prod-backend.nl`)
-    services:
-    - name: minimalservice
-      kind: Service
-      port: 8080
-    middlewares:
-    - name: minimalservice-ingress-0-whitelist
+    - kind: Rule
+      match: Host(`mpyl-minimalservice.prod-backend.nl`)
+      services:
+        - name: minimalservice
+          kind: Service
+          port: 8080
+      middlewares:
+        - name: minimalservice-ingress-0-whitelist
   entryPoints:
-  - websecure
+    - websecure
   tls:
     secretName: le-custom-prod-wildcard-cert

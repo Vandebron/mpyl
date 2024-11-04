@@ -1,3 +1,4 @@
+---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
@@ -13,16 +14,16 @@ metadata:
   name: dockertest-ingress-1-http
 spec:
   routes:
-  - kind: Rule
-    match: Host(`some.other.host.com`)
-    services:
-    - name: dockertest
-      kind: Service
-      port: 4091
-    middlewares:
-    - name: traefik-https-redirect@kubernetescrd
-    - name: dockertest-ingress-1-whitelist
-    syntax: v3
-    priority: 1000
+    - kind: Rule
+      match: Host(`some.other.host.com`)
+      services:
+        - name: dockertest
+          kind: Service
+          port: 4091
+      middlewares:
+        - name: traefik-https-redirect@kubernetescrd
+        - name: dockertest-ingress-1-whitelist
+      syntax: v3
+      priority: 1000
   entryPoints:
-  - web
+    - web

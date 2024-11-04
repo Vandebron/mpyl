@@ -1,27 +1,27 @@
-name: 'dockertest'
-description: 'This is a test container. For testing the MPL pipelines, not to be deployed anywhere.'
+---
+name: dockertest
+description: This is a test container. For testing the MPL pipelines, not to be deployed anywhere.
 stages:
   build: Docker Build
   test: Docker Test
-  deploy: 'Kubernetes Deploy'
+  deploy: Kubernetes Deploy
   postdeploy: Cypress Test
-maintainer: [ 'MPyL']
+maintainer: [MPyL]
 deployment:
   traefik:
     hosts:
       - host:
-          all: "Host(`some.other.host.com`)"
+          all: Host(`some.other.host.com`)
         servicePort: 4091
         priority: 1000
         whitelists:
           pr:
-            - "K8s-Test"
-            - "VPN"
+            - K8s-Test
+            - VPN
           test:
-            - "K8s-Test"
-            - "VPN"
+            - K8s-Test
+            - VPN
           acceptance:
-            - "VPN"
+            - VPN
           production:
-            - "Outside-World"
-
+            - Outside-World

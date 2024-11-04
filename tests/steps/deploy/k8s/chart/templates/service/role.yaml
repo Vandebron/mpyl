@@ -1,3 +1,4 @@
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -12,10 +13,10 @@ metadata:
     revision: 2ad3293a7675d08bc037ef0846ef55897f38ec8f
   name: dockertest
 rules:
-- apiGroups:
-  - ''
-  resources:
-  - pods
-  verbs:
-  - list
-  - get
+  - apiGroups:
+      - ''
+    resources:
+      - pods
+    verbs:
+      - list
+      - get

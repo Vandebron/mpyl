@@ -1,4 +1,4 @@
-!Output
+--- !Output
 success: true
 message: build success
 produced_artifact: !Artifact

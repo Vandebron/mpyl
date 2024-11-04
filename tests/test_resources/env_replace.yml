@@ -1,3 +1,4 @@
+---
 root:
   key1: !ENV ${SOME_VALUE}
   key2: !ENV ${SOME_VALUE:fallback}

@@ -1,3 +1,4 @@
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -31,29 +32,29 @@ spec:
       name: job
     spec:
       containers:
-      - args:
-        - --env
-        - test
-        command:
-        - python
-        - run.py
-        env:
-        - name: SOME_SECRET_ENV
-          valueFrom:
-            secretKeyRef:
-              key: SOME_SECRET_ENV
-              name: job
-              optional: false
-        image: registry/image:123
-        imagePullPolicy: Always
-        name: job
-        resources:
-          limits:
-            cpu: 500m
-            memory: 1024Mi
-          requests:
-            cpu: 100m
-            memory: 512Mi
+        - args:
+            - --env
+            - test
+          command:
+            - python
+            - run.py
+          env:
+            - name: SOME_SECRET_ENV
+              valueFrom:
+                secretKeyRef:
+                  key: SOME_SECRET_ENV
+                  name: job
+                  optional: false
+          image: registry/image:123
+          imagePullPolicy: Always
+          name: job
+          resources:
+            limits:
+              cpu: 500m
+              memory: 1024Mi
+            requests:
+              cpu: 100m
+              memory: 512Mi
       restartPolicy: Never
       serviceAccount: job
       serviceAccountName: job
