@@ -65,7 +65,7 @@ or `lint`.
 ##### MPyL configuration
 
 MPyL can be configured through a file that adheres to the `mpyl_config.yml`
-[schema](https://vandebron.github.io/mpyl/schema/mpyl_config.schema.yml).  
+[schema](https://vandebron.github.io/mpyl/schema/mpyl_config.schema.yml).
 Which configuration fields need to be set depends on your use case. The error messages that you
 encounter while using the cli may guide you through the process.
 Note that the included `mpyl_config.example.yml` is just an example.
@@ -88,7 +88,7 @@ documentation and can be used to enable on-the-fly validation and auto-completio
 ###### Stage configuration
 
 MPyL can be configured to use an arbitrary set of build stages. Typical CI/CD stages are `build`, `test` or `deploy`.
-See `mpyl.steps` for the steps that come bundled and how to define and register your own. 
+See `mpyl.steps` for the steps that come bundled and how to define and register your own.
 
 <details>
   <summary>Example stage configuration</summary>
@@ -241,8 +241,8 @@ The docker cache can be used in both the `mpyl.steps.build.dockerbuild` and `mpy
 
 #### Artifacts
 
-MPyL's artifact metadata is stored in the hidden `.mpyl` folders next to `project.yml`. 
-These folders are used to cache information about (intermediate) build results. 
+MPyL's artifact metadata is stored in the hidden `.mpyl` folders next to `project.yml`.
+These folders are used to cache information about (intermediate) build results.
 A typical `.mpyl` folder has a file for each executed stage. The `BUILD.yml` file contains the metadata for the
 build step. For example:
 ```yaml
@@ -256,8 +256,8 @@ produced_artifact: !Artifact
 ```
 These files speed up subsequent runs by preventing steps from being executed when their inputs have not changed.
 
-🧹 These `.mpyl` folders can be safely deleted to force a full rebuild via 
-```shell 
+🧹 These `.mpyl` folders can be safely deleted to force a full rebuild via
+```shell
 mpyl build clean
 ```
 

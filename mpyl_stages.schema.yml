@@ -1,12 +1,13 @@
+---
 $schema: http://json-schema.org/draft-07/schema#
 $id: mpyl_stages.schema.yml
 definitions:
   stageNames:
     enum:
-      - "build"
-      - "test"
-      - "deploy"
-      - "postdeploy"
+      - build
+      - test
+      - deploy
+      - postdeploy
   dependencies:
     type: object
     properties:
