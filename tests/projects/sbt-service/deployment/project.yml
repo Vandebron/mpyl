@@ -1,20 +1,19 @@
----
-name: sbtservice
-maintainer: [MPyL]
+name: 'sbtservice'
+maintainer: ['MPyL']
 stages:
   build: Echo Build
   deploy: Kubernetes Deploy
 mpylVersion: 1.4.18
-description: Demonstrates how an SBT project can be built and tested
+description: 'Demonstrates how an SBT project can be built and tested'
 deployment:
-  namespace: sbtservice
+  namespace: 'sbtservice'
   properties:
     env:
       - key: SOME_ENV
-        pr: PullRequest
-        test: Test
-        acceptance: Acceptance
-        production: Production
+        pr: "PullRequest"
+        test: "Test"
+        acceptance: "Acceptance"
+        production: "Production"
     kubernetes:
       - key: SOME_SECRET_ENV
         valueFrom:
@@ -25,7 +24,7 @@ deployment:
   kubernetes:
     rancher:
       projectId:
-        all: p-11111
+        all: "p-11111"
     livenessProbe:
       path:
         all: /health
@@ -44,23 +43,23 @@ deployment:
     metrics:
       enabled: true
       alerts:
-        - name: ServiceError
+        - name: 'ServiceError'
           expr: 'true'
-          forDuration: 1m
-          description: Service has encountered errors
-          severity: warning
-        - name: ServiceErrorCritical
+          forDuration: '1m'
+          description: 'Service has encountered errors'
+          severity: 'warning'
+        - name: 'ServiceErrorCritical'
           expr: 'true'
-          forDuration: 1m
-          description: Service has encountered critical errors
-          severity: critical
+          forDuration: '1m'
+          description: 'Service has encountered critical errors'
+          severity: 'critical'
   traefik:
     hosts:
       - host:
-          pr: Host(`sbtservice-{PR-NUMBER}.test.nl`)
-          test: Host(`sbtservice.test.nl`)
-          acceptance: Host(`sbtservice.acceptance1.nl`)
-          production: Host(`sbtservice.nl`)
+          pr: "Host(`sbtservice-{PR-NUMBER}.test.nl`)"
+          test: "Host(`sbtservice.test.nl`)"
+          acceptance: "Host(`sbtservice.acceptance1.nl`)"
+          production: "Host(`sbtservice.nl`)"
         tls:
-          all: le-custom-prod-wildcard-cert
+          all: "le-custom-prod-wildcard-cert"
         insecure: true

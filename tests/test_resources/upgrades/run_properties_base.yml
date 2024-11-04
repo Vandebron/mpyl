@@ -1,4 +1,3 @@
----
 build:
   run:
     id: !ENV ${BUILD_ID:1}

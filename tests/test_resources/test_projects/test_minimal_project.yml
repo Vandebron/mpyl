@@ -1,30 +1,29 @@
----
-name: minimalService
-description: This is a test container. For testing the MPL pipelines, not to be deployed anywhere.
+name: 'minimalService'
+description: 'This is a test container. For testing the MPL pipelines, not to be deployed anywhere.'
 stages:
   build: Echo Build
   test: Echo Test
   deploy: Echo Deploy
-maintainer: [MPyL]
+maintainer: [ 'MPyL' ]
 build:
   args:
     plain:
       - key: SOME_ENV
-        test: Test
-        acceptance: Acceptance
-        production: Production
+        test: "Test"
+        acceptance: "Acceptance"
+        production: "Production"
 dependencies:
   build:
-    - test/docker/
+    - 'test/docker/'
 deployment:
-  namespace: mpyl
+  namespace: "mpyl"
   properties:
     env:
       - key: SOME_ENV
-        pr: PullRequest
-        test: Test
-        acceptance: Acceptance
-        production: Production
+        pr: "PullRequest"
+        test: "Test"
+        acceptance: "Acceptance"
+        production: "Production"
   kubernetes:
     rancher:
       projectId:
@@ -36,7 +35,7 @@ deployment:
       failureThreshold: 99
       grpc:
         port: 123
-        service: grpcService
+        service: 'grpcService'
     portMappings:
       8080: 8080
     metrics:

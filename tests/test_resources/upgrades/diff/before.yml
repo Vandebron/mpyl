@@ -1,14 +1,13 @@
----
-name: dockertest
-description: This is a test container. For testing the MPL pipelines, not to be deployed anywhere.
+name: 'dockertest'
+description: 'This is a test container. For testing the MPL pipelines, not to be deployed anywhere.'
 stages:
   build: Docker Build
   test: Sbt Test
-maintainer: [MPyL]
+maintainer: [ 'MPyL']
 deployment:
-  namespace: namespace
+  namespace: 'namespace'
   traefik:
     host:
-      all: Host(`some.other.host.com`)
+      all: "Host(`some.other.host.com`)"
       servicePort: 4091
       priority: 1000

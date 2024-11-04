@@ -1,11 +1,10 @@
----
-name: testproject
-description: This is a test project to validate the schema
+name: 'testproject'
+description: 'This is a test project to validate the schema'
 stages:
   firstStage: Stage One
   secondStage: Stage Two
 mpylVersion: 1.3.1
-maintainer: [MPyL]
+maintainer: ['MPyL']
 dependencies:
   firstStage:
-    - test/docker/
+    - 'test/docker/'

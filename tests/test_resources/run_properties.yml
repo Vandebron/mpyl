@@ -1,4 +1,3 @@
----
 build:
   run:
     id: !ENV ${BUILD_ID:1}
@@ -6,7 +5,7 @@ build:
     change_url: !ENV ${GIT_URL:http://localhost:3000/}
     tests_url: !ENV ${RUN_TESTS_DISPLAY_URL:http://localhost:3000/}
     user_email: !ENV ${BUILD_USER_EMAIL}
-    user: anonymous
+    user: 'anonymous'
   parameters:
     deploy_target: !ENV ${DEPLOY_TARGET:PullRequest}
   versioning:
@@ -17,11 +16,11 @@ build:
     width: 0
     logLevel: INFO
 stages:
-  - name: build
-    icon: 🏗️
-  - name: test
-    icon: 📋
-  - name: deploy
-    icon: 🚀
-  - name: postdeploy
-    icon: 🦺️
+  - name: 'build'
+    icon: '🏗️'
+  - name: 'test'
+    icon: '📋'
+  - name : 'deploy'
+    icon: '🚀'
+  - name: 'postdeploy'
+    icon: '🦺️'

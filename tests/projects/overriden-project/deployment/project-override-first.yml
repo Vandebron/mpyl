@@ -1,6 +1,5 @@
----
 name: ocpp-first
-maintainer: [MPyL]
+maintainer: ['MPyL']
 mpylVersion: 1.0.9
 stages:
   deploy: Echo Deploy
@@ -9,4 +8,4 @@ deployment:
   properties:
     env:
       - key: INSTANCE
-        all: one
+        all: 'one'
