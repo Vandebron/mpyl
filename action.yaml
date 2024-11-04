@@ -20,7 +20,7 @@ inputs:
 
 runs:
   using: docker
-  image: ../../Dockerfile
+  image: Dockerfile
   args:
     - ${{ inputs.group }} ${{ inputs.debug != '' && '--verbose' || '' }} ${{ inputs.command }}
   env:
