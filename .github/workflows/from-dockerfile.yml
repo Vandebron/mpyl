@@ -1,3 +1,4 @@
+---
 name: from-dockerfile
 on:
   workflow_dispatch:

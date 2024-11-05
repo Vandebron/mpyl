@@ -1,3 +1,4 @@
+---
 loggers:
   console:
     config:
@@ -12,4 +13,4 @@ execution:
 
 compute_logs:
   module: dagster.core.storage.noop_compute_log_manager
-  class: "NoOpComputeLogManager"
+  class: NoOpComputeLogManager

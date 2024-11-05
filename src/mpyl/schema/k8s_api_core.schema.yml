@@ -1,54 +1,33 @@
+---
 $schema: http://json-schema.org/draft-07/schema#
 # Taken from https://github.com/kubernetes/kubernetes/blob/master/api/openapi-spec/swagger.json and converted to YAML
 definitions:
   io.k8s.api.apps.v1.DeploymentStrategy:
-    description: DeploymentStrategy describes how to replace existing pods with new
-      ones.
+    description: DeploymentStrategy describes how to replace existing pods with new ones.
     properties:
       rollingUpdate:
-        "$ref": "#/definitions/io.k8s.api.apps.v1.RollingUpdateDeployment"
-        description: Rolling update config params. Present only if DeploymentStrategyType
-          = RollingUpdate.
+        $ref: '#/definitions/io.k8s.api.apps.v1.RollingUpdateDeployment'
+        description: Rolling update config params. Present only if DeploymentStrategyType = RollingUpdate.
       type:
-        description: Type of deployment. Can be "Recreate" or "RollingUpdate". Default
-          is RollingUpdate.
+        description: Type of deployment. Can be "Recreate" or "RollingUpdate". Default is RollingUpdate.
         type: string
         enum:
-          - 'RollingUpdate'
-          - 'Recreate'
-        default: 'RollingUpdate'
+          - RollingUpdate
+          - Recreate
+        default: RollingUpdate
     type: object
   io.k8s.api.apps.v1.RollingUpdateDeployment:
     description: Spec to control the desired behavior of rolling update.
     properties:
       maxSurge:
-        "$ref": "#/definitions/io.k8s.apimachinery.pkg.util.intstr.IntOrString"
-        description: 'The maximum number of pods that can be scheduled above the desired
-            number of pods. Value can be an absolute number (ex: 5) or a percentage
-            of desired pods (ex: 10%). This can not be 0 if MaxUnavailable is 0. Absolute
-            number is calculated from percentage by rounding up. Defaults to 25%. Example:
-            when this is set to 30%, the new ReplicaSet can be scaled up immediately
-            when the rolling update starts, such that the total number of old and new
-            pods do not exceed 130% of desired pods. Once old pods have been killed,
-            new ReplicaSet can be scaled up further, ensuring that total number of pods
-            running at any time during the update is at most 130% of desired pods.'
+        $ref: '#/definitions/io.k8s.apimachinery.pkg.util.intstr.IntOrString'
+        description: 'The maximum number of pods that can be scheduled above the desired number of pods. Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%). This can not be 0 if MaxUnavailable is 0. Absolute number is calculated from percentage by rounding up. Defaults to 25%. Example: when this is set to 30%, the new ReplicaSet can be scaled up immediately when the rolling update starts, such that the total number of old and new pods do not exceed 130% of desired pods. Once old pods have been killed, new ReplicaSet can be scaled up further, ensuring that total number of pods running at any time during the update is at most 130% of desired pods.'
       maxUnavailable:
-        "$ref": "#/definitions/io.k8s.apimachinery.pkg.util.intstr.IntOrString"
-        description: 'The maximum number of pods that can be unavailable during the
-            update. Value can be an absolute number (ex: 5) or a percentage of desired
-            pods (ex: 10%). Absolute number is calculated from percentage by rounding
-            down. This can not be 0 if MaxSurge is 0. Defaults to 25%. Example: when
-            this is set to 30%, the old ReplicaSet can be scaled down to 70% of desired
-            pods immediately when the rolling update starts. Once new pods are ready,
-            old ReplicaSet can be scaled down further, followed by scaling up the new
-            ReplicaSet, ensuring that the total number of pods available at all times
-            during the update is at least 70% of desired pods.'
+        $ref: '#/definitions/io.k8s.apimachinery.pkg.util.intstr.IntOrString'
+        description: 'The maximum number of pods that can be unavailable during the update. Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%). Absolute number is calculated from percentage by rounding down. This can not be 0 if MaxSurge is 0. Defaults to 25%. Example: when this is set to 30%, the old ReplicaSet can be scaled down to 70% of desired pods immediately when the rolling update starts. Once new pods are ready, old ReplicaSet can be scaled down further, followed by scaling up the new ReplicaSet, ensuring that the total number of pods available at all times during the update is at least 70% of desired pods.'
     type: object
   io.k8s.apimachinery.pkg.util.intstr.IntOrString:
-    description: IntOrString is a type that can hold an int32 or a string.  When used
-      in JSON or YAML marshalling and unmarshalling, it produces or consumes the inner
-      type.  This allows you to have, for example, a JSON field that can accept a
-      name or number.
+    description: IntOrString is a type that can hold an int32 or a string.  When used in JSON or YAML marshalling and unmarshalling, it produces or consumes the inner type.  This allows you to have, for example, a JSON field that can accept a name or number.
     format: int-or-string
     type: string
   io.k8s.api.core.v1.EnvVarSource:
@@ -144,59 +123,44 @@ definitions:
       - type: string
       - type: number
   io.k8s.api.core.v1.LocalObjectReference:
-    description: LocalObjectReference contains enough information to let you locate
-      the referenced object inside the same namespace.
+    description: LocalObjectReference contains enough information to let you locate the referenced object inside the same namespace.
     properties:
       name:
         description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
         type: string
     type: object
   io.k8s.api.rbac.v1.PolicyRule:
-    description: PolicyRule holds information that describes a policy rule, but does
-      not contain information about who the rule applies to or which namespace the
-      rule applies to.
+    description: PolicyRule holds information that describes a policy rule, but does not contain information about who the rule applies to or which namespace the rule applies to.
     required:
       - verbs
     properties:
       apiGroups:
-        description: APIGroups is the name of the APIGroup that contains the resources.  If
-          multiple API groups are specified, any action requested against one of the
-          enumerated resources in any API group will be allowed.
+        description: APIGroups is the name of the APIGroup that contains the resources.  If multiple API groups are specified, any action requested against one of the enumerated resources in any API group will be allowed.
         type: array
         items:
           type: string
       nonResourceURLs:
-        description: NonResourceURLs is a set of partial urls that a user should have
-          access to.  *s are allowed, but only as the full, final step in the path
-          Since non-resource URLs are not namespaced, this field is only applicable
-          for ClusterRoles referenced from a ClusterRoleBinding. Rules can either
-          apply to API resources (such as "pods" or "secrets") or non-resource URL
-          paths (such as "/api"),  but not both.
+        description: NonResourceURLs is a set of partial urls that a user should have access to.  *s are allowed, but only as the full, final step in the path Since non-resource URLs are not namespaced, this field is only applicable for ClusterRoles referenced from a ClusterRoleBinding. Rules can either apply to API resources (such as "pods" or "secrets") or non-resource URL paths (such as "/api"),  but not both.
         type: array
         items:
           type: string
       resourceNames:
-        description: ResourceNames is an optional white list of names that the rule
-          applies to.  An empty set means that everything is allowed.
+        description: ResourceNames is an optional white list of names that the rule applies to.  An empty set means that everything is allowed.
         type: array
         items:
           type: string
       resources:
-        description: Resources is a list of resources this rule applies to.  ResourceAll
-          represents all resources.
+        description: Resources is a list of resources this rule applies to.  ResourceAll represents all resources.
         type: array
         items:
           type: string
       verbs:
-        description: Verbs is a list of Verbs that apply to ALL the ResourceKinds
-          and AttributeRestrictions contained in this rule.  VerbAll represents all
-          kinds.
+        description: Verbs is a list of Verbs that apply to ALL the ResourceKinds and AttributeRestrictions contained in this rule.  VerbAll represents all kinds.
         type: array
         items:
           type: string
   io.k8s.api.batch.v1.CronJobSpec:
-    description: CronJobSpec describes how the job execution will look like and when
-      it will actually run.
+    description: CronJobSpec describes how the job execution will look like and when it will actually run.
     properties:
       concurrencyPolicy:
         description: |-
@@ -209,39 +173,25 @@ definitions:
           - Forbid
           - Replace
       failedJobsHistoryLimit:
-        description: The number of failed finished jobs to retain. Value must be non-negative
-          integer. Defaults to 1.
+        description: The number of failed finished jobs to retain. Value must be non-negative integer. Defaults to 1.
         format: int32
         type: integer
       schedule:
         description: The schedule in Cron format, see https://en.wikipedia.org/wiki/Cron.
         type: string
       startingDeadlineSeconds:
-        description: Optional deadline in seconds for starting the job if it misses
-          scheduled time for any reason.  Missed jobs executions will be counted as
-          failed ones.
+        description: Optional deadline in seconds for starting the job if it misses scheduled time for any reason.  Missed jobs executions will be counted as failed ones.
         format: int64
         type: integer
       successfulJobsHistoryLimit:
-        description: The number of successful finished jobs to retain. Value must be
-          non-negative integer. Defaults to 3.
+        description: The number of successful finished jobs to retain. Value must be non-negative integer. Defaults to 3.
         format: int32
         type: integer
       suspend:
-        description: This flag tells the controller to suspend subsequent executions,
-          it does not apply to already started executions.  Defaults to false.
+        description: This flag tells the controller to suspend subsequent executions, it does not apply to already started executions.  Defaults to false.
         type: boolean
       timeZone:
-        description: The time zone name for the given schedule, see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones.
-          If not specified, this will default to the time zone of the kube-controller-manager
-          process. The set of valid time zone names and the time zone offset is loaded
-          from the system-wide time zone database by the API server during CronJob validation
-          and the controller manager during execution. If no system-wide time zone database
-          can be found a bundled version of the database is used instead. If the time
-          zone name becomes invalid during the lifetime of a CronJob or due to a change
-          in host configuration, the controller will stop creating new new Jobs and
-          will create a system event with the reason UnknownTimeZone. More information
-          can be found in https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#time-zones
+        description: The time zone name for the given schedule, see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones. If not specified, this will default to the time zone of the kube-controller-manager process. The set of valid time zone names and the time zone offset is loaded from the system-wide time zone database by the API server during CronJob validation and the controller manager during execution. If no system-wide time zone database can be found a bundled version of the database is used instead. If the time zone name becomes invalid during the lifetime of a CronJob or due to a change in host configuration, the controller will stop creating new new Jobs and will create a system event with the reason UnknownTimeZone. More information can be found in https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#time-zones
         type: string
     required:
       - schedule
