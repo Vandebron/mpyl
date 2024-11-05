@@ -1,3 +1,4 @@
+---
 name: mpyl
 description: Action to run mpyl from a docker container
 
@@ -7,7 +8,7 @@ inputs:
     required: true
   command:
     description: The command to run
-    required: true
+    required: false
   debug:
     description: Whether to run mpyl in debug mode
     required: false

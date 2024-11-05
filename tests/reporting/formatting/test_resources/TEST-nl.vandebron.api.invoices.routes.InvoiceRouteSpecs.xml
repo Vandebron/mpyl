@@ -5,45 +5,45 @@
 "/><property name="java.specification.name" value="Java Platform API Specification"/><property name="java.vm.specification.vendor" value="Oracle Corporation"/><property name="idea.installation.dir" value="/Applications/IntelliJ IDEA.app/Contents"/><property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/><property name="java.runtime.version" value="11.0.16.1+1-LTS-1"/><property name="user.name" value="samtheisens"/><property name="log4j.ignoreTCL" value="true"/><property name="file.encoding" value="UTF-8"/><property name="java.vendor.version" value="18.9"/><property name="java.io.tmpdir" value="/var/folders/xb/ry5j42395k1559q1rdp1g5zr0000gp/T/"/><property name="java.version" value="11.0.16.1"/><property name="java.vm.specification.name" value="Java Virtual Machine Specification"/><property name="java.awt.printerjob" value="sun.lwawt.macosx.CPrinterJob"/><property name="sun.os.patch.level" value="unknown"/><property name="java.library.path" value="/Users/samtheisens/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:."/><property name="java.vendor" value="Oracle Corporation"/><property name="sun.io.unicode.encoding" value="UnicodeBig"/><property name="gopherProxySet" value="false"/><property name="java.class.path" value="/Users/samtheisens/Library/Application Support/JetBrains/IntelliJIdea2022.3/plugins/Scala/launcher/sbt-launch.jar"/><property name="java.vm.vendor" value="Oracle Corporation"/><property name="jline.shutdownhook" value="false"/><property name="user.timezone" value="Asia/Makassar"/><property name="os.name" value="Mac OS X"/><property name="java.vm.specification.version" value="11"/><property name="sun.java.launcher" value="SUN_STANDARD"/><property name="user.country" value="NL"/><property name="sun.cpu.endian" value="little"/><property name="user.home" value="/Users/samtheisens"/><property name="user.language" value="en"/><property name="sbt.ipcsocket.tmpdir" value="/var/folders/xb/ry5j42395k1559q1rdp1g5zr0000gp/T/.sbt32606a76/ipcsocket"/><property name="swoval.tmpdir" value="/var/folders/xb/ry5j42395k1559q1rdp1g5zr0000gp/T/.sbt32606a76/swoval"/><property name="java.awt.graphicsenv" value="sun.awt.CGraphicsEnvironment"/><property name="jline.esc.timeout" value="0"/><property name="path.separator" value=":"/><property name="os.version" value="13.1"/><property name="jna.nosys" value="true"/><property name="java.runtime.name" value="Java(TM) SE Runtime Environment"/><property name="java.vm.name" value="Java HotSpot(TM) 64-Bit Server VM"/><property name="java.vendor.url.bug" value="https://bugreport.java.com/bugreport/"/><property name="user.dir" value="/Users/samtheisens/IdeaProjects/Vandebron"/><property name="os.arch" value="aarch64"/><property name="idea.managed" value="true"/><property name="java.vm.info" value="mixed mode"/><property name="java.vm.version" value="11.0.16.1+1-LTS-1"/><property name="java.class.version" value="55.0"/>
     </properties>
           <testcase classname="nl.vandebron.api.invoices.routes.InvoiceRouteSpecs" name="Invoice routes should serve all invoices if user user owns organization" time="1.909">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.routes.InvoiceRouteSpecs" name="Invoice routes should create payment plan" time="0.03">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.routes.InvoiceRouteSpecs" name="Invoice routes should serve invoices summary" time="0.011">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.routes.InvoiceRouteSpecs" name="Invoice routes should filter on queried type and honour contract" time="0.179">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.routes.InvoiceRouteSpecs" name="Invoice routes should serve invoices for specified invoice types" time="0.176">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.routes.InvoiceRouteSpecs" name="Invoice routes should refuse to serve invoices if user reference in path does not match token" time="0.021">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.routes.InvoiceRouteSpecs" name="Invoice routes should refuse request without filter" time="0.013">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.routes.InvoiceRouteSpecs" name="Invoice routes should use proper headers when returning a PDF invoice" time="0.021">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.routes.InvoiceRouteSpecs" name="Invoice routes should GET '/api/v1/organizations/{customerReference}/invoices/{invoiceId}' should return a 200 with invoice details" time="0.025">
                       <failure message="json response from /api/v1/organizations/2001683/invoices/74106ec1-cc47-44a4-93c6-44233cfc6f02.json not matching:
 Added: {
   &quot;rows&quot;:{
     &quot;rowId&quot;:&quot;87a9cb21-ae05-495b-960d-a99e0101937d&quot;
   }
-} 
+}
   Removed: {
   &quot;rows&quot;:{
     &quot;rowIdt&quot;:&quot;87a9cb21-ae05-495b-960d-a99e0101937d&quot;
   }
-} 
+}
 
 " type="org.scalatest.exceptions.TestFailedException">org.scalatest.exceptions.TestFailedException: json response from /api/v1/organizations/2001683/invoices/74106ec1-cc47-44a4-93c6-44233cfc6f02.json not matching:
 Added: {
   &quot;rows&quot;:{
     &quot;rowId&quot;:&quot;87a9cb21-ae05-495b-960d-a99e0101937d&quot;
   }
-} 
+}
   Removed: {
   &quot;rows&quot;:{
     &quot;rowIdt&quot;:&quot;87a9cb21-ae05-495b-960d-a99e0101937d&quot;
   }
-} 
+}
 
 
 	at org.scalatest.matchers.MatchersHelper$.indicateFailure(MatchersHelper.scala:392)

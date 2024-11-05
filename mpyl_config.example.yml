@@ -1,71 +1,72 @@
+---
 vcs:
   changedFilesPath: !ENV ${CHANGED_FILES_PATH}
   git:
-    mainBranch: 'main'
+    mainBranch: main
     ignorePatterns: ['*.md', '*.svg']
-    projectSubFolder: "deployment"
+    projectSubFolder: deployment
     remote:
-      url: 'https://github.com/acme/repo.git'
+      url: https://github.com/acme/repo.git
       userName: !ENV ${GIT_CREDENTIALS_USR}
       password: !ENV ${GIT_CREDENTIALS_PSW}
       email: !ENV ${GIT_EMAIL_ADDRESS:somebody@somewhere}
 dagster:
-  baseNamespace: 'dagster'
-  workspaceConfigMap: 'dagster-external-workspace-yaml'
-  workspaceFileKey: 'workspace.yaml'
-  daemon: 'dagster-daemon'
-  webserver: 'dagster-dagster-webserver'
-  globalServiceAccountOverride: 'global-dagster-user-deployment'
+  baseNamespace: dagster
+  workspaceConfigMap: dagster-external-workspace-yaml
+  workspaceFileKey: workspace.yaml
+  daemon: dagster-daemon
+  webserver: dagster-dagster-webserver
+  globalServiceAccountOverride: global-dagster-user-deployment
 docker:
-  defaultRegistry: 'acme.docker.com'
+  defaultRegistry: acme.docker.com
   registries:
-    - hostName: 'aws.amazonaws.com'
+    - hostName: aws.amazonaws.com
       userName: !ENV ${AWS_ACCESS_KEY_ID:user}
       password: !ENV ${AWS_SECRET_ACCESS_KEY:password}
-      region: 'us-east-1'
-      provider: 'aws'
-    - hostName: 'acme.docker.com'
+      region: us-east-1
+      provider: aws
+    - hostName: acme.docker.com
       userName: !ENV ${DOCKER_REGISTRY_USR:docker_user}
       password: !ENV ${DOCKER_REGISTRY_PSW:docker_password}
       cache:
         cacheFromRegistry: false
         custom:
-          to: 'type=gha,mode=max'
-          from: 'type=gha'
+          to: type=gha,mode=max
+          from: type=gha
   build:
-    rootFolder: '.'
-    buildTarget: 'builder'
-    testTarget: 'tester'
-    dockerFileName: 'Dockerfile-mpl'
+    rootFolder: .
+    buildTarget: builder
+    testTarget: tester
+    dockerFileName: Dockerfile-mpl
   compose:
     periodSeconds: 2
     failureThreshold: 20
 whiteLists:
-  default: [ "VPN" ]
+  default: [VPN]
   addresses:
-    - name: "VPN"
-      all: [ "10.0.0.1" ]
-    - name: 'Outside-World'
-      all: [ '0.0.0.0/0' ]
-    - name: 'K8s-Test'
-      all: [ '1.2.3.0', '1.2.3.1' ]
-    - name: 'TargetSpecificWhitelist'
-      pr: ['1.2.3.4']
-      test: ['1.2.3.4']
-      acceptance: ['2.3.4.5']
-      production: ['3.4.5.6']
+    - name: VPN
+      all: [10.0.0.1]
+    - name: Outside-World
+      all: [0.0.0.0/0]
+    - name: K8s-Test
+      all: [1.2.3.0, 1.2.3.1]
+    - name: TargetSpecificWhitelist
+      pr: [1.2.3.4]
+      test: [1.2.3.4]
+      acceptance: [2.3.4.5]
+      production: [3.4.5.6]
 kubernetes:
   deploymentStrategy:
     rollingUpdate:
-      maxUnavailable: "25%"
-      maxSurge: "25%"
-    type: "RollingUpdate"
+      maxUnavailable: 25%
+      maxSurge: 25%
+    type: RollingUpdate
   deployAction: KubectlManifest
   defaultCluster:
-    pr: 'K8S-Test'
-    test: 'K8S-Test'
-    acceptance: 'K8S-Acceptance'
-    production: 'K8S-Production'
+    pr: K8S-Test
+    test: K8S-Test
+    acceptance: K8S-Acceptance
+    production: K8S-Production
   clusters:
     - name: K8S-Test
       clusterId: c-acme
@@ -82,15 +83,15 @@ kubernetes:
       projectId: p-lb52t
       clusterEnv: prod
       context: acme-k8s-prod
-project: # default values
-  allowedMaintainers: [ 'Team1', 'Team2', 'MPyL' ]
+project:  # default values
+  allowedMaintainers: [Team1, Team2, MPyL]
   deployment:
     kubernetes:
       rancher:
         projectId:
           all: invalidId
       imagePullSecrets:
-        - name: 'acme-registry'
+        - name: acme-registry
       job:
         ttlSecondsAfterFinished:
           all: 3600
@@ -113,7 +114,7 @@ project: # default values
             production: 2048
       startupProbe:
         path:
-          all: '/health'
+          all: /health
         initialDelaySeconds: 4  # 0 - We expect service to rarely be up within 4 secs.
         periodSeconds: 2  # 10 - We want the service to become available as soon as possible
         timeoutSeconds: 3  # 1 - If the app is very busy during the startup stage, 1 second might be too fast
@@ -121,38 +122,38 @@ project: # default values
         failureThreshold: 60  # 3 - 4 + 60 * 2 = more than 2 minutes
       livenessProbe:
         path:
-          all: '/health'
+          all: /health
         periodSeconds: 30  # 10
         timeoutSeconds: 20  # 1 - Busy apps may momentarily have long timeouts
         successThreshold: 1  # 1
         failureThreshold: 3  # 3
       metrics:
-        path: '/metrics'
+        path: /metrics
         enabled: true
     traefik:
       enabled: true
       hosts:
         - host:
-            pr: "Host(`{SERVICE-NAME}-{PR-NUMBER}.{CLUSTER-ENV}-backend.nl`)"
-            test: "Host(`{namespace}-{SERVICE-NAME}.{CLUSTER-ENV}-backend.nl`)"
-            acceptance: "Host(`{namespace}-{SERVICE-NAME}.{CLUSTER-ENV}-backend.nl`)"
-            production: "Host(`{namespace}-{SERVICE-NAME}.{CLUSTER-ENV}-backend.nl`)"
+            pr: Host(`{SERVICE-NAME}-{PR-NUMBER}.{CLUSTER-ENV}-backend.nl`)
+            test: Host(`{namespace}-{SERVICE-NAME}.{CLUSTER-ENV}-backend.nl`)
+            acceptance: Host(`{namespace}-{SERVICE-NAME}.{CLUSTER-ENV}-backend.nl`)
+            production: Host(`{namespace}-{SERVICE-NAME}.{CLUSTER-ENV}-backend.nl`)
           tls:
-            all: "le-custom-prod-wildcard-cert"
+            all: le-custom-prod-wildcard-cert
           insecure: false
           whitelists:
-            all: [ "VPN" ]
+            all: [VPN]
     additionalTraefikRoutes:
-      - name: "ingress-intracloud-https"
+      - name: ingress-intracloud-https
         clusterEnv:
-          pr: "test-other"
-          test: "test-other"
-          acceptance: "acce-other"
-          production: "acce-other"
+          pr: test-other
+          test: test-other
+          acceptance: acce-other
+          production: acce-other
         middlewares:
-          - "intracloud-middleware@kubernetescrd"
+          - intracloud-middleware@kubernetescrd
         entrypoints:
-          - "intracloud"
+          - intracloud
     traefikDefaults:
-      httpMiddleware: "traefik-https-redirect@kubernetescrd"
-      tls: "le-custom-prod-wildcard-cert"
+      httpMiddleware: traefik-https-redirect@kubernetescrd
+      tls: le-custom-prod-wildcard-cert

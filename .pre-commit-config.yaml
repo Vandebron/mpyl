@@ -1,0 +1,36 @@
+---
+exclude: tests/.+\.ya?ml|tests/.+\.md|tests/.+\.txt
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    # more information available at https://pre-commit.com/hooks.html
+    hooks:
+      - id: check-ast  # simply checks whether the files parse as valid python
+      - id: check-json  # checks json files for parseable syntax
+      - id: check-xml  # checks xml files for parseable syntax
+      - id: check-added-large-files  # prevents giant files from being committed
+      - id: check-executables-have-shebangs  # ensures that (non-binary) executables have a shebang
+      - id: check-shebang-scripts-are-executable  # ensures that (non-binary) files with a shebang are executable
+      - id: check-merge-conflict  # checks for files that contain merge conflict strings
+      - id: check-symlinks  # checks for symlinks which do not point to anything
+      - id: destroyed-symlinks  # detects symlinks which are changed to regular files with a content of a path which that symlink was pointing to
+      - id: detect-private-key  # detects the presence of private keys
+      - id: end-of-file-fixer  # ensures that a file is either empty, or ends with one newline
+      - id: fix-byte-order-marker  # removes utf-8 byte order marker
+      - id: mixed-line-ending  # replaces or checks mixed line ending
+      - id: trailing-whitespace  # trims trailing whitespace
+  - repo: https://github.com/lyz-code/yamlfix/
+    rev: 1.17.0
+    hooks:
+      - id: yamlfix  # formats all modified YAML files to conform with our internal style convention
+        args: [--config-file, yamlfix.toml]
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.4
+    hooks:
+      - id: actionlint
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.29.4
+    hooks:
+      - id: check-github-actions
+      - id: check-github-workflows
+      - id: check-dependabot

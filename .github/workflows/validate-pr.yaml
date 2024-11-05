@@ -15,7 +15,7 @@ jobs:
         id: cache-dependencies
         with:
           python-version: '3.11'
-          cache: 'pipenv'
+          cache: pipenv
           cache-dependency-path: |
             Pipfile.lock
 
@@ -44,7 +44,7 @@ jobs:
         id: cache-dependencies
         with:
           python-version: '3.11'
-          cache: 'pipenv'
+          cache: pipenv
           cache-dependency-path: |
             Pipfile.lock
 
@@ -70,7 +70,7 @@ jobs:
         id: cache-dependencies
         with:
           python-version: '3.11'
-          cache: 'pipenv'
+          cache: pipenv
           cache-dependency-path: |
             Pipfile.lock
 
@@ -101,7 +101,7 @@ jobs:
           hide_complexity: true
           indicators: true
           output: both
-          thresholds: '79 99'
+          thresholds: 79 99
 
       - name: Add Coverage PR Comment
         uses: marocchino/sticky-pull-request-comment@v2.9.0
