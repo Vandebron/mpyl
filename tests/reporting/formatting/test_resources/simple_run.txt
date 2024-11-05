@@ -1,12 +1,12 @@
 Stage build
-2019-01-04 16:41:24+02:00 - dockertest - Stage(name='build', icon='🏗️') - success: False
-2019-01-04 16:41:26+02:00 - test - Stage(name='build', icon='🏗️') - success: True
+2019-01-04 16:41:24+02:00 - dockertest - Stage(name='build', icon='🏗️') - success: False 
+2019-01-04 16:41:26+02:00 - test - Stage(name='build', icon='🏗️') - success: True 
 Stage test
-2019-01-04 16:41:45+02:00 - test - Stage(name='test', icon='📋') - success: True
-TestRunSummary(tests=51, failures=1, errors=0, skipped=0)
+2019-01-04 16:41:45+02:00 - test - Stage(name='test', icon='📋') - success: True 
+TestRunSummary(tests=51, failures=1, errors=0, skipped=0) 
 
 Suite pytest: tests=18, failures=0, errors=0, skipped=0
 Suite nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs: tests=24, failures=0, errors=0, skipped=0
 Suite nl.vandebron.api.invoices.routes.InvoiceRouteSpecs: tests=9, failures=1, errors=0, skipped=0
 Stage deploy
-2019-01-04 16:41:45+02:00 - test - Stage(name='deploy', icon='🚀') - success: True
+2019-01-04 16:41:45+02:00 - test - Stage(name='deploy', icon='🚀') - success: True 
