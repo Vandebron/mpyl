@@ -149,6 +149,12 @@ jobs:
         with:
           registry-type: public
 
+      - name: Create repository in ECR
+        uses: int128/create-ecr-repository-action@v1.319.0
+        with:
+          repository: ${{ env.image-name }}
+          public: true
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3.2.0
 
