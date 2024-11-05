@@ -1,4 +1,4 @@
-                               Project dockertest                               
+                               Project dockertest
 ┌─────────────┬────────────────────────────────────────────────────────────────┐
 │ Name        │ dockertest                                                     │
 │ Path        │ test_projects/test_project.yml                                 │
