@@ -5,53 +5,53 @@
 "/><property name="java.specification.name" value="Java Platform API Specification"/><property name="java.vm.specification.vendor" value="Oracle Corporation"/><property name="idea.installation.dir" value="/Applications/IntelliJ IDEA.app/Contents"/><property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/><property name="java.runtime.version" value="11.0.16.1+1-LTS-1"/><property name="user.name" value="samtheisens"/><property name="log4j.ignoreTCL" value="true"/><property name="file.encoding" value="UTF-8"/><property name="java.vendor.version" value="18.9"/><property name="java.io.tmpdir" value="/var/folders/xb/ry5j42395k1559q1rdp1g5zr0000gp/T/"/><property name="java.version" value="11.0.16.1"/><property name="java.vm.specification.name" value="Java Virtual Machine Specification"/><property name="java.awt.printerjob" value="sun.lwawt.macosx.CPrinterJob"/><property name="sun.os.patch.level" value="unknown"/><property name="java.library.path" value="/Users/samtheisens/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:."/><property name="java.vendor" value="Oracle Corporation"/><property name="sun.io.unicode.encoding" value="UnicodeBig"/><property name="gopherProxySet" value="false"/><property name="java.class.path" value="/Users/samtheisens/Library/Application Support/JetBrains/IntelliJIdea2022.3/plugins/Scala/launcher/sbt-launch.jar"/><property name="java.vm.vendor" value="Oracle Corporation"/><property name="jline.shutdownhook" value="false"/><property name="user.timezone" value="Asia/Makassar"/><property name="os.name" value="Mac OS X"/><property name="java.vm.specification.version" value="11"/><property name="sun.java.launcher" value="SUN_STANDARD"/><property name="user.country" value="NL"/><property name="sun.cpu.endian" value="little"/><property name="user.home" value="/Users/samtheisens"/><property name="user.language" value="en"/><property name="sbt.ipcsocket.tmpdir" value="/var/folders/xb/ry5j42395k1559q1rdp1g5zr0000gp/T/.sbt32606a76/ipcsocket"/><property name="swoval.tmpdir" value="/var/folders/xb/ry5j42395k1559q1rdp1g5zr0000gp/T/.sbt32606a76/swoval"/><property name="java.awt.graphicsenv" value="sun.awt.CGraphicsEnvironment"/><property name="jline.esc.timeout" value="0"/><property name="path.separator" value=":"/><property name="os.version" value="13.1"/><property name="jna.nosys" value="true"/><property name="java.runtime.name" value="Java(TM) SE Runtime Environment"/><property name="java.vm.name" value="Java HotSpot(TM) 64-Bit Server VM"/><property name="java.vendor.url.bug" value="https://bugreport.java.com/bugreport/"/><property name="user.dir" value="/Users/samtheisens/IdeaProjects/Vandebron"/><property name="os.arch" value="aarch64"/><property name="idea.managed" value="true"/><property name="java.vm.info" value="mixed mode"/><property name="java.vm.version" value="11.0.16.1+1-LTS-1"/><property name="java.class.version" value="55.0"/>
     </properties>
           <testcase classname="nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs" name="Invoice orchestrator should Return the stream of incoming data when downloading a PDF file" time="0.896">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs" name="Invoice orchestrator should Filter invoices by type" time="0.299">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs" name="Invoice orchestrator should Enrich ecedo producer invoices with BusinessCentral vendor invoices" time="0.054">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs" name="Invoice orchestrator should Enrich ecedo invoice with BusinessCentral data for roles EV and CONSUMER" time="0.04">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs" name="Invoice orchestrator should getInvoicesSummary should Generate invoices summary from ecedo data with multiple rows" time="0.071">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs" name="Invoice orchestrator should getInvoicesSummary should Generate invoices summary from ecedo data with a single row" time="0.022">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs" name="Invoice orchestrator should getInvoicesSummary should Return a 404 error if ecedo returns an empty list for InvoiceRowsTotals" time="0.023">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs" name="Invoice orchestrator should getInvoicesSummary should Return a 404 error if total usage is zero" time="0.022">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs" name="Invoice orchestrator should toMWH should convert KWh to MWh" time="0.001">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs" name="Invoice orchestrator should toMWH should convert Wh to MWh" time="0.0">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs" name="Invoice orchestrator should toMWH should do not change value for MWh" time="0.0">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs" name="Invoice orchestrator should toMWH should return a left for unknown unit" time="0.0">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs" name="Invoice orchestrator should toInvoiceDto should set paymentProcessing as true when both maybeOpen and PPEntryPresent are true" time="0.015">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs" name="Invoice orchestrator should zipMaps should merge two maps" time="0.001">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs" name="Invoice orchestrator should embedSubInvoicesInParent should return None for empty arrays" time="0.0">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs" name="Invoice orchestrator should embedSubInvoicesInParent should return only parent for one invoice" time="0.015">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs" name="Invoice orchestrator should embedSubInvoicesInParent should separate parent and sort children" time="0.028">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs" name="Invoice orchestrator should createPaymentPlan should accept requests with valid payload" time="0.023">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs" name="Invoice orchestrator should createPaymentPlan should reject requests with invalid numberOfMonths" time="0.026">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs" name="Invoice orchestrator should getPaymentPlanStartDate should set start date as 18th of the coming month" time="0.0">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs" name="Invoice orchestrator should getInvoiceDataSet should return a result when it exists in Ecedo" time="0.025">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs" name="Invoice orchestrator should getInvoiceDataSet should return a 404 when invoice has different company label id Ecedo" time="0.021">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs" name="Invoice orchestrator should getInvoiceDataSet should return a 404 when invoice doesn't exist in Ecedo" time="0.058">
-                      
+
                     </testcase><testcase classname="nl.vandebron.api.invoices.services.InvoiceOrchestratorSpecs" name="Invoice orchestrator should getInvoiceDataSet should return a 404 when organization doesn't exist in Ecedo" time="0.033">
-                      
+
                     </testcase>
           <system-out><![CDATA[]]></system-out>
           <system-err><![CDATA[]]></system-err>

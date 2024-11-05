@@ -1,3 +1,4 @@
+---
 $schema: http://json-schema.org/draft-07/schema#
 $id: schema/run_properties.schema.yml
 required:
@@ -51,7 +52,7 @@ properties:
             type: string
           user_email:
             description: Email of of the user that triggered the run
-            type: ["string", "null"]
+            type: [string, 'null']
             format: idn-email
       parameters:
         description: defines the run properties
@@ -60,24 +61,24 @@ properties:
         properties:
           deploy_target:
             description: The deploy target.
-            type: ["string", "null"]
-            enum: [ null,  'PullRequest', 'PullRequestBase', 'Acceptance', 'Production' ]
+            type: [string, 'null']
+            enum: [null, PullRequest, PullRequestBase, Acceptance, Production]
       console:
         type: object
         additionalProperties: false
         properties:
           showPaths:
-            description: "Show paths in the console"
+            description: Show paths in the console
             type: boolean
             default: false
           width:
-            description: "The width of the console in characters, 0 means no limit"
+            description: The width of the console in characters, 0 means no limit
             type: integer
             default: 0
           logLevel:
             type: string
-            enum: [ "NOTSET", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL" ]
-            default: "INFO"
+            enum: [NOTSET, DEBUG, INFO, WARNING, ERROR, CRITICAL]
+            default: INFO
       versioning:
         description: Versioning information
         type: object
@@ -87,16 +88,16 @@ properties:
         properties:
           revision:
             description: an id to reference an object in git (usually a commit).
-            type: ["string", "null"]
+            type: [string, 'null']
           branch:
             description: name of the branch
-            type: ["string", "null"]
+            type: [string, 'null']
           pr_number:
             description: id of the pull request
-            type: ["string", "null"]
+            type: [string, 'null']
           tag:
             description: reference that points to the MPyL version
-            type: ["string", "null"]
+            type: [string, 'null']
   stages:
     description: defines stages in a run
     type: array
@@ -105,6 +106,6 @@ properties:
       additionalProperties: false
       properties:
         name:
-          "$ref": "mpyl_stages.schema.yml#/definitions/stageNames"
+          $ref: mpyl_stages.schema.yml#/definitions/stageNames
         icon:
           type: string
