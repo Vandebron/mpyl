@@ -11,6 +11,7 @@ on:
       - requirements.txt
       - Pipfile
       - Pipfile.lock
+      - .github/workflows/**  # FIXME remove before merging
 
 # If multiple commits are pushed simultaneously, only build the last one.
 concurrency:
