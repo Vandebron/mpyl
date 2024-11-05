@@ -1,5 +1,5 @@
 ---
-exclude: tests/.+/.+.ya?ml
+exclude: tests/.+\.ya?ml|tests/.+\.md
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
