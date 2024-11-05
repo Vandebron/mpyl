@@ -1,3 +1,4 @@
+---
 mpylVersion: 1.0.9
 build:
   run:
@@ -18,11 +19,11 @@ build:
     logLevel: INFO
     width: 160
 stages:
-  - name: 'build'
-    icon: '🏗️'
-  - name: 'test'
-    icon: '📋'
-  - name: 'deploy'
-    icon: '🚀'
-  - name: 'postdeploy'
-    icon: '🦺️'
+  - name: build
+    icon: 🏗️
+  - name: test
+    icon: 📋
+  - name: deploy
+    icon: 🚀
+  - name: postdeploy
+    icon: 🦺️
