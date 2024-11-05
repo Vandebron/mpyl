@@ -1,3 +1,4 @@
+---
 $schema: http://json-schema.org/draft-07/schema#
 $id: schema/project.schema.yml
 description: Description of a buildable artifact
@@ -45,7 +46,7 @@ properties:
     type: object
     additionalProperties: true
     propertyNames:
-      $ref: 'mpyl_stages.schema.yml#/definitions/stageNames'
+      $ref: mpyl_stages.schema.yml#/definitions/stageNames
     properties:
       build:
         description: Output needs to be a docker image
@@ -162,7 +163,7 @@ properties:
             uniqueItems: true
           sealedSecret:
             description: >-
-              Bitnami sealed secrets (https://bitnami.com/stack/sealed-secrets/helm). 
+              Bitnami sealed secrets (https://bitnami.com/stack/sealed-secrets/helm).
               Will be decrypted in the cluster at deploy time and converted to ordinary k8s secrets.
             type: array
             items:
@@ -170,7 +171,7 @@ properties:
             uniqueItems: true
           kubernetes:
             description: >-
-              Represents a source for the value of an EnvVar as defined in 
+              Represents a source for the value of an EnvVar as defined in
               https://kubernetesjsonschema.dev/v1.14.0/_definitions.json#definitions/io.k8s.api.core.v1.EnvVarSource
             type: array
             items:
@@ -180,7 +181,7 @@ properties:
                 key:
                   type: string
                 valueFrom:
-                  $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.core.v1.EnvVarSource'
+                  $ref: k8s_api_core.schema.yml#/definitions/io.k8s.api.core.v1.EnvVarSource
       namespace:
         description: >-
           Corresponds to the namespace in Kubernetes to which the artifact will
@@ -290,7 +291,7 @@ properties:
         additionalProperties: false
         type: string
   dependencies:
-    $ref: 'mpyl_stages.schema.yml#/definitions/dependencies'
+    $ref: mpyl_stages.schema.yml#/definitions/dependencies
 definitions:
   traefik:
     additionalProperties: false
@@ -798,13 +799,10 @@ definitions:
         type: object
       imagePullSecrets:
         minItems: 1
-        description: 'ImagePullSecrets is a list of references to secrets in the same namespace
-          to use for pulling any images in pods that reference this ServiceAccount. ImagePullSecrets
-          are distinct from Secrets because Secrets can be mounted in the pod, but ImagePullSecrets
-          are only accessed by the kubelet. More info: https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod'
+        description: 'ImagePullSecrets is a list of references to secrets in the same namespace to use for pulling any images in pods that reference this ServiceAccount. ImagePullSecrets are distinct from Secrets because Secrets can be mounted in the pod, but ImagePullSecrets are only accessed by the kubelet. More info: https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod'
         items:
-          "$ref": k8s_api_core.schema.yml#/definitions/io.k8s.api.core.v1.LocalObjectReference
-        type: [ array, null ]
+          $ref: k8s_api_core.schema.yml#/definitions/io.k8s.api.core.v1.LocalObjectReference
+        type: [array, null]
       job:
         type: object
         additionalProperties: true
@@ -826,17 +824,17 @@ definitions:
                   - all
             properties:
               pr:
-                $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.batch.v1.CronJobSpec'
+                $ref: k8s_api_core.schema.yml#/definitions/io.k8s.api.batch.v1.CronJobSpec
               test:
-                $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.batch.v1.CronJobSpec'
+                $ref: k8s_api_core.schema.yml#/definitions/io.k8s.api.batch.v1.CronJobSpec
               acceptance:
-                $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.batch.v1.CronJobSpec'
+                $ref: k8s_api_core.schema.yml#/definitions/io.k8s.api.batch.v1.CronJobSpec
               production:
-                $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.batch.v1.CronJobSpec'
+                $ref: k8s_api_core.schema.yml#/definitions/io.k8s.api.batch.v1.CronJobSpec
               all:
-                $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.batch.v1.CronJobSpec'
+                $ref: k8s_api_core.schema.yml#/definitions/io.k8s.api.batch.v1.CronJobSpec
       role:
-        $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.rbac.v1.PolicyRule'
+        $ref: k8s_api_core.schema.yml#/definitions/io.k8s.api.rbac.v1.PolicyRule
       metrics:
         description: >-
           Prometheus metrics. Requires prometheus operator to be installed.
@@ -860,7 +858,7 @@ definitions:
         description: >-
           Kubernetes deployment strategy.
           https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
-        $ref: 'k8s_api_core.schema.yml#/definitions/io.k8s.api.apps.v1.DeploymentStrategy'
+        $ref: k8s_api_core.schema.yml#/definitions/io.k8s.api.apps.v1.DeploymentStrategy
     dependencies:
       portMappings:
         - metrics
