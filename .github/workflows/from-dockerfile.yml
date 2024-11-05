@@ -13,6 +13,6 @@ jobs:
           fetch-depth: 0
 
       - name: Check mpyl health
-        uses: ./.github/run-mpyl
+        uses: ./
         with:
           group: health
