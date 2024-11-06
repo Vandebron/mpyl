@@ -135,7 +135,7 @@ jobs:
     outputs:
       image: ${{ steps.login-ecr-public.outputs.registry }}/vdb-public/${{ env.image-name }}:${{ env.image-version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.1
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4.0.2
