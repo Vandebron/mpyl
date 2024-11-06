@@ -12,15 +12,85 @@ jobs:
   release:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+    env:
+      image-name: gh-mpyl
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Get Next Version
+      - name: Compute the next version to release
         id: semver
         uses: ietf-tools/semver-action@v1.8.0
         with:
           token: ${{ github.token }}
           noVersionBumpBehavior: patch
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ECR_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_ECR_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR Public
+        id: login-ecr-public
+        uses: aws-actions/amazon-ecr-login@v2.0.1
+        with:
+          registry-type: public
+
+      - name: Create repository in ECR
+        uses: int128/create-ecr-repository-action@v1.319.0
+        with:
+          repository: ${{ env.image-name }}
+          public: true
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3.2.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3.7.1
+
+      - name: Build and push
+        id: docker-build-push
+        uses: docker/build-push-action@v6.9.0
+        with:
+          file: Dockerfile
+          context: .
+          tags: ${{ steps.login-ecr-public.outputs.registry }}/${{ vars.AWS_ECR_PUBLIC_ALIAS }}/${{ env.image-name }}:${{ steps.semver.outputs.next }}
+          platforms: |-
+            linux/amd64
+            linux/arm64
+          provenance: false
+          push: true
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.7.0
+
+      - name: Sign Docker image
+        env:
+          COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+          IMAGE: ${{ steps.login-ecr-public.outputs.registry }}/${{ vars.AWS_ECR_PUBLIC_ALIAS }}/${{ env.image-name }}
+          VERSION: ${{ steps.semver.outputs.next }}
+          DIGEST: ${{ steps.docker-build-push.outputs.digest }}
+        run: |-
+          echo "$COSIGN_KEY" > cosign.key
+          cosign sign --key cosign.key "$IMAGE:$VERSION@$DIGEST" --tlog-upload=false
+
+      - name: Point action.yaml to the new version
+        env:
+          IMAGE: docker://${{ steps.login-ecr-public.outputs.registry }}/vdb-public/${{ env.image-name }}:${{ steps.semver.outputs.next }}
+        run: yq -i '.runs.image = strenv(IMAGE)' action.yaml
+
+      - name: Commit changes
+        uses: ryancyq/github-signed-commit@v1.2.0
+        id: commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        with:
+          files: action.yaml
+          commit-message: Update action.yaml to ${{ env.image-name }}:${{ steps.semver.outputs.next }}
 
       - name: Tag version ${{ steps.semver.outputs.next }}
         uses: actions/github-script@v7.0.1
@@ -30,7 +100,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               ref: 'refs/tags/${{ steps.semver.outputs.next }}',
-              sha: context.sha
+              sha: '${{ steps.commit.outputs.commit-sha }}'
             })
 
       - name: Generate changelog
@@ -51,6 +121,7 @@ jobs:
           tag: ${{  steps.semver.outputs.next }}
           name: ${{ steps.semver.outputs.next }}
           body: ${{ steps.changelog.outputs.changes }}
+          commit: ${{ steps.commit.outputs.commit-sha }}
           token: ${{ github.token }}
 
       - name: Update Tags

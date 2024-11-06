@@ -1,7 +1,6 @@
 ---
 name: mpyl
 description: Action to run mpyl from a docker container
-
 inputs:
   group:
     description: The command group to run
@@ -18,10 +17,9 @@ inputs:
   changed-files-path:
     description: The path to the file containing the changed files
     required: false
-
 runs:
   using: docker
-  image: Dockerfile
+  image: docker://public.ecr.aws/vdb-public/gh-mpyl:latest
   args:
     - ${{ inputs.group }} ${{ inputs.debug != '' && '--verbose' || '' }} ${{ inputs.command }}
   env:
