@@ -48,6 +48,11 @@ def perform_health_checks(bare_console: Console):
         os.environ.get("MPYL_RUN_PROPERTIES_PATH") or DEFAULT_RUN_PROPERTIES_FILE_NAME
     )
 
+    bare_console.print(f"TAG = {os.environ.get('TAG')}")
+    bare_console.print(f"GIT_COMMIT = {os.environ.get('GIT_COMMIT')}")
+    bare_console.print(f"CHANGE_ID = {os.environ.get('CHANGE_ID')}")
+    bare_console.print(f"DEPLOY_TARGET = {os.environ.get('DEPLOY_TARGET')}")
+
     stages_schema = properties_schema_path.parent / DEFAULT_STAGES_SCHEMA_FILE_NAME
     stages_schema_exists = Path(stages_schema).exists()
     if not stages_schema_exists:
