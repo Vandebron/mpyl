@@ -130,7 +130,7 @@ class Step(metaclass=IPluginRegistry):
         before: Optional[Step] = None,
         after: Optional[Step] = None,
     ) -> None:
-        self._logger = logger.getChild(meta.name.replace(" ", ""))
+        self._logger = logger
         self.meta = meta
         self.produced_artifact = produced_artifact
         self.required_artifact = required_artifact
