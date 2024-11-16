@@ -154,3 +154,6 @@ mpyl_config.yml
 
 # Gradle template
 .gradle
+
+# Jupyter playground
+*.ipynb

@@ -293,7 +293,9 @@ class Repository:  # pylint: disable=too-many-public-methods
         overrides_pattern = f"{folder}/{Project.project_overrides_yaml_file_pattern()}"
 
         def files(pattern: str):
-            return set(self._repo.git.ls_files(pattern).splitlines())
+            return set(
+                self._repo.git.ls_files(pattern, recurse_submodules=True).splitlines()
+            )
 
         def deleted(pattern: str):
             return set(self._repo.git.ls_files("-d", pattern).splitlines())
