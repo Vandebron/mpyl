@@ -167,10 +167,10 @@ class MockRepository(Repository):
         return self
 
     def find_projects(
-        self, folder_pattern: str = "", config_folder: str = "deployment"
+        self, folder_pattern: str = "", _project_file_name=None
     ) -> list[str]:
         projects = Path(os.path.basename(root_test_path)).glob(
-            f"*{folder_pattern}*/{config_folder}/{Project.project_yaml_file_name()}"
+            f"*{folder_pattern}*/deployment/{Project.project_yaml_file_name()}"
         )
         return sorted(map(str, projects))
 
