@@ -32,7 +32,6 @@ definitions:
         "$ref": "#/definitions/Camunda"
     required:
       - vcs
-      - docker
     title: MPyL global configuration
   Whitelists:
     type: object
@@ -189,7 +188,6 @@ definitions:
         "$ref": "#/definitions/Github"
     required:
       - git
-      - github
     title: VCS
   Git:
     type: object
