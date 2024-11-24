@@ -375,7 +375,7 @@ def _get_changes(
     local: bool,
     tag: Optional[str] = None,
     changed_files_path: Optional[str] = None,
-):
+) -> Changeset:
     if changed_files_path:
         return repo.changes_from_file(
             logger=logger, changed_files_path=changed_files_path
