@@ -1,5 +1,19 @@
 # Release notes
 
+## MPyL 1.7.6
+
+
+
+#### Use pathlib to determine path of project during discovery
+- Using `pathlib` instead of string manipulation to determine the build plan of project avoids name overshadowing like `project_A` and `project_A_B`.
+
+### Upgrading `rich` and `slack` dependencies
+- `slack-sdk` from `3.21.3` to `3.33.3`
+- `rich` from `13.8.0` to `13.9.4`
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.7.6)
+
 ## MPyL 1.7.5
 
 
