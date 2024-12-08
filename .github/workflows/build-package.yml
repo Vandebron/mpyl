@@ -165,8 +165,7 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-          TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
-        run: pipenv run publish
+        run: pipenv run publish-test
 
       - name: Ensure package is in pypi cache
         run: pipenv run release exists ${{ steps.version.outputs.mpylVersion }} --test --attempts 5
