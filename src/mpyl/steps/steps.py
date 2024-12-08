@@ -163,18 +163,6 @@ class Steps:
 
         return after_result
 
-    def _validate_project_against_config(self, project: Project) -> Optional[Output]:
-        allowed_maintainers = set(
-            self._properties.config.get("project", {}).get("allowedMaintainers", [])
-        )
-        not_allowed = set(project.maintainer).difference(allowed_maintainers)
-        if not_allowed:
-            return Output(
-                success=False,
-                message=f"Maintainer(s) '{', '.join(not_allowed)}' not defined in config",
-            )
-        return None
-
     def _execute_stage(
         self,
         stage: Stage,
@@ -187,12 +175,6 @@ class Steps:
                 success=False,
                 message=f"Stage '{stage.name}' not defined on project '{project_execution.name}'",
             )
-
-        invalid_maintainers = self._validate_project_against_config(
-            project_execution.project
-        )
-        if invalid_maintainers:
-            return invalid_maintainers
 
         executor: Optional[Step] = self._steps_collection.get_executor(stage, step_name)
         if not executor:
