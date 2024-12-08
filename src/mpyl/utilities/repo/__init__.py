@@ -284,7 +284,7 @@ class Repository:  # pylint: disable=too-many-public-methods
         return self._repo.git.ls_remote("origin", branch_name) != ""
 
     def find_projects(
-        self, folder_pattern: str = "", project_file_name: Optional[str] = None
+        self, folder_pattern: str = "", project_file_name="project.yml"
     ) -> list[str]:
         """
         returns a set of all project.yml files
@@ -292,7 +292,7 @@ class Repository:  # pylint: disable=too-many-public-methods
         :param project_file_name: if project files are named differently than `project.yml`
         """
         folder = f"*{folder_pattern}*/{self.config.project_sub_folder}"
-        projects_pattern = f"{folder}/{project_file_name if project_file_name else Project.project_yaml_file_name()}"
+        projects_pattern = f"{folder}/{project_file_name}"
         overrides_pattern = f"{folder}/{Project.project_overrides_yaml_file_pattern()}"
 
         def files(pattern: str):
