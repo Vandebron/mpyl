@@ -293,7 +293,7 @@ class Repository:  # pylint: disable=too-many-public-methods
         """
         folder = f"*{folder_pattern}*/{self.config.project_sub_folder}"
         projects_pattern = f"{folder}/{project_file_name}"
-        overrides_pattern = f"{folder}/{Project.project_overrides_yaml_file_pattern()}"
+        overrides_pattern = Project.to_override_pattern(projects_pattern)
 
         def files(pattern: str):
             return set(
