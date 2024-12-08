@@ -98,6 +98,7 @@ class RepoConfig:
     main_branch: str
     ignore_patterns: list[str]
     project_sub_folder: str
+    project_file_name: str
     repo_credentials: RepoCredentials
 
     @staticmethod
@@ -112,6 +113,7 @@ class RepoConfig:
             main_branch=git_config["mainBranch"],
             ignore_patterns=git_config.get("ignorePatterns", []),
             project_sub_folder=git_config.get("projectSubFolder", "deployment"),
+            project_file_name=git_config.get("projectFile", "project.yml"),
             repo_credentials=(
                 RepoCredentials.from_config(maybe_remote_config)
                 if maybe_remote_config
@@ -283,16 +285,14 @@ class Repository:  # pylint: disable=too-many-public-methods
     def remote_branch_exists(self, branch_name: str) -> bool:
         return self._repo.git.ls_remote("origin", branch_name) != ""
 
-    def find_projects(
-        self, folder_pattern: str = "", project_file_name="project.yml"
-    ) -> list[str]:
+    def find_projects(self, folder_pattern: str = "") -> list[str]:
         """
         returns a set of all project.yml files
         :param folder_pattern: project paths are filtered on this pattern
         :param project_file_name: if project files are named differently than `project.yml`
         """
         folder = f"*{folder_pattern}*/{self.config.project_sub_folder}"
-        projects_pattern = f"{folder}/{project_file_name}"
+        projects_pattern = f"{folder}/{self.config.project_file_name}"
         overrides_pattern = Project.to_override_pattern(projects_pattern)
 
         def files(pattern: str):

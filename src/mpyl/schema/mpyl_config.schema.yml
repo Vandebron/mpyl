@@ -220,6 +220,10 @@ definitions:
         description: "The project subfolder in which the `project.yml` file resides"
         type: string
         default: "deployment"
+      projectFile:
+        description: "The file name of the project configuration file"
+        type: string
+        default: "project.yml"
     required:
       - mainBranch
     title: Git
