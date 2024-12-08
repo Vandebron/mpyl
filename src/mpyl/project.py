@@ -566,8 +566,8 @@ class Project:
         return "project.yml"
 
     @staticmethod
-    def project_overrides_yaml_file_pattern() -> str:
-        return "project-override-*.yml"
+    def to_override_pattern(project_path: str) -> str:
+        return project_path.replace(".yml", "-override-*.yml")
 
     @property
     def root_path(self) -> Path:
