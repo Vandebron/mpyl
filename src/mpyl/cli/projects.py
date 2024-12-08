@@ -82,9 +82,6 @@ def projects(ctx, config, verbose, filter_):
     )
 
 
-OVERRIDE_PATTERN = "project-override"
-
-
 @projects.command(name="list", help="List found projects")
 @click.pass_obj
 def list_projects(obj: ProjectsContext):

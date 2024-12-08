@@ -509,6 +509,8 @@ class Project:
     deployment: Optional[Deployment]
     dependencies: Optional[Dependencies]
 
+    OVERRIDE_TOKEN = "-override-"
+
     def __lt__(self, other):
         return self.path < other.path
 
@@ -561,13 +563,20 @@ class Project:
             )
         return self.kubernetes.job
 
-    @staticmethod
-    def project_yaml_file_name() -> str:
-        return "project.yml"
+    @property
+    def project_yaml_file_name(self) -> str:
+        return Path(self.path).name
 
     @staticmethod
     def to_override_pattern(project_path: str) -> str:
-        return project_path.replace(".yml", "-override-*.yml")
+        suffix = Path(project_path).suffix
+        return project_path.replace(suffix, Project.OVERRIDE_TOKEN + f"*{suffix}")
+
+    @staticmethod
+    def to_parent_project_name(project_path: Path) -> Path:
+        return project_path.parent / (
+            project_path.stem.split(Project.OVERRIDE_TOKEN)[0] + project_path.suffix
+        )
 
     @property
     def root_path(self) -> Path:
@@ -629,12 +638,9 @@ def load_possible_parent(
     full_path: Path,
     loader: YAML,
 ) -> Optional[dict]:
-    parent_project_path = full_path.parent / Project.project_yaml_file_name()
-    if (
-        str(full_path).endswith(Project.project_yaml_file_name())
-        or not parent_project_path.exists()
-    ):
+    if Project.OVERRIDE_TOKEN not in str(full_path):
         return None
+    parent_project_path = Project.to_parent_project_name(full_path)
     with open(parent_project_path, encoding="utf-8") as file:
         return loader.load(file)
 

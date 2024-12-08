@@ -170,7 +170,7 @@ class MockRepository(Repository):
         self, folder_pattern: str = "", _project_file_name=None
     ) -> list[str]:
         projects = Path(os.path.basename(root_test_path)).glob(
-            f"*{folder_pattern}*/deployment/{Project.project_yaml_file_name()}"
+            f"*{folder_pattern}*/deployment/project.yml"
         )
         return sorted(map(str, projects))
 
