@@ -4,6 +4,7 @@ vcs:
     mainBranch: 'main'
     ignorePatterns: ['*.md', '*.svg']
     projectSubFolder: "deployment"
+    projectFile: "project.yml"
     remote:
       url: 'https://github.com/acme/repo.git'
       userName: !ENV ${GIT_CREDENTIALS_USR}
