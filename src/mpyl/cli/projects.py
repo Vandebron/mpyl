@@ -192,7 +192,7 @@ def lint(obj: ProjectsContext):
         console.print("  ✅ All kubernetes projects have a project id")
 
     have_disallowed_maintainers = _assert_allowed_maintainers(
-        console=console, all_projects=all_projects, properties=obj.cli.run_properties
+        console=console, all_projects=all_projects, properties=obj.cli.config
     )
     if have_disallowed_maintainers:
         for project, disallowed in have_disallowed_maintainers:
