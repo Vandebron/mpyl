@@ -181,8 +181,7 @@ class Repository:  # pylint: disable=too-many-public-methods
 
     @property
     def base_revision(self) -> Union[Commit, None]:
-        main = self.main_origin_branch
-        return self._safe_ref_parse(main)
+        return self._safe_ref_parse(self.main_branch)
 
     @property
     def remote_url(self) -> Optional[str]:
@@ -196,14 +195,7 @@ class Repository:  # pylint: disable=too-many-public-methods
 
     @property
     def main_branch(self) -> str:
-        return self.config.main_branch.split("/")[-1]
-
-    @property
-    def main_origin_branch(self) -> str:
-        parts = self.config.main_branch.split("/")
-        if len(parts) > 1:
-            return "/".join(parts)
-        return f"origin/{self.main_branch}"
+        return self.config.main_branch
 
     def __get_filter_patterns(self):
         return ["--"] + [f":!{pattern}" for pattern in self.config.ignore_patterns]
@@ -215,7 +207,7 @@ class Repository:  # pylint: disable=too-many-public-methods
         # TODO pass the base_branch as a build parameter, not all branches  # pylint: disable=fixme
         #  are created from the main branch
         #  Also throw a more specific exception if the base branch is not found
-        base_branch = self.main_origin_branch
+        base_branch = self.main_branch
         diff = set(
             self._repo.git.diff(f"{base_branch}...HEAD", name_status=True).splitlines()
         )
