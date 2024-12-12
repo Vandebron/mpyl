@@ -81,6 +81,26 @@ def _assert_project_ids(console: Console, all_projects: list[Project]):
     return missing_ids
 
 
+def _assert_allowed_maintainers(
+    console: Console, all_projects: list[Project], properties: dict
+) -> list[tuple[Project, set[str]]]:
+    console.print("")
+    console.print("Checking allowed maintainers: ")
+
+    allowed_maintainers = set(
+        properties.get("project", {}).get("allowedMaintainers", [])
+    )
+
+    invalid = []
+    for project in all_projects:
+        not_allowed = set(project.maintainer).difference(allowed_maintainers)
+
+        if not_allowed:
+            invalid.append((project, not_allowed))
+
+    return invalid
+
+
 @dataclass
 class WrongLinkupPerProject:
     name: str
