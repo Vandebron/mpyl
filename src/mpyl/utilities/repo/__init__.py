@@ -59,6 +59,15 @@ class Changeset:
     def empty(sha: str):
         return Changeset(sha=sha, _files_touched={})
 
+    def merge(self, other: "Changeset"):
+        return Changeset(
+            sha=self.sha,
+            _files_touched={
+                **self._files_touched,
+                **other._files_touched,  # pylint: disable=protected-access
+            },
+        )
+
 
 @dataclass(frozen=True)
 class RepoCredentials:
