@@ -227,12 +227,18 @@ class ArtifactsRepository:
         github = Github(login_or_token=get_token(github_config))
         repo = github.get_repo(github_config.repository)
         open_pulls = repo.get_pulls(head=branch)
+        repo_credentials = self.codebase_repo.config.repo_credentials
+        commit_url = (
+            f"{repo_credentials.url.removesuffix('.git')}/commit/{revision}"
+            if repo_credentials
+            else ""
+        )
 
         if open_pulls.totalCount == 0:
             body = f"""
 ## 🚀 Deploying
 Docker tag: [{run_properties.versioning.identifier}]{f'({run_properties.details.change_url})' if run_properties.details.change_url else ''}
-Commit: [{revision}]({self.codebase_repo.config.repo_credentials.url.removesuffix(".git")}/commit/{revision})
+Commit: [{revision}]({commit_url})
 
 ## 📍 To
 Cluster: {get_argo_folder_name(target=run_properties.target)}

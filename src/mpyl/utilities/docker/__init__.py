@@ -155,8 +155,8 @@ def stream_docker_logging(
                 if isinstance(next_item, tuple)
                 else next_item
             )
-            copied_logs.append(log_line)
-            logger.log(level, try_parse_ansi(log_line))
+            copied_logs.append(str(log_line))
+            logger.log(level, try_parse_ansi(str(log_line)))
         except StopIteration:
             logger.info(f"{task_name} complete.")
             return copied_logs

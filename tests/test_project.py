@@ -22,6 +22,7 @@ class TestMpylSchema:
         assert project.name == "dockertest"
         assert project.maintainer, ["Marketplace", "Energy Trading"]
         assert project.deployment is not None
+        assert project.deployment.properties is not None
         envs = project.deployment.properties.env
 
         simple_env = [x for x in envs if x.key == "SOME_ENV"].pop()
@@ -108,12 +109,12 @@ class TestMpylSchema:
         assert self.project.test_report_path == Path("target/test-reports")
 
     def test_project_yaml_file_name(self):
-        assert self.project.project_yaml_file_name() == "project.yml"
+        assert self.project.project_yaml_file_name == "test_project.yml"
 
     def test_project_overrides_yaml_file_pattern(self):
         assert (
-            self.project.project_overrides_yaml_file_pattern()
-            == "project-override-*.yml"
+            self.project.to_override_pattern(self.project.project_yaml_file_name)
+            == "test_project-override-*.yml"
         )
 
     def test_dynamic_stages(self):

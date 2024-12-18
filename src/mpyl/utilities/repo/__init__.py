@@ -59,6 +59,15 @@ class Changeset:
     def empty(sha: str):
         return Changeset(sha=sha, _files_touched={})
 
+    def merge(self, other: "Changeset"):
+        return Changeset(
+            sha=self.sha,
+            _files_touched={
+                **self._files_touched,
+                **other._files_touched,  # pylint: disable=protected-access
+            },
+        )
+
 
 @dataclass(frozen=True)
 class RepoCredentials:
@@ -98,7 +107,8 @@ class RepoConfig:
     main_branch: str
     ignore_patterns: list[str]
     project_sub_folder: str
-    repo_credentials: RepoCredentials
+    project_file_name: str
+    repo_credentials: Optional[RepoCredentials]
 
     @staticmethod
     def from_config(config: dict):
@@ -112,6 +122,7 @@ class RepoConfig:
             main_branch=git_config["mainBranch"],
             ignore_patterns=git_config.get("ignorePatterns", []),
             project_sub_folder=git_config.get("projectSubFolder", "deployment"),
+            project_file_name=git_config.get("projectFile", "project.yml"),
             repo_credentials=(
                 RepoCredentials.from_config(maybe_remote_config)
                 if maybe_remote_config
@@ -179,8 +190,7 @@ class Repository:  # pylint: disable=too-many-public-methods
 
     @property
     def base_revision(self) -> Union[Commit, None]:
-        main = self.main_origin_branch
-        return self._safe_ref_parse(main)
+        return self._safe_ref_parse(self.main_branch)
 
     @property
     def remote_url(self) -> Optional[str]:
@@ -194,14 +204,7 @@ class Repository:  # pylint: disable=too-many-public-methods
 
     @property
     def main_branch(self) -> str:
-        return self.config.main_branch.split("/")[-1]
-
-    @property
-    def main_origin_branch(self) -> str:
-        parts = self.config.main_branch.split("/")
-        if len(parts) > 1:
-            return "/".join(parts)
-        return f"origin/{self.main_branch}"
+        return self.config.main_branch
 
     def __get_filter_patterns(self):
         return ["--"] + [f":!{pattern}" for pattern in self.config.ignore_patterns]
@@ -213,7 +216,7 @@ class Repository:  # pylint: disable=too-many-public-methods
         # TODO pass the base_branch as a build parameter, not all branches  # pylint: disable=fixme
         #  are created from the main branch
         #  Also throw a more specific exception if the base branch is not found
-        base_branch = self.main_origin_branch
+        base_branch = self.main_branch
         diff = set(
             self._repo.git.diff(f"{base_branch}...HEAD", name_status=True).splitlines()
         )
@@ -287,13 +290,16 @@ class Repository:  # pylint: disable=too-many-public-methods
         """
         returns a set of all project.yml files
         :param folder_pattern: project paths are filtered on this pattern
+        :param project_file_name: if project files are named differently than `project.yml`
         """
         folder = f"*{folder_pattern}*/{self.config.project_sub_folder}"
-        projects_pattern = f"{folder}/{Project.project_yaml_file_name()}"
-        overrides_pattern = f"{folder}/{Project.project_overrides_yaml_file_pattern()}"
+        projects_pattern = f"{folder}/{self.config.project_file_name}"
+        overrides_pattern = Project.to_override_pattern(projects_pattern)
 
         def files(pattern: str):
-            return set(self._repo.git.ls_files(pattern).splitlines())
+            return set(
+                self._repo.git.ls_files(pattern, recurse_submodules=True).splitlines()
+            )
 
         def deleted(pattern: str):
             return set(self._repo.git.ls_files("-d", pattern).splitlines())
