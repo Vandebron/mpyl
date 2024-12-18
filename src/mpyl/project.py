@@ -464,7 +464,7 @@ class Build:
 class Deployment:
     cluster: Optional[TargetProperty[str]]
     namespace: Optional[str]
-    properties: Properties
+    properties: Optional[Properties]
     kubernetes: Optional[Kubernetes]
     dagster: Optional[Dagster]
     traefik: Optional[Traefik]
@@ -723,7 +723,7 @@ def merge_dicts(
 
 
 def get_env_variables(project: Project, target: Target) -> dict[str, str]:
-    if project.deployment is None:
+    if project.deployment is None or project.deployment.properties is None:
         raise KeyError(
             f"No deployment information was found for project: {project.name}"
         )

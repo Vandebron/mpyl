@@ -108,7 +108,7 @@ class RepoConfig:
     ignore_patterns: list[str]
     project_sub_folder: str
     project_file_name: str
-    repo_credentials: RepoCredentials
+    repo_credentials: Optional[RepoCredentials]
 
     @staticmethod
     def from_config(config: dict):

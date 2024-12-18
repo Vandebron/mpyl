@@ -22,6 +22,7 @@ class TestMpylSchema:
         assert project.name == "dockertest"
         assert project.maintainer, ["Marketplace", "Energy Trading"]
         assert project.deployment is not None
+        assert project.deployment.properties is not None
         envs = project.deployment.properties.env
 
         simple_env = [x for x in envs if x.key == "SOME_ENV"].pop()

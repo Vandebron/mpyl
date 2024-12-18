@@ -19,8 +19,10 @@ class TestEphemeral:
             test_data.RUN_PROPERTIES,
             None,
         )
-        assert step_input.project_execution.project.deployment is not None
-        assert len(step_input.project_execution.project.deployment.properties.env) == 4
+        deployment = step_input.project_execution.project.deployment
+        assert deployment is not None
+        assert deployment.properties is not None
+        assert len(deployment.properties.env) == 4
 
         env_variables = get_env_variables(
             step_input.project_execution.project, test_data.RUN_PROPERTIES.target
