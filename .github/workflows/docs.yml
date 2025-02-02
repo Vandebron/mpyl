@@ -5,6 +5,7 @@ on:
   push:
     branches:
     - main
+    - fix/doc-upload
 
 # security: restrict permissions for CI jobs.
 permissions:
@@ -34,7 +35,7 @@ jobs:
         chmod -R 0755 docs/schema
         cp src/mpyl/schema/* docs/schema
 
-    - uses: actions/upload-pages-artifact@v4
+    - uses: actions/upload-pages-artifact@v3
       with:
         path: docs/
 
