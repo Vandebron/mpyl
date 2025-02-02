@@ -212,6 +212,13 @@ jobs:
       - name: Build status
         run: mpyl build status --all
 
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: sbt
+      - uses: sbt/setup-sbt@v1
       - name: Build run
         run: python plugin-run.py
         env:
