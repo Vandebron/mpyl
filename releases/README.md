@@ -1,5 +1,17 @@
 # Release notes
 
+## MPyL 1.8.0
+
+
+#### Increased flexibility
+
+Allow project definitions to be described in files named different from `project.yaml`
+
+#### Upgrade mypy
+To latest version
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.8.0)
+
 ## MPyL 1.7.6
 
 
