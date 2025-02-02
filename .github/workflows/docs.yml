@@ -34,7 +34,7 @@ jobs:
         chmod -R 0755 docs/schema
         cp src/mpyl/schema/* docs/schema
 
-    - uses: actions/upload-pages-artifact@v1
+    - uses: actions/upload-pages-artifact@v3
       with:
         path: docs/
 
@@ -51,4 +51,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
     - id: deployment
-      uses: actions/deploy-pages@v1
+      uses: actions/deploy-pages@v3
