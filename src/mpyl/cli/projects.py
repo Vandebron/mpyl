@@ -24,6 +24,7 @@ from ..cli.commands.projects.lint import (
     __detail_wrong_substitutions,
     _assert_project_ids,
     _assert_no_self_dependencies,
+    _assert_allowed_maintainers,
 )
 from ..cli.commands.projects.upgrade import check_upgrade
 from ..constants import DEFAULT_CONFIG_FILE_NAME
@@ -79,9 +80,6 @@ def projects(ctx, config, verbose, filter_):
         ),
         filter=filter_ if filter_ else "",
     )
-
-
-OVERRIDE_PATTERN = "project-override"
 
 
 @projects.command(name="list", help="List found projects")
@@ -192,6 +190,18 @@ def lint(obj: ProjectsContext):
         failed = True
     else:
         console.print("  ✅ All kubernetes projects have a project id")
+
+    have_disallowed_maintainers = _assert_allowed_maintainers(
+        console=console, all_projects=all_projects, properties=obj.cli.config
+    )
+    if have_disallowed_maintainers:
+        for project, disallowed in have_disallowed_maintainers:
+            console.print(
+                f"  ❌ Project {project.name} has a disallowed maintainer(s) {disallowed}"
+            )
+        failed = True
+    else:
+        console.print("  ✅ All projects' maintainers are allowed")
 
     wrong_substitutions = _assert_correct_project_linkup(
         console=console,

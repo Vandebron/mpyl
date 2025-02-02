@@ -165,8 +165,7 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-          TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
-        run: pipenv run publish
+        run: pipenv run publish-test
 
       - name: Ensure package is in pypi cache
         run: pipenv run release exists ${{ steps.version.outputs.mpylVersion }} --test --attempts 5
@@ -213,6 +212,13 @@ jobs:
       - name: Build status
         run: mpyl build status --all
 
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: sbt
+      - uses: sbt/setup-sbt@v1
       - name: Build run
         run: python plugin-run.py
         env:

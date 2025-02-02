@@ -145,12 +145,12 @@ def _hash_changes_in_project(
     project: Project,
     changeset: Changeset,
 ) -> Optional[str]:
-    files_to_hash = set(
-        filter(
-            lambda changed_file: file_belongs_to_project(project, changed_file),
-            changeset.files_touched(status={"A", "M", "R", "C"}),
-        )
-    )
+    files_to_hash = {
+        changed_file
+        for changed_file in (changeset.files_touched(status={"A", "M", "R", "C"}))
+        if file_belongs_to_project(project, changed_file)
+        and Path(changed_file).is_file()
+    }
 
     if len(files_to_hash) == 0:
         return None
@@ -375,7 +375,7 @@ def _get_changes(
     local: bool,
     tag: Optional[str] = None,
     changed_files_path: Optional[str] = None,
-):
+) -> Changeset:
     if changed_files_path:
         return repo.changes_from_file(
             logger=logger, changed_files_path=changed_files_path

@@ -189,21 +189,6 @@ class TestSteps:
             == "Executor 'Unknown Build' for 'build' not known or registered"
         )
 
-    def test_should_fail_if_maintainer_is_not_known(self):
-        project = test_data.get_project_with_stages(
-            stage_config={"build": "Echo Build"}, path="", maintainers=["Unknown Team"]
-        )
-
-        result = self.executor.execute(
-            stage=build.STAGE_NAME,
-            project_execution=ProjectExecution.run(project),
-        )
-        assert not result.output.success
-        assert (
-            result.output.message
-            == "Maintainer(s) 'Unknown Team' not defined in config"
-        )
-
     def test_should_succeed_if_stage_is_not_known(self):
         project = test_data.get_project_with_stages(stage_config={"test": "Some Test"})
         result = self.executor.execute(
