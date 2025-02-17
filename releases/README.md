@@ -1,5 +1,14 @@
 # Release notes
 
+## MPyL 1.8.1
+
+
+#### Upgrade to python 3.12
+
+And remove dagster and all its transient dependencies
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.8.1)
+
 ## MPyL 1.8.0
 
 
