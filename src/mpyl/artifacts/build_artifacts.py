@@ -235,9 +235,14 @@ class ArtifactsRepository:
         )
 
         if open_pulls.totalCount == 0:
+            url = (
+                f"({run_properties.details.change_url})"
+                if run_properties.details.change_url
+                else ""
+            )
             body = f"""
 ## 🚀 Deploying
-Docker tag: [{run_properties.versioning.identifier}]{f'({run_properties.details.change_url})' if run_properties.details.change_url else ''}
+Docker tag: [{run_properties.versioning.identifier}]{url}
 Commit: [{revision}]({commit_url})
 
 ## 📍 To
