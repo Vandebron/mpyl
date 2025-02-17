@@ -12,7 +12,7 @@ jobs:
       - uses: actions/setup-python@v5
         id: cache-dependencies
         with:
-          python-version: '3.11'
+          python-version: '3.12'
           cache: 'pipenv'
           cache-dependency-path: |
             Pipfile.lock
@@ -41,7 +41,7 @@ jobs:
       - uses: actions/setup-python@v5
         id: cache-dependencies
         with:
-          python-version: '3.11'
+          python-version: '3.12'
           cache: 'pipenv'
           cache-dependency-path: |
             Pipfile.lock
@@ -67,7 +67,7 @@ jobs:
       - uses: actions/setup-python@v5
         id: cache-dependencies
         with:
-          python-version: '3.11'
+          python-version: '3.12'
           cache: 'pipenv'
           cache-dependency-path: |
             Pipfile.lock
@@ -124,13 +124,16 @@ jobs:
       - uses: actions/setup-python@v5
         id: cache-dependencies
         with:
-          python-version: '3.11'
+          python-version: '3.12'
           cache: 'pipenv'
           cache-dependency-path: |
             Pipfile.lock
 
       - name: Install pipenv
         run: pip install pipenv
+
+      - name: Install setuptools
+        run: pip install -U pip setuptools
 
       - name: Install dependencies
         if: steps.cache-dependencies.outputs.cache-hit != 'true'
@@ -180,7 +183,7 @@ jobs:
     steps:
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Prefetch MPyL
         continue-on-error: true
@@ -233,7 +236,7 @@ jobs:
     steps:
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Prefetch MPyL Attempt
         continue-on-error: true
