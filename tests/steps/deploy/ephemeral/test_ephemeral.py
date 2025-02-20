@@ -15,6 +15,7 @@ class TestEphemeral:
                 project=load_project(
                     self.config_resource_path, self.resource_path / "project.yml", True
                 ),
+                changed_files=frozenset(),
                 hashed_changes=None,
                 cached=False,
             ),

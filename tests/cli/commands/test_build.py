@@ -67,6 +67,7 @@ class TestBuildCommand:
         project_executions = {
             ProjectExecution(
                 project=get_minimal_project(),
+                changed_files=frozenset(),
                 hashed_changes=None,
                 cached=False,
             )
@@ -100,6 +101,7 @@ class TestBuildCommand:
                 TestStage.build(): {
                     ProjectExecution(
                         project=p,
+                        changed_files=frozenset(),
                         hashed_changes=None,
                         cached=False,
                     )

@@ -42,6 +42,7 @@ class TestDagster:
                 project=load_project(
                     test_resource_path, self.resource_path / "project.yml", True
                 ),
+                changed_files=frozenset(),
                 hashed_changes=None,
                 cached=False,
             ),
@@ -70,6 +71,7 @@ class TestDagster:
                 project=load_project(
                     test_resource_path, Path(self.resource_path, "project.yml"), True
                 ),
+                changed_files=frozenset(),
                 hashed_changes=None,
                 cached=False,
             ),
@@ -96,6 +98,7 @@ class TestDagster:
                 project=load_project(
                     test_resource_path, Path(self.resource_path, "project.yml"), True
                 ),
+                changed_files=frozenset(),
                 hashed_changes=None,
                 cached=False,
             ),
@@ -127,6 +130,7 @@ class TestDagster:
                     project_folder / "project_with_sealed_secret.yml",
                     True,
                 ),
+                changed_files=frozenset(),
                 hashed_changes=None,
                 cached=False,
             ),

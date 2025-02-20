@@ -71,6 +71,7 @@ def get_project() -> Project:
 def get_project_execution() -> ProjectExecution:
     return ProjectExecution(
         project=get_project(),
+        changed_files=frozenset(),
         hashed_changes=None,
         cached=False,
     )
@@ -121,6 +122,7 @@ def run_properties_prod_with_plan() -> RunProperties:
             TestStage.deploy(): {
                 ProjectExecution(
                     project=get_minimal_project(),
+                    changed_files=frozenset(),
                     hashed_changes=None,
                     cached=False,
                 )

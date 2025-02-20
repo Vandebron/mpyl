@@ -181,6 +181,7 @@ def to_project_executions(
 
         return ProjectExecution(
             project=project,
+            changed_files=frozenset(changeset.files_touched()),
             hashed_changes=hashed_changes,
             cached=is_project_cached_for_stage(
                 logger=logger,
@@ -230,7 +231,10 @@ def find_projects_to_execute(
                 hashed_changes = None
 
             return ProjectExecution(
-                project=project, hashed_changes=hashed_changes, cached=False
+                project=project,
+                changed_files=frozenset(changeset.files_touched()),
+                hashed_changes=hashed_changes,
+                cached=False,
             )
 
         if is_project_modified:
@@ -240,6 +244,7 @@ def find_projects_to_execute(
 
             return ProjectExecution(
                 project=project,
+                changed_files=frozenset(changeset.files_touched()),
                 hashed_changes=hashed_changes,
                 cached=is_project_cached_for_stage(
                     logger=logger,

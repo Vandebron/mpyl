@@ -9,12 +9,9 @@ from .project import Project
 @dataclass(frozen=True)
 class ProjectExecution:
     project: Project
+    changed_files: frozenset[str]
     hashed_changes: Optional[str]
     cached: bool
-
-    @staticmethod
-    def create(project: Project, cached: bool, hashed_changes: Optional[str] = None):
-        return ProjectExecution(project, hashed_changes, cached)
 
     @property
     def name(self):

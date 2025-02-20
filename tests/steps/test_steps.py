@@ -136,7 +136,10 @@ class TestSteps:
         output = steps.execute(
             stage=build.STAGE_NAME,
             project_execution=ProjectExecution(
-                project=project, hashed_changes=None, cached=False
+                project=project,
+                changed_files=frozenset(),
+                hashed_changes=None,
+                cached=False,
             ),
         ).output
         assert not output.success
@@ -171,7 +174,10 @@ class TestSteps:
         result = self.executor.execute(
             stage=build.STAGE_NAME,
             project_execution=ProjectExecution(
-                project=project, hashed_changes=None, cached=False
+                project=project,
+                changed_files=frozenset(),
+                hashed_changes=None,
+                cached=False,
             ),
         )
         assert result.output.success
@@ -186,7 +192,10 @@ class TestSteps:
         result = self.executor.execute(
             stage=build.STAGE_NAME,
             project_execution=ProjectExecution(
-                project=project, hashed_changes=None, cached=False
+                project=project,
+                changed_files=frozenset(),
+                hashed_changes=None,
+                cached=False,
             ),
         )
         assert not result.output.success
@@ -200,7 +209,10 @@ class TestSteps:
         result = self.executor.execute(
             stage="build",
             project_execution=ProjectExecution(
-                project=project, hashed_changes=None, cached=False
+                project=project,
+                changed_files=frozenset(),
+                hashed_changes=None,
+                cached=False,
             ),
         )
         assert not result.output.success
