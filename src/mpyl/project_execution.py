@@ -14,21 +14,7 @@ class ProjectExecution:
 
     @staticmethod
     def create(project: Project, cached: bool, hashed_changes: Optional[str] = None):
-        if cached:
-            return ProjectExecution.skip(project, hashed_changes)
-        return ProjectExecution.run(project, hashed_changes)
-
-    @staticmethod
-    def skip(project: Project, hashed_changes: Optional[str] = None):
-        return ProjectExecution(
-            project=project, hashed_changes=hashed_changes, cached=True
-        )
-
-    @staticmethod
-    def run(project: Project, hashed_changes: Optional[str] = None):
-        return ProjectExecution(
-            project=project, hashed_changes=hashed_changes, cached=False
-        )
+        return ProjectExecution(project, hashed_changes, cached)
 
     @property
     def name(self):

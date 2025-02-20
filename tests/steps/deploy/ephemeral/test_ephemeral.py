@@ -11,10 +11,12 @@ class TestEphemeral:
 
     def test_get_env_variables_for_target(self):
         step_input = Input(
-            ProjectExecution.run(
-                load_project(
+            ProjectExecution(
+                project=load_project(
                     self.config_resource_path, self.resource_path / "project.yml", True
-                )
+                ),
+                hashed_changes=None,
+                cached=False,
             ),
             test_data.RUN_PROPERTIES,
             None,

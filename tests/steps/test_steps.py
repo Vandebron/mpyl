@@ -135,7 +135,9 @@ class TestSteps:
         )
         output = steps.execute(
             stage=build.STAGE_NAME,
-            project_execution=ProjectExecution.run(project),
+            project_execution=ProjectExecution(
+                project=project, hashed_changes=None, cached=False
+            ),
         ).output
         assert not output.success
         assert output.message == "Stage 'build' not defined on project 'test'"
@@ -168,7 +170,9 @@ class TestSteps:
         )
         result = self.executor.execute(
             stage=build.STAGE_NAME,
-            project_execution=ProjectExecution.run(project),
+            project_execution=ProjectExecution(
+                project=project, hashed_changes=None, cached=False
+            ),
         )
         assert result.output.success
         assert result.output.message == "Built test"
@@ -181,7 +185,9 @@ class TestSteps:
         project = test_data.get_project_with_stages({"build": "Unknown Build"})
         result = self.executor.execute(
             stage=build.STAGE_NAME,
-            project_execution=ProjectExecution.run(project),
+            project_execution=ProjectExecution(
+                project=project, hashed_changes=None, cached=False
+            ),
         )
         assert not result.output.success
         assert (
@@ -193,7 +199,9 @@ class TestSteps:
         project = test_data.get_project_with_stages(stage_config={"test": "Some Test"})
         result = self.executor.execute(
             stage="build",
-            project_execution=ProjectExecution.run(project),
+            project_execution=ProjectExecution(
+                project=project, hashed_changes=None, cached=False
+            ),
         )
         assert not result.output.success
         assert result.output.message == "Stage 'build' not defined on project 'test'"

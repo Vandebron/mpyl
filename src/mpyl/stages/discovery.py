@@ -179,8 +179,9 @@ def to_project_executions(
     ) -> ProjectExecution:
         hashed_changes = _hash_changes_in_project(project=project, changeset=changeset)
 
-        return ProjectExecution.create(
+        return ProjectExecution(
             project=project,
+            hashed_changes=hashed_changes,
             cached=is_project_cached_for_stage(
                 logger=logger,
                 project=project.name,
@@ -188,7 +189,6 @@ def to_project_executions(
                 output=Output.try_read(project.target_path, stage),
                 hashed_changes=hashed_changes,
             ),
-            hashed_changes=hashed_changes,
         )
 
     return set(map(to_project_execution, projects))
@@ -229,15 +229,18 @@ def find_projects_to_execute(
             else:
                 hashed_changes = None
 
-            return ProjectExecution.run(project, hashed_changes)
+            return ProjectExecution(
+                project=project, hashed_changes=hashed_changes, cached=False
+            )
 
         if is_project_modified:
             hashed_changes = _hash_changes_in_project(
                 project=project, changeset=changeset
             )
 
-            return ProjectExecution.create(
+            return ProjectExecution(
                 project=project,
+                hashed_changes=hashed_changes,
                 cached=is_project_cached_for_stage(
                     logger=logger,
                     project=project.name,
@@ -245,7 +248,6 @@ def find_projects_to_execute(
                     output=Output.try_read(project.target_path, stage),
                     hashed_changes=hashed_changes,
                 ),
-                hashed_changes=hashed_changes,
             )
 
         return None
