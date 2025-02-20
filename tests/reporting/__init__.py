@@ -38,11 +38,31 @@ def create_test_result_with_plan() -> RunResult:
             run_plan=RunPlan.from_plan(
                 {
                     TestStage.build(): {
-                        ProjectExecution.run(p) for p in build_projects
+                        ProjectExecution(
+                            project=p,
+                            changed_files=frozenset(),
+                            hashed_changes=None,
+                            cached=False,
+                        )
+                        for p in build_projects
                     },
-                    TestStage.test(): {ProjectExecution.run(p) for p in test_projects},
+                    TestStage.test(): {
+                        ProjectExecution(
+                            project=p,
+                            changed_files=frozenset(),
+                            hashed_changes=None,
+                            cached=False,
+                        )
+                        for p in test_projects
+                    },
                     TestStage.deploy(): {
-                        ProjectExecution.run(p) for p in deploy_projects
+                        ProjectExecution(
+                            project=p,
+                            changed_files=frozenset(),
+                            hashed_changes=None,
+                            cached=False,
+                        )
+                        for p in deploy_projects
                     },
                 }
             ),

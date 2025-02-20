@@ -69,7 +69,12 @@ def get_project() -> Project:
 
 
 def get_project_execution() -> ProjectExecution:
-    return ProjectExecution.run(get_project())
+    return ProjectExecution(
+        project=get_project(),
+        changed_files=frozenset(),
+        hashed_changes=None,
+        cached=False,
+    )
 
 
 def get_deployment_strategy_project() -> Project:
@@ -113,7 +118,16 @@ def run_properties_with_plan(plan: RunPlan) -> RunProperties:
 
 def run_properties_prod_with_plan() -> RunProperties:
     plan = RunPlan.from_plan(
-        {TestStage.deploy(): {ProjectExecution.run(get_minimal_project())}}
+        {
+            TestStage.deploy(): {
+                ProjectExecution(
+                    project=get_minimal_project(),
+                    changed_files=frozenset(),
+                    hashed_changes=None,
+                    cached=False,
+                )
+            }
+        }
     )
     run_properties_prod = construct_run_properties(
         config=config_values,
