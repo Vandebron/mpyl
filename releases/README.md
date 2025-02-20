@@ -1,5 +1,14 @@
 # Release notes
 
+## MPyL 1.8.2
+
+
+#### Pass changed files down to steps
+
+So that steps can decide to check changed files only
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.8.2)
+
 ## MPyL 1.8.1
 
 
