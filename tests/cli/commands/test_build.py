@@ -11,7 +11,7 @@ from src.mpyl.steps import Step, Meta, ArtifactType, Input, Output
 from src.mpyl.steps.build import STAGE_NAME
 from src.mpyl.steps.run import RunResult
 from src.mpyl.steps.run_properties import construct_run_properties
-from src.mpyl.steps.steps import Steps, StepsCollection
+from src.mpyl.steps.executor import Executor, StepsCollection
 from tests import root_test_path
 from tests.test_resources.test_data import (
     get_minimal_project,
@@ -53,7 +53,7 @@ class TestBuildCommand:
     def test_run_build_without_plan_should_be_successful(self):
         run_properties = RUN_PROPERTIES
         accumulator = RunResult(run_properties=run_properties)
-        executor = Steps(
+        executor = Executor(
             logging.getLogger(),
             run_properties,
             StepsCollection(logging.getLogger()),
@@ -82,7 +82,7 @@ class TestBuildCommand:
         run_properties = run_properties_with_plan(plan=run_plan)
         accumulator = RunResult(run_properties=run_properties)
         collection = StepsCollection(logging.getLogger())
-        executor = Steps(
+        executor = Executor(
             logging.getLogger(),
             run_properties,
             collection,
@@ -118,7 +118,7 @@ class TestBuildCommand:
         accumulator = RunResult(run_properties=run_properties)
         logger = logging.getLogger()
         collection = StepsCollection(logger)
-        executor = Steps(logger, run_properties, collection)
+        executor = Executor(logger, run_properties, collection)
 
         result = run_build(self.logger, accumulator, executor, None)
         assert not result.has_results

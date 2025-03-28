@@ -6,7 +6,7 @@ import operator
 from typing import Optional
 
 from .models import RunProperties
-from .steps import StepResult, ExecutionException
+from .executor import StepResult, ExecutionException
 from ..project import Stage
 from ..run_plan import RunPlan
 

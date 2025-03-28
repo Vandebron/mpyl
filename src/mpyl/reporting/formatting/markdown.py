@@ -10,7 +10,7 @@ from ...project_execution import ProjectExecution
 from ...steps import Output, ArtifactType
 from ...steps.deploy.k8s import DeployedHelmAppSpec
 from ...steps.run import RunResult
-from ...steps.steps import StepResult
+from ...steps.executor import StepResult
 from ...utilities.junit import TestRunSummary, JunitTestSpec
 
 

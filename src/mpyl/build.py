@@ -25,7 +25,7 @@ from .steps.collection import StepsCollection
 from .steps.models import Output, RunProperties
 from .steps.run import RunResult
 from .steps.run_properties import construct_run_properties
-from .steps.steps import ExecutionException, StepResult, Steps
+from .steps.executor import ExecutionException, StepResult, Executor
 
 
 def print_status(
@@ -127,7 +127,7 @@ def run_mpyl(
         if reporter:
             reporter.send_report(run_result)
         try:
-            steps = Steps(
+            steps = Executor(
                 logger=logger,
                 properties=run_properties,
                 steps_collection=StepsCollection(logger=logger),
@@ -165,7 +165,7 @@ def run_mpyl(
 def run_build(
     logger: logging.Logger,
     accumulator: RunResult,
-    executor: Steps,
+    executor: Executor,
     reporter: Optional[Reporter] = None,
     dry_run: bool = True,
 ):
