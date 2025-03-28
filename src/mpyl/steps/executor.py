@@ -1,11 +1,9 @@
 """ Entry point of MPyL. Loads all available Step implementations and triggers their execution based on the specified
 Project and Stage.
 """
-import pkgutil
 from dataclasses import dataclass
 from datetime import datetime
 from logging import Logger
-from pathlib import Path
 from typing import Optional
 
 from ruamel.yaml import YAML  # type: ignore
@@ -16,7 +14,6 @@ from .models import Output, Input, RunProperties, ArtifactType, Artifact
 from ..project import Project
 from ..project import Stage
 from ..project_execution import ProjectExecution
-from ..validation import validate
 
 yaml = YAML()
 
@@ -60,16 +57,10 @@ class Executor:
         logger: Logger,
         properties: RunProperties,
         steps_collection: Optional[StepsCollection] = None,
-        root_dir: Path = Path("."),
     ) -> None:
         self._logger = logger
         self._properties = properties
         self._steps_collection = steps_collection or StepsCollection(logger)
-
-        schema_dict = pkgutil.get_data(__name__, "../schema/mpyl_config.schema.yml")
-
-        if schema_dict:
-            validate(properties.config, schema_dict.decode("utf-8"), root_dir=root_dir)
 
     def _execute(
         self,
