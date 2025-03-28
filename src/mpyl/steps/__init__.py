@@ -28,7 +28,7 @@ Implement the `Step` interface as `BuildJava(Step)`, or however you want to call
  a look at the `mpyl.steps.build.echo.BuildEcho`.
 
 ##### Important constructor properties
- - `Meta.name` is how you can refer to this step from a `project.yml`. The `mpyl.steps.steps.Steps` executor will pick
+ - `Meta.name` is how you can refer to this step from a `project.yml`. The `mpyl.steps.executor.Steps` executor will pick
  up the `Step` implementation that has the name described in `stages.build` to execute the build step.
 ```yaml
 name: 'javaService'
@@ -61,7 +61,7 @@ remains type safe and mistakes are found as early as possible.
 
 ##### Registration with the executor
 Importing the module in which your step is defined is enough to register it.
-Steps are automatically registered with the `mpyl.steps.steps.Steps` executor via the `IPluginRegistry` metaclass.
+Steps are automatically registered with the `mpyl.steps.executor.Steps` executor via the `IPluginRegistry` metaclass.
 
 Example:
 ```python

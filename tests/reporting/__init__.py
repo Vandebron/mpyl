@@ -7,7 +7,7 @@ from src.mpyl.steps.deploy.k8s import DeployedHelmAppSpec
 from src.mpyl.steps.models import Output, Artifact, ArtifactType
 from src.mpyl.steps.run import RunResult
 from src.mpyl.steps.run_properties import construct_run_properties
-from src.mpyl.steps.steps import StepResult
+from src.mpyl.steps.executor import StepResult
 from src.mpyl.utilities.junit import JunitTestSpec, TestRunSummary
 from tests import root_test_path
 from tests.test_resources import test_data

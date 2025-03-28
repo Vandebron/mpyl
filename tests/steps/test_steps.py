@@ -23,7 +23,7 @@ from src.mpyl.steps.models import (
     ConsoleProperties,
     Artifact,
 )
-from src.mpyl.steps.steps import Steps
+from src.mpyl.steps.executor import Executor
 from src.mpyl.utilities.docker import DockerImageSpec
 from tests import root_test_path, test_resource_path
 from tests.test_resources import test_data
@@ -34,7 +34,7 @@ yaml = YAML()
 
 class TestSteps:
     resource_path = root_test_path / "test_resources"
-    executor = Steps(
+    executor = Executor(
         logger=logging.getLogger(),
         properties=test_data.RUN_PROPERTIES,
         steps_collection=StepsCollection(logging.getLogger()),
@@ -91,7 +91,7 @@ class TestSteps:
         )
 
     def test_find_required_output(self):
-        found_artifact = Steps._find_required_artifact(
+        found_artifact = Executor._find_required_artifact(
             self.build_project, RUN_PROPERTIES.stages, ArtifactType.DOCKER_IMAGE
         )
         assert found_artifact is not None
@@ -103,7 +103,7 @@ class TestSteps:
 
     def test_find_not_required_output(self):
         with pytest.raises(ValueError) as exc_info:
-            Steps._find_required_artifact(
+            Executor._find_required_artifact(
                 self.build_project,
                 RUN_PROPERTIES.stages,
                 ArtifactType.DEPLOYED_HELM_APP,
@@ -115,14 +115,14 @@ class TestSteps:
 
     def test_find_required_output_should_handle_none(self):
         assert (
-            Steps._find_required_artifact(
+            Executor._find_required_artifact(
                 self.build_project, RUN_PROPERTIES.stages, None
             )
             is None
         )
 
     def test_should_return_error_if_stage_not_defined(self):
-        steps = Steps(
+        steps = Executor(
             logger=Logger.manager.getLogger("logger"),
             properties=test_data.RUN_PROPERTIES,
             root_dir=self.resource_path,
@@ -159,7 +159,7 @@ class TestSteps:
             run_plan=RunPlan.empty(),
         )
         with pytest.raises(ValidationError) as excinfo:
-            Steps(
+            Executor(
                 logger=Logger.manager.getLogger("logger"),
                 properties=properties,
                 root_dir=self.resource_path,
