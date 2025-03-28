@@ -1,5 +1,15 @@
 # Release notes
 
+## MPyL 1.8.3
+
+
+#### Rename Steps to Executor
+
+And remove late validation of mypl_config.yaml to allow for different config schemas
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.8.3)
+
 ## MPyL 1.8.2
 
 
