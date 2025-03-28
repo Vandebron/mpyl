@@ -75,7 +75,6 @@ def construct_run_properties(
         run_plan=run_plan,
         all_projects=all_projects,
         cli_tag=tag,
-        root_dir=root_dir,
     )
 
 

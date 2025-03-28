@@ -1,6 +1,5 @@
 """ Model representation of run-specific configuration. """
 
-import pkgutil
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -11,7 +10,6 @@ from ruamel.yaml import YAML, yaml_object  # type: ignore
 from ..project import Project, Stage, Target
 from ..project_execution import ProjectExecution
 from ..run_plan import RunPlan
-from ..validation import validate
 
 yaml = YAML()
 
@@ -128,13 +126,7 @@ class RunProperties:
         run_plan: RunPlan,
         all_projects: set[Project],
         cli_tag: Optional[str] = None,
-        root_dir: Path = Path("."),
     ):
-        build_dict = pkgutil.get_data(__name__, "../schema/run_properties.schema.yml")
-
-        if build_dict:
-            validate(run_properties, build_dict.decode("utf-8"), root_dir)
-
         build = run_properties["build"]
         versioning_config = build["versioning"]
 
