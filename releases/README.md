@@ -1,5 +1,15 @@
 # Release notes
 
+## MPyL 1.8.4
+
+
+#### Remove validations on config load
+
+To allow for other schemas to be used
+
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.8.4)
+
 ## MPyL 1.8.3
 
 
