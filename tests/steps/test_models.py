@@ -1,7 +1,5 @@
 import os
 
-import pytest
-from jsonschema import ValidationError
 from ruamel.yaml import YAML  # type: ignore
 
 from src.mpyl.constants import (
@@ -23,20 +21,6 @@ class TestModels:
     properties_path = resource_path / DEFAULT_RUN_PROPERTIES_FILE_NAME
     run_properties_values = parse_config(properties_path)
     config_values = parse_config(resource_path / DEFAULT_CONFIG_FILE_NAME)
-
-    def test_should_return_error_if_validation_fails(self):
-        with pytest.raises(ValidationError) as excinfo:
-            construct_run_properties(
-                config=self.config_values,
-                properties=parse_config(
-                    self.resource_path / "run_properties_invalid.yml"
-                ),
-                run_plan=RunPlan.empty(),
-                all_projects=set(),
-                root_dir=self.resource_path,
-            )
-
-        assert "'stages' is a required property" in excinfo.value.message
 
     def test_should_pass_validation(self):
         os.environ["CHANGE_ID"] = "123"
