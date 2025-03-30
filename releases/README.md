@@ -1,5 +1,17 @@
 # Release notes
 
+## MPyL 1.8.5
+
+
+#### Upgrade dependencies
+
+kubernetes = "==32.0.1"
+python-on-whales = "==0.76.1"
+click = "==8.1.8"
+boto3 = "==1.37.23"
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.8.5)
+
 ## MPyL 1.8.4
 
 
