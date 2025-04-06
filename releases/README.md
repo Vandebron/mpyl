@@ -1,5 +1,14 @@
 # Release notes
 
+## MPyL 1.8.6
+
+
+#### Improve logging output
+
+A single line per execution
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.8.6)
+
 ## MPyL 1.8.5
 
 
