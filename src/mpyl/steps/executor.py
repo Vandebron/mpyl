@@ -64,6 +64,7 @@ class Executor:
 
     def _execute(
         self,
+        stage: Stage,
         executor: Step,
         project_execution: ProjectExecution,
         properties: RunProperties,
@@ -71,7 +72,7 @@ class Executor:
         dry_run: bool = False,
     ) -> Output:
         self._logger.info(
-            f"Executing {executor.meta.name} for '{project_execution.name}'"
+            f"Executing {stage.icon} {stage.name} ({executor.meta.name}) for '{project_execution.name}'"
         )
         required = executor.required_artifact
         if (
@@ -134,6 +135,7 @@ class Executor:
     ) -> Output:
         main_step_artifact = main_result.produced_artifact
         after_result = self._execute(
+            stage=stage,
             executor=step,
             project_execution=project_execution,
             properties=self._properties,
@@ -179,9 +181,6 @@ class Executor:
             )
 
         try:
-            self._logger.info(
-                f"Executing {stage.name} {stage.icon} for {project_execution.name}"
-            )
             artifact: Optional[Artifact] = self._find_required_artifact(
                 project_execution.project,
                 self._properties.stages,
@@ -189,6 +188,7 @@ class Executor:
             )
             if executor.before:
                 before_result = self._execute(
+                    stage=stage,
                     executor=executor.before,
                     project_execution=project_execution,
                     properties=self._properties,
@@ -203,6 +203,7 @@ class Executor:
                     return before_result
 
             result = self._execute(
+                stage=stage,
                 executor=executor,
                 project_execution=project_execution,
                 properties=self._properties,
