@@ -1,5 +1,14 @@
 # Release notes
 
+## MPyL 1.8.7
+
+
+#### Ensure correct artifact is used as required input
+
+By taking the most recent one
+
+Details on [Github](https://github.com/Vandebron/mpyl/releases/tag/1.8.7)
+
 ## MPyL 1.8.6
 
 
