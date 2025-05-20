@@ -112,7 +112,8 @@ class Executor:
         if not required_artifact or required_artifact == ArtifactType.NONE:
             return None
 
-        for stage in stages:
+        stages_from_recent_to_old = reversed(stages)
+        for stage in stages_from_recent_to_old:
             output: Optional[Output] = Output.try_read(project.target_path, stage.name)
             if (
                 output
